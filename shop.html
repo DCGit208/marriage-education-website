@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Shop Marriage Education</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="magazine.html">Magazine</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="shop">
+    <div class="container">
+      <h2>Books & Resources</h2>
+      
+      <div class="shop-filters">
+        <a href="#all" class="filter-button active">All Products</a>
+        <a href="#sbd-series" class="filter-button">SBD Series</a>
+        <a href="#arts-of-marriage" class="filter-button">Arts of Marriage</a>
+        <a href="#publications" class="filter-button">Publications</a>
+        <a href="#bundles" class="filter-button">Bundles</a>
+      </div>
+
+      <div class="bundle-offer">
+        <h3>🎉 Bundle & Save Big!</h3>
+        <p>Get more value with our curated book collections. Save up to 33% compared to individual purchases!</p>
+        <div class="bundle-highlights">
+          <span>📚 Complete SBD Library: Save $64.92</span> • 
+          <span>🎨 Arts Collection: Save $14.98</span> • 
+          <span>🚀 Foundation Bundle: Save $14.98</span>
+        </div>
+        <a href="#bundles" class="buy-button" onclick="document.querySelector('a[href=\'#bundles\']').click()">View All Bundles</a>
+      </div>
+
+      <div class="product-grid">
+        <div class="product" id="sbd-compendium">
+          <img src="images/sexbydesigncompendium.jpg" alt="The Sex by Design Compendium" />
+          <h4>The Sex by Design Compendium</h4>
+          <p>The essential guide and navigator into all SBD-Sex by Design book Series. Your comprehensive roadmap to understanding and applying biblical sexuality principles.</p>
+          <div class="course-features">
+            <ul>
+              <li>Complete overview of the entire SBD series</li>
+              <li>Navigation guide for choosing the right books</li>
+              <li>Essential principles from all SBD works</li>
+              <li>Perfect starting point for new readers</li>
+            </ul>
+          </div>
+          <p class="price">$34.99</p>
+          <a href="payment.html?product=sbd-compendium&price=34.99" class="buy-button" onclick="purchaseProduct('sbd-compendium', 34.99, 'The Sex by Design Compendium')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-dummies">
+          <img src="images/sbd-dummies.jpg" alt="SBD for Dummies" />
+          <h4>SBD for Dummies</h4>
+          <p>Entry-level guide to sexual design and intimacy. Perfect for couples just beginning their journey of deeper understanding.</p>
+          <div class="course-features">
+            <ul>
+              <li>Foundation principles of marital intimacy</li>
+              <li>Practical exercises for couples</li>
+              <li>Easy-to-understand language</li>
+              <li>Step-by-step guidance</li>
+            </ul>
+          </div>
+          <p class="price">$19.99</p>
+          <a href="payment.html?product=sbd-dummies&price=19.99" class="buy-button" onclick="purchaseProduct('sbd-dummies', 19.99, 'SBD for Dummies')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-canonical">
+          <img src="images/sbd-canonical.jpg" alt="SBD Canonical" />
+          <h4>SBD Canonical</h4>
+          <p>Explore the legal and societal frameworks of sexuality within marriage. Understand the deeper structures that shape intimate relationships.</p>
+          <div class="course-features">
+            <ul>
+              <li>Legal perspectives on marriage</li>
+              <li>Societal influences on intimacy</li>
+              <li>Historical context and wisdom</li>
+              <li>Framework for understanding</li>
+            </ul>
+          </div>
+          <p class="price">$29.99</p>
+          <a href="payment.html?product=sbd-canonical&price=29.99" class="buy-button" onclick="purchaseProduct('sbd-canonical', 29.99, 'SBD Canonical')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-standard">
+          <img src="images/sbd-standard.jpg" alt="SBD Standard" />
+          <h4>SBD Standard</h4>
+          <p>The foundational text of the Sex by Design series. Essential reading for understanding the core principles of biblical sexuality and marriage design.</p>
+          <div class="course-features">
+            <ul>
+              <li>Core principles of biblical sexuality</li>
+              <li>Foundational marriage design concepts</li>
+              <li>Biblical framework for intimacy</li>
+              <li>Essential reading for all couples</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=sbd-standard&price=24.99" class="buy-button" onclick="purchaseProduct('sbd-standard', 24.99, 'SBD Standard')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-real-couples">
+          <img src="images/SBD-Real-Couples.jpg" alt="SBD Real Couples" />
+          <h4>SBD Real Couples</h4>
+          <p>Real stories from real couples applying Sex by Design principles. Learn from authentic experiences and practical applications in marriage.</p>
+          <div class="course-features">
+            <ul>
+              <li>Real couple testimonials and stories</li>
+              <li>Practical application examples</li>
+              <li>Overcoming common challenges</li>
+              <li>Inspiring transformation journeys</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=sbd-real-couples&price=24.99" class="buy-button" onclick="purchaseProduct('sbd-real-couples', 24.99, 'SBD Real Couples')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-heart-of-relationship">
+          <img src="images/sbd-the-heart-of-relationship.jpg" alt="SBD The Heart of Relationship" />
+          <h4>SBD The Heart of Relationship</h4>
+          <p>Dive deep into the emotional and spiritual core of marital relationships. Understanding the heart connection that makes intimacy truly meaningful.</p>
+          <div class="course-features">
+            <ul>
+              <li>Emotional intimacy foundations</li>
+              <li>Spiritual connection in marriage</li>
+              <li>Heart-level communication</li>
+              <li>Building lasting emotional bonds</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=sbd-heart-of-relationship&price=24.99" class="buy-button" onclick="purchaseProduct('sbd-heart-of-relationship', 24.99, 'SBD The Heart of Relationship')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-unequally-yoked">
+          <img src="images/sbd-unequally yoked together.jpg" alt="SBD Unequally Yoked Together" />
+          <h4>SBD Unequally Yoked Together</h4>
+          <p>Navigating marriage when partners have different beliefs, values, or spiritual foundations. Finding unity despite differences.</p>
+          <div class="course-features">
+            <ul>
+              <li>Managing different belief systems</li>
+              <li>Finding common ground in marriage</li>
+              <li>Respecting differences while building unity</li>
+              <li>Practical strategies for mixed-faith couples</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=sbd-unequally-yoked&price=24.99" class="buy-button" onclick="purchaseProduct('sbd-unequally-yoked', 24.99, 'SBD Unequally Yoked Together')">Buy Now</a>
+        </div>
+
+        <div class="product" id="sbd-impregnable-assemblage">
+          <img src="images/Sex-by-design-2-the-impregnable-assemblage.jpg" alt="SBD 2 - The Impregnable Assemblage" />
+          <h4>SBD 2 - The Impregnable Assemblage</h4>
+          <p>The advanced sequel to Sex by Design. Explore deeper concepts of marital unity and the unbreakable bond between husband and wife.</p>
+          <div class="course-features">
+            <ul>
+              <li>Advanced marital unity concepts</li>
+              <li>Strengthening the marriage bond</li>
+              <li>Building an unshakeable foundation</li>
+              <li>Next-level intimacy principles</li>
+            </ul>
+          </div>
+          <p class="price">$29.99</p>
+          <a href="payment.html?product=sbd-impregnable-assemblage&price=29.99" class="buy-button" onclick="purchaseProduct('sbd-impregnable-assemblage', 29.99, 'SBD 2 - The Impregnable Assemblage')">Buy Now</a>
+        </div>
+
+        <div class="product">
+          <img src="images/naked-not-ashamed.jpg" alt="Naked & Not Ashamed" />
+          <h4>Naked & Not Ashamed</h4>
+          <p>Individual volume focusing on overcoming shame and embracing vulnerability in marriage.</p>
+          <div class="course-features">
+            <ul>
+              <li>Overcoming sexual shame</li>
+              <li>Building emotional intimacy</li>
+              <li>Practical vulnerability exercises</li>
+              <li>Healing past wounds</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="mailto:orders@marriageducation.com?subject=Naked & Not Ashamed Order&body=I would like to order Naked & Not Ashamed ($24.99)" class="buy-button">Order via Email</a>
+        </div>
+
+        <div class="product">
+          <img src="images/sbd-standard.jpg" alt="Marriage = Sexuality" />
+          <h4>Marriage = Sexuality</h4>
+          <p>Explore the profound connection between marriage and sexuality, understanding how they are inseparable aspects of relationship.</p>
+          <div class="course-features">
+            <ul>
+              <li>Theological perspectives on sexuality</li>
+              <li>The unity of marriage and intimacy</li>
+              <li>Practical applications</li>
+              <li>Scriptural foundations</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="mailto:orders@marriageducation.com?subject=Marriage = Sexuality Order&body=I would like to order Marriage = Sexuality ($24.99)" class="buy-button">Order via Email</a>
+        </div>
+
+        <div class="product">
+          <img src="images/sbd-the-heart-of-relationship.jpg" alt="The Arts of Marriage" />
+          <h4>The Arts of Marriage</h4>
+          <p>Master the artistry of marital intimacy through practical wisdom and time-tested principles.</p>
+          <div class="course-features">
+            <ul>
+              <li>Advanced intimacy techniques</li>
+              <li>Communication mastery</li>
+              <li>Emotional intelligence in marriage</li>
+              <li>Long-term relationship building</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="mailto:orders@marriageducation.com?subject=The Arts of Marriage Order&body=I would like to order The Arts of Marriage ($24.99)" class="buy-button">Order via Email</a>
+        </div>
+
+        <div class="product arts-of-marriage-category">
+          <img src="images/the-art-of-sexuality.jpg" alt="The Art of Sexuality" />
+          <h4>The Art of Sexuality</h4>
+          <p>Master the deeper dimensions of sexual intimacy and spiritual connection within marriage.</p>
+          <div class="course-features">
+            <ul>
+              <li>Understanding sexual energy and flow</li>
+              <li>Sacred sexuality principles</li>
+              <li>Connecting body, mind, and spirit</li>
+              <li>Advanced intimacy techniques</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=art-of-sexuality&price=24.99" class="buy-button" onclick="purchaseProduct('art-of-sexuality', 24.99, 'The Art of Sexuality')">Buy Now</a>
+        </div>
+
+        <div class="product arts-of-marriage-category">
+          <img src="images/sbd-the-art-of-seduction.jpg" alt="The Art of Seduction" />
+          <h4>The Art of Seduction</h4>
+          <p>Rediscover the power of attraction and playful pursuit within committed marriage relationships.</p>
+          <div class="course-features">
+            <ul>
+              <li>Reigniting attraction in long-term relationships</li>
+              <li>The psychology of desire and pursuit</li>
+              <li>Playful seduction techniques for couples</li>
+              <li>Maintaining mystery and allure</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=art-of-seduction&price=24.99" class="buy-button" onclick="purchaseProduct('art-of-seduction', 24.99, 'The Art of Seduction')">Buy Now</a>
+        </div>
+
+        <div class="product arts-of-marriage-category">
+          <img src="images/sbd-the-art-of-fucking.jpg" alt="The Art of Fucking" />
+          <h4>The Art of Fucking</h4>
+          <p>A bold exploration of passionate physical intimacy and sexual mastery within marriage.</p>
+          <div class="course-features">
+            <ul>
+              <li>Advanced physical intimacy techniques</li>
+              <li>Understanding sexual passion and intensity</li>
+              <li>Breaking through sexual limitations</li>
+              <li>Creating extraordinary physical connection</li>
+            </ul>
+          </div>
+          <p class="price">$24.99</p>
+          <a href="payment.html?product=art-of-fucking&price=24.99" class="buy-button" onclick="purchaseProduct('art-of-fucking', 24.99, 'The Art of Fucking')">Buy Now</a>
+        </div>
+
+        <div class="product publications-category" id="sbd-magazine-annual">
+          <img src="images/Sex-by-design-magazine.jpg" alt="SBD Magazine Annual Subscription" />
+          <h4>SBD Magazine Annual Subscription</h4>
+          <p>The definitive quarterly publication on Sex by Design principles. Get 3 issues per year with cutting-edge insights, real couple stories, and expert guidance.</p>
+          <div class="course-features">
+            <ul>
+              <li>3 quarterly issues per year</li>
+              <li>200+ pages of expert content per issue</li>
+              <li>Real couple testimonials and stories</li>
+              <li>Exclusive subscriber-only content</li>
+              <li>Digital and print access included</li>
+            </ul>
+          </div>
+          <p class="price">$50.00</p>
+          <a href="payment.html?product=sbd-magazine-annual&price=50.00" class="buy-button" onclick="purchaseProduct('sbd-magazine-annual', 50.00, 'SBD Magazine Annual Subscription')">Subscribe Now</a>
+        </div>
+
+        <div class="product publications-category" id="sbd-magazine-single">
+          <img src="images/Sex-by-design-magazine.jpg" alt="SBD Magazine Single Issue" />
+          <h4>SBD Magazine Single Issue</h4>
+          <p>Try a single issue of The Sex by Design Magazine. Perfect for getting a taste of our quarterly publication before committing to an annual subscription.</p>
+          <div class="course-features">
+            <ul>
+              <li>Current quarterly issue</li>
+              <li>200+ pages of expert content</li>
+              <li>Real couple testimonials</li>
+              <li>Digital access included</li>
+              <li>No subscription commitment</li>
+            </ul>
+          </div>
+          <p class="price">$20.00</p>
+          <a href="payment.html?product=sbd-magazine-single&price=20.00" class="buy-button" onclick="purchaseProduct('sbd-magazine-single', 20.00, 'SBD Magazine Single Issue')">Buy Now</a>
+        </div>
+
+        <div class="product publications-category" id="sbd-digital-archive">
+          <img src="images/Sex-by-design-magazine.jpg" alt="SBD Digital Archive Access" />
+          <h4>SBD Digital Archive Access</h4>
+          <p>Access to our complete digital archive of past SBD Magazine issues. Hundreds of articles, insights, and expert guidance at your fingertips.</p>
+          <div class="course-features">
+            <ul>
+              <li>Complete digital archive access</li>
+              <li>All past magazine issues</li>
+              <li>Searchable content database</li>
+              <li>Mobile-friendly access</li>
+              <li>Lifetime access included</li>
+            </ul>
+          </div>
+          <p class="price">$30.00</p>
+          <a href="payment.html?product=sbd-digital-archive&price=30.00" class="buy-button" onclick="purchaseProduct('sbd-digital-archive', 30.00, 'SBD Digital Archive Access')">Buy Now</a>
+        </div>
+
+        <!-- BUNDLE COLLECTIONS -->
+        <div class="product comprehensive-bundle" id="complete-sbd-library">
+          <img src="images/sbd-standard.jpg" alt="Complete SBD Library" />
+          <h4>Complete SBD Library</h4>
+          <p>The ultimate collection of all SBD Series books. Perfect for serious students, counselors, and marriage educators who want the complete methodology.</p>
+          <div class="course-features">
+            <strong>📚 What's Included (10 Books):</strong>
+            <ul>
+              <li>✅ SBD Compendium - Complete series navigator</li>
+              <li>✅ SBD for Dummies - Entry-level foundation</li>
+              <li>✅ SBD Standard - Core principles</li>
+              <li>✅ SBD Canonical - Legal & societal frameworks</li>
+              <li>✅ Marriage=Porn & Beyond - Modern intimacy challenges</li>
+              <li>✅ SBD Real Couples - Testimonials & stories</li>
+              <li>✅ SBD Heart of Relationship - Emotional intimacy</li>
+              <li>✅ SBD Unequally Yoked - Mixed-faith guidance</li>
+              <li>✅ SBD 2 - Impregnable Assemblage - Advanced concepts</li>
+              <li>🎁 BONUS: Exclusive implementation guide (PDF)</li>
+              <li>🎁 BONUS: 30-day early access to new books</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$254.91</span> <span class="price">$189.99</span></p>
+          <p class="savings">💰 Save $64.92 (26% discount)</p>
+          <a href="payment.html?product=complete-sbd-library&price=189.99" class="buy-button" onclick="purchaseProduct('complete-sbd-library', 189.99, 'Complete SBD Library')">Get Complete Library</a>
+        </div>
+
+        <div class="product thematic-bundle" id="arts-of-marriage-collection">
+          <img src="images/sbd-the-art-of-seduction.jpg" alt="Arts of Marriage Complete Collection" />
+          <h4>Arts of Marriage Complete Collection</h4>
+          <p>Master all dimensions of marital artistry with this complete trilogy covering sexuality, seduction, and passionate intimacy.</p>
+          <div class="course-features">
+            <strong>🎨 What's Included (3 Books):</strong>
+            <ul>
+              <li>✅ The Art of Sexuality - Sacred intimacy mastery</li>
+              <li>✅ The Art of Seduction - Attraction & pursuit</li>
+              <li>✅ The Art of Fucking - Passionate physical connection</li>
+              <li>🎁 BONUS: Private Facebook community access</li>
+              <li>🎁 BONUS: Monthly Q&A with Dr. Coach (3 months)</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$74.97</span> <span class="price">$59.99</span></p>
+          <p class="savings">💰 Save $14.98 (20% discount)</p>
+          <a href="payment.html?product=arts-of-marriage-collection&price=59.99" class="buy-button" onclick="purchaseProduct('arts-of-marriage-collection', 59.99, 'Arts of Marriage Complete Collection')">Get Arts Collection</a>
+        </div>
+
+        <div class="product starter-bundle" id="marriage-foundation-bundle">
+          <img src="images/sbd-dummies.jpg" alt="Marriage Foundation Bundle" />
+          <h4>Marriage Foundation Bundle</h4>
+          <p>Perfect starter package for couples beginning their marriage education journey. Build a strong foundation with essential books.</p>
+          <div class="course-features">
+            <strong>🚀 What's Included (3 Books):</strong>
+            <ul>
+              <li>✅ SBD for Dummies - Beginner-friendly foundation</li>
+              <li>✅ SBD Standard - Core biblical principles</li>
+              <li>✅ Naked & Not Ashamed - Overcoming shame</li>
+              <li>🎁 BONUS: Quick start checklist (PDF)</li>
+              <li>🎁 BONUS: 7-day email implementation course</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$69.97</span> <span class="price">$54.99</span></p>
+          <p class="savings">💰 Save $14.98 (21% discount)</p>
+          <a href="payment.html?product=marriage-foundation-bundle&price=54.99" class="buy-button" onclick="purchaseProduct('marriage-foundation-bundle', 54.99, 'Marriage Foundation Bundle')">Start Your Journey</a>
+        </div>
+
+        <div class="product publication-bundle" id="sbd-starter-magazine">
+          <img src="images/Sex-by-design-magazine.jpg" alt="SBD Starter + Magazine Bundle" />
+          <h4>SBD Starter + Magazine Bundle</h4>
+          <p>Combine essential books with ongoing quarterly insights. Perfect for sustained learning and continuous growth.</p>
+          <div class="course-features">
+            <strong>📖📰 What's Included:</strong>
+            <ul>
+              <li>✅ Marriage Foundation Bundle (3 books worth $54.99)</li>
+              <li>✅ SBD Magazine Annual Subscription ($50.00)</li>
+              <li>🎁 BONUS: Free sample issue sent immediately</li>
+              <li>🎁 BONUS: Digital archive access ($30 value)</li>
+              <li>🎁 BONUS: Priority customer support</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$134.99</span> <span class="price">$89.99</span></p>
+          <p class="savings">💰 Save $45.00 (33% discount)</p>
+          <a href="payment.html?product=sbd-starter-magazine&price=89.99" class="buy-button" onclick="purchaseProduct('sbd-starter-magazine', 89.99, 'SBD Starter + Magazine Bundle')">Get Books + Magazine</a>
+        </div>
+
+        <div class="product seasonal-bundle" id="newlywed-special">
+          <img src="images/naked-not-ashamed.jpg" alt="Newlywed Special Bundle" />
+          <h4>Newlywed Special Bundle</h4>
+          <p>🎉 Special package for newlyweds! Essential books to build extraordinary intimacy from the very beginning of marriage.</p>
+          <div class="course-features">
+            <strong>💒 What's Included (3 Books):</strong>
+            <ul>
+              <li>✅ SBD for Dummies - Perfect beginner foundation</li>
+              <li>✅ Naked & Not Ashamed - Overcome shame together</li>
+              <li>✅ The Arts of Marriage - Master marital intimacy</li>
+              <li>🎁 BONUS: Newlywed checklist & guide (PDF)</li>
+              <li>🎁 BONUS: First year marriage planning template</li>
+              <li>🎁 BONUS: Congratulations card from Dr. Coach</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$69.97</span> <span class="price">$49.99</span></p>
+          <p class="savings">💰 Save $19.98 (29% discount) - Limited Time!</p>
+          <a href="payment.html?product=newlywed-special&price=49.99" class="buy-button" onclick="purchaseProduct('newlywed-special', 49.99, 'Newlywed Special Bundle')">Perfect for Newlyweds</a>
+        </div>
+
+        <div class="product seasonal-bundle" id="anniversary-celebration">
+          <img src="images/sbd-the-heart-of-relationship.jpg" alt="Anniversary Celebration Bundle" />
+          <h4>Anniversary Celebration Bundle</h4>
+          <p>🎊 Celebrate your love with advanced relationship tools. Perfect for couples ready to deepen their connection and passion.</p>
+          <div class="course-features">
+            <strong>💕 What's Included (4 Books):</strong>
+            <ul>
+              <li>✅ Arts of Marriage Complete Collection ($59.99 value)</li>
+              <li>✅ SBD Heart of Relationship - Emotional intimacy</li>
+              <li>🎁 BONUS: Anniversary planning guide (PDF)</li>
+              <li>🎁 BONUS: Romance enhancement worksheets</li>
+              <li>🎁 BONUS: Love letters templates collection</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$84.98</span> <span class="price">$69.99</span></p>
+          <p class="savings">💰 Save $14.99 (18% discount)</p>
+          <a href="payment.html?product=anniversary-celebration&price=69.99" class="buy-button" onclick="purchaseProduct('anniversary-celebration', 69.99, 'Anniversary Celebration Bundle')">Celebrate Your Love</a>
+        </div>
+
+        <div class="product" id="marriage-porn-beyond">
+          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" />
+          <h4>Marriage=Porn & Beyond</h4>
+          <p>A groundbreaking exploration of the intersection between marriage and modern sexual culture. Navigate the complexities of intimacy in the digital age with biblical wisdom.</p>
+          <div class="course-features">
+            <ul>
+              <li>Understanding modern sexual culture</li>
+              <li>Biblical perspective on intimacy challenges</li>
+              <li>Practical strategies for couples</li>
+              <li>Rebuilding authentic connection</li>
+            </ul>
+          </div>
+          <p class="price">$29.99</p>
+          <a href="payment.html?product=marriage-porn-beyond&price=29.99" class="buy-button" onclick="purchaseProduct('marriage-porn-beyond', 29.99, 'Marriage=Porn & Beyond')">Buy Now</a>
+        </div>
+      </div>
+
+      <div class="lead-magnet">
+        <div class="container">
+          <h3>New to SBD? Start with a Free Sample!</h3>
+          <p>Download a free sample issue of SBD Magazine to discover which resources are right for your relationship stage.</p>
+          <form action="mailto:info@marriageducation.com" method="POST" class="email-form">
+            <input type="email" name="email" placeholder="Enter your email for free magazine sample" required />
+            <button type="submit">Get Free Sample Issue</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="magazine.html">Magazine</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p>Email: info@marriageducation.com</p>
+          <p>Training: train@marriageducation.com</p>
+          <p>Orders: orders@marriageducation.com</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/payment-processor.js"></script>
+  <script src="js/email-marketing.js"></script>
+  <script src="js/analytics.js"></script>
+  <script>
+    // Product filtering functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const filterButtons = document.querySelectorAll('.filter-button');
+      const products = document.querySelectorAll('.product');
+
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active class from all buttons
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          
+          // Add active class to clicked button
+          this.classList.add('active');
+          
+          // Get filter type
+          const filter = this.getAttribute('href').substring(1);
+          
+          // Show/hide products based on filter
+          products.forEach(product => {
+            if (filter === 'all') {
+              product.style.display = 'block';
+            } else if (filter === 'sbd-series') {
+              // Show SBD series products
+              if (product.id && (product.id.includes('sbd') || product.querySelector('h4').textContent.includes('SBD'))) {
+                product.style.display = 'block';
+              } else {
+                product.style.display = 'none';
+              }
+            } else if (filter === 'arts-of-marriage') {
+              // Show Arts of Marriage products
+              if (product.classList.contains('arts-of-marriage-category') || 
+                  product.querySelector('h4').textContent.includes('Art of')) {
+                product.style.display = 'block';
+              } else {
+                product.style.display = 'none';
+              }
+            } else if (filter === 'publications') {
+              // Show Publications products
+              if (product.classList.contains('publications-category') || 
+                  product.querySelector('h4').textContent.includes('Magazine') ||
+                  product.querySelector('h4').textContent.includes('Archive')) {
+                product.style.display = 'block';
+              } else {
+                product.style.display = 'none';
+              }
+            } else if (filter === 'bundles') {
+              // Show bundle products
+              if (product.classList.contains('starter-bundle') ||
+                  product.classList.contains('thematic-bundle') ||
+                  product.classList.contains('comprehensive-bundle') ||
+                  product.classList.contains('publication-bundle') ||
+                  product.classList.contains('seasonal-bundle') ||
+                  product.querySelector('h4').textContent.includes('Bundle') ||
+                  product.querySelector('h4').textContent.includes('Collection')) {
+                product.style.display = 'block';
+              } else {
+                product.style.display = 'none';
+              }
+            }
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

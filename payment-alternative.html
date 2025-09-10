@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alternative Payment - Marriage Education</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .payment-option {
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      background: white;
+    }
+    .payment-option:hover {
+      border-color: #007bff;
+    }
+    .payment-option.recommended {
+      border-color: #28a745;
+      background: #f8fff8;
+    }
+    .payment-form {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .pay-button {
+      width: 100%;
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 4px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .pay-button:hover {
+      background: #0051cc;
+    }
+    .paypal-button {
+      background: #ffc439;
+      color: #003087;
+    }
+    .paypal-button:hover {
+      background: #e6b800;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Complete Your Purchase</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="payment-section">
+    <div class="container">
+      <div class="payment-container">
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          <div class="order-item">
+            <span id="product-name">SBD for Dummies</span>
+            <span id="product-price">$19.99</span>
+          </div>
+          <div class="order-total">
+            <strong>Total: <span id="order-total">$19.99</span></strong>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3>Choose Payment Method</h3>
+          
+          <!-- PayPal Hosted Checkout -->
+          <div class="payment-option recommended">
+            <h4>💳 PayPal (Recommended)</h4>
+            <p>Pay securely with PayPal, credit card, or debit card</p>
+            
+            <form id="paypal-form" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+              <input type="hidden" name="cmd" value="_xclick">
+              <input type="hidden" name="business" value="MDSNVRPA8J7UE">
+              <input type="hidden" name="item_name" id="paypal-item-name" value="Marriage Education Product">
+              <input type="hidden" name="amount" id="paypal-amount" value="19.99">
+              <input type="hidden" name="currency_code" value="USD">
+              <input type="hidden" name="return" value="">
+              <input type="hidden" name="cancel_return" value="">
+              <input type="hidden" name="notify_url" value="">
+              <input type="hidden" name="custom" id="paypal-custom" value="">
+              
+              <button type="submit" class="pay-button paypal-button">
+                Pay with PayPal - $<span id="paypal-display-amount">19.99</span>
+              </button>
+            </form>
+            
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure Payment</span>
+              </div>
+              <div class="security-badge">
+                <span>🛡️</span>
+                <span>Buyer Protection</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stripe Credit Card -->
+          <div class="payment-option">
+            <h4>💳 Credit/Debit Card</h4>
+            <p>Pay directly with your credit or debit card</p>
+            
+            <div class="payment-form">
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+              </div>
+
+              <div class="form-group">
+                <label>Card Information</label>
+                <div id="card-element">
+                  <!-- Stripe Elements will create form elements here -->
+                </div>
+                <div id="card-errors" role="alert"></div>
+              </div>
+
+              <button type="button" id="stripe-submit" class="pay-button">
+                Pay with Card - $<span id="stripe-display-amount">19.99</span>
+              </button>
+            </div>
+            
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>SSL Encrypted</span>
+              </div>
+              <div class="security-badge">
+                <span>💳</span>
+                <span>PCI Compliant</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Contact Option -->
+          <div class="payment-option">
+            <h4>📞 Need Help?</h4>
+            <p>Having payment issues? Contact us directly:</p>
+            <p><strong>Email:</strong> support@marriageducation.com</p>
+            <p><strong>Phone:</strong> (555) 123-4567</p>
+            <p>We can process your order manually and send you secure payment links.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Security</h4>
+          <p>🔒 SSL Encrypted</p>
+          <p>💳 Secure Payments</p>
+          <p>🛡️ Privacy Protected</p>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <p>Email: support@marriageducation.com</p>
+          <p>Response within 24 hours</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    // Get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get product details from URL
+      const productId = getUrlParameter('product');
+      const productPrice = getUrlParameter('price') || '19.99';
+      const productName = getUrlParameter('name') || 'Marriage Education Product';
+
+      console.log('Product details:', { productId, productPrice, productName });
+
+      // Update display
+      document.getElementById('product-name').textContent = productName;
+      document.getElementById('product-price').textContent = '$' + productPrice;
+      document.getElementById('order-total').textContent = '$' + productPrice;
+      
+      // Update PayPal form
+      document.getElementById('paypal-item-name').value = productName;
+      document.getElementById('paypal-amount').value = productPrice;
+      document.getElementById('paypal-custom').value = productId || 'default';
+      document.getElementById('paypal-display-amount').textContent = productPrice;
+      
+      // Update Stripe display
+      document.getElementById('stripe-display-amount').textContent = productPrice;
+      
+      // Set return URLs for PayPal
+      const currentDomain = window.location.origin;
+      document.querySelector('input[name="return"]').value = currentDomain + '/payment-success.html?method=paypal&product=' + productId;
+      document.querySelector('input[name="cancel_return"]').value = currentDomain + '/payment.html?product=' + productId + '&price=' + productPrice + '&name=' + encodeURIComponent(productName);
+
+      // Initialize Stripe
+      if (typeof Stripe !== 'undefined') {
+        const stripe = Stripe('pk_test_your_stripe_publishable_key_here');
+        const elements = stripe.elements();
+
+        const cardElement = elements.create('card', {
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#424770',
+              '::placeholder': {
+                color: '#aab7c4',
+              },
+            },
+            invalid: {
+              color: '#9e2146',
+            },
+          },
+        });
+
+        cardElement.mount('#card-element');
+
+        cardElement.on('change', function(event) {
+          const displayError = document.getElementById('card-errors');
+          if (event.error) {
+            displayError.textContent = event.error.message;
+          } else {
+            displayError.textContent = '';
+          }
+        });
+
+        // Handle Stripe form submission
+        document.getElementById('stripe-submit').addEventListener('click', function() {
+          const email = document.getElementById('email').value;
+          const name = document.getElementById('name').value;
+          
+          if (!email || !name) {
+            alert('Please fill in all required fields.');
+            return;
+          }
+
+          // Create payment method and handle with your backend
+          // This is a placeholder - you'll need to implement Stripe payment processing
+          alert('Stripe payment processing would be implemented here.\n\nFor now, please use the PayPal option above.');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

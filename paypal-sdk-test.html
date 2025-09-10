@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal SDK Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 2rem; }
+    .status { padding: 1rem; margin: 1rem 0; border-radius: 4px; text-align: center; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .loading { background: #d1ecf1; color: #0c5460; }
+    #paypal-test { margin: 2rem 0; min-height: 60px; border: 2px dashed #ccc; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>🔧 PayPal SDK Loading Test</h1>
+  
+  <div id="sdk-status" class="status loading">🔄 Loading PayPal SDK...</div>
+  
+  <div id="paypal-test">
+    <div style="text-align: center; color: #666;">PayPal button will appear here...</div>
+  </div>
+  
+  <div id="debug-info">
+    <h3>Debug Information</h3>
+    <div id="debug-output"></div>
+  </div>
+
+  <!-- Load PayPal SDK with error handling -->
+  <script 
+    src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD&intent=capture&components=buttons"
+    onload="handleSDKLoad()"
+    onerror="handleSDKError()"
+    async>
+  </script>
+
+  <script>
+    function log(message) {
+      const debugOutput = document.getElementById('debug-output');
+      const timestamp = new Date().toLocaleTimeString();
+      debugOutput.innerHTML += `[${timestamp}] ${message}<br>`;
+      console.log(`[${timestamp}] ${message}`);
+    }
+
+    function handleSDKLoad() {
+      log('✅ PayPal SDK script loaded successfully');
+      checkPayPalAvailability();
+    }
+
+    function handleSDKError() {
+      log('❌ PayPal SDK script failed to load');
+      document.getElementById('sdk-status').innerHTML = '❌ PayPal SDK failed to load';
+      document.getElementById('sdk-status').className = 'status error';
+    }
+
+    function checkPayPalAvailability() {
+      log('🔍 Checking if PayPal object is available...');
+      
+      if (typeof paypal !== 'undefined') {
+        log('✅ PayPal object is available');
+        document.getElementById('sdk-status').innerHTML = '✅ PayPal SDK loaded successfully';
+        document.getElementById('sdk-status').className = 'status success';
+        initializeButton();
+      } else {
+        log('⏳ PayPal object not yet available, waiting...');
+        setTimeout(checkPayPalAvailability, 500);
+      }
+    }
+
+    function initializeButton() {
+      log('🚀 Initializing PayPal button...');
+      
+      try {
+        paypal.Buttons({
+          style: {
+            layout: 'vertical',
+            color: 'gold'
+          },
+          createOrder: function(data, actions) {
+            log('📝 Creating test order...');
+            return actions.order.create({
+              purchase_units: [{
+                amount: { value: '1.00', currency_code: 'USD' },
+                description: 'Test Payment'
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            log('✅ Payment approved!');
+            alert('✅ Test payment successful!');
+            return actions.order.capture();
+          },
+          onError: function(err) {
+            log('❌ PayPal error: ' + JSON.stringify(err));
+          },
+          onCancel: function(data) {
+            log('🚫 Payment cancelled');
+          }
+        }).render('#paypal-test').then(function() {
+          log('✅ PayPal button rendered successfully');
+        }).catch(function(error) {
+          log('❌ Button render failed: ' + error.message);
+        });
+      } catch (error) {
+        log('❌ Error initializing button: ' + error.message);
+      }
+    }
+
+    // Start checking immediately
+    document.addEventListener('DOMContentLoaded', function() {
+      log('📱 DOM loaded, starting PayPal test...');
+      
+      // Check if PayPal is already available
+      if (typeof paypal !== 'undefined') {
+        handleSDKLoad();
+      } else {
+        log('⏳ Waiting for PayPal SDK to load...');
+      }
+    });
+
+    // Global error handler
+    window.addEventListener('error', function(event) {
+      log('❌ Global error: ' + event.error.message);
+    });
+  </script>
+</body>
+</html>

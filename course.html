@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Viewer - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/course-viewer.css" />
+  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
+</head>
+<body class="course-page">
+  <header>
+    <div class="container">
+      <h1>Course: <span class="course-title">Foundations Course</span></h1>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="my-courses.html">My Courses</a>
+        <a href="downloads.html">Downloads</a>
+        <a href="profile.html">Profile</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="course-container">
+    <div class="course-sidebar">
+      <div class="course-progress">
+        <h3>Course Progress</h3>
+        <div class="overall-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 45%"></div>
+          </div>
+          <span class="progress-text">45% Complete</span>
+        </div>
+      </div>
+
+      <div class="lesson-list">
+        <h3>Lessons</h3>
+        <div class="module">
+          <h4>Module 1: Foundations</h4>
+          <ul class="lesson-items">
+            <li class="lesson-item completed">
+              <span class="lesson-status">✓</span>
+              <a href="?lesson=1" class="lesson-link" data-lesson-id="1">Introduction to Marriage Education</a>
+              <span class="lesson-duration">12:30</span>
+            </li>
+            <li class="lesson-item completed">
+              <span class="lesson-status">✓</span>
+              <a href="?lesson=2" class="lesson-link" data-lesson-id="2">Understanding Intimacy</a>
+              <span class="lesson-duration">18:45</span>
+            </li>
+            <li class="lesson-item current">
+              <span class="lesson-status">▶</span>
+              <a href="?lesson=3" class="lesson-link" data-lesson-id="3">Communication Basics</a>
+              <span class="lesson-duration">22:15</span>
+            </li>
+            <li class="lesson-item">
+              <span class="lesson-status">⚪</span>
+              <a href="?lesson=4" class="lesson-link" data-lesson-id="4">Building Trust</a>
+              <span class="lesson-duration">16:30</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="module">
+          <h4>Module 2: Advanced Concepts</h4>
+          <ul class="lesson-items">
+            <li class="lesson-item locked">
+              <span class="lesson-status">🔒</span>
+              <span class="lesson-name">Deeper Intimacy</span>
+              <span class="lesson-duration">25:00</span>
+            </li>
+            <li class="lesson-item locked">
+              <span class="lesson-status">🔒</span>
+              <span class="lesson-name">Conflict Resolution</span>
+              <span class="lesson-duration">20:15</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-main">
+      <div class="lesson-header">
+        <h2 class="lesson-title">Communication Basics</h2>
+        <div class="lesson-meta">
+          <span class="lesson-number">Lesson 3 of 6</span>
+          <span class="lesson-duration">22:15</span>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <video
+          id="course-video"
+          class="video-js"
+          controls
+          preload="auto"
+          width="100%"
+          height="400"
+          data-setup="{}">
+          <source src="/videos/foundations/lesson-3.mp4" type="video/mp4" />
+          <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+          </p>
+        </video>
+      </div>
+
+      <div class="lesson-content">
+        <div class="lesson-description">
+          <h3>What You'll Learn</h3>
+          <ul>
+            <li>The foundations of healthy communication in marriage</li>
+            <li>Active listening techniques that create deeper connection</li>
+            <li>How to express needs without triggering defensiveness</li>
+            <li>Common communication pitfalls and how to avoid them</li>
+          </ul>
+        </div>
+
+        <div class="lesson-resources">
+          <h3>Lesson Resources</h3>
+          <div class="resource-links">
+            <a href="/downloads/communication-worksheet.pdf" class="resource-link" target="_blank">
+              📄 Communication Worksheet
+            </a>
+            <a href="/downloads/listening-exercises.pdf" class="resource-link" target="_blank">
+              📋 Listening Exercises
+            </a>
+            <a href="/downloads/conversation-starters.pdf" class="resource-link" target="_blank">
+              💬 Conversation Starters
+            </a>
+          </div>
+        </div>
+
+        <div class="lesson-notes">
+          <h3>My Notes</h3>
+          <textarea id="lesson-notes" placeholder="Take notes during the lesson..."></textarea>
+          <button id="save-notes" class="save-notes-btn">Save Notes</button>
+        </div>
+      </div>
+
+      <div class="lesson-navigation">
+        <button class="nav-btn prev-lesson-btn" data-prev-lesson="2">
+          ← Previous Lesson
+        </button>
+        <button class="nav-btn next-lesson-btn" data-next-lesson="4" style="display: none;">
+          Next Lesson →
+        </button>
+        <button class="nav-btn mark-complete-btn">
+          Mark as Complete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Need Help?</h4>
+          <p>Email: support@marriageducation.com</p>
+          <p>Response within 24 hours</p>
+        </div>
+        <div class="footer-section">
+          <h4>Technical Issues?</h4>
+          <p>Video not playing? Try refreshing the page.</p>
+          <p>Still having issues? Contact support.</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+  <script src="js/course-delivery.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

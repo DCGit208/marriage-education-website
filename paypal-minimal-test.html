@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal PayPal Test - BTHPAY</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .test-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .status {
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    #debug-output {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 1rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-box">
+    <h1>🔧 PayPal BTHPAY App Test</h1>
+    
+    <div class="info">
+      <strong>Testing Configuration:</strong><br>
+      App: BTHPAY<br>
+      Client ID: AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO<br>
+      Merchant ID: MDSNVRPA8J7UE
+    </div>
+
+    <div id="status-container">
+      <div class="info">🔄 Initializing PayPal SDK...</div>
+    </div>
+
+    <h3>Test Payment: $1.00 USD</h3>
+    <div id="paypal-minimal-button"></div>
+
+    <h3>Debug Output</h3>
+    <div id="debug-output">Waiting for PayPal SDK...</div>
+  </div>
+
+  <!-- Load PayPal SDK with minimal configuration -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD&intent=capture&components=buttons"></script>
+
+  <script>
+    // Debug logging
+    function debugLog(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const debugOutput = document.getElementById('debug-output');
+      const logMessage = `[${timestamp}] ${message}\n`;
+      debugOutput.textContent += logMessage;
+      debugOutput.scrollTop = debugOutput.scrollHeight;
+      
+      console.log(`[${timestamp}] ${message}`);
+    }
+
+    function updateStatus(message, type = 'info') {
+      const statusContainer = document.getElementById('status-container');
+      const statusClass = type === 'error' ? 'error' : 
+                         type === 'success' ? 'success' : 
+                         type === 'warning' ? 'warning' : 'info';
+      statusContainer.innerHTML = `<div class="${statusClass}">${message}</div>`;
+    }
+
+    // Global error handler
+    window.addEventListener('error', function(event) {
+      debugLog(`Global Error: ${event.error.message}`, 'error');
+      updateStatus(`❌ Global Error: ${event.error.message}`, 'error');
+    });
+
+    // Check PayPal SDK status
+    function checkPayPalSDK() {
+      debugLog('Checking PayPal SDK availability...');
+      
+      if (typeof paypal === 'undefined') {
+        debugLog('PayPal SDK not available', 'error');
+        updateStatus('❌ PayPal SDK failed to load', 'error');
+        return false;
+      }
+      
+      debugLog('PayPal SDK loaded successfully', 'success');
+      updateStatus('✅ PayPal SDK loaded successfully', 'success');
+      return true;
+    }
+
+    // Initialize minimal PayPal button
+    function initializePayPal() {
+      if (!checkPayPalSDK()) {
+        return;
+      }
+
+      debugLog('Initializing PayPal button...');
+      updateStatus('🔄 Creating PayPal button...', 'info');
+
+      try {
+        paypal.Buttons({
+          // Minimal style configuration
+          style: {
+            layout: 'vertical',
+            color: 'gold',
+            shape: 'rect'
+          },
+          
+          // Create order with minimal data
+          createOrder: function(data, actions) {
+            debugLog('createOrder function called');
+            debugLog(`Actions object type: ${typeof actions}`);
+            debugLog(`Actions.order exists: ${!!actions.order}`);
+            
+            const orderRequest = {
+              purchase_units: [{
+                amount: {
+                  value: '1.00',
+                  currency_code: 'USD'
+                },
+                description: 'Test Payment - Marriage Education'
+              }]
+            };
+            
+            debugLog(`Order request: ${JSON.stringify(orderRequest, null, 2)}`);
+            
+            try {
+              return actions.order.create(orderRequest).then(function(orderId) {
+                debugLog(`Order created successfully: ${orderId}`, 'success');
+                updateStatus('✅ Order created successfully', 'success');
+                return orderId;
+              }).catch(function(error) {
+                debugLog(`Order creation failed: ${error.message}`, 'error');
+                debugLog(`Full error: ${JSON.stringify(error, null, 2)}`, 'error');
+                updateStatus(`❌ Order creation failed: ${error.message}`, 'error');
+                throw error;
+              });
+            } catch (syncError) {
+              debugLog(`Synchronous error in createOrder: ${syncError.message}`, 'error');
+              updateStatus(`❌ Sync error in createOrder: ${syncError.message}`, 'error');
+              throw syncError;
+            }
+          },
+          
+          // Handle approval
+          onApprove: function(data, actions) {
+            debugLog(`Payment approved: Order ID ${data.orderID}`, 'success');
+            updateStatus('✅ Payment approved - capturing...', 'success');
+            
+            return actions.order.capture().then(function(details) {
+              debugLog(`Payment captured: ${JSON.stringify(details, null, 2)}`, 'success');
+              updateStatus(`✅ Payment successful! Transaction ID: ${details.id}`, 'success');
+              alert(`✅ Test payment successful!\n\nTransaction ID: ${details.id}\nPayer: ${details.payer.name.given_name} ${details.payer.name.surname}`);
+            }).catch(function(error) {
+              debugLog(`Capture failed: ${error.message}`, 'error');
+              updateStatus(`❌ Payment capture failed: ${error.message}`, 'error');
+            });
+          },
+          
+          // Handle errors
+          onError: function(err) {
+            debugLog(`PayPal Error occurred: ${JSON.stringify(err, null, 2)}`, 'error');
+            updateStatus(`❌ PayPal Error: ${err.message || 'Unknown error'}`, 'error');
+            
+            // Try to get more specific error info
+            if (err.details) {
+              debugLog(`Error details: ${JSON.stringify(err.details, null, 2)}`, 'error');
+            }
+            if (err.debug_id) {
+              debugLog(`Debug ID: ${err.debug_id}`, 'error');
+            }
+          },
+          
+          // Handle cancellation
+          onCancel: function(data) {
+            debugLog(`Payment cancelled: ${JSON.stringify(data)}`, 'warning');
+            updateStatus('⚠️ Payment cancelled by user', 'warning');
+          }
+          
+        }).render('#paypal-minimal-button').then(function() {
+          debugLog('PayPal button rendered successfully', 'success');
+          updateStatus('✅ PayPal button ready', 'success');
+        }).catch(function(renderError) {
+          debugLog(`Button render failed: ${renderError.message}`, 'error');
+          debugLog(`Full render error: ${JSON.stringify(renderError, null, 2)}`, 'error');
+          updateStatus(`❌ Button render failed: ${renderError.message}`, 'error');
+        });
+        
+      } catch (initError) {
+        debugLog(`Initialization error: ${initError.message}`, 'error');
+        updateStatus(`❌ Initialization failed: ${initError.message}`, 'error');
+      }
+    }
+
+    // Wait for DOM and PayPal SDK
+    document.addEventListener('DOMContentLoaded', function() {
+      debugLog('DOM Content Loaded');
+      
+      // Check if PayPal is already available
+      if (typeof paypal !== 'undefined') {
+        debugLog('PayPal SDK already available');
+        setTimeout(initializePayPal, 100);
+      } else {
+        debugLog('Waiting for PayPal SDK to load...');
+        // Poll for PayPal availability
+        let attempts = 0;
+        const maxAttempts = 50;
+        const pollInterval = setInterval(function() {
+          attempts++;
+          debugLog(`Polling attempt ${attempts}/${maxAttempts}`);
+          
+          if (typeof paypal !== 'undefined') {
+            clearInterval(pollInterval);
+            debugLog('PayPal SDK became available');
+            initializePayPal();
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            debugLog('PayPal SDK failed to load after maximum attempts', 'error');
+            updateStatus('❌ PayPal SDK failed to load', 'error');
+          }
+        }, 200);
+      }
+    });
+  </script>
+</body>
+</html>

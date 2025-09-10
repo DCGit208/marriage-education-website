@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Payment Successful</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="magazine.html">Magazine</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="success-section">
+    <div class="container">
+      <div class="success-container">
+        <div class="success-icon">
+          <span>✅</span>
+        </div>
+        <h2>Thank You for Your Purchase!</h2>
+        <p class="success-message">Your payment has been processed successfully.</p>
+        
+        <div class="order-details">
+          <h3>Order Details</h3>
+          <div id="order-info">
+            <p><strong>Product:</strong> <span id="order-product">Loading...</span></p>
+            <p><strong>Amount:</strong> <span id="order-amount">Loading...</span></p>
+            <p><strong>Order ID:</strong> <span id="order-id">Loading...</span></p>
+            <p><strong>Date:</strong> <span id="order-date">Loading...</span></p>
+          </div>
+        </div>
+
+        <div class="next-steps">
+          <h3>What's Next?</h3>
+          <ul>
+            <li>📧 You'll receive an email confirmation shortly</li>
+            <li>📚 Digital products will be available for download immediately</li>
+            <li>📞 For support, contact us at support@marriageducation.com</li>
+          </ul>
+        </div>
+
+        <div class="action-buttons">
+          <a href="shop.html" class="button secondary">Continue Shopping</a>
+          <a href="courses.html" class="button primary">View Courses</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <p>Email: support@marriageducation.com</p>
+          <p>Response within 24 hours</p>
+        </div>
+        <div class="footer-section">
+          <h4>Follow Us</h4>
+          <p>Stay connected for updates and insights</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get URL parameters
+      function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+      }
+
+      // Get order details from URL or localStorage
+      const orderId = getUrlParameter('order');
+      const productId = getUrlParameter('product');
+      
+      // Try to get order details from localStorage
+      const lastOrder = localStorage.getItem('lastOrder');
+      if (lastOrder) {
+        const orderData = JSON.parse(lastOrder);
+        document.getElementById('order-product').textContent = orderData.product_name || 'Marriage Education Product';
+        document.getElementById('order-amount').textContent = '$' + (orderData.amount || '0.00');
+        document.getElementById('order-id').textContent = orderData.paypal_order_id || orderId || 'N/A';
+        document.getElementById('order-date').textContent = new Date(orderData.timestamp || Date.now()).toLocaleDateString();
+      } else {
+        // Fallback to URL parameters
+        document.getElementById('order-product').textContent = getUrlParameter('name') || 'Marriage Education Product';
+        document.getElementById('order-amount').textContent = '$' + (getUrlParameter('price') || '0.00');
+        document.getElementById('order-id').textContent = orderId || 'N/A';
+        document.getElementById('order-date').textContent = new Date().toLocaleDateString();
+      }
+
+      // Clear the stored order after displaying
+      if (lastOrder) {
+        localStorage.removeItem('lastOrder');
+      }
+    });
+  </script>
+
+  <style>
+    .success-section {
+      padding: 4rem 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+    }
+
+    .success-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .success-container h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+    }
+
+    .success-message {
+      color: #27ae60;
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+
+    .order-details {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+
+    .order-details h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .order-details p {
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .next-steps {
+      text-align: left;
+      margin: 2rem 0;
+    }
+
+    .next-steps h3 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .next-steps ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .next-steps li {
+      padding: 0.5rem 0;
+      color: #555;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .button {
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .button.secondary {
+      background: #f8f9fa;
+      color: #333;
+      border: 2px solid #e9ecef;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .success-container {
+        margin: 1rem;
+        padding: 2rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .button {
+        text-align: center;
+      }
+    }
+  </style>
+</body>
+</html>

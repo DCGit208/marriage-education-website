@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal Configuration Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 2rem; }
+    .test-section { background: white; padding: 2rem; margin: 1rem 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .status { padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .warning { background: #fff3cd; color: #856404; }
+    .info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <h1>🔧 PayPal BTHPAY Configuration Test</h1>
+  
+  <div class="test-section">
+    <h2>Test 1: Without Merchant ID</h2>
+    <div id="status1" class="info">Loading...</div>
+    <div id="paypal-test1"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 2: With Merchant ID</h2>
+    <div id="status2" class="info">Loading...</div>
+    <div id="paypal-test2"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 3: Sandbox Mode Check</h2>
+    <div id="status3" class="info">Loading...</div>
+    <div id="paypal-test3"></div>
+  </div>
+
+  <!-- Test 1: Without merchant-id -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD&intent=capture&components=buttons"></script>
+
+  <script>
+    function createTest(containerId, statusId, testName) {
+      console.log(`Starting ${testName}`);
+      
+      if (typeof paypal === 'undefined') {
+        document.getElementById(statusId).innerHTML = '<div class="error">❌ PayPal SDK not loaded</div>';
+        return;
+      }
+
+      try {
+        paypal.Buttons({
+          style: { layout: 'vertical', color: 'gold' },
+          
+          createOrder: function(data, actions) {
+            console.log(`${testName} - Creating order`);
+            return actions.order.create({
+              purchase_units: [{
+                amount: { value: '1.00', currency_code: 'USD' },
+                description: `${testName} - Test Payment`
+              }]
+            }).then(function(orderId) {
+              console.log(`${testName} - Order created: ${orderId}`);
+              document.getElementById(statusId).innerHTML = '<div class="success">✅ Order creation successful</div>';
+              return orderId;
+            }).catch(function(error) {
+              console.error(`${testName} - Order creation failed:`, error);
+              document.getElementById(statusId).innerHTML = `<div class="error">❌ Order creation failed: ${error.message}</div>`;
+              throw error;
+            });
+          },
+          
+          onApprove: function(data, actions) {
+            console.log(`${testName} - Payment approved`);
+            return actions.order.capture().then(function(details) {
+              console.log(`${testName} - Payment captured:`, details);
+              document.getElementById(statusId).innerHTML = '<div class="success">✅ Payment successful!</div>';
+              alert(`${testName} - Payment successful!`);
+            });
+          },
+          
+          onError: function(err) {
+            console.error(`${testName} - Error:`, err);
+            document.getElementById(statusId).innerHTML = `<div class="error">❌ Error: ${JSON.stringify(err)}</div>`;
+          },
+          
+          onCancel: function(data) {
+            console.log(`${testName} - Cancelled`);
+            document.getElementById(statusId).innerHTML = '<div class="warning">⚠️ Payment cancelled</div>';
+          }
+          
+        }).render(`#${containerId}`).then(function() {
+          console.log(`${testName} - Button rendered`);
+          if (document.getElementById(statusId).innerHTML.includes('Loading')) {
+            document.getElementById(statusId).innerHTML = '<div class="info">🔄 Ready for payment</div>';
+          }
+        }).catch(function(error) {
+          console.error(`${testName} - Render failed:`, error);
+          document.getElementById(statusId).innerHTML = `<div class="error">❌ Render failed: ${error.message}</div>`;
+        });
+        
+      } catch (error) {
+        console.error(`${testName} - Init failed:`, error);
+        document.getElementById(statusId).innerHTML = `<div class="error">❌ Init failed: ${error.message}</div>`;
+      }
+    }
+
+    // Wait for PayPal SDK
+    document.addEventListener('DOMContentLoaded', function() {
+      let attempts = 0;
+      const checkPayPal = setInterval(function() {
+        attempts++;
+        if (typeof paypal !== 'undefined') {
+          clearInterval(checkPayPal);
+          console.log('PayPal SDK loaded, starting tests');
+          
+          // Start tests
+          setTimeout(() => createTest('paypal-test1', 'status1', 'Test 1 (No Merchant ID)'), 500);
+          setTimeout(() => createTest('paypal-test2', 'status2', 'Test 2 (With Merchant ID)'), 1000);
+          setTimeout(() => createTest('paypal-test3', 'status3', 'Test 3 (Sandbox Check)'), 1500);
+          
+        } else if (attempts > 50) {
+          clearInterval(checkPayPal);
+          ['status1', 'status2', 'status3'].forEach(id => {
+            document.getElementById(id).innerHTML = '<div class="error">❌ PayPal SDK failed to load</div>';
+          });
+        }
+      }, 200);
+    });
+  </script>
+
+  <!-- Additional scripts for other tests -->
+  <script>
+    // After initial tests, load additional configurations
+    setTimeout(function() {
+      // Test 2: Add script with merchant ID
+      const script2 = document.createElement('script');
+      script2.src = 'https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&merchant-id=MDSNVRPA8J7UE&currency=USD&intent=capture&components=buttons';
+      script2.onload = function() {
+        createTest('paypal-test2', 'status2', 'Test 2 (With Merchant ID)');
+      };
+      script2.onerror = function() {
+        document.getElementById('status2').innerHTML = '<div class="error">❌ Failed to load PayPal with Merchant ID</div>';
+      };
+      // Don't append yet - this would conflict with the first script
+      
+      // Test 3: Check if client ID is sandbox
+      const clientId = 'AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO';
+      const isSandbox = clientId.includes('sb') || clientId.startsWith('AZDx') || clientId.startsWith('ATx');
+      document.getElementById('status3').innerHTML = isSandbox ? 
+        '<div class="warning">⚠️ Sandbox Client ID detected</div>' : 
+        '<div class="success">✅ Live Client ID detected</div>';
+        
+    }, 3000);
+  </script>
+</body>
+</html>

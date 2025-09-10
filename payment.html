@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://js.stripe.com/v3/"></script>
+  <!-- PayPal SDK with simplified configuration -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD&intent=capture&components=buttons"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Complete Your Purchase</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="payment-section">
+    <div class="container">
+      <div class="payment-container">
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          <div class="order-item">
+            <span id="modal-product-name">SBD for Dummies</span>
+            <span id="modal-product-price">$19.99</span>
+          </div>
+          <div class="order-total">
+            <strong>Total: <span id="order-total">$19.99</span></strong>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3>Choose Payment Method</h3>
+          
+          <div class="payment-tabs">
+            <button class="tab-button" data-tab="stripe">Credit Card</button>
+            <button class="tab-button active" data-tab="paypal">PayPal</button>
+          </div>
+
+          <!-- Stripe Payment Form -->
+          <div class="payment-tab" id="stripe-tab">
+            <div class="credit-card-notice">
+              <h4>💳 Credit Card Payment</h4>
+              <p><strong>Coming Soon!</strong> Credit card payments are currently being set up.</p>
+              <p>For now, please use the <strong>PayPal option</strong> which accepts credit cards, debit cards, and PayPal accounts.</p>
+            </div>
+            
+            <form id="stripe-payment-form" class="payment-form-disabled">
+              <div class="form-group">
+                <label for="customer-email">Email Address</label>
+                <input type="email" id="customer-email" name="email" placeholder="Currently disabled - Use PayPal tab" disabled />
+              </div>
+              
+              <div class="form-group">
+                <label for="customer-name">Full Name</label>
+                <input type="text" id="customer-name" name="name" placeholder="Currently disabled - Use PayPal tab" disabled />
+              </div>
+
+              <div class="form-group">
+                <label>Card Information</label>
+                <div id="card-element" class="card-element-disabled">
+                  <div class="card-placeholder">
+                    Credit card processing coming soon - Please use PayPal
+                  </div>
+                </div>
+                <div id="card-errors" role="alert"></div>
+              </div>
+
+              <button type="button" id="stripe-submit" class="pay-button" disabled>
+                Credit Card Coming Soon - Use PayPal
+              </button>
+              
+              <div class="security-badges">
+                <div class="security-badge">
+                  <span>🔒</span>
+                  <span>SSL Encrypted</span>
+                </div>
+                <div class="security-badge">
+                  <span>💳</span>
+                  <span>PCI Compliant</span>
+                </div>
+                <div class="security-badge">
+                  <span>🛡️</span>
+                  <span>Fraud Protected</span>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- PayPal Payment -->
+          <div class="payment-tab active" id="paypal-tab">
+            <div id="paypal-button-container"></div>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure Payment</span>
+              </div>
+              <div class="security-badge">
+                <span>🛡️</span>
+                <span>Buyer Protection</span>
+              </div>
+              <div class="security-badge">
+                <span>⚡</span>
+                <span>Instant Processing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Payment Modal -->
+  <div id="payment-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Complete Your Purchase</h2>
+      <div class="modal-body">
+        <!-- Payment content will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Security</h4>
+          <p>🔒 SSL Encrypted</p>
+          <p>💳 Secure Payments</p>
+          <p>🛡️ Privacy Protected</p>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <p>Email: support@marriageducation.com</p>
+          <p>Response within 24 hours</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/payment-processor.js"></script>
+  <script src="js/analytics.js"></script>
+  <script>
+    // Get URL parameters function
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Initialize payment page
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 Payment page loading...');
+      
+      // Get product details from URL
+      const productId = getUrlParameter('product');
+      const productPrice = getUrlParameter('price');
+      const productName = getUrlParameter('name') || 'Marriage Education Product';
+
+      console.log('📋 Product details:', { productId, productPrice, productName });
+
+      // Update order summary
+      if (productName && productPrice) {
+        document.getElementById('modal-product-name').textContent = productName;
+        document.getElementById('modal-product-price').textContent = '$' + productPrice;
+        document.getElementById('order-total').textContent = '$' + productPrice;
+      }
+
+      // PayPal initialization function - simplified approach
+      function initializePayPal() {
+        console.log('🔍 Initializing PayPal...');
+        
+        if (typeof paypal === 'undefined') {
+          console.error('❌ PayPal SDK not available');
+          document.getElementById('paypal-button-container').innerHTML = 
+            '<div class="error-message">❌ PayPal SDK failed to load. Please refresh the page.</div>';
+          return false;
+        }
+
+        console.log('✅ PayPal SDK loaded, creating button...');
+        
+        try {
+          paypal.Buttons({
+            style: {
+              layout: 'vertical',
+              color: 'gold',
+              shape: 'rect',
+              label: 'paypal'
+            },
+            
+            createOrder: function(data, actions) {
+              console.log('🚀 Creating PayPal order...');
+              
+              const price = parseFloat(productPrice || '19.99').toFixed(2);
+              console.log('Order price:', price);
+              
+              // Simplified order structure to avoid PAYMENT_DENIED
+              return actions.order.create({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                  amount: {
+                    currency_code: 'USD',
+                    value: price
+                  },
+                  description: productName || 'Marriage Education Product'
+                }]
+              });
+            },
+            
+            onApprove: function(data, actions) {
+              console.log('✅ Payment approved, capturing...');
+              
+              return actions.order.capture().then(function(details) {
+                console.log('✅ Payment captured:', details);
+                
+                // Store order details
+                const orderInfo = {
+                  paypal_order_id: details.id,
+                  product_id: productId,
+                  product_name: productName,
+                  amount: productPrice,
+                  payer_email: details.payer?.email_address,
+                  payer_name: (details.payer?.name?.given_name || '') + ' ' + (details.payer?.name?.surname || ''),
+                  transaction_time: new Date().toISOString()
+                };
+                
+                localStorage.setItem('payment_success_info', JSON.stringify(orderInfo));
+                
+                // Redirect to success page
+                window.location.href = 'payment-success.html?order_id=' + details.id;
+              });
+            },
+            
+            onError: function(err) {
+              console.error('❌ PayPal error:', err);
+              
+              let message = 'Payment error occurred.';
+              if (err.message?.includes('PAYMENT_DENIED')) {
+                message = 'Payment was declined. This may be due to:\n• Insufficient funds\n• Payment method restrictions\n• Regional limitations\n\nPlease try a different payment method or contact support.';
+              }
+              
+              alert('❌ ' + message);
+            },
+            
+            onCancel: function(data) {
+              console.log('🚫 Payment cancelled');
+              alert('Payment was cancelled.');
+            }
+            
+          }).render('#paypal-button-container');
+          
+        } catch (error) {
+          console.error('❌ PayPal initialization error:', error);
+          document.getElementById('paypal-button-container').innerHTML = 
+            '<div class="error-message">❌ PayPal initialization failed. Please try refreshing the page.</div>';
+        }
+      }
+
+      // Wait for PayPal SDK
+      if (typeof paypal !== 'undefined') {
+        initializePayPal();
+      } else {
+        let attempts = 0;
+        const pollInterval = setInterval(function() {
+          attempts++;
+          
+          if (typeof paypal !== 'undefined') {
+            clearInterval(pollInterval);
+            initializePayPal();
+          } else if (attempts >= 50) {
+            clearInterval(pollInterval);
+            document.getElementById('paypal-button-container').innerHTML = 
+              '<div class="error-message">❌ PayPal failed to load. Please refresh the page.</div>';
+          }
+        }, 200);
+      }
+
+      // Initialize Stripe Elements
+      if (typeof Stripe !== 'undefined') {
+        const stripe = Stripe('pk_test_your_stripe_publishable_key_here');
+        const elements = stripe.elements();
+
+        const cardElement = elements.create('card', {
+          style: {
+            base: {
+              fontSize: '16px',
+              color: '#424770',
+              '::placeholder': {
+                color: '#aab7c4',
+              },
+            },
+            invalid: {
+              color: '#9e2146',
+            },
+          },
+        });
+
+        cardElement.mount('#card-element');
+
+        cardElement.on('change', function(event) {
+          const displayError = document.getElementById('card-errors');
+          if (event.error) {
+            displayError.textContent = event.error.message;
+          } else {
+            displayError.textContent = '';
+          }
+        });
+      }
+
+      // Payment tab switching
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+          const tabName = this.dataset.tab;
+          
+          document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          
+          document.querySelectorAll('.payment-tab').forEach(tab => tab.classList.remove('active'));
+          document.getElementById(tabName + '-tab').classList.add('active');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

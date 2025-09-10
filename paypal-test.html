@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal Test - Marriage Education</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .test-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .error-box {
+      background: #ffebee;
+      border: 1px solid #f44336;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .success-box {
+      background: #e8f5e8;
+      border: 1px solid #4caf50;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    #paypal-test-button {
+      margin: 2rem 0;
+    }
+    .log-section {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .log-entry {
+      font-family: monospace;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem;
+      background: white;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>PayPal Integration Test</h1>
+    
+    <div class="info-box">
+      <h3>🔧 PayPal Configuration Test</h3>
+      <p><strong>Client ID:</strong> AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO</p>
+      <p><strong>Merchant ID:</strong> MDSNVRPA8J7UE</p>
+      <p><strong>App Name:</strong> BTHPAY</p>
+      <p><strong>Environment:</strong> <span id="environment-check">Checking...</span></p>
+      <p><strong>SDK Status:</strong> <span id="sdk-status">Loading...</span></p>
+    </div>
+
+    <div id="test-results"></div>
+
+    <h3>Test Payment</h3>
+    <p>Test product: <strong>SBD for Dummies - $19.99</strong></p>
+    
+    <div id="paypal-test-button"></div>
+
+    <div class="log-section">
+      <h4>Debug Log</h4>
+      <div id="debug-log"></div>
+    </div>
+
+    <div class="info-box">
+      <h4>🛠️ Troubleshooting Tips</h4>
+      <ul>
+        <li><strong>Sandbox vs Live:</strong> Make sure your Client ID matches your intended environment</li>
+        <li><strong>Business Account:</strong> Ensure your PayPal account is verified for business</li>
+        <li><strong>API Permissions:</strong> Check that your app has the right permissions in PayPal Developer Console</li>
+        <li><strong>Currency:</strong> Verify USD is supported in your account</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&merchant-id=MDSNVRPA8J7UE&currency=USD&intent=capture&components=buttons&enable-funding=venmo&disable-funding=credit,card,sepa,bancontact,eps,giropay,ideal,mybank,p24,sofort"></script>
+
+  <script>
+    // Debug logging function
+    function debugLog(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log-entry';
+      logEntry.style.borderLeft = type === 'error' ? '3px solid #f44336' : 
+                                  type === 'success' ? '3px solid #4caf50' : 
+                                  '3px solid #2196f3';
+      logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+      document.getElementById('debug-log').appendChild(logEntry);
+      console.log(`[${timestamp}] ${message}`);
+    }
+
+    // Check environment and SDK status
+    function checkPayPalStatus() {
+      const clientId = 'AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO';
+      
+      // Check if it's sandbox or live based on client ID format
+      const isSandbox = clientId.includes('sb') || clientId.startsWith('AZDx') || clientId.startsWith('ATx');
+      const envElement = document.getElementById('environment-check');
+      
+      if (isSandbox) {
+        envElement.innerHTML = '<span style="color: orange;">⚠️ SANDBOX (Test Mode)</span>';
+        debugLog('Environment detected: SANDBOX', 'info');
+      } else {
+        envElement.innerHTML = '<span style="color: green;">✅ LIVE (Production Mode)</span>';
+        debugLog('Environment detected: LIVE', 'success');
+      }
+
+      // Check SDK status
+      const sdkElement = document.getElementById('sdk-status');
+      if (typeof paypal !== 'undefined') {
+        sdkElement.innerHTML = '<span style="color: green;">✅ Loaded Successfully</span>';
+        debugLog('PayPal SDK loaded successfully', 'success');
+        initializePayPalTest();
+      } else {
+        sdkElement.innerHTML = '<span style="color: red;">❌ Failed to Load</span>';
+        debugLog('PayPal SDK failed to load', 'error');
+        showError('PayPal SDK failed to load. Check your internet connection and Client ID.');
+      }
+    }
+
+    function showError(message) {
+      const resultsDiv = document.getElementById('test-results');
+      resultsDiv.innerHTML = `<div class="error-box"><strong>❌ Error:</strong> ${message}</div>`;
+    }
+
+    function showSuccess(message) {
+      const resultsDiv = document.getElementById('test-results');
+      resultsDiv.innerHTML = `<div class="success-box"><strong>✅ Success:</strong> ${message}</div>`;
+    }
+
+    function initializePayPalTest() {
+      debugLog('Initializing PayPal test button...', 'info');
+      
+      paypal.Buttons({
+        style: {
+          layout: 'vertical',
+          color: 'gold',
+          shape: 'rect',
+          label: 'paypal'
+        },
+        createOrder: function(data, actions) {
+          debugLog('Creating test order...', 'info');
+          const orderData = {
+            purchase_units: [{
+              amount: {
+                value: '19.99',
+                currency_code: 'USD'
+              },
+              description: 'TEST: SBD for Dummies',
+              custom_id: 'test-sbd-dummies',
+              invoice_id: 'TEST-' + Date.now()
+            }],
+            application_context: {
+              brand_name: 'Marriage Education (TEST)',
+              landing_page: 'BILLING',
+              user_action: 'PAY_NOW'
+            }
+          };
+          debugLog('Order data: ' + JSON.stringify(orderData, null, 2), 'info');
+          return actions.order.create(orderData);
+        },
+        onApprove: function(data, actions) {
+          debugLog('Payment approved by user: ' + JSON.stringify(data), 'success');
+          return actions.order.capture().then(function(details) {
+            debugLog('Payment captured successfully: ' + JSON.stringify(details, null, 2), 'success');
+            showSuccess('Test payment completed! Order ID: ' + details.id);
+            alert('TEST PAYMENT SUCCESSFUL! Order ID: ' + details.id);
+          }).catch(function(error) {
+            debugLog('Error capturing payment: ' + error.toString(), 'error');
+            showError('Failed to capture payment: ' + error.message);
+          });
+        },
+        onError: function(err) {
+          debugLog('PayPal error occurred: ' + JSON.stringify(err), 'error');
+          debugLog('Error type: ' + typeof err, 'error');
+          debugLog('Error string: ' + err.toString(), 'error');
+          
+          let errorMsg = 'Unknown PayPal error';
+          if (err.message) {
+            errorMsg = err.message;
+          } else if (typeof err === 'string') {
+            errorMsg = err;
+          }
+          
+          showError('PayPal Error: ' + errorMsg);
+        },
+        onCancel: function(data) {
+          debugLog('Payment cancelled by user: ' + JSON.stringify(data), 'info');
+          showError('Payment was cancelled by user');
+        }
+      }).render('#paypal-test-button').then(function() {
+        debugLog('PayPal button rendered successfully', 'success');
+      }).catch(function(error) {
+        debugLog('Error rendering PayPal button: ' + error.toString(), 'error');
+        showError('Failed to render PayPal button: ' + error.message);
+      });
+    }
+
+    // Wait for DOM and PayPal SDK
+    document.addEventListener('DOMContentLoaded', function() {
+      debugLog('DOM loaded, checking PayPal status...', 'info');
+      
+      if (typeof paypal !== 'undefined') {
+        checkPayPalStatus();
+      } else {
+        debugLog('PayPal SDK not ready, waiting...', 'info');
+        // Wait a bit for PayPal SDK to load
+        setTimeout(checkPayPalStatus, 2000);
+      }
+    });
+
+    // Global error handler
+    window.addEventListener('error', function(event) {
+      debugLog('Global error: ' + event.error.toString(), 'error');
+    });
+  </script>
+</body>
+</html>

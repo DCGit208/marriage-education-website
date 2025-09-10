@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple PayPal Test - Marriage Education</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .test-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .status {
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    #console-log {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 1rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-box">
+    <h1>🧪 Simple PayPal Test</h1>
+    <p>This is a minimal PayPal integration test to diagnose the PAYMENT_DENIED error.</p>
+    
+    <div class="info">
+      <strong>Configuration:</strong><br>
+      Client ID: AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO<br>
+      Amount: $5.00 USD<br>
+      Mode: Live (Production)
+    </div>
+
+    <div id="status-display">
+      <div class="info">🔄 Loading PayPal...</div>
+    </div>
+
+    <div id="paypal-button-container"></div>
+
+    <h3>Console Log:</h3>
+    <div id="console-log"></div>
+  </div>
+
+  <!-- Minimal PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD"></script>
+
+  <script>
+    // Console logging function
+    function logToPage(message, type = 'info') {
+      const logDiv = document.getElementById('console-log');
+      const timestamp = new Date().toLocaleTimeString();
+      logDiv.textContent += `[${timestamp}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    // Override console methods to show on page
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function(...args) {
+      logToPage('LOG: ' + args.join(' '));
+      originalLog.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+      logToPage('ERROR: ' + args.join(' '));
+      originalError.apply(console, args);
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      logToPage('🚀 Page loaded, checking PayPal SDK...');
+      
+      function updateStatus(message, type = 'info') {
+        document.getElementById('status-display').innerHTML = 
+          `<div class="${type}">${message}</div>`;
+      }
+
+      function initPayPal() {
+        if (typeof paypal === 'undefined') {
+          updateStatus('❌ PayPal SDK not available', 'error');
+          logToPage('PayPal SDK not available');
+          return;
+        }
+
+        updateStatus('✅ PayPal SDK loaded, creating button...', 'success');
+        logToPage('PayPal SDK available, initializing...');
+
+        try {
+          paypal.Buttons({
+            style: {
+              layout: 'vertical',
+              color: 'gold',
+              shape: 'rect'
+            },
+            
+            createOrder: function(data, actions) {
+              logToPage('🚀 createOrder called');
+              
+              // Absolute minimal order structure
+              const order = {
+                intent: 'CAPTURE',
+                purchase_units: [{
+                  amount: {
+                    currency_code: 'USD',
+                    value: '5.00'
+                  }
+                }]
+              };
+              
+              logToPage('Creating order: ' + JSON.stringify(order));
+              
+              return actions.order.create(order)
+                .then(function(orderId) {
+                  logToPage('✅ Order created: ' + orderId);
+                  updateStatus('✅ Order created successfully', 'success');
+                  return orderId;
+                })
+                .catch(function(error) {
+                  logToPage('❌ Order creation failed: ' + error.message);
+                  updateStatus('❌ Order creation failed: ' + error.message, 'error');
+                  throw error;
+                });
+            },
+            
+            onApprove: function(data, actions) {
+              logToPage('✅ Payment approved, order ID: ' + data.orderID);
+              updateStatus('✅ Payment approved, capturing...', 'success');
+              
+              return actions.order.capture()
+                .then(function(details) {
+                  logToPage('✅ Payment captured: ' + JSON.stringify(details, null, 2));
+                  updateStatus('✅ Payment successful!', 'success');
+                  alert('✅ Payment successful!\nOrder ID: ' + details.id);
+                })
+                .catch(function(error) {
+                  logToPage('❌ Capture failed: ' + error.message);
+                  updateStatus('❌ Payment capture failed: ' + error.message, 'error');
+                  alert('❌ Payment capture failed: ' + error.message);
+                });
+            },
+            
+            onError: function(err) {
+              logToPage('❌ PayPal error: ' + JSON.stringify(err, null, 2));
+              updateStatus('❌ PayPal error occurred', 'error');
+              
+              let message = 'Payment error occurred.';
+              if (err.message) {
+                if (err.message.includes('PAYMENT_DENIED')) {
+                  message = '❌ PAYMENT_DENIED Error\n\nPossible causes:\n• Merchant account limitations\n• Geographic restrictions\n• Payment method declined\n• Account verification required\n\nPlease contact PayPal support or try a different payment method.';
+                } else {
+                  message = 'Error: ' + err.message;
+                }
+              }
+              
+              alert(message);
+            },
+            
+            onCancel: function(data) {
+              logToPage('🚫 Payment cancelled: ' + JSON.stringify(data));
+              updateStatus('🚫 Payment cancelled', 'info');
+              alert('Payment was cancelled.');
+            }
+            
+          }).render('#paypal-button-container')
+            .then(function() {
+              logToPage('✅ PayPal button rendered successfully');
+              updateStatus('✅ PayPal button ready', 'success');
+            })
+            .catch(function(error) {
+              logToPage('❌ Button render failed: ' + error.message);
+              updateStatus('❌ Button render failed: ' + error.message, 'error');
+            });
+            
+        } catch (error) {
+          logToPage('❌ Initialization error: ' + error.message);
+          updateStatus('❌ Initialization failed: ' + error.message, 'error');
+        }
+      }
+
+      // Wait for PayPal SDK
+      if (typeof paypal !== 'undefined') {
+        logToPage('PayPal SDK already available');
+        initPayPal();
+      } else {
+        logToPage('Waiting for PayPal SDK...');
+        let attempts = 0;
+        const interval = setInterval(function() {
+          attempts++;
+          
+          if (typeof paypal !== 'undefined') {
+            clearInterval(interval);
+            logToPage('PayPal SDK became available after ' + attempts + ' attempts');
+            initPayPal();
+          } else if (attempts >= 50) {
+            clearInterval(interval);
+            logToPage('PayPal SDK failed to load after 50 attempts');
+            updateStatus('❌ PayPal SDK failed to load', 'error');
+          }
+        }, 200);
+      }
+    });
+  </script>
+</body>
+</html>
