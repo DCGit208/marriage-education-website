@@ -1,0 +1,40 @@
+name: Deploy to FTP
+
+# Trigger deployment on push to main branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        # FTP server details (set these in GitHub repository secrets)
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        
+        # Optional: specify the remote directory path on your FTP server
+        server-dir: /public_html/
+        
+        # Optional: exclude certain files/folders
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .DS_Store
+          *.md
+          **/*-test.html
+          **/paypal-*test*.html
+          
+        # Optional: only upload changed files (faster)
+        dry-run: false
