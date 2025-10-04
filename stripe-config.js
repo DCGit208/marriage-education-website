@@ -2,7 +2,7 @@
 // Replace YOUR_STRIPE_PUBLISHABLE_KEY_HERE with your actual Stripe publishable key
 
 // STEP 1: Add your Stripe publishable key here
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_KEY_HERE'; // Replace with your publishable key
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776';
 
 // STEP 2: Add your webhook endpoint secret (for server-side processing)
 const STRIPE_WEBHOOK_SECRET = 'whsec_YOUR_WEBHOOK_SECRET_HERE'; // Replace with your webhook secret

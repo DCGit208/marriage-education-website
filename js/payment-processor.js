@@ -13,7 +13,7 @@ class PaymentProcessor {
     async initializeStripe() {
         // Load Stripe.js
         if (typeof Stripe !== 'undefined') {
-            this.stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY_HERE'); // Will be updated with your actual key
+            this.stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
             this.setupStripeElements();
         }
     }
