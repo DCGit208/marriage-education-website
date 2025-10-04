@@ -31,7 +31,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         
         # Try marriageducation.com subfolder path
-        server-dir: /public_html/marriageducation.com/
+        server-dir: /public_html/
         
         # Log deployment details
         log-level: verbose
