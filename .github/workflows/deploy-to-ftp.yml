@@ -21,8 +21,8 @@ jobs:
         ls -la payment.html
         echo "🔧 Webhook file exists:"
         ls -la stripe-webhook-simple.php
-      
-    - name: Deploy to FTP
+    
+    - name: Deploy to FTP (root /public_html)
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         # FTP server details (set these in GitHub repository secrets)
@@ -30,7 +30,6 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         
-        # Try marriageducation.com subfolder path
         server-dir: /public_html/
         
         # Log deployment details
@@ -49,3 +48,29 @@ jobs:
           
         # Force sync all files
         dry-run: false
+
+    - name: Deploy to FTP (subfolder /public_html/marriageducation.com)
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html/marriageducation.com/
+        log-level: verbose
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .DS_Store
+          *.md
+          **/*-test.html
+          **/paypal-*test*.html
+          **/MANUAL_DEPLOYMENT_INSTRUCTIONS.txt
+        dry-run: false
+
+    - name: Post-deploy sanity check (fetch live payment page)
+      run: |
+        echo "🌐 Fetching https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}"
+        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | head -n 40
+        echo "🔎 Checking for Stripe-only markers"
+        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | grep -iE "js.stripe.com|card-element|Secure Credit Card" -n || true
