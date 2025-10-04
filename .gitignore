@@ -34,3 +34,11 @@ temp/
 
 # Payment configuration (keep secure)
 # Note: Make sure to keep payment credentials secure
+
+# Test and backup pages
+test-pages/
+*-test.html
+*-test-*.html
+*-backup.html
+paypal-*.html
+deployment-test.*

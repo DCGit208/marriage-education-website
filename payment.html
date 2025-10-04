@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment - Marriage Education (LIVE TEST <?php echo date('H:i'); ?>)</title>
+  <title>Complete Your Purchase - Marriage Education</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Stripe.js must be loaded directly from Stripe's servers -->
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -113,19 +114,48 @@
     document.getElementById('order-total').textContent = '$' + productInfo.price;
     document.getElementById('button-text').textContent = 'Pay $' + productInfo.price;
 
-    // Initialize Stripe - LIVE MODE for production
+    // Initialize Stripe with live publishable key
+    // Note: This key is safe to expose in client-side code
     const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-    const elements = stripe.elements();
+    
+    // Create an instance of Elements with recommended styling options
+    const elements = stripe.elements({
+      fonts: [
+        {
+          cssSrc: 'https://fonts.googleapis.com/css?family=Roboto',
+        },
+      ],
+      locale: 'auto'
+    });
 
-    // Create card element
-    const cardElement = elements.create('card');
+    // Custom styling can be passed to options when creating an Element
+    const style = {
+      base: {
+        color: '#32325d',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '16px',
+        '::placeholder': {
+          color: '#aab7c4'
+        }
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a'
+      }
+    };
+
+    // Create an instance of the card Element with styling
+    const cardElement = elements.create('card', { style: style });
+    
+    // Add an instance of the card Element into the `card-element` div
     cardElement.mount('#card-element');
 
-    // Handle real-time validation errors
-    cardElement.on('change', ({error}) => {
+    // Handle real-time validation errors from the card Element
+    cardElement.on('change', function(event) {
       const displayError = document.getElementById('card-errors');
-      if (error) {
-        displayError.textContent = error.message;
+      if (event.error) {
+        displayError.textContent = event.error.message;
       } else {
         displayError.textContent = '';
       }
@@ -133,19 +163,22 @@
 
     // Handle form submission
     const form = document.getElementById('payment-form');
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', async function(event) {
       event.preventDefault();
 
       const submitButton = document.getElementById('submit');
+      const buttonText = document.getElementById('button-text');
+      
+      // Disable button to prevent multiple submissions
       submitButton.disabled = true;
-      document.getElementById('button-text').textContent = 'Processing...';
+      buttonText.textContent = 'Processing...';
 
       // Get form data
       const email = document.getElementById('email').value;
       const name = document.getElementById('name').value;
 
       try {
-        // Create payment method
+        // Create payment method with card details
         const {paymentMethod, error} = await stripe.createPaymentMethod({
           type: 'card',
           card: cardElement,
@@ -156,28 +189,47 @@
         });
 
         if (error) {
+          // Show error to customer
           document.getElementById('card-errors').textContent = error.message;
+          console.error('Payment method creation error:', error);
         } else {
-          // Success! Payment method created
-          console.log('Payment method created:', paymentMethod);
+          // Payment method created successfully
+          console.log('Payment method created:', paymentMethod.id);
           
-          // Here you would normally send to your backend
+          // In production, send paymentMethod.id to your server
           // For now, show success message
-          alert('Payment method created successfully! (This is a test - no actual charge was made)');
+          alert('Payment method created successfully!\\n\\nPayment Method ID: ' + paymentMethod.id + '\\n\\n(This is a test - integrate with your backend to process actual payments)');
           
-          // In production, you would:
+          // Production flow:
           // 1. Send paymentMethod.id to your server
-          // 2. Create a payment intent on the server
+          // 2. Create a Payment Intent on the server with the payment method
           // 3. Confirm the payment
+          // 4. Handle the payment result
+          // 5. Redirect to success page
+          
+          // Example:
+          // const response = await fetch('/create-payment-intent', {
+          //   method: 'POST',
+          //   headers: {'Content-Type': 'application/json'},
+          //   body: JSON.stringify({
+          //     paymentMethodId: paymentMethod.id,
+          //     amount: Math.round(productInfo.price * 100), // Amount in cents
+          //     currency: 'usd',
+          //     productName: productInfo.name,
+          //     customerEmail: email
+          //   })
+          // });
+          // const paymentIntent = await response.json();
+          // window.location.href = '/payment-success.html?payment_intent=' + paymentIntent.id;
         }
       } catch (err) {
-        console.error('Error:', err);
-        document.getElementById('card-errors').textContent = 'An unexpected error occurred.';
+        console.error('Unexpected error:', err);
+        document.getElementById('card-errors').textContent = 'An unexpected error occurred. Please try again.';
       }
 
-      // Re-enable button
+      // Re-enable submit button
       submitButton.disabled = false;
-      document.getElementById('button-text').textContent = 'Pay $' + productInfo.price;
+      buttonText.textContent = 'Pay $' + productInfo.price;
     });
   </script>
 </body>
