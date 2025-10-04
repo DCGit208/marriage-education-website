@@ -30,8 +30,8 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         
-        # Deploy to marriageducation.com directory
-        server-dir: /public_html/
+        # Try marriageducation.com subfolder path
+        server-dir: /public_html/marriageducation.com/
         
         # Log deployment details
         log-level: verbose
