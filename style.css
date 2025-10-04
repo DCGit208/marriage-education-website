@@ -564,11 +564,8 @@ footer {
 
 /* Minimal card element container - let Stripe handle the input styling */
 #card-element {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  min-height: 40px;
+  /* Keep container neutral; Stripe controls input UI */
+  min-height: 44px;
 }
 
 #card-errors {
@@ -606,19 +603,7 @@ footer {
   transform: none;
 }
 
-#paypal-button-container {
-  min-height: 50px;
-  margin-top: 1rem;
-}
-
-#paypal-button-container .paypal-button {
-  margin-bottom: 0.5rem;
-}
-
-/* PayPal Button Styling Override */
-#paypal-button-container iframe {
-  border-radius: 8px !important;
-}
+/* PayPal styles removed to prevent interference with Stripe-only checkout */
 
 /* Modal Styles */
 .modal {
@@ -2618,26 +2603,4 @@ body {
   font-size: 14px;
 }
 
-/* Stripe Element specific styling */
-.StripeElement {
-  height: 44px;
-  padding: 10px 12px;
-  color: #424770;
-  background-color: white;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px 0 #e6ebf1;
-  transition: box-shadow 150ms ease;
-}
-
-.StripeElement--focus {
-  box-shadow: 0 1px 3px 0 #cfd7df;
-}
-
-.StripeElement--invalid {
-  border-color: #fa755a;
-}
-
-.StripeElement--webkit-autofill {
-  background-color: #fefde5 !important;
-}
+/* Removed StripeElement overrides to let Stripe control internal iframe styling */
