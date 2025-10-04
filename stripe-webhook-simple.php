@@ -194,4 +194,4 @@ Support: bthedugrp@gmail.com
     mail($customer_email, $subject, $message, $headers);
     error_log("📧 Confirmation email sent to: $customer_email");
 }
-?>
+?>/* Updated Sat Oct  4 08:04:09 WAT 2025 */
