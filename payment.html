@@ -168,87 +168,42 @@
 
       
 
-      // Initialize Stripe Elements with timeout
-      function initializeStripe() {
-        console.log('🔍 Initializing Stripe...');
+      // Simple Stripe initialization
+      console.log('Initializing Stripe...');
+      
+      if (typeof Stripe !== 'undefined') {
+        const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
+        const elements = stripe.elements();
+
+        // Create card element with minimal styling
+        const cardElement = elements.create('card');
+
+        // Clear loading text and mount
+        const loadingDiv = document.getElementById('card-loading');
+        if (loadingDiv) loadingDiv.remove();
         
-        if (typeof Stripe === 'undefined') {
-          console.error('❌ Stripe SDK not loaded');
-          document.getElementById('card-element').innerHTML = 
-            '<div id="stripe-error">❌ Payment system loading failed. Please refresh the page.</div>';
-          return;
-        }
+        // Mount the element
+        cardElement.mount('#card-element');
 
-        try {
-          const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-          const elements = stripe.elements();
+        // Handle changes
+        cardElement.on('change', function(event) {
+          const displayError = document.getElementById('card-errors');
+          if (event.error) {
+            displayError.textContent = event.error.message;
+          } else {
+            displayError.textContent = '';
+          }
+        });
 
-          const cardElement = elements.create('card', {
-            style: {
-              base: {
-                fontSize: '18px',
-                color: '#424770',
-                fontFamily: 'Arial, sans-serif',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-                lineHeight: '48px',
-              },
-              invalid: {
-                color: '#fa755a',
-                iconColor: '#fa755a'
-              }
-            }
-          });
-
-          // Clear loading and mount
-          const cardContainer = document.getElementById('card-element');
-          const loadingDiv = document.getElementById('card-loading');
-          if (loadingDiv) loadingDiv.remove();
-          
-          cardElement.mount('#card-element');
-          
-          console.log('✅ Stripe mounted successfully');
-
-          // Event listeners
-          cardElement.on('change', function(event) {
-            const displayError = document.getElementById('card-errors');
-            if (event.error) {
-              displayError.textContent = event.error.message;
-            } else {
-              displayError.textContent = '';
-            }
-          });
-
-          cardElement.on('ready', function() {
-            console.log('✅ Card element ready');
-          });
-
-          // Store for form submission
-          window.stripeInstance = stripe;
-          window.cardElement = cardElement;
-
-        } catch (error) {
-          console.error('❌ Stripe error:', error);
-          document.getElementById('card-element').innerHTML = 
-            '<div id="stripe-error">❌ Payment form error. Please refresh the page.</div>';
-        }
+        // Store references
+        window.stripeInstance = stripe;
+        window.cardElement = cardElement;
+        
+        console.log('Stripe initialized successfully');
+      } else {
+        console.error('Stripe SDK not loaded');
+        document.getElementById('card-element').innerHTML = 'Error: Payment system not available';
       }
-
-      // Wait for Stripe SDK or timeout
-      let attempts = 0;
-      const maxAttempts = 50;
-      const checkStripe = setInterval(function() {
-        attempts++;
-        if (typeof Stripe !== 'undefined') {
-          clearInterval(checkStripe);
-          initializeStripe();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(checkStripe);
-          document.getElementById('card-element').innerHTML = 
-            '<div id="stripe-error">❌ Payment system failed to load. Please refresh the page.</div>';
-        }
-      }, 100);
 
       // Handle Stripe form submission (using global references)
       const form = document.getElementById('stripe-payment-form');

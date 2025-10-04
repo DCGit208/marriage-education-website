@@ -562,33 +562,9 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Basic card element container - let Stripe handle the styling */
 #card-element {
-  padding: 0.875rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  transition: border-color 0.3s ease;
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-}
-
-#card-element:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-#card-element.StripeElement--focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-#card-element.StripeElement--invalid {
-  border-color: #e74c3c;
-}
-
-#card-element.StripeElement--complete {
-  border-color: #27ae60;
+  margin: 10px 0;
 }
 
 #card-errors {
@@ -2530,40 +2506,8 @@ body {
   }
 }
 
-/* Stripe Payment Styling */
-.card-element {
-  background: white;
-  padding: 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: border-color 0.3s ease;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-.card-element .StripeElement {
-  width: 100%;
-}
-
-.card-element--focus {
-  border-color: #3498db !important;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important;
-}
-
-.card-element:focus-within {
-  border-color: #3498db;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
-}
-
-.card-element.StripeElement--invalid {
-  border-color: #e74c3c;
-}
-
-.card-element.StripeElement--complete {
-  border-color: #27ae60;
-}
+/* Stripe Payment Styling - Simplified */
+/* Removed conflicting card-element styles - let Stripe handle styling */
 
 #card-errors {
   color: #e74c3c;
@@ -2648,16 +2592,7 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Ensure card element is visible and properly sized */
-#card-element {
-  min-height: 50px !important;
-  padding: 16px !important;
-  font-size: 16px !important;
-  line-height: 1.4 !important;
-  background: white !important;
-  border: 2px solid #e1e5e9 !important;
-  border-radius: 8px !important;
-}
+
 
 #card-loading {
   padding: 12px;
