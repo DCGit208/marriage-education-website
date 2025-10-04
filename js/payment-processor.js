@@ -21,7 +21,10 @@ class PaymentProcessor {
     // Setup Stripe Elements
     setupStripeElements() {
         if (!this.stripe) return;
-        
+        // Only mount if container exists on this page
+        const cardContainer = document.querySelector('#card-element');
+        if (!cardContainer) return;
+
         const elements = this.stripe.elements();
         this.cardElement = elements.create('card', {
             style: {
@@ -160,15 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Utility functions for product purchases
 function purchaseProduct(productId, amount, productName) {
+    // If the payment modal exists on this page, use it; otherwise, allow normal link navigation
     const modal = document.getElementById('payment-modal');
+    if (!modal) {
+        // No modal present (e.g., on shop.html). Let the anchor href navigate to payment.html.
+        return;
+    }
+
     const productNameEl = document.getElementById('modal-product-name');
     const productPriceEl = document.getElementById('modal-product-price');
-    
-    productNameEl.textContent = productName;
-    productPriceEl.textContent = `$${amount}`;
-    
+    if (productNameEl) productNameEl.textContent = productName;
+    if (productPriceEl) productPriceEl.textContent = `$${amount}`;
+
     modal.style.display = 'block';
-    
+
     // Setup payment methods for this product
     setupProductPayment(productId, amount, productName);
 }
