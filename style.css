@@ -2651,9 +2651,26 @@ body {
 /* Ensure card element is visible and properly sized */
 #card-element {
   min-height: 50px !important;
-  padding: 12px 16px !important;
+  padding: 16px !important;
   font-size: 16px !important;
   line-height: 1.4 !important;
+  background: white !important;
+  border: 2px solid #e1e5e9 !important;
+  border-radius: 8px !important;
+}
+
+#card-loading {
+  padding: 12px;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+}
+
+#card-errors {
+  color: #fa755a;
+  font-size: 14px;
+  margin-top: 8px;
+  min-height: 20px;
 }
 
 /* Loading state for card element */

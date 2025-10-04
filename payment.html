@@ -65,10 +65,12 @@
 
               <div class="form-group">
                 <label>Card Information</label>
-                <div id="card-element" class="card-element card-element-loading">
-                  <div class="card-loading-text">Loading secure payment form...</div>
+                <div id="card-element" class="card-element">
+                  <div id="card-loading" style="padding: 12px; color: #666; font-style: italic;">
+                    Loading secure payment form...
+                  </div>
                 </div>
-                <div id="card-errors" role="alert"></div>
+                <div id="card-errors" role="alert" style="color: #fa755a; font-size: 14px; margin-top: 8px;"></div>
               </div>
 
               <button type="submit" id="stripe-submit" class="pay-button">
@@ -166,85 +168,87 @@
 
       
 
-      // Initialize Stripe Elements
-      console.log('🔍 Checking Stripe availability...');
-      
-      if (typeof Stripe === 'undefined') {
-        console.error('❌ Stripe SDK not loaded');
-        document.getElementById('card-element').innerHTML = 
-          '<div style="color: red; padding: 16px;">❌ Stripe SDK failed to load. Please refresh the page.</div>';
-        return;
-      }
-
-      console.log('✅ Stripe SDK available, initializing...');
-      
-      try {
-        const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-        const elements = stripe.elements();
-
-        console.log('🔧 Creating card element...');
+      // Initialize Stripe Elements with timeout
+      function initializeStripe() {
+        console.log('🔍 Initializing Stripe...');
         
-        const cardElement = elements.create('card', {
-          style: {
-            base: {
-              fontSize: '16px',
-              color: '#424770',
-              fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-              fontSmoothing: 'antialiased',
-              '::placeholder': {
-                color: '#aab7c4',
-              },
-            },
-            invalid: {
-              color: '#fa755a',
-              iconColor: '#fa755a'
-            }
-          },
-          hidePostalCode: true
-        });
-
-        console.log('🎯 Mounting card element to #card-element...');
-        
-        // Check if element exists
-        const cardContainer = document.getElementById('card-element');
-        if (!cardContainer) {
-          console.error('❌ Card element container not found!');
+        if (typeof Stripe === 'undefined') {
+          console.error('❌ Stripe SDK not loaded');
+          document.getElementById('card-element').innerHTML = 
+            '<div id="stripe-error">❌ Payment system loading failed. Please refresh the page.</div>';
           return;
         }
 
-        // Clear loading state and mount
-        cardContainer.innerHTML = ''; // Clear loading text
-        cardContainer.classList.remove('card-element-loading');
-        
-        cardElement.mount('#card-element');
-        
-        console.log('✅ Card element mounted successfully');
+        try {
+          const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
+          const elements = stripe.elements();
 
-        // Add event listeners
-        cardElement.on('change', function(event) {
-          console.log('💳 Card element changed:', event);
-          const displayError = document.getElementById('card-errors');
-          if (event.error) {
-            displayError.textContent = event.error.message;
-            displayError.style.color = '#fa755a';
-          } else {
-            displayError.textContent = '';
-          }
-        });
+          const cardElement = elements.create('card', {
+            style: {
+              base: {
+                fontSize: '18px',
+                color: '#424770',
+                fontFamily: 'Arial, sans-serif',
+                '::placeholder': {
+                  color: '#aab7c4',
+                },
+                lineHeight: '48px',
+              },
+              invalid: {
+                color: '#fa755a',
+                iconColor: '#fa755a'
+              }
+            }
+          });
 
-        cardElement.on('ready', function() {
-          console.log('✅ Card element is ready for input');
-        });
+          // Clear loading and mount
+          const cardContainer = document.getElementById('card-element');
+          const loadingDiv = document.getElementById('card-loading');
+          if (loadingDiv) loadingDiv.remove();
+          
+          cardElement.mount('#card-element');
+          
+          console.log('✅ Stripe mounted successfully');
 
-        // Store references globally for form submission
-        window.stripeInstance = stripe;
-        window.cardElement = cardElement;
+          // Event listeners
+          cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+              displayError.textContent = event.error.message;
+            } else {
+              displayError.textContent = '';
+            }
+          });
 
-      } catch (error) {
-        console.error('❌ Stripe initialization error:', error);
-        document.getElementById('card-element').innerHTML = 
-          '<div style="color: red; padding: 16px;">❌ Error loading payment form. Please refresh the page.</div>';
+          cardElement.on('ready', function() {
+            console.log('✅ Card element ready');
+          });
+
+          // Store for form submission
+          window.stripeInstance = stripe;
+          window.cardElement = cardElement;
+
+        } catch (error) {
+          console.error('❌ Stripe error:', error);
+          document.getElementById('card-element').innerHTML = 
+            '<div id="stripe-error">❌ Payment form error. Please refresh the page.</div>';
+        }
       }
+
+      // Wait for Stripe SDK or timeout
+      let attempts = 0;
+      const maxAttempts = 50;
+      const checkStripe = setInterval(function() {
+        attempts++;
+        if (typeof Stripe !== 'undefined') {
+          clearInterval(checkStripe);
+          initializeStripe();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkStripe);
+          document.getElementById('card-element').innerHTML = 
+            '<div id="stripe-error">❌ Payment system failed to load. Please refresh the page.</div>';
+        }
+      }, 100);
 
       // Handle Stripe form submission (using global references)
       const form = document.getElementById('stripe-payment-form');
