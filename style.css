@@ -562,19 +562,21 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Minimal card element container - let Stripe handle the input styling */
+/* Stripe card element container - minimal styling to avoid conflicts */
 #card-element {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border: 1px solid #ddd;
   border-radius: 4px;
   background: white;
-  min-height: 40px;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 #card-errors {
-  color: #e74c3c;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
+  color: #fa755a;
+  font-size: 14px;
+  margin-top: 8px;
+  min-height: 20px;
 }
 
 .pay-button {
@@ -606,6 +608,7 @@ footer {
   transform: none;
 }
 
+/* PayPal button container - kept for backward compatibility but not used in main payment page */
 #paypal-button-container {
   min-height: 50px;
   margin-top: 1rem;
@@ -615,7 +618,6 @@ footer {
   margin-bottom: 0.5rem;
 }
 
-/* PayPal Button Styling Override */
 #paypal-button-container iframe {
   border-radius: 8px !important;
 }
@@ -2507,16 +2509,7 @@ body {
   }
 }
 
-/* Stripe Payment Styling - Simplified */
-/* Removed conflicting card-element styles - let Stripe handle styling */
-
-#card-errors {
-  color: #e74c3c;
-  font-size: 14px;
-  margin-top: 8px;
-  padding: 8px 0;
-  min-height: 24px;
-}
+/* Stripe Payment Styling - Consolidated above, duplicates removed */
 
 .spinner {
   display: inline-block;
@@ -2594,7 +2587,6 @@ body {
 }
 
 
-
 #card-loading {
   padding: 12px;
   color: #666;
@@ -2602,23 +2594,7 @@ body {
   text-align: center;
 }
 
-#card-errors {
-  color: #fa755a;
-  font-size: 14px;
-  margin-top: 8px;
-  min-height: 20px;
-}
-
-/* Loading state for card element */
-/* Removed card-element-loading styling */
-
-.card-loading-text {
-  color: #6c757d;
-  font-style: italic;
-  font-size: 14px;
-}
-
-/* Stripe Element specific styling */
+/* Stripe Element specific styling - standard implementation */
 .StripeElement {
   height: 44px;
   padding: 10px 12px;
