@@ -2534,10 +2534,22 @@ body {
 .card-element {
   background: white;
   padding: 16px;
-  border: 1px solid #ddd;
+  border: 2px solid #e1e5e9;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   transition: border-color 0.3s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.card-element .StripeElement {
+  width: 100%;
+}
+
+.card-element--focus {
+  border-color: #3498db !important;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3) !important;
 }
 
 .card-element:focus-within {
@@ -2634,4 +2646,51 @@ body {
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Ensure card element is visible and properly sized */
+#card-element {
+  min-height: 50px !important;
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+/* Loading state for card element */
+.card-element-loading {
+  background: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.card-loading-text {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Stripe Element specific styling */
+.StripeElement {
+  height: 44px;
+  padding: 10px 12px;
+  color: #424770;
+  background-color: white;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px 0 #e6ebf1;
+  transition: box-shadow 150ms ease;
+}
+
+.StripeElement--focus {
+  box-shadow: 0 1px 3px 0 #cfd7df;
+}
+
+.StripeElement--invalid {
+  border-color: #fa755a;
+}
+
+.StripeElement--webkit-autofill {
+  background-color: #fefde5 !important;
 }

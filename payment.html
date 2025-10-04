@@ -65,8 +65,8 @@
 
               <div class="form-group">
                 <label>Card Information</label>
-                <div id="card-element" class="card-element">
-                  <!-- Stripe card element will be mounted here -->
+                <div id="card-element" class="card-element card-element-loading">
+                  <div class="card-loading-text">Loading secure payment form...</div>
                 </div>
                 <div id="card-errors" role="alert"></div>
               </div>
@@ -167,40 +167,96 @@
       
 
       // Initialize Stripe Elements
-      if (typeof Stripe !== 'undefined') {
+      console.log('🔍 Checking Stripe availability...');
+      
+      if (typeof Stripe === 'undefined') {
+        console.error('❌ Stripe SDK not loaded');
+        document.getElementById('card-element').innerHTML = 
+          '<div style="color: red; padding: 16px;">❌ Stripe SDK failed to load. Please refresh the page.</div>';
+        return;
+      }
+
+      console.log('✅ Stripe SDK available, initializing...');
+      
+      try {
         const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
         const elements = stripe.elements();
 
+        console.log('🔧 Creating card element...');
+        
         const cardElement = elements.create('card', {
           style: {
             base: {
               fontSize: '16px',
               color: '#424770',
+              fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+              fontSmoothing: 'antialiased',
               '::placeholder': {
                 color: '#aab7c4',
               },
             },
             invalid: {
-              color: '#9e2146',
-            },
+              color: '#fa755a',
+              iconColor: '#fa755a'
+            }
           },
+          hidePostalCode: true
         });
 
-        cardElement.mount('#card-element');
+        console.log('🎯 Mounting card element to #card-element...');
+        
+        // Check if element exists
+        const cardContainer = document.getElementById('card-element');
+        if (!cardContainer) {
+          console.error('❌ Card element container not found!');
+          return;
+        }
 
+        // Clear loading state and mount
+        cardContainer.innerHTML = ''; // Clear loading text
+        cardContainer.classList.remove('card-element-loading');
+        
+        cardElement.mount('#card-element');
+        
+        console.log('✅ Card element mounted successfully');
+
+        // Add event listeners
         cardElement.on('change', function(event) {
+          console.log('💳 Card element changed:', event);
           const displayError = document.getElementById('card-errors');
           if (event.error) {
             displayError.textContent = event.error.message;
+            displayError.style.color = '#fa755a';
           } else {
             displayError.textContent = '';
           }
         });
 
-        // Handle Stripe form submission
-        const form = document.getElementById('stripe-payment-form');
+        cardElement.on('ready', function() {
+          console.log('✅ Card element is ready for input');
+        });
+
+        // Store references globally for form submission
+        window.stripeInstance = stripe;
+        window.cardElement = cardElement;
+
+      } catch (error) {
+        console.error('❌ Stripe initialization error:', error);
+        document.getElementById('card-element').innerHTML = 
+          '<div style="color: red; padding: 16px;">❌ Error loading payment form. Please refresh the page.</div>';
+      }
+
+      // Handle Stripe form submission (using global references)
+      const form = document.getElementById('stripe-payment-form');
+      if (form) {
         form.addEventListener('submit', async function(event) {
           event.preventDefault();
+          
+          // Check if Stripe is available
+          if (!window.stripeInstance || !window.cardElement) {
+            alert('Payment system not ready. Please refresh the page.');
+            return;
+          }
           
           const submitButton = document.getElementById('stripe-submit');
           const buttonText = document.getElementById('button-text');
@@ -216,9 +272,9 @@
           
           try {
             // Create payment method
-            const {paymentMethod, error} = await stripe.createPaymentMethod({
+            const {paymentMethod, error} = await window.stripeInstance.createPaymentMethod({
               type: 'card',
-              card: cardElement,
+              card: window.cardElement,
               billing_details: {
                 name: customerName,
                 email: customerEmail,
