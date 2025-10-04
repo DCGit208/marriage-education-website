@@ -13,8 +13,43 @@ class PaymentProcessor {
     async initializeStripe() {
         // Load Stripe.js
         if (typeof Stripe !== 'undefined') {
-            this.stripe = Stripe('pk_test_your_stripe_publishable_key_here'); // Replace with your actual key
+            this.stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY_HERE'); // Will be updated with your actual key
+            this.setupStripeElements();
         }
+    }
+
+    // Setup Stripe Elements
+    setupStripeElements() {
+        if (!this.stripe) return;
+        
+        const elements = this.stripe.elements();
+        this.cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                        color: '#aab7c4',
+                    },
+                },
+                invalid: {
+                    color: '#9e2146',
+                },
+            },
+        });
+        
+        // Mount the card element
+        this.cardElement.mount('#card-element');
+        
+        // Handle real-time validation errors from the card Element
+        this.cardElement.on('change', ({error}) => {
+            const displayError = document.getElementById('card-errors');
+            if (error) {
+                displayError.textContent = error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
     }
 
     // Initialize PayPal

@@ -1,0 +1,10 @@
+# Quick deployment commands:
+git add .
+git commit -m "Your update message"
+git push
+
+# Example:
+# git add .
+# git commit -m "Updated shop page with new products"
+# git push
+

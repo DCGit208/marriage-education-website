@@ -42,41 +42,40 @@
           <h3>Choose Payment Method</h3>
           
           <div class="payment-tabs">
-            <button class="tab-button" data-tab="stripe">Credit Card</button>
-            <button class="tab-button active" data-tab="paypal">PayPal</button>
+            <button class="tab-button active" data-tab="stripe">Credit Card</button>
+            <button class="tab-button" data-tab="paypal">PayPal</button>
           </div>
 
           <!-- Stripe Payment Form -->
-          <div class="payment-tab" id="stripe-tab">
+          <div class="payment-tab active" id="stripe-tab">
             <div class="credit-card-notice">
               <h4>💳 Credit Card Payment</h4>
-              <p><strong>Coming Soon!</strong> Credit card payments are currently being set up.</p>
-              <p>For now, please use the <strong>PayPal option</strong> which accepts credit cards, debit cards, and PayPal accounts.</p>
+              <p><strong>Secure and Fast!</strong> Pay with your credit or debit card.</p>
+              <p>Powered by <strong>Stripe</strong> - trusted by millions worldwide.</p>
             </div>
             
-            <form id="stripe-payment-form" class="payment-form-disabled">
+            <form id="stripe-payment-form" class="payment-form">
               <div class="form-group">
                 <label for="customer-email">Email Address</label>
-                <input type="email" id="customer-email" name="email" placeholder="Currently disabled - Use PayPal tab" disabled />
+                <input type="email" id="customer-email" name="email" placeholder="Enter your email address" required />
               </div>
               
               <div class="form-group">
                 <label for="customer-name">Full Name</label>
-                <input type="text" id="customer-name" name="name" placeholder="Currently disabled - Use PayPal tab" disabled />
+                <input type="text" id="customer-name" name="name" placeholder="Enter your full name" required />
               </div>
 
               <div class="form-group">
                 <label>Card Information</label>
-                <div id="card-element" class="card-element-disabled">
-                  <div class="card-placeholder">
-                    Credit card processing coming soon - Please use PayPal
-                  </div>
+                <div id="card-element" class="card-element">
+                  <!-- Stripe card element will be mounted here -->
                 </div>
                 <div id="card-errors" role="alert"></div>
               </div>
 
-              <button type="button" id="stripe-submit" class="pay-button" disabled>
-                Credit Card Coming Soon - Use PayPal
+              <button type="submit" id="stripe-submit" class="pay-button">
+                <span id="button-text">Pay Now</span>
+                <span id="spinner" class="spinner hidden"></span>
               </button>
               
               <div class="security-badges">
@@ -97,7 +96,7 @@
           </div>
 
           <!-- PayPal Payment -->
-          <div class="payment-tab active" id="paypal-tab">
+          <div class="payment-tab" id="paypal-tab">
             <div id="paypal-button-container"></div>
             <div class="security-badges">
               <div class="security-badge">
@@ -295,7 +294,7 @@
 
       // Initialize Stripe Elements
       if (typeof Stripe !== 'undefined') {
-        const stripe = Stripe('pk_test_your_stripe_publishable_key_here');
+        const stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY_HERE'); // Will be updated with your actual key
         const elements = stripe.elements();
 
         const cardElement = elements.create('card', {
@@ -322,6 +321,59 @@
           } else {
             displayError.textContent = '';
           }
+        });
+
+        // Handle Stripe form submission
+        const form = document.getElementById('stripe-payment-form');
+        form.addEventListener('submit', async function(event) {
+          event.preventDefault();
+          
+          const submitButton = document.getElementById('stripe-submit');
+          const buttonText = document.getElementById('button-text');
+          const spinner = document.getElementById('spinner');
+          
+          // Show loading state
+          submitButton.disabled = true;
+          if (buttonText) buttonText.textContent = 'Processing...';
+          if (spinner) spinner.classList.remove('hidden');
+          
+          const customerEmail = document.getElementById('customer-email').value;
+          const customerName = document.getElementById('customer-name').value;
+          
+          try {
+            // Create payment method
+            const {paymentMethod, error} = await stripe.createPaymentMethod({
+              type: 'card',
+              card: cardElement,
+              billing_details: {
+                name: customerName,
+                email: customerEmail,
+              },
+            });
+
+            if (error) {
+              // Show error to customer
+              const errorElement = document.getElementById('card-errors');
+              errorElement.textContent = error.message;
+            } else {
+              // Send payment method to your server (implement your backend integration here)
+              console.log('✅ Payment method created:', paymentMethod.id);
+              
+              // For demo purposes - replace with actual server call
+              alert('✅ Payment successful! Payment Method ID: ' + paymentMethod.id);
+              
+              // Redirect to success page
+              window.location.href = 'payment-success.html?payment_method=' + paymentMethod.id + '&amount=' + productPrice;
+            }
+          } catch (err) {
+            console.error('❌ Payment error:', err);
+            document.getElementById('card-errors').textContent = 'Payment failed. Please try again.';
+          }
+          
+          // Reset button state
+          submitButton.disabled = false;
+          if (buttonText) buttonText.textContent = 'Pay Now';
+          if (spinner) spinner.classList.add('hidden');
         });
       }
 
