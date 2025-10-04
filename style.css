@@ -2607,3 +2607,31 @@ body {
   margin: 4px 0;
   opacity: 0.9;
 }
+
+/* Payment Methods Header */
+.payment-methods-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border-radius: 8px;
+}
+
+.payment-methods-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.payment-methods-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+.payment-form-container {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}

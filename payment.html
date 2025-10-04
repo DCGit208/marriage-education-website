@@ -6,8 +6,6 @@
   <title>Payment - Marriage Education</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.stripe.com/v3/"></script>
-  <!-- PayPal SDK with simplified configuration -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AV2lnBrIkt_EeUyPx_tkntdOaEPnLAlWgWs7qgj7NXT4JoMLLioU_NDJoYOOrYkCpsrfCyooDDc281qO&currency=USD&intent=capture&components=buttons"></script>
 </head>
 <body>
   <header>
@@ -41,13 +39,13 @@
         <div class="payment-methods">
           <h3>Choose Payment Method</h3>
           
-          <div class="payment-tabs">
-            <button class="tab-button active" data-tab="stripe">Credit Card</button>
-            <button class="tab-button" data-tab="paypal">PayPal</button>
+          <div class="payment-methods-header">
+            <h3>💳 Secure Credit Card Payment</h3>
+            <p>Powered by Stripe - trusted by millions worldwide</p>
           </div>
 
           <!-- Stripe Payment Form -->
-          <div class="payment-tab active" id="stripe-tab">
+          <div class="payment-form-container" id="stripe-section">
             <div class="credit-card-notice">
               <h4>💳 Credit Card Payment</h4>
               <p><strong>Secure and Fast!</strong> Pay with your credit or debit card.</p>
@@ -95,24 +93,7 @@
             </form>
           </div>
 
-          <!-- PayPal Payment -->
-          <div class="payment-tab" id="paypal-tab">
-            <div id="paypal-button-container"></div>
-            <div class="security-badges">
-              <div class="security-badge">
-                <span>🔒</span>
-                <span>Secure Payment</span>
-              </div>
-              <div class="security-badge">
-                <span>🛡️</span>
-                <span>Buyer Protection</span>
-              </div>
-              <div class="security-badge">
-                <span>⚡</span>
-                <span>Instant Processing</span>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -183,114 +164,7 @@
         document.getElementById('order-total').textContent = '$' + productPrice;
       }
 
-      // PayPal initialization function - simplified approach
-      function initializePayPal() {
-        console.log('🔍 Initializing PayPal...');
-        
-        if (typeof paypal === 'undefined') {
-          console.error('❌ PayPal SDK not available');
-          document.getElementById('paypal-button-container').innerHTML = 
-            '<div class="error-message">❌ PayPal SDK failed to load. Please refresh the page.</div>';
-          return false;
-        }
-
-        console.log('✅ PayPal SDK loaded, creating button...');
-        
-        try {
-          paypal.Buttons({
-            style: {
-              layout: 'vertical',
-              color: 'gold',
-              shape: 'rect',
-              label: 'paypal'
-            },
-            
-            createOrder: function(data, actions) {
-              console.log('🚀 Creating PayPal order...');
-              
-              const price = parseFloat(productPrice || '19.99').toFixed(2);
-              console.log('Order price:', price);
-              
-              // Simplified order structure to avoid PAYMENT_DENIED
-              return actions.order.create({
-                intent: 'CAPTURE',
-                purchase_units: [{
-                  amount: {
-                    currency_code: 'USD',
-                    value: price
-                  },
-                  description: productName || 'Marriage Education Product'
-                }]
-              });
-            },
-            
-            onApprove: function(data, actions) {
-              console.log('✅ Payment approved, capturing...');
-              
-              return actions.order.capture().then(function(details) {
-                console.log('✅ Payment captured:', details);
-                
-                // Store order details
-                const orderInfo = {
-                  paypal_order_id: details.id,
-                  product_id: productId,
-                  product_name: productName,
-                  amount: productPrice,
-                  payer_email: details.payer?.email_address,
-                  payer_name: (details.payer?.name?.given_name || '') + ' ' + (details.payer?.name?.surname || ''),
-                  transaction_time: new Date().toISOString()
-                };
-                
-                localStorage.setItem('payment_success_info', JSON.stringify(orderInfo));
-                
-                // Redirect to success page
-                window.location.href = 'payment-success.html?order_id=' + details.id;
-              });
-            },
-            
-            onError: function(err) {
-              console.error('❌ PayPal error:', err);
-              
-              let message = 'Payment error occurred.';
-              if (err.message?.includes('PAYMENT_DENIED')) {
-                message = 'Payment was declined. This may be due to:\n• Insufficient funds\n• Payment method restrictions\n• Regional limitations\n\nPlease try a different payment method or contact support.';
-              }
-              
-              alert('❌ ' + message);
-            },
-            
-            onCancel: function(data) {
-              console.log('🚫 Payment cancelled');
-              alert('Payment was cancelled.');
-            }
-            
-          }).render('#paypal-button-container');
-          
-        } catch (error) {
-          console.error('❌ PayPal initialization error:', error);
-          document.getElementById('paypal-button-container').innerHTML = 
-            '<div class="error-message">❌ PayPal initialization failed. Please try refreshing the page.</div>';
-        }
-      }
-
-      // Wait for PayPal SDK
-      if (typeof paypal !== 'undefined') {
-        initializePayPal();
-      } else {
-        let attempts = 0;
-        const pollInterval = setInterval(function() {
-          attempts++;
-          
-          if (typeof paypal !== 'undefined') {
-            clearInterval(pollInterval);
-            initializePayPal();
-          } else if (attempts >= 50) {
-            clearInterval(pollInterval);
-            document.getElementById('paypal-button-container').innerHTML = 
-              '<div class="error-message">❌ PayPal failed to load. Please refresh the page.</div>';
-          }
-        }, 200);
-      }
+      
 
       // Initialize Stripe Elements
       if (typeof Stripe !== 'undefined') {
@@ -377,18 +251,7 @@
         });
       }
 
-      // Payment tab switching
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', function() {
-          const tabName = this.dataset.tab;
-          
-          document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-          this.classList.add('active');
-          
-          document.querySelectorAll('.payment-tab').forEach(tab => tab.classList.remove('active'));
-          document.getElementById(tabName + '-tab').classList.add('active');
-        });
-      });
+      // No tab switching needed - single payment method
     });
   </script>
 </body>
