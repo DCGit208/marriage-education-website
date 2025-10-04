@@ -65,10 +65,8 @@
 
               <div class="form-group">
                 <label>Card Information</label>
-                <div id="card-element" class="card-element">
-                  <div id="card-loading" style="padding: 12px; color: #666; font-style: italic;">
-                    Loading secure payment form...
-                  </div>
+                <div id="card-element">
+                  <!-- Stripe Elements will render here -->
                 </div>
                 <div id="card-errors" role="alert" style="color: #fa755a; font-size: 14px; margin-top: 8px;"></div>
               </div>
@@ -168,42 +166,29 @@
 
       
 
-      // Simple Stripe initialization
-      console.log('Initializing Stripe...');
-      
-      if (typeof Stripe !== 'undefined') {
-        const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-        const elements = stripe.elements();
+      // Pure Stripe implementation - no interference
+      const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
+      const elements = stripe.elements();
 
-        // Create card element with minimal styling
-        const cardElement = elements.create('card');
+      // Create card element with Stripe's default styling
+      const cardElement = elements.create('card');
 
-        // Clear loading text and mount
-        const loadingDiv = document.getElementById('card-loading');
-        if (loadingDiv) loadingDiv.remove();
-        
-        // Mount the element
-        cardElement.mount('#card-element');
+      // Mount to the div
+      cardElement.mount('#card-element');
 
-        // Handle changes
-        cardElement.on('change', function(event) {
-          const displayError = document.getElementById('card-errors');
-          if (event.error) {
-            displayError.textContent = event.error.message;
-          } else {
-            displayError.textContent = '';
-          }
-        });
+      // Handle real-time validation errors
+      cardElement.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+          displayError.textContent = event.error.message;
+        } else {
+          displayError.textContent = '';
+        }
+      });
 
-        // Store references
-        window.stripeInstance = stripe;
-        window.cardElement = cardElement;
-        
-        console.log('Stripe initialized successfully');
-      } else {
-        console.error('Stripe SDK not loaded');
-        document.getElementById('card-element').innerHTML = 'Error: Payment system not available';
-      }
+      // Store for form submission
+      window.stripeInstance = stripe;
+      window.cardElement = cardElement;
 
       // Handle Stripe form submission (using global references)
       const form = document.getElementById('stripe-payment-form');

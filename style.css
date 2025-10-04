@@ -562,10 +562,7 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Basic card element container - let Stripe handle the styling */
-#card-element {
-  margin: 10px 0;
-}
+/* Stripe card element - no custom styling */
 
 #card-errors {
   color: #e74c3c;
@@ -2444,10 +2441,7 @@ body {
   pointer-events: none;
 }
 
-.card-element-disabled {
-  background: #f8f9fa !important;
-  color: #6c757d !important;
-}
+/* Removed card-element-disabled styling */
 
 .card-placeholder {
   padding: 1rem;
@@ -2609,13 +2603,7 @@ body {
 }
 
 /* Loading state for card element */
-.card-element-loading {
-  background: #f8f9fa !important;
-  border-color: #dee2e6 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
+/* Removed card-element-loading styling */
 
 .card-loading-text {
   color: #6c757d;
