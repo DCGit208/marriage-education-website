@@ -166,29 +166,41 @@
 
       
 
-      // Pure Stripe implementation - no interference
-      const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-      const elements = stripe.elements();
-
-      // Create card element with Stripe's default styling
-      const cardElement = elements.create('card');
-
-      // Mount to the div
-      cardElement.mount('#card-element');
-
-      // Handle real-time validation errors
-      cardElement.on('change', function(event) {
-        const displayError = document.getElementById('card-errors');
-        if (event.error) {
-          displayError.textContent = event.error.message;
-        } else {
-          displayError.textContent = '';
+      // Wait for DOM and Stripe SDK to be ready
+      document.addEventListener('DOMContentLoaded', function() {
+        // Ensure Stripe is loaded
+        if (typeof Stripe === 'undefined') {
+          console.error('Stripe SDK not loaded');
+          document.getElementById('card-element').innerHTML = '<p style="color: red;">Payment system loading error. Please refresh the page.</p>';
+          return;
         }
-      });
 
-      // Store for form submission
-      window.stripeInstance = stripe;
-      window.cardElement = cardElement;
+        // Initialize Stripe
+        const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
+        const elements = stripe.elements();
+
+        // Create card element with default Stripe styling
+        const cardElement = elements.create('card');
+
+        // Mount to the container
+        cardElement.mount('#card-element');
+
+        // Handle real-time validation errors
+        cardElement.on('change', function(event) {
+          const displayError = document.getElementById('card-errors');
+          if (event.error) {
+            displayError.textContent = event.error.message;
+          } else {
+            displayError.textContent = '';
+          }
+        });
+
+        // Store for form submission
+        window.stripeInstance = stripe;
+        window.cardElement = cardElement;
+
+        console.log('Stripe Elements initialized successfully');
+      });
 
       // Handle Stripe form submission (using global references)
       const form = document.getElementById('stripe-payment-form');

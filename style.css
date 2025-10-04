@@ -562,7 +562,14 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Stripe card element - no custom styling */
+/* Minimal card element container - let Stripe handle the input styling */
+#card-element {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  min-height: 40px;
+}
 
 #card-errors {
   color: #e74c3c;
