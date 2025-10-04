@@ -4,8 +4,6 @@ name: Deploy to FTP
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   deploy:
@@ -15,6 +13,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Debug - Show files to deploy
+      run: |
+        echo "🔍 Files in repository:"
+        ls -la
+        echo "📄 Payment.html exists:"
+        ls -la payment.html
+        echo "🔧 Webhook file exists:"
+        ls -la stripe-webhook-simple.php
+      
     - name: Deploy to FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
@@ -23,10 +30,13 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         
-        # Optional: specify the remote directory path on your FTP server
+        # Deploy to marriageducation.com directory
         server-dir: /public_html/
         
-        # Optional: exclude certain files/folders
+        # Log deployment details
+        log-level: verbose
+        
+        # Exclude test files
         exclude: |
           **/.git*
           **/.git*/**
@@ -35,6 +45,7 @@ jobs:
           *.md
           **/*-test.html
           **/paypal-*test*.html
+          **/MANUAL_DEPLOYMENT_INSTRUCTIONS.txt
           
-        # Optional: only upload changed files (faster)
+        # Force sync all files
         dry-run: false

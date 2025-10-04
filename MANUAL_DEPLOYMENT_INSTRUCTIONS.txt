@@ -1,0 +1,40 @@
+MANUAL DEPLOYMENT INSTRUCTIONS FOR MARRIAGEDUCATION.COM
+========================================================
+
+CRITICAL: GitHub Actions auto-deployment is not working properly.
+You need to manually upload these files to get the live payment system working.
+
+FILES TO UPLOAD TO YOUR WEB SERVER:
+===================================
+
+1. payment.html (PRIORITY 1 - Main payment page)
+2. stripe-webhook-simple.php (PRIORITY 2 - Payment processing)
+3. style.css (if any styling issues)
+
+UPLOAD LOCATIONS:
+================
+- Upload TO: public_html/ (or your website root directory)
+- payment.html goes to: public_html/payment.html
+- stripe-webhook-simple.php goes to: public_html/stripe-webhook-simple.php
+
+AFTER UPLOAD:
+============
+1. Test: https://marriageducation.com/payment.html?product=sbd-dummies&price=19.99
+2. Verify Stripe card fields appear properly
+3. Set Stripe webhook URL to: https://marriageducation.com/stripe-webhook-simple.php
+
+FTP/cPanel UPLOAD PROCESS:
+=========================
+1. Access your web hosting control panel (cPanel/FTP)
+2. Navigate to public_html/ folder
+3. Upload payment.html (replace existing)
+4. Upload stripe-webhook-simple.php (new file)
+5. Set file permissions to 644
+
+VERIFICATION:
+============
+✅ Card element should show proper input fields
+✅ No PayPal tabs should appear
+✅ Live Stripe keys will work over HTTPS
+
+The files in this local directory are ready for upload!
