@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment - Marriage Education (LIVE TEST <?php echo date('H:i'); ?>)</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20251004-1" />
   <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
@@ -94,6 +94,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      console.log('[diagnostics] DOMContentLoaded - initializing Stripe checkout');
       // Get product details from URL
       const urlParams = new URLSearchParams(window.location.search);
       const product = urlParams.get('product') || 'sbd-dummies';
@@ -126,6 +127,7 @@
 
       // Create and mount card element (default styling)
       const cardElement = elements.create('card');
+      console.log('[diagnostics] Mounting Stripe card element into #card-element');
       cardElement.mount('#card-element');
 
       // Handle real-time validation errors
