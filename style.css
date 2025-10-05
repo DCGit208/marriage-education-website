@@ -562,10 +562,14 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Minimal card element container - let Stripe handle the input styling */
+/* Stripe card container (style the wrapper only, not the iframe) */
 #card-element {
-  /* Keep container neutral; Stripe controls input UI */
+  /* Container provides visual box like the test page */
   min-height: 44px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #ffffff;
 }
 
 #card-errors {

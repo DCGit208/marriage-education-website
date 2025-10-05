@@ -63,7 +63,7 @@
               </div>
 
               <div class="form-group">
-                <label>Card Information</label>
+                <label for="card-element">Card Information</label>
                 <div id="card-element">
                   <!-- Stripe Elements will render here -->
                 </div>
@@ -71,7 +71,7 @@
               </div>
 
               <button type="submit" id="submit" class="pay-button">
-                <span id="button-text">Pay Now</span>
+                <span id="button-text">Pay $19.99</span>
               </button>
             </form>
           </div>
@@ -113,7 +113,7 @@
       document.getElementById('modal-product-name').textContent = productInfo.name;
       document.getElementById('modal-product-price').textContent = '$' + productInfo.price;
       document.getElementById('order-total').textContent = '$' + productInfo.price;
-      document.getElementById('button-text').textContent = 'Pay $' + productInfo.price;
+  document.getElementById('button-text').textContent = 'Pay $' + productInfo.price;
 
       if (typeof Stripe === 'undefined') {
         console.error('Stripe.js failed to load');
@@ -156,7 +156,7 @@
           });
 
           if (error) {
-            document.getElementById('card-errors').textContent = error.message;
+            document.getElementById('card-errors').textContent = error.message || 'Your card could not be validated.';
           } else {
             console.log('Payment method created:', paymentMethod);
             alert('Payment method created successfully!');
