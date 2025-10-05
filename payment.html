@@ -57,10 +57,58 @@
         .summary {
             background: #f0f0f0; padding: 20px; margin-bottom: 30px; border-radius: 8px;
         }
+        .security-badges {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .security-badges h3 {
+            color: #635bff;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .security-text {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .security-items {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .security-item {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        footer {
+            margin-top: 50px;
+            padding: 30px 0;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer-links {
+            margin-bottom: 15px;
+        }
+        .footer-links a {
+            color: #635bff;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <h1>Complete Your Purchase</h1>
+    <h1>💳 Secure Credit Card Payment</h1>
     
     <div class="summary">
         <h3>Order Summary</h3>
@@ -91,6 +139,16 @@
             <span id="button-text">Pay $19.99</span>
         </button>
     </form>
+
+    <div class="security-badges">
+        <h3>Powered by Stripe - trusted by millions worldwide</h3>
+        <p class="security-text">Your payment information is secure and encrypted</p>
+        <div class="security-items">
+            <div class="security-item">🔒 SSL Encrypted</div>
+            <div class="security-item">🛡️ PCI Compliant</div>
+            <div class="security-item">🛡️ Fraud Protected</div>
+        </div>
+    </div>
 
     <script>
         // Initialize Stripe
@@ -126,5 +184,17 @@
             }
         });
     </script>
+
+    <footer>
+        <div class="footer-links">
+            <a href="/">Home</a>
+            <a href="/about.html">About</a>
+            <a href="/contact.html">Contact</a>
+            <a href="/privacy.html">Privacy Policy</a>
+            <a href="/terms.html">Terms of Service</a>
+        </div>
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+        <p>Secure payments powered by <strong>Stripe</strong></p>
+    </footer>
 </body>
 </html>
