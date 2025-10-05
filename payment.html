@@ -112,8 +112,8 @@
     
     <div class="summary">
         <h3>Order Summary</h3>
-        <p><strong>Product:</strong> SBD for Dummies</p>
-        <p><strong>Price:</strong> $19.99</p>
+        <p><strong>Product:</strong> <span id="product-name"></span>SBD for Dummies</span></p>
+        <p><strong>Price:</strong> <span id="product-price">$19.99</span></p>
     </div>
 
     <form id="payment-form">
@@ -198,19 +198,24 @@
 
         // Update page content with dynamic product info
         document.addEventListener('DOMContentLoaded', function() {
-            // Update product name and price in summary
-            const productNameEl = document.querySelector('.summary p:first-of-type strong').nextSibling;
-            const productPriceEl = document.querySelector('.summary p:last-of-type strong').nextSibling;
+            console.log('Dynamic pricing: productId=' + productId + ', price=' + productPrice + ', name=' + productDisplayName);
+            
+            // Update product name and price in summary using specific IDs
+            const productNameEl = document.getElementById('product-name');
+            const productPriceEl = document.getElementById('product-price');
             const payButtonEl = document.getElementById('button-text');
             
             if (productNameEl) {
-                productNameEl.textContent = ' ' + productDisplayName;
+                productNameEl.textContent = productDisplayName;
+                console.log('Updated product name to: ' + productDisplayName);
             }
             if (productPriceEl) {
-                productPriceEl.textContent = ' $' + productPrice.toFixed(2);
+                productPriceEl.textContent = '$' + productPrice.toFixed(2);
+                console.log('Updated product price to: $' + productPrice.toFixed(2));
             }
             if (payButtonEl) {
                 payButtonEl.textContent = 'Pay $' + productPrice.toFixed(2);
+                console.log('Updated pay button to: Pay $' + productPrice.toFixed(2));
             }
         });
 
