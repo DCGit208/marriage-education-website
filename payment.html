@@ -151,6 +151,43 @@
     </div>
 
     <script>
+        // Parse URL parameters for product and price
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('product') || 'sbd-dummies';
+        const productPrice = parseFloat(urlParams.get('price')) || 19.99;
+
+        // Product mapping for display names
+        const productNames = {
+            'sbd-compendium': 'The Sex by Design Compendium',
+            'sbd-dummies': 'SBD for Dummies',
+            'sbd-canonical': 'SBD Canonical',
+            'sbd-standard': 'SBD Standard',
+            'sbd-real-couples': 'SBD Real Couples',
+            'sbd-heart-of-relationship': 'SBD The Heart of Relationship',
+            'sbd-unequally-yoked': 'SBD Unequally Yoked Together',
+            'sbd-impregnable-assemblage': 'SBD 2 - The Impregnable Assemblage',
+            'naked-not-ashamed': 'Naked & Not Ashamed',
+            'marriage-sexuality': 'Marriage = Sexuality',
+            'arts-of-marriage': 'The Arts of Marriage',
+            'art-of-sexuality': 'The Art of Sexuality',
+            'art-of-seduction': 'The Art of Seduction',
+            'art-of-fucking': 'The Art of Fucking',
+            'sbd-magazine-annual': 'SBD Magazine Annual Subscription',
+            'sbd-magazine-single': 'SBD Magazine Single Issue',
+            'sbd-digital-archive': 'SBD Digital Archive Access',
+            'complete-sbd-library': 'Complete SBD Library',
+            'arts-of-marriage-collection': 'Arts of Marriage Complete Collection',
+            'marriage-foundation-bundle': 'Marriage Foundation Bundle',
+            'sbd-starter-magazine': 'SBD Starter + Magazine Bundle',
+            'newlywed-special': 'Newlywed Special Bundle',
+            'anniversary-celebration': 'Anniversary Celebration Bundle',
+            'marriage-porn-beyond': 'Marriage=Porn & Beyond'
+        };
+
+        // Get display name or use formatted product ID as fallback
+        const productDisplayName = productNames[productId] || 
+            productId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
         // Initialize Stripe
         const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
         const elements = stripe.elements();
@@ -158,6 +195,24 @@
         // Create card element
         const cardElement = elements.create('card');
         cardElement.mount('#card-element');
+
+        // Update page content with dynamic product info
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update product name and price in summary
+            const productNameEl = document.querySelector('.summary p:first-of-type strong').nextSibling;
+            const productPriceEl = document.querySelector('.summary p:last-of-type strong').nextSibling;
+            const payButtonEl = document.getElementById('button-text');
+            
+            if (productNameEl) {
+                productNameEl.textContent = ' ' + productDisplayName;
+            }
+            if (productPriceEl) {
+                productPriceEl.textContent = ' $' + productPrice.toFixed(2);
+            }
+            if (payButtonEl) {
+                payButtonEl.textContent = 'Pay $' + productPrice.toFixed(2);
+            }
+        });
 
         // Handle form submission (tokenization demo)
         const form = document.getElementById('payment-form');
