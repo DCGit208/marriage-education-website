@@ -21,6 +21,11 @@ jobs:
         ls -la payment.html
         echo "🔧 Webhook file exists:"
         ls -la stripe-webhook-simple.php
+
+    - name: Create deployment marker
+      run: |
+        echo "run=${GITHUB_RUN_NUMBER} time=$(date -u +%FT%TZ)" > deployment-marker.txt
+        echo "Created deployment-marker.txt with content:" && cat deployment-marker.txt
     
     - name: Deploy to FTP (root /public_html only)
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -56,7 +61,10 @@ jobs:
 
     - name: Post-deploy sanity check (fetch live payment page)
       run: |
+        set -e
+        echo "🌐 Fetching https://marriageducation.com/deployment-marker.txt?cb=${{ github.run_number }}"
+        curl -sS "https://marriageducation.com/deployment-marker.txt?cb=${{ github.run_number }}" | sed -n '1,2p'
         echo "🌐 Fetching https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}"
         curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | head -n 40
         echo "🔎 Checking for Stripe-only markers"
-        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | grep -iE "js.stripe.com|card-element|Secure Credit Card" -n || true
+        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | grep -iE "js.stripe.com|card-element|Secure Credit Card|Stripe\(" -n || true
