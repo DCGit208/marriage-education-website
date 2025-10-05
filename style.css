@@ -2459,6 +2459,45 @@ body {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+  /* Ensure subscription cards stack and CTAs don't overlap on small screens */
+  .subscription-grid {
+    grid-template-columns: 1fr;
+  }
+  .subscription-card {
+    display: flex;
+    flex-direction: column;
+  }
+  /* Prevent overlapping/overflowing CTAs and badges on small screens */
+  .subscription-card.featured {
+    transform: none; /* disable scale bump to avoid overflow */
+  }
+  .popular-badge {
+    position: static; /* flow in document to avoid overlap */
+    display: inline-block;
+    margin: 0 0 0.75rem 0;
+    transform: none;
+  }
+  .magazine-features .feature-badge,
+  .reader-testimonial {
+    position: static; /* stack naturally to avoid covering text/images */
+    margin: 0.5rem 0;
+  }
+  .main-magazine {
+    transform: none; /* remove rotation on small screens for layout stability */
+  }
+  /* Give benefits area room and keep button from crowding */
+  .card-benefits {
+    margin-bottom: 1rem;
+  }
+  .btn-subscription {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary,
+  .btn-subscription {
+    width: 100%;
+  }
   
   .hero-title {
     font-size: 2.5rem;
