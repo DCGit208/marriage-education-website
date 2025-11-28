@@ -4,6 +4,8 @@ name: Deploy to FTP
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -13,38 +15,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Debug - Show files to deploy
-      run: |
-        echo "🔍 Files in repository:"
-        ls -la
-        echo "📄 Payment.html exists:"
-        ls -la payment.html
-        echo "🔧 Webhook file exists:"
-        ls -la stripe-webhook-simple.php
-
-    - name: Create deployment marker
-      run: |
-        echo "run=${GITHUB_RUN_NUMBER} time=$(date -u +%FT%TZ)" > deployment-marker.txt
-        echo "Created deployment-marker.txt with content:" && cat deployment-marker.txt
-    
-    - name: Deploy to FTP (root /public_html only)
+    - name: Deploy to FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         # FTP server details (set these in GitHub repository secrets)
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftp
-        port: 21
-
+        
+        # Optional: specify the remote directory path on your FTP server
         server-dir: /public_html/
         
-        # Log deployment details
-        log-level: verbose
-        # Ensure remote is cleaned to avoid stale files
-        dangerous-clean-slate: true
-        
-        # Exclude test files
+        # Optional: exclude certain files/folders
         exclude: |
           **/.git*
           **/.git*/**
@@ -53,18 +35,6 @@ jobs:
           *.md
           **/*-test.html
           **/paypal-*test*.html
-          **/MANUAL_DEPLOYMENT_INSTRUCTIONS.txt
           
-        # Force sync all files
+        # Optional: only upload changed files (faster)
         dry-run: false
-
-
-    - name: Post-deploy sanity check (fetch live payment page)
-      run: |
-        set -e
-        echo "🌐 Fetching https://marriageducation.com/deployment-marker.txt?cb=${{ github.run_number }}"
-        curl -sS "https://marriageducation.com/deployment-marker.txt?cb=${{ github.run_number }}" | sed -n '1,2p'
-        echo "🌐 Fetching https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}"
-        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | head -n 40
-        echo "🔎 Checking for Stripe-only markers"
-        curl -sS "https://marriageducation.com/payment.html?cache-bust=${{ github.run_number }}" | grep -iE "js.stripe.com|card-element|Secure Credit Card|Stripe\(" -n || true

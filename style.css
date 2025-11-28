@@ -562,14 +562,33 @@ footer {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Stripe card container (style the wrapper only, not the iframe) */
 #card-element {
-  /* Container provides visual box like the test page */
-  min-height: 44px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #ffffff;
+  padding: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.3s ease;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+#card-element:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#card-element.StripeElement--focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#card-element.StripeElement--invalid {
+  border-color: #e74c3c;
+}
+
+#card-element.StripeElement--complete {
+  border-color: #27ae60;
 }
 
 #card-errors {
@@ -607,7 +626,19 @@ footer {
   transform: none;
 }
 
-/* PayPal styles removed to prevent interference with Stripe-only checkout */
+#paypal-button-container {
+  min-height: 50px;
+  margin-top: 1rem;
+}
+
+#paypal-button-container .paypal-button {
+  margin-bottom: 0.5rem;
+}
+
+/* PayPal Button Styling Override */
+#paypal-button-container iframe {
+  border-radius: 8px !important;
+}
 
 /* Modal Styles */
 .modal {
@@ -2437,7 +2468,10 @@ body {
   pointer-events: none;
 }
 
-/* Removed card-element-disabled styling */
+.card-element-disabled {
+  background: #f8f9fa !important;
+  color: #6c757d !important;
+}
 
 .card-placeholder {
   padding: 1rem;
@@ -2459,14 +2493,6 @@ body {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  /* Ensure subscription cards stack and CTAs don't overlap on small screens */
-  .subscription-grid {
-    grid-template-columns: 1fr;
-  }
-  .subscription-card {
-    display: flex;
-    flex-direction: column;
-  }
   /* Prevent overlapping/overflowing CTAs and badges on small screens */
   .subscription-card.featured {
     transform: none; /* disable scale bump to avoid overflow */
@@ -2484,14 +2510,6 @@ body {
   }
   .main-magazine {
     transform: none; /* remove rotation on small screens for layout stability */
-  }
-  /* Give benefits area room and keep button from crowding */
-  .card-benefits {
-    margin-bottom: 1rem;
-  }
-  .btn-subscription {
-    width: 100%;
-    margin-top: 0.5rem;
   }
   .hero-buttons .btn-primary,
   .hero-buttons .btn-secondary,
@@ -2534,116 +2552,3 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
-/* Stripe Payment Styling - Simplified */
-/* Removed conflicting card-element styles - let Stripe handle styling */
-
-#card-errors {
-  color: #e74c3c;
-  font-size: 14px;
-  margin-top: 8px;
-  padding: 8px 0;
-  min-height: 24px;
-}
-
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-left: 8px;
-}
-
-.spinner.hidden {
-  display: none;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.payment-form input[required]:invalid {
-  border-color: #e74c3c;
-}
-
-.payment-form input[required]:valid {
-  border-color: #27ae60;
-}
-
-.credit-card-notice {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.credit-card-notice h4 {
-  margin-bottom: 8px;
-  font-size: 18px;
-}
-
-.credit-card-notice p {
-  margin: 4px 0;
-  opacity: 0.9;
-}
-
-/* Payment Methods Header */
-.payment-methods-header {
-  text-align: center;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
-  border-radius: 8px;
-}
-
-.payment-methods-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-}
-
-.payment-methods-header p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-.payment-form-container {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-
-
-#card-loading {
-  padding: 12px;
-  color: #666;
-  font-style: italic;
-  text-align: center;
-}
-
-#card-errors {
-  color: #fa755a;
-  font-size: 14px;
-  margin-top: 8px;
-  min-height: 20px;
-}
-
-/* Loading state for card element */
-/* Removed card-element-loading styling */
-
-.card-loading-text {
-  color: #6c757d;
-  font-style: italic;
-  font-size: 14px;
-}
-
-/* Removed StripeElement overrides to let Stripe control internal iframe styling */
