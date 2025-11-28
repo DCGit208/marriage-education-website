@@ -3,60 +3,27 @@
 
 class PaymentProcessor {
     constructor() {
-    this.stripe = null;
-    this.paypal = null; // Stripe-only checkout
-    this.initializeStripe();
-    // PayPal disabled intentionally
+        this.stripe = null;
+        this.paypal = null;
+        this.initializeStripe();
+        this.initializePayPal();
     }
 
     // Initialize Stripe
     async initializeStripe() {
         // Load Stripe.js
         if (typeof Stripe !== 'undefined') {
-            this.stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-            this.setupStripeElements();
+            this.stripe = Stripe('pk_test_your_stripe_publishable_key_here'); // Replace with your actual key
         }
     }
 
-    // Setup Stripe Elements
-    setupStripeElements() {
-        if (!this.stripe) return;
-        // Only mount if container exists on this page
-        const cardContainer = document.querySelector('#card-element');
-        if (!cardContainer) return;
-
-        const elements = this.stripe.elements();
-        this.cardElement = elements.create('card', {
-            style: {
-                base: {
-                    fontSize: '16px',
-                    color: '#424770',
-                    '::placeholder': {
-                        color: '#aab7c4',
-                    },
-                },
-                invalid: {
-                    color: '#9e2146',
-                },
-            },
-        });
-        
-        // Mount the card element
-        this.cardElement.mount('#card-element');
-        
-        // Handle real-time validation errors from the card Element
-        this.cardElement.on('change', ({error}) => {
-            const displayError = document.getElementById('card-errors');
-            if (error) {
-                displayError.textContent = error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        });
+    // Initialize PayPal
+    initializePayPal() {
+        // PayPal SDK will be loaded via script tag in HTML
+        if (typeof paypal !== 'undefined') {
+            this.paypal = paypal;
+        }
     }
-
-    // Initialize PayPal (disabled)
-    // initializePayPal() {}
 
     // Process Stripe Payment
     async processStripePayment(amount, currency, productName, customerEmail) {
@@ -98,10 +65,6 @@ class PaymentProcessor {
 
     // Setup PayPal Buttons
     setupPayPalButtons(containerId, amount, currency, productName) {
-        if (!this.paypal) {
-            console.warn('PayPal is disabled on this site.');
-            return { render: () => Promise.resolve() };
-        }
         return this.paypal.Buttons({
             createOrder: (data, actions) => {
                 return actions.order.create({
@@ -163,37 +126,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Utility functions for product purchases
 function purchaseProduct(productId, amount, productName) {
-    // If the payment modal exists on this page, use it; otherwise, allow normal link navigation
     const modal = document.getElementById('payment-modal');
-    if (!modal) {
-        // No modal present (e.g., on shop.html). Let the anchor href navigate to payment.html.
-        return;
-    }
-
     const productNameEl = document.getElementById('modal-product-name');
     const productPriceEl = document.getElementById('modal-product-price');
-    if (productNameEl) productNameEl.textContent = productName;
-    if (productPriceEl) productPriceEl.textContent = `$${amount}`;
-
+    
+    productNameEl.textContent = productName;
+    productPriceEl.textContent = `$${amount}`;
+    
     modal.style.display = 'block';
-
+    
     // Setup payment methods for this product
     setupProductPayment(productId, amount, productName);
 }
 
 function setupProductPayment(productId, amount, productName) {
     // Setup PayPal button
-    // if (window.paymentProcessor && window.paymentProcessor.paypal) {
-    //     const paypalContainer = document.getElementById('paypal-button-container');
-    //     paypalContainer.innerHTML = ''; // Clear existing buttons
-    //     
-    //     window.paymentProcessor.setupPayPalButtons(
-    //         'paypal-button-container',
-    //         amount,
-    //         'USD',
-    //         productName
-    //     );
-    // }
+    if (window.paymentProcessor && window.paymentProcessor.paypal) {
+        const paypalContainer = document.getElementById('paypal-button-container');
+        paypalContainer.innerHTML = ''; // Clear existing buttons
+        
+        window.paymentProcessor.setupPayPalButtons(
+            'paypal-button-container',
+            amount,
+            'USD',
+            productName
+        );
+    }
     
     // Setup Stripe form submission
     const stripeForm = document.getElementById('stripe-payment-form');
