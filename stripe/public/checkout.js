@@ -1,6 +1,5 @@
-// Stripe publishable key - replace with your key or load from config
-// TODO: Load from server-side config endpoint
-const stripe = Stripe("pk_live_REPLACE_WITH_YOUR_PUBLISHABLE_KEY");
+// Stripe publishable key (safe to expose in client-side code)
+const stripe = Stripe("pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776");
 
 initialize();
 
