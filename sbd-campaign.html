@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sex By Design for Dummies - 14-Day Launch Campaign | Marriage Education</title>
+    <meta name="description" content="14 Days. 7 Revenue Engines. 1 Mission: Raise 500,000,000+ FCFA to fund a national marriage literacy movement.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        /* Premium Typography */
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        
+        /* Campaign Hero - Premium Design */
+        .campaign-hero {
+            position: relative;
+            min-height: 95vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            padding: 60px 20px;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f1f3f4 100%);
+        }
+        
+        .hero-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at top left, rgba(0, 184, 148, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(116, 185, 255, 0.1) 0%, transparent 50%);
+            animation: floatBackground 20s ease-in-out infinite;
+        }
+        
+        @keyframes floatBackground {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        .campaign-hero .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .hero-text {
+            color: #2d3436;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 184, 148, 0.2);
+            animation: fadeInDown 0.8s ease;
+        }
+        
+        .hero-badge span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            color: #2d3436;
+            letter-spacing: -1px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        
+        .hero-text .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #636e72;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+        
+        .hero-text .book-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 25px;
+            color: #00b894;
+            animation: fadeInUp 0.8s ease 0.4s both;
+            line-height: 1.2;
+        }
+        
+        .campaign-mission {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin: 25px 0;
+            line-height: 1.7;
+            color: #2d3436;
+            animation: fadeInUp 0.8s ease 0.5s both;
+        }
+        
+        .mission-highlight {
+            color: #00b894;
+            font-weight: 700;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0 25px 0;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.9s both;
+        }
+        
+        .hero-buttons .btn-primary,
+        .hero-buttons .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.05rem;
+        }
+        
+        .trust-indicators {
+            font-size: 0.9rem;
+            color: #636e72;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            animation: fadeInUp 0.8s ease 1s both;
+        }
+        
+        .countdown-timer {
+            display: flex;
+            justify-content: flex-start;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.7s both;
+        }
+        
+        .countdown-item {
+            background: white;
+            padding: 18px 22px;
+            border-radius: 12px;
+            min-width: 90px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .countdown-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.15);
+            border-color: #00b894;
+        }
+        
+        .countdown-number {
+            font-size: 2.8rem;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+            color: #00b894;
+        }
+        
+        .countdown-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #636e72;
+            margin-top: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .founding-counter {
+            background: rgba(0, 184, 148, 0.1);
+            border: 2px solid #00b894;
+            padding: 12px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            margin: 25px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3436;
+            animation: fadeInUp 0.8s ease 0.8s both;
+        }
+        
+        .founding-counter .number {
+            color: #00b894;
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+        
+        /* Hero Visual Section */
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInRight 1s ease 0.5s both;
+        }
+        
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .hero-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            transform: rotate(-5deg);
+            transition: all 0.4s ease;
+            animation: floatCard 6s ease-in-out infinite;
+        }
+        
+        @keyframes floatCard {
+            0%, 100% { transform: rotate(-5deg) translateY(0px); }
+            50% { transform: rotate(-5deg) translateY(-15px); }
+        }
+        
+        .hero-card:hover {
+            transform: rotate(-2deg) scale(1.05) translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .hero-card img {
+            width: 240px;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .card-content h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .card-content p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+        
+        .card-price {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+        
+        .floating-elements {
+            position: absolute;
+            top: 15%;
+            right: -15%;
+            z-index: 10;
+        }
+        
+        .floating-testimonial {
+            background: white;
+            padding: 1.2rem;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            max-width: 220px;
+            animation: float 6s ease-in-out infinite;
+            border-left: 4px solid #00b894;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .floating-testimonial p {
+            font-size: 0.9rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+            line-height: 1.5;
+        }
+        
+        .floating-testimonial cite {
+            font-size: 0.8rem;
+            color: #00b894;
+            font-weight: 600;
+            font-style: normal;
+        }
+        
+        .section {
+            padding: 80px 20px;
+        }
+        
+        .section-alt {
+            background: #f9fafb;
+        }
+        
+        .revenue-engine {
+            scroll-margin-top: 80px;
+        }
+        
+        .launch-window-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .engine-badge {
+            display: inline-block;
+            background: #00b894;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            color: #2d3436;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        
+        .section-header .subtitle {
+            font-size: 1.2rem;
+            color: #6b7280;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .pressure-badge {
+            background: rgba(0, 184, 148, 0.1);
+            border: 2px solid #00b894;
+            border-radius: 12px;
+            padding: 15px 25px;
+            color: #1f2937;
+            font-size: 1rem;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .pressure-badge i {
+            color: #00b894;
+            margin-right: 8px;
+        }
+        
+        .engine-card {
+            border-top: 4px solid #00b894;
+        }
+        
+        .benefits-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            max-width: 700px;
+        }
+        
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .benefits-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .benefits-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .benefits-list i {
+            color: #10b981;
+            margin-right: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .price-tag {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .price-tag .currency {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .pillar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .pillar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 4px solid #00b894;
+        }
+        
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 184, 148, 0.2);
+        }
+        
+        .pillar-card h3 {
+            color: #00b894;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        /* VIP Section for Major Sponsorship */
+        .vip-section {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+        }
+        
+        .vip-section .section-header h2 {
+            color: white;
+        }
+        
+        .vip-section .subtitle,
+        .vip-section p {
+            color: rgba(255,255,255,0.85);
+        }
+        
+        .vip-section .engine-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #f39c12 100%);
+            color: #1f2937;
+        }
+        
+        .sponsor-card {
+            background: white;
+            border-top: 4px solid #ffd700;
+        }
+        
+        .sponsor-card h3 {
+            color: #1f2937;
+            font-size: 1.6rem;
+        }
+        
+        .pillar-card .copies {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        
+        .pillar-card .price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 20px 0;
+        }
+        
+        .pillar-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .pillar-card ul li {
+            padding: 8px 0;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .pillar-card ul li i {
+            color: #10b981;
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        
+        .supporter-table {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .supporter-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .supporter-table th {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-size: 1.1rem;
+        }
+        
+        .supporter-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .supporter-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .supporter-table tr:hover {
+            background: #f9fafb;
+        }
+        
+        .pack-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 1.05rem;
+        }
+        
+        .referral-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+        
+        .referral-step {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .referral-step .number {
+            background: #00b894;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .referral-arrow {
+            color: #00b894;
+            font-size: 2rem;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 80px;
+            color: #00b894;
+            opacity: 0.2;
+            font-family: Georgia, serif;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #4b5563;
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        .testimonial-author {
+            color: #00b894;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .impact-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            margin: 30px auto;
+        }
+        
+        .impact-item {
+            background: white;
+            border-left: 4px solid #00b894;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .impact-item i {
+            color: #00b894;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .payment-options {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        
+        .payment-option {
+            text-align: center;
+        }
+        
+        .payment-option i {
+            font-size: 3rem;
+            color: #00b894;
+            margin-bottom: 10px;
+        }
+        
+        .payment-option .name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        /* Summary Checklist Grid */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .checklist-item {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #00b894;
+            text-align: center;
+        }
+        
+        .checklist-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 184, 148, 0.2);
+        }
+        
+        .checklist-number {
+            background: #00b894;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        
+        .checklist-item h3 {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .checklist-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #00b894;
+            margin-bottom: 10px;
+        }
+        
+        .checklist-desc {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .btn-checklist {
+            background: #00b894;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-checklist:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: #00b894;
+            color: white;
+            padding: 16px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #2d3436;
+            padding: 16px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: 2px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #00b894;
+            color: #00b894;
+            transform: translateY(-2px);
+        }
+        
+        .btn-pillar {
+            background: #00b894;
+            color: white;
+            padding: 14px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .btn-pillar:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+        
+        .btn-table {
+            background: #00b894;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-table:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+        }
+        
+        .sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .sticky-cta.visible {
+            transform: translateY(0);
+        }
+        
+        .sticky-cta .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .sticky-cta .text {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .sticky-cta .spots {
+            color: #ffd700;
+            font-weight: 700;
+        }
+        
+        .referral-generator {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            margin: 30px auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .referral-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .referral-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .referral-input:focus {
+            outline: none;
+            border-color: #00b894;
+        }
+        
+        .btn-generate {
+            background: #00b894;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-generate:hover {
+            background: #00a085;
+        }
+        
+        .referral-link-display {
+            background: #f9fafb;
+            border: 2px dashed #00b894;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .referral-link-display.active {
+            display: block;
+        }
+        
+        .referral-link {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            color: #00b894;
+            margin: 10px 0;
+        }
+        
+        .btn-copy {
+            background: #10b981;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-copy:hover {
+            background: #059669;
+        }
+        
+        .btn-copy.copied {
+            background: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .campaign-hero {
+                min-height: auto;
+                padding: 40px 20px;
+            }
+            
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .hero-text .book-title {
+                font-size: 1.8rem;
+            }
+            
+            .campaign-mission {
+                font-size: 1.05rem;
+            }
+            
+            .countdown-timer {
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .countdown-item {
+                min-width: 75px;
+                padding: 15px 18px;
+            }
+            
+            .countdown-number {
+                font-size: 2.2rem;
+            }
+            
+            .countdown-label {
+                font-size: 0.75rem;
+            }
+            
+            .founding-counter {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            
+            .founding-counter .number {
+                font-size: 1.4rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .hero-buttons .btn-primary,
+            .hero-buttons .btn-secondary {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 30px;
+            }
+            
+            .hero-card {
+                transform: rotate(-3deg);
+            }
+            
+            .hero-card img {
+                width: 200px;
+            }
+            
+            .floating-elements {
+                display: none;
+            }
+            
+            .trust-indicators {
+                font-size: 0.85rem;
+            }
+            
+            .section-header h2 {
+                font-size: 1.8rem;
+                line-height: 1.3;
+            }
+            
+            .section-header .subtitle {
+                font-size: 1rem;
+            }
+            
+            .engine-badge {
+                font-size: 0.75rem;
+                padding: 6px 16px;
+            }
+            
+            .section {
+                padding: 60px 20px;
+            }
+            
+            .supporter-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .supporter-table table {
+                min-width: 700px;
+            }
+            
+            .pillar-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .checklist-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .impact-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .cta-buttons .btn-primary,
+            .cta-buttons .btn-secondary {
+                width: 100%;
+            }
+            
+            .sticky-cta .container {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .referral-input-group {
+                flex-direction: column;
+            }
+            
+            .pressure-badge {
+                font-size: 0.9rem;
+                padding: 12px 20px;
+            }
+            
+            .price-tag {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="campaign-hero">
+        <div class="hero-background">
+            <div class="hero-gradient"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <span>⏰ 14-Day National Launch Campaign</span>
+                    </div>
+                    <h1 class="hero-title">
+                        Rebuild the Nation — One Marriage at a Time
+                    </h1>
+                    <p class="subtitle">14-Day National Launch Campaign for</p>
+                    <p class="book-title">Sex By Design for Dummies</p>
+                    
+                    <p class="campaign-mission">
+                        <strong class="mission-highlight">14 Days. 7 Revenue Engines. 1 Mission:</strong><br>
+                        Raise <span class="mission-highlight">500,000,000+ FCFA</span> to fund a national marriage literacy movement.
+                    </p>
+                    
+                    <!-- Countdown Timer -->
+                    <div class="countdown-timer">
+                        <div class="countdown-item">
+                            <span class="countdown-number" id="days">00</span>
+                            <span class="countdown-label">Days</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-number" id="hours">00</span>
+                            <span class="countdown-label">Hours</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-number" id="minutes">00</span>
+                            <span class="countdown-label">Minutes</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-number" id="seconds">00</span>
+                            <span class="countdown-label">Seconds</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Founding Counter -->
+                    <div class="founding-counter">
+                        <span class="number" id="spots-remaining">487</span> of 500 Founding Spots Remaining
+                    </div>
+                    
+                    <!-- Hero CTA Grid -->
+                    <div class="hero-buttons">
+                        <a href="#founding-500" class="btn-primary">
+                            <span>Join the Founding 500</span>
+                            <i>→</i>
+                        </a>
+                        <a href="#founding-pillars" class="btn-secondary">
+                            <span>Become a Pillar</span>
+                            <i>💎</i>
+                        </a>
+                    </div>
+                    
+                    <div class="trust-indicators">
+                        <p>✅ 14-Day Window • ✅ 500M+ FCFA Goal • ✅ 7 Revenue Engines • ✅ Digital Delivery</p>
+                    </div>
+                </div>
+                
+                <div class="hero-visual">
+                    <div class="hero-card">
+                        <img src="images/sbd-dummies.jpg" alt="Sex By Design for Dummies" />
+                        <div class="card-content">
+                            <h4>Sex By Design for Dummies</h4>
+                            <p>The civilizational blueprint for marriage literacy</p>
+                            <div class="card-price">From 15,000 FCFA</div>
+                        </div>
+                    </div>
+                    <div class="floating-elements">
+                        <div class="floating-testimonial">
+                            <p>"This is not a book. This is a revelation."</p>
+                            <cite>- Early Reader</cite>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 14-Day Launch Window Section -->
+    <section class="section launch-window-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>⏳ 14-Day Launch Window</h2>
+                <p class="subtitle"><strong>This campaign is live for 14 days only.</strong></p>
+            </div>
+            
+            <div class="benefits-card" style="max-width: 900px; margin: 0 auto;">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 25px;">During this window, your support helps:</h3>
+                <div class="impact-list">
+                    <div class="impact-item">
+                        <i class="fas fa-book"></i>
+                        <p>Fund <strong>ISBN, editing, and final design</strong></p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-users"></i>
+                        <p>Build the <strong>first 1,000,000-copy movement</strong></p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <p>Seed <strong>marriage literacy</strong> across youth, couples, churches, and institutions</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-landmark"></i>
+                        <p>Establish <strong>SBD for Dummies</strong> as a civilizational reference work</p>
+                    </div>
+                </div>
+                
+                <div style="background: #f9fafb; padding: 25px; border-radius: 12px; margin-top: 30px; text-align: center;">
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;"><strong>📅 Campaign Duration:</strong> 14 Days</p>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;"><strong>🎯 Funding Goal:</strong> <span style="color: #667eea; font-weight: 700;">500,000,000+ FCFA</span></p>
+                    <p style="font-size: 1.1rem;"><strong>📍 Method:</strong> 100% digital — Stripe + Paystack + Flutterwave, WhatsApp & social media</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 1: Founding 500 -->
+    <section class="section revenue-engine" id="founding-500">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 1</div>
+                <h2>🔥 Founding 500 — Launch Fuel for the Movement</h2>
+                <p class="subtitle">The first 500 supporters fund the technical backbone of the project</p>
+            </div>
+            
+            <div class="benefits-card engine-card">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">The First 500 Supporters Fund:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-check-circle"></i> ISBN registration</li>
+                    <li><i class="fas fa-check-circle"></i> Final editing & professional layout</li>
+                    <li><i class="fas fa-check-circle"></i> Cover refinement</li>
+                    <li><i class="fas fa-check-circle"></i> Initial marketing & distribution integration</li>
+                    <li><i class="fas fa-check-circle"></i> First wave of awareness campaigns</li>
+                </ul>
+                
+                <h3 style="text-align: center; color: #667eea; margin-top: 30px; margin-bottom: 20px;">🎁 What Founding Supporters Receive:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-star"></i> Your name listed in the <strong>Founding Supporters Page</strong> (first edition)</li>
+                    <li><i class="fas fa-star"></i> Instant access to the <strong>Digital Edition (PDF/EPUB)</strong></li>
+                    <li><i class="fas fa-star"></i> Exclusive invite to the <strong>Teleios Mastery Live Session</strong></li>
+                    <li><i class="fas fa-star"></i> Priority access to future <strong>SBD projects & experiences</strong></li>
+                    <li><i class="fas fa-star"></i> Digital <strong>Founding Supporter Certificate</strong></li>
+                </ul>
+                
+                <div class="price-tag">
+                    <span class="currency">15,000 FCFA</span>
+                </div>
+                
+                <div class="pressure-badge">
+                    <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Founding supporter listings in the first edition close at the end of this window.
+                </div>
+                
+                <a href="payment.html?product=sbd-founding&price=15000&currency=FCFA" class="btn-primary" style="width: 100%; text-align: center; display: block;">Join the Founding 500 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 2: Founding Pillars -->
+    <section class="section section-alt revenue-engine" id="founding-pillars">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 2</div>
+                <h2>💎 Founding Pillars & Nation Builders (10–100 Copies)</h2>
+                <p class="subtitle">High-impact sponsorship tiers that accelerate the 500M+ FCFA target</p>
+                <p style="margin-top: 15px; color: #4b5563;">Your support sponsors books for youth groups, couples & families, churches & ministries, universities & campuses, and community networks.</p>
+            </div>
+            
+            <div class="pillar-grid">
+                <!-- 10 Copies Pillar -->
+                <div class="pillar-card">
+                    <h3>🧱 10 Copies</h3>
+                    <p class="copies">Sponsor 10 copies</p>
+                    <p class="price">150,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Listed as <strong>Founding Pillar</strong></li>
+                        <li><i class="fas fa-check"></i> 10 sponsored copies</li>
+                        <li><i class="fas fa-check"></i> Digital Certificate</li>
+                        <li><i class="fas fa-check"></i> Priority invitations</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-pillar-10&price=150000&currency=FCFA" class="btn-pillar">Sponsor 10 Copies →</a>
+                </div>
+                
+                <!-- 20 Copies Pillar -->
+                <div class="pillar-card">
+                    <h3>🧱 20 Copies</h3>
+                    <p class="copies">Sponsor 20 copies</p>
+                    <p class="price">300,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All 10-copy benefits</li>
+                        <li><i class="fas fa-check"></i> 20 sponsored copies</li>
+                        <li><i class="fas fa-check"></i> <strong>Bonus:</strong> Teleios audio teachings</li>
+                        <li><i class="fas fa-check"></i> Extended recognition</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-pillar-20&price=300000&currency=FCFA" class="btn-pillar">Sponsor 20 Copies →</a>
+                </div>
+                
+                <!-- 50 Copies Pillar -->
+                <div class="pillar-card">
+                    <h3>🧱 50 Copies</h3>
+                    <p class="copies">Sponsor 50 copies</p>
+                    <p class="price">750,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All 20-copy benefits</li>
+                        <li><i class="fas fa-check"></i> 50 sponsored copies</li>
+                        <li><i class="fas fa-check"></i> <strong>Bonus:</strong> Private strategy call</li>
+                        <li><i class="fas fa-check"></i> Premium recognition</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-pillar-50&price=750000&currency=FCFA" class="btn-pillar">Sponsor 50 Copies →</a>
+                </div>
+                
+                <!-- 100 Copies Pillar -->
+                <div class="pillar-card">
+                    <h3>🧱 100 Copies</h3>
+                    <p class="copies">Sponsor 100 copies</p>
+                    <p class="price">1,500,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All 50-copy benefits</li>
+                        <li><i class="fas fa-check"></i> 100 sponsored copies</li>
+                        <li><i class="fas fa-check"></i> <strong>Bonus:</strong> SBD partnership plaque</li>
+                        <li><i class="fas fa-check"></i> Elite recognition</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-pillar-100&price=1500000&currency=FCFA" class="btn-pillar">Sponsor 100 Copies →</a>
+                </div>
+            </div>
+            
+            <div class="pressure-badge" style="text-align: center; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Pillar listings in the first edition are locked at the end of the 14-day window.
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 3: Supporter Packs -->
+    <section class="section revenue-engine" id="supporter-packs">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 3</div>
+                <h2>📚 Supporter Packs (1–100 Copies) — Multiply Without Stress</h2>
+                <p class="subtitle">For everyday supporters who want to buy for themselves, gift to friends & family, seed small groups, or sponsor local youth</p>
+            </div>
+            
+            <div class="supporter-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pack</th>
+                            <th>Copies</th>
+                            <th>Total Price</th>
+                            <th>Use Case</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="pack-name">Single</td>
+                            <td>1</td>
+                            <td>15,000 FCFA</td>
+                            <td>Read it yourself</td>
+                            <td><a href="payment.html?product=sbd-1&price=15000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Triple</td>
+                            <td>3</td>
+                            <td>45,000 FCFA</td>
+                            <td>One for you, two for friends</td>
+                            <td><a href="payment.html?product=sbd-3&price=45000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Family Pack</td>
+                            <td>5</td>
+                            <td>75,000 FCFA</td>
+                            <td>Household or close network</td>
+                            <td><a href="payment.html?product=sbd-5&price=75000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Community Pack</td>
+                            <td>10</td>
+                            <td>150,000 FCFA</td>
+                            <td>Small group / cell / youth group</td>
+                            <td><a href="payment.html?product=sbd-10&price=150000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Impact Pack</td>
+                            <td>20</td>
+                            <td>300,000 FCFA</td>
+                            <td>Sponsor a community / class</td>
+                            <td><a href="payment.html?product=sbd-20&price=300000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Movement Pack</td>
+                            <td>50</td>
+                            <td>750,000 FCFA</td>
+                            <td>Seed an entire ministry or campus</td>
+                            <td><a href="payment.html?product=sbd-50&price=750000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                        <tr>
+                            <td class="pack-name">Nation Builder Pack</td>
+                            <td>100</td>
+                            <td>1,500,000 FCFA</td>
+                            <td>Anchor a region or institutional rollout</td>
+                            <td><a href="payment.html?product=sbd-100&price=1500000&currency=FCFA" class="btn-table">Buy Now</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pressure-badge" style="text-align: center; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Supporter packs bought in the first 14 days count towards the 500M FCFA founding goal.
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral Program Section -->
+    <section class="section section-alt" id="referral-program">
+        <div class="container">
+            <div class="section-header">
+                <h2>🔗 Referral Program — Ambassador 10</h2>
+                <p class="subtitle">Help spread the message and earn rewards</p>
+            </div>
+            
+            <!-- Referral Flow -->
+            <div class="referral-flow">
+                <div class="referral-step">
+                    <div class="number">1</div>
+                    <p><strong>Buy a copy</strong></p>
+                </div>
+                <div class="referral-arrow">→</div>
+                <div class="referral-step">
+                    <div class="number">2</div>
+                    <p><strong>Get your link</strong></p>
+                </div>
+                <div class="referral-arrow">→</div>
+                <div class="referral-step">
+                    <div class="number">3</div>
+                    <p><strong>Share widely</strong></p>
+                </div>
+                <div class="referral-arrow">→</div>
+                <div class="referral-step">
+                    <div class="number">🎁</div>
+                    <p><strong>Earn rewards</strong></p>
+                </div>
+            </div>
+            
+            <div class="benefits-card" style="margin-top: 40px;">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">When 10 people buy through your link:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-gift"></i> You receive <strong>1 free sponsored copy</strong></li>
+                    <li><i class="fas fa-gift"></i> OR <strong>Exclusive SBD Merch (digital)</strong></li>
+                    <li><i class="fas fa-trophy"></i> Recognition on Ambassador Leaderboard</li>
+                </ul>
+                
+                <h3 style="text-align: center; color: #667eea; margin-top: 30px; margin-bottom: 20px;">🎯 Why Referral Works:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-check-circle"></i> Zero ads — Pure word of mouth</li>
+                    <li><i class="fas fa-check-circle"></i> Organic growth through trust</li>
+                    <li><i class="fas fa-check-circle"></i> WhatsApp virality enabled</li>
+                    <li><i class="fas fa-check-circle"></i> Community-based impact</li>
+                </ul>
+            </div>
+            
+            <!-- Referral Link Generator -->
+            <div class="referral-generator">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 15px;">Generate Your Referral Link</h3>
+                <p style="text-align: center; color: #6b7280; margin-bottom: 20px;">Enter your name or email to create your unique referral link</p>
+                
+                <div class="referral-input-group">
+                    <input type="text" class="referral-input" id="referral-name" placeholder="Your name or email">
+                    <button class="btn-generate" onclick="generateReferralLink()">Generate Link</button>
+                </div>
+                
+                <div class="referral-link-display" id="referral-link-display">
+                    <p style="font-weight: 600; margin-bottom: 10px;">Your Referral Link:</p>
+                    <div class="referral-link" id="referral-link"></div>
+                    <button class="btn-copy" id="copy-btn" onclick="copyReferralLink()">Copy Link</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 4: Ambassador Program -->
+    <section class="section revenue-engine" id="ambassador-program">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 4</div>
+                <h2>🚀 Ambassador Program — Earn Up to 90,000 FCFA</h2>
+                <p class="subtitle">Join 500 ambassadors selling 60 books each • Earn 1,500 FCFA per book + bonuses</p>
+            </div>
+            
+            <!-- Ambassador Opportunity Highlight -->
+            <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); padding: 3rem 2rem; border-radius: 16px; color: white; margin-bottom: 2rem; text-align: center;">
+                <h3 style="font-size: 2rem; margin-bottom: 1.5rem; color: white;">💰 Your Earning Opportunity</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                    <div>
+                        <div style="font-size: 3rem; font-weight: 700; margin-bottom: 0.5rem;">60</div>
+                        <div style="font-size: 1.1rem; opacity: 0.9;">Books to Sell</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 3rem; font-weight: 700; margin-bottom: 0.5rem;">1,500</div>
+                        <div style="font-size: 1.1rem; opacity: 0.9;">FCFA per Book</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 3rem; font-weight: 700; margin-bottom: 0.5rem;">90,000</div>
+                        <div style="font-size: 1.1rem; opacity: 0.9;">FCFA You Earn</div>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><strong>Complete 60 books = 106,000 FCFA</strong></p>
+                    <p style="font-size: 0.95rem; opacity: 0.9;">(Includes 10,000 FCFA completion bonus)</p>
+                </div>
+                <p style="font-size: 1rem; opacity: 0.95;"><i class="fas fa-fire"></i> Super Sellers earn even more: 2,500 FCFA/book (61-90) • 3,000 FCFA/book (91-120)</p>
+            </div>
+            
+            <div class="benefits-card">
+                <h3 style="text-align: center; color: #00b894; margin-bottom: 20px;">🎁 What You Get as an Ambassador:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-star"></i> <strong>Personalized referral code & tracking dashboard</strong></li>
+                    <li><i class="fas fa-star"></i> Digital marketing assets package (25 quote posters, 10 video scripts)</li>
+                    <li><i class="fas fa-star"></i> Real-time sales tracking and commission calculator</li>
+                    <li><i class="fas fa-star"></i> Training resources & sales strategies</li>
+                    <li><i class="fas fa-star"></i> Access to Ambassador Leaderboard & competitions</li>
+                    <li><i class="fas fa-star"></i> Weekly bonuses & milestone rewards</li>
+                    <li><i class="fas fa-star"></i> Priority access to Ambassador Momentum Community</li>
+                </ul>
+                
+                <h3 style="text-align: center; color: #00b894; margin-top: 30px; margin-bottom: 20px;">📊 Commission Structure:</h3>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #dee2e6;">
+                        <span><i class="fas fa-star" style="color: #cd7f32;"></i> Books 1-20 (Bronze)</span>
+                        <strong>30,000 FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #dee2e6;">
+                        <span><i class="fas fa-star" style="color: #c0c0c0;"></i> Books 21-40 (Silver)</span>
+                        <strong>36,000 FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #dee2e6;">
+                        <span><i class="fas fa-star" style="color: #ffd700;"></i> Books 41-60 (Gold)</span>
+                        <strong>40,000 FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; background: #fff3cd; margin: 1rem -1rem -1rem; padding: 1rem 2rem; border-radius: 0 0 12px 12px;">
+                        <span><i class="fas fa-gift" style="color: #856404;"></i> Completion Bonus (60 books)</span>
+                        <strong style="color: #856404;">+10,000 FCFA</strong>
+                    </div>
+                </div>
+                
+                <h3 style="text-align: center; color: #00b894; margin-top: 30px; margin-bottom: 20px;">🎯 Ambassador Mission:</h3>
+                <div style="text-align: center; font-size: 1.1rem; color: #2d3436; line-height: 1.8;">
+                    <p><strong>500 Ambassadors × 60 Books Each = 30,000 Total Sales</strong></p>
+                    <p style="margin-top: 1rem; color: #00b894; font-weight: 600;">Target Revenue: 450,000,000 FCFA</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.95rem; color: #636e72;">You're not just earning—you're building a movement</p>
+                </div>
+                
+                <div class="pressure-badge" style="margin-top: 30px;">
+                    <i class="fas fa-clock"></i> <strong>14-Day Exclusive:</strong> Only ambassadors who join during this launch window earn <strong>Founding Ambassador</strong> status + special recognition.
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;">
+                    <a href="ambassador-register.html" class="btn-primary" style="width: 100%; text-align: center; display: block; padding: 1.25rem 2rem; font-size: 1.1rem;">
+                        <i class="fas fa-rocket"></i> Become an Ambassador →
+                    </a>
+                    <a href="#" onclick="alert('Ambassador dashboard coming soon! Register first to get your login credentials.'); return false;" class="btn-secondary" style="width: 100%; text-align: center; display: block; padding: 1.25rem 2rem; font-size: 1.1rem; background: white; color: #00b894; border: 2px solid #00b894;">
+                        <i class="fas fa-chart-line"></i> View Leaderboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 5: Marriage Literacy Challenge -->
+    <section class="section section-alt revenue-engine" id="marriage-literacy-challenge">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 5</div>
+                <h2>🧭 14-Day Marriage Literacy Challenge</h2>
+                <p class="subtitle">A structured online challenge based on Sex By Design for Dummies</p>
+            </div>
+            
+            <div class="benefits-card engine-card">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📚 What Participants Get:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-check-circle"></i> <strong>14 days of structured reflections</strong></li>
+                    <li><i class="fas fa-check-circle"></i> Daily prompts rooted in <strong>teleios, covenant, literacy, muliebrity & virility</strong></li>
+                    <li><i class="fas fa-check-circle"></i> Guided readings from the book</li>
+                    <li><i class="fas fa-check-circle"></i> Access to a <strong>private online group</strong> (Telegram/WhatsApp)</li>
+                    <li><i class="fas fa-check-circle"></i> Completion badge + <strong>digital certificate</strong></li>
+                </ul>
+                
+                <div class="price-tag">
+                    <span class="currency">5,000 FCFA</span>
+                    <span style="font-size: 1rem; display: block; margin-top: 10px; opacity: 0.9;">per participant (Launch Price)</span>
+                </div>
+                
+                <div class="pressure-badge">
+                    <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> This challenge is tied to the launch; founding cohort is only available during this 14-day window.
+                </div>
+                
+                <a href="payment.html?product=sbd-challenge-14&price=5000&currency=FCFA" class="btn-primary" style="width: 100%; text-align: center; display: block;">Join the 14-Day Challenge →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 6: Teleios Mastery Live Session -->
+    <section class="section revenue-engine" id="teleios-mastery-live">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 6</div>
+                <h2>🎙 Teleios Mastery Live Session</h2>
+                <p class="subtitle">A deep-dive live teaching session with the author</p>
+            </div>
+            
+            <div class="benefits-card engine-card">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎯 Session Topics:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-star"></i> <strong>Teleios</strong> — Maturity & wholeness</li>
+                    <li><i class="fas fa-star"></i> The workshop of marriage</li>
+                    <li><i class="fas fa-star"></i> <strong>Covenant vs contract</strong></li>
+                    <li><i class="fas fa-star"></i> The grammar of nakedness & literacy</li>
+                    <li><i class="fas fa-star"></i> <strong>Q&A with the audience</strong></li>
+                </ul>
+                
+                <div class="price-tag">
+                    <span class="currency">10,000 FCFA</span>
+                    <span style="font-size: 1rem; display: block; margin-top: 10px; opacity: 0.9;">per ticket</span>
+                </div>
+                
+                <div class="pressure-badge">
+                    <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Early supporters (Founding 500 + Pillars) get priority access and special recognition during this live session.
+                </div>
+                
+                <a href="payment.html?product=sbd-teleios-live&price=10000&currency=FCFA" class="btn-primary" style="width: 100%; text-align: center; display: block;">Secure Your Teleios Mastery Seat →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 7: Viral Quote Pack -->
+    <section class="section section-alt revenue-engine" id="viral-quote-pack">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge">Revenue Engine 7</div>
+                <h2>🖼 SBD Viral Quote Pack</h2>
+                <p class="subtitle">A digital media kit for supporters, creatives, and ambassadors</p>
+            </div>
+            
+            <div class="benefits-card engine-card">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📦 What's Included:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-check-circle"></i> <strong>100 quote posters</strong> (for WhatsApp, IG, TikTok covers, Facebook)</li>
+                    <li><i class="fas fa-check-circle"></i> <strong>200 micro-scripts</strong> for Reels/Shorts</li>
+                    <li><i class="fas fa-check-circle"></i> <strong>50 carousel captions</strong></li>
+                    <li><i class="fas fa-check-circle"></i> <strong>50 WhatsApp broadcast templates</strong></li>
+                    <li><i class="fas fa-star"></i> Lifetime access to updates (new quotes and designs added)</li>
+                </ul>
+                
+                <div class="price-tag">
+                    <span class="currency">2,000 FCFA</span>
+                    <span style="font-size: 1rem; display: block; margin-top: 10px; opacity: 0.9;">one-time purchase</span>
+                </div>
+                
+                <div class="pressure-badge">
+                    <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Launch buyers get lifetime access to updates as new quotes and designs are added.
+                </div>
+                
+                <a href="payment.html?product=sbd-quote-pack&price=2000&currency=FCFA" class="btn-primary" style="width: 100%; text-align: center; display: block;">Get the SBD Viral Quote Pack →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue Engine 8: Major Sponsorship -->
+    <section class="section revenue-engine vip-section" id="major-sponsorship">
+        <div class="container">
+            <div class="section-header">
+                <div class="engine-badge" style="background: linear-gradient(135deg, #ffd700 0%, #f39c12 100%);">High-Net-Worth Tier</div>
+                <h2 style="color: #1f2937;">🏛 Major Sponsorship Tiers</h2>
+                <p class="subtitle">For NGOs, churches, ministries, universities, corporate CSR programs, diaspora supporters, and high-impact donors</p>
+                <p style="margin-top: 15px; color: #6b7280;">Where large slices of the 500M+ FCFA target are achieved</p>
+            </div>
+            
+            <div class="pillar-grid">
+                <div class="pillar-card sponsor-card">
+                    <h3>🏅 Marriage Literacy Partner</h3>
+                    <p class="copies">250 Copies Sponsored</p>
+                    <p class="price">3,750,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Logo/name in <strong>Partner section</strong></li>
+                        <li><i class="fas fa-check"></i> 250 sponsored copies</li>
+                        <li><i class="fas fa-check"></i> Partner certificate</li>
+                        <li><i class="fas fa-check"></i> Recognition in all editions</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-sponsor-250&price=3750000&currency=FCFA" class="btn-pillar">Sponsor 250 Copies →</a>
+                </div>
+                
+                <div class="pillar-card sponsor-card">
+                    <h3>🏆 National Impact Partner</h3>
+                    <p class="copies">500 Copies Sponsored</p>
+                    <p class="price">7,500,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All above benefits</li>
+                        <li><i class="fas fa-check"></i> <strong>Dedicated partner page</strong></li>
+                        <li><i class="fas fa-check"></i> VIP access to all events</li>
+                        <li><i class="fas fa-check"></i> Co-branded campaign slide</li>
+                        <li><i class="fas fa-check"></i> 500 sponsored copies</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-sponsor-500&price=7500000&currency=FCFA" class="btn-pillar">Sponsor 500 Copies →</a>
+                </div>
+                
+                <div class="pillar-card sponsor-card">
+                    <h3>👑 Nation Builder Partner</h3>
+                    <p class="copies">1000 Copies Sponsored</p>
+                    <p class="price">15,000,000 FCFA</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All above benefits</li>
+                        <li><i class="fas fa-check"></i> <strong>Co-branded webinar</strong></li>
+                        <li><i class="fas fa-check"></i> Special mention in launch report</li>
+                        <li><i class="fas fa-check"></i> Strategic partnership recognition</li>
+                        <li><i class="fas fa-check"></i> 1000 sponsored copies</li>
+                    </ul>
+                    <a href="payment.html?product=sbd-sponsor-1000&price=15000000&currency=FCFA" class="btn-pillar">Sponsor 1000 Copies →</a>
+                </div>
+            </div>
+            
+            <div class="pressure-badge" style="text-align: center; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto;">
+                <i class="fas fa-clock"></i> <strong>14-Day Pressure:</strong> Founding partners signed in the first 14 days will be recorded as Charter Institutional Partners in all launch materials.
+            </div>
+        </div>
+    </section>
+
+    <!-- Why This Book Section -->
+    <section class="section" id="why-this-book">
+        <div class="container">
+            <div class="section-header">
+                <h2>📈 Why This Book? Why Now?</h2>
+            </div>
+            
+            <div class="benefits-card">
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 30px; font-weight: 600; color: #1f2937;">
+                    <strong>Sex By Design for Dummies</strong> is not a relationship book.<br>
+                    It is a <span style="color: #667eea;">civilizational blueprint</span> rooted in:
+                </p>
+                
+                <div class="impact-list">
+                    <div class="impact-item">
+                        <i class="fas fa-book-open"></i>
+                        <p><strong>Teleios</strong> — The complete design</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-eye"></i>
+                        <p><strong>Nakedness</strong> as literacy</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-handshake"></i>
+                        <p><strong>Covenant</strong> anthropology</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-venus"></i>
+                        <p><strong>Muliebrity</strong> restored</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-mars"></i>
+                        <p><strong>Virility</strong> reclaimed</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-home"></i>
+                        <p><strong>Marriage</strong> as national institution</p>
+                    </div>
+                    <div class="impact-item">
+                        <i class="fas fa-dna"></i>
+                        <p><strong>Genetic discipline</strong> of becoming</p>
+                    </div>
+                </div>
+                
+                <h3 style="text-align: center; color: #667eea; margin-top: 40px; margin-bottom: 20px;">This movement is built to restore:</h3>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-heart"></i> Wholeness</li>
+                    <li><i class="fas fa-fingerprint"></i> Identity</li>
+                    <li><i class="fas fa-ring"></i> Marriage</li>
+                    <li><i class="fas fa-users"></i> Family</li>
+                    <li><i class="fas fa-flag"></i> Nationhood</li>
+                </ul>
+                
+                <p style="font-size: 1.2rem; text-align: center; margin-top: 40px; font-weight: 600; color: #1f2937;">
+                    You are not buying a product.<br>
+                    You are <span style="color: #667eea;">funding a national restoration mission</span>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section section-alt" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>💬 What Early Readers Are Saying</h2>
+            </div>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">This book exposed what no pastor or counselor ever taught us.</p>
+                    <p class="testimonial-author">— Early Reviewer</p>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">We finally understand covenant beyond emotion and romance.</p>
+                    <p class="testimonial-author">— Pre-launch Reader</p>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">This is not a marriage book. This is a revelation.</p>
+                    <p class="testimonial-author">— SBD Study Group</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Section -->
+    <section class="section" id="impact">
+        <div class="container">
+            <div class="section-header">
+                <h2>🎯 Your Purchase Is a Seed</h2>
+                <p class="subtitle">Every purchase helps rebuild nations through literacy</p>
+            </div>
+            
+            <div class="impact-list">
+                <div class="impact-item">
+                    <i class="fas fa-print"></i>
+                    <p><strong>Print & ISBN</strong><br>Professional publishing standards</p>
+                </div>
+                <div class="impact-item">
+                    <i class="fas fa-shipping-fast"></i>
+                    <p><strong>Distribution</strong><br>Nationwide & international reach</p>
+                </div>
+                <div class="impact-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <p><strong>Youth Workshops</strong><br>Educational programs in schools</p>
+                </div>
+                <div class="impact-item">
+                    <i class="fas fa-trophy"></i>
+                    <p><strong>Literacy Challenges</strong><br>Community engagement programs</p>
+                </div>
+                <div class="impact-item">
+                    <i class="fas fa-landmark"></i>
+                    <p><strong>National Advocacy</strong><br>Policy and cultural influence</p>
+                </div>
+                <div class="impact-item">
+                    <i class="fas fa-globe-africa"></i>
+                    <p><strong>Continental Impact</strong><br>Pan-African marriage movement</p>
+                </div>
+            </div>
+            
+            <p style="font-size: 1.3rem; text-align: center; margin-top: 40px; font-weight: 600; color: #667eea;">
+                You are helping rebuild nations through literacy.
+            </p>
+        </div>
+    </section>
+
+    <!-- Payment Options Section -->
+    <section class="section section-alt" id="payment-options">
+        <div class="container">
+            <div class="section-header">
+                <h2>💳 Secure Payment Options</h2>
+                <p class="subtitle">Choose your preferred payment method</p>
+            </div>
+            
+            <div class="payment-options">
+                <div class="payment-option">
+                    <i class="fab fa-stripe"></i>
+                    <p class="name">Stripe</p>
+                    <p style="color: #6b7280; font-size: 0.9rem;">International Cards<br>Apple Pay</p>
+                </div>
+                <div class="payment-option">
+                    <i class="fas fa-credit-card"></i>
+                    <p class="name">Paystack</p>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Mobile Money<br>African Cards</p>
+                </div>
+                <div class="payment-option">
+                    <i class="fas fa-wallet"></i>
+                    <p class="name">Flutterwave</p>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Multiple Options<br>Africa-wide</p>
+                </div>
+            </div>
+            
+            <div class="benefits-card" style="margin-top: 40px;">
+                <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📥 Instant Delivery</h3>
+                <p style="text-align: center; margin-bottom: 20px;">Every digital purchase includes:</p>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-file-pdf"></i> PDF Format</li>
+                    <li><i class="fas fa-book"></i> EPUB Format</li>
+                    <li><i class="fas fa-link"></i> Universal Reader Link</li>
+                    <li><i class="fas fa-sync"></i> Lifetime Update Access</li>
+                </ul>
+                
+                <p style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 0.95rem;">
+                    <i class="fas fa-lock" style="color: #10b981;"></i> Your payment is secure and encrypted. All transactions are processed through trusted payment gateways.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Checklist Section -->
+    <section class="section" id="summary-checklist">
+        <div class="container">
+            <div class="section-header">
+                <h2>✅ Summary of Actions — Your 14-Day Launch Checklist</h2>
+                <p class="subtitle">Choose one or more ways to participate in this historic movement</p>
+            </div>
+            
+            <div class="checklist-grid">
+                <div class="checklist-item">
+                    <div class="checklist-number">1</div>
+                    <h3>🔥 Founding 500</h3>
+                    <p class="checklist-price">15,000 FCFA</p>
+                    <p class="checklist-desc">Your name in first edition + digital access + Teleios Live invite</p>
+                    <a href="payment.html?product=sbd-founding&price=15000&currency=FCFA" class="btn-checklist">Join Now →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">2</div>
+                    <h3>💎 Founding Pillars</h3>
+                    <p class="checklist-price">150K - 1.5M FCFA</p>
+                    <p class="checklist-desc">Sponsor 10-100 copies and multiply the impact</p>
+                    <a href="#founding-pillars" class="btn-checklist">View Tiers →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">3</div>
+                    <h3>📚 Supporter Packs</h3>
+                    <p class="checklist-price">15K - 1.5M FCFA</p>
+                    <p class="checklist-desc">Buy 1-100 copies for yourself, friends, or groups</p>
+                    <a href="#supporter-packs" class="btn-checklist">Buy Copies →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">4</div>
+                    <h3>🚀 Ambassador Program</h3>
+                    <p class="checklist-price">FREE</p>
+                    <p class="checklist-desc">Sell with us and earn rewards for every 10 referrals</p>
+                    <a href="#ambassador-program" class="btn-checklist">Join Ambassadors →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">5</div>
+                    <h3>🧭 Marriage Literacy Challenge</h3>
+                    <p class="checklist-price">5,000 FCFA</p>
+                    <p class="checklist-desc">14-day structured challenge with group access & certificate</p>
+                    <a href="payment.html?product=sbd-challenge-14&price=5000&currency=FCFA" class="btn-checklist">Join Challenge →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">6</div>
+                    <h3>🎙 Teleios Mastery Live</h3>
+                    <p class="checklist-price">10,000 FCFA</p>
+                    <p class="checklist-desc">Deep-dive live teaching session with Q&A</p>
+                    <a href="payment.html?product=sbd-teleios-live&price=10000&currency=FCFA" class="btn-checklist">Reserve Seat →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">7</div>
+                    <h3>🖼 Viral Quote Pack</h3>
+                    <p class="checklist-price">2,000 FCFA</p>
+                    <p class="checklist-desc">100 posters + 200 scripts + templates for social sharing</p>
+                    <a href="payment.html?product=sbd-quote-pack&price=2000&currency=FCFA" class="btn-checklist">Get Quote Pack →</a>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checklist-number">8</div>
+                    <h3>🏛 Major Sponsorship</h3>
+                    <p class="checklist-price">3.75M - 15M FCFA</p>
+                    <p class="checklist-desc">Institutional partnerships for 250-1000 copies</p>
+                    <a href="#major-sponsorship" class="btn-checklist">Become a Sponsor →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>🎉 Ready? Start Your Impact Journey</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; opacity: 0.95;">Choose how you want to participate in rebuilding the nation</p>
+            
+            <div class="cta-buttons">
+                <a href="#founding-500" class="btn-primary">Join the Founding 500</a>
+                <a href="#founding-pillars" class="btn-secondary">Become a Pillar</a>
+                <a href="#supporter-packs" class="btn-secondary">Buy Supporter Pack</a>
+                <a href="#ambassador-program" class="btn-secondary">Join Ambassadors</a>
+                <a href="#marriage-literacy-challenge" class="btn-secondary">Take the Challenge</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: #1f2937; color: white; padding: 40px 20px; text-align: center;">
+        <div class="container">
+            <p style="font-size: 1.1rem; margin-bottom: 15px;">© 2025 MarriageEducation.com</p>
+            <p style="opacity: 0.8; font-size: 1rem;">Restoring the Nation — One Marriage at a Time.</p>
+            <div style="margin-top: 20px;">
+                <a href="/" style="color: white; margin: 0 15px; text-decoration: none;">Home</a>
+                <a href="/about.html" style="color: white; margin: 0 15px; text-decoration: none;">About</a>
+                <a href="/contact.html" style="color: white; margin: 0 15px; text-decoration: none;">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Sticky CTA Bar -->
+    <div class="sticky-cta" id="sticky-cta">
+        <div class="container">
+            <div class="text">
+                <span class="spots" id="sticky-spots">487</span> Founding Spots Remaining
+            </div>
+            <a href="#founding-500" class="btn-primary" style="padding: 12px 30px; font-size: 1rem;">Join Now →</a>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Countdown Timer (Set launch date: 14 days from now)
+        const launchDate = new Date();
+        launchDate.setDate(launchDate.getDate() + 14); // 14 days from today
+        
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = launchDate.getTime() - now;
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                document.querySelector('.countdown-timer').innerHTML = '<p style="font-size: 1.5rem; font-weight: 700;">Campaign is Live!</p>';
+            }
+        }
+        
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        updateCountdown();
+        
+        // Founding Spots Counter (simulated - would connect to real database)
+        let spotsRemaining = 487;
+        
+        function updateSpotsCounter() {
+            // Simulate random purchases (in production, this would be real-time from database)
+            if (spotsRemaining > 0 && Math.random() > 0.97) {
+                spotsRemaining--;
+                document.getElementById('spots-remaining').textContent = spotsRemaining;
+                document.getElementById('sticky-spots').textContent = spotsRemaining;
+                
+                // Save to localStorage
+                localStorage.setItem('sbd-spots-remaining', spotsRemaining);
+            }
+        }
+        
+        // Load spots from localStorage if available
+        const savedSpots = localStorage.getItem('sbd-spots-remaining');
+        if (savedSpots) {
+            spotsRemaining = parseInt(savedSpots);
+            document.getElementById('spots-remaining').textContent = spotsRemaining;
+            document.getElementById('sticky-spots').textContent = spotsRemaining;
+        }
+        
+        // Update spots every 5 seconds
+        setInterval(updateSpotsCounter, 5000);
+        
+        // Sticky CTA Bar visibility
+        const stickyCta = document.getElementById('sticky-cta');
+        let lastScroll = 0;
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 600 && currentScroll > lastScroll) {
+                stickyCta.classList.add('visible');
+            } else if (currentScroll < lastScroll) {
+                stickyCta.classList.remove('visible');
+            }
+            
+            lastScroll = currentScroll;
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Referral Link Generator
+        function generateReferralLink() {
+            const name = document.getElementById('referral-name').value.trim();
+            
+            if (!name) {
+                alert('Please enter your name or email');
+                return;
+            }
+            
+            // Generate unique referral code
+            const code = btoa(name).replace(/=/g, '').substring(0, 10).toUpperCase();
+            const baseUrl = window.location.origin + window.location.pathname;
+            const referralUrl = `${baseUrl}?ref=${code}`;
+            
+            // Display the link
+            document.getElementById('referral-link').textContent = referralUrl;
+            document.getElementById('referral-link-display').classList.add('active');
+            
+            // Store in localStorage for tracking
+            localStorage.setItem('sbd-referral-code', code);
+            localStorage.setItem('sbd-referral-name', name);
+        }
+        
+        // Copy Referral Link
+        function copyReferralLink() {
+            const link = document.getElementById('referral-link').textContent;
+            const copyBtn = document.getElementById('copy-btn');
+            
+            navigator.clipboard.writeText(link).then(() => {
+                copyBtn.textContent = '✓ Copied!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy Link';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy link. Please copy manually.');
+            });
+        }
+        
+        // Payment Button Handlers
+        document.querySelectorAll('[data-product]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const product = this.getAttribute('data-product');
+                const price = this.getAttribute('data-price');
+                
+                // Show payment modal or redirect to payment page
+                showPaymentModal(product, price);
+            });
+        });
+        
+        function showPaymentModal(product, price) {
+            // In production, this would open a payment modal with Stripe/Paystack/Flutterwave
+            const confirmed = confirm(`Proceed to payment for ${product}?\nAmount: ${price} FCFA\n\nChoose your payment method:\n1. Stripe (International)\n2. Paystack (MoMo/Cards)\n3. Flutterwave (Multiple)`);
+            
+            if (confirmed) {
+                // Get referral code if exists
+                const urlParams = new URLSearchParams(window.location.search);
+                const refCode = urlParams.get('ref') || localStorage.getItem('sbd-referral-code') || '';
+                
+                // Redirect to payment page with product info
+                // In production: integrate with actual payment gateways
+                window.location.href = `/stripe/public/checkout.html?product=${product}&price=${price}&currency=FCFA&ref=${refCode}`;
+            }
+        }
+        
+        // Track referral if ref parameter exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        if (refCode) {
+            localStorage.setItem('sbd-incoming-ref', refCode);
+            console.log('Referral tracked:', refCode);
+        }
+        
+        // Entrance animations (fade in on scroll)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.pillar-card, .testimonial-card, .impact-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(el);
+        });
+    </script>
+    
+    <!-- Referral Tracking System -->
+    <script src="js/referral-tracking.js"></script>
+</body>
+</html>
