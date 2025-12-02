@@ -1,9 +1,6 @@
 // Stripe publishable key (safe to expose in client-side code)
 const stripe = Stripe("pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776");
 
-// API URL - change this to your deployed server URL
-const API_URL = window.location.origin; // Uses same domain as the page
-
 initialize();
 
 // Helper to get URL parameters
@@ -21,7 +18,7 @@ async function initialize() {
   const productId = getUrlParameter('product');
 
   const fetchClientSecret = async () => {
-    const response = await fetch(API_URL + "/create-checkout-session", {
+    const response = await fetch("/create-checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
