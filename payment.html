@@ -409,8 +409,8 @@
       });
       if (referralCode) params.append('ref', referralCode);
       
-      // Redirect to Stripe server (must be running on port 4242)
-      window.location.href = `http://localhost:4242/checkout.html?${params.toString()}`;
+      // Redirect to Stripe checkout page
+      window.location.href = `stripe/public/checkout.html?${params.toString()}`;
     }
 
     // Paystack checkout
