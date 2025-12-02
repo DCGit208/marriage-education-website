@@ -17,7 +17,10 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.use(express.json());
 
-const YOUR_DOMAIN = process.env.DOMAIN || 'http://localhost:4242';
+// Automatically detect domain - works for both local and production
+const YOUR_DOMAIN = process.env.DOMAIN || (process.env.NODE_ENV === 'production' 
+  ? 'https://yourdomain.com'  // Replace with your actual domain when you know it
+  : 'http://localhost:4242');
 
 app.post('/create-checkout-session', async (req, res) => {
   try {
