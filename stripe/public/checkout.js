@@ -14,14 +14,14 @@ function getUrlParameter(name) {
 // Create a Checkout Session
 async function initialize() {
 
-  // Get product ID from URL
+    // Get product ID from URL
   const productId = getUrlParameter('product');
 
   const fetchClientSecret = async () => {
-    // Use production URL if deployed, otherwise localhost
+    // Use Ruby server - localhost for dev, relative path for production
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
       ? 'http://localhost:4242' 
-      : window.location.origin;
+      : 'https://marriageducation.com/stripe';
     
     const response = await fetch(`${API_URL}/create-checkout-session`, {
       method: "POST",
