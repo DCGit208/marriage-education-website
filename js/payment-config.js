@@ -20,6 +20,16 @@ const PAYMENT_CONFIG = {
         enabled: true
     },
     
+    // MTN Mobile Money Configuration (Collection Widget)
+    mtnMomo: {
+        // Collection Widget Subscription Key from: https://momodeveloper.mtn.com/
+        subscriptionKey: '88e6592aa57d425280a3e55be6ddcac6', // Your Collection Widget key
+        environment: 'sandbox', // 'sandbox' or 'production'
+        merchantNumber: '237677604100', // Your MTN MOMO number to receive payments
+        enabled: true,
+        // Customers will use USSD (*126#) or MTN MoMo app to send money to your number
+    },
+    
     // Book Price
     bookPrice: 15000, // FCFA
     

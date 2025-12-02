@@ -40,9 +40,36 @@
           <h3>Choose Payment Method</h3>
           
           <div class="payment-tabs">
-            <button class="tab-button active" data-tab="stripe">Stripe (International)</button>
+            <button class="tab-button active" data-tab="mtn">MTN MOMO (Cameroon)</button>
             <button class="tab-button" data-tab="paystack">Paystack (Cards/MoMo)</button>
+            <button class="tab-button" data-tab="stripe">Stripe (International)</button>
             <button class="tab-button" data-tab="flutterwave">Flutterwave (Africa)</button>
+          </div>
+
+          <!-- MTN Mobile Money Payment -->
+          <div class="payment-tab active" id="mtn-tab">
+            <div class="credit-card-notice" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000;">
+              <h4>📱 MTN Mobile Money - Pay with USSD or App</h4>
+              <p style="color: #000;">Most popular payment method in Cameroon! Pay with *126# or MTN MoMo app.</p>
+              <p><small style="color: #333;">✅ Pay from any MTN phone • ✅ No card needed • ✅ Instant & secure</small></p>
+            </div>
+            <button class="pay-button" onclick="payWithMTNWidget()" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000; font-weight: bold; font-size: 18px; padding: 20px;">
+              📱 Pay 15,000 FCFA with MTN MOMO
+            </button>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>📱</span>
+                <span>USSD Payment</span>
+              </div>
+              <div class="security-badge">
+                <span>⚡</span>
+                <span>2 Minutes</span>
+              </div>
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>MTN Verified</span>
+              </div>
+            </div>
           </div>
 
           <!-- Stripe Payment Form -->
@@ -282,6 +309,9 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/payment-config.js"></script>
   
+  <!-- MTN Collection Widget Integration -->
+  <script src="js/mtn-widget.js"></script>
+  
   <script>
     // Record sale after successful payment
     async function recordPayment(paymentData) {
@@ -322,6 +352,19 @@
         recordPayment(event.data.payment);
       }
     });
+    
+    // MTN Mobile Money Widget Payment Handler
+    function payWithMTNWidget() {
+      const amount = PAYMENT_CONFIG.bookPrice; // 15000 FCFA
+      const referralCode = getReferralCode();
+      
+      // Show MTN Collection Widget modal
+      if (typeof MTNWidget !== 'undefined') {
+        MTNWidget.showPaymentModal(amount, referralCode);
+      } else {
+        alert('MTN Mobile Money widget is loading. Please try again in a moment.');
+      }
+    }
   </script>
 </body>
 </html>
