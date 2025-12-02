@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador Training | Marriage Education</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .nav-breadcrumb {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+        }
+
+        .nav-breadcrumb a {
+            color: #00b894;
+            text-decoration: none;
+            margin-right: 0.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .progress-overview {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .progress-overview h2 {
+            margin-bottom: 1rem;
+            color: #2d3436;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894 0%, #00a085 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .modules-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .module-header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .module-header.locked {
+            background: linear-gradient(135deg, #636e72 0%, #636e72 100%);
+            opacity: 0.6;
+        }
+
+        .module-icon {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .module-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-meta {
+            opacity: 0.9;
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .module-body {
+            padding: 2rem;
+        }
+
+        .module-description {
+            color: #636e72;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-topics {
+            margin-bottom: 1.5rem;
+        }
+
+        .module-topics h4 {
+            color: #2d3436;
+            margin-bottom: 1rem;
+        }
+
+        .topic-list {
+            list-style: none;
+        }
+
+        .topic-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .topic-list li:last-child {
+            border-bottom: none;
+        }
+
+        .topic-list .icon {
+            color: #00b894;
+            font-size: 1.2rem;
+        }
+
+        .module-action {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #00b894;
+            border: 2px solid #00b894;
+        }
+
+        .btn-secondary:hover {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-locked {
+            background: #e0e0e0;
+            color: #636e72;
+            cursor: not-allowed;
+        }
+
+        .completion-badge {
+            display: inline-block;
+            background: #d4edda;
+            color: #155724;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-left: auto;
+        }
+
+        .tips-section {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #ffc107;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .tips-section h3 {
+            color: #856404;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tips-section ul {
+            margin-left: 1.5rem;
+            color: #856404;
+        }
+
+        .tips-section li {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .success-stories {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .success-stories h2 {
+            margin-bottom: 1.5rem;
+            color: #2d3436;
+        }
+
+        .story-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .story-card .quote {
+            font-style: italic;
+            color: #2d3436;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .story-card .author {
+            font-weight: 600;
+            color: #00b894;
+        }
+
+        .story-card .achievement {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .module-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .module-action {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-graduation-cap"></i> Ambassador Training</h1>
+        <p>Master the skills to achieve 60+ book sales and beyond</p>
+    </div>
+
+    <div class="nav-breadcrumb">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a> / 
+        <span>Training</span>
+    </div>
+
+    <div class="container">
+        <!-- Progress Overview -->
+        <div class="progress-overview">
+            <h2>Your Training Progress</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 25%">25% Complete</div>
+            </div>
+            <p style="color: #636e72;">1 of 4 modules completed • Keep going!</p>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="tips-section">
+            <h3><i class="fas fa-lightbulb"></i> Pro Tips for Success</h3>
+            <ul>
+                <li><strong>Complete modules in order</strong> - Each builds on the previous one</li>
+                <li><strong>Take notes</strong> - Write down strategies that resonate with you</li>
+                <li><strong>Apply immediately</strong> - Don't wait; test each strategy as you learn it</li>
+                <li><strong>Track what works</strong> - Note which approaches get the best results</li>
+                <li><strong>Join the community</strong> - Share wins and ask questions in the WhatsApp group</li>
+            </ul>
+        </div>
+
+        <!-- Training Modules -->
+        <div class="modules-grid">
+            <!-- Module 1 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="module-info">
+                        <h3>Module 1: Getting Started</h3>
+                        <div class="module-meta">
+                            <span><i class="fas fa-clock"></i> 15 minutes</span>
+                            <span><i class="fas fa-signal"></i> Beginner</span>
+                        </div>
+                    </div>
+                    <span class="completion-badge">✓ Completed</span>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        Learn the fundamentals of the ambassador program, understand the 60-book target, and set up your marketing plan for success.
+                    </p>
+                    <div class="module-topics">
+                        <h4>What You'll Learn:</h4>
+                        <ul class="topic-list">
+                            <li>
+                                <i class="fas fa-check-circle icon"></i>
+                                <span>Understanding the 60-book target and commission structure</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle icon"></i>
+                                <span>How referral tracking works and why it matters</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle icon"></i>
+                                <span>Setting realistic daily/weekly sales goals</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle icon"></i>
+                                <span>Identifying your target audience (who will buy?)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle icon"></i>
+                                <span>Creating your 14-day action plan</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="module-action">
+                        <button class="btn btn-primary" onclick="alert('Video player will launch here')">
+                            <i class="fas fa-play"></i> Watch Again
+                        </button>
+                        <button class="btn btn-secondary" onclick="alert('Download materials')">
+                            <i class="fas fa-download"></i> Download Notes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 2 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="module-info">
+                        <h3>Module 2: Social Media Mastery</h3>
+                        <div class="module-meta">
+                            <span><i class="fas fa-clock"></i> 20 minutes</span>
+                            <span><i class="fas fa-signal"></i> Intermediate</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        Master social media strategies to reach maximum people with minimum effort. Learn platform-specific tactics that convert followers into buyers.
+                    </p>
+                    <div class="module-topics">
+                        <h4>What You'll Learn:</h4>
+                        <ul class="topic-list">
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>Instagram Stories Strategy:</strong> How to create curiosity and drive clicks</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>WhatsApp Broadcast:</strong> Writing messages that don't feel spammy</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>Facebook Groups:</strong> Selling without getting banned</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>TikTok/Reels:</strong> Creating viral content about the book</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>Timing & Frequency:</strong> When to post for maximum engagement</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-circle icon"></i>
+                                <span><strong>Hashtag Strategy:</strong> Getting discovered by new audiences</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="module-action">
+                        <button class="btn btn-primary" onclick="startModule(2)">
+                            <i class="fas fa-play"></i> Start Module
+                        </button>
+                        <button class="btn btn-secondary" onclick="alert('Preview available')">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="module-card">
+                <div class="module-header locked">
+                    <div class="module-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="module-info">
+                        <h3>Module 3: Sales Psychology</h3>
+                        <div class="module-meta">
+                            <span><i class="fas fa-clock"></i> 25 minutes</span>
+                            <span><i class="fas fa-signal"></i> Advanced</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        Understand buyer psychology and master the art of persuasion without being pushy. Learn to handle objections and close sales confidently.
+                    </p>
+                    <div class="module-topics">
+                        <h4>What You'll Learn:</h4>
+                        <ul class="topic-list">
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Understanding Buyer Objections:</strong> What people really mean when they say no</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Value-Based Selling:</strong> Focusing on transformation, not price</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Creating Urgency:</strong> Without pressure or manipulation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Handling Price Concerns:</strong> Positioning 15,000 FCFA as an investment</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Following Up:</strong> When and how to check in with prospects</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Leveraging Testimonials:</strong> Using social proof effectively</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="module-action">
+                        <button class="btn btn-locked" disabled>
+                            <i class="fas fa-lock"></i> Complete Module 2 to Unlock
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="module-card">
+                <div class="module-header locked">
+                    <div class="module-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="module-info">
+                        <h3>Module 4: Scaling to 60+ Books</h3>
+                        <div class="module-meta">
+                            <span><i class="fas fa-clock"></i> 30 minutes</span>
+                            <span><i class="fas fa-signal"></i> Expert</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-body">
+                    <p class="module-description">
+                        Advanced strategies to hit and exceed your 60-book target. Learn bulk order tactics, corporate partnerships, and how to build a sustainable sales system.
+                    </p>
+                    <div class="module-topics">
+                        <h4>What You'll Learn:</h4>
+                        <ul class="topic-list">
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Bulk Order Strategies:</strong> Selling to churches, companies, and organizations</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Corporate Partnerships:</strong> Approaching HR departments and CSR programs</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Building a Sales Funnel:</strong> Automating your marketing with landing pages</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Event-Based Selling:</strong> Hosting book readings or marriage seminars</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Recruiting Sub-Ambassadors:</strong> Building your own mini-team</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-lock icon"></i>
+                                <span><strong>Long-Term Income:</strong> Beyond the 14-day campaign</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="module-action">
+                        <button class="btn btn-locked" disabled>
+                            <i class="fas fa-lock"></i> Complete Module 3 to Unlock
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Stories -->
+        <div class="success-stories">
+            <h2><i class="fas fa-star"></i> Success Stories from Top Ambassadors</h2>
+            
+            <div class="story-card">
+                <div class="quote">
+                    "I completed all 4 modules in my first week and applied everything immediately. The social media strategies from Module 2 helped me sell 15 books just through Instagram stories! The key was creating curiosity without giving everything away."
+                </div>
+                <div class="author">— Grace M.</div>
+                <div class="achievement">58 books sold • Diamond Level • 104,400 FCFA earned</div>
+            </div>
+
+            <div class="story-card">
+                <div class="quote">
+                    "Module 3 changed everything for me. I was scared of rejection, but learning how to handle objections made me confident. Now when someone says 'it's expensive,' I know exactly what to say. My conversion rate jumped from 20% to 65%!"
+                </div>
+                <div class="author">— Paul K.</div>
+                <div class="achievement">52 books sold • Gold Level • 91,200 FCFA earned</div>
+            </div>
+
+            <div class="story-card">
+                <div class="quote">
+                    "The bulk order strategy from Module 4 was a game-changer. I approached my church's marriage ministry and sold 30 books in one transaction. Don't sleep on corporate and organization sales!"
+                </div>
+                <div class="author">— Samuel T.</div>
+                <div class="achievement">45 books sold • Gold Level • 77,000 FCFA earned</div>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="dashboard.html" class="btn btn-primary" style="display: inline-flex; max-width: 300px;">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function startModule(moduleNumber) {
+            // TODO: Launch video player or module content
+            alert(`Starting Module ${moduleNumber}...\n\nVideo player will be integrated here.`);
+            
+            // Simulate module completion and update progress
+            // In real implementation, this would track actual video completion
+        }
+
+        // Simulate progress tracking
+        const completedModules = 1; // Module 1 completed
+        const totalModules = 4;
+        const progress = (completedModules / totalModules) * 100;
+    </script>
+</body>
+</html>

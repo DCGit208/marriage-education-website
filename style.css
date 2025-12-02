@@ -453,7 +453,7 @@ footer {
 }
 
 .order-summary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
   color: white;
   padding: 2rem;
 }
@@ -521,8 +521,8 @@ footer {
 }
 
 .tab-button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #00b894;
+  border-bottom-color: #00b894;
   background: #f8f9fa;
 }
 
@@ -558,8 +558,8 @@ footer {
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #00b894;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
 }
 
 #card-element {
@@ -574,13 +574,13 @@ footer {
 }
 
 #card-element:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #00b894;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
 }
 
 #card-element.StripeElement--focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #00b894;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
 }
 
 #card-element.StripeElement--invalid {
@@ -600,7 +600,7 @@ footer {
 .pay-button {
   width: 100%;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -613,7 +613,7 @@ footer {
 
 .pay-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
 }
 
 .pay-button:active {
@@ -711,7 +711,7 @@ footer {
   width: 20px;
   height: 20px;
   margin: -10px 0 0 -10px;
-  border: 2px solid #667eea;
+  border: 2px solid #00b894;
   border-radius: 50%;
   border-top-color: transparent;
   animation: spin 1s linear infinite;

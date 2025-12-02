@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador Leaderboard | Marriage Education</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .stats-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-box .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        .stat-box .label {
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-top: 0.5rem;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #00b894;
+            color: white;
+            border-color: #00b894;
+        }
+
+        .filter-btn:hover {
+            border-color: #00b894;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #00b894;
+        }
+
+        .podium {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            align-items: end;
+        }
+
+        .podium-place {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .podium-place.first {
+            grid-row: 1;
+            grid-column: 2;
+            padding: 3rem 1rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        }
+
+        .podium-place.second {
+            grid-row: 1;
+            grid-column: 1;
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+        }
+
+        .podium-place.third {
+            grid-row: 1;
+            grid-column: 3;
+            background: linear-gradient(135deg, #cd7f32 0%, #e5a26b 100%);
+        }
+
+        .podium-medal {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .podium-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .podium-stats {
+            font-size: 0.95rem;
+            color: #2d3436;
+        }
+
+        .leaderboard-table {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .leaderboard-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            display: grid;
+            grid-template-columns: 80px 1fr 150px 150px 120px;
+            gap: 1rem;
+            font-weight: 700;
+            color: #2d3436;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .leaderboard-row {
+            padding: 1.5rem 1.5rem;
+            display: grid;
+            grid-template-columns: 80px 1fr 150px 150px 120px;
+            gap: 1rem;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-row:hover {
+            background: #f8f9fa;
+        }
+
+        .leaderboard-row.highlight {
+            background: rgba(0,184,148,0.1);
+            border-left: 4px solid #00b894;
+        }
+
+        .rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: #00b894;
+        }
+
+        .rank.top3 {
+            font-size: 2rem;
+        }
+
+        .ambassador-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .ambassador-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .ambassador-details .name {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 0.25rem;
+        }
+
+        .ambassador-details .code {
+            font-size: 0.85rem;
+            color: #636e72;
+            font-family: monospace;
+        }
+
+        .books-sold {
+            text-align: center;
+        }
+
+        .books-sold .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .books-sold .target {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        .commission {
+            text-align: center;
+            font-weight: 700;
+            color: #00b894;
+            font-size: 1.1rem;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .level-badge.bronze {
+            background: rgba(205,127,50,0.2);
+            color: #cd7f32;
+        }
+
+        .level-badge.silver {
+            background: rgba(192,192,192,0.3);
+            color: #666;
+        }
+
+        .level-badge.gold {
+            background: rgba(255,215,0,0.3);
+            color: #b8860b;
+        }
+
+        .level-badge.diamond {
+            background: rgba(0,184,148,0.2);
+            color: #00b894;
+        }
+
+        .hall-of-fame {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .hall-of-fame h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .hall-of-fame p {
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .achievers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .achiever-card {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .achiever-card .name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .achiever-card .achievement {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .podium {
+                grid-template-columns: 1fr;
+            }
+
+            .podium-place.first,
+            .podium-place.second,
+            .podium-place.third {
+                grid-column: 1;
+            }
+
+            .leaderboard-header,
+            .leaderboard-row {
+                grid-template-columns: 60px 1fr 100px;
+                font-size: 0.9rem;
+            }
+
+            .commission,
+            .level-badge {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-trophy"></i> Ambassador Leaderboard</h1>
+        <p>Top performers driving the marriage education movement</p>
+    </div>
+
+    <div class="container">
+        <!-- Stats Banner -->
+        <div class="stats-banner">
+            <div class="stat-box">
+                <div class="value">237</div>
+                <div class="label">Active Ambassadors</div>
+            </div>
+            <div class="stat-box">
+                <div class="value">5,421</div>
+                <div class="label">Total Books Sold</div>
+            </div>
+            <div class="stat-box">
+                <div class="value">81.3M</div>
+                <div class="label">Total Revenue (FCFA)</div>
+            </div>
+            <div class="stat-box">
+                <div class="value">12</div>
+                <div class="label">Diamond Achievers</div>
+            </div>
+        </div>
+
+        <!-- Hall of Fame -->
+        <div class="hall-of-fame">
+            <h2>💎 Diamond Hall of Fame</h2>
+            <p>Ambassadors who achieved 60+ books and earned Founding Ambassador status</p>
+            <div class="achievers-grid">
+                <div class="achiever-card">
+                    <div class="name">Grace M.</div>
+                    <div class="achievement">58 books • 104,400 FCFA</div>
+                </div>
+                <div class="achiever-card">
+                    <div class="name">Paul K.</div>
+                    <div class="achievement">52 books • 91,200 FCFA</div>
+                </div>
+                <div class="achiever-card">
+                    <div class="name">Sarah N.</div>
+                    <div class="achievement">48 books • 82,800 FCFA</div>
+                </div>
+                <div class="achiever-card">
+                    <div class="name">Emmanuel T.</div>
+                    <div class="achievement">45 books • 77,000 FCFA</div>
+                </div>
+                <div class="achiever-card">
+                    <div class="name">Rebecca A.</div>
+                    <div class="achievement">42 books • 70,200 FCFA</div>
+                </div>
+                <div class="achiever-card">
+                    <div class="name">David M.</div>
+                    <div class="achievement">40 books • 66,000 FCFA</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterLeaderboard('all')">All Time</button>
+            <button class="filter-btn" onclick="filterLeaderboard('week')">This Week</button>
+            <button class="filter-btn" onclick="filterLeaderboard('today')">Today</button>
+            <div class="search-box">
+                <input type="text" placeholder="Search by name or code..." id="searchInput" onkeyup="searchLeaderboard()">
+            </div>
+        </div>
+
+        <!-- Top 3 Podium -->
+        <div class="podium">
+            <div class="podium-place second">
+                <div class="podium-medal">🥈</div>
+                <div class="podium-name">Paul K.</div>
+                <div class="podium-stats">
+                    <strong>52 books</strong><br>
+                    91,200 FCFA<br>
+                    Gold Level
+                </div>
+            </div>
+
+            <div class="podium-place first">
+                <div class="podium-medal">🥇</div>
+                <div class="podium-name">Grace M.</div>
+                <div class="podium-stats">
+                    <strong>58 books</strong><br>
+                    104,400 FCFA<br>
+                    Diamond Level
+                </div>
+            </div>
+
+            <div class="podium-place third">
+                <div class="podium-medal">🥉</div>
+                <div class="podium-name">Sarah N.</div>
+                <div class="podium-stats">
+                    <strong>48 books</strong><br>
+                    82,800 FCFA<br>
+                    Gold Level
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="leaderboard-table">
+            <div class="leaderboard-header">
+                <div>Rank</div>
+                <div>Ambassador</div>
+                <div>Books Sold</div>
+                <div>Commission</div>
+                <div>Level</div>
+            </div>
+
+            <!-- Row 4-50 -->
+            <div class="leaderboard-row">
+                <div class="rank">4</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">E</div>
+                    <div class="ambassador-details">
+                        <div class="name">Emmanuel T.</div>
+                        <div class="code">AMB-EMMANUEL-034</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">45</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">77,000</div>
+                <div><span class="level-badge gold">Gold</span></div>
+            </div>
+
+            <div class="leaderboard-row">
+                <div class="rank">5</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">R</div>
+                    <div class="ambassador-details">
+                        <div class="name">Rebecca A.</div>
+                        <div class="code">AMB-REBECCA-012</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">42</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">70,200</div>
+                <div><span class="level-badge gold">Gold</span></div>
+            </div>
+
+            <div class="leaderboard-row">
+                <div class="rank">6</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">D</div>
+                    <div class="ambassador-details">
+                        <div class="name">David M.</div>
+                        <div class="code">AMB-DAVID-089</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">40</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">66,000</div>
+                <div><span class="level-badge silver">Silver</span></div>
+            </div>
+
+            <!-- Continue with more rows... -->
+            <div class="leaderboard-row">
+                <div class="rank">7</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">M</div>
+                    <div class="ambassador-details">
+                        <div class="name">Mary L.</div>
+                        <div class="code">AMB-MARY-045</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">38</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">61,200</div>
+                <div><span class="level-badge silver">Silver</span></div>
+            </div>
+
+            <div class="leaderboard-row">
+                <div class="rank">8</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">J</div>
+                    <div class="ambassador-details">
+                        <div class="name">John B.</div>
+                        <div class="code">AMB-JOHN-067</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">35</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">57,000</div>
+                <div><span class="level-badge silver">Silver</span></div>
+            </div>
+
+            <!-- Add simulated highlight row for current user -->
+            <div class="leaderboard-row highlight">
+                <div class="rank">47</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">Y</div>
+                    <div class="ambassador-details">
+                        <div class="name">You (Jean-Paul K.)</div>
+                        <div class="code">AMB-JEANPAUL-001</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">23</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">34,500</div>
+                <div><span class="level-badge bronze">Bronze</span></div>
+            </div>
+
+            <!-- More sample rows -->
+            <div class="leaderboard-row">
+                <div class="rank">48</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">A</div>
+                    <div class="ambassador-details">
+                        <div class="name">Alice N.</div>
+                        <div class="code">AMB-ALICE-123</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">22</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">33,000</div>
+                <div><span class="level-badge bronze">Bronze</span></div>
+            </div>
+
+            <div class="leaderboard-row">
+                <div class="rank">49</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">T</div>
+                    <div class="ambassador-details">
+                        <div class="name">Thomas O.</div>
+                        <div class="code">AMB-THOMAS-098</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">21</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">31,800</div>
+                <div><span class="level-badge bronze">Bronze</span></div>
+            </div>
+
+            <div class="leaderboard-row">
+                <div class="rank">50</div>
+                <div class="ambassador-info">
+                    <div class="ambassador-avatar">L</div>
+                    <div class="ambassador-details">
+                        <div class="name">Lisa P.</div>
+                        <div class="code">AMB-LISA-156</div>
+                    </div>
+                </div>
+                <div class="books-sold">
+                    <div class="value">20</div>
+                    <div class="target">/60</div>
+                </div>
+                <div class="commission">30,000</div>
+                <div><span class="level-badge bronze">Bronze</span></div>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="dashboard.html" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background: #00b894; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function filterLeaderboard(period) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // TODO: Filter leaderboard data based on period
+            console.log('Filtering by:', period);
+        }
+
+        function searchLeaderboard() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.leaderboard-row');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.name').textContent.toLowerCase();
+                const code = row.querySelector('.code').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || code.includes(searchTerm)) {
+                    row.style.display = 'grid';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    
+    <script>
+        // Load real leaderboard data from Firebase
+        async function loadRealLeaderboard() {
+            try {
+                const leaders = await FirebaseHelper.getLeaderboard('all');
+                
+                if (leaders.length === 0) {
+                    console.warn('No ambassadors found in leaderboard');
+                    return;
+                }
+                
+                // Update stats banner
+                const totalAmbassadors = leaders.length;
+                const totalBooks = leaders.reduce((sum, a) => sum + (a.booksSold || 0), 0);
+                const totalRevenue = totalBooks * 15000;
+                const diamondCount = leaders.filter(a => a.level === 'Diamond').length;
+                
+                // Update DOM (find elements by class/id and update them)
+                // This would replace the static data in the HTML
+                
+                console.log('✅ Leaderboard loaded:', {
+                    totalAmbassadors,
+                    totalBooks,
+                    totalRevenue,
+                    diamondCount
+                });
+                
+                // TODO: Actually replace the table rows with real data
+                // For now, check console to verify data is loading
+                
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+        
+        // Load on page load
+        loadRealLeaderboard();
+        
+        // Refresh every 30 seconds
+        setInterval(loadRealLeaderboard, 30000);
+    </script>
+</body>
+</html>

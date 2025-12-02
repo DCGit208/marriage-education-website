@@ -39,10 +39,24 @@
         var results = regex.exec(window.location.search);
         return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
       }
+      
+      function formatCurrency(amount, currency) {
+        if (currency === 'FCFA') {
+          return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+        } else if (currency === 'USD') {
+          return '$' + new Intl.NumberFormat('en-US').format(amount);
+        } else {
+          return amount + ' ' + currency;
+        }
+      }
+      
       const productName = getUrlParameter('name');
       const productPrice = getUrlParameter('price');
+      const currency = getUrlParameter('currency') || 'USD';
+      
       if (productName && productPrice) {
-        document.getElementById('product-summary').innerHTML = `<div class='summary-card'><span class='summary-label'>Product:</span> <span class='summary-value'>${productName}</span><br><span class='summary-label'>Price:</span> <span class='summary-value'>$${productPrice}</span></div>`;
+        const formattedPrice = formatCurrency(productPrice, currency);
+        document.getElementById('product-summary').innerHTML = `<div class='summary-card'><span class='summary-label'>Product:</span> <span class='summary-value'>${productName}</span><br><span class='summary-label'>Price:</span> <span class='summary-value'>${formattedPrice}</span></div>`;
       }
     </script>
   </body>
