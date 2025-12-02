@@ -39,61 +39,110 @@
         <div class="payment-methods">
           <h3>Choose Payment Method</h3>
           
-          <div class="payment-methods-header">
-            <h3>💳 Secure Credit Card Payment</h3>
-            <p>Powered by Stripe - trusted by millions worldwide</p>
+          <div class="payment-tabs">
+            <button class="tab-button active" data-tab="mtn" onclick="switchTab('mtn')">MTN MOMO (Cameroon)</button>
+            <button class="tab-button" data-tab="paystack" onclick="switchTab('paystack')">Paystack (Cards/MoMo)</button>
+            <button class="tab-button" data-tab="stripe" onclick="switchTab('stripe')">Stripe (International)</button>
+            <button class="tab-button" data-tab="flutterwave" onclick="switchTab('flutterwave')">Flutterwave (Africa)</button>
+          </div>
+
+          <!-- MTN Mobile Money Payment -->
+          <div class="payment-tab active" id="mtn-tab">
+            <div class="credit-card-notice" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000;">
+              <h4>📱 MTN Mobile Money - Pay with USSD or App</h4>
+              <p style="color: #000;">Most popular payment method in Cameroon! Pay with *126# or MTN MoMo app.</p>
+              <p><small style="color: #333;">✅ Pay from any MTN phone • ✅ No card needed • ✅ Instant & secure</small></p>
+            </div>
+            <button class="pay-button" onclick="payWithMTNWidget()" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000; font-weight: bold; font-size: 18px; padding: 20px;">
+              📱 Pay 15,000 FCFA with MTN MOMO
+            </button>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>📱</span>
+                <span>USSD Payment</span>
+              </div>
+              <div class="security-badge">
+                <span>⚡</span>
+                <span>2 Minutes</span>
+              </div>
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>MTN Verified</span>
+              </div>
+            </div>
           </div>
 
           <!-- Stripe Payment Form -->
-          <div class="payment-form-container" id="stripe-section">
+          <div class="payment-tab" id="stripe-tab">
             <div class="credit-card-notice">
-              <h4>💳 Credit Card Payment</h4>
-              <p><strong>Secure and Fast!</strong> Pay with your credit or debit card.</p>
-              <p>Powered by <strong>Stripe</strong> - trusted by millions worldwide.</p>
+              <h4>💳 Stripe - International Cards</h4>
+              <p>Pay securely with your credit or debit card, Apple Pay, or Google Pay.</p>
+              <p><small>Recommended for international cards and non-African payments.</small></p>
             </div>
-            
-            <form id="stripe-payment-form" class="payment-form">
-              <div class="form-group">
-                <label for="customer-email">Email Address</label>
-                <input type="email" id="customer-email" name="email" placeholder="Enter your email address" required />
+            <a id="stripe-checkout-link" class="pay-button" href="#">Proceed with Stripe</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>SSL Encrypted</span>
               </div>
-              
-              <div class="form-group">
-                <label for="customer-name">Full Name</label>
-                <input type="text" id="customer-name" name="name" placeholder="Enter your full name" required />
+              <div class="security-badge">
+                <span>💳</span>
+                <span>PCI Compliant</span>
               </div>
-
-              <div class="form-group">
-                <label>Card Information</label>
-                <div id="card-element">
-                  <!-- Stripe Elements will render here -->
-                </div>
-                <div id="card-errors" role="alert" style="color: #fa755a; font-size: 14px; margin-top: 8px;"></div>
+              <div class="security-badge">
+                <span>🛡️</span>
+                <span>Fraud Protected</span>
               </div>
-
-              <button type="submit" id="stripe-submit" class="pay-button">
-                <span id="button-text">Pay Now</span>
-                <span id="spinner" class="spinner hidden"></span>
-              </button>
-              
-              <div class="security-badges">
-                <div class="security-badge">
-                  <span>🔒</span>
-                  <span>SSL Encrypted</span>
-                </div>
-                <div class="security-badge">
-                  <span>💳</span>
-                  <span>PCI Compliant</span>
-                </div>
-                <div class="security-badge">
-                  <span>🛡️</span>
-                  <span>Fraud Protected</span>
-                </div>
-              </div>
-            </form>
+            </div>
           </div>
 
+          <!-- Paystack Payment Form -->
+          <div class="payment-tab" id="paystack-tab">
+            <div class="credit-card-notice">
+              <h4>📱 Paystack - Cards & Mobile Money</h4>
+              <p>Pay with African cards, Mobile Money (MTN, Orange, Moov), or bank transfer.</p>
+              <p><small>Recommended for Cameroon, Nigeria, Ghana, and African payments.</small></p>
+            </div>
+            <a id="paystack-checkout-link" class="pay-button" href="#">Proceed with Paystack</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>📱</span>
+                <span>Mobile Money</span>
+              </div>
+              <div class="security-badge">
+                <span>🏦</span>
+                <span>Bank Transfer</span>
+              </div>
+              <div class="security-badge">
+                <span>💳</span>
+                <span>African Cards</span>
+              </div>
+            </div>
+          </div>
 
+          <!-- Flutterwave Payment Form -->
+          <div class="payment-tab" id="flutterwave-tab">
+            <div class="credit-card-notice">
+              <h4>🌍 Flutterwave - Pan-African Payments</h4>
+              <p>Pay with cards, Mobile Money, bank accounts, or USSD.</p>
+              <p><small>Supports 150+ currencies and payment methods across Africa.</small></p>
+            </div>
+            <a id="flutterwave-checkout-link" class="pay-button" href="#">Proceed with Flutterwave</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🌍</span>
+                <span>150+ Currencies</span>
+              </div>
+              <div class="security-badge">
+                <span>📱</span>
+                <span>Mobile Money</span>
+              </div>
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -135,8 +184,6 @@
     </div>
   </footer>
 
-  <script src="js/payment-processor.js"></script>
-  <script src="js/analytics.js"></script>
   <script>
     // Get URL parameters function
     function getUrlParameter(name) {
@@ -146,6 +193,50 @@
       return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
 
+    // Format currency based on type
+    function formatCurrency(amount, currency) {
+      if (currency === 'FCFA') {
+        return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+      } else if (currency === 'USD') {
+        return '$' + new Intl.NumberFormat('en-US').format(amount);
+      } else {
+        return amount + ' ' + currency;
+      }
+    }
+
+    // Tab switching functionality
+    function switchTab(tabName) {
+      console.log('🔄 Switching to tab:', tabName);
+      
+      // Hide all tabs
+      document.querySelectorAll('.payment-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      const targetTab = document.getElementById(tabName + '-tab');
+      if (targetTab) {
+        targetTab.classList.add('active');
+        console.log('✅ Tab activated:', tabName + '-tab');
+      } else {
+        console.error('❌ Tab not found:', tabName + '-tab');
+      }
+      
+      // Activate button
+      const targetButton = document.querySelector('[data-tab="' + tabName + '"]');
+      if (targetButton) {
+        targetButton.classList.add('active');
+        console.log('✅ Button activated');
+      } else {
+        console.error('❌ Button not found for tab:', tabName);
+      }
+    }
+
     // Initialize payment page
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 Payment page loading...');
@@ -153,118 +244,139 @@
       // Get product details from URL
       const productId = getUrlParameter('product');
       const productPrice = getUrlParameter('price');
-      const productName = getUrlParameter('name') || 'Marriage Education Product';
+      const currency = getUrlParameter('currency') || 'USD';
+      const productName = getUrlParameter('name') || productId || 'Marriage Education Product';
+      const referralCode = getUrlParameter('ref') || '';
 
-      console.log('📋 Product details:', { productId, productPrice, productName });
+      console.log('📋 Product details:', { productId, productPrice, currency, productName, referralCode });
 
-      // Update order summary
+      // Update order summary with proper currency formatting
       if (productName && productPrice) {
+        const formattedPrice = formatCurrency(productPrice, currency);
         document.getElementById('modal-product-name').textContent = productName;
-        document.getElementById('modal-product-price').textContent = '$' + productPrice;
-        document.getElementById('order-total').textContent = '$' + productPrice;
+        document.getElementById('modal-product-price').textContent = formattedPrice;
+        document.getElementById('order-total').textContent = formattedPrice;
       }
 
-      
-
-      // Wait for DOM and Stripe SDK to be ready
-      document.addEventListener('DOMContentLoaded', function() {
-        // Ensure Stripe is loaded
-        if (typeof Stripe === 'undefined') {
-          console.error('Stripe SDK not loaded');
-          document.getElementById('card-element').innerHTML = '<p style="color: red;">Payment system loading error. Please refresh the page.</p>';
-          return;
+      // Stripe checkout button logic
+      document.getElementById('stripe-checkout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (productId) {
+          const params = new URLSearchParams({
+            product: productId,
+            name: productName,
+            price: productPrice,
+            currency: currency
+          });
+          if (referralCode) params.append('ref', referralCode);
+          
+          window.location.href = `stripe/public/checkout.html?${params.toString()}`;
+        } else {
+          alert('Product ID missing.');
         }
-
-        // Initialize Stripe
-        const stripe = Stripe('pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776');
-        const elements = stripe.elements();
-
-        // Create card element with default Stripe styling
-        const cardElement = elements.create('card');
-
-        // Mount to the container
-        cardElement.mount('#card-element');
-
-        // Handle real-time validation errors
-        cardElement.on('change', function(event) {
-          const displayError = document.getElementById('card-errors');
-          if (event.error) {
-            displayError.textContent = event.error.message;
-          } else {
-            displayError.textContent = '';
-          }
-        });
-
-        // Store for form submission
-        window.stripeInstance = stripe;
-        window.cardElement = cardElement;
-
-        console.log('Stripe Elements initialized successfully');
       });
 
-      // Handle Stripe form submission (using global references)
-      const form = document.getElementById('stripe-payment-form');
-      if (form) {
-        form.addEventListener('submit', async function(event) {
-          event.preventDefault();
-          
-          // Check if Stripe is available
-          if (!window.stripeInstance || !window.cardElement) {
-            alert('Payment system not ready. Please refresh the page.');
-            return;
-          }
-          
-          const submitButton = document.getElementById('stripe-submit');
-          const buttonText = document.getElementById('button-text');
-          const spinner = document.getElementById('spinner');
-          
-          // Show loading state
-          submitButton.disabled = true;
-          if (buttonText) buttonText.textContent = 'Processing...';
-          if (spinner) spinner.classList.remove('hidden');
-          
-          const customerEmail = document.getElementById('customer-email').value;
-          const customerName = document.getElementById('customer-name').value;
-          
-          try {
-            // Create payment method
-            const {paymentMethod, error} = await window.stripeInstance.createPaymentMethod({
-              type: 'card',
-              card: window.cardElement,
-              billing_details: {
-                name: customerName,
-                email: customerEmail,
-              },
-            });
+      // Paystack checkout button logic
+      document.getElementById('paystack-checkout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        // TODO: Implement Paystack checkout
+        alert('Paystack integration coming soon! For now, please use Stripe or Flutterwave.');
+        // Future implementation:
+        // window.location.href = `paystack/checkout.html?product=${productId}&price=${productPrice}&currency=${currency}&ref=${referralCode}`;
+      });
 
-            if (error) {
-              // Show error to customer
-              const errorElement = document.getElementById('card-errors');
-              errorElement.textContent = error.message;
-            } else {
-              // Send payment method to your server (implement your backend integration here)
-              console.log('✅ Payment method created:', paymentMethod.id);
-              
-              // For demo purposes - replace with actual server call
-              alert('✅ Payment successful! Payment Method ID: ' + paymentMethod.id);
-              
-              // Redirect to success page
-              window.location.href = 'payment-success.html?payment_method=' + paymentMethod.id + '&amount=' + productPrice;
-            }
-          } catch (err) {
-            console.error('❌ Payment error:', err);
-            document.getElementById('card-errors').textContent = 'Payment failed. Please try again.';
-          }
-          
-          // Reset button state
-          submitButton.disabled = false;
-          if (buttonText) buttonText.textContent = 'Pay Now';
-          if (spinner) spinner.classList.add('hidden');
-        });
+      // Flutterwave checkout button logic
+      document.getElementById('flutterwave-checkout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        // TODO: Implement Flutterwave checkout
+        alert('Flutterwave integration coming soon! For now, please use Stripe.');
+        // Future implementation:
+        // window.location.href = `flutterwave/checkout.html?product=${productId}&price=${productPrice}&currency=${currency}&ref=${referralCode}`;
+      });
+
+      // Add referral code to Stripe checkout link
+      const referralCode = getReferralCode();
+      if (referralCode) {
+        const stripeLink = document.getElementById('stripe-checkout-link');
+        const url = new URL(stripeLink.href);
+        url.searchParams.set('ref', referralCode);
+        stripeLink.href = url.toString();
       }
-
-      // No tab switching needed - single payment method
     });
+  </script>
+  
+  <!-- Referral Tracking System -->
+  <script src="js/referral-tracking.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/payment-config.js"></script>
+  
+  <!-- MTN Collection Widget Integration -->
+  <script src="js/mtn-widget.js"></script>
+  
+  <script>
+    // Record sale after successful payment
+    async function recordPayment(paymentData) {
+      try {
+        const referralCode = getReferralCode();
+        
+        const saleData = {
+          customerEmail: paymentData.email || '',
+          customerName: paymentData.name || '',
+          quantity: paymentData.quantity || 1,
+          amount: paymentData.amount || PAYMENT_CONFIG.bookPrice,
+          currency: PAYMENT_CONFIG.currency,
+          paymentMethod: paymentData.method || 'unknown',
+          paymentId: paymentData.transactionId || '',
+          referralCode: referralCode || null,
+          status: 'completed'
+        };
+        
+        const result = await FirebaseHelper.recordSale(saleData);
+        
+        if (result.success) {
+          console.log('✅ Sale recorded successfully:', result.id);
+          
+          if (referralCode) {
+            console.log('✅ Commission attributed to:', referralCode);
+          }
+        } else {
+          console.error('❌ Error recording sale:', result.error);
+        }
+      } catch (error) {
+        console.error('Error in recordPayment:', error);
+      }
+    }
+    
+    // Listen for successful payment (would come from webhook in production)
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'payment_success') {
+        recordPayment(event.data.payment);
+      }
+    });
+    
+    // MTN Collection Widget Payment Handler
+    window.payWithMTNWidget = function() {
+      console.log('🔘 MTN Payment button clicked');
+      const amount = PAYMENT_CONFIG.bookPrice; // 15000 FCFA
+      const referralCode = getReferralCode();
+      
+      console.log('💰 Amount:', amount, 'Referral:', referralCode);
+      
+      // Show MTN Collection Widget modal
+      if (typeof MTNWidget !== 'undefined' && MTNWidget) {
+        console.log('✅ MTNWidget found, showing modal...');
+        MTNWidget.showPaymentModal(amount, referralCode);
+      } else {
+        console.error('❌ MTNWidget not initialized');
+        alert('MTN Mobile Money widget is loading. Please refresh the page and try again.');
+      }
+    }
   </script>
 </body>
 </html>
