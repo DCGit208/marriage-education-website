@@ -18,7 +18,7 @@ async function initialize() {
   const productId = getUrlParameter('product');
 
   const fetchClientSecret = async () => {
-    const response = await fetch("/create-checkout-session", {
+    const response = await fetch("http://localhost:4242/create-checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
