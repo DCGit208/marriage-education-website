@@ -206,6 +206,8 @@
 
     // Tab switching functionality
     function switchTab(tabName) {
+      console.log('🔄 Switching to tab:', tabName);
+      
       // Hide all tabs
       document.querySelectorAll('.payment-tab').forEach(tab => {
         tab.classList.remove('active');
@@ -217,10 +219,22 @@
       });
       
       // Show selected tab
-      document.getElementById(tabName + '-tab').classList.add('active');
+      const targetTab = document.getElementById(tabName + '-tab');
+      if (targetTab) {
+        targetTab.classList.add('active');
+        console.log('✅ Tab activated:', tabName + '-tab');
+      } else {
+        console.error('❌ Tab not found:', tabName + '-tab');
+      }
       
       // Activate button
-      document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+      const targetButton = document.querySelector('[data-tab="' + tabName + '"]');
+      if (targetButton) {
+        targetButton.classList.add('active');
+        console.log('✅ Button activated');
+      } else {
+        console.error('❌ Button not found for tab:', tabName);
+      }
     }
 
     // Initialize payment page

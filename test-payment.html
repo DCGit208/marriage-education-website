@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment System Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-card {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .test-card h2 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #ffcb05;
+      padding-bottom: 10px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .status.success {
+      background: #4caf50;
+      color: white;
+    }
+    .status.error {
+      background: #f44336;
+      color: white;
+    }
+    .status.warning {
+      background: #ff9800;
+      color: white;
+    }
+    .test-item {
+      padding: 10px;
+      margin: 10px 0;
+      background: #f9f9f9;
+      border-left: 4px solid #ccc;
+      border-radius: 4px;
+    }
+    .test-item.pass {
+      border-left-color: #4caf50;
+    }
+    .test-item.fail {
+      border-left-color: #f44336;
+    }
+    pre {
+      background: #263238;
+      color: #aed581;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      background: #ffcb05;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #ffa000;
+    }
+    .config-display {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">🔍 Payment System Verification</h1>
+
+  <!-- Tab Switching Test -->
+  <div class="test-card">
+    <h2>1. Tab Switching Test</h2>
+    <div id="tab-test-results"></div>
+    <button onclick="testTabSwitching()">Run Tab Switch Test</button>
+    <button onclick="window.open('payment.html', '_blank')">Open Payment Page</button>
+  </div>
+
+  <!-- Collections API Test -->
+  <div class="test-card">
+    <h2>2. MTN Collections API Configuration</h2>
+    <div id="api-test-results"></div>
+    <button onclick="testCollectionsAPI()">Verify API Config</button>
+  </div>
+
+  <!-- MTN Widget Test -->
+  <div class="test-card">
+    <h2>3. MTN Widget Initialization</h2>
+    <div id="widget-test-results"></div>
+    <button onclick="testMTNWidget()">Test Widget Loading</button>
+  </div>
+
+  <!-- Quick Access -->
+  <div class="test-card">
+    <h2>4. Quick Actions</h2>
+    <button onclick="testFullPaymentFlow()">Test Full Payment Flow</button>
+    <button onclick="openBrowserConsole()">View Console Instructions</button>
+  </div>
+
+  <!-- Load payment configuration -->
+  <script src="js/payment-config.js"></script>
+  <script src="js/mtn-widget.js"></script>
+
+  <script>
+    // Test 1: Tab Switching
+    function testTabSwitching() {
+      const resultsDiv = document.getElementById('tab-test-results');
+      resultsDiv.innerHTML = '<p>Testing tab switching functionality...</p>';
+      
+      const tests = [];
+      
+      // Open payment page in iframe to test
+      const iframe = document.createElement('iframe');
+      iframe.src = 'payment.html';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      iframe.onload = function() {
+        const doc = iframe.contentWindow.document;
+        
+        // Check if all tabs exist
+        const tabs = ['mtn-tab', 'paystack-tab', 'stripe-tab', 'flutterwave-tab'];
+        const tabElements = tabs.map(id => doc.getElementById(id));
+        
+        if (tabElements.every(el => el !== null)) {
+          tests.push({name: 'All payment tabs exist', pass: true});
+        } else {
+          tests.push({name: 'All payment tabs exist', pass: false});
+        }
+        
+        // Check if only one tab is active by default
+        const activeTabs = tabElements.filter(el => el && el.classList.contains('active'));
+        if (activeTabs.length === 1) {
+          tests.push({name: 'Only one tab active by default', pass: true});
+          tests.push({name: `Default active tab: ${activeTabs[0].id}`, pass: true});
+        } else {
+          tests.push({name: 'Only one tab active by default', pass: false, 
+                     message: `Found ${activeTabs.length} active tabs`});
+        }
+        
+        // Check if tab buttons exist
+        const tabButtons = doc.querySelectorAll('.tab-button');
+        tests.push({name: `Tab buttons found: ${tabButtons.length}`, pass: tabButtons.length === 4});
+        
+        // Check if switchTab function exists
+        const hasSwitchFunction = typeof iframe.contentWindow.switchTab === 'function';
+        tests.push({name: 'switchTab function exists', pass: hasSwitchFunction});
+        
+        // Display results
+        displayTestResults(resultsDiv, tests);
+        document.body.removeChild(iframe);
+      };
+    }
+
+    // Test 2: Collections API
+    function testCollectionsAPI() {
+      const resultsDiv = document.getElementById('api-test-results');
+      const tests = [];
+      
+      // Check if PAYMENT_CONFIG exists
+      if (typeof PAYMENT_CONFIG === 'undefined') {
+        resultsDiv.innerHTML = '<div class="status error">ERROR: PAYMENT_CONFIG not loaded</div>';
+        return;
+      }
+      
+      tests.push({name: 'PAYMENT_CONFIG loaded', pass: true});
+      
+      // Check MTN MOMO config
+      if (PAYMENT_CONFIG.mtnMomo) {
+        tests.push({name: 'MTN MOMO config exists', pass: true});
+        
+        // Check Collection Widget key
+        const hasWidgetKey = PAYMENT_CONFIG.mtnMomo.subscriptionKey && 
+                             PAYMENT_CONFIG.mtnMomo.subscriptionKey !== 'YOUR_MTN_SUBSCRIPTION_KEY_HERE';
+        tests.push({name: 'Collection Widget key configured', pass: hasWidgetKey});
+        
+        if (hasWidgetKey) {
+          tests.push({
+            name: 'Widget Key', 
+            pass: true, 
+            message: PAYMENT_CONFIG.mtnMomo.subscriptionKey.substring(0, 10) + '...'
+          });
+        }
+        
+        // Check Collections API key
+        const hasCollectionsKey = PAYMENT_CONFIG.mtnMomo.collectionsApiKey && 
+                                   PAYMENT_CONFIG.mtnMomo.collectionsApiKey !== 'YOUR_API_KEY_HERE';
+        tests.push({name: 'Collections API key configured', pass: hasCollectionsKey});
+        
+        if (hasCollectionsKey) {
+          tests.push({
+            name: 'Collections API Key', 
+            pass: true, 
+            message: PAYMENT_CONFIG.mtnMomo.collectionsApiKey.substring(0, 10) + '...'
+          });
+        }
+        
+        // Check merchant number
+        const hasMerchantNumber = PAYMENT_CONFIG.mtnMomo.merchantNumber && 
+                                   PAYMENT_CONFIG.mtnMomo.merchantNumber.includes('237');
+        tests.push({name: 'Merchant number configured', pass: hasMerchantNumber});
+        
+        if (hasMerchantNumber) {
+          tests.push({
+            name: 'Merchant Number', 
+            pass: true, 
+            message: PAYMENT_CONFIG.mtnMomo.merchantNumber
+          });
+        }
+        
+        // Check environment
+        tests.push({
+          name: 'Environment', 
+          pass: true, 
+          message: PAYMENT_CONFIG.mtnMomo.environment
+        });
+        
+        // Check enabled status
+        tests.push({
+          name: 'MTN MOMO enabled', 
+          pass: PAYMENT_CONFIG.mtnMomo.enabled === true
+        });
+        
+        // Display full config
+        const configHtml = `
+          <div class="config-display">
+            <h4>Current MTN MOMO Configuration:</h4>
+            <pre>${JSON.stringify(PAYMENT_CONFIG.mtnMomo, null, 2)}</pre>
+          </div>
+        `;
+        resultsDiv.innerHTML = configHtml;
+        
+      } else {
+        tests.push({name: 'MTN MOMO config exists', pass: false});
+      }
+      
+      displayTestResults(resultsDiv, tests, true);
+    }
+
+    // Test 3: MTN Widget
+    function testMTNWidget() {
+      const resultsDiv = document.getElementById('widget-test-results');
+      const tests = [];
+      
+      // Check if MTNCollectionWidget class exists
+      tests.push({
+        name: 'MTNCollectionWidget class loaded', 
+        pass: typeof MTNCollectionWidget !== 'undefined'
+      });
+      
+      // Check if MTNWidget instance exists
+      tests.push({
+        name: 'MTNWidget instance created', 
+        pass: typeof MTNWidget !== 'undefined' && MTNWidget !== null
+      });
+      
+      if (typeof MTNWidget !== 'undefined' && MTNWidget) {
+        // Check widget properties
+        tests.push({
+          name: 'Widget has merchantNumber', 
+          pass: MTNWidget.merchantNumber !== undefined
+        });
+        
+        tests.push({
+          name: 'Widget environment', 
+          pass: true,
+          message: MTNWidget.environment
+        });
+        
+        tests.push({
+          name: 'Widget baseURL', 
+          pass: true,
+          message: MTNWidget.baseURL
+        });
+        
+        // Test showPaymentModal method
+        tests.push({
+          name: 'showPaymentModal method exists', 
+          pass: typeof MTNWidget.showPaymentModal === 'function'
+        });
+      }
+      
+      displayTestResults(resultsDiv, tests);
+    }
+
+    // Test 4: Full Payment Flow
+    function testFullPaymentFlow() {
+      alert('Opening payment page...\n\n' +
+            'To test the full flow:\n' +
+            '1. Open browser console (Cmd+Option+J)\n' +
+            '2. Click on each payment tab\n' +
+            '3. Click "Pay with MTN MOMO" button\n' +
+            '4. Verify modal opens with USSD instructions\n' +
+            '5. Check console for logs');
+      
+      window.open('payment.html', '_blank');
+    }
+
+    // Helper function to display test results
+    function displayTestResults(container, tests, append = false) {
+      let html = '';
+      
+      const passed = tests.filter(t => t.pass).length;
+      const total = tests.length;
+      const allPassed = passed === total;
+      
+      html += `<div class="status ${allPassed ? 'success' : (passed > 0 ? 'warning' : 'error')}">
+        ${passed}/${total} tests passed
+      </div>`;
+      
+      tests.forEach(test => {
+        html += `<div class="test-item ${test.pass ? 'pass' : 'fail'}">
+          ${test.pass ? '✅' : '❌'} ${test.name}
+          ${test.message ? `<br><small>${test.message}</small>` : ''}
+        </div>`;
+      });
+      
+      if (append) {
+        container.innerHTML += html;
+      } else {
+        container.innerHTML = html;
+      }
+    }
+
+    // Browser console instructions
+    function openBrowserConsole() {
+      alert('To open browser console:\n\n' +
+            'Chrome/Edge: Cmd+Option+J (Mac) or Ctrl+Shift+J (Windows)\n' +
+            'Safari: Cmd+Option+C (Mac)\n' +
+            'Firefox: Cmd+Option+K (Mac) or Ctrl+Shift+K (Windows)\n\n' +
+            'In the console, you should see:\n' +
+            '✅ MTN Config found\n' +
+            '✅ MTN Widget initialized successfully\n' +
+            '🔘 MTN Payment button clicked (when you click Pay)');
+    }
+
+    // Auto-run tests on page load
+    window.addEventListener('load', function() {
+      console.log('🧪 Test page loaded - Ready to verify payment system');
+    });
+  </script>
+</body>
+</html>
