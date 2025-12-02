@@ -34,3 +34,4 @@ temp/
 
 # Payment configuration (keep secure)
 # Note: Make sure to keep payment credentials secure
+stripe/node_modules/
