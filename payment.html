@@ -188,33 +188,72 @@
           <div class="payment-tab" id="paystack-tab">
             <div class="credit-card-notice">
               <h4>📱 Paystack - Cards & Mobile Money</h4>
-              <p>African cards, Mobile Money, bank transfer</p>
+              <p>Pay with African cards, Mobile Money (MTN, Orange, Moov), or bank transfer.</p>
+              <p><small>Recommended for Cameroon, Nigeria, Ghana, and African payments.</small></p>
             </div>
-            <button class="pay-button" onclick="alert('Paystack integration coming soon')">
-              Proceed with Paystack
-            </button>
+            <a id="paystack-checkout-link" class="pay-button" href="#" onclick="goToPaystack(); return false;">Proceed with Paystack</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>📱</span>
+                <span>Mobile Money</span>
+              </div>
+              <div class="security-badge">
+                <span>🏦</span>
+                <span>Bank Transfer</span>
+              </div>
+              <div class="security-badge">
+                <span>💳</span>
+                <span>African Cards</span>
+              </div>
+            </div>
           </div>
 
           <!-- Stripe Tab -->
           <div class="payment-tab" id="stripe-tab">
             <div class="credit-card-notice">
               <h4>💳 Stripe - International Cards</h4>
-              <p>Credit/debit cards, Apple Pay, Google Pay</p>
+              <p>Pay securely with your credit or debit card, Apple Pay, or Google Pay.</p>
+              <p><small>Recommended for international cards and non-African payments.</small></p>
             </div>
-            <button class="pay-button" onclick="alert('Stripe integration coming soon')">
-              Proceed with Stripe
-            </button>
+            <a id="stripe-checkout-link" class="pay-button" href="#" onclick="goToStripe(); return false;">Proceed with Stripe</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>SSL Encrypted</span>
+              </div>
+              <div class="security-badge">
+                <span>💳</span>
+                <span>PCI Compliant</span>
+              </div>
+              <div class="security-badge">
+                <span>🛡️</span>
+                <span>Fraud Protected</span>
+              </div>
+            </div>
           </div>
 
           <!-- Flutterwave Tab -->
           <div class="payment-tab" id="flutterwave-tab">
             <div class="credit-card-notice">
-              <h4>🌍 Flutterwave - Pan-African</h4>
-              <p>Cards, Mobile Money, bank accounts, USSD</p>
+              <h4>🌍 Flutterwave - Pan-African Payments</h4>
+              <p>Pay with cards, Mobile Money, bank accounts, or USSD.</p>
+              <p><small>Supports 150+ currencies and payment methods across Africa.</small></p>
             </div>
-            <button class="pay-button" onclick="alert('Flutterwave integration coming soon')">
-              Proceed with Flutterwave
-            </button>
+            <a id="flutterwave-checkout-link" class="pay-button" href="#" onclick="goToFlutterwave(); return false;">Proceed with Flutterwave</a>
+            <div class="security-badges">
+              <div class="security-badge">
+                <span>🌍</span>
+                <span>150+ Currencies</span>
+              </div>
+              <div class="security-badge">
+                <span>📱</span>
+                <span>Mobile Money</span>
+              </div>
+              <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -345,6 +384,75 @@
         closeMTNModal();
       }
     });
+
+    // Get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Stripe checkout
+    function goToStripe() {
+      const productId = getUrlParameter('product') || 'sbd-for-dummies';
+      const productName = getUrlParameter('name') || 'SBD for Dummies';
+      const productPrice = getUrlParameter('price') || '19.99';
+      const currency = getUrlParameter('currency') || 'USD';
+      const referralCode = getUrlParameter('ref') || '';
+      
+      const params = new URLSearchParams({
+        product: productId,
+        name: productName,
+        price: productPrice,
+        currency: currency
+      });
+      if (referralCode) params.append('ref', referralCode);
+      
+      window.location.href = `stripe/public/checkout.html?${params.toString()}`;
+    }
+
+    // Paystack checkout
+    function goToPaystack() {
+      const productId = getUrlParameter('product') || 'sbd-for-dummies';
+      const productName = getUrlParameter('name') || 'SBD for Dummies';
+      const productPrice = getUrlParameter('price') || '15000';
+      const currency = getUrlParameter('currency') || 'FCFA';
+      const referralCode = getUrlParameter('ref') || '';
+      
+      const params = new URLSearchParams({
+        product: productId,
+        name: productName,
+        price: productPrice,
+        currency: currency
+      });
+      if (referralCode) params.append('ref', referralCode);
+      
+      // For now, show coming soon
+      alert('Paystack integration coming soon! For now, please use MTN MOMO or Stripe.');
+      // Future: window.location.href = `paystack/checkout.html?${params.toString()}`;
+    }
+
+    // Flutterwave checkout
+    function goToFlutterwave() {
+      const productId = getUrlParameter('product') || 'sbd-for-dummies';
+      const productName = getUrlParameter('name') || 'SBD for Dummies';
+      const productPrice = getUrlParameter('price') || '15000';
+      const currency = getUrlParameter('currency') || 'FCFA';
+      const referralCode = getUrlParameter('ref') || '';
+      
+      const params = new URLSearchParams({
+        product: productId,
+        name: productName,
+        price: productPrice,
+        currency: currency
+      });
+      if (referralCode) params.append('ref', referralCode);
+      
+      // For now, show coming soon
+      alert('Flutterwave integration coming soon! For now, please use MTN MOMO or Stripe.');
+      // Future: window.location.href = `flutterwave/checkout.html?${params.toString()}`;
+    }
 
     console.log('✅ Payment page loaded and ready');
   </script>
