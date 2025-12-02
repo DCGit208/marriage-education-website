@@ -31,7 +31,8 @@ $stderr.sync = true
 
 post '/create-checkout-session' do
   content_type 'application/json'
-
+  headers 'Access-Control-Allow-Origin' => '*'
+  
   begin
     request.body.rewind
     raw_body = request.body.read
