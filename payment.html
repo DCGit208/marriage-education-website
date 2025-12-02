@@ -40,10 +40,10 @@
           <h3>Choose Payment Method</h3>
           
           <div class="payment-tabs">
-            <button class="tab-button active" data-tab="mtn">MTN MOMO (Cameroon)</button>
-            <button class="tab-button" data-tab="paystack">Paystack (Cards/MoMo)</button>
-            <button class="tab-button" data-tab="stripe">Stripe (International)</button>
-            <button class="tab-button" data-tab="flutterwave">Flutterwave (Africa)</button>
+            <button class="tab-button active" data-tab="mtn" onclick="switchTab('mtn')">MTN MOMO (Cameroon)</button>
+            <button class="tab-button" data-tab="paystack" onclick="switchTab('paystack')">Paystack (Cards/MoMo)</button>
+            <button class="tab-button" data-tab="stripe" onclick="switchTab('stripe')">Stripe (International)</button>
+            <button class="tab-button" data-tab="flutterwave" onclick="switchTab('flutterwave')">Flutterwave (Africa)</button>
           </div>
 
           <!-- MTN Mobile Money Payment -->
@@ -257,14 +257,6 @@
         document.getElementById('modal-product-price').textContent = formattedPrice;
         document.getElementById('order-total').textContent = formattedPrice;
       }
-
-      // Tab button listeners
-      document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', function() {
-          const tabName = this.getAttribute('data-tab');
-          switchTab(tabName);
-        });
-      });
 
       // Stripe checkout button logic
       document.getElementById('stripe-checkout-link').addEventListener('click', function(e) {
