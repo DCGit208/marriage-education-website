@@ -6,20 +6,23 @@ require 'dotenv/load'
 # Load Stripe API key from environment
 Stripe.api_key = ENV['STRIPE_API_KEY'] || ENV['STRIPE_SECRET_KEY']
 
-# Enable CORS for all origins
-before do
-  headers['Access-Control-Allow-Origin'] = '*'
-  headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-  headers['Access-Control-Allow-Headers'] = 'Content-Type'
-  halt 200 if request.request_method == 'OPTIONS'
-end
-
 set :static, true
 set :port, 4242
 set :public_folder, File.dirname(__FILE__) + '/public'
+set :bind, '0.0.0.0'
 
-# Auto-detect domain based on environment
-YOUR_DOMAIN = ENV['DOMAIN'] || (ENV['RACK_ENV'] == 'production' ? 'https://marriageducation.com' : 'http://localhost:4242')
+# Enable CORS
+before do
+  headers 'Access-Control-Allow-Origin' => '*',
+          'Access-Control-Allow-Methods' => ['GET', 'POST', 'OPTIONS'],
+          'Access-Control-Allow-Headers' => 'Content-Type'
+end
+
+options '*' do
+  200
+end
+
+YOUR_DOMAIN = ENV['DOMAIN'] || 'https://marriageducation.com'
 
 require 'json'
 
@@ -27,7 +30,6 @@ $stdout.sync = true
 $stderr.sync = true
 
 post '/create-checkout-session' do
-
   content_type 'application/json'
 
   begin
