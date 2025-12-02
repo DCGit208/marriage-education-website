@@ -20,10 +20,12 @@ const PAYMENT_CONFIG = {
         enabled: true
     },
     
-    // MTN Mobile Money Configuration (Collection Widget)
+    // MTN Mobile Money Configuration (Collection Widget + API)
     mtnMomo: {
-        // Collection Widget Subscription Key from: https://momodeveloper.mtn.com/
-        subscriptionKey: '88e6592aa57d425280a3e55be6ddcac6', // Your Collection Widget key
+        // Collection Widget Key (for USSD/QR payments)
+        subscriptionKey: '88e6592aa57d425280a3e55be6ddcac6',
+        // Collections API Key (for programmatic payments)
+        collectionsApiKey: '4455fd39957b48e281efde9612b55530',
         environment: 'sandbox', // 'sandbox' or 'production'
         merchantNumber: '237677604100', // Your MTN MOMO number to receive payments
         enabled: true,

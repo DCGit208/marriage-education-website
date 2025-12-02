@@ -73,7 +73,7 @@
           </div>
 
           <!-- Stripe Payment Form -->
-          <div class="payment-tab active" id="stripe-tab">
+          <div class="payment-tab" id="stripe-tab">
             <div class="credit-card-notice">
               <h4>💳 Stripe - International Cards</h4>
               <p>Pay securely with your credit or debit card, Apple Pay, or Google Pay.</p>
@@ -306,6 +306,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/payment-config.js"></script>
   
@@ -353,16 +354,21 @@
       }
     });
     
-    // MTN Mobile Money Widget Payment Handler
-    function payWithMTNWidget() {
+    // MTN Collection Widget Payment Handler
+    window.payWithMTNWidget = function() {
+      console.log('🔘 MTN Payment button clicked');
       const amount = PAYMENT_CONFIG.bookPrice; // 15000 FCFA
       const referralCode = getReferralCode();
       
+      console.log('💰 Amount:', amount, 'Referral:', referralCode);
+      
       // Show MTN Collection Widget modal
-      if (typeof MTNWidget !== 'undefined') {
+      if (typeof MTNWidget !== 'undefined' && MTNWidget) {
+        console.log('✅ MTNWidget found, showing modal...');
         MTNWidget.showPaymentModal(amount, referralCode);
       } else {
-        alert('MTN Mobile Money widget is loading. Please try again in a moment.');
+        console.error('❌ MTNWidget not initialized');
+        alert('MTN Mobile Money widget is loading. Please refresh the page and try again.');
       }
     }
   </script>

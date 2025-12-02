@@ -406,10 +406,15 @@ class MTNCollectionWidget {
 window.MTNCollectionWidget = MTNCollectionWidget;
 
 // Initialize widget
-if (typeof PAYMENT_CONFIG !== 'undefined' && PAYMENT_CONFIG.mtnMomo.enabled) {
+console.log('🔄 Loading MTN Collection Widget...');
+if (typeof PAYMENT_CONFIG !== 'undefined' && PAYMENT_CONFIG.mtnMomo && PAYMENT_CONFIG.mtnMomo.enabled) {
+    console.log('✅ MTN Config found:', PAYMENT_CONFIG.mtnMomo);
     window.MTNWidget = new MTNCollectionWidget({
         subscriptionKey: PAYMENT_CONFIG.mtnMomo.subscriptionKey,
         environment: PAYMENT_CONFIG.mtnMomo.environment,
-        merchantNumber: PAYMENT_CONFIG.mtnMomo.testNumber || PAYMENT_CONFIG.mtnMomo.merchantNumber
+        merchantNumber: PAYMENT_CONFIG.mtnMomo.merchantNumber
     });
+    console.log('✅ MTN Widget initialized successfully');
+} else {
+    console.warn('⚠️ MTN MOMO config not found or disabled');
 }
