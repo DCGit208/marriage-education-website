@@ -25,8 +25,8 @@ async function initialize() {
 
   try {
     console.log('📡 Calling API to create checkout session...');
-    // Use relative path so it works on both local and production
-    const response = await fetch("/stripe/create-checkout-session", {
+    // Use relative path - works when accessed via Ruby server on same domain
+    const response = await fetch("/create-checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
