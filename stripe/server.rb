@@ -50,18 +50,19 @@ post '/create-checkout-session' do
   end
 
   # Use the real Stripe price ID from CSV
+  # For local HTTP testing, use hosted redirect mode (not embedded)
   session = Stripe::Checkout::Session.create({
-    ui_mode: 'embedded',
     line_items: [{
       price: stripe_price_id,
       quantity: 1,
     }],
     mode: 'payment',
-    return_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+    success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
     automatic_tax: {enabled: true},
   })
 
-  {clientSecret: session.client_secret}.to_json
+  {url: session.url}.to_json
 end
 
 get '/download' do
