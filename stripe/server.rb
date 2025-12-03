@@ -9,20 +9,8 @@ Stripe.api_key = ENV['STRIPE_API_KEY'] || ENV['STRIPE_SECRET_KEY']
 set :static, true
 set :port, 4242
 set :public_folder, File.dirname(__FILE__) + '/public'
-set :bind, '0.0.0.0'
 
-# Enable CORS
-before do
-  headers 'Access-Control-Allow-Origin' => '*',
-          'Access-Control-Allow-Methods' => ['GET', 'POST', 'OPTIONS'],
-          'Access-Control-Allow-Headers' => 'Content-Type'
-end
-
-options '*' do
-  200
-end
-
-YOUR_DOMAIN = ENV['DOMAIN'] || 'https://marriageducation.com'
+YOUR_DOMAIN = 'http://localhost:4242'
 
 require 'json'
 
@@ -30,9 +18,9 @@ $stdout.sync = true
 $stderr.sync = true
 
 post '/create-checkout-session' do
+
   content_type 'application/json'
-  headers 'Access-Control-Allow-Origin' => '*'
-  
+
   begin
     request.body.rewind
     raw_body = request.body.read
@@ -74,8 +62,6 @@ post '/create-checkout-session' do
   })
 
   {clientSecret: session.client_secret}.to_json
-end
-
 get '/download' do
   # Example: /download?product_id=the-sex-by-design-compendium
   product_id = params['product_id']
@@ -97,6 +83,7 @@ get '/download' do
   halt 404, 'eBook file not found' unless File.exist?(ebook_path)
 
   send_file ebook_path, :filename => download_filename, :type => 'application/pdf'
+end
 end
 
 get '/session-status' do
