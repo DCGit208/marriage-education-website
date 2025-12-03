@@ -1,7 +1,6 @@
 require 'stripe'
 require 'dotenv/load'
-
-Stripe.api_key = ENV['STRIPE_API_KEY'] || ENV['STRIPE_SECRET_KEY']
+Stripe.api_key = ENV['STRIPE_API_KEY']
 
 begin
   products = Stripe::Product.list(limit: 1)

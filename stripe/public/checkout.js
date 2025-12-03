@@ -1,4 +1,4 @@
-// Stripe publishable key (safe to expose in client-side code)
+// This is your test publishable API key.
 const stripe = Stripe("pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776");
 
 initialize();

@@ -4,7 +4,7 @@ require 'csv'
 require 'dotenv/load'
 
 # Load Stripe API key from environment
-Stripe.api_key = ENV['STRIPE_API_KEY'] || ENV['STRIPE_SECRET_KEY']
+Stripe.api_key = ENV['STRIPE_API_KEY']
 
 set :static, true
 set :port, 4242
