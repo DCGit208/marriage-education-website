@@ -206,7 +206,9 @@
       
       document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
-        const checkoutUrl = 'stripe/public/checkout.html?product=' + encodeURIComponent(productId);
+        // Use absolute path for production compatibility
+        const checkoutUrl = '/stripe/public/checkout.html?product=' + encodeURIComponent(productId);
+        console.log('Redirecting to:', checkoutUrl);
         window.location.href = checkoutUrl;
       });
       
