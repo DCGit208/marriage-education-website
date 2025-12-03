@@ -1,6 +1,4 @@
-// This is your test publishable API key.
-const stripe = Stripe("pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776");
-
+// Redirect to Stripe hosted checkout (works over HTTP for local testing)
 initialize();
 
 // Helper to get URL parameters
@@ -11,15 +9,22 @@ function getUrlParameter(name) {
   return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
-// Create a Checkout Session
+// Create a Checkout Session and redirect
 async function initialize() {
-
   // Get product ID from URL
   const productId = getUrlParameter('product');
-  console.log('🔍 Initializing checkout for product:', productId);
+  console.log('🔍 Creating checkout session for product:', productId);
 
-  const fetchClientSecret = async () => {
-    console.log('📡 Fetching client secret from API...');
+  if (!productId) {
+    document.getElementById('checkout').innerHTML = '<p style="color:red;">Missing product ID</p>';
+    return;
+  }
+
+  // Show loading message
+  document.getElementById('checkout').innerHTML = '<p>Loading secure checkout...</p>';
+
+  try {
+    console.log('📡 Calling API to create checkout session...');
     const response = await fetch("/create-checkout-session", {
       method: "POST",
       headers: {
@@ -29,30 +34,29 @@ async function initialize() {
         product_id: productId
       })
     });
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('❌ API Error:', response.status, errorData);
-      throw new Error(errorData.error || 'An error occurred while creating the checkout session.');
+      throw new Error(errorData.error || 'Failed to create checkout session');
     }
-    const data = await response.json();
-    console.log('✅ Received data:', data);
-    const { clientSecret } = data;
-    console.log('🔑 Client secret:', clientSecret ? 'received' : 'missing');
-    return clientSecret;
-  };
 
-  try {
-    console.log('🎨 Initializing Stripe embedded checkout...');
-    const checkout = await stripe.initEmbeddedCheckout({
-      fetchClientSecret,
-    });
-    console.log('✅ Stripe checkout initialized');
-    // Mount Checkout
-    checkout.mount('#checkout');
-    console.log('✅ Checkout mounted to DOM');
+    const data = await response.json();
+    console.log('✅ Received checkout URL:', data.url);
+
+    // Redirect to Stripe hosted checkout page
+    if (data.url) {
+      console.log('🚀 Redirecting to Stripe checkout...');
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL received');
+    }
   } catch (err) {
     console.error('❌ Checkout error:', err);
-    const checkoutDiv = document.getElementById('checkout');
-    checkoutDiv.innerHTML = `<div class="error-message" style="color:red; font-weight:bold; padding:2em;">${err.message}</div>`;
+    document.getElementById('checkout').innerHTML = 
+      `<div style="color:red; font-weight:bold; padding:2em;">
+        <p>Error: ${err.message}</p>
+        <p><a href="javascript:location.reload()">Try again</a></p>
+      </div>`;
   }
 }
