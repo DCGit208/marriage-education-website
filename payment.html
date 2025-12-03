@@ -236,8 +236,11 @@
       
       document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
-        // Use absolute path for production compatibility
-        const checkoutUrl = '/stripe/public/checkout.html?product=' + encodeURIComponent(productId);
+        // For local: use Ruby server URL. For production: marriageducation.com has Ruby running
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const checkoutUrl = isLocal 
+          ? 'http://localhost:4242/checkout.html?product=' + encodeURIComponent(productId)
+          : '/stripe/public/checkout.html?product=' + encodeURIComponent(productId);
         console.log('Redirecting to:', checkoutUrl);
         window.location.href = checkoutUrl;
       });

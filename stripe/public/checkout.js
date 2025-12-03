@@ -1,4 +1,6 @@
 // Redirect to Stripe hosted checkout (works over HTTP for local testing)
+// Version banner to confirm the exact script loaded in the browser
+console.log('✅ checkout.js loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
 initialize();
 
 // Helper to get URL parameters
@@ -24,9 +26,10 @@ async function initialize() {
   document.getElementById('checkout').innerHTML = '<p>Loading secure checkout...</p>';
 
   try {
-    console.log('📡 Calling API to create checkout session...');
-    // Use relative path - works when accessed via Ruby server on same domain
-    const response = await fetch("/create-checkout-session", {
+    const apiUrl = `${window.location.origin}/create-checkout-session`;
+    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId);
+    // Always call same-origin Ruby endpoint explicitly to avoid wrong-origin issues
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -37,9 +40,13 @@ async function initialize() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('❌ API Error:', response.status, errorData);
-      throw new Error(errorData.error || 'Failed to create checkout session');
+      let errorMsg = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData && errorData.error) errorMsg += ` - ${errorData.error}`;
+      } catch (_) {}
+      console.error('❌ API Error:', errorMsg);
+      throw new Error('Failed to create checkout session');
     }
 
     const data = await response.json();
