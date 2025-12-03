@@ -25,7 +25,8 @@ async function initialize() {
 
   try {
     console.log('📡 Calling API to create checkout session...');
-    const response = await fetch("http://localhost:4242/create-checkout-session", {
+    // Use relative path so it works on both local and production
+    const response = await fetch("/stripe/create-checkout-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
