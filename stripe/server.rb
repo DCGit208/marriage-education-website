@@ -17,6 +17,17 @@ require 'json'
 $stdout.sync = true
 $stderr.sync = true
 
+# Enable CORS for local development
+before do
+  headers['Access-Control-Allow-Origin'] = '*'
+  headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+  headers['Access-Control-Allow-Headers'] = 'Content-Type'
+end
+
+options '*' do
+  200
+end
+
 post '/create-checkout-session' do
 
   content_type 'application/json'
