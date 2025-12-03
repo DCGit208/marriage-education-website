@@ -5,137 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment - Marriage Education</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    /* Ensure tabs work properly */
-    .payment-tab {
-      display: none !important;
-    }
-    .payment-tab.active {
-      display: block !important;
-    }
-    
-    /* Modal styling */
-    .mtn-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 10000;
-      overflow-y: auto;
-    }
-    .mtn-modal.show {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .mtn-modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 600px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    .close-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 28px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: #666;
-    }
-    .close-btn:hover {
-      color: #000;
-    }
-    .mtn-header {
-      background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%);
-      padding: 30px;
-      margin: -30px -30px 30px;
-      border-radius: 12px 12px 0 0;
-      text-align: center;
-    }
-    .mtn-amount {
-      font-size: 32px;
-      font-weight: bold;
-      color: #000;
-      margin-top: 10px;
-    }
-    .payment-ref {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      margin: 20px 0;
-      font-family: monospace;
-      font-size: 16px;
-      text-align: center;
-      border: 2px solid #ffcb05;
-    }
-    .instructions {
-      background: #fff3cd;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
-      border-left: 4px solid #ffcb05;
-    }
-    .instructions ol {
-      margin: 10px 0;
-      padding-left: 20px;
-    }
-    .instructions li {
-      margin: 10px 0;
-      line-height: 1.6;
-    }
-    .merchant-num {
-      background: #000;
-      color: #ffcb05;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    .form-group {
-      margin: 20px 0;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    .form-group input:focus {
-      border-color: #ffcb05;
-      outline: none;
-    }
-    .submit-btn {
-      width: 100%;
-      padding: 16px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    .submit-btn:hover {
-      background: #45a049;
-    }
-  </style>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
   <header>
@@ -145,6 +15,9 @@
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="shop.html">Shop</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
       </nav>
     </div>
   </header>
@@ -155,11 +28,11 @@
         <div class="order-summary">
           <h3>Order Summary</h3>
           <div class="order-item">
-            <span>SBD for Dummies</span>
-            <span>15,000 FCFA</span>
+            <span id="modal-product-name">SBD for Dummies</span>
+            <span id="modal-product-price">$19.99</span>
           </div>
           <div class="order-total">
-            <strong>Total: <span>15,000 FCFA</span></strong>
+            <strong>Total: <span id="order-total">$19.99</span></strong>
           </div>
         </div>
 
@@ -167,55 +40,16 @@
           <h3>Choose Payment Method</h3>
           
           <div class="payment-tabs">
-            <button class="tab-button active" onclick="showTab('mtn')">MTN MOMO (Cameroon)</button>
-            <button class="tab-button" onclick="showTab('paystack')">Paystack (Cards/MoMo)</button>
-            <button class="tab-button" onclick="showTab('stripe')">Stripe (International)</button>
-            <button class="tab-button" onclick="showTab('flutterwave')">Flutterwave (Africa)</button>
+            <button class="tab-button active" data-tab="stripe">Credit Card</button>
           </div>
 
-          <!-- MTN Tab -->
-          <div class="payment-tab active" id="mtn-tab">
-            <div class="credit-card-notice" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000;">
-              <h4>📱 MTN Mobile Money</h4>
-              <p style="color: #000;">Pay with *126# or MTN MoMo app</p>
-            </div>
-            <button class="pay-button" onclick="openMTNModal()" style="background: linear-gradient(135deg, #ffcb05 0%, #ffa000 100%); color: #000; font-weight: bold;">
-              📱 Pay 15,000 FCFA with MTN MOMO
-            </button>
-          </div>
-
-          <!-- Paystack Tab -->
-          <div class="payment-tab" id="paystack-tab">
+          <!-- Stripe Payment Form -->
+          <div class="payment-tab active" id="stripe-tab">
             <div class="credit-card-notice">
-              <h4>📱 Paystack - Cards & Mobile Money</h4>
-              <p>Pay with African cards, Mobile Money (MTN, Orange, Moov), or bank transfer.</p>
-              <p><small>Recommended for Cameroon, Nigeria, Ghana, and African payments.</small></p>
+              <h4>💳 Credit Card Payment</h4>
+              <p>Pay securely with your credit or debit card using Stripe.</p>
             </div>
-            <a id="paystack-checkout-link" class="pay-button" href="#" onclick="goToPaystack(); return false;">Proceed with Paystack</a>
-            <div class="security-badges">
-              <div class="security-badge">
-                <span>📱</span>
-                <span>Mobile Money</span>
-              </div>
-              <div class="security-badge">
-                <span>🏦</span>
-                <span>Bank Transfer</span>
-              </div>
-              <div class="security-badge">
-                <span>💳</span>
-                <span>African Cards</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Stripe Tab -->
-          <div class="payment-tab" id="stripe-tab">
-            <div class="credit-card-notice">
-              <h4>💳 Stripe - International Cards</h4>
-              <p>Pay securely with your credit or debit card, Apple Pay, or Google Pay.</p>
-              <p><small>Recommended for international cards and non-African payments.</small></p>
-            </div>
-            <a id="stripe-checkout-link" class="pay-button" href="#" onclick="goToStripe(); return false;">Proceed with Stripe</a>
+            <a id="stripe-checkout-link" class="pay-button" href="#">Proceed to Secure Payment</a>
             <div class="security-badges">
               <div class="security-badge">
                 <span>🔒</span>
@@ -231,161 +65,51 @@
               </div>
             </div>
           </div>
-
-          <!-- Flutterwave Tab -->
-          <div class="payment-tab" id="flutterwave-tab">
-            <div class="credit-card-notice">
-              <h4>🌍 Flutterwave - Pan-African Payments</h4>
-              <p>Pay with cards, Mobile Money, bank accounts, or USSD.</p>
-              <p><small>Supports 150+ currencies and payment methods across Africa.</small></p>
-            </div>
-            <a id="flutterwave-checkout-link" class="pay-button" href="#" onclick="goToFlutterwave(); return false;">Proceed with Flutterwave</a>
-            <div class="security-badges">
-              <div class="security-badge">
-                <span>🌍</span>
-                <span>150+ Currencies</span>
-              </div>
-              <div class="security-badge">
-                <span>📱</span>
-                <span>Mobile Money</span>
-              </div>
-              <div class="security-badge">
-                <span>🔒</span>
-                <span>Secure</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- MTN Modal -->
-  <div id="mtn-modal" class="mtn-modal">
-    <div class="mtn-modal-content">
-      <button class="close-btn" onclick="closeMTNModal()">×</button>
-      
-      <div class="mtn-header">
-        <h2 style="margin: 0; color: #000;">MTN Mobile Money</h2>
-        <div class="mtn-amount">15,000 FCFA</div>
+  <!-- Payment Modal -->
+  <div id="payment-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Complete Your Purchase</h2>
+      <div class="modal-body">
+        <!-- Payment content will be loaded here -->
       </div>
-
-      <div class="payment-ref" id="payment-reference">
-        Loading reference...
-      </div>
-
-      <div class="instructions">
-        <h4 style="margin-top: 0;">How to Pay:</h4>
-        <ol>
-          <li>Dial <strong style="font-size: 18px;">*126#</strong> from your MTN phone</li>
-          <li>Select <strong>Transfer Money</strong></li>
-          <li>Select <strong>To Mobile Money Number</strong></li>
-          <li>Enter: <span class="merchant-num">237677604100</span></li>
-          <li>Enter amount: <strong>15000</strong></li>
-          <li>Enter the reference code above</li>
-          <li>Confirm with your PIN</li>
-        </ol>
-      </div>
-
-      <div class="form-group">
-        <label>MTN Transaction ID *</label>
-        <input type="text" id="transaction-id" placeholder="e.g., MM210602.1234.A12345">
-      </div>
-
-      <div class="form-group">
-        <label>Payment Screenshot (Optional)</label>
-        <input type="file" id="screenshot" accept="image/*">
-      </div>
-
-      <button class="submit-btn" onclick="submitPayment()">
-        ✓ I've Completed the Payment
-      </button>
     </div>
   </div>
 
   <footer>
     <div class="container">
-      <p>&copy; 2024 Marriage Education. All rights reserved.</p>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Security</h4>
+          <p>🔒 SSL Encrypted</p>
+          <p>💳 Secure Payments</p>
+          <p>🛡️ Privacy Protected</p>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <p>Email: support@marriageducation.com</p>
+          <p>Response within 24 hours</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
+  <script src="js/payment-processor.js"></script>
+  <script src="js/analytics.js"></script>
   <script>
-    // Simple tab switching
-    function showTab(tabName) {
-      console.log('Switching to:', tabName);
-      
-      // Remove active from all tabs and buttons
-      document.querySelectorAll('.payment-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // Add active to selected
-      document.getElementById(tabName + '-tab').classList.add('active');
-      event.target.classList.add('active');
-      
-      console.log('Switched to:', tabName);
-    }
-
-    // Generate payment reference
-    function generateReference() {
-      return 'BOOK-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-    }
-
-    // Open MTN modal
-    function openMTNModal() {
-      console.log('Opening MTN modal');
-      const reference = generateReference();
-      document.getElementById('payment-reference').textContent = reference;
-      document.getElementById('mtn-modal').classList.add('show');
-    }
-
-    // Close MTN modal
-    function closeMTNModal() {
-      document.getElementById('mtn-modal').classList.remove('show');
-      document.getElementById('transaction-id').value = '';
-      document.getElementById('screenshot').value = '';
-    }
-
-    // Submit payment
-    async function submitPayment() {
-      const transactionId = document.getElementById('transaction-id').value.trim();
-      
-      if (!transactionId) {
-        alert('Please enter the MTN Transaction ID');
-        return;
-      }
-
-      const reference = document.getElementById('payment-reference').textContent;
-      
-      alert('Payment confirmation submitted!\n\nReference: ' + reference + '\nTransaction ID: ' + transactionId + '\n\nWe will verify and confirm within 5 minutes.');
-      
-      // In production, this would save to Firebase
-      console.log('Payment submitted:', {
-        reference: reference,
-        transactionId: transactionId,
-        amount: 15000,
-        timestamp: new Date()
-      });
-      
-      closeMTNModal();
-      
-      // Redirect to pending page
-      setTimeout(() => {
-        window.location.href = 'payment-pending.html?ref=' + reference;
-      }, 1000);
-    }
-
-    // Close modal on outside click
-    document.getElementById('mtn-modal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeMTNModal();
-      }
-    });
-
-    // Get URL parameters
+    // Get URL parameters function
     function getUrlParameter(name) {
       name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
       var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -393,68 +117,36 @@
       return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
 
-    // Stripe checkout
-    function goToStripe() {
-      const productId = getUrlParameter('product') || 'sbd-for-dummies';
-      const productName = getUrlParameter('name') || 'SBD for Dummies';
-      const productPrice = getUrlParameter('price') || '19.99';
-      const currency = getUrlParameter('currency') || 'USD';
-      const referralCode = getUrlParameter('ref') || '';
+    // Initialize payment page
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 Payment page loading...');
       
-      const params = new URLSearchParams({
-        product: productId,
-        name: productName,
-        price: productPrice,
-        currency: currency
-      });
-      if (referralCode) params.append('ref', referralCode);
-      
-      window.location.href = `stripe/public/checkout.html?${params.toString()}`;
-    }
+      // Get product details from URL
+      const productId = getUrlParameter('product');
+      const productPrice = getUrlParameter('price');
+      const productName = getUrlParameter('name') || 'Marriage Education Product';
 
-    // Paystack checkout
-    function goToPaystack() {
-      const productId = getUrlParameter('product') || 'sbd-for-dummies';
-      const productName = getUrlParameter('name') || 'SBD for Dummies';
-      const productPrice = getUrlParameter('price') || '15000';
-      const currency = getUrlParameter('currency') || 'FCFA';
-      const referralCode = getUrlParameter('ref') || '';
-      
-      const params = new URLSearchParams({
-        product: productId,
-        name: productName,
-        price: productPrice,
-        currency: currency
-      });
-      if (referralCode) params.append('ref', referralCode);
-      
-      // For now, show coming soon
-      alert('Paystack integration coming soon! For now, please use MTN MOMO or Stripe.');
-      // Future: window.location.href = `paystack/checkout.html?${params.toString()}`;
-    }
+      console.log('📋 Product details:', { productId, productPrice, productName });
 
-    // Flutterwave checkout
-    function goToFlutterwave() {
-      const productId = getUrlParameter('product') || 'sbd-for-dummies';
-      const productName = getUrlParameter('name') || 'SBD for Dummies';
-      const productPrice = getUrlParameter('price') || '15000';
-      const currency = getUrlParameter('currency') || 'FCFA';
-      const referralCode = getUrlParameter('ref') || '';
-      
-      const params = new URLSearchParams({
-        product: productId,
-        name: productName,
-        price: productPrice,
-        currency: currency
-      });
-      if (referralCode) params.append('ref', referralCode);
-      
-      // For now, show coming soon
-      alert('Flutterwave integration coming soon! For now, please use MTN MOMO or Stripe.');
-      // Future: window.location.href = `flutterwave/checkout.html?${params.toString()}`;
-    }
+      // Update order summary
+      if (productName && productPrice) {
+        document.getElementById('modal-product-name').textContent = productName;
+        document.getElementById('modal-product-price').textContent = '$' + productPrice;
+        document.getElementById('order-total').textContent = '$' + productPrice;
+      }
 
-    console.log('✅ Payment page loaded and ready');
+      // Stripe checkout button logic
+      document.getElementById('stripe-checkout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Redirect to Stripe embedded checkout page with product_id
+        const productId = getUrlParameter('product');
+        if (productId) {
+          window.location.href = `stripe/public/checkout.html?product=${encodeURIComponent(productId)}`;
+        } else {
+          alert('Product ID missing.');
+        }
+      });
+    });
   </script>
 </body>
 </html>
