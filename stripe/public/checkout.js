@@ -16,8 +16,10 @@ async function initialize() {
 
   // Get product ID from URL
   const productId = getUrlParameter('product');
+  console.log('🔍 Initializing checkout for product:', productId);
 
   const fetchClientSecret = async () => {
+    console.log('📡 Fetching client secret from API...');
     const response = await fetch("/create-checkout-session", {
       method: "POST",
       headers: {
@@ -29,19 +31,27 @@ async function initialize() {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('❌ API Error:', response.status, errorData);
       throw new Error(errorData.error || 'An error occurred while creating the checkout session.');
     }
-    const { clientSecret } = await response.json();
+    const data = await response.json();
+    console.log('✅ Received data:', data);
+    const { clientSecret } = data;
+    console.log('🔑 Client secret:', clientSecret ? 'received' : 'missing');
     return clientSecret;
   };
 
   try {
+    console.log('🎨 Initializing Stripe embedded checkout...');
     const checkout = await stripe.initEmbeddedCheckout({
       fetchClientSecret,
     });
+    console.log('✅ Stripe checkout initialized');
     // Mount Checkout
     checkout.mount('#checkout');
+    console.log('✅ Checkout mounted to DOM');
   } catch (err) {
+    console.error('❌ Checkout error:', err);
     const checkoutDiv = document.getElementById('checkout');
     checkoutDiv.innerHTML = `<div class="error-message" style="color:red; font-weight:bold; padding:2em;">${err.message}</div>`;
   }
