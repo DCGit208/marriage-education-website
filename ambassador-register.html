@@ -701,6 +701,14 @@
     <script src="js/firebase-config.js"></script>
 
     <script>
+        // Wait for Firebase to load
+        window.addEventListener('load', function() {
+            console.log('🔥 Checking Firebase availability...');
+            console.log('Firebase:', typeof firebase !== 'undefined' ? '✅' : '❌');
+            console.log('FirebaseHelper:', typeof FirebaseHelper !== 'undefined' ? '✅' : '❌');
+            console.log('db:', typeof db !== 'undefined' ? '✅' : '❌');
+        });
+
         // Form submission handler
         document.getElementById('ambassadorForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -721,6 +729,11 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
             try {
+                // Check if Firebase is available
+                if (typeof FirebaseHelper === 'undefined') {
+                    throw new Error('Firebase is not loaded. Please refresh the page.');
+                }
+
                 // Prepare complete data object
                 const completeData = {
                     firstName: data.firstName,
@@ -743,33 +756,44 @@
                     referralSource: data.referralSource || ''
                 };
                 
+                console.log('📝 Preparing to save ambassador application...');
+                
                 // Step 1: Save to Firebase
                 console.log('📝 Saving to Firebase...');
                 const firebaseResult = await FirebaseHelper.createAmbassador(completeData);
                 
                 if (!firebaseResult.success) {
-                    throw new Error(firebaseResult.error);
+                    throw new Error(firebaseResult.error || 'Failed to save to Firebase');
                 }
                 
                 console.log('✅ Saved to Firebase:', firebaseResult.code);
                 
                 // Step 2: Send email notification
                 console.log('📧 Sending email notification...');
-                const emailResponse = await fetch('send-ambassador-email.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(completeData)
-                });
-                
-                const emailResult = await emailResponse.json();
-                
-                if (!emailResult.success) {
-                    console.warn('⚠️ Email notification failed, but data was saved to Firebase');
+                try {
+                    const emailResponse = await fetch('send-ambassador-email.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(completeData)
+                    });
+                    
+                    if (!emailResponse.ok) {
+                        console.warn('⚠️ Email notification request failed with status:', emailResponse.status);
+                    } else {
+                        const emailResult = await emailResponse.json();
+                        
+                        if (emailResult.success) {
+                            console.log('✅ Email sent to ambassadors@marriageducation.com');
+                        } else {
+                            console.warn('⚠️ Email notification failed:', emailResult.error);
+                        }
+                    }
+                } catch (emailError) {
+                    console.warn('⚠️ Email notification error:', emailError.message);
+                    // Don't fail the entire process if email fails
                 }
-                
-                console.log('✅ Email sent to ambassadors@marriageducation.com');
                 
                 // Show success modal
                 document.getElementById('successModal').classList.add('active');
@@ -781,8 +805,8 @@
                 await updateSpotsCounter();
                 
             } catch (error) {
-                console.error('Error submitting application:', error);
-                alert('❌ Error submitting application. Please try again or contact support at ambassadors@marriageducation.com');
+                console.error('❌ Error submitting application:', error);
+                alert(`❌ Error: ${error.message}\n\nPlease try again or contact support at ambassadors@marriageducation.com`);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
@@ -792,13 +816,22 @@
         // Update spots counter from Firebase
         async function updateSpotsCounter() {
             try {
+                // Check if db is available
+                if (typeof db === 'undefined') {
+                    console.warn('⚠️ Firebase database not available yet');
+                    return;
+                }
+
                 const ambassadorsSnapshot = await db.collection('ambassadors').get();
                 
                 const totalSpots = 500;
                 const spotsTaken = ambassadorsSnapshot.size;
                 const spotsAvailable = totalSpots - spotsTaken;
                 
-                document.getElementById('spotsAvailable').textContent = `${spotsAvailable}/${totalSpots}`;
+                const counterElement = document.getElementById('spotsAvailable');
+                if (counterElement) {
+                    counterElement.textContent = `${spotsAvailable}/${totalSpots}`;
+                }
                 
                 // Update Firebase settings
                 await db.collection('settings').doc('general').set({
@@ -811,8 +844,8 @@
             }
         }
         
-        // Update on page load and every 30 seconds
-        updateSpotsCounter();
+        // Update on page load (with delay to ensure Firebase loads) and every 30 seconds
+        setTimeout(updateSpotsCounter, 1000);
         setInterval(updateSpotsCounter, 30000);
     </script>
 </body>
