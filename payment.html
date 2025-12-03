@@ -188,6 +188,30 @@
   </footer>
 
   <script>
+    // Product name mapping for when name parameter is missing
+    const productNames = {
+      'the-sex-by-design-compendium': 'The Sex by Design Compendium',
+      'sbd-for-dummies': 'SBD for Dummies',
+      'sbd-canonical': 'SBD Canonical',
+      'sbd-standard': 'SBD Standard',
+      'sbd-real-couples': 'SBD Real Couples',
+      'sbd-the-heart-of-relationship': 'SBD The Heart of Relationship',
+      'sbd-unequally-yoked-together': 'SBD Unequally Yoked Together',
+      'sbd-2-the-impregnable-assemblage': 'SBD 2 - The Impregnable Assemblage',
+      'naked-not-ashamed': 'Naked & Not Ashamed',
+      'marriage-sexuality': 'Marriage = Sexuality',
+      'the-arts-of-marriage': 'The Arts of Marriage',
+      'the-art-of-sexuality': 'The Art of Sexuality',
+      'the-art-of-seduction': 'The Art of Seduction',
+      'the-art-of-fucking': 'The Art of Fucking',
+      'sbd-magazine-annual-subscription': 'SBD Magazine Annual Subscription',
+      'sbd-magazine-single-issue': 'SBD Magazine Single Issue',
+      'sbd-digital-archive-access': 'SBD Digital Archive Access',
+      'complete-sbd-library': 'Complete SBD Library',
+      'arts-of-marriage-complete-collection': 'Arts of Marriage Complete Collection',
+      'marriage-foundation-bundle': 'Marriage Foundation Bundle'
+    };
+
     function getUrlParameter(name) {
       name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
       const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -197,8 +221,14 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       const productId = getUrlParameter('product') || 'sbd-for-dummies';
-      const productName = getUrlParameter('name') || 'SBD for Dummies';
       const productPrice = getUrlParameter('price') || '19.99';
+      // Use name from URL or lookup from productId
+      let productName = getUrlParameter('name');
+      if (!productName && productNames[productId]) {
+        productName = productNames[productId];
+      } else if (!productName) {
+        productName = 'Product'; // Fallback
+      }
       
       document.getElementById('product-name').textContent = productName;
       document.getElementById('product-price').textContent = '$' + productPrice;
