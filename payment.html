@@ -409,7 +409,6 @@
       });
       if (referralCode) params.append('ref', referralCode);
       
-      // Redirect to Stripe checkout page
       window.location.href = `stripe/public/checkout.html?${params.toString()}`;
     }
 
@@ -457,30 +456,5 @@
 
     console.log('✅ Payment page loaded and ready');
   </script>
-
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h4>Marriage Education</h4>
-          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
-        </div>
-        <div class="footer-section">
-          <h4>Security</h4>
-          <p>🔒 SSL Encrypted</p>
-          <p>💳 Secure Payments</p>
-          <p>🛡️ Privacy Protected</p>
-        </div>
-        <div class="footer-section">
-          <h4>Support</h4>
-          <p>Email: support@marriageducation.com</p>
-          <p>Response within 24 hours</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
 </body>
 </html>
