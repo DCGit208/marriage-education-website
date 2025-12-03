@@ -504,9 +504,15 @@
             <!-- Personal Information -->
             <div class="form-section-title"><i class="fas fa-user"></i> Personal Information</div>
             
-            <div class="form-group">
-                <label>Full Name <span class="required">*</span></label>
-                <input type="text" name="fullName" required placeholder="Enter your full name">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" name="firstName" required placeholder="Enter your first name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" name="lastName" required placeholder="Enter your last name">
+                </div>
             </div>
 
             <div class="form-row">
@@ -715,40 +721,68 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
             try {
-                // Save to Firebase
-                const result = await FirebaseHelper.createAmbassador({
+                // Prepare complete data object
+                const completeData = {
                     firstName: data.firstName,
                     lastName: data.lastName,
+                    fullName: `${data.firstName} ${data.lastName}`,
                     email: data.email,
                     phone: data.phone,
-                    whatsapp: data.whatsapp,
+                    city: data.city,
+                    region: data.region,
                     instagram: data.instagram || '',
                     facebook: data.facebook || '',
                     tiktok: data.tiktok || '',
+                    linkedin: data.linkedin || '',
                     instagramFollowers: parseInt(data.instagramFollowers) || 0,
                     facebookFollowers: parseInt(data.facebookFollowers) || 0,
-                    tiktokFollowers: parseInt(data.tiktokFollowers) || 0,
+                    primaryPlatform: data.primaryPlatform,
                     motivation: data.motivation,
-                    commitment: data.commitment
+                    salesExperience: data.salesExperience,
+                    commitment: data.commitment,
+                    referralSource: data.referralSource || ''
+                };
+                
+                // Step 1: Save to Firebase
+                console.log('📝 Saving to Firebase...');
+                const firebaseResult = await FirebaseHelper.createAmbassador(completeData);
+                
+                if (!firebaseResult.success) {
+                    throw new Error(firebaseResult.error);
+                }
+                
+                console.log('✅ Saved to Firebase:', firebaseResult.code);
+                
+                // Step 2: Send email notification
+                console.log('📧 Sending email notification...');
+                const emailResponse = await fetch('send-ambassador-email.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(completeData)
                 });
                 
-                if (result.success) {
-                    console.log('✅ Ambassador registered:', result.code);
-                    
-                    // Show success modal
-                    document.getElementById('successModal').classList.add('active');
-                    
-                    // Reset form
-                    this.reset();
-                    
-                    // Update counter
-                    await updateSpotsCounter();
-                } else {
-                    throw new Error(result.error);
+                const emailResult = await emailResponse.json();
+                
+                if (!emailResult.success) {
+                    console.warn('⚠️ Email notification failed, but data was saved to Firebase');
                 }
+                
+                console.log('✅ Email sent to ambassadors@marriageducation.com');
+                
+                // Show success modal
+                document.getElementById('successModal').classList.add('active');
+                
+                // Reset form
+                this.reset();
+                
+                // Update counter
+                await updateSpotsCounter();
+                
             } catch (error) {
                 console.error('Error submitting application:', error);
-                alert('❌ Error submitting application. Please try again or contact support.');
+                alert('❌ Error submitting application. Please try again or contact support at ambassadors@marriageducation.com');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ambassador Email System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #00b894;
+            margin-bottom: 20px;
+        }
+        .test-form {
+            display: grid;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #00b894;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #00a085;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Ambassador Email System</h1>
+        <p style="color: #666; margin-bottom: 20px;">
+            This page allows you to test if ambassador registration emails are being sent correctly to <strong>ambassadors@marriageducation.com</strong>
+        </p>
+
+        <form id="testForm" class="test-form">
+            <div>
+                <label>First Name *</label>
+                <input type="text" name="firstName" value="John" required>
+            </div>
+
+            <div>
+                <label>Last Name *</label>
+                <input type="text" name="lastName" value="Doe" required>
+            </div>
+
+            <div>
+                <label>Email *</label>
+                <input type="email" name="email" value="john.doe@example.com" required>
+            </div>
+
+            <div>
+                <label>Phone *</label>
+                <input type="tel" name="phone" value="+237 677 123 456" required>
+            </div>
+
+            <div>
+                <label>City *</label>
+                <input type="text" name="city" value="Douala" required>
+            </div>
+
+            <div>
+                <label>Region *</label>
+                <select name="region" required>
+                    <option value="Littoral">Littoral</option>
+                    <option value="Centre">Centre</option>
+                    <option value="West">West</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Instagram Handle</label>
+                <input type="text" name="instagram" value="@johndoe">
+            </div>
+
+            <div>
+                <label>Instagram Followers</label>
+                <input type="number" name="instagramFollowers" value="1500">
+            </div>
+
+            <div>
+                <label>Primary Platform *</label>
+                <select name="primaryPlatform" required>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Motivation * (min 50 words)</label>
+                <textarea name="motivation" rows="4" required>I am passionate about marriage education and believe that strong marriages are the foundation of strong families and communities. I want to become an ambassador because I have a wide network of friends and family who would benefit from this book. I am committed to making a difference by promoting healthy relationships and helping couples build marriages that last. I have good communication skills and am active on social media.</textarea>
+            </div>
+
+            <div>
+                <label>Sales Experience *</label>
+                <select name="salesExperience" required>
+                    <option value="Yes - Side hustle">Yes - Side hustle</option>
+                    <option value="No - First time">No - First time</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Commitment *</label>
+                <select name="commitment" required>
+                    <option value="60">60 books</option>
+                    <option value="90">90 books</option>
+                    <option value="120">120 books</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn">
+                Send Test Email
+            </button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            resultDiv.style.display = 'none';
+
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Add fullName
+            data.fullName = `${data.firstName} ${data.lastName}`;
+
+            try {
+                console.log('📤 Sending test email with data:', data);
+
+                const response = await fetch('send-ambassador-email.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                console.log('📥 Server response:', result);
+
+                resultDiv.style.display = 'block';
+
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Success!</strong><br>
+                        Test email sent successfully to <strong>ambassadors@marriageducation.com</strong><br>
+                        <small>Check your email inbox (it may take a few minutes to arrive)</small>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>❌ Error</strong><br>
+                        ${result.error || 'Failed to send email'}<br>
+                        <small>Check server logs or contact support</small>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error</strong><br>
+                    ${error.message}<br>
+                    <small>Check browser console for details</small>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Test Email';
+            }
+        });
+    </script>
+</body>
+</html>
