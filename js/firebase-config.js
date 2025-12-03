@@ -16,18 +16,18 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Initialize services
-const db = firebase.firestore();
-const auth = firebase.auth();
-const functions = firebase.functions();
+// Initialize services (use var to make them globally accessible)
+var db = firebase.firestore();
+var auth = firebase.auth();
+var functions = firebase.functions();
 
-// Collection references
-const ambassadorsRef = db.collection('ambassadors');
-const salesRef = db.collection('sales');
-const notificationsRef = db.collection('notifications');
-const contestsRef = db.collection('contests');
-const badgesRef = db.collection('badges');
-const settingsRef = db.collection('settings');
+// Collection references (use var to make them globally accessible)
+var ambassadorsRef = db.collection('ambassadors');
+var salesRef = db.collection('sales');
+var notificationsRef = db.collection('notifications');
+var contestsRef = db.collection('contests');
+var badgesRef = db.collection('badges');
+var settingsRef = db.collection('settings');
 
 // Helper Functions
 const FirebaseHelper = {

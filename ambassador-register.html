@@ -701,16 +701,8 @@
     <script src="js/firebase-config.js"></script>
 
     <script>
-        // Wait for Firebase to load
-        window.addEventListener('load', function() {
-            console.log('🔥 Checking Firebase availability...');
-            console.log('Firebase:', typeof firebase !== 'undefined' ? '✅' : '❌');
-            console.log('FirebaseHelper:', typeof FirebaseHelper !== 'undefined' ? '✅' : '❌');
-            console.log('db:', typeof db !== 'undefined' ? '✅' : '❌');
-        });
-
         // Form submission handler
-        document.getElementById('ambassadorForm').addEventListener('submit', async function(e) {
+        document.getElementById('ambassadorForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             // Get form data
@@ -728,124 +720,125 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
-            try {
-                // Check if Firebase is available
-                if (typeof FirebaseHelper === 'undefined') {
-                    throw new Error('Firebase is not loaded. Please refresh the page.');
-                }
-
-                // Prepare complete data object
-                const completeData = {
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    fullName: `${data.firstName} ${data.lastName}`,
-                    email: data.email,
-                    phone: data.phone,
-                    city: data.city,
-                    region: data.region,
-                    instagram: data.instagram || '',
-                    facebook: data.facebook || '',
-                    tiktok: data.tiktok || '',
-                    linkedin: data.linkedin || '',
-                    instagramFollowers: parseInt(data.instagramFollowers) || 0,
-                    facebookFollowers: parseInt(data.facebookFollowers) || 0,
-                    primaryPlatform: data.primaryPlatform,
-                    motivation: data.motivation,
-                    salesExperience: data.salesExperience,
-                    commitment: data.commitment,
-                    referralSource: data.referralSource || ''
-                };
-                
-                console.log('📝 Preparing to save ambassador application...');
-                
-                // Step 1: Save to Firebase
-                console.log('📝 Saving to Firebase...');
-                const firebaseResult = await FirebaseHelper.createAmbassador(completeData);
-                
-                if (!firebaseResult.success) {
-                    throw new Error(firebaseResult.error || 'Failed to save to Firebase');
-                }
-                
-                console.log('✅ Saved to Firebase:', firebaseResult.code);
-                
-                // Step 2: Send email notification
-                console.log('📧 Sending email notification...');
+            // Prepare complete data object
+            const completeData = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                fullName: `${data.firstName} ${data.lastName}`,
+                email: data.email,
+                phone: data.phone,
+                city: data.city,
+                region: data.region,
+                instagram: data.instagram || '',
+                facebook: data.facebook || '',
+                tiktok: data.tiktok || '',
+                linkedin: data.linkedin || '',
+                instagramFollowers: parseInt(data.instagramFollowers) || 0,
+                facebookFollowers: parseInt(data.facebookFollowers) || 0,
+                primaryPlatform: data.primaryPlatform,
+                motivation: data.motivation,
+                salesExperience: data.salesExperience,
+                commitment: data.commitment,
+                referralSource: data.referralSource || ''
+            };
+            
+            console.log('📝 Starting ambassador registration...');
+            
+            // Use setTimeout to ensure async operations complete
+            setTimeout(async function() {
                 try {
-                    const emailResponse = await fetch('send-ambassador-email.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(completeData)
-                    });
+                    // Step 1: Save to Firebase
+                    console.log('📝 Saving to Firebase...');
                     
-                    if (!emailResponse.ok) {
-                        console.warn('⚠️ Email notification request failed with status:', emailResponse.status);
-                    } else {
-                        const emailResult = await emailResponse.json();
-                        
-                        if (emailResult.success) {
-                            console.log('✅ Email sent to ambassadors@marriageducation.com');
-                        } else {
-                            console.warn('⚠️ Email notification failed:', emailResult.error);
-                        }
+                    if (typeof firebase === 'undefined' || typeof db === 'undefined') {
+                        throw new Error('Firebase is not initialized. Please refresh the page and try again.');
                     }
-                } catch (emailError) {
-                    console.warn('⚠️ Email notification error:', emailError.message);
-                    // Don't fail the entire process if email fails
+                    
+                    const code = 'AMB-' + completeData.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+                    
+                    const ambassadorData = {
+                        ...completeData,
+                        code: code,
+                        status: 'pending',
+                        booksSold: 0,
+                        commissionEarned: 0,
+                        level: 'Starter',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    const docRef = await db.collection('ambassadors').add(ambassadorData);
+                    console.log('✅ Saved to Firebase with code:', code);
+                    
+                    // Step 2: Send email notification
+                    console.log('📧 Sending email notification...');
+                    try {
+                        const emailResponse = await fetch('send-ambassador-email.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(completeData)
+                        });
+                        
+                        const emailResult = await emailResponse.json();
+                        if (emailResult.success) {
+                            console.log('✅ Email sent successfully');
+                        }
+                    } catch (emailError) {
+                        console.warn('⚠️ Email error (application still saved):', emailError);
+                    }
+                    
+                    // Show success modal
+                    document.getElementById('successModal').classList.add('active');
+                    
+                    // Reset form
+                    document.getElementById('ambassadorForm').reset();
+                    
+                    // Update counter
+                    updateSpotsCounter();
+                    
+                } catch (error) {
+                    console.error('❌ Error:', error);
+                    alert('❌ Error: ' + error.message + '\n\nPlease try again or contact ambassadors@marriageducation.com');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
                 }
-                
-                // Show success modal
-                document.getElementById('successModal').classList.add('active');
-                
-                // Reset form
-                this.reset();
-                
-                // Update counter
-                await updateSpotsCounter();
-                
-            } catch (error) {
-                console.error('❌ Error submitting application:', error);
-                alert(`❌ Error: ${error.message}\n\nPlease try again or contact support at ambassadors@marriageducation.com`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
-            }
+            }, 100);
         });
 
         // Update spots counter from Firebase
-        async function updateSpotsCounter() {
-            try {
-                // Check if db is available
-                if (typeof db === 'undefined') {
-                    console.warn('⚠️ Firebase database not available yet');
-                    return;
-                }
+        function updateSpotsCounter() {
+            setTimeout(async function() {
+                try {
+                    if (typeof db === 'undefined' || typeof firebase === 'undefined') {
+                        console.log('⏳ Waiting for Firebase to load...');
+                        return;
+                    }
 
-                const ambassadorsSnapshot = await db.collection('ambassadors').get();
-                
-                const totalSpots = 500;
-                const spotsTaken = ambassadorsSnapshot.size;
-                const spotsAvailable = totalSpots - spotsTaken;
-                
-                const counterElement = document.getElementById('spotsAvailable');
-                if (counterElement) {
-                    counterElement.textContent = `${spotsAvailable}/${totalSpots}`;
+                    const ambassadorsSnapshot = await db.collection('ambassadors').get();
+                    
+                    const totalSpots = 500;
+                    const spotsTaken = ambassadorsSnapshot.size;
+                    const spotsAvailable = totalSpots - spotsTaken;
+                    
+                    const counterElement = document.getElementById('spotsAvailable');
+                    if (counterElement) {
+                        counterElement.textContent = `${spotsAvailable}/${totalSpots}`;
+                    }
+                    
+                    console.log('✅ Counter updated:', spotsAvailable, 'spots remaining');
+                } catch (error) {
+                    console.warn('Counter update error:', error);
                 }
-                
-                // Update Firebase settings
-                await db.collection('settings').doc('general').set({
-                    totalAmbassadors: spotsTaken,
-                    spotsAvailable: spotsAvailable,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            } catch (error) {
-                console.error('Error updating counter:', error);
-            }
+            }, 500);
         }
         
-        // Update on page load (with delay to ensure Firebase loads) and every 30 seconds
-        setTimeout(updateSpotsCounter, 1000);
+        // Update on page load and every 30 seconds
+        window.addEventListener('load', function() {
+            setTimeout(updateSpotsCounter, 2000);
+        });
         setInterval(updateSpotsCounter, 30000);
     </script>
 </body>
