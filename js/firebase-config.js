@@ -52,7 +52,31 @@ const FirebaseHelper = {
         try {
             const code = this.generateAmbassadorCode(data.firstName);
             const ambassadorData = {
-                ...data,
+                // Personal Information
+                firstName: data.firstName,
+                lastName: data.lastName,
+                fullName: data.fullName || `${data.firstName} ${data.lastName}`,
+                email: data.email,
+                phone: data.phone,
+                city: data.city || '',
+                region: data.region || '',
+                
+                // Social Media
+                instagram: data.instagram || '',
+                facebook: data.facebook || '',
+                tiktok: data.tiktok || '',
+                linkedin: data.linkedin || '',
+                instagramFollowers: data.instagramFollowers || 0,
+                facebookFollowers: data.facebookFollowers || 0,
+                primaryPlatform: data.primaryPlatform || '',
+                
+                // Ambassador Details
+                motivation: data.motivation || '',
+                salesExperience: data.salesExperience || '',
+                commitment: data.commitment || '',
+                referralSource: data.referralSource || '',
+                
+                // System Fields
                 code: code,
                 status: 'pending',
                 booksSold: 0,
@@ -63,6 +87,14 @@ const FirebaseHelper = {
             };
 
             const docRef = await ambassadorsRef.add(ambassadorData);
+            
+            console.log('✅ Ambassador created in Firebase:', {
+                id: docRef.id,
+                code: code,
+                name: ambassadorData.fullName,
+                email: ambassadorData.email
+            });
+            
             return { success: true, id: docRef.id, code: code };
         } catch (error) {
             console.error('Error creating ambassador:', error);
