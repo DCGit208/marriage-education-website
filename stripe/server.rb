@@ -92,12 +92,18 @@ post '/create-checkout-session' do
     currency_map = { 'FCFA' => 'XAF', 'XAF' => 'XAF', 'XOF' => 'XOF', 'USD' => 'USD' }
     currency = currency_map[dynamic_currency] || 'USD'
     zero_decimal = %w[BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF UGX VND VUV XAF XOF XPF]
+    
     begin
       amount = if zero_decimal.include?(currency)
         dynamic_price.to_s.gsub(/[^0-9]/, '').to_i
       else
         (dynamic_price.to_s.strip.to_f * 100).round
       end
+      halt 400, { error: 'Invalid price value' }.to_json if amount <= 0
+    rescue
+      halt 400, { error: 'Invalid price value' }.to_json
+    end
+
     # Generate idempotency key for dynamic pricing
     idempotency_key = "checkout_dynamic_#{product_id || 'campaign'}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
 
@@ -124,11 +130,6 @@ post '/create-checkout-session' do
       puts "[ERROR] Stripe API error: #{e.message}"
       halt 500, { error: "Failed to create checkout session: #{e.user_message || e.message}" }.to_json
     end
-    }, {
-      idempotency_key: idempotency_key
-    })
-
-    return({ url: session.url }.to_json)
   else
     halt 400, { error: 'Invalid product ID' }.to_json
   end
