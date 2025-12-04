@@ -16,12 +16,11 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Initialize services (use var to make them globally accessible)
+// Initialize services (use var for global scope)
 var db = firebase.firestore();
 var auth = firebase.auth();
-var functions = firebase.functions();
 
-// Collection references (use var to make them globally accessible)
+// Collection references (use var for global scope)
 var ambassadorsRef = db.collection('ambassadors');
 var salesRef = db.collection('sales');
 var notificationsRef = db.collection('notifications');
@@ -52,31 +51,7 @@ const FirebaseHelper = {
         try {
             const code = this.generateAmbassadorCode(data.firstName);
             const ambassadorData = {
-                // Personal Information
-                firstName: data.firstName,
-                lastName: data.lastName,
-                fullName: data.fullName || `${data.firstName} ${data.lastName}`,
-                email: data.email,
-                phone: data.phone,
-                city: data.city || '',
-                region: data.region || '',
-                
-                // Social Media
-                instagram: data.instagram || '',
-                facebook: data.facebook || '',
-                tiktok: data.tiktok || '',
-                linkedin: data.linkedin || '',
-                instagramFollowers: data.instagramFollowers || 0,
-                facebookFollowers: data.facebookFollowers || 0,
-                primaryPlatform: data.primaryPlatform || '',
-                
-                // Ambassador Details
-                motivation: data.motivation || '',
-                salesExperience: data.salesExperience || '',
-                commitment: data.commitment || '',
-                referralSource: data.referralSource || '',
-                
-                // System Fields
+                ...data,
                 code: code,
                 status: 'pending',
                 booksSold: 0,
@@ -87,14 +62,6 @@ const FirebaseHelper = {
             };
 
             const docRef = await ambassadorsRef.add(ambassadorData);
-            
-            console.log('✅ Ambassador created in Firebase:', {
-                id: docRef.id,
-                code: code,
-                name: ambassadorData.fullName,
-                email: ambassadorData.email
-            });
-            
             return { success: true, id: docRef.id, code: code };
         } catch (error) {
             console.error('Error creating ambassador:', error);
