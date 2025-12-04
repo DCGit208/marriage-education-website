@@ -711,6 +711,7 @@
             
             // Show loading state
             const submitBtn = this.querySelector('.submit-btn');
+            const formElement = this;
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
@@ -723,6 +724,12 @@
                     }
                     
                     console.log('📝 Starting submission...');
+                    console.log('Form data:', data);
+                    
+                    // Validate required fields
+                    if (!data.firstName || !data.lastName) {
+                        throw new Error('First name and last name are required');
+                    }
                     
                     // Generate ambassador code
                     const code = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
@@ -781,7 +788,7 @@
                     document.getElementById('successModal').classList.add('active');
                     
                     // Reset form
-                    document.getElementById('ambassadorForm').reset();
+                    formElement.reset();
                     
                     // Update counter
                     updateSpotsCounter();
