@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: marriage-education-stripe
+    env: ruby
+    buildCommand: "cd stripe && bundle install"
+    startCommand: "cd stripe && ruby server.rb"
+    envVars:
+      - key: STRIPE_API_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: YOUR_DOMAIN
+        value: https://marriageducation.com
+    autoDeploy: true
