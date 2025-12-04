@@ -504,15 +504,9 @@
             <!-- Personal Information -->
             <div class="form-section-title"><i class="fas fa-user"></i> Personal Information</div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label>First Name <span class="required">*</span></label>
-                    <input type="text" name="firstName" required placeholder="Enter your first name">
-                </div>
-                <div class="form-group">
-                    <label>Last Name <span class="required">*</span></label>
-                    <input type="text" name="lastName" required placeholder="Enter your last name">
-                </div>
+            <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" name="fullName" required placeholder="Enter your full name">
             </div>
 
             <div class="form-row">
@@ -720,44 +714,39 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
-            // Prepare complete data object
-            const completeData = {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                fullName: `${data.firstName} ${data.lastName}`,
-                email: data.email,
-                phone: data.phone,
-                city: data.city,
-                region: data.region,
-                instagram: data.instagram || '',
-                facebook: data.facebook || '',
-                tiktok: data.tiktok || '',
-                linkedin: data.linkedin || '',
-                instagramFollowers: parseInt(data.instagramFollowers) || 0,
-                facebookFollowers: parseInt(data.facebookFollowers) || 0,
-                primaryPlatform: data.primaryPlatform,
-                motivation: data.motivation,
-                salesExperience: data.salesExperience,
-                commitment: data.commitment,
-                referralSource: data.referralSource || ''
-            };
-            
-            console.log('📝 Starting ambassador registration...');
-            
-            // Use setTimeout to ensure async operations complete
+            // Use setTimeout to ensure async operations work properly
             setTimeout(async function() {
                 try {
-                    // Step 1: Save to Firebase
-                    console.log('📝 Saving to Firebase...');
-                    
+                    // Check Firebase is loaded
                     if (typeof firebase === 'undefined' || typeof db === 'undefined') {
-                        throw new Error('Firebase is not initialized. Please refresh the page and try again.');
+                        throw new Error('Firebase not loaded. Please refresh the page.');
                     }
                     
-                    const code = 'AMB-' + completeData.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+                    console.log('📝 Starting submission...');
                     
-                    const ambassadorData = {
-                        ...completeData,
+                    // Generate ambassador code
+                    const code = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+                    
+                    // Prepare complete data
+                    const completeData = {
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        fullName: data.firstName + ' ' + data.lastName,
+                        email: data.email,
+                        phone: data.phone,
+                        city: data.city,
+                        region: data.region,
+                        instagram: data.instagram || '',
+                        facebook: data.facebook || '',
+                        tiktok: data.tiktok || '',
+                        linkedin: data.linkedin || '',
+                        instagramFollowers: parseInt(data.instagramFollowers) || 0,
+                        facebookFollowers: parseInt(data.facebookFollowers) || 0,
+                        primaryPlatform: data.primaryPlatform,
+                        motivation: data.motivation,
+                        salesExperience: data.salesExperience,
+                        commitment: data.commitment,
+                        referralSource: data.referralSource || '',
                         code: code,
                         status: 'pending',
                         booksSold: 0,
@@ -767,26 +756,25 @@
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     
-                    const docRef = await db.collection('ambassadors').add(ambassadorData);
-                    console.log('✅ Saved to Firebase with code:', code);
+                    // Save to Firebase
+                    console.log('📝 Saving to Firebase...');
+                    const docRef = await db.collection('ambassadors').add(completeData);
+                    console.log('✅ Saved to Firebase:', code);
                     
-                    // Step 2: Send email notification
-                    console.log('📧 Sending email notification...');
+                    // Send email notification
+                    console.log('📧 Sending email...');
                     try {
                         const emailResponse = await fetch('send-ambassador-email.php', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(completeData)
                         });
-                        
                         const emailResult = await emailResponse.json();
                         if (emailResult.success) {
-                            console.log('✅ Email sent successfully');
+                            console.log('✅ Email sent');
                         }
                     } catch (emailError) {
-                        console.warn('⚠️ Email error (application still saved):', emailError);
+                        console.warn('⚠️ Email error:', emailError);
                     }
                     
                     // Show success modal
@@ -800,7 +788,7 @@
                     
                 } catch (error) {
                     console.error('❌ Error:', error);
-                    alert('❌ Error: ' + error.message + '\n\nPlease try again or contact ambassadors@marriageducation.com');
+                    alert('❌ Error: ' + error.message);
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
@@ -812,30 +800,27 @@
         function updateSpotsCounter() {
             setTimeout(async function() {
                 try {
-                    if (typeof db === 'undefined' || typeof firebase === 'undefined') {
-                        console.log('⏳ Waiting for Firebase to load...');
-                        return;
-                    }
-
+                    if (typeof db === 'undefined') return;
+                    
                     const ambassadorsSnapshot = await db.collection('ambassadors').get();
                     
                     const totalSpots = 500;
                     const spotsTaken = ambassadorsSnapshot.size;
                     const spotsAvailable = totalSpots - spotsTaken;
                     
-                    const counterElement = document.getElementById('spotsAvailable');
-                    if (counterElement) {
-                        counterElement.textContent = `${spotsAvailable}/${totalSpots}`;
+                    const counter = document.getElementById('spotsAvailable');
+                    if (counter) {
+                        counter.textContent = `${spotsAvailable}/${totalSpots}`;
                     }
                     
-                    console.log('✅ Counter updated:', spotsAvailable, 'spots remaining');
+                    console.log('✅ Counter updated:', spotsAvailable, 'spots left');
                 } catch (error) {
-                    console.warn('Counter update error:', error);
+                    console.warn('Counter error:', error);
                 }
             }, 500);
         }
         
-        // Update on page load and every 30 seconds
+        // Update counter on load and every 30 seconds
         window.addEventListener('load', function() {
             setTimeout(updateSpotsCounter, 2000);
         });
