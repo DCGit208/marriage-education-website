@@ -51,29 +51,63 @@ post '/create-checkout-session' do
     product_db[row['product_id']] = row.to_h
   end
 
-  # Lookup product info
+  # Dynamic campaign fallback: if product_id not found and name/price provided, create session via price_data
+  dynamic_name = data['name']
+  dynamic_price = data['price']
+  dynamic_currency = (data['currency'] || 'USD').to_s.upcase
+
   if product_id && product_db[product_id]
     product = product_db[product_id]
     product_name = product['name']
     stripe_price_id = product['stripe_price_id']
+
+    session = Stripe::Checkout::Session.create({
+      line_items: [{
+        price: stripe_price_id,
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
+      automatic_tax: {enabled: true},
+    })
+
+    return({ url: session.url }.to_json)
+  elsif dynamic_name && dynamic_price
+    currency_map = { 'FCFA' => 'XAF', 'XAF' => 'XAF', 'XOF' => 'XOF', 'USD' => 'USD' }
+    currency = currency_map[dynamic_currency] || 'USD'
+    zero_decimal = %w[BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF UGX VND VUV XAF XOF XPF]
+    begin
+      amount = if zero_decimal.include?(currency)
+        dynamic_price.to_s.gsub(/[^0-9]/, '').to_i
+      else
+        (dynamic_price.to_s.strip.to_f * 100).round
+      end
+      halt 400, { error: 'Invalid price value' }.to_json if amount <= 0
+    rescue
+      halt 400, { error: 'Invalid price value' }.to_json
+    end
+
+    session = Stripe::Checkout::Session.create({
+      line_items: [{
+        price_data: {
+          currency: currency.downcase,
+          product_data: { name: dynamic_name },
+          unit_amount: amount
+        },
+        quantity: 1
+      }],
+      mode: 'payment',
+      success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + (product_id || ''),
+      automatic_tax: {enabled: true}
+    })
+
+    return({ url: session.url }.to_json)
   else
     halt 400, { error: 'Invalid product ID' }.to_json
   end
 
-  # Use the real Stripe price ID from CSV
-  # For local HTTP testing, use hosted redirect mode (not embedded)
-  session = Stripe::Checkout::Session.create({
-    line_items: [{
-      price: stripe_price_id,
-      quantity: 1,
-    }],
-    mode: 'payment',
-    success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
-    cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
-    automatic_tax: {enabled: true},
-  })
-
-  {url: session.url}.to_json
 end
 
 get '/download' do

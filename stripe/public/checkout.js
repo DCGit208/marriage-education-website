@@ -1,6 +1,8 @@
 // Redirect to Stripe hosted checkout (works over HTTP for local testing)
 // Version banner to confirm the exact script loaded in the browser
-console.log('✅ checkout.js loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
+// v6: Hardcoded production path to /stripe/create-checkout-session for cache resilience
+console.log('✅ checkout.js v6 loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
+console.log('🔧 Hostname:', window.location.hostname, 'Pathname:', window.location.pathname);
 initialize();
 
 // Helper to get URL parameters
@@ -26,8 +28,12 @@ async function initialize() {
   document.getElementById('checkout').innerHTML = '<p>Loading secure checkout...</p>';
 
   try {
-    const apiUrl = `${window.location.origin}/create-checkout-session`;
-    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId);
+    // Hardcoded live production path to survive caching: always use /stripe prefix on marriageducation.com
+    const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const prefix = isProduction ? '/stripe' : (isLocal ? '' : '/stripe');
+    const apiUrl = `${window.location.origin}${prefix}/create-checkout-session`;
+    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isProduction ? 'PRODUCTION' : 'LOCAL');
     // Always call same-origin Ruby endpoint explicitly to avoid wrong-origin issues
     const response = await fetch(apiUrl, {
       method: "POST",
