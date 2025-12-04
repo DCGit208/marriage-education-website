@@ -2,6 +2,7 @@ require 'stripe'
 require 'sinatra'
 require 'csv'
 require 'dotenv/load'
+require 'securerandom'
 
 # Load Stripe API key from environment
 Stripe.api_key = ENV['STRIPE_API_KEY']
@@ -10,7 +11,8 @@ set :static, true
 set :port, 4242
 set :public_folder, File.dirname(__FILE__) + '/public'
 
-YOUR_DOMAIN = 'http://localhost:4242'
+# Use environment variable for domain (production) or fallback to localhost
+YOUR_DOMAIN = ENV['YOUR_DOMAIN'] || 'http://localhost:4242'
 
 require 'json'
 
@@ -29,7 +31,6 @@ options '*' do
 end
 
 post '/create-checkout-session' do
-
   content_type 'application/json'
 
   begin
@@ -39,9 +40,12 @@ post '/create-checkout-session' do
     data = JSON.parse(raw_body)
     product_id = data['product_id']
     puts "[DEBUG] Parsed product_id: #{product_id}"
-  rescue => e
+  rescue JSON::ParserError => e
     puts "[ERROR] Failed to parse JSON: #{e.message}"
     halt 400, { error: 'Invalid JSON in request body' }.to_json
+  rescue => e
+    puts "[ERROR] Unexpected error parsing request: #{e.message}"
+    halt 500, { error: 'Internal server error' }.to_json
   end
 
   # Load product database from CSV (with headers)
@@ -61,18 +65,28 @@ post '/create-checkout-session' do
     product_name = product['name']
     stripe_price_id = product['stripe_price_id']
 
-    session = Stripe::Checkout::Session.create({
-      line_items: [{
-        price: stripe_price_id,
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
-      automatic_tax: {enabled: true},
-    })
+    # Generate idempotency key to prevent duplicate charges on retries
+    idempotency_key = "checkout_#{product_id}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
 
-    return({ url: session.url }.to_json)
+    begin
+      session = Stripe::Checkout::Session.create({
+        line_items: [{
+          price: stripe_price_id,
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
+        automatic_tax: {enabled: true},
+      }, {
+        idempotency_key: idempotency_key
+      })
+
+      return({ url: session.url }.to_json)
+    rescue Stripe::StripeError => e
+      puts "[ERROR] Stripe API error: #{e.message}"
+      halt 500, { error: "Failed to create checkout session: #{e.user_message || e.message}" }.to_json
+    end
   elsif dynamic_name && dynamic_price
     currency_map = { 'FCFA' => 'XAF', 'XAF' => 'XAF', 'XOF' => 'XOF', 'USD' => 'USD' }
     currency = currency_map[dynamic_currency] || 'USD'
@@ -83,24 +97,34 @@ post '/create-checkout-session' do
       else
         (dynamic_price.to_s.strip.to_f * 100).round
       end
-      halt 400, { error: 'Invalid price value' }.to_json if amount <= 0
-    rescue
-      halt 400, { error: 'Invalid price value' }.to_json
-    end
+    # Generate idempotency key for dynamic pricing
+    idempotency_key = "checkout_dynamic_#{product_id || 'campaign'}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
 
-    session = Stripe::Checkout::Session.create({
-      line_items: [{
-        price_data: {
-          currency: currency.downcase,
-          product_data: { name: dynamic_name },
-          unit_amount: amount
-        },
-        quantity: 1
-      }],
-      mode: 'payment',
-      success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + (product_id || ''),
-      automatic_tax: {enabled: true}
+    begin
+      session = Stripe::Checkout::Session.create({
+        line_items: [{
+          price_data: {
+            currency: currency.downcase,
+            product_data: { name: dynamic_name },
+            unit_amount: amount
+          },
+          quantity: 1
+        }],
+        mode: 'payment',
+        success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + (product_id || ''),
+        automatic_tax: {enabled: true}
+      }, {
+        idempotency_key: idempotency_key
+      })
+
+      return({ url: session.url }.to_json)
+    rescue Stripe::StripeError => e
+      puts "[ERROR] Stripe API error: #{e.message}"
+      halt 500, { error: "Failed to create checkout session: #{e.user_message || e.message}" }.to_json
+    end
+    }, {
+      idempotency_key: idempotency_key
     })
 
     return({ url: session.url }.to_json)
@@ -131,6 +155,50 @@ get '/download' do
   halt 404, 'eBook file not found' unless File.exist?(ebook_path)
 
   send_file ebook_path, :filename => download_filename, :type => 'application/pdf'
+end
+
+# Webhook endpoint for Stripe events (recommended for fulfillment)
+post '/webhooks' do
+  payload = request.body.read
+  sig_header = request.env['HTTP_STRIPE_SIGNATURE']
+  endpoint_secret = ENV['STRIPE_WEBHOOK_SECRET']
+
+  begin
+    event = Stripe::Webhook.construct_event(
+      payload, sig_header, endpoint_secret
+    )
+  rescue JSON::ParserError => e
+    puts "[WEBHOOK ERROR] Invalid payload: #{e.message}"
+    halt 400
+  rescue Stripe::SignatureVerificationError => e
+    puts "[WEBHOOK ERROR] Invalid signature: #{e.message}"
+    halt 400
+  end
+
+  # Handle the event
+  case event['type']
+  when 'checkout.session.completed'
+    session = event['data']['object']
+    puts "[WEBHOOK] ✅ Payment succeeded for session: #{session['id']}"
+    puts "[WEBHOOK] Customer email: #{session['customer_details']['email']}"
+    
+    # TODO: Fulfill the order here (send download link, update database, etc.)
+    # Example: send_download_email(session)
+    
+  when 'payment_intent.succeeded'
+    payment_intent = event['data']['object']
+    puts "[WEBHOOK] ✅ PaymentIntent succeeded: #{payment_intent['id']}"
+    
+  when 'payment_intent.payment_failed'
+    payment_intent = event['data']['object']
+    puts "[WEBHOOK] ❌ Payment failed: #{payment_intent['id']}"
+    
+  else
+    puts "[WEBHOOK] Unhandled event type: #{event['type']}"
+  end
+
+  # Return 200 immediately to acknowledge receipt
+  status 200
 end
 
 get '/session-status' do
