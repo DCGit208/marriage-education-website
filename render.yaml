@@ -2,6 +2,7 @@ services:
   - type: web
     name: marriage-education-stripe
     runtime: ruby
+    plan: free
     buildCommand: "bundle install"
     startCommand: "bundle exec ruby stripe/server.rb"
     envVars:
