@@ -241,12 +241,25 @@
       
       document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
-        // For local: use Ruby server URL. For production: marriageducation.com has Ruby running
+        
+        // Get currency from URL (campaign products have FCFA)
+        const currency = getUrlParameter('currency');
+        
+        // Build checkout URL with all parameters
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const checkoutUrl = isLocal 
-          ? 'http://localhost:4242/checkout.html?product=' + encodeURIComponent(productId)
-          : '/stripe/public/checkout.html?product=' + encodeURIComponent(productId);
-        console.log('Redirecting to:', checkoutUrl);
+        const baseUrl = isLocal 
+          ? 'http://localhost:4242/checkout.html'
+          : '/stripe/public/checkout.html';
+        
+        // Build query string with all parameters
+        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
+        checkoutUrl += '&name=' + encodeURIComponent(productName);
+        checkoutUrl += '&price=' + encodeURIComponent(productPrice);
+        if (currency) {
+          checkoutUrl += '&currency=' + encodeURIComponent(currency);
+        }
+        
+        console.log('Redirecting to checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
       });
       
