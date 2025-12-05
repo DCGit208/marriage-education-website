@@ -246,6 +246,8 @@
     document.addEventListener('DOMContentLoaded', function() {
       const productId = getUrlParameter('product') || 'sbd-for-dummies';
       const productPrice = getUrlParameter('price') || '19.99';
+      const productCurrency = getUrlParameter('currency') || 'USD';
+      
       // Use name from URL or lookup from productId
       let productName = getUrlParameter('name');
       if (!productName && productNames[productId]) {
@@ -254,9 +256,23 @@
         productName = 'Product'; // Fallback
       }
       
+      // Format price with appropriate currency symbol
+      const currencySymbols = {
+        'USD': '$',
+        'FCFA': 'FCFA',
+        'XAF': 'FCFA',
+        'XOF': 'FCFA',
+        'EUR': '€',
+        'GBP': '£'
+      };
+      const currencySymbol = currencySymbols[productCurrency] || productCurrency;
+      const priceDisplay = productCurrency === 'FCFA' || productCurrency === 'XAF' || productCurrency === 'XOF'
+        ? productPrice + ' ' + currencySymbol
+        : currencySymbol + productPrice;
+      
       document.getElementById('product-name').textContent = productName;
-      document.getElementById('product-price').textContent = '$' + productPrice;
-      document.getElementById('order-total').textContent = '$' + productPrice;
+      document.getElementById('product-price').textContent = priceDisplay;
+      document.getElementById('order-total').textContent = priceDisplay;
       
       document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
