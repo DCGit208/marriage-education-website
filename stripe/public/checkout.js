@@ -1,7 +1,7 @@
 // Redirect to Stripe hosted checkout (works over HTTP for local testing)
 // Version banner to confirm the exact script loaded in the browser
-// v7: Production API at root /create-checkout-session (no /stripe prefix)
-console.log('✅ checkout.js v7 loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
+// v8: Production uses Render backend at marriage-education-stripe.onrender.com
+console.log('✅ checkout.js v8 loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
 console.log('🔧 Hostname:', window.location.hostname, 'Pathname:', window.location.pathname);
 initialize();
 
@@ -15,9 +15,13 @@ function getUrlParameter(name) {
 
 // Create a Checkout Session and redirect
 async function initialize() {
-  // Get product ID from URL
+  // Get product details from URL
   const productId = getUrlParameter('product');
-  console.log('🔍 Creating checkout session for product:', productId);
+  const productName = getUrlParameter('name');
+  const productPrice = getUrlParameter('price');
+  const productCurrency = getUrlParameter('currency');
+  
+  console.log('🔍 Creating checkout session for product:', productId, 'name:', productName, 'price:', productPrice, 'currency:', productCurrency);
 
   if (!productId) {
     document.getElementById('checkout').innerHTML = '<p style="color:red;">Missing product ID</p>';
@@ -28,21 +32,31 @@ async function initialize() {
   document.getElementById('checkout').innerHTML = '<p>Loading secure checkout...</p>';
 
   try {
-    // Production server exposes API at root /create-checkout-session; local dev at root on 4242
+    // Detect environment and use appropriate API URL
     const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    // Production and local both use root path (no /stripe prefix in API call)
-    const apiUrl = `${window.location.origin}/create-checkout-session`;
+    
+    // Production uses deployed Render backend, local uses localhost:4242
+    const apiUrl = isProduction 
+      ? 'https://marriage-education-stripe.onrender.com/create-checkout-session'
+      : 'http://localhost:4242/create-checkout-session';
+    
     console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isProduction ? 'PRODUCTION' : 'LOCAL');
-    // Always call same-origin Ruby endpoint explicitly to avoid wrong-origin issues
+    
+    // Build request body - include dynamic pricing if provided
+    const requestBody = {
+      product_id: productId
+    };
+    if (productName) requestBody.name = productName;
+    if (productPrice) requestBody.price = productPrice;
+    if (productCurrency) requestBody.currency = productCurrency;
+    
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        product_id: productId
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
