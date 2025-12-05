@@ -60,22 +60,46 @@
       margin-bottom: 20px;
     }
     
-    .stripe-payment-box {
-      background: linear-gradient(135deg, #635bff 0%, #5469d4 100%);
+    .payment-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .payment-option {
       padding: 25px;
       border-radius: 8px;
       color: white;
       text-align: center;
+      transition: transform 0.2s;
     }
     
-    .stripe-payment-box h4 {
+    .payment-option:hover {
+      transform: translateY(-3px);
+    }
+    
+    .stripe-payment-box {
+      background: linear-gradient(135deg, #635bff 0%, #5469d4 100%);
+    }
+    
+    .momo-payment-box {
+      background: linear-gradient(135deg, #FFCB05 0%, #FFA000 100%);
+      color: #000;
+    }
+    
+    .payment-option h4 {
       margin: 0 0 10px 0;
       font-size: 1.4em;
     }
     
-    .stripe-payment-box p {
+    .payment-option p {
       margin: 10px 0;
       opacity: 0.9;
+    }
+    
+    .momo-payment-box p {
+      color: #333;
     }
     
     .pay-button {
@@ -150,27 +174,54 @@
           </div>
         </div>
 
-        <!-- Stripe Payment -->
+        <!-- Payment Methods -->
         <div class="payment-method-section">
-          <h3>Payment Method</h3>
-          <div class="stripe-payment-box">
-            <h4>💳 Secure Card Payment</h4>
-            <p>Pay safely with Stripe - trusted by millions worldwide</p>
-            <a href="#" class="pay-button" id="stripe-checkout-btn">
-              Proceed to Secure Checkout
-            </a>
-            <div class="security-badges">
-              <div class="security-badge">
-                <span>🔒</span>
-                <span>256-bit SSL</span>
+          <h3>Choose Payment Method</h3>
+          
+          <div class="payment-options">
+            <!-- MTN Mobile Money -->
+            <div class="payment-option momo-payment-box">
+              <h4>📱 MTN Mobile Money</h4>
+              <p>Pay with MTN MOMO - Fast & Secure (Cameroon)</p>
+              <a href="#" class="pay-button" id="momo-checkout-btn" style="background: #000; color: #FFCB05;">
+                Pay with MTN MOMO
+              </a>
+              <div class="security-badges" style="justify-content: center; margin-top: 15px;">
+                <div class="security-badge" style="color: #333;">
+                  <span>🔒</span>
+                  <span>Secure</span>
+                </div>
+                <div class="security-badge" style="color: #333;">
+                  <span>⚡</span>
+                  <span>Instant</span>
+                </div>
+                <div class="security-badge" style="color: #333;">
+                  <span>🇨🇲</span>
+                  <span>Local</span>
+                </div>
               </div>
-              <div class="security-badge">
-                <span>💳</span>
-                <span>PCI Compliant</span>
-              </div>
-              <div class="security-badge">
-                <span>🛡️</span>
-                <span>Fraud Protection</span>
+            </div>
+            
+            <!-- Stripe Payment -->
+            <div class="payment-option stripe-payment-box">
+              <h4>💳 Credit / Debit Card</h4>
+              <p>Pay safely with Stripe - International cards accepted</p>
+              <a href="#" class="pay-button" id="stripe-checkout-btn">
+                Pay with Card
+              </a>
+              <div class="security-badges">
+                <div class="security-badge">
+                  <span>🔒</span>
+                  <span>256-bit SSL</span>
+                </div>
+                <div class="security-badge">
+                  <span>💳</span>
+                  <span>PCI Compliant</span>
+                </div>
+                <div class="security-badge">
+                  <span>🛡️</span>
+                  <span>Fraud Protection</span>
+                </div>
               </div>
             </div>
           </div>
@@ -274,19 +325,18 @@
       document.getElementById('product-price').textContent = priceDisplay;
       document.getElementById('order-total').textContent = priceDisplay;
       
-      document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
+      // MTN MOMO Checkout Handler
+      document.getElementById('momo-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
         
-        // Get currency from URL (campaign products have FCFA)
         const currency = getUrlParameter('currency');
         
-        // Build checkout URL with all parameters
+        // Build MOMO checkout URL
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseUrl = isLocal 
-          ? 'http://localhost:4242/checkout.html'
-          : '/stripe/public/checkout.html';
+          ? 'http://localhost:4243/momo-checkout.html'
+          : '/momo/public/momo-checkout.html';
         
-        // Build query string with all parameters
         let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
         checkoutUrl += '&price=' + encodeURIComponent(productPrice);
@@ -294,11 +344,34 @@
           checkoutUrl += '&currency=' + encodeURIComponent(currency);
         }
         
-        console.log('Redirecting to checkout:', checkoutUrl);
+        console.log('Redirecting to MOMO checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
       });
       
-      console.log('✅ Payment page loaded:', { productId, productName, productPrice });
+      // Stripe Checkout Handler
+      document.getElementById('stripe-checkout-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const currency = getUrlParameter('currency');
+        
+        // Build Stripe checkout URL
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal 
+          ? 'http://localhost:4242/checkout.html'
+          : '/stripe/public/checkout.html';
+        
+        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
+        checkoutUrl += '&name=' + encodeURIComponent(productName);
+        checkoutUrl += '&price=' + encodeURIComponent(productPrice);
+        if (currency) {
+          checkoutUrl += '&currency=' + encodeURIComponent(currency);
+        }
+        
+        console.log('Redirecting to Stripe checkout:', checkoutUrl);
+        window.location.href = checkoutUrl;
+      });
+      
+      console.log('✅ Payment page loaded:', { productId, productName, productPrice, productCurrency });
     });
   </script>
 </body>
