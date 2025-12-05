@@ -1,0 +1,24 @@
+# Render Deployment Configuration for MTN MOMO Service
+services:
+  - type: web
+    name: marriage-education-momo
+    runtime: ruby
+    plan: free
+    buildCommand: cd momo && bundle install
+    startCommand: cd momo && bundle exec ruby server.rb
+    envVars:
+      - key: MTN_MOMO_PRIMARY_KEY
+        sync: false
+      - key: MTN_MOMO_SUBSCRIPTION_KEY
+        sync: false
+      - key: MTN_MOMO_API_USER
+        sync: false
+      - key: MTN_MOMO_API_KEY
+        sync: false
+      - key: MTN_MOMO_ENVIRONMENT
+        value: sandbox
+      - key: MTN_MOMO_BASE_URL
+        value: https://sandbox.momodeveloper.mtn.com
+      - key: YOUR_DOMAIN
+        value: https://marriageducation.com
+    autoDeploy: false
