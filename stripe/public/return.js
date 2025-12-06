@@ -7,6 +7,8 @@ async function initialize() {
   const paymentMethod = urlParams.get('payment_method');
   const productId = urlParams.get('product_id');
 
+  console.log('URL params:', { sessionId, paymentMethod, productId });
+
   // Handle MOMO payments differently (no Stripe session to check)
   if (paymentMethod === 'momo') {
     console.log('MOMO payment detected');
@@ -29,7 +31,12 @@ async function initialize() {
     return;
   }
 
-  // Handle Stripe payments
+  // Handle Stripe payments - but check if we have a valid sessionId first
+  if (!sessionId) {
+    console.error('No session_id found');
+    return;
+  }
+
   const response = await fetch(`/session-status?session_id=${sessionId}`);
   const session = await response.json();
 
