@@ -126,9 +126,9 @@ function pollPaymentStatus(referenceId, attempts) {
         console.log('✅ Payment successful!');
         showStatus('success', '🎉 Payment Successful!\n\nRedirecting to download page...');
         
-        // Redirect to success page with product ID
+        // Redirect to stripe's return page (served from root)
         setTimeout(() => {
-          window.location.href = `/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`;
+          window.location.href = `/stripe/public/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`;
         }, 2000);
         
       } else if (data.success && data.status === 'FAILED') {
