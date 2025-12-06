@@ -32,7 +32,7 @@ if (productName && productPrice) {
 // Detect environment
 const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
 const apiUrl = isProduction 
-  ? 'https://marriage-education-momo.onrender.com'
+  ? 'https://marriage-education-momo-rp92.onrender.com'
   : 'http://localhost:4243';
 
 console.log('API URL:', apiUrl, 'Environment:', isProduction ? 'PRODUCTION' : 'LOCAL');
