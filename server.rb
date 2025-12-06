@@ -16,9 +16,9 @@ Stripe.api_key = ENV['STRIPE_API_KEY']
 
 # MTN MOMO Configuration
 MTN_MOMO_PRIMARY_KEY = ENV['MTN_MOMO_PRIMARY_KEY'] || '4455fd39957b48e281efde9612b55530'
-MTN_MOMO_SUBSCRIPTION_KEY = ENV['MTN_MOMO_SUBSCRIPTION_KEY']
-MTN_MOMO_API_USER = ENV['MTN_MOMO_API_USER']
-MTN_MOMO_API_KEY = ENV['MTN_MOMO_API_KEY']
+MTN_MOMO_SUBSCRIPTION_KEY = ENV['MTN_MOMO_SUBSCRIPTION_KEY'] || MTN_MOMO_PRIMARY_KEY
+MTN_MOMO_API_USER = ENV['MTN_MOMO_API_USER'] || 'a26c84f3-d4b6-4d7d-b695-2a4a6078bed5'
+MTN_MOMO_API_KEY = ENV['MTN_MOMO_API_KEY'] || 'ddf8f48d32cf4d5f90a1e401540ed143'
 MTN_MOMO_ENVIRONMENT = ENV['MTN_MOMO_ENVIRONMENT'] || 'sandbox'
 MTN_MOMO_BASE_URL = ENV['MTN_MOMO_BASE_URL'] || 'https://sandbox.momodeveloper.mtn.com'
 
@@ -41,7 +41,11 @@ puts "Port: #{settings.port}"
 puts "Domain: #{YOUR_DOMAIN}"
 puts "Public folder: #{settings.public_folder}"
 puts "Stripe API Key: #{ENV['STRIPE_API_KEY'] ? 'Configured' : 'NOT SET'}"
+puts "MOMO Primary Key: #{MTN_MOMO_PRIMARY_KEY ? MTN_MOMO_PRIMARY_KEY[0..10] + '...' : 'NOT SET'}"
+puts "MOMO Subscription Key: #{MTN_MOMO_SUBSCRIPTION_KEY ? MTN_MOMO_SUBSCRIPTION_KEY[0..10] + '...' : 'NOT SET'}"
 puts "MOMO API User: #{MTN_MOMO_API_USER || 'NOT SET'}"
+puts "MOMO API Key: #{MTN_MOMO_API_KEY ? MTN_MOMO_API_KEY[0..10] + '...' : 'NOT SET'}"
+puts "MOMO Environment: #{MTN_MOMO_ENVIRONMENT}"
 puts "=" * 80
 
 # Enable CORS
