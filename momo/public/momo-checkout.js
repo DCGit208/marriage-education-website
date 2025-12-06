@@ -126,9 +126,14 @@ function pollPaymentStatus(referenceId, attempts) {
         console.log('✅ Payment successful!');
         showStatus('success', '🎉 Payment Successful!\n\nRedirecting to download page...');
         
-        // Redirect to stripe's return page (served from root)
+        // Detect environment and redirect accordingly
+        const isLocal = window.location.hostname === 'localhost';
+        const returnUrl = isLocal 
+          ? `http://localhost:4242/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`
+          : `https://marriage-education-stripe-rp92.onrender.com/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`;
+        
         setTimeout(() => {
-          window.location.href = `/stripe/public/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`;
+          window.location.href = returnUrl;
         }, 2000);
         
       } else if (data.success && data.status === 'FAILED') {
