@@ -18,8 +18,9 @@ services:
     name: marriage-education-momo
     runtime: ruby
     plan: free
-    buildCommand: "cd momo && bundle install"
-    startCommand: "cd momo && bundle exec ruby server.rb"
+    buildCommand: "bundle install"
+    startCommand: "bundle exec ruby momo/server.rb"
+    rootDirectory: .
     envVars:
       - key: MTN_MOMO_PRIMARY_KEY
         sync: false
@@ -35,4 +36,4 @@ services:
         value: https://sandbox.momodeveloper.mtn.com
       - key: YOUR_DOMAIN
         value: https://marriageducation.com
-    autoDeploy: false
+    autoDeploy: true
