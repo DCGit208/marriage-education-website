@@ -331,11 +331,11 @@
         
         const currency = getUrlParameter('currency');
         
-        // Build MOMO checkout URL
+        // Build MOMO checkout URL - point to Render MOMO server
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseUrl = isLocal 
           ? 'http://localhost:4243/momo-checkout.html'
-          : '/momo/public/momo-checkout.html';
+          : 'https://marriage-education-momo-rp92.onrender.com/momo-checkout.html';
         
         let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
