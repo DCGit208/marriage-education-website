@@ -9,15 +9,22 @@ async function initialize() {
 
   // Handle MOMO payments differently (no Stripe session to check)
   if (paymentMethod === 'momo') {
+    console.log('MOMO payment detected');
+    console.log('Product ID:', productId);
+    
     document.getElementById('success').classList.remove('hidden');
     document.getElementById('customer-email').textContent = 'your email';
     
     // Show download link for MOMO payment
     if (productId) {
+      console.log('Creating download link for product:', productId);
       const downloadUrl = `/download?product_id=${encodeURIComponent(productId)}`;
       const link = document.getElementById('download-link');
       link.href = downloadUrl;
       document.getElementById('download-link-container').style.display = 'block';
+      console.log('Download button should be visible');
+    } else {
+      console.error('No product_id found in URL parameters');
     }
     return;
   }
