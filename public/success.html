@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Successful - Download Your eBook</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 50px 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      background: #00b894;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+    .checkmark {
+      width: 40px;
+      height: 40px;
+      border: 4px solid white;
+      border-radius: 50%;
+      position: relative;
+    }
+    .checkmark:after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 3px;
+      width: 12px;
+      height: 20px;
+      border: solid white;
+      border-width: 0 4px 4px 0;
+      transform: rotate(45deg);
+    }
+    h1 {
+      color: #2d3436;
+      font-size: 32px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    p {
+      color: #636e72;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 35px;
+    }
+    .product-name {
+      color: #00b894;
+      font-weight: 600;
+    }
+    .download-btn {
+      display: inline-block;
+      background: #00b894;
+      color: white;
+      padding: 18px 50px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,184,148,0.4);
+      margin-bottom: 20px;
+    }
+    .download-btn:hover {
+      background: #00a383;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,184,148,0.5);
+    }
+    .home-link {
+      display: inline-block;
+      color: #636e72;
+      text-decoration: none;
+      margin-top: 15px;
+      font-size: 16px;
+      transition: color 0.3s ease;
+    }
+    .home-link:hover {
+      color: #2d3436;
+    }
+    .payment-method {
+      display: inline-block;
+      background: rgba(0, 184, 148, 0.1);
+      color: #00b894;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">
+      <div class="checkmark"></div>
+    </div>
+    <h1>🎉 Payment Successful!</h1>
+    <div id="payment-method-badge" class="payment-method"></div>
+    <p>Thank you for your purchase of <span class="product-name" id="product-name">the eBook</span>.</p>
+    <p>Click the button below to download your eBook now:</p>
+    
+    <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+    
+    <br><br>
+    <a href="https://marriageducation.com" class="home-link">← Return to Home</a>
+  </div>
+
+  <script>
+    // Get parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product_id') || 'sbd-founding';
+    const sessionId = urlParams.get('session_id');
+    const paymentMethod = urlParams.get('payment_method') || 'unknown';
+    
+    // Update product name
+    const productNames = {
+      'sbd-founding': 'Sex By Design For Dummies (Founding Member)',
+      'sbd-for-dummies': 'Sex By Design For Dummies',
+      'sbd-1': 'Sex By Design For Dummies (1 Copy)',
+      'sbd-3': 'Sex By Design For Dummies (3 Copies)',
+      'sbd-5': 'Sex By Design For Dummies (5 Copies)',
+      'sbd-10': 'Sex By Design For Dummies (10 Copies)',
+      'sbd-20': 'Sex By Design For Dummies (20 Copies)',
+      'sbd-50': 'Sex By Design For Dummies (50 Copies)',
+      'sbd-100': 'Sex By Design For Dummies (100 Copies)',
+      'sbd-pillar-10': 'Sex By Design For Dummies (Pillar Sponsor - 10 Copies)',
+      'sbd-pillar-20': 'Sex By Design For Dummies (Pillar Sponsor - 20 Copies)',
+      'sbd-pillar-50': 'Sex By Design For Dummies (Pillar Sponsor - 50 Copies)',
+      'sbd-pillar-100': 'Sex By Design For Dummies (Pillar Sponsor - 100 Copies)',
+      'sbd-sponsor-250': 'Sex By Design For Dummies (Major Sponsor - 250 Copies)',
+      'sbd-sponsor-500': 'Sex By Design For Dummies (Major Sponsor - 500 Copies)',
+      'sbd-sponsor-1000': 'Sex By Design For Dummies (Major Sponsor - 1000 Copies)',
+      'sbd-challenge-14': 'Sex By Design For Dummies (14-Day Challenge)',
+      'sbd-teleios-live': 'Sex By Design For Dummies (Teleios Mastery)',
+      'sbd-quote-pack': 'Sex By Design For Dummies (Viral Quote Pack)'
+    };
+    
+    document.getElementById('product-name').textContent = productNames[productId] || 'your eBook';
+    
+    // Show payment method
+    const methodBadge = document.getElementById('payment-method-badge');
+    if (paymentMethod === 'momo') {
+      methodBadge.textContent = '📱 MTN MOMO Payment';
+    } else if (paymentMethod === 'stripe') {
+      methodBadge.textContent = '💳 Card Payment';
+    } else {
+      methodBadge.style.display = 'none';
+    }
+    
+    // Set download link
+    const downloadBtn = document.getElementById('download-btn');
+    downloadBtn.href = `/download?product_id=${encodeURIComponent(productId)}&session_id=${encodeURIComponent(sessionId || 'direct')}`;
+    
+    console.log('✅ Success page loaded');
+    console.log('Product ID:', productId);
+    console.log('Session ID:', sessionId);
+    console.log('Payment Method:', paymentMethod);
+    console.log('Download URL:', downloadBtn.href);
+  </script>
+</body>
+</html>
