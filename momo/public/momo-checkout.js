@@ -29,13 +29,9 @@ if (productName && productPrice) {
   document.getElementById('order-total').textContent = '-';
 }
 
-// Detect environment
-const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
-const apiUrl = isProduction 
-  ? 'https://marriage-education-momo-rp92.onrender.com'
-  : 'http://localhost:4243';
-
-console.log('API URL:', apiUrl, 'Environment:', isProduction ? 'PRODUCTION' : 'LOCAL');
+// Use PHP backend on same server - NO external dependencies!
+const apiUrl = window.location.origin; // Same server as the website
+console.log('API URL:', apiUrl, '(Using PHP backend on same server)');
 
 // Handle form submission
 document.getElementById('momo-payment-form').addEventListener('submit', async (e) => {
@@ -126,8 +122,11 @@ function pollPaymentStatus(referenceId, attempts) {
         console.log('✅ Payment successful!');
         showStatus('success', '🎉 Payment Successful!\n\nRedirecting to download page...');
         
-        // Redirect to success page on SAME SERVER - no bottlenecks!
-        const successUrl = `/success.html?session_id=${referenceId}&product_id=${productId}`;
+        // Redirect to success page on MOMO server (absolute URL to ensure correct server)
+        const isLocal = window.location.hostname === 'localhost';
+        const successUrl = isLocal
+          ? `http://localhost:4243/success.html?session_id=${referenceId}&product_id=${productId}`
+          : `https://marriage-education-momo-rp92.onrender.com/success.html?session_id=${referenceId}&product_id=${productId}`;
         
         setTimeout(() => {
           window.location.href = successUrl;
