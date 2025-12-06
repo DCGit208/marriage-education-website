@@ -29,9 +29,13 @@ if (productName && productPrice) {
   document.getElementById('order-total').textContent = '-';
 }
 
-// Use PHP backend on same server - NO external dependencies!
-const apiUrl = window.location.origin; // Same server as the website
-console.log('API URL:', apiUrl, '(Using PHP backend on same server)');
+// Detect environment and use correct API URL
+const isLocal = window.location.hostname === 'localhost';
+const apiUrl = isLocal 
+  ? 'http://localhost:4243'
+  : 'https://marriage-education-momo-rp92.onrender.com';
+
+console.log('API URL:', apiUrl);
 
 // Handle form submission
 document.getElementById('momo-payment-form').addEventListener('submit', async (e) => {
