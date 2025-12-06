@@ -112,6 +112,9 @@ post '/create-momo-payment' do
   dynamic_name = data['name']
   dynamic_price = data['price']
   dynamic_currency = (data['currency'] || 'XAF').to_s.upcase
+  
+  # Normalize currency code (FCFA -> XAF)
+  dynamic_currency = 'XAF' if dynamic_currency == 'FCFA'
 
   if product_id && product_db[product_id]
     product = product_db[product_id]
@@ -122,14 +125,19 @@ post '/create-momo-payment' do
   elsif dynamic_name && dynamic_price
     product_name = dynamic_name
     # Map currency
-    if dynamic_currency == 'FCFA' || dynamic_currency == 'XAF'
+    if dynamic_currency == 'XAF'
       amount = dynamic_price.to_s.gsub(/[^0-9]/, '').to_i
-    else
+    elsif dynamic_currency == 'USD'
       amount = (dynamic_price.to_f * 600).to_i # Convert USD to XAF
+    else
+      # Invalid currency
+      halt 400, { error: "Currency not supported. Please use XAF or FCFA." }.to_json
     end
   else
     halt 400, { error: 'Invalid product ID or missing product details' }.to_json
   end
+  
+  puts "[MOMO] Product: #{product_name}, Amount: #{amount} XAF"
 
   # Validate amount
   if amount <= 0 || amount < 100
@@ -150,6 +158,23 @@ post '/create-momo-payment' do
 
   # Create Request to Pay
   begin
+    # Use EUR for sandbox, XAF for production (MTN sandbox requirement)
+    api_currency = MTN_MOMO_ENVIRONMENT == 'sandbox' ? 'EUR' : 'XAF'
+    
+    request_body = {
+      amount: amount.to_s,
+      currency: api_currency,
+      externalId: external_id,
+      payer: {
+        partyIdType: 'MSISDN',
+        partyId: phone_number
+      },
+      payerMessage: "Payment for #{product_name}",
+      payeeNote: "Marriage Education - #{product_name}"
+    }
+    
+    puts "[MOMO] Request body: #{request_body.to_json}"
+    
     response = HTTParty.post(
       "#{MTN_MOMO_BASE_URL}/collection/v1_0/requesttopay",
       headers: {
@@ -159,18 +184,11 @@ post '/create-momo-payment' do
         'Ocp-Apim-Subscription-Key' => MTN_MOMO_SUBSCRIPTION_KEY,
         'Content-Type' => 'application/json'
       },
-      body: {
-        amount: amount.to_s,
-        currency: 'XAF',
-        externalId: external_id,
-        payer: {
-          partyIdType: 'MSISDN',
-          partyId: phone_number
-        },
-        payerMessage: "Payment for #{product_name}",
-        payeeNote: "Marriage Education - #{product_name}"
-      }.to_json
+      body: request_body.to_json
     )
+
+    puts "[MOMO] Response code: #{response.code}"
+    puts "[MOMO] Response body: #{response.body}" unless response.code == 202
 
     if response.code == 202
       puts "[MOMO] ✅ Payment request created successfully"
@@ -178,19 +196,30 @@ post '/create-momo-payment' do
         success: true,
         reference_id: reference_id,
         amount: amount,
-        currency: 'XAF',
+        currency: api_currency,
         phone_number: phone_number,
         product_name: product_name,
         message: 'Payment request sent. Please check your phone to approve.'
       }.to_json
     else
       puts "[MOMO] ❌ Payment request failed: #{response.code} - #{response.body}"
-      halt 500, { 
-        error: "Failed to create payment request. #{response['message'] || 'Please try again.'}" 
-      }.to_json
+      error_message = "Failed to create payment request."
+      
+      # Parse error response
+      if response.body && !response.body.empty?
+        begin
+          error_data = JSON.parse(response.body)
+          error_message += " #{error_data['message'] || error_data['error'] || 'Please try again.'}"
+        rescue
+          error_message += " Please try again."
+        end
+      end
+      
+      halt 500, { error: error_message }.to_json
     end
   rescue => e
     puts "[MOMO] ❌ Payment request error: #{e.message}"
+    puts "[MOMO] Error backtrace: #{e.backtrace.first(3).join("\n")}"
     halt 500, { error: "Payment request failed: #{e.message}" }.to_json
   end
 end
