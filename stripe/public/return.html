@@ -7,27 +7,17 @@
   <meta http-equiv="Expires" content="0">
   <link rel="stylesheet" href="style.css">
   <script>
-    // Inline script to handle MOMO payments immediately (bypass cache issues)
-    (function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentMethod = urlParams.get('payment_method');
-      const productId = urlParams.get('product_id');
-      
-      if (paymentMethod === 'momo' && productId) {
-        // Wait for DOM to load
-        document.addEventListener('DOMContentLoaded', function() {
-          document.getElementById('success').classList.remove('hidden');
-          document.getElementById('customer-email').textContent = 'your email';
-          
-          const downloadUrl = '/download?product_id=' + encodeURIComponent(productId);
-          const link = document.getElementById('download-link');
-          link.href = downloadUrl;
-          document.getElementById('download-link-container').style.display = 'block';
-        });
-      }
-    })();
+    // SIMPLE: Show download link immediately for MOMO payments
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentMethod = urlParams.get('payment_method');
+    const productId = urlParams.get('product_id');
+    
+    // If it's a MOMO payment, show everything NOW
+    if (paymentMethod === 'momo' && productId) {
+      document.write('<style>#success { display: block !important; } #download-link-container { display: block !important; }</style>');
+    }
   </script>
-  <script src="return.js?v=2" defer></script>
+  <script src="return.js?v=3" defer></script>
 </head>
 <body style="background: #f6f9fc; margin:0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Ubuntu', sans-serif;">
   <div class="return-container">
@@ -40,13 +30,18 @@
       </div>
       <h1 class="success-title">Thank you for your purchase!</h1>
       <p class="success-message">
-        A confirmation email will be sent to <span id="customer-email" class="email-highlight"></span>.<br>
         <span class="support-message">If you have any questions, please email <a href="mailto:orders@marriageducation.com">orders@marriageducation.com</a>.</span>
       </p>
-      <div id="download-link-container" style="margin-top:18px; display:none;">
-        <a id="download-link" href="#" class="download-ebook" style="display:inline-block; padding:10px 24px; background:#635bff; color:#fff; border-radius:8px; text-decoration:none; font-weight:600; font-size:1rem;">Download your eBook</a>
+      <div id="download-link-container" style="margin-top:24px; margin-bottom:18px; display:none;">
+        <script>
+          // Set download link directly from URL
+          const pid = new URLSearchParams(window.location.search).get('product_id');
+          if (pid) {
+            document.write('<a href="/download?product_id=' + encodeURIComponent(pid) + '" class="download-ebook" style="display:inline-block; padding:12px 32px; background:#00b894; color:#fff; border-radius:8px; text-decoration:none; font-weight:600; font-size:1.1rem; box-shadow: 0 2px 8px rgba(0,184,148,0.3);">📥 Download your eBook Now</a>');
+          }
+        </script>
       </div>
-      <a href="https://marriageducation.com" class="return-home">Return to Home</a>
+      <a href="https://marriageducation.com" class="return-home" style="margin-top:12px; display:inline-block; padding:10px 24px; background:#635bff; color:#fff; border-radius:8px; text-decoration:none; font-weight:500;">Return to Home</a>
     </section>
   </div>
   <style>
