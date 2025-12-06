@@ -10,7 +10,7 @@ Stripe.api_key = ENV['STRIPE_API_KEY']
 set :static, true
 set :bind, '0.0.0.0'
 set :port, ENV['PORT'] || 4242
-set :public_folder, File.expand_path('..', File.dirname(__FILE__))
+set :public_folder, File.join(File.dirname(__FILE__), 'public')
 
 # Use environment variable for domain (production) or fallback to localhost
 YOUR_DOMAIN = ENV['YOUR_DOMAIN'] || 'http://localhost:4242'
@@ -29,6 +29,11 @@ end
 
 options '*' do
   200
+end
+
+# Serve payment.html from root directory
+get '/payment.html' do
+  send_file File.join(File.dirname(__FILE__), '..', 'payment.html')
 end
 
 post '/create-checkout-session' do
