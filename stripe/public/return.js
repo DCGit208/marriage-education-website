@@ -4,6 +4,25 @@ async function initialize() {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const sessionId = urlParams.get('session_id');
+  const paymentMethod = urlParams.get('payment_method');
+  const productId = urlParams.get('product_id');
+
+  // Handle MOMO payments differently (no Stripe session to check)
+  if (paymentMethod === 'momo') {
+    document.getElementById('success').classList.remove('hidden');
+    document.getElementById('customer-email').textContent = 'your email';
+    
+    // Show download link for MOMO payment
+    if (productId) {
+      const downloadUrl = `/download?product_id=${encodeURIComponent(productId)}`;
+      const link = document.getElementById('download-link');
+      link.href = downloadUrl;
+      document.getElementById('download-link-container').style.display = 'block';
+    }
+    return;
+  }
+
+  // Handle Stripe payments
   const response = await fetch(`/session-status?session_id=${sessionId}`);
   const session = await response.json();
 
