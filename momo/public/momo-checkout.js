@@ -126,15 +126,12 @@ function pollPaymentStatus(referenceId, attempts) {
         console.log('✅ Payment successful!');
         showStatus('success', '🎉 Payment Successful!\n\nRedirecting to download page...');
         
-        // Detect environment and redirect accordingly
-        const isLocal = window.location.hostname === 'localhost';
-        const returnUrl = isLocal 
-          ? `http://localhost:4242/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`
-          : `https://marriage-education-stripe-rp92.onrender.com/return.html?session_id=${referenceId}&product_id=${productId}&payment_method=momo`;
+        // Redirect to success page on SAME SERVER - no bottlenecks!
+        const successUrl = `/success.html?session_id=${referenceId}&product_id=${productId}`;
         
         setTimeout(() => {
-          window.location.href = returnUrl;
-        }, 2000);
+          window.location.href = successUrl;
+        }, 1500);
         
       } else if (data.success && data.status === 'FAILED') {
         // Payment failed

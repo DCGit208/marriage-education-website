@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Successful - Download Your eBook</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 50px 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      background: #00b894;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+    .checkmark {
+      width: 40px;
+      height: 40px;
+      border: 4px solid white;
+      border-radius: 50%;
+      position: relative;
+    }
+    .checkmark:after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 3px;
+      width: 12px;
+      height: 20px;
+      border: solid white;
+      border-width: 0 4px 4px 0;
+      transform: rotate(45deg);
+    }
+    h1 {
+      color: #2d3436;
+      font-size: 32px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    p {
+      color: #636e72;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 35px;
+    }
+    .download-btn {
+      display: inline-block;
+      background: #00b894;
+      color: white;
+      padding: 18px 50px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,184,148,0.4);
+      margin-bottom: 20px;
+    }
+    .download-btn:hover {
+      background: #00a383;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,184,148,0.5);
+    }
+    .download-btn:active {
+      transform: translateY(0);
+    }
+    .home-link {
+      display: inline-block;
+      color: #636e72;
+      text-decoration: none;
+      margin-top: 15px;
+      font-size: 16px;
+      transition: color 0.3s ease;
+    }
+    .home-link:hover {
+      color: #2d3436;
+    }
+    .product-name {
+      color: #00b894;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">
+      <div class="checkmark"></div>
+    </div>
+    <h1>🎉 Payment Successful!</h1>
+    <p>Thank you for your purchase of <span class="product-name" id="product-name">the eBook</span>.</p>
+    <p>Click the button below to download your eBook now:</p>
+    
+    <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+    
+    <br><br>
+    <a href="https://marriageducation.com" class="home-link">← Return to Home</a>
+  </div>
+
+  <script>
+    // Get product_id from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product_id') || 'sbd-founding';
+    const sessionId = urlParams.get('session_id');
+    
+    // Update product name
+    const productNames = {
+      'sbd-founding': 'Save Before Divorce (Founding Member Edition)',
+      'sbd-regular': 'Save Before Divorce',
+      'default': 'your eBook'
+    };
+    document.getElementById('product-name').textContent = productNames[productId] || productNames['default'];
+    
+    // Set download link - point to MOMO server's download endpoint
+    const downloadBtn = document.getElementById('download-btn');
+    downloadBtn.href = `/download?product_id=${encodeURIComponent(productId)}&session_id=${encodeURIComponent(sessionId || 'direct')}`;
+    
+    // Auto-download after 2 seconds (optional)
+    setTimeout(() => {
+      console.log('Auto-downloading...');
+    }, 2000);
+  </script>
+</body>
+</html>
