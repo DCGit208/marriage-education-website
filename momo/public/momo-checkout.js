@@ -29,13 +29,17 @@ if (productName && productPrice) {
   document.getElementById('order-total').textContent = '-';
 }
 
-// Detect environment and use correct API URL
-const isLocal = window.location.hostname === 'localhost';
+// Always use the correct backend - if on Render, use relative URL (same server)
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isRender = window.location.hostname.includes('onrender.com');
+
 const apiUrl = isLocal 
   ? 'http://localhost:4243'
-  : 'https://marriage-education-momo-rp92.onrender.com';
+  : isRender
+    ? window.location.origin  // Same server on Render
+    : 'https://marriage-education-momo-rp92.onrender.com';  // Fallback
 
-console.log('API URL:', apiUrl);
+console.log('API URL:', apiUrl, 'Hostname:', window.location.hostname);
 
 // Handle form submission
 document.getElementById('momo-payment-form').addEventListener('submit', async (e) => {
