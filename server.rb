@@ -230,9 +230,14 @@ post '/create-momo-payment' do
     phone_number = data['phone_number']
     
     # Sanitize product name for MTN MOMO (WAF blocks certain words)
-    sanitized_name = product_name.to_s.gsub(/sex/i, 'S*x').gsub(/adult/i, 'mature')
+    # Replace "Sex By Design" with generic book title
+    sanitized_name = product_name.to_s
+      .gsub(/Sex By Design/i, 'SBD Book')
+      .gsub(/sex/i, 'SBD')
+      .gsub(/adult/i, 'mature')
     
     puts "[MOMO] Payment request - Product: #{product_id}, Amount: #{amount}, Phone: #{phone_number}"
+    puts "[MOMO] Original name: #{product_name}"
     puts "[MOMO] Sanitized name: #{sanitized_name}"
 
     # Validate phone number
