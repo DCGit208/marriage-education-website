@@ -329,22 +329,27 @@
       document.getElementById('momo-checkout-btn').addEventListener('click', function(e) {
         e.preventDefault();
         
-        const currency = getUrlParameter('currency');
+        let currency = getUrlParameter('currency') || productCurrency;
+        let price = productPrice;
         
-        // Build MOMO checkout URL - point to Render MOMO server
+        // Convert USD to FCFA for MOMO (1 USD = 656 FCFA)
+        if (currency === 'USD') {
+          price = Math.round(parseFloat(productPrice) * 656);
+          currency = 'FCFA';
+        }
+        
+        // Build MOMO checkout URL - point to unified Render server
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseUrl = isLocal 
-          ? 'http://localhost:4243/momo-checkout.html'
-          : 'https://marriage-education-momo-rp92.onrender.com/momo-checkout.html';
+          ? 'http://localhost:4567/momo-checkout.html'
+          : 'https://marriage-education-website.onrender.com/momo-checkout.html';
         
         let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
-        checkoutUrl += '&price=' + encodeURIComponent(productPrice);
-        if (currency) {
-          checkoutUrl += '&currency=' + encodeURIComponent(currency);
-        }
+        checkoutUrl += '&price=' + encodeURIComponent(price);
+        checkoutUrl += '&currency=' + encodeURIComponent(currency);
         
-        console.log('Redirecting to MOMO checkout:', checkoutUrl);
+        console.log('Redirecting to MOMO checkout:', checkoutUrl, 'Price:', price, 'Currency:', currency);
         window.location.href = checkoutUrl;
       });
       
