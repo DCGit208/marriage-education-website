@@ -3,7 +3,11 @@ require 'stripe'
 require 'httparty'
 require 'json'
 require 'csv'
-require 'dotenv/load'
+begin
+  require 'dotenv/load'
+rescue LoadError
+  # dotenv not available in production, that's fine
+end
 require 'securerandom'
 require 'base64'
 
@@ -40,12 +44,14 @@ puts "=" * 80
 puts "Port: #{settings.port}"
 puts "Domain: #{YOUR_DOMAIN}"
 puts "Public folder: #{settings.public_folder}"
-puts "Stripe API Key: #{ENV['STRIPE_API_KEY'] ? 'Configured' : 'NOT SET'}"
+puts "Stripe API Key: #{ENV['STRIPE_API_KEY'] ? "Configured (#{ENV['STRIPE_API_KEY'][0..10]}...)" : 'NOT SET - CHECK RENDER ENV VARS'}"
+puts "Stripe.api_key: #{Stripe.api_key ? "Set (#{Stripe.api_key[0..10]}...)" : 'NOT SET'}"
 puts "MOMO Primary Key: #{MTN_MOMO_PRIMARY_KEY ? MTN_MOMO_PRIMARY_KEY[0..10] + '...' : 'NOT SET'}"
 puts "MOMO Subscription Key: #{MTN_MOMO_SUBSCRIPTION_KEY ? MTN_MOMO_SUBSCRIPTION_KEY[0..10] + '...' : 'NOT SET'}"
 puts "MOMO API User: #{MTN_MOMO_API_USER || 'NOT SET'}"
 puts "MOMO API Key: #{MTN_MOMO_API_KEY ? MTN_MOMO_API_KEY[0..10] + '...' : 'NOT SET'}"
 puts "MOMO Environment: #{MTN_MOMO_ENVIRONMENT}"
+puts "All ENV vars: #{ENV.keys.grep(/STRIPE|MOMO/).join(', ')}"
 puts "=" * 80
 
 # Enable CORS
