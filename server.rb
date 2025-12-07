@@ -376,3 +376,4 @@ get '/' do
 end
 
 puts "✅ Server ready on port #{settings.port}"
+
