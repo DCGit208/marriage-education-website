@@ -157,10 +157,11 @@ post '/create-checkout-session' do
     idempotency_key = "checkout_#{product_id}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
 
     begin
+      render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
       session = Stripe::Checkout::Session.create({
         line_items: [{ price: stripe_price_id, quantity: 1 }],
         mode: 'payment',
-        success_url: YOUR_DOMAIN + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + product_id + '&payment_method=stripe',
+        success_url: render_url + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + product_id + '&payment_method=stripe',
         cancel_url: YOUR_DOMAIN + '/payment.html?product=' + product_id,
         automatic_tax: {enabled: true},
       }, { idempotency_key: idempotency_key })
@@ -179,6 +180,7 @@ post '/create-checkout-session' do
     amount = zero_decimal.include?(currency) ? dynamic_price.to_i : (dynamic_price.to_f * 100).to_i
 
     begin
+      render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
       session = Stripe::Checkout::Session.create({
         line_items: [{
           price_data: {
@@ -189,7 +191,7 @@ post '/create-checkout-session' do
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: YOUR_DOMAIN + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + (product_id || 'dynamic') + '&payment_method=stripe',
+        success_url: render_url + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + (product_id || 'dynamic') + '&payment_method=stripe',
         cancel_url: YOUR_DOMAIN + '/payment.html',
       })
 
