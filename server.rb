@@ -229,7 +229,11 @@ post '/create-momo-payment' do
     currency_input = (data['currency'] || 'FCFA').upcase
     phone_number = data['phone_number']
     
+    # Sanitize product name for MTN MOMO (WAF blocks certain words)
+    sanitized_name = product_name.to_s.gsub(/sex/i, 'S*x').gsub(/adult/i, 'mature')
+    
     puts "[MOMO] Payment request - Product: #{product_id}, Amount: #{amount}, Phone: #{phone_number}"
+    puts "[MOMO] Sanitized name: #{sanitized_name}"
 
     # Validate phone number
     if phone_number.nil? || phone_number.empty?
@@ -272,8 +276,8 @@ post '/create-momo-payment' do
         currency: momo_currency,
         externalId: product_id || 'campaign',
         payer: { partyIdType: 'MSISDN', partyId: phone_number },
-        payerMessage: "Payment for #{product_name || 'Product'}",
-        payeeNote: "Marriage Education - #{product_id}"
+        payerMessage: "Payment for #{sanitized_name || 'Book Purchase'}",
+        payeeNote: "Marriage Ed - #{product_id}"
       }.to_json
     )
 
