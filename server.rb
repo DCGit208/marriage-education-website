@@ -3,20 +3,38 @@ require 'stripe'
 require 'httparty'
 require 'json'
 require 'csv'
-begin
-  require 'dotenv/load'
-rescue LoadError
-  # dotenv not available in production, that's fine
-end
 require 'securerandom'
 require 'base64'
+
+# Load dotenv only in development
+if ENV['RACK_ENV'] != 'production' && File.exist?('.env')
+  require 'dotenv/load'
+end
 
 # ============================================================================
 # UNIFIED PAYMENT BACKEND - Stripe + MTN MOMO
 # ============================================================================
 
+# Debug: Print all environment variables at startup
+puts "\n" + "=" * 80
+puts "ENVIRONMENT VARIABLES DEBUG"
+puts "=" * 80
+puts "RACK_ENV: #{ENV['RACK_ENV'] || 'not set'}"
+puts "PORT: #{ENV['PORT'] || 'not set'}"
+puts "Raw ENV keys containing STRIPE: #{ENV.keys.select { |k| k.include?('STRIPE') }}"
+puts "Raw ENV keys containing MOMO: #{ENV.keys.select { |k| k.include?('MOMO') }}"
+puts "STRIPE_API_KEY present: #{ENV.key?('STRIPE_API_KEY')}"
+puts "STRIPE_API_KEY value: #{ENV['STRIPE_API_KEY'] ? "#{ENV['STRIPE_API_KEY'][0..15]}..." : 'EMPTY OR NIL'}"
+puts "=" * 80 + "\n"
+
 # Stripe Configuration
-Stripe.api_key = ENV['STRIPE_API_KEY']
+STRIPE_API_KEY = ENV['STRIPE_API_KEY']
+if STRIPE_API_KEY && !STRIPE_API_KEY.empty?
+  Stripe.api_key = STRIPE_API_KEY
+  puts "[CONFIG] ✅ Stripe API key loaded: #{STRIPE_API_KEY[0..15]}..."
+else
+  puts "[CONFIG] ❌ WARNING: STRIPE_API_KEY is not set or empty!"
+end
 
 # MTN MOMO Configuration
 MTN_MOMO_PRIMARY_KEY = ENV['MTN_MOMO_PRIMARY_KEY'] || '4455fd39957b48e281efde9612b55530'
@@ -365,7 +383,8 @@ get '/health' do
     status: 'ok',
     timestamp: Time.now.iso8601,
     environment: MTN_MOMO_ENVIRONMENT,
-    stripe: ENV['STRIPE_API_KEY'] ? 'configured' : 'not configured',
+    stripe: (STRIPE_API_KEY && !STRIPE_API_KEY.empty?) ? 'configured' : 'not configured',
+    stripe_set_in_gem: Stripe.api_key ? 'yes' : 'no',
     momo: MTN_MOMO_API_USER ? 'configured' : 'not configured'
   }.to_json
 end
