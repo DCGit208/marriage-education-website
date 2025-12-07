@@ -281,8 +281,8 @@ post '/create-momo-payment' do
         currency: momo_currency,
         externalId: product_id || 'campaign',
         payer: { partyIdType: 'MSISDN', partyId: phone_number },
-        payerMessage: "Payment for #{sanitized_name || 'Book Purchase'}",
-        payeeNote: "Marriage Ed - #{product_id}"
+        payerMessage: "Book purchase - #{product_id}",
+        payeeNote: "Order #{product_id}"
       }.to_json
     )
 
