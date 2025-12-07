@@ -151,28 +151,8 @@ post '/create-checkout-session' do
   dynamic_price = data['price']
   dynamic_currency = (data['currency'] || 'USD').to_s.upcase
 
-  if product_id && product_db[product_id]
-    product = product_db[product_id]
-    stripe_price_id = product['stripe_price_id']
-    idempotency_key = "checkout_#{product_id}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
-
-    begin
-      render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
-      session = Stripe::Checkout::Session.create({
-        line_items: [{ price: stripe_price_id, quantity: 1 }],
-        mode: 'payment',
-        success_url: render_url + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + product_id + '&payment_method=stripe',
-        cancel_url: YOUR_DOMAIN + '/payment.html?product=' + product_id,
-        automatic_tax: {enabled: true},
-      }, { idempotency_key: idempotency_key })
-
-      puts "[STRIPE] ✅ Checkout session created: #{session.id}"
-      return { url: session.url }.to_json
-    rescue Stripe::StripeError => e
-      puts "[STRIPE] ❌ Error: #{e.message}"
-      halt 500, { error: "Failed to create checkout session: #{e.user_message || e.message}" }.to_json
-    end
-  elsif dynamic_name && dynamic_price
+  # If dynamic pricing is provided, use it (for campaign products)
+  if dynamic_name && dynamic_price
     # Dynamic campaign pricing
     currency_map = { 'FCFA' => 'XAF', 'XAF' => 'XAF', 'XOF' => 'XOF', 'USD' => 'USD' }
     currency = currency_map[dynamic_currency] || 'USD'
@@ -199,7 +179,34 @@ post '/create-checkout-session' do
       return { url: session.url }.to_json
     rescue Stripe::StripeError => e
       puts "[STRIPE] ❌ Error: #{e.message}"
-      halt 500, { error: "Failed to create dynamic checkout session: #{e.user_message || e.message}" }.to_json
+      halt 500, { error: "Failed to create dynamic checkout session: #{e.message}" }.to_json
+    end
+  # Otherwise, use fixed price from products.csv
+  elsif product_id && product_db[product_id]
+    product = product_db[product_id]
+    stripe_price_id = product['stripe_price_id']
+    
+    if stripe_price_id && !stripe_price_id.empty?
+      idempotency_key = "checkout_#{product_id}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
+
+      begin
+        render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+        session = Stripe::Checkout::Session.create({
+          line_items: [{ price: stripe_price_id, quantity: 1 }],
+          mode: 'payment',
+          success_url: render_url + '/success.html?session_id={CHECKOUT_SESSION_ID}&product_id=' + product_id + '&payment_method=stripe',
+          cancel_url: YOUR_DOMAIN + '/payment.html?product=' + product_id,
+          automatic_tax: {enabled: true},
+        }, { idempotency_key: idempotency_key })
+
+        puts "[STRIPE] ✅ Checkout session created: #{session.id}"
+        return { url: session.url }.to_json
+      rescue Stripe::StripeError => e
+        puts "[STRIPE] ❌ Error: #{e.message}"
+        halt 500, { error: "Failed to create checkout session: #{e.message}" }.to_json
+      end
+    else
+      halt 400, { error: "Product #{product_id} has no Stripe price configured" }.to_json
     end
   else
     halt 400, { error: 'Invalid product_id or missing name/price for dynamic pricing' }.to_json
