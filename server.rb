@@ -118,7 +118,7 @@ post '/create-checkout-session' do
 
   # Load product database
   product_db = {}
-  CSV.foreach(File.join(__dir__, 'products.csv'), headers: true) do |row|
+  CSV.foreach(File.join(__dir__, 'stripe', 'products.csv'), headers: true) do |row|
     next if row['product_id'].to_s.strip.empty?
     product_db[row['product_id']] = row.to_h
   end
