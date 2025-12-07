@@ -36,10 +36,10 @@ async function initialize() {
     const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Production uses deployed Render backend, local uses localhost:4242
+    // Production uses unified Render backend, local uses localhost:4567
     const apiUrl = isProduction 
-      ? 'https://marriage-education-stripe.onrender.com/create-checkout-session'
-      : 'http://localhost:4242/create-checkout-session';
+      ? 'https://marriage-education-payments.onrender.com/create-checkout-session'
+      : 'http://localhost:4567/create-checkout-session';
     
     console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isProduction ? 'PRODUCTION' : 'LOCAL');
     
