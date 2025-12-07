@@ -38,7 +38,7 @@ async function initialize() {
     
     // Production uses unified Render backend, local uses localhost:4567
     const apiUrl = isProduction 
-      ? 'https://marriage-education-payments.onrender.com/create-checkout-session'
+      ? 'https://marriage-education-website.onrender.com/create-checkout-session'
       : 'http://localhost:4567/create-checkout-session';
     
     console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isProduction ? 'PRODUCTION' : 'LOCAL');

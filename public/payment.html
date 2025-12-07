@@ -333,11 +333,9 @@
         
         // Build MOMO checkout URL - unified server
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal 
-          ? 'http://localhost:4567/momo-checkout.html'
-          : 'https://marriage-education-payments.onrender.com/momo-checkout.html';
-        
-        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
+                const baseUrl = isLocal 
+                    ? 'http://localhost:4567/momo-checkout.html'
+                    : 'https://marriage-education-website.onrender.com/momo-checkout.html';        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
         checkoutUrl += '&price=' + encodeURIComponent(productPrice);
         if (currency) {
