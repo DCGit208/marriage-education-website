@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Pending Verification</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 50px 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    .pending-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 30px;
+      background: #ffc107;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    h1 {
+      color: #2d3436;
+      font-size: 28px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    p {
+      color: #636e72;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .reference-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 30px 0;
+    }
+    .reference-label {
+      font-size: 14px;
+      color: #636e72;
+      margin-bottom: 8px;
+    }
+    .reference-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2d3436;
+      font-family: 'Courier New', monospace;
+    }
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: left;
+      margin: 20px 0;
+    }
+    .info-box strong {
+      color: #1976d2;
+    }
+    .home-link {
+      display: inline-block;
+      color: #636e72;
+      text-decoration: none;
+      margin-top: 20px;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
+    .home-link:hover {
+      color: #2d3436;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="pending-icon">⏳</div>
+    <h1>Payment Under Review</h1>
+    <p>Thank you! We've received your payment notification.</p>
+    
+    <div class="reference-box">
+      <div class="reference-label">Reference Code</div>
+      <div class="reference-value" id="reference">Loading...</div>
+    </div>
+
+    <div class="info-box">
+      <strong>📧 What happens next?</strong><br><br>
+      1. We'll verify your MOMO transfer<br>
+      2. Once confirmed, your download link will be sent to <strong id="email">your email</strong><br>
+      3. This usually takes 5-15 minutes during business hours<br><br>
+      <strong>💡 Tip:</strong> Check your spam folder if you don't see the email within 15 minutes.
+    </div>
+
+    <p style="font-size: 14px; color: #95a5a6;">
+      Questions? Contact us at <a href="mailto:support@marriageducation.com" style="color: #667eea;">support@marriageducation.com</a>
+    </p>
+
+    <a href="https://marriageducation.com" class="home-link">← Return to Home</a>
+  </div>
+
+  <script>
+    // Get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      const results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    const reference = getUrlParameter('reference') || 'N/A';
+    const email = getUrlParameter('email') || 'your email';
+
+    document.getElementById('reference').textContent = reference;
+    document.getElementById('email').textContent = email;
+  </script>
+</body>
+</html>
