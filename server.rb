@@ -6,6 +6,7 @@ require 'csv'
 require 'securerandom'
 require 'base64'
 require 'time'
+require 'mail'
 
 # Load dotenv only in development
 if ENV['RACK_ENV'] != 'production' && File.exist?('.env')
@@ -221,9 +222,30 @@ end
 PENDING_PAYMENTS_FILE = File.join(File.dirname(__FILE__), 'pending_payments.json')
 DOWNLOAD_TOKENS_FILE = File.join(File.dirname(__FILE__), 'download_tokens.json')
 
-# Email Configuration (SendGrid)
-SENDGRID_API_KEY = ENV['SENDGRID_API_KEY']
+# Email Configuration (iPage SMTP)
+SMTP_HOST = ENV['SMTP_HOST'] || 'smtp.yourdomain.com'
+SMTP_PORT = ENV['SMTP_PORT'] || '587'
+SMTP_USERNAME = ENV['SMTP_USERNAME']
+SMTP_PASSWORD = ENV['SMTP_PASSWORD']
 FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
+
+# Configure Mail gem for SMTP
+if SMTP_USERNAME && SMTP_PASSWORD
+  Mail.defaults do
+    delivery_method :smtp, {
+      address: SMTP_HOST,
+      port: SMTP_PORT.to_i,
+      domain: 'marriageducation.com',
+      user_name: SMTP_USERNAME,
+      password: SMTP_PASSWORD,
+      authentication: 'plain',
+      enable_starttls_auto: true
+    }
+  end
+  puts "[EMAIL] ✅ SMTP configured: #{SMTP_HOST}:#{SMTP_PORT} as #{SMTP_USERNAME}"
+else
+  puts "[EMAIL] ⚠️  SMTP not configured - emails will not be sent"
+end
 
 # Initialize files if they don't exist
 unless File.exist?(PENDING_PAYMENTS_FILE)
@@ -285,34 +307,28 @@ def generate_download_token(payment)
   }
 end
 
-# Helper: Send email via SendGrid
+# Helper: Send email via SMTP (iPage)
 def send_email(to_email, subject, html_content)
-  return false unless SENDGRID_API_KEY
+  return false unless SMTP_USERNAME && SMTP_PASSWORD
   
   begin
-    response = HTTParty.post(
-      'https://api.sendgrid.com/v3/mail/send',
-      headers: {
-        'Authorization' => "Bearer #{SENDGRID_API_KEY}",
-        'Content-Type' => 'application/json'
-      },
-      body: {
-        personalizations: [{ to: [{ email: to_email }] }],
-        from: { email: FROM_EMAIL, name: 'Marriage Education' },
-        subject: subject,
-        content: [{ type: 'text/html', value: html_content }]
-      }.to_json
-    )
-    
-    if response.code == 202
-      puts "[EMAIL] ✅ Sent to #{to_email}"
-      true
-    else
-      puts "[EMAIL] ❌ Failed: #{response.code} - #{response.body}"
-      false
+    mail = Mail.new do
+      from     "Marriage Education <#{FROM_EMAIL}>"
+      to       to_email
+      subject  subject
+      
+      html_part do
+        content_type 'text/html; charset=UTF-8'
+        body html_content
+      end
     end
+    
+    mail.deliver!
+    puts "[EMAIL] ✅ Sent to #{to_email} via SMTP"
+    true
   rescue => e
     puts "[EMAIL] ❌ Error: #{e.message}"
+    puts "[EMAIL] ❌ Backtrace: #{e.backtrace.first(3).join(' | ')}"
     false
   end
 end

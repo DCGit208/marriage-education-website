@@ -1,60 +1,83 @@
-# 📧 Email Setup Instructions
+# 📧 Email Setup Instructions - iPage SMTP
 
-## SendGrid Setup (Free - 100 emails/day)
+## iPage Email Setup (Your Existing Service)
 
-### Step 1: Create SendGrid Account
-1. Go to: https://signup.sendgrid.com/
-2. Sign up for **FREE** account
-3. Verify your email address
+### Step 1: Get Your iPage Email Credentials
+You already have these from your iPage hosting account. You need:
 
-### Step 2: Get API Key
-1. Login to SendGrid dashboard
-2. Go to: **Settings** → **API Keys**
-3. Click **Create API Key**
-4. Name it: `marriage-education-downloads`
-5. Select: **Full Access**
-6. Click **Create & View**
-7. **COPY THE KEY** (you'll only see it once!)
+1. **SMTP Server:** Usually one of these:
+   - `smtp.yourdomain.com` (replace with your actual domain)
+   - `mail.yourdomain.com`
+   - `smtp.secureserver.net` (if using iPage's shared servers)
 
-### Step 3: Verify Sender Email
-1. Go to: **Settings** → **Sender Authentication**
-2. Click **Verify a Single Sender**
-3. Fill in your details:
-   - From Name: `Marriage Education`
-   - From Email: `noreply@marriageducation.com` (or your email)
-   - Reply To: `support@marriageducation.com`
-4. Check your email and verify
+2. **SMTP Port:** Usually `587` (recommended) or `465`
 
-### Step 4: Add to Render
+3. **Username:** Your full email address (e.g., `info@marriageducation.com`)
+
+4. **Password:** Your email account password
+
+### Step 2: Find Your SMTP Settings in iPage
+1. Login to iPage Control Panel
+2. Go to **Email Accounts** or **Mail**
+3. Find your email account (e.g., `noreply@marriageducation.com`)
+4. Look for **Email Client Configuration** or **SMTP Settings**
+5. Note down:
+   - Outgoing Mail Server (SMTP)
+   - SMTP Port
+   - Authentication required: Yes
+   - Your email and password
+
+### Step 3: Add to Render Environment Variables
 1. Go to: https://dashboard.render.com
 2. Select your service: `marriage-education-website`
 3. Go to **Environment** tab
 4. Add these variables:
    ```
-   SENDGRID_API_KEY = SG.xxxxxxxxxxxxxxxxxxxxxxxxxxx (paste your key)
-   FROM_EMAIL = noreply@marriageducation.com (your verified email)
+   SMTP_HOST = smtp.yourdomain.com (or mail.yourdomain.com)
+   SMTP_PORT = 587
+   SMTP_USERNAME = noreply@marriageducation.com (your full email)
+   SMTP_PASSWORD = your_email_password
+   FROM_EMAIL = noreply@marriageducation.com
    ```
 5. Click **Save Changes**
-6. Service will auto-redeploy
+6. Service will auto-redeploy (takes 2-3 minutes)
 
 ## Test Email Sending
 
-After setup, when you approve a payment in admin panel:
-- ✅ Email sent automatically → Green notification
-- ❌ Email failed → Red alert, copy link manually
+### Quick Test:
+1. After adding environment variables to Render, wait 2-3 minutes for redeployment
+2. Check server logs: `https://marriage-education-website.onrender.com/health`
+3. Should see: `[EMAIL] ✅ SMTP configured: smtp.yourdomain.com:587`
 
-## Alternative: Mailgun Setup (Free - 5,000 emails/month)
+### When you approve a payment:
+- ✅ Email sent successfully → Green notification: "✅ Email sent automatically!"
+- ❌ Email failed → Red alert: "⚠️ Payment Approved BUT Email Failed!"
 
-If you prefer Mailgun:
-1. Go to: https://signup.mailgun.com/
-2. Sign up for FREE account
-3. Get API key from dashboard
-4. Add to Render:
-   ```
-   MAILGUN_API_KEY = your-key
-   MAILGUN_DOMAIN = your-domain.mailgun.org
-   FROM_EMAIL = noreply@yourdomain.com
-   ```
+### If emails fail:
+- Check SMTP credentials are correct
+- Verify email account exists in iPage
+- Try alternative SMTP port (465 instead of 587)
+- Check Render logs for error details
+
+## Common iPage SMTP Settings
+
+**For most iPage accounts:**
+```
+SMTP_HOST = mail.marriageducation.com (or smtp.marriageducation.com)
+SMTP_PORT = 587 (use 465 if 587 doesn't work)
+SMTP_USERNAME = noreply@marriageducation.com
+SMTP_PASSWORD = your_password
+FROM_EMAIL = noreply@marriageducation.com
+```
+
+**If you're using iPage's shared hosting:**
+```
+SMTP_HOST = smtp.secureserver.net
+SMTP_PORT = 587
+SMTP_USERNAME = noreply@marriageducation.com
+SMTP_PASSWORD = your_password
+FROM_EMAIL = noreply@marriageducation.com
+```
 
 ## Email Template Features
 

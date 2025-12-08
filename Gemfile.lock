@@ -4,17 +4,33 @@ GEM
     base64 (0.3.0)
     bigdecimal (3.3.1)
     csv (3.3.5)
+    date (3.5.0)
     dotenv (3.2.0)
     httparty (0.23.2)
       csv
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
     logger (1.7.0)
+    mail (2.9.0)
+      logger
+      mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
     mini_mime (1.1.5)
     multi_xml (0.7.2)
       bigdecimal (~> 3.1)
     mustermann (3.0.4)
       ruby2_keywords (~> 0.0.1)
+    net-imap (0.5.12)
+      date
+      net-protocol
+    net-pop (0.1.2)
+      net-protocol
+    net-protocol (0.2.2)
+      timeout
+    net-smtp (0.5.1)
+      net-protocol
     nio4r (2.7.5)
     puma (7.1.0)
       nio4r (~> 2.0)
@@ -38,6 +54,7 @@ GEM
       tilt (~> 2.0)
     stripe (18.0.1)
     tilt (2.6.1)
+    timeout (0.5.0)
 
 PLATFORMS
   arm64-darwin-24
@@ -46,6 +63,7 @@ PLATFORMS
 DEPENDENCIES
   dotenv
   httparty
+  mail
   puma
   rackup
   sinatra
