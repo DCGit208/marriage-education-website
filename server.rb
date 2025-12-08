@@ -784,7 +784,9 @@ get '/health' do
     environment: MTN_MOMO_ENVIRONMENT,
     stripe: (STRIPE_API_KEY && !STRIPE_API_KEY.empty?) ? 'configured' : 'not configured',
     stripe_set_in_gem: Stripe.api_key ? 'yes' : 'no',
-    momo: MTN_MOMO_API_USER ? 'configured' : 'not configured'
+    momo: MTN_MOMO_API_USER ? 'configured' : 'not configured',
+    email: (SMTP_USERNAME && SMTP_PASSWORD) ? 'configured' : 'not configured',
+    email_settings: (SMTP_USERNAME && SMTP_PASSWORD) ? "#{SMTP_HOST}:#{SMTP_PORT} as #{SMTP_USERNAME}" : 'not configured'
   }.to_json
 end
 
