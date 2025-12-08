@@ -383,19 +383,27 @@
     // Load payments
     async function loadPayments() {
       try {
+        showAlert('⏳ Loading payments from server... (Render free tier may take 30-60 seconds to wake up)', 'success');
+        
         const response = await fetch(`${API_BASE}/admin/pending-payments`, {
           headers: { 'Authorization': authToken }
         });
 
-        if (!response.ok) throw new Error('Failed to load payments');
+        if (!response.ok) {
+          if (response.status === 503) {
+            throw new Error('Server is waking up. Please wait 30 seconds and refresh.');
+          }
+          throw new Error('Failed to load payments');
+        }
 
         const data = await response.json();
         allPayments = data.payments || [];
         updateStats();
         renderPayments();
+        showAlert(`✅ Loaded ${allPayments.length} payment(s)`, 'success');
       } catch (error) {
         console.error('Load error:', error);
-        showAlert('Failed to load payments', 'error');
+        showAlert('❌ ' + error.message + ' - Try clicking Refresh', 'error');
       }
     }
 
@@ -496,7 +504,8 @@
         const result = await response.json();
 
         if (response.ok) {
-          showAlert(`✓ Payment approved! Download URL: ${result.download_url}`, 'success');
+          const emailStatus = result.email_sent ? '✅ Email sent automatically!' : '⚠️ Email failed - copy link manually';
+          showAlert(`✓ Payment approved! ${emailStatus}`, 'success');
           
           // Copy download URL to clipboard
           navigator.clipboard.writeText(result.download_url);
@@ -504,7 +513,12 @@
           // Reload payments
           await loadPayments();
           
-          alert(`Payment approved!\n\nDownload URL copied to clipboard.\n\nSend this to customer:\n${result.download_url}`);
+          const expiryInfo = result.expires_at ? `\nExpires: ${new Date(result.expires_at).toLocaleString()}\nMax downloads: 5` : '';
+          
+          if (result.email_sent) {
+            alert(`✅ Payment Approved!\n\n📧 Email sent automatically to: ${email}\n\nDownload link (also copied to clipboard):\n${result.download_url}${expiryInfo}`);
+          } else {
+            alert(`⚠️ Payment Approved BUT Email Failed!\n\n❗ IMPORTANT: Send this link to customer manually:\n${result.download_url}\n\nEmail: ${email}${expiryInfo}\n\n(Link copied to clipboard)`);
         } else {
           showAlert('Failed to approve payment', 'error');
         }
