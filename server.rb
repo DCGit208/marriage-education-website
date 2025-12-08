@@ -5,6 +5,7 @@ require 'json'
 require 'csv'
 require 'securerandom'
 require 'base64'
+require 'time'
 
 # Load dotenv only in development
 if ENV['RACK_ENV'] != 'production' && File.exist?('.env')
@@ -218,10 +219,19 @@ end
 # ============================================================================
 
 PENDING_PAYMENTS_FILE = File.join(File.dirname(__FILE__), 'pending_payments.json')
+DOWNLOAD_TOKENS_FILE = File.join(File.dirname(__FILE__), 'download_tokens.json')
 
-# Initialize payments file if it doesn't exist
+# Email Configuration (SendGrid)
+SENDGRID_API_KEY = ENV['SENDGRID_API_KEY']
+FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
+
+# Initialize files if they don't exist
 unless File.exist?(PENDING_PAYMENTS_FILE)
   File.write(PENDING_PAYMENTS_FILE, JSON.pretty_generate({ payments: [] }))
+end
+
+unless File.exist?(DOWNLOAD_TOKENS_FILE)
+  File.write(DOWNLOAD_TOKENS_FILE, JSON.pretty_generate({ tokens: [] }))
 end
 
 # Helper: Read pending payments
@@ -238,6 +248,127 @@ def write_pending_payments(data)
 rescue => e
   puts "[ERROR] Failed to write pending payments: #{e.message}"
   false
+end
+
+# Helper: Read download tokens
+def read_download_tokens
+  JSON.parse(File.read(DOWNLOAD_TOKENS_FILE))
+rescue => e
+  puts "[ERROR] Failed to read download tokens: #{e.message}"
+  { 'tokens' => [] }
+end
+
+# Helper: Write download tokens
+def write_download_tokens(data)
+  File.write(DOWNLOAD_TOKENS_FILE, JSON.pretty_generate(data))
+rescue => e
+  puts "[ERROR] Failed to write download tokens: #{e.message}"
+  false
+end
+
+# Helper: Generate secure download token
+def generate_download_token(payment)
+  token = SecureRandom.urlsafe_base64(32)
+  expiry = Time.now + (7 * 24 * 60 * 60) # 7 days from now
+  
+  {
+    'token' => token,
+    'product_id' => payment['product_id'],
+    'product_name' => payment['product_name'],
+    'email' => payment['email'],
+    'reference' => payment['reference'],
+    'created_at' => Time.now.iso8601,
+    'expires_at' => expiry.iso8601,
+    'download_count' => 0,
+    'max_downloads' => 5,
+    'status' => 'active'
+  }
+end
+
+# Helper: Send email via SendGrid
+def send_email(to_email, subject, html_content)
+  return false unless SENDGRID_API_KEY
+  
+  begin
+    response = HTTParty.post(
+      'https://api.sendgrid.com/v3/mail/send',
+      headers: {
+        'Authorization' => "Bearer #{SENDGRID_API_KEY}",
+        'Content-Type' => 'application/json'
+      },
+      body: {
+        personalizations: [{ to: [{ email: to_email }] }],
+        from: { email: FROM_EMAIL, name: 'Marriage Education' },
+        subject: subject,
+        content: [{ type: 'text/html', value: html_content }]
+      }.to_json
+    )
+    
+    if response.code == 202
+      puts "[EMAIL] ✅ Sent to #{to_email}"
+      true
+    else
+      puts "[EMAIL] ❌ Failed: #{response.code} - #{response.body}"
+      false
+    end
+  rescue => e
+    puts "[EMAIL] ❌ Error: #{e.message}"
+    false
+  end
+end
+
+# Helper: Generate download email HTML
+def generate_download_email(product_name, download_url, expiry_date)
+  <<~HTML
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #FFCB05; color: #000; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: #000; color: #FFCB05 !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .info-box { background: #fff; padding: 15px; border-left: 4px solid #FFCB05; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Your Purchase is Confirmed!</h1>
+        </div>
+        <div class="content">
+          <p>Thank you for your purchase of <strong>#{product_name}</strong>!</p>
+          
+          <p>Your payment has been verified and approved. Click the button below to download your eBook:</p>
+          
+          <div style="text-align: center;">
+            <a href="#{download_url}" class="button">📥 Download Your eBook</a>
+          </div>
+          
+          <div class="info-box">
+            <strong>⏰ Important Information:</strong><br>
+            • This link expires on: <strong>#{expiry_date}</strong><br>
+            • Maximum 5 downloads allowed<br>
+            • Save the file to your device for unlimited access<br>
+          </div>
+          
+          <p>If you have any issues downloading, please contact us at support@marriageducation.com</p>
+          
+          <p>Enjoy your reading!</p>
+          
+          <p><strong>Marriage Education Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>This email was sent because you purchased an eBook from Marriage Education.<br>
+          If you did not make this purchase, please contact us immediately.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  HTML
 end
 
 # Submit manual payment
@@ -315,16 +446,29 @@ post '/admin/approve-payment' do
       if write_pending_payments(payments_data)
         puts "[ADMIN] Payment approved: #{reference}"
         
-        # Here you would send email with download link
-        # For now, just return success
+        # Generate secure download token
+        token_data = generate_download_token(payment)
+        tokens = read_download_tokens
+        tokens['tokens'] << token_data
+        write_download_tokens(tokens)
+        
+        # Build download URL with token
         render_url = ENV['YOUR_DOMAIN'] || 'https://marriageducation.com'
-        download_url = "#{render_url}/download?product_id=#{payment['product_id']}&payment_method=momo&reference=#{reference}"
+        download_url = "#{render_url}/download?token=#{token_data['token']}"
+        
+        # Send email automatically
+        expiry_date = Time.parse(token_data['expires_at']).strftime('%B %d, %Y at %I:%M %p')
+        email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
+        email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
         
         {
           success: true,
           message: 'Payment approved',
           download_url: download_url,
-          email: payment['email']
+          email: payment['email'],
+          email_sent: email_sent,
+          token: token_data['token'],
+          expires_at: token_data['expires_at']
         }.to_json
       else
         halt 500, { error: 'Failed to update payment' }.to_json
@@ -525,11 +669,64 @@ end
 # ============================================================================
 
 get '/download' do
-  product_id = params['product_id']
-  halt 400, 'Missing product_id' unless product_id
+  token = params['token']
+  
+  # Legacy support for old links (will be removed later)
+  if !token && params['product_id']
+    product_id = params['product_id']
+    puts "[DOWNLOAD] ⚠️  Legacy download request for product: #{product_id}"
+    
+    # Load product database
+    product_db = {}
+    CSV.foreach(File.join(__dir__, 'stripe', 'products.csv'), headers: true) do |row|
+      next if row['product_id'].to_s.strip.empty?
+      product_db[row['product_id']] = row.to_h
+    end
 
-  puts "[DOWNLOAD] Request for product: #{product_id}"
+    product = product_db[product_id]
+    halt 404, 'Product not found' unless product
+    
+    download_filename = product['download_filename']
+    halt 404, 'No download available for this product' unless download_filename && !download_filename.strip.empty?
 
+    ebook_path = File.expand_path(File.join(__dir__, 'ebooks', download_filename))
+    
+    unless File.exist?(ebook_path)
+      puts "[DOWNLOAD] ❌ File not found: #{ebook_path}"
+      halt 404, 'eBook file not found'
+    end
+
+    puts "[DOWNLOAD] ✅ Serving (legacy): #{download_filename}"
+    return send_file ebook_path, filename: download_filename, type: 'application/pdf'
+  end
+  
+  # New secure token-based download
+  halt 400, 'Missing download token' unless token
+  
+  puts "[DOWNLOAD] Token request: #{token[0..8]}..."
+  
+  # Find token
+  tokens_data = read_download_tokens
+  token_record = tokens_data['tokens'].find { |t| t['token'] == token }
+  
+  halt 404, 'Invalid or expired download link' unless token_record
+  
+  # Check if token is active
+  halt 403, 'Download link has been deactivated' unless token_record['status'] == 'active'
+  
+  # Check expiry
+  expiry_time = Time.parse(token_record['expires_at'])
+  if Time.now > expiry_time
+    token_record['status'] = 'expired'
+    write_download_tokens(tokens_data)
+    halt 403, 'Download link has expired. Please contact support.'
+  end
+  
+  # Check download limit
+  if token_record['download_count'] >= token_record['max_downloads']
+    halt 403, 'Download limit reached. You have already downloaded this file 5 times.'
+  end
+  
   # Load product database
   product_db = {}
   CSV.foreach(File.join(__dir__, 'stripe', 'products.csv'), headers: true) do |row|
@@ -537,7 +734,7 @@ get '/download' do
     product_db[row['product_id']] = row.to_h
   end
 
-  product = product_db[product_id]
+  product = product_db[token_record['product_id']]
   halt 404, 'Product not found' unless product
   
   download_filename = product['download_filename']
@@ -549,8 +746,13 @@ get '/download' do
     puts "[DOWNLOAD] ❌ File not found: #{ebook_path}"
     halt 404, 'eBook file not found'
   end
-
-  puts "[DOWNLOAD] ✅ Serving: #{download_filename}"
+  
+  # Increment download count
+  token_record['download_count'] += 1
+  token_record['last_downloaded_at'] = Time.now.iso8601
+  write_download_tokens(tokens_data)
+  
+  puts "[DOWNLOAD] ✅ Serving: #{download_filename} (Download #{token_record['download_count']}/#{token_record['max_downloads']})"
   send_file ebook_path, filename: download_filename, type: 'application/pdf'
 end
 
