@@ -214,6 +214,169 @@ post '/create-checkout-session' do
 end
 
 # ============================================================================
+# MANUAL MOMO PAYMENT TRACKING
+# ============================================================================
+
+PENDING_PAYMENTS_FILE = File.join(File.dirname(__FILE__), 'pending_payments.json')
+
+# Initialize payments file if it doesn't exist
+unless File.exist?(PENDING_PAYMENTS_FILE)
+  File.write(PENDING_PAYMENTS_FILE, JSON.pretty_generate({ payments: [] }))
+end
+
+# Helper: Read pending payments
+def read_pending_payments
+  JSON.parse(File.read(PENDING_PAYMENTS_FILE))
+rescue => e
+  puts "[ERROR] Failed to read pending payments: #{e.message}"
+  { 'payments' => [] }
+end
+
+# Helper: Write pending payments
+def write_pending_payments(data)
+  File.write(PENDING_PAYMENTS_FILE, JSON.pretty_generate(data))
+rescue => e
+  puts "[ERROR] Failed to write pending payments: #{e.message}"
+  false
+end
+
+# Submit manual payment
+post '/submit-manual-payment' do
+  content_type 'application/json'
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    
+    payment = {
+      'reference' => data['reference'],
+      'product_id' => data['product_id'],
+      'product_name' => data['product_name'],
+      'amount' => data['amount'],
+      'currency' => data['currency'],
+      'phone' => data['phone'],
+      'email' => data['email'],
+      'timestamp' => data['timestamp'],
+      'status' => 'pending',
+      'created_at' => Time.now.iso8601
+    }
+    
+    payments_data = read_pending_payments
+    payments_data['payments'] << payment
+    
+    if write_pending_payments(payments_data)
+      puts "[MANUAL PAYMENT] New payment submitted: #{payment['reference']} - #{payment['amount']} FCFA"
+      { success: true, message: 'Payment submitted successfully' }.to_json
+    else
+      halt 500, { error: 'Failed to save payment' }.to_json
+    end
+  rescue => e
+    puts "[ERROR] Submit manual payment: #{e.message}"
+    halt 500, { error: e.message }.to_json
+  end
+end
+
+# Get pending payments (for admin)
+get '/admin/pending-payments' do
+  content_type 'application/json'
+  
+  # Simple auth check - you can enhance this
+  auth_token = request.env['HTTP_AUTHORIZATION']
+  unless auth_token == 'Bearer admin-secret-2024' # Change this!
+    halt 401, { error: 'Unauthorized' }.to_json
+  end
+  
+  payments_data = read_pending_payments
+  payments_data.to_json
+end
+
+# Approve payment and send download link
+post '/admin/approve-payment' do
+  content_type 'application/json'
+  
+  # Simple auth check
+  auth_token = request.env['HTTP_AUTHORIZATION']
+  unless auth_token == 'Bearer admin-secret-2024' # Change this!
+    halt 401, { error: 'Unauthorized' }.to_json
+  end
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    reference = data['reference']
+    
+    payments_data = read_pending_payments
+    payment = payments_data['payments'].find { |p| p['reference'] == reference }
+    
+    if payment
+      payment['status'] = 'approved'
+      payment['approved_at'] = Time.now.iso8601
+      
+      if write_pending_payments(payments_data)
+        puts "[ADMIN] Payment approved: #{reference}"
+        
+        # Here you would send email with download link
+        # For now, just return success
+        render_url = ENV['YOUR_DOMAIN'] || 'https://marriageducation.com'
+        download_url = "#{render_url}/download?product_id=#{payment['product_id']}&payment_method=momo&reference=#{reference}"
+        
+        {
+          success: true,
+          message: 'Payment approved',
+          download_url: download_url,
+          email: payment['email']
+        }.to_json
+      else
+        halt 500, { error: 'Failed to update payment' }.to_json
+      end
+    else
+      halt 404, { error: 'Payment not found' }.to_json
+    end
+  rescue => e
+    puts "[ERROR] Approve payment: #{e.message}"
+    halt 500, { error: e.message }.to_json
+  end
+end
+
+# Reject payment
+post '/admin/reject-payment' do
+  content_type 'application/json'
+  
+  auth_token = request.env['HTTP_AUTHORIZATION']
+  unless auth_token == 'Bearer admin-secret-2024'
+    halt 401, { error: 'Unauthorized' }.to_json
+  end
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    reference = data['reference']
+    reason = data['reason'] || 'Payment not verified'
+    
+    payments_data = read_pending_payments
+    payment = payments_data['payments'].find { |p| p['reference'] == reference }
+    
+    if payment
+      payment['status'] = 'rejected'
+      payment['rejected_at'] = Time.now.iso8601
+      payment['rejection_reason'] = reason
+      
+      if write_pending_payments(payments_data)
+        puts "[ADMIN] Payment rejected: #{reference} - #{reason}"
+        { success: true, message: 'Payment rejected' }.to_json
+      else
+        halt 500, { error: 'Failed to update payment' }.to_json
+      end
+    else
+      halt 404, { error: 'Payment not found' }.to_json
+    end
+  rescue => e
+    puts "[ERROR] Reject payment: #{e.message}"
+    halt 500, { error: e.message }.to_json
+  end
+end
+
+# ============================================================================
 # MTN MOMO PAYMENT ENDPOINT
 # ============================================================================
 
