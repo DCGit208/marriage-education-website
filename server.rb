@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/cookies'
 require 'stripe'
 require 'httparty'
 require 'json'
@@ -7,6 +8,7 @@ require 'securerandom'
 require 'base64'
 require 'time'
 require 'mail'
+require 'digest'
 
 # Load dotenv only in development
 if ENV['RACK_ENV'] != 'production' && File.exist?('.env')
@@ -111,6 +113,48 @@ def check_rate_limit(key, max_requests = 10, window_seconds = 60)
   end
   
   $rate_limit_store[key] << now
+end
+
+# ============================================================================
+# SESSION MANAGEMENT FOR ADMIN
+# ============================================================================
+
+enable :sessions
+set :session_secret, ENV['SESSION_SECRET'] || SecureRandom.hex(32)
+
+# In-memory session store (consider Redis for production)
+$admin_sessions = {}
+ADMIN_PASSWORD = ENV['ADMIN_PASSWORD'] || 'admin-secret-2024'
+SESSION_EXPIRY = 24 * 60 * 60 # 24 hours
+
+# Helper: Validate admin session
+def validate_admin_session
+  # Check both Authorization header (for API calls) and session cookie
+  auth_header = request.env['HTTP_AUTHORIZATION']
+  
+  # Support old Bearer token for backwards compatibility
+  if auth_header == "Bearer #{ADMIN_PASSWORD}"
+    return true
+  end
+  
+  # Check for session token
+  if auth_header&.start_with?('Bearer ')
+    session_token = auth_header.sub('Bearer ', '')
+    session_data = $admin_sessions[session_token]
+    
+    if session_data && Time.now.to_i < session_data[:expires_at]
+      # Extend session on activity
+      session_data[:expires_at] = Time.now.to_i + SESSION_EXPIRY
+      return true
+    else
+      # Session expired or invalid
+      $admin_sessions.delete(session_token)
+      log_security_event('expired_session_access', { session: session_token[0..8] + '...' })
+    end
+  end
+  
+  log_security_event('unauthorized_admin_access', { path: request.path_info })
+  halt 401, { error: 'Unauthorized - Please login' }.to_json
 end
 
 # Enable CORS for admin panel
@@ -287,6 +331,77 @@ post '/create-checkout-session' do
   else
     halt 400, { error: 'Invalid product_id or missing name/price for dynamic pricing' }.to_json
   end
+end
+
+# ============================================================================
+# ADMIN AUTHENTICATION ENDPOINTS
+# ============================================================================
+
+# Admin login endpoint
+post '/admin/login' do
+  content_type 'application/json'
+  
+  # Rate limit: 5 login attempts per IP per 15 minutes
+  check_rate_limit("admin_login_#{request.ip}", 5, 900)
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    password = data['password']
+    
+    if password == ADMIN_PASSWORD
+      # Generate secure session token
+      session_token = SecureRandom.urlsafe_base64(32)
+      
+      $admin_sessions[session_token] = {
+        created_at: Time.now.to_i,
+        expires_at: Time.now.to_i + SESSION_EXPIRY,
+        ip: request.ip,
+        user_agent: request.user_agent
+      }
+      
+      puts "[ADMIN] Successful login from #{request.ip}"
+      
+      {
+        success: true,
+        token: session_token,
+        expires_in: SESSION_EXPIRY,
+        message: 'Login successful'
+      }.to_json
+    else
+      log_security_event('failed_admin_login', { ip: request.ip })
+      halt 401, { error: 'Invalid password' }.to_json
+    end
+  rescue => e
+    puts "[ERROR] Admin login: #{e.message}"
+    halt 500, { error: 'Internal server error' }.to_json
+  end
+end
+
+# Admin logout endpoint
+post '/admin/logout' do
+  content_type 'application/json'
+  
+  auth_header = request.env['HTTP_AUTHORIZATION']
+  if auth_header&.start_with?('Bearer ')
+    session_token = auth_header.sub('Bearer ', '')
+    $admin_sessions.delete(session_token)
+    puts "[ADMIN] Logout: session #{session_token[0..8]}..."
+  end
+  
+  { success: true, message: 'Logged out successfully' }.to_json
+end
+
+# Admin session check endpoint
+get '/admin/session' do
+  content_type 'application/json'
+  
+  validate_admin_session
+  
+  {
+    success: true,
+    message: 'Session valid'
+  }.to_json
 end
 
 # ============================================================================
@@ -612,12 +727,8 @@ get '/admin/pending-payments' do
   # Rate limit: 60 requests per minute per IP
   check_rate_limit("admin_#{request.ip}", 60, 60)
   
-  # Simple auth check - you can enhance this
-  auth_token = request.env['HTTP_AUTHORIZATION']
-  unless auth_token == 'Bearer admin-secret-2024' # Change this!
-    log_security_event('unauthorized_admin_access', { endpoint: '/admin/pending-payments' })
-    halt 401, { error: 'Unauthorized' }.to_json
-  end
+  # Validate admin session
+  validate_admin_session
   
   payments_data = read_pending_payments
   payments_data.to_json
@@ -630,12 +741,8 @@ post '/admin/approve-payment' do
   # Rate limit: 30 approvals per minute per IP
   check_rate_limit("approve_#{request.ip}", 30, 60)
   
-  # Simple auth check
-  auth_token = request.env['HTTP_AUTHORIZATION']
-  unless auth_token == 'Bearer admin-secret-2024' # Change this!
-    log_security_event('unauthorized_approval_attempt', { endpoint: '/admin/approve-payment' })
-    halt 401, { error: 'Unauthorized' }.to_json
-  end
+  # Validate admin session
+  validate_admin_session
   
   begin
     request.body.rewind
@@ -692,10 +799,7 @@ end
 post '/admin/reject-payment' do
   content_type 'application/json'
   
-  auth_token = request.env['HTTP_AUTHORIZATION']
-  unless auth_token == 'Bearer admin-secret-2024'
-    halt 401, { error: 'Unauthorized' }.to_json
-  end
+  validate_admin_session
   
   begin
     request.body.rewind
@@ -730,10 +834,7 @@ end
 get '/admin/tokens' do
   content_type 'application/json'
   
-  auth_token = request.env['HTTP_AUTHORIZATION']
-  unless auth_token == 'Bearer admin-secret-2024'
-    halt 401, { error: 'Unauthorized' }.to_json
-  end
+  validate_admin_session
   
   tokens_data = read_download_tokens
   {
@@ -757,10 +858,7 @@ end
 get '/admin/security-logs' do
   content_type 'application/json'
   
-  auth_token = request.env['HTTP_AUTHORIZATION']
-  unless auth_token == 'Bearer admin-secret-2024'
-    halt 401, { error: 'Unauthorized' }.to_json
-  end
+  validate_admin_session
   
   # Get recent events from memory
   recent_events = $failed_attempts.last(100)
@@ -773,6 +871,169 @@ get '/admin/security-logs' do
     summary: summary,
     recent_events: recent_events.reverse # Most recent first
   }.to_json
+end
+
+# ============================================================================
+# CUSTOMER SELF-SERVICE ENDPOINTS
+# ============================================================================
+
+# Customer: Resend download link
+post '/resend-download-link' do
+  content_type 'application/json'
+  
+  # Rate limit: 3 requests per email per hour
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    email = data['email']&.downcase&.strip
+    
+    halt 400, { error: 'Email is required' }.to_json unless email
+    
+    check_rate_limit("resend_#{email}", 3, 3600)
+    
+    # Find active tokens for this email
+    tokens_data = read_download_tokens
+    user_tokens = tokens_data['tokens'].select do |t|
+      t['email']&.downcase&.strip == email && 
+      t['status'] == 'active' && 
+      Time.now < Time.parse(t['expires_at'])
+    end
+    
+    if user_tokens.empty?
+      halt 404, { 
+        error: 'No active download links found for this email. Please contact support.',
+        support_email: 'orders@marriageducation.com'
+      }.to_json
+    end
+    
+    # Send email with all active download links
+    backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+    
+    links_html = user_tokens.map do |t|
+      download_url = "#{backend_url}/download?token=#{t['token']}"
+      expiry_date = Time.parse(t['expires_at']).strftime('%B %d, %Y at %I:%M %p')
+      remaining_downloads = t['max_downloads'] - t['download_count']
+      
+      <<~HTML
+        <div style="background: #fff; padding: 15px; margin: 15px 0; border-left: 4px solid #FFCB05;">
+          <strong>#{t['product_name']}</strong><br>
+          <a href="#{download_url}" style="color: #000; font-weight: bold;">📥 Download eBook</a><br>
+          <small style="color: #666;">
+            Expires: #{expiry_date}<br>
+            Remaining downloads: #{remaining_downloads}/#{t['max_downloads']}
+          </small>
+        </div>
+      HTML
+    end.join
+    
+    email_html = <<~HTML
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #FFCB05; color: #000; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>📥 Your Download Links</h2>
+          </div>
+          <div class="content">
+            <p>Here are your active download links:</p>
+            #{links_html}
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">
+              If you need further assistance, please contact us at orders@marriageducation.com
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    HTML
+    
+    if send_email(email, '📥 Your Download Links - Marriage Education', email_html)
+      {
+        success: true,
+        message: "Download links have been sent to #{email}",
+        links_sent: user_tokens.length
+      }.to_json
+    else
+      halt 500, { error: 'Failed to send email. Please try again or contact support.' }.to_json
+    end
+    
+  rescue => e
+    puts "[ERROR] Resend link: #{e.message}"
+    halt 500, { error: 'Internal server error' }.to_json
+  end
+end
+
+# Admin: Get dashboard statistics
+get '/admin/dashboard-stats' do
+  content_type 'application/json'
+  
+  validate_admin_session
+  
+  begin
+    payments_data = read_pending_payments
+    tokens_data = read_download_tokens
+    
+    payments = payments_data['payments']
+    tokens = tokens_data['tokens']
+    
+    # Calculate statistics
+    total_payments = payments.length
+    pending_payments = payments.count { |p| p['status'] == 'pending' }
+    approved_payments = payments.count { |p| p['status'] == 'approved' }
+    rejected_payments = payments.count { |p| p['status'] == 'rejected' }
+    
+    total_revenue = approved_payments.reduce(0) { |sum, p| sum + (p['amount'].to_f || 0) }
+    
+    active_tokens = tokens.count { |t| t['status'] == 'active' && Time.now < Time.parse(t['expires_at']) }
+    expired_tokens = tokens.count { |t| Time.now >= Time.parse(t['expires_at']) }
+    
+    total_downloads = tokens.reduce(0) { |sum, t| sum + (t['download_count'] || 0) }
+    
+    # Product breakdown
+    products = payments.group_by { |p| p['product_name'] }
+      .transform_values { |ps| { count: ps.length, revenue: ps.sum { |p| p['amount'].to_f || 0 } } }
+      .sort_by { |_, v| -v[:count] }
+      .to_h
+    
+    # Recent activity (last 7 days)
+    week_ago = Time.now - (7 * 24 * 60 * 60)
+    recent_payments = payments.count { |p| Time.parse(p['created_at']) > week_ago }
+    
+    {
+      payments: {
+        total: total_payments,
+        pending: pending_payments,
+        approved: approved_payments,
+        rejected: rejected_payments,
+        recent_week: recent_payments
+      },
+      revenue: {
+        total: total_revenue,
+        currency: 'FCFA'
+      },
+      tokens: {
+        active: active_tokens,
+        expired: expired_tokens,
+        total_downloads: total_downloads
+      },
+      products: products,
+      security: {
+        total_events: $failed_attempts.length,
+        recent_24h: $failed_attempts.count { |e| Time.parse(e[:timestamp]) > Time.now - 86400 }
+      }
+    }.to_json
+  rescue => e
+    puts "[ERROR] Dashboard stats: #{e.message}"
+    halt 500, { error: e.message }.to_json
+  end
 end
 
 # ============================================================================
