@@ -519,6 +519,7 @@
             alert(`✅ Payment Approved!\n\n📧 Email sent automatically to: ${email}\n\nDownload link (also copied to clipboard):\n${result.download_url}${expiryInfo}`);
           } else {
             alert(`⚠️ Payment Approved BUT Email Failed!\n\n❗ IMPORTANT: Send this link to customer manually:\n${result.download_url}\n\nEmail: ${email}${expiryInfo}\n\n(Link copied to clipboard)`);
+          }
         } else {
           showAlert('Failed to approve payment', 'error');
         }
