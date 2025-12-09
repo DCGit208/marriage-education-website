@@ -244,6 +244,10 @@ FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
 
 # Configure Mail gem for SMTP
 if SMTP_USERNAME && SMTP_PASSWORD
+  # Port 465 requires SSL/TLS, port 587 uses STARTTLS
+  use_ssl = SMTP_PORT.to_i == 465
+  use_starttls = SMTP_PORT.to_i == 587
+  
   Mail.defaults do
     delivery_method :smtp, {
       address: SMTP_HOST,
@@ -251,11 +255,14 @@ if SMTP_USERNAME && SMTP_PASSWORD
       domain: 'marriageducation.com',
       user_name: SMTP_USERNAME,
       password: SMTP_PASSWORD,
-      authentication: 'plain',
-      enable_starttls_auto: true
+      authentication: 'login',  # Changed from 'plain' to 'login' for iPage
+      enable_starttls_auto: use_starttls,
+      ssl: use_ssl,
+      tls: use_ssl,
+      openssl_verify_mode: 'none'  # Disable SSL verification for compatibility
     }
   end
-  puts "[EMAIL] ✅ SMTP configured: #{SMTP_HOST}:#{SMTP_PORT} as #{SMTP_USERNAME}"
+  puts "[EMAIL] ✅ SMTP configured: #{SMTP_HOST}:#{SMTP_PORT} as #{SMTP_USERNAME} (SSL: #{use_ssl}, STARTTLS: #{use_starttls})"
 else
   puts "[EMAIL] ⚠️  SMTP not configured - emails will not be sent"
 end
