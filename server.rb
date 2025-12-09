@@ -58,12 +58,73 @@ set :public_folder, File.join(File.dirname(__FILE__), 'public')
 $stdout.sync = true
 $stderr.sync = true
 
+# ============================================================================
+# SECURITY & RATE LIMITING
+# ============================================================================
+
+# In-memory rate limiting store (consider Redis for production)
+$rate_limit_store = {}
+$failed_attempts = []
+SECURITY_LOG_FILE = File.join(File.dirname(__FILE__), 'security_log.json')
+
+# Helper: Log security events
+def log_security_event(event_type, details = {})
+  event = {
+    timestamp: Time.now.iso8601,
+    type: event_type,
+    ip: request.ip,
+    user_agent: request.user_agent,
+    path: request.path_info,
+    method: request.request_method,
+    details: details
+  }
+  
+  $failed_attempts << event
+  
+  # Keep only last 1000 events in memory
+  $failed_attempts = $failed_attempts.last(1000) if $failed_attempts.length > 1000
+  
+  # Also write to file
+  begin
+    existing_logs = File.exist?(SECURITY_LOG_FILE) ? JSON.parse(File.read(SECURITY_LOG_FILE)) : []
+    existing_logs << event
+    existing_logs = existing_logs.last(5000) # Keep last 5000 in file
+    File.write(SECURITY_LOG_FILE, JSON.pretty_generate(existing_logs))
+  rescue => e
+    puts "[SECURITY] Failed to write security log: #{e.message}"
+  end
+  
+  puts "[SECURITY] #{event_type.upcase}: #{details.inspect} from #{request.ip}"
+end
+
+# Helper: Check rate limit
+def check_rate_limit(key, max_requests = 10, window_seconds = 60)
+  now = Time.now.to_i
+  $rate_limit_store[key] ||= []
+  
+  # Remove old requests outside the time window
+  $rate_limit_store[key].reject! { |timestamp| now - timestamp > window_seconds }
+  
+  if $rate_limit_store[key].length >= max_requests
+    log_security_event('rate_limit_exceeded', { key: key, limit: max_requests, window: window_seconds })
+    halt 429, { error: 'Too many requests. Please try again later.' }.to_json
+  end
+  
+  $rate_limit_store[key] << now
+end
+
 # Enable CORS for admin panel
 before do
   headers 'Access-Control-Allow-Origin' => '*'
   headers 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS'
   headers 'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
   headers 'Access-Control-Max-Age' => '86400'
+  
+  # Security headers
+  headers 'X-Content-Type-Options' => 'nosniff'
+  headers 'X-Frame-Options' => 'SAMEORIGIN'
+  headers 'X-XSS-Protection' => '1; mode=block'
+  headers 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains' if request.secure?
   
   # Handle preflight OPTIONS requests
   if request.request_method == 'OPTIONS'
@@ -308,6 +369,63 @@ rescue => e
   false
 end
 
+# Helper: Send admin notification email
+def send_admin_notification(payment)
+  return unless SMTP_USERNAME && SMTP_PASSWORD
+  
+  admin_email = FROM_EMAIL # Send to admin email
+  subject = "🔔 New Payment Pending Approval - #{payment['reference']}"
+  
+  html_content = <<~HTML
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
+        .header { background: #FF6B6B; color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #fff; padding: 20px; border-radius: 0 0 8px 8px; }
+        .info { background: #f8f9fa; padding: 15px; border-left: 4px solid #FF6B6B; margin: 15px 0; }
+        .button { display: inline-block; background: #FF6B6B; color: #fff !important; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 15px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>🔔 New Payment Awaiting Approval</h2>
+        </div>
+        <div class="content">
+          <p><strong>A new manual MOMO payment has been submitted and requires your approval.</strong></p>
+          
+          <div class="info">
+            <strong>Payment Details:</strong><br>
+            Reference: <strong>#{payment['reference']}</strong><br>
+            Product: <strong>#{payment['product_name']}</strong><br>
+            Amount: <strong>#{payment['amount']} #{payment['currency']}</strong><br>
+            Customer Email: <strong>#{payment['email']}</strong><br>
+            Phone: <strong>#{payment['phone']}</strong><br>
+            Submitted: <strong>#{payment['created_at']}</strong>
+          </div>
+          
+          <p style="text-align: center;">
+            <a href="https://marriageducation.com/admin-payments.html" class="button">
+              👉 Review & Approve Payment
+            </a>
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            Login to your admin panel to verify the payment and approve or reject it.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  HTML
+  
+  send_email(admin_email, subject, html_content)
+end
+
 # Helper: Generate secure download token
 def generate_download_token(payment)
   token = SecureRandom.urlsafe_base64(32)
@@ -441,6 +559,9 @@ end
 post '/submit-manual-payment' do
   content_type 'application/json'
   
+  # Rate limit: 5 submissions per IP per 5 minutes
+  check_rate_limit("submit_payment_#{request.ip}", 5, 300)
+  
   begin
     request.body.rewind
     data = JSON.parse(request.body.read)
@@ -463,6 +584,17 @@ post '/submit-manual-payment' do
     
     if write_pending_payments(payments_data)
       puts "[MANUAL PAYMENT] New payment submitted: #{payment['reference']} - #{payment['amount']} FCFA"
+      
+      # Send admin notification email (non-blocking)
+      Thread.new do
+        begin
+          send_admin_notification(payment)
+          puts "[ADMIN NOTIFICATION] Email sent for payment: #{payment['reference']}"
+        rescue => e
+          puts "[ADMIN NOTIFICATION] Failed to send: #{e.message}"
+        end
+      end
+      
       { success: true, message: 'Payment submitted successfully' }.to_json
     else
       halt 500, { error: 'Failed to save payment' }.to_json
@@ -477,9 +609,13 @@ end
 get '/admin/pending-payments' do
   content_type 'application/json'
   
+  # Rate limit: 60 requests per minute per IP
+  check_rate_limit("admin_#{request.ip}", 60, 60)
+  
   # Simple auth check - you can enhance this
   auth_token = request.env['HTTP_AUTHORIZATION']
   unless auth_token == 'Bearer admin-secret-2024' # Change this!
+    log_security_event('unauthorized_admin_access', { endpoint: '/admin/pending-payments' })
     halt 401, { error: 'Unauthorized' }.to_json
   end
   
@@ -491,9 +627,13 @@ end
 post '/admin/approve-payment' do
   content_type 'application/json'
   
+  # Rate limit: 30 approvals per minute per IP
+  check_rate_limit("approve_#{request.ip}", 30, 60)
+  
   # Simple auth check
   auth_token = request.env['HTTP_AUTHORIZATION']
   unless auth_token == 'Bearer admin-secret-2024' # Change this!
+    log_security_event('unauthorized_approval_attempt', { endpoint: '/admin/approve-payment' })
     halt 401, { error: 'Unauthorized' }.to_json
   end
   
@@ -610,6 +750,28 @@ get '/admin/tokens' do
         max_downloads: t['max_downloads']
       }
     }
+  }.to_json
+end
+
+# Admin: Get security logs
+get '/admin/security-logs' do
+  content_type 'application/json'
+  
+  auth_token = request.env['HTTP_AUTHORIZATION']
+  unless auth_token == 'Bearer admin-secret-2024'
+    halt 401, { error: 'Unauthorized' }.to_json
+  end
+  
+  # Get recent events from memory
+  recent_events = $failed_attempts.last(100)
+  
+  # Group by type for summary
+  summary = recent_events.group_by { |e| e[:type] }.transform_values(&:count)
+  
+  {
+    total_events: recent_events.length,
+    summary: summary,
+    recent_events: recent_events.reverse # Most recent first
   }.to_json
 end
 
@@ -762,6 +924,9 @@ end
 # ============================================================================
 
 get '/download' do
+  # Rate limit: 10 download attempts per IP per minute
+  check_rate_limit("download_#{request.ip}", 10, 60)
+  
   token = params['token']
   
   # Legacy support for old links (will be removed later)
@@ -802,21 +967,41 @@ get '/download' do
   tokens_data = read_download_tokens
   token_record = tokens_data['tokens'].find { |t| t['token'] == token }
   
-  halt 404, 'Invalid or expired download link' unless token_record
+  unless token_record
+    log_security_event('invalid_download_token', { token: token[0..8] + '...', reason: 'token_not_found' })
+    halt 404, 'Invalid or expired download link'
+  end
   
   # Check if token is active
-  halt 403, 'Download link has been deactivated' unless token_record['status'] == 'active'
+  unless token_record['status'] == 'active'
+    log_security_event('inactive_token_access', { 
+      token: token[0..8] + '...', 
+      status: token_record['status'],
+      email: token_record['email']
+    })
+    halt 403, 'Download link has been deactivated'
+  end
   
   # Check expiry
   expiry_time = Time.parse(token_record['expires_at'])
   if Time.now > expiry_time
     token_record['status'] = 'expired'
     write_download_tokens(tokens_data)
+    log_security_event('expired_token_access', { 
+      token: token[0..8] + '...', 
+      expired_at: token_record['expires_at'],
+      email: token_record['email']
+    })
     halt 403, 'Download link has expired. Please contact support.'
   end
   
   # Check download limit
   if token_record['download_count'] >= token_record['max_downloads']
+    log_security_event('download_limit_exceeded', { 
+      token: token[0..8] + '...', 
+      count: token_record['download_count'],
+      email: token_record['email']
+    })
     halt 403, 'Download limit reached. You have already downloaded this file 5 times.'
   end
   
