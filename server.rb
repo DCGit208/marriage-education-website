@@ -518,9 +518,9 @@ post '/admin/approve-payment' do
         tokens['tokens'] << token_data
         write_download_tokens(tokens)
         
-        # Build download URL with token
-        render_url = ENV['YOUR_DOMAIN'] || 'https://marriageducation.com'
-        download_url = "#{render_url}/download?token=#{token_data['token']}"
+        # Build download URL with token - must point to Render backend
+        backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+        download_url = "#{backend_url}/download?token=#{token_data['token']}"
         
         # Send email automatically
         expiry_date = Time.parse(token_data['expires_at']).strftime('%B %d, %Y at %I:%M %p')
