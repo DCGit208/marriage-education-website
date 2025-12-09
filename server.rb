@@ -58,6 +58,19 @@ set :public_folder, File.join(File.dirname(__FILE__), 'public')
 $stdout.sync = true
 $stderr.sync = true
 
+# Enable CORS for admin panel
+before do
+  headers 'Access-Control-Allow-Origin' => '*'
+  headers 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS'
+  headers 'Access-Control-Allow-Headers' => 'Content-Type, Authorization'
+  headers 'Access-Control-Max-Age' => '86400'
+  
+  # Handle preflight OPTIONS requests
+  if request.request_method == 'OPTIONS'
+    halt 200
+  end
+end
+
 puts "=" * 80
 puts "🚀 UNIFIED PAYMENT SERVER STARTING"
 puts "=" * 80
