@@ -1,5 +1,4 @@
 require 'sinatra'
-require 'sinatra/cookies'
 require 'stripe'
 require 'httparty'
 require 'json'
@@ -118,9 +117,6 @@ end
 # ============================================================================
 # SESSION MANAGEMENT FOR ADMIN
 # ============================================================================
-
-enable :sessions
-set :session_secret, ENV['SESSION_SECRET'] || SecureRandom.hex(32)
 
 # In-memory session store (consider Redis for production)
 $admin_sessions = {}
