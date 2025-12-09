@@ -983,10 +983,11 @@ get '/admin/dashboard-stats' do
     # Calculate statistics
     total_payments = payments.length
     pending_payments = payments.count { |p| p['status'] == 'pending' }
-    approved_payments = payments.count { |p| p['status'] == 'approved' }
+    approved_list = payments.select { |p| p['status'] == 'approved' }
+    approved_payments = approved_list.count
     rejected_payments = payments.count { |p| p['status'] == 'rejected' }
     
-    total_revenue = approved_payments.reduce(0) { |sum, p| sum + (p['amount'].to_f || 0) }
+    total_revenue = approved_list.reduce(0) { |sum, p| sum + (p['amount'].to_f || 0) }
     
     active_tokens = tokens.count { |t| t['status'] == 'active' && Time.now < Time.parse(t['expires_at']) }
     expired_tokens = tokens.count { |t| Time.now >= Time.parse(t['expires_at']) }
