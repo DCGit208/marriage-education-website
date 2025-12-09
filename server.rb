@@ -586,6 +586,33 @@ post '/admin/reject-payment' do
   end
 end
 
+# Admin: Get all download tokens (for debugging)
+get '/admin/tokens' do
+  content_type 'application/json'
+  
+  auth_token = request.env['HTTP_AUTHORIZATION']
+  unless auth_token == 'Bearer admin-secret-2024'
+    halt 401, { error: 'Unauthorized' }.to_json
+  end
+  
+  tokens_data = read_download_tokens
+  {
+    total: tokens_data['tokens'].length,
+    tokens: tokens_data['tokens'].map { |t| 
+      {
+        token: t['token'][0..10] + '...',  # Show first 11 chars for security
+        product_id: t['product_id'],
+        email: t['email'],
+        status: t['status'] || 'active',
+        created_at: t['created_at'],
+        expires_at: t['expires_at'],
+        download_count: t['download_count'],
+        max_downloads: t['max_downloads']
+      }
+    }
+  }.to_json
+end
+
 # ============================================================================
 # MTN MOMO PAYMENT ENDPOINT
 # ============================================================================
