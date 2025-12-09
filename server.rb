@@ -332,6 +332,10 @@ def send_email(to_email, subject, html_content)
   return false unless SMTP_USERNAME && SMTP_PASSWORD
   
   begin
+    puts "[EMAIL] 📤 Attempting to send email to: #{to_email}"
+    puts "[EMAIL] 📤 From: #{FROM_EMAIL}"
+    puts "[EMAIL] 📤 Subject: #{subject}"
+    
     mail = Mail.new do
       from     "Marriage Education <#{FROM_EMAIL}>"
       to       to_email
@@ -343,12 +347,25 @@ def send_email(to_email, subject, html_content)
       end
     end
     
-    mail.deliver!
-    puts "[EMAIL] ✅ Sent to #{to_email} via SMTP"
+    # Get the delivery response
+    response = mail.deliver!
+    puts "[EMAIL] ✅ SMTP Response: #{response.inspect}"
+    puts "[EMAIL] ✅ Successfully sent to #{to_email}"
     true
+  rescue Net::SMTPAuthenticationError => e
+    puts "[EMAIL] ❌ SMTP Authentication Failed: #{e.message}"
+    puts "[EMAIL] ❌ Check username/password for #{SMTP_USERNAME}"
+    false
+  rescue Net::SMTPServerBusy => e
+    puts "[EMAIL] ❌ SMTP Server Busy: #{e.message}"
+    false
+  rescue Net::SMTPFatalError => e
+    puts "[EMAIL] ❌ SMTP Fatal Error: #{e.message}"
+    puts "[EMAIL] ❌ This usually means the email was rejected by the server"
+    false
   rescue => e
-    puts "[EMAIL] ❌ Error: #{e.message}"
-    puts "[EMAIL] ❌ Backtrace: #{e.backtrace.first(3).join(' | ')}"
+    puts "[EMAIL] ❌ General Error: #{e.class.name} - #{e.message}"
+    puts "[EMAIL] ❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
     false
   end
 end
