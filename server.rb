@@ -336,10 +336,23 @@ def send_email(to_email, subject, html_content)
     puts "[EMAIL] 📤 From: #{FROM_EMAIL}"
     puts "[EMAIL] 📤 Subject: #{subject}"
     
+    # Generate plain text version from HTML
+    text_content = html_content
+      .gsub(/<style>.*?<\/style>/m, '')
+      .gsub(/<[^>]+>/, ' ')
+      .gsub(/\s+/, ' ')
+      .strip
+    
     mail = Mail.new do
       from     "Marriage Education <#{FROM_EMAIL}>"
       to       to_email
       subject  subject
+      reply_to FROM_EMAIL
+      
+      text_part do
+        content_type 'text/plain; charset=UTF-8'
+        body text_content
+      end
       
       html_part do
         content_type 'text/html; charset=UTF-8'
