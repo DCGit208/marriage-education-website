@@ -187,10 +187,58 @@ post '/webhooks' do
   when 'checkout.session.completed'
     session = event['data']['object']
     puts "[WEBHOOK] ✅ Payment succeeded for session: #{session['id']}"
-    puts "[WEBHOOK] Customer email: #{session['customer_details']['email']}"
     
-    # TODO: Fulfill the order here (send download link, update database, etc.)
-    # Example: send_download_email(session)
+    customer_email = session['customer_details']['email']
+    puts "[WEBHOOK] Customer email: #{customer_email}"
+    
+    # Get the price_id and product info
+    line_items = Stripe::Checkout::Session.list_line_items(session['id'], limit: 1)
+    price_id = line_items.data[0].price.id if line_items.data[0]
+    amount_total = session['amount_total'] / 100.0 # Convert from cents
+    
+    product_id = nil
+    product_name = nil
+    download_file = nil
+    
+    if price_id
+      CSV.foreach(File.join(__dir__, 'products.csv'), headers: true) do |row|
+        if row['stripe_price_id'] == price_id
+          product_id = row['product_id']
+          product_name = row['product_name']
+          download_file = row['download_file']
+          break
+        end
+      end
+    end
+    
+    if product_id && download_file && customer_email
+      begin
+        # Call main server to create download token and send emails
+        main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriage-education-website.onrender.com'
+        
+        response = HTTParty.post("#{main_server_url}/stripe/fulfill-order",
+          headers: { 'Content-Type' => 'application/json' },
+          body: {
+            customer_email: customer_email,
+            product_id: product_id,
+            product_name: product_name,
+            download_file: download_file,
+            amount: amount_total,
+            stripe_session_id: session['id']
+          }.to_json
+        )
+        
+        if response.success?
+          puts "[WEBHOOK] ✅ Order fulfilled successfully for #{customer_email}"
+        else
+          puts "[WEBHOOK] ❌ Failed to fulfill order: #{response.code} - #{response.body}"
+        end
+      rescue => e
+        puts "[WEBHOOK] ❌ Error fulfilling order: #{e.message}"
+      end
+    else
+      puts "[WEBHOOK] ⚠️  Missing data - product_id: #{product_id}, download_file: #{download_file}, email: #{customer_email}"
+    end
     
   when 'payment_intent.succeeded'
     payment_intent = event['data']['object']
