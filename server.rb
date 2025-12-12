@@ -414,10 +414,26 @@ SMTP_USERNAME = ENV['SMTP_USERNAME']
 SMTP_PASSWORD = ENV['SMTP_PASSWORD']
 FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
 
-# WhatsApp Configuration (FREE - CallMeBot API)
+# Telegram Configuration (FREE - for admin notifications)
+TELEGRAM_ENABLED = ENV['TELEGRAM_BOT_TOKEN'] && ENV['TELEGRAM_CHAT_ID']
+TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
+TELEGRAM_CHAT_ID = ENV['TELEGRAM_CHAT_ID']
+
+if TELEGRAM_ENABLED
+  puts "[TELEGRAM] ✅ Enabled - Admin notifications active"
+else
+  puts "[TELEGRAM] ⚠️  Disabled - Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to enable"
+end
+
+# WhatsApp Configuration (FREE - CallMeBot API for customer download links)
 WHATSAPP_ENABLED = ENV['CALLMEBOT_API_KEY'] && !ENV['CALLMEBOT_API_KEY'].empty?
 CALLMEBOT_API_KEY = ENV['CALLMEBOT_API_KEY']
-ADMIN_WHATSAPP = ENV['ADMIN_WHATSAPP'] || '237677604100' # Without + prefix for CallMeBot
+
+if WHATSAPP_ENABLED
+  puts "[WHATSAPP] ✅ Enabled - Customer download links active"
+else
+  puts "[WHATSAPP] ⚠️  Disabled - Set CALLMEBOT_API_KEY to enable customer WhatsApp"
+end
 
 # Configure Mail gem for SMTP
 if SMTP_USERNAME && SMTP_PASSWORD
@@ -541,20 +557,20 @@ def send_admin_notification(payment)
   
   send_email(admin_email, subject, html_content)
   
-  # Send WhatsApp notification to admin
-  if WHATSAPP_ENABLED
-    whatsapp_msg = <<~MSG
+  # Send Telegram notification to admin
+  if TELEGRAM_ENABLED
+    telegram_msg = <<~MSG
 🔔 *New Payment Pending Approval*
 
-Reference: #{payment['reference']}
-Product: #{payment['product_name']}
+Reference: `#{payment['reference']}`
+Product: *#{payment['product_name']}*
 Amount: #{payment['amount']} #{payment['currency']}
 Customer: #{payment['email']}
 Phone: #{payment['phone']}
 
-👉 Review at: https://marriageducation.com/admin-payments.html
+👉 [Review & Approve](https://marriageducation.com/admin-payments.html)
     MSG
-    send_whatsapp(ADMIN_WHATSAPP, whatsapp_msg)
+    send_telegram(telegram_msg)
   end
 end
 
@@ -633,29 +649,59 @@ def send_email(to_email, subject, html_content)
   end
 end
 
-# Helper: Send WhatsApp message via CallMeBot (FREE)
-def send_whatsapp(to_number, message)
-  return false unless WHATSAPP_ENABLED
+# Helper: Send Telegram message (FREE - for admin notifications)
+def send_telegram(message)
+  return false unless TELEGRAM_ENABLED
   
-  # For admin notifications only (CallMeBot can only send to your own number)
-  phone = ADMIN_WHATSAPP.to_s.strip.gsub(/[^0-9]/, '') # Remove + and spaces
-  
-  puts "[WHATSAPP] 📱 Sending to: +#{phone}"
+  puts "[TELEGRAM] 📱 Sending notification..."
   
   begin
-    # CallMeBot API - completely FREE, no credit card needed
+    url = "https://api.telegram.org/bot#{TELEGRAM_BOT_TOKEN}/sendMessage"
+    
+    response = HTTParty.post(url,
+      body: {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      }
+    )
+    
+    if response.success?
+      puts "[TELEGRAM] ✅ Message sent successfully"
+      true
+    else
+      puts "[TELEGRAM] ❌ Failed: #{response.code} - #{response.body}"
+      false
+    end
+  rescue => e
+    puts "[TELEGRAM] ❌ Error: #{e.message}"
+    false
+  end
+end
+
+# Helper: Send WhatsApp to customer (FREE - CallMeBot)
+def send_customer_whatsapp(phone, message)
+  return false unless WHATSAPP_ENABLED && phone && !phone.to_s.empty?
+  
+  # Clean phone number - remove +, spaces, dashes
+  clean_phone = phone.to_s.strip.gsub(/[^0-9]/, '')
+  
+  puts "[WHATSAPP] 📱 Sending to customer: +#{clean_phone}"
+  
+  begin
+    # CallMeBot WhatsApp API - FREE
     url = "https://api.callmebot.com/whatsapp.php"
     
     response = HTTParty.get(url,
       query: {
-        phone: phone,
+        phone: clean_phone,
         text: message,
         apikey: CALLMEBOT_API_KEY
       }
     )
     
     if response.success? && response.body.include?('success')
-      puts "[WHATSAPP] ✅ Message sent successfully"
+      puts "[WHATSAPP] ✅ Message sent to customer successfully"
       true
     else
       puts "[WHATSAPP] ❌ Failed: #{response.code} - #{response.body}"
@@ -665,18 +711,6 @@ def send_whatsapp(to_number, message)
     puts "[WHATSAPP] ❌ Error: #{e.message}"
     false
   end
-end
-
-# Helper: Send WhatsApp to customer (FREE - using wa.me link in message)
-def send_customer_whatsapp_notification(phone, message)
-  # Since CallMeBot only sends to your own number, we'll send admin a notification
-  # that includes a wa.me link to easily contact the customer
-  return false unless WHATSAPP_ENABLED && phone && !phone.to_s.empty?
-  
-  customer_phone = phone.to_s.strip.gsub(/[^0-9]/, '')
-  admin_msg = "#{message}\n\n📱 Contact customer: https://wa.me/#{customer_phone}"
-  
-  send_whatsapp(ADMIN_WHATSAPP, admin_msg)
 end
 
 # Helper: Generate download email HTML
@@ -837,23 +871,43 @@ post '/admin/approve-payment' do
         email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
         email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
         
-        # Send WhatsApp notification (admin gets notified with customer contact)
+        # Send WhatsApp download link to CUSTOMER
         whatsapp_sent = false
         if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
           whatsapp_msg = <<~MSG
-✅ *Payment Approved - Send to Customer*
+📚 *Marriage Education - Payment Approved*
 
-Customer: #{payment['email']}
-Phone: #{payment['phone']}
-Product: #{payment['product_name']}
-Amount: #{payment['amount']} #{payment['currency']}
+Hi! Your payment has been approved.
 
-📥 Download Link:
+✅ Product: #{payment['product_name']}
+💵 Amount: #{payment['amount']} #{payment['currency']}
+
+📥 *Download your eBook here:*
 #{download_url}
 
-Valid: #{expiry_date} (5 downloads)
+⏰ Valid until: #{expiry_date}
+📊 Downloads allowed: 5 times
+
+Thank you for your purchase!
           MSG
-          whatsapp_sent = send_customer_whatsapp_notification(payment['phone'], whatsapp_msg)
+          whatsapp_sent = send_customer_whatsapp(payment['phone'], whatsapp_msg)
+        end
+        
+        # Send Telegram notification to ADMIN that payment was approved
+        if TELEGRAM_ENABLED
+          admin_msg = <<~MSG
+✅ *Payment Approved & Sent*
+
+Reference: `#{payment['reference']}`
+Customer: #{payment['email']}
+Phone: #{payment['phone']}
+Product: *#{payment['product_name']}*
+Amount: #{payment['amount']} #{payment['currency']}
+
+📧 Email sent: #{email_sent ? '✅' : '❌'}
+📱 WhatsApp sent: #{whatsapp_sent ? '✅' : '❌'}
+          MSG
+          send_telegram(admin_msg)
         end
         
         {
@@ -1013,19 +1067,19 @@ post '/stripe/fulfill-order' do
       admin_email_sent = send_email(admin_email, "💰 New Stripe Purchase - #{product_name}", admin_notification_html)
       puts "[STRIPE FULFILLMENT] Admin notification sent: #{admin_email_sent}"
       
-      # Send WhatsApp notification to admin
-      if WHATSAPP_ENABLED
-        whatsapp_msg = <<~MSG
+      # Send Telegram notification to admin
+      if TELEGRAM_ENABLED
+        telegram_msg = <<~MSG
 💰 *New Stripe Purchase*
 
-Product: #{product_name}
+Product: *#{product_name}*
 Amount: $#{amount}
 Customer: #{customer_email}
 
 ✅ Download link sent automatically
-Session: #{stripe_session_id}
+Session: `#{stripe_session_id}`
         MSG
-        send_whatsapp(ADMIN_WHATSAPP, whatsapp_msg)
+        send_telegram(telegram_msg)
       end
     rescue => e
       puts "[STRIPE FULFILLMENT] Failed to send admin notification: #{e.message}"
