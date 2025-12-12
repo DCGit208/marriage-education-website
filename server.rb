@@ -826,6 +826,150 @@ post '/admin/reject-payment' do
   end
 end
 
+# ============================================================================
+# STRIPE FULFILLMENT ENDPOINT
+# ============================================================================
+
+# Fulfill Stripe order - Called by Stripe webhook to send download link
+post '/stripe/fulfill-order' do
+  content_type 'application/json'
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    
+    customer_email = data['customer_email']
+    product_id = data['product_id']
+    product_name = data['product_name']
+    download_file = data['download_file']
+    amount = data['amount']
+    stripe_session_id = data['stripe_session_id']
+    
+    puts "[STRIPE FULFILLMENT] Processing order for #{customer_email}"
+    puts "[STRIPE FULFILLMENT] Product: #{product_name} (#{product_id})"
+    
+    # Generate secure download token (same as manual payment approval)
+    token_data = {
+      'token' => SecureRandom.hex(32),
+      'product_id' => product_id,
+      'product_name' => product_name,
+      'download_file' => download_file,
+      'email' => customer_email,
+      'created_at' => Time.now.iso8601,
+      'expires_at' => (Time.now + (30 * 24 * 60 * 60)).iso8601, # 30 days
+      'max_downloads' => 5,
+      'download_count' => 0,
+      'status' => 'active',
+      'payment_method' => 'stripe',
+      'stripe_session_id' => stripe_session_id
+    }
+    
+    # Save token to database
+    tokens = read_download_tokens
+    tokens['tokens'] << token_data
+    write_download_tokens(tokens)
+    
+    # Build download URL - must point to Render backend
+    backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+    download_url = "#{backend_url}/download?token=#{token_data['token']}"
+    
+    # Send download email to customer
+    expiry_date = Time.parse(token_data['expires_at']).strftime('%B %d, %Y at %I:%M %p')
+    email_html = generate_download_email(product_name, download_url, expiry_date)
+    customer_email_sent = send_email(customer_email, '📥 Your eBook is Ready to Download', email_html)
+    
+    puts "[STRIPE FULFILLMENT] Customer email sent: #{customer_email_sent}"
+    
+    # Send admin notification email
+    admin_email_sent = false
+    begin
+      admin_notification_html = <<~HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #000; color: #FFCB05; padding: 20px; text-align: center; }
+            .content { background: #f8f9fa; padding: 20px; }
+            .info-box { background: #fff; padding: 15px; border-left: 4px solid #000; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>💰 New Stripe Purchase!</h2>
+            </div>
+            <div class="content">
+              <div class="info-box">
+                <strong>💳 Payment Method:</strong> Stripe<br>
+                <strong>📧 Customer Email:</strong> #{customer_email}<br>
+                <strong>📚 Product:</strong> #{product_name}<br>
+                <strong>💵 Amount:</strong> #{amount} USD<br>
+                <strong>🔑 Session ID:</strong> #{stripe_session_id}<br>
+                <strong>⏰ Time:</strong> #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}<br>
+                <strong>✅ Status:</strong> Automatically Approved & Fulfilled
+              </div>
+              
+              <p><strong>Download link sent to customer:</strong><br>
+              #{download_url}</p>
+              
+              <p>The customer has been automatically sent their download link via email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      HTML
+      
+      admin_email = ENV['ADMIN_EMAIL'] || 'achugustave@gmail.com'
+      admin_email_sent = send_email(admin_email, "💰 New Stripe Purchase - #{product_name}", admin_notification_html)
+      puts "[STRIPE FULFILLMENT] Admin notification sent: #{admin_email_sent}"
+    rescue => e
+      puts "[STRIPE FULFILLMENT] Failed to send admin notification: #{e.message}"
+    end
+    
+    {
+      success: true,
+      message: 'Order fulfilled successfully',
+      token: token_data['token'],
+      download_url: download_url,
+      customer_email_sent: customer_email_sent,
+      admin_email_sent: admin_email_sent
+    }.to_json
+    
+  rescue => e
+    puts "[STRIPE FULFILLMENT ERROR] #{e.message}"
+    puts e.backtrace.join("\n")
+    halt 500, { error: e.message }.to_json
+  end
+end
+
+# Get download token by Stripe session ID (for immediate download after payment)
+get '/stripe/token-by-session' do
+  content_type 'application/json'
+  
+  session_id = params['session_id']
+  
+  unless session_id
+    halt 400, { error: 'session_id required' }.to_json
+  end
+  
+  tokens = read_download_tokens
+  token = tokens['tokens'].find { |t| t['stripe_session_id'] == session_id }
+  
+  if token
+    {
+      success: true,
+      token: token['token'],
+      product_name: token['product_name'],
+      expires_at: token['expires_at']
+    }.to_json
+  else
+    halt 404, { error: 'Token not found for this session' }.to_json
+  end
+end
+
 # Admin: Get all download tokens (for debugging)
 get '/admin/tokens' do
   content_type 'application/json'

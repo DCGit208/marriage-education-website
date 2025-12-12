@@ -279,9 +279,25 @@ get '/session-status' do
     end
   end
 
+  # Get download token from main server if payment is complete
+  download_token = nil
+  if session.status == 'complete'
+    begin
+      main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriage-education-website.onrender.com'
+      response = HTTParty.get("#{main_server_url}/stripe/token-by-session?session_id=#{params[:session_id]}")
+      if response.success?
+        data = JSON.parse(response.body)
+        download_token = data['token']
+      end
+    rescue => e
+      puts "[SESSION-STATUS] Error fetching token: #{e.message}"
+    end
+  end
+
   {
     status: session.status,
     customer_email: session.customer_details.email,
-    product_id: product_id
+    product_id: product_id,
+    download_token: download_token
   }.to_json
 end

@@ -46,12 +46,19 @@ async function initialize() {
     document.getElementById('success').classList.remove('hidden');
     document.getElementById('customer-email').textContent = session.customer_email;
 
-    // Try to get product_id from session (backend must include it in /session-status response)
-    if (session.product_id) {
+    // Use secure token for download (preferred) or fallback to product_id
+    if (session.download_token) {
+      const downloadUrl = `/download?token=${encodeURIComponent(session.download_token)}`;
+      const link = document.getElementById('download-link');
+      link.href = downloadUrl;
+      document.getElementById('download-link-container').style.display = 'block';
+      console.log('Download link ready with secure token');
+    } else if (session.product_id) {
       const downloadUrl = `/download?product_id=${encodeURIComponent(session.product_id)}`;
       const link = document.getElementById('download-link');
       link.href = downloadUrl;
       document.getElementById('download-link-container').style.display = 'block';
+      console.log('Download link ready with product_id (fallback)');
     }
   }
 }
