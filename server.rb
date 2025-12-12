@@ -414,6 +414,13 @@ SMTP_USERNAME = ENV['SMTP_USERNAME']
 SMTP_PASSWORD = ENV['SMTP_PASSWORD']
 FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
 
+# WhatsApp Configuration (Twilio)
+WHATSAPP_ENABLED = ENV['TWILIO_ACCOUNT_SID'] && ENV['TWILIO_AUTH_TOKEN'] && ENV['TWILIO_WHATSAPP_FROM']
+TWILIO_ACCOUNT_SID = ENV['TWILIO_ACCOUNT_SID']
+TWILIO_AUTH_TOKEN = ENV['TWILIO_AUTH_TOKEN']
+TWILIO_WHATSAPP_FROM = ENV['TWILIO_WHATSAPP_FROM'] # Format: whatsapp:+14155238886
+ADMIN_WHATSAPP = ENV['ADMIN_WHATSAPP'] || '+237677604100'
+
 # Configure Mail gem for SMTP
 if SMTP_USERNAME && SMTP_PASSWORD
   # Port 465 requires SSL/TLS, port 587 uses STARTTLS
@@ -535,6 +542,22 @@ def send_admin_notification(payment)
   HTML
   
   send_email(admin_email, subject, html_content)
+  
+  # Send WhatsApp notification to admin
+  if WHATSAPP_ENABLED
+    whatsapp_msg = <<~MSG
+🔔 *New Payment Pending Approval*
+
+Reference: #{payment['reference']}
+Product: #{payment['product_name']}
+Amount: #{payment['amount']} #{payment['currency']}
+Customer: #{payment['email']}
+Phone: #{payment['phone']}
+
+👉 Review at: https://marriageducation.com/admin-payments.html
+    MSG
+    send_whatsapp(ADMIN_WHATSAPP, whatsapp_msg)
+  end
 end
 
 # Helper: Generate secure download token
@@ -608,6 +631,41 @@ def send_email(to_email, subject, html_content)
   rescue => e
     puts "[EMAIL] ❌ General Error: #{e.class.name} - #{e.message}"
     puts "[EMAIL] ❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+    false
+  end
+end
+
+# Helper: Send WhatsApp message via Twilio
+def send_whatsapp(to_number, message)
+  return false unless WHATSAPP_ENABLED
+  
+  # Ensure number is in E.164 format (e.g., +237677604100)
+  to_number = to_number.to_s.strip
+  to_number = "+#{to_number}" unless to_number.start_with?('+')
+  
+  puts "[WHATSAPP] 📱 Sending to: #{to_number}"
+  
+  begin
+    url = "https://api.twilio.com/2010-04-01/Accounts/#{TWILIO_ACCOUNT_SID}/Messages.json"
+    
+    response = HTTParty.post(url,
+      basic_auth: { username: TWILIO_ACCOUNT_SID, password: TWILIO_AUTH_TOKEN },
+      body: {
+        From: TWILIO_WHATSAPP_FROM,
+        To: "whatsapp:#{to_number}",
+        Body: message
+      }
+    )
+    
+    if response.success?
+      puts "[WHATSAPP] ✅ Message sent successfully"
+      true
+    else
+      puts "[WHATSAPP] ❌ Failed: #{response.code} - #{response.body}"
+      false
+    end
+  rescue => e
+    puts "[WHATSAPP] ❌ Error: #{e.message}"
     false
   end
 end
@@ -770,12 +828,35 @@ post '/admin/approve-payment' do
         email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
         email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
         
+        # Send WhatsApp to customer with download link
+        whatsapp_sent = false
+        if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
+          whatsapp_msg = <<~MSG
+📚 *Marriage Education - Payment Approved*
+
+Hi! Your payment has been approved.
+
+✅ Product: #{payment['product_name']}
+💵 Amount: #{payment['amount']} #{payment['currency']}
+
+📥 *Download your eBook here:*
+#{download_url}
+
+⏰ Valid until: #{expiry_date}
+📊 Downloads allowed: 5 times
+
+Thank you for your purchase!
+          MSG
+          whatsapp_sent = send_whatsapp(payment['phone'], whatsapp_msg)
+        end
+        
         {
           success: true,
           message: 'Payment approved',
           download_url: download_url,
           email: payment['email'],
           email_sent: email_sent,
+          whatsapp_sent: whatsapp_sent,
           token: token_data['token'],
           expires_at: token_data['expires_at']
         }.to_json
@@ -925,6 +1006,21 @@ post '/stripe/fulfill-order' do
       admin_email = ENV['ADMIN_EMAIL'] || 'achugustave@gmail.com'
       admin_email_sent = send_email(admin_email, "💰 New Stripe Purchase - #{product_name}", admin_notification_html)
       puts "[STRIPE FULFILLMENT] Admin notification sent: #{admin_email_sent}"
+      
+      # Send WhatsApp notification to admin
+      if WHATSAPP_ENABLED
+        whatsapp_msg = <<~MSG
+💰 *New Stripe Purchase*
+
+Product: #{product_name}
+Amount: $#{amount}
+Customer: #{customer_email}
+
+✅ Download link sent automatically
+Session: #{stripe_session_id}
+        MSG
+        send_whatsapp(ADMIN_WHATSAPP, whatsapp_msg)
+      end
     rescue => e
       puts "[STRIPE FULFILLMENT] Failed to send admin notification: #{e.message}"
     end
