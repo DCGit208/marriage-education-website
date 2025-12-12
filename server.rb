@@ -414,12 +414,10 @@ SMTP_USERNAME = ENV['SMTP_USERNAME']
 SMTP_PASSWORD = ENV['SMTP_PASSWORD']
 FROM_EMAIL = ENV['FROM_EMAIL'] || 'noreply@marriageducation.com'
 
-# WhatsApp Configuration (Twilio)
-WHATSAPP_ENABLED = ENV['TWILIO_ACCOUNT_SID'] && ENV['TWILIO_AUTH_TOKEN'] && ENV['TWILIO_WHATSAPP_FROM']
-TWILIO_ACCOUNT_SID = ENV['TWILIO_ACCOUNT_SID']
-TWILIO_AUTH_TOKEN = ENV['TWILIO_AUTH_TOKEN']
-TWILIO_WHATSAPP_FROM = ENV['TWILIO_WHATSAPP_FROM'] # Format: whatsapp:+14155238886
-ADMIN_WHATSAPP = ENV['ADMIN_WHATSAPP'] || '+237677604100'
+# WhatsApp Configuration (FREE - CallMeBot API)
+WHATSAPP_ENABLED = ENV['CALLMEBOT_API_KEY'] && !ENV['CALLMEBOT_API_KEY'].empty?
+CALLMEBOT_API_KEY = ENV['CALLMEBOT_API_KEY']
+ADMIN_WHATSAPP = ENV['ADMIN_WHATSAPP'] || '237677604100' # Without + prefix for CallMeBot
 
 # Configure Mail gem for SMTP
 if SMTP_USERNAME && SMTP_PASSWORD
@@ -635,29 +633,28 @@ def send_email(to_email, subject, html_content)
   end
 end
 
-# Helper: Send WhatsApp message via Twilio
+# Helper: Send WhatsApp message via CallMeBot (FREE)
 def send_whatsapp(to_number, message)
   return false unless WHATSAPP_ENABLED
   
-  # Ensure number is in E.164 format (e.g., +237677604100)
-  to_number = to_number.to_s.strip
-  to_number = "+#{to_number}" unless to_number.start_with?('+')
+  # For admin notifications only (CallMeBot can only send to your own number)
+  phone = ADMIN_WHATSAPP.to_s.strip.gsub(/[^0-9]/, '') # Remove + and spaces
   
-  puts "[WHATSAPP] 📱 Sending to: #{to_number}"
+  puts "[WHATSAPP] 📱 Sending to: +#{phone}"
   
   begin
-    url = "https://api.twilio.com/2010-04-01/Accounts/#{TWILIO_ACCOUNT_SID}/Messages.json"
+    # CallMeBot API - completely FREE, no credit card needed
+    url = "https://api.callmebot.com/whatsapp.php"
     
-    response = HTTParty.post(url,
-      basic_auth: { username: TWILIO_ACCOUNT_SID, password: TWILIO_AUTH_TOKEN },
-      body: {
-        From: TWILIO_WHATSAPP_FROM,
-        To: "whatsapp:#{to_number}",
-        Body: message
+    response = HTTParty.get(url,
+      query: {
+        phone: phone,
+        text: message,
+        apikey: CALLMEBOT_API_KEY
       }
     )
     
-    if response.success?
+    if response.success? && response.body.include?('success')
       puts "[WHATSAPP] ✅ Message sent successfully"
       true
     else
@@ -668,6 +665,18 @@ def send_whatsapp(to_number, message)
     puts "[WHATSAPP] ❌ Error: #{e.message}"
     false
   end
+end
+
+# Helper: Send WhatsApp to customer (FREE - using wa.me link in message)
+def send_customer_whatsapp_notification(phone, message)
+  # Since CallMeBot only sends to your own number, we'll send admin a notification
+  # that includes a wa.me link to easily contact the customer
+  return false unless WHATSAPP_ENABLED && phone && !phone.to_s.empty?
+  
+  customer_phone = phone.to_s.strip.gsub(/[^0-9]/, '')
+  admin_msg = "#{message}\n\n📱 Contact customer: https://wa.me/#{customer_phone}"
+  
+  send_whatsapp(ADMIN_WHATSAPP, admin_msg)
 end
 
 # Helper: Generate download email HTML
@@ -828,26 +837,23 @@ post '/admin/approve-payment' do
         email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
         email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
         
-        # Send WhatsApp to customer with download link
+        # Send WhatsApp notification (admin gets notified with customer contact)
         whatsapp_sent = false
         if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
           whatsapp_msg = <<~MSG
-📚 *Marriage Education - Payment Approved*
+✅ *Payment Approved - Send to Customer*
 
-Hi! Your payment has been approved.
+Customer: #{payment['email']}
+Phone: #{payment['phone']}
+Product: #{payment['product_name']}
+Amount: #{payment['amount']} #{payment['currency']}
 
-✅ Product: #{payment['product_name']}
-💵 Amount: #{payment['amount']} #{payment['currency']}
-
-📥 *Download your eBook here:*
+📥 Download Link:
 #{download_url}
 
-⏰ Valid until: #{expiry_date}
-📊 Downloads allowed: 5 times
-
-Thank you for your purchase!
+Valid: #{expiry_date} (5 downloads)
           MSG
-          whatsapp_sent = send_whatsapp(payment['phone'], whatsapp_msg)
+          whatsapp_sent = send_customer_whatsapp_notification(payment['phone'], whatsapp_msg)
         end
         
         {
@@ -1003,7 +1009,7 @@ post '/stripe/fulfill-order' do
         </html>
       HTML
       
-      admin_email = ENV['ADMIN_EMAIL'] || 'achugustave@gmail.com'
+      admin_email = ENV['ADMIN_EMAIL'] || FROM_EMAIL
       admin_email_sent = send_email(admin_email, "💰 New Stripe Purchase - #{product_name}", admin_notification_html)
       puts "[STRIPE FULFILLMENT] Admin notification sent: #{admin_email_sent}"
       

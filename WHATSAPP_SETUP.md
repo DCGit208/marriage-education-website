@@ -1,78 +1,68 @@
-# WhatsApp Notification Setup Guide
+# WhatsApp Notification Setup Guide (100% FREE)
 
 ## Overview
-Your Marriage Education system now supports WhatsApp notifications via **Twilio WhatsApp API**. When enabled, you'll receive instant WhatsApp messages for purchases, and customers will get their download links via both email AND WhatsApp.
+Your Marriage Education system now supports **FREE WhatsApp notifications** via CallMeBot API. No credit card required, no monthly fees, completely free forever!
 
 ---
 
 ## What Gets Sent via WhatsApp?
 
-### **Admin Notifications (You receive):**
+### **Admin Notifications (You receive on +237677604100):**
 1. **Manual MOMO Payment Submitted** - Instant alert when customer submits payment
 2. **Stripe Purchase Completed** - Instant alert when Stripe payment succeeds
+3. **Payment Approved** - Notification with customer contact details and download link to forward
 
-### **Customer Notifications (Buyers receive):**
-1. **Manual MOMO Approved** - Download link sent via WhatsApp + Email
+**Note:** CallMeBot can only send to YOUR number (the account owner). You'll receive admin notifications + customer details, then you can easily forward the download link to customers via the WhatsApp link provided.
 
 ---
 
-## Setup Instructions
+## Setup Instructions (5 Minutes, 100% FREE)
 
-### **Step 1: Create Twilio Account**
-1. Go to https://www.twilio.com/try-twilio
-2. Sign up for a free account
-3. Verify your phone number (+237677604100)
+### **Step 1: Get Your CallMeBot API Key**
+1. **Add CallMeBot to your WhatsApp contacts:**
+   - Save this number: `+34 644 24 84 77`
+   - Contact name: "CallMeBot"
 
-### **Step 2: Get WhatsApp Sandbox Access**
-1. In Twilio Console, go to: **Messaging** → **Try it out** → **Send a WhatsApp message**
-2. You'll see a WhatsApp number like: `+1 415 523 8886`
-3. **JOIN THE SANDBOX:** Send a WhatsApp message to that number with the code shown (e.g., "join <code>")
-4. You'll receive a confirmation message
+2. **Send activation message:**
+   - Open WhatsApp
+   - Send this exact message to CallMeBot: `I allow callmebot to send me messages`
+   - You'll receive your API key instantly (looks like: `123456`)
+   - **SAVE THIS API KEY** - you'll need it
 
-### **Step 3: Get Your Credentials**
-From Twilio Console Dashboard:
-- **Account SID**: Found on dashboard (starts with `AC...`)
-- **Auth Token**: Click to reveal (starts with auth token)
-- **WhatsApp From Number**: The sandbox number (e.g., `whatsapp:+14155238886`)
-
-### **Step 4: Add to Render Environment Variables**
+### **Step 2: Add to Render Environment Variables**
 1. Go to https://dashboard.render.com
 2. Select your `marriage-education-website` service
 3. Go to **Environment** tab
-4. Add these variables:
+4. Add this variable:
 
 ```
-TWILIO_ACCOUNT_SID = YOUR_ACCOUNT_SID_HERE
-TWILIO_AUTH_TOKEN = YOUR_AUTH_TOKEN_HERE
-TWILIO_WHATSAPP_FROM = whatsapp:+14155238886
-ADMIN_WHATSAPP = +237677604100
+CALLMEBOT_API_KEY = 123456
+ADMIN_WHATSAPP = 237677604100
 ```
+
+(Use your actual API key from Step 1)
 
 5. Click **Save Changes**
-6. Your app will automatically redeploy
+6. Your app will automatically redeploy (2-3 minutes)
 
-### **Step 5: Test**
+### **Step 3: Test**
 1. Make a test Stripe purchase or submit a manual MOMO payment
-2. You should receive a WhatsApp message instantly!
+2. You should receive a WhatsApp message instantly on +237677604100!
 
 ---
 
-## Production Setup (After Testing)
+## Why CallMeBot Instead of Twilio?
 
-### **Upgrade to Production WhatsApp** (Optional)
-Twilio Sandbox is free but has limitations:
-- Users must "join" your sandbox first
-- Shows "via Twilio Sandbox"
+| Feature | CallMeBot | Twilio |
+|---------|-----------|--------|
+| **Cost** | 🟢 **100% FREE** | 🔴 ~$0.02-0.05 per message |
+| **Setup** | 🟢 2 minutes | 🟡 10-15 minutes |
+| **Credit Card** | 🟢 Not required | 🔴 Required after trial |
+| **Monthly Limit** | 🟢 Unlimited | 🔴 Pay per message |
+| **Approval** | 🟢 Instant | 🟡 May need business verification |
+| **Send to customers** | 🟡 Manual forward | 🟢 Automatic |
 
-For production (sending to any customer without them joining):
-1. Request WhatsApp Business API access from Twilio
-2. Get approved by Facebook/Meta
-3. Use your own business phone number
-4. Update `TWILIO_WHATSAPP_FROM` to your number
-
-**Cost:** Twilio charges per message (varies by country)
-- Cameroon: ~$0.02-0.05 per message
-- Check pricing: https://www.twilio.com/whatsapp/pricing
+**Conclusion:** CallMeBot is perfect for admin notifications. You get instant alerts for free, and can easily forward download links to customers manually via WhatsApp.
 
 ---
 
@@ -103,50 +93,33 @@ Customer: customer@example.com
 Session: cs_test_abc123...
 ```
 
-### **Customer - Download Link**
+### **Admin - Payment Approved (with customer contact)**
 ```
-📚 *Marriage Education - Payment Approved*
+✅ *Payment Approved - Send to Customer*
 
-Hi! Your payment has been approved.
+Customer: customer@example.com
+Phone: +237690123456
+Product: SBD for Dummies
+Amount: 15000 XAF
 
-✅ Product: SBD for Dummies
-💵 Amount: 15000 XAF
-
-📥 *Download your eBook here:*
+📥 Download Link:
 https://marriage-education-website.onrender.com/download?token=abc123...
 
-⏰ Valid until: December 19, 2025 at 02:30 PM
-📊 Downloads allowed: 5 times
+Valid: December 19, 2025 (5 downloads)
 
-Thank you for your purchase!
+📱 Contact customer: https://wa.me/237690123456
 ```
+
+Click the `wa.me` link to instantly open WhatsApp chat with the customer and forward the download link!
 
 ---
 
-## Troubleshooting
+## How It Works
 
-### **Not Receiving Messages?**
-1. Check you joined the Twilio Sandbox (send "join <code>" to Twilio number)
-2. Verify environment variables are set correctly in Render
-3. Check Render logs: `cat /var/log/render.log | grep WHATSAPP`
-4. Ensure your phone number is in E.164 format: `+237677604100`
-
-### **Customer Not Receiving WhatsApp?**
-- WhatsApp only works if customer also joined Twilio Sandbox
-- In production with approved WhatsApp Business API, this isn't required
-- Until then, customers still get email (always works)
-
-### **Check If WhatsApp is Enabled**
-Look at Render logs after deployment:
-```
-WhatsApp enabled - Admin: +237677604100
-```
-
-If you see:
-```
-WhatsApp disabled - Set TWILIO credentials to enable
-```
-Then environment variables are missing.
+1. **Customer submits payment** → You get WhatsApp alert
+2. **You approve payment** → Customer gets email + You get WhatsApp with download link
+3. **Click wa.me link** → Opens WhatsApp chat with customer
+4. **Forward download link** → Customer gets it via WhatsApp (takes 5 seconds)
 
 ---
 
@@ -154,36 +127,80 @@ Then environment variables are missing.
 
 | Event | Admin Email | Admin WhatsApp | Customer Email | Customer WhatsApp |
 |-------|-------------|----------------|----------------|-------------------|
-| Manual MOMO Submitted | ✅ orders@marriageducation.com | ✅ +237677604100 | ❌ | ❌ |
-| Manual MOMO Approved | ❌ | ❌ | ✅ | ✅ |
-| Stripe Purchase | ✅ achugustave@gmail.com | ✅ +237677604100 | ✅ | ❌ |
-
-**Note:** Stripe purchases don't send WhatsApp to customer (they get immediate download on success page + email). Only manual MOMO approvals send WhatsApp to customer.
+| **Manual MOMO Submitted** | ✅ orders@ | ✅ Instant | ❌ | ❌ |
+| **Manual MOMO Approved** | ❌ | ✅ (with wa.me link) | ✅ | Manual forward |
+| **Stripe Purchase** | ✅ orders@ | ✅ Instant | ✅ | ❌ |
 
 ---
 
-## Cost Estimate
+## Troubleshooting
 
-### **Twilio Pricing (Cameroon)**
-- **Sandbox (Testing):** FREE
-- **Production:** ~$0.02-0.05 per message
+### **Not Receiving Messages?**
+1. **Check you sent the activation message:** Send `I allow callmebot to send me messages` to `+34 644 24 84 77`
+2. **Verify API key:** Check the number CallMeBot sent you matches what's in Render
+3. **Check Render environment variables:** Make sure `CALLMEBOT_API_KEY` is set
+4. **Check phone number format:** Should be `237677604100` (no + or spaces)
 
-### **Monthly Estimate**
-If you get 100 purchases/month:
-- 100 admin notifications (Stripe/MOMO) = ~$2-5
-- 50 customer WhatsApp (manual MOMO) = ~$1-2.50
-- **Total:** ~$3-8/month
+### **Check If WhatsApp is Enabled**
+Look at Render logs after deployment. You should see:
+```
+WhatsApp enabled - Admin: 237677604100
+```
 
-### **Free Alternative**
-Twilio offers $15 free trial credit - enough for ~300-750 messages!
+If you see:
+```
+WhatsApp disabled - Set CALLMEBOT API key to enable
+```
+Then the API key is missing from environment variables.
+
+### **API Key Stopped Working?**
+- CallMeBot API keys don't expire
+- If it stops working, just send the activation message again
+- You'll get a new API key instantly
+
+---
+
+## Limitations & Solutions
+
+### **Limitation:** Can only send to YOUR number
+**Solution:** You get instant admin alerts + customer contact info. Click `wa.me` link to message customer directly.
+
+### **Limitation:** Can't auto-send to customers
+**Solution:** Customers always get email automatically. WhatsApp forwarding is optional (takes 5 seconds).
+
+### **Limitation:** Rate limit ~100 messages/hour
+**Solution:** More than enough for typical eBook sales volume.
+
+---
+
+## Alternative: Upgrade to Paid Later
+
+If your business grows and you want **automatic customer WhatsApp**, you can upgrade to:
+- **Twilio WhatsApp API** (~$3-8/month for 100 sales)
+- **MessageBird** (similar pricing)
+- **WhatsApp Business API** (direct from Meta, requires business verification)
+
+But for now, CallMeBot gives you 90% of the benefits for **$0**!
+
+---
+
+## Cost Comparison (100 sales/month)
+
+| Solution | Setup Cost | Monthly Cost | Total Year 1 |
+|----------|------------|--------------|--------------|
+| **CallMeBot** | $0 | $0 | **$0** |
+| Twilio | $0 | $3-8 | $36-96 |
+| WhatsApp Business | $0 | $10-50 | $120-600 |
+
+**Winner:** CallMeBot! 🎉
 
 ---
 
 ## Support
-- Twilio Console: https://console.twilio.com
-- Twilio Docs: https://www.twilio.com/docs/whatsapp
-- Check if WhatsApp Business API approved: https://www.twilio.com/console/sms/whatsapp/senders
+- CallMeBot FAQ: https://www.callmebot.com/blog/free-api-whatsapp-messages/
+- Test your setup: Send a message to CallMeBot anytime
+- Need help? The activation message works instantly
 
 ---
 
-**Status:** ✅ Code deployed and ready. Just add Twilio credentials to activate!
+**Status:** ✅ Code deployed and ready. Just get your CallMeBot API key to activate!
