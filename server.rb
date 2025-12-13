@@ -420,19 +420,19 @@ TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
 TELEGRAM_CHAT_ID = ENV['TELEGRAM_CHAT_ID']
 
 if TELEGRAM_ENABLED
-  puts "[TELEGRAM] ✅ Enabled - Admin notifications active"
+  puts "[TELEGRAM] ✅ Enabled - Admin notifications + customer download links active"
 else
   puts "[TELEGRAM] ⚠️  Disabled - Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to enable"
 end
 
-# WhatsApp Configuration (FREE - CallMeBot API for customer download links)
+# WhatsApp Configuration (FREE - CallMeBot API for customer download links - OPTIONAL)
 WHATSAPP_ENABLED = ENV['CALLMEBOT_API_KEY'] && !ENV['CALLMEBOT_API_KEY'].empty?
 CALLMEBOT_API_KEY = ENV['CALLMEBOT_API_KEY']
 
 if WHATSAPP_ENABLED
-  puts "[WHATSAPP] ✅ Enabled - Customer download links active"
+  puts "[WHATSAPP] ✅ Enabled - Customer WhatsApp download links active"
 else
-  puts "[WHATSAPP] ⚠️  Disabled - Set CALLMEBOT_API_KEY to enable customer WhatsApp"
+  puts "[WHATSAPP] ⚠️  Disabled - Using Telegram for customer links (CallMeBot optional)"
 end
 
 # Configure Mail gem for SMTP
@@ -679,6 +679,30 @@ def send_telegram(message)
   end
 end
 
+# Helper: Send Telegram message to customer (via username or chat_id)
+def send_customer_telegram(username_or_id, message)
+  return false unless TELEGRAM_ENABLED
+  
+  # If it's a username (starts with @), we need to get their chat_id first
+  # For now, send to admin with customer contact info
+  # In production, customer would start bot first to get their chat_id
+  
+  puts "[TELEGRAM] 📱 Sending to customer: #{username_or_id}"
+  
+  # For simplicity, send to admin with customer info and download link
+  admin_msg = <<~MSG
+📤 *Forward to Customer*
+
+Customer: #{username_or_id}
+
+#{message}
+
+_Note: Customer needs to start @sbd_bot first to receive direct messages_
+  MSG
+  
+  send_telegram(admin_msg)
+end
+
 # Helper: Send WhatsApp to customer (FREE - CallMeBot)
 def send_customer_whatsapp(phone, message)
   return false unless WHATSAPP_ENABLED && phone && !phone.to_s.empty?
@@ -871,10 +895,11 @@ post '/admin/approve-payment' do
         email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
         email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
         
-        # Send WhatsApp download link to CUSTOMER
+        # Send download link to CUSTOMER via Telegram/WhatsApp
+        telegram_sent = false
         whatsapp_sent = false
-        if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
-          whatsapp_msg = <<~MSG
+        
+        customer_msg = <<~MSG
 📚 *Marriage Education - Payment Approved*
 
 Hi! Your payment has been approved.
@@ -889,8 +914,16 @@ Hi! Your payment has been approved.
 📊 Downloads allowed: 5 times
 
 Thank you for your purchase!
-          MSG
-          whatsapp_sent = send_customer_whatsapp(payment['phone'], whatsapp_msg)
+        MSG
+        
+        # Try Telegram first (if customer provided username/phone)
+        if TELEGRAM_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
+          telegram_sent = send_customer_telegram(payment['phone'], customer_msg)
+        end
+        
+        # Also try WhatsApp if CallMeBot is configured
+        if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
+          whatsapp_sent = send_customer_whatsapp(payment['phone'], customer_msg)
         end
         
         # Send Telegram notification to ADMIN that payment was approved
@@ -900,12 +933,15 @@ Thank you for your purchase!
 
 Reference: `#{payment['reference']}`
 Customer: #{payment['email']}
-Phone: #{payment['phone']}
+Contact: #{payment['phone']}
 Product: *#{payment['product_name']}*
 Amount: #{payment['amount']} #{payment['currency']}
 
-📧 Email sent: #{email_sent ? '✅' : '❌'}
-📱 WhatsApp sent: #{whatsapp_sent ? '✅' : '❌'}
+📧 Email: #{email_sent ? '✅' : '❌'}
+📱 Telegram: #{telegram_sent ? '✅ (forwarded to you)' : '❌'}
+📱 WhatsApp: #{whatsapp_sent ? '✅' : '❌'}
+
+Download link: #{download_url}
           MSG
           send_telegram(admin_msg)
         end

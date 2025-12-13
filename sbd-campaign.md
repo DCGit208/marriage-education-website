@@ -231,5 +231,5 @@ Every digital purchase includes:
 
 ---
 
-# © 2025 MarriageEducation.com  
+# © 2025 MarriagEducation.com  
 Restoring the Nation — One Marriage at a Time.

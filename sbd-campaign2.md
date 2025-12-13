@@ -313,5 +313,5 @@ We support:
 
 ---
 
-# © 2025 MarriageEducation.com  
+# © 2025 MarriagEducation.com  
 **Sex By Design for Dummies** — Restoring the Nation, One Marriage at a Time.
