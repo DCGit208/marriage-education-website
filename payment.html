@@ -408,11 +408,11 @@
         
         const currency = getUrlParameter('currency');
         
-        // Build Stripe checkout URL
+        // Build Stripe checkout URL - point to Render backend
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseUrl = isLocal 
-          ? 'http://localhost:4242/checkout.html'
-          : '/stripe/public/checkout.html';
+          ? 'http://localhost:4567/checkout.html'
+          : 'https://marriage-education-website.onrender.com/checkout.html';
         
         let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);

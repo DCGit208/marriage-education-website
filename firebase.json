@@ -7,11 +7,36 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "public": "public",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "functions/**",
+      "vendor/**",
+      "logs/**",
+      "public/**",
+      "momo/**",
+      "stripe/**",
+      "*.md",
+      "*.rb",
+      "*.sh",
+      "*.sql",
+      "Gemfile*",
+      "Procfile",
+      "*.yaml",
+      "*.yml"
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
     ]
   }
 }
