@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Builder - SBD Academy Admin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .admin-header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2rem;
+    }
+    
+    .admin-header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .sidebar {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    
+    .sidebar h3 {
+      margin: 0 0 1rem 0;
+      color: #2d3436;
+      font-size: 1.2rem;
+    }
+    
+    .course-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .course-list-item {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    
+    .course-list-item:hover {
+      background: #e9ecef;
+      border-left-color: #667eea;
+    }
+    
+    .course-list-item.active {
+      background: #e7e9fc;
+      border-left-color: #667eea;
+      font-weight: 600;
+    }
+    
+    .new-course-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: #00b894;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+    
+    .new-course-btn:hover {
+      background: #00a383;
+    }
+    
+    .main-content {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid #f1f3f5;
+    }
+    
+    .form-section:last-child {
+      border-bottom: none;
+    }
+    
+    .form-section h2 {
+      color: #2d3436;
+      margin: 0 0 1.5rem 0;
+      font-size: 1.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #2d3436;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    .module-card {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .module-number {
+      background: #667eea;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .delete-module-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    .delete-module-btn:hover {
+      background: #ee5a52;
+    }
+    
+    .add-module-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #f8f9fa;
+      color: #667eea;
+      border: 2px dashed #667eea;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    
+    .add-module-btn:hover {
+      background: #e7e9fc;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 2px solid #f1f3f5;
+    }
+    
+    .save-btn {
+      flex: 1;
+      padding: 1rem;
+      background: #00b894;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .save-btn:hover {
+      background: #00a383;
+    }
+    
+    .preview-btn {
+      padding: 1rem 2rem;
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .preview-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .help-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 0.25rem;
+    }
+    
+    .markdown-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .markdown-btn {
+      padding: 0.4rem 0.8rem;
+      background: #e9ecef;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    
+    .markdown-btn:hover {
+      background: #dee2e6;
+    }
+    
+    .question-item {
+      background: white;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .remove-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    
+    .add-item-btn {
+      padding: 0.6rem 1.2rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    
+    .add-item-btn:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-header">
+    <h1>🎓 SBD Academy Course Builder</h1>
+    <p>Create and manage your courses</p>
+  </div>
+
+  <div class="container">
+    <div class="builder-grid">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <button class="new-course-btn" onclick="courseBuilder.createNewCourse()">➕ New Course</button>
+        <h3>Your Courses</h3>
+        <ul class="course-list" id="courseList">
+          <li class="course-list-item">Loading courses...</li>
+        </ul>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <div id="alertContainer"></div>
+        
+        <form id="courseForm">
+          <!-- Course Details -->
+          <div class="form-section">
+            <h2>📋 Course Details</h2>
+            
+            <div class="form-group">
+              <label for="courseId">Course ID *</label>
+              <input type="text" id="courseId" required placeholder="e.g., teleios-blueprint">
+              <p class="help-text">Lowercase, use hyphens (no spaces). This cannot be changed later.</p>
+            </div>
+            
+            <div class="form-group">
+              <label for="courseTitle">Course Title *</label>
+              <input type="text" id="courseTitle" required placeholder="e.g., The Teleios Blueprint: Full Human Maturity">
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coursePrice">Price (USD) *</label>
+                <input type="number" id="coursePrice" required placeholder="247" min="0">
+              </div>
+              
+              <div class="form-group">
+                <label for="courseDuration">Duration (weeks) *</label>
+                <input type="number" id="courseDuration" required placeholder="6" min="1">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="courseDescription">Short Description *</label>
+              <textarea id="courseDescription" required placeholder="Complete transformation of self, identity, maturity, and human design..."></textarea>
+              <p class="help-text">Brief summary shown on course listings (2-3 sentences)</p>
+            </div>
+            
+            <div class="form-group">
+              <label for="courseCategory">Category</label>
+              <select id="courseCategory">
+                <option value="personal-development">Personal Development</option>
+                <option value="sexual-literacy">Sexual Literacy & Conjugal Mastery</option>
+                <option value="marriage-systems">Marriage Systems & Fidelity</option>
+                <option value="civilization">Civilization & Family Leadership</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Modules -->
+          <div class="form-section">
+            <h2>📚 Course Modules</h2>
+            <div id="modulesContainer">
+              <!-- Modules will be added here dynamically -->
+            </div>
+            <button type="button" class="add-module-btn" onclick="courseBuilder.addModule()">➕ Add Module</button>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button type="button" class="preview-btn" onclick="courseBuilder.previewCourse()">👁️ Preview</button>
+            <button type="submit" class="save-btn">💾 Save Course to Firebase</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="../js/firebase-config.js"></script>
+  
+  <script>
+    const courseBuilder = {
+      currentCourseId: null,
+      moduleCount: 0,
+      
+      init() {
+        this.loadCourses();
+        this.setupFormHandlers();
+        this.addModule(); // Add first module by default
+      },
+      
+      setupFormHandlers() {
+        document.getElementById('courseForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.saveCourse();
+        });
+      },
+      
+      async loadCourses() {
+        try {
+          const snapshot = await db.collection('courses').get();
+          const courseList = document.getElementById('courseList');
+          
+          if (snapshot.empty) {
+            courseList.innerHTML = '<li style="padding: 1rem; color: #6c757d; text-align: center;">No courses yet. Create your first one!</li>';
+            return;
+          }
+          
+          courseList.innerHTML = '';
+          snapshot.forEach(doc => {
+            const course = doc.data();
+            const li = document.createElement('li');
+            li.className = 'course-list-item';
+            li.textContent = course.title;
+            li.onclick = () => this.loadCourse(doc.id);
+            courseList.appendChild(li);
+          });
+        } catch (error) {
+          console.error('Error loading courses:', error);
+          this.showAlert('Error loading courses: ' + error.message, 'error');
+        }
+      },
+      
+      async loadCourse(courseId) {
+        try {
+          const doc = await db.collection('courses').doc(courseId).get();
+          if (!doc.exists) {
+            this.showAlert('Course not found', 'error');
+            return;
+          }
+          
+          const course = doc.data();
+          this.currentCourseId = courseId;
+          
+          // Populate form
+          document.getElementById('courseId').value = courseId;
+          document.getElementById('courseId').disabled = true; // Can't change ID
+          document.getElementById('courseTitle').value = course.title;
+          document.getElementById('coursePrice').value = course.price;
+          document.getElementById('courseDuration').value = course.duration_weeks;
+          document.getElementById('courseDescription').value = course.description;
+          document.getElementById('courseCategory').value = course.category || 'personal-development';
+          
+          // Load modules
+          const modulesContainer = document.getElementById('modulesContainer');
+          modulesContainer.innerHTML = '';
+          this.moduleCount = 0;
+          
+          if (course.modules && course.modules.length > 0) {
+            course.modules.forEach((module, index) => {
+              this.addModule(module);
+            });
+          }
+          
+          this.showAlert('Course loaded successfully!', 'success');
+          
+          // Highlight in sidebar
+          document.querySelectorAll('.course-list-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.textContent === course.title) {
+              item.classList.add('active');
+            }
+          });
+          
+        } catch (error) {
+          console.error('Error loading course:', error);
+          this.showAlert('Error loading course: ' + error.message, 'error');
+        }
+      },
+      
+      createNewCourse() {
+        this.currentCourseId = null;
+        document.getElementById('courseForm').reset();
+        document.getElementById('courseId').disabled = false;
+        document.getElementById('modulesContainer').innerHTML = '';
+        this.moduleCount = 0;
+        this.addModule();
+        document.querySelectorAll('.course-list-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        this.showAlert('Ready to create a new course!', 'success');
+      },
+      
+      addModule(moduleData = null) {
+        this.moduleCount++;
+        const moduleNum = this.moduleCount;
+        
+        const moduleCard = document.createElement('div');
+        moduleCard.className = 'module-card';
+        moduleCard.id = `module-${moduleNum}`;
+        
+        moduleCard.innerHTML = `
+          <div class="module-header">
+            <div class="module-number">${moduleNum}</div>
+            <button type="button" class="delete-module-btn" onclick="courseBuilder.deleteModule(${moduleNum})">🗑️ Delete</button>
+          </div>
+          
+          <div class="form-group">
+            <label>Module Title *</label>
+            <input type="text" class="module-title" required placeholder="e.g., Introduction to Teleios Identity" value="${moduleData?.title || ''}">
+          </div>
+          
+          <div class="form-group">
+            <label>Lesson Content * (Supports Markdown)</label>
+            <div class="markdown-toolbar">
+              <button type="button" class="markdown-btn" onclick="courseBuilder.insertMarkdown(${moduleNum}, '**', '**')">Bold</button>
+              <button type="button" class="markdown-btn" onclick="courseBuilder.insertMarkdown(${moduleNum}, '_', '_')">Italic</button>
+              <button type="button" class="markdown-btn" onclick="courseBuilder.insertMarkdown(${moduleNum}, '## ', '')">Heading</button>
+              <button type="button" class="markdown-btn" onclick="courseBuilder.insertMarkdown(${moduleNum}, '- ', '')">List</button>
+              <button type="button" class="markdown-btn" onclick="courseBuilder.insertMarkdown(${moduleNum}, '[', '](url)')">Link</button>
+            </div>
+            <textarea class="module-content" required placeholder="Write your lesson content here. You can use markdown:\n\n## Main Heading\n### Subheading\n\n**Bold text** and _italic text_\n\n- Bullet point 1\n- Bullet point 2\n\n1. Numbered list\n2. Another item">${moduleData?.content || ''}</textarea>
+            <p class="help-text">Write your full lesson. Use ## for headings, ** for bold, _ for italic, - for lists</p>
+          </div>
+          
+          <div class="form-group">
+            <label>Reflection Questions</label>
+            <div class="questions-container" id="questions-${moduleNum}">
+              ${moduleData?.reflection_questions?.map((q, i) => `
+                <div class="question-item">
+                  <input type="text" placeholder="Question ${i + 1}" value="${q}" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;">
+                  <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+                </div>
+              `).join('') || ''}
+            </div>
+            <button type="button" class="add-item-btn" onclick="courseBuilder.addQuestion(${moduleNum})">➕ Add Question</button>
+          </div>
+        `;
+        
+        document.getElementById('modulesContainer').appendChild(moduleCard);
+      },
+      
+      deleteModule(moduleNum) {
+        if (confirm('Delete this module?')) {
+          document.getElementById(`module-${moduleNum}`).remove();
+        }
+      },
+      
+      insertMarkdown(moduleNum, before, after) {
+        const textarea = document.querySelector(`#module-${moduleNum} .module-content`);
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const selectedText = text.substring(start, end);
+        
+        textarea.value = text.substring(0, start) + before + selectedText + after + text.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start + before.length;
+        textarea.selectionEnd = end + before.length;
+      },
+      
+      addQuestion(moduleNum) {
+        const container = document.getElementById(`questions-${moduleNum}`);
+        const questionItem = document.createElement('div');
+        questionItem.className = 'question-item';
+        questionItem.innerHTML = `
+          <input type="text" placeholder="New question" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;">
+          <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+        `;
+        container.appendChild(questionItem);
+      },
+      
+      async saveCourse() {
+        try {
+          const courseId = document.getElementById('courseId').value.trim().toLowerCase().replace(/\s+/g, '-');
+          
+          // Collect modules
+          const modules = [];
+          document.querySelectorAll('.module-card').forEach((card, index) => {
+            const title = card.querySelector('.module-title').value;
+            const content = card.querySelector('.module-content').value;
+            const questions = Array.from(card.querySelectorAll('.questions-container input'))
+              .map(input => input.value)
+              .filter(q => q.trim());
+            
+            modules.push({
+              week: index + 1,
+              title: title,
+              content: content,
+              reflection_questions: questions,
+              downloads: [] // Can add file upload later
+            });
+          });
+          
+          const courseData = {
+            title: document.getElementById('courseTitle').value,
+            price: parseFloat(document.getElementById('coursePrice').value),
+            duration_weeks: parseInt(document.getElementById('courseDuration').value),
+            description: document.getElementById('courseDescription').value,
+            category: document.getElementById('courseCategory').value,
+            modules: modules,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            created_at: this.currentCourseId ? undefined : firebase.firestore.FieldValue.serverTimestamp()
+          };
+          
+          await db.collection('courses').doc(courseId).set(courseData, { merge: true });
+          
+          this.currentCourseId = courseId;
+          this.showAlert('✅ Course saved successfully!', 'success');
+          this.loadCourses();
+          
+        } catch (error) {
+          console.error('Error saving course:', error);
+          this.showAlert('❌ Error saving course: ' + error.message, 'error');
+        }
+      },
+      
+      previewCourse() {
+        const courseId = document.getElementById('courseId').value.trim().toLowerCase().replace(/\s+/g, '-');
+        if (courseId) {
+          window.open(`../course-viewer.html?course=${courseId}`, '_blank');
+        } else {
+          this.showAlert('Please enter a course ID first', 'error');
+        }
+      },
+      
+      showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        container.innerHTML = '';
+        container.appendChild(alert);
+        
+        setTimeout(() => {
+          alert.remove();
+        }, 5000);
+      }
+    };
+    
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      courseBuilder.init();
+    });
+  </script>
+</body>
+</html>
