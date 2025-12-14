@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting to Checkout</title>
+    <meta name="description" content="Redirecting to secure Stripe checkout" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="checkout.js?v=8" defer></script>
+  </head>
+  <body>
+    <div class="checkout-container">
+      <header class="checkout-header">
+        <img src="https://stripe.com/img/v3/home/twitter.png" alt="Stripe Logo" class="stripe-logo" />
+        <h1>Secure Payment</h1>
+        <p class="checkout-subtitle">Pay with confidence. All transactions are encrypted and processed by Stripe.</p>
+      </header>
+      <div class="product-summary" id="product-summary">
+        <!-- Product info will be dynamically inserted by JS if desired -->
+      </div>
+      <div id="checkout">
+        <!-- Stripe Checkout will insert the payment form here -->
+      </div>
+      <footer class="checkout-footer">
+        <div class="security-badges">
+          <span class="badge"><img src="https://img.icons8.com/fluency/24/lock.png" alt="SSL" /> SSL Encrypted</span>
+          <span class="badge"><img src="https://img.icons8.com/fluency/24/bank-card-back-side.png" alt="PCI" /> PCI Compliant</span>
+          <span class="badge"><img src="https://img.icons8.com/fluency/24/shield.png" alt="Fraud Protection" /> Fraud Protection</span>
+        </div>
+        <p class="footer-note">&copy; 2025 Marriage Education. Powered by Stripe.</p>
+      </footer>
+    </div>
+    <script>
+      // Optionally show product info if product name/price is in URL
+      function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(window.location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+      }
+      const productName = getUrlParameter('name');
+      const productPrice = getUrlParameter('price');
+      if (productName && productPrice) {
+        document.getElementById('product-summary').innerHTML = `<div class='summary-card'><span class='summary-label'>Product:</span> <span class='summary-value'>${productName}</span><br><span class='summary-label'>Price:</span> <span class='summary-value'>$${productPrice}</span></div>`;
+      }
+    </script>
+  </body>
+</html>
