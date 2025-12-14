@@ -84,6 +84,10 @@ post '/create-checkout-session' do
         success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + product_id,
         automatic_tax: {enabled: true},
+        metadata: {
+          courseId: product_id,
+          product: product_id
+        }
       }, {
         idempotency_key: idempotency_key
       })
@@ -125,7 +129,11 @@ post '/create-checkout-session' do
         mode: 'payment',
         success_url: YOUR_DOMAIN + '/return.html?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: YOUR_DOMAIN + '/checkout.html?product=' + (product_id || ''),
-        automatic_tax: {enabled: true}
+        automatic_tax: {enabled: true},
+        metadata: {
+          courseId: product_id || 'unknown',
+          product: product_id || 'unknown'
+        }
       }, {
         idempotency_key: idempotency_key
       })
