@@ -921,5 +921,75 @@
       </div>
     </div>
   </footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBnKMGPBu9LNi2_NfU6OhfxP3_2TmqY4jE",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "257768723041",
+      appId: "1:257768723041:web:7c3f8f5e7d3e8f5e7d3e8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Replace all "View in Courses" buttons with real payment links
+    async function updateCourseButtons() {
+      try {
+        const coursesRef = collection(db, 'courses');
+        const snapshot = await getDocs(coursesRef);
+        
+        const coursesMap = {};
+        snapshot.forEach(doc => {
+          const course = doc.data();
+          coursesMap[course.courseId] = course;
+        });
+
+        // Find all "View in Courses" buttons and update them
+        const buttons = document.querySelectorAll('a.buy-button');
+        buttons.forEach(button => {
+          const href = button.getAttribute('href');
+          
+          // Skip if already has payment link
+          if (href && href.includes('payment.html')) return;
+          
+          // Find the course title from the parent product div
+          const productDiv = button.closest('.product');
+          if (!productDiv) return;
+          
+          const titleElement = productDiv.querySelector('h4');
+          if (!titleElement) return;
+          
+          const title = titleElement.textContent.trim();
+          
+          // Match title to courseId
+          const matchedCourse = Object.values(coursesMap).find(course => 
+            course.title === title || title.includes(course.title.substring(0, 20))
+          );
+          
+          if (matchedCourse) {
+            button.setAttribute('href', `payment.html?product=${matchedCourse.courseId}`);
+            button.textContent = 'Enroll Now - $' + matchedCourse.price;
+            button.setAttribute('data-role', `cta-${matchedCourse.courseId}`);
+          }
+        });
+
+      } catch (error) {
+        console.error('Error updating course buttons:', error);
+      }
+    }
+
+    // Run when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateCourseButtons);
+    } else {
+      updateCourseButtons();
+    }
+  </script>
 </body>
 </html>

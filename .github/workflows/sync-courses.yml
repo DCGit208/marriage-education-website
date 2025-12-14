@@ -1,0 +1,67 @@
+name: Sync Courses to Firebase
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'courses-catalogue.json'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Firebase Admin
+        run: npm install firebase-admin
+      
+      - name: Sync to Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node <<'EOF'
+          const admin = require('firebase-admin');
+          const fs = require('fs');
+          
+          // Initialize Firebase Admin
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+          });
+          
+          const db = admin.firestore();
+          
+          // Read courses catalogue
+          const courses = JSON.parse(fs.readFileSync('courses-catalogue.json', 'utf8'));
+          
+          // Import each course
+          async function importCourses() {
+            let imported = 0;
+            
+            for (const course of courses) {
+              const courseData = {
+                ...course,
+                updatedAt: new Date().toISOString(),
+                createdAt: course.createdAt || new Date().toISOString(),
+                published: course.published !== undefined ? course.published : false,
+                enrollmentCount: course.enrollmentCount || 0
+              };
+              
+              await db.collection('courses').doc(course.courseId).set(courseData, { merge: true });
+              imported++;
+              console.log(`✅ Imported: ${course.courseId}`);
+            }
+            
+            console.log(`\n🎉 Successfully imported ${imported} courses to Firebase!`);
+          }
+          
+          importCourses().catch(console.error);
+          EOF

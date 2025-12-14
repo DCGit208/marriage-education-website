@@ -638,5 +638,112 @@
       </div>
     </div>
   </footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBnKMGPBu9LNi2_NfU6OhfxP3_2TmqY4jE",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "257768723041",
+      appId: "1:257768723041:web:7c3f8f5e7d3e8f5e7d3e8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Load dynamic course cards from Firebase
+    async function loadDynamicCourses() {
+      try {
+        const coursesRef = collection(db, 'courses');
+        const q = query(coursesRef, orderBy('course_no', 'asc'));
+        const snapshot = await getDocs(q);
+        
+        const coursesBySchool = {
+          1: [],
+          2: [],
+          3: [],
+          4: []
+        };
+
+        snapshot.forEach(doc => {
+          const course = doc.data();
+          if (course.published !== false) {
+            coursesBySchool[course.school].push(course);
+          }
+        });
+
+        // Create dynamic sections for each school
+        const coursesSection = document.querySelector('#courses');
+        if (!coursesSection) return;
+
+        const schoolNames = {
+          1: 'Teleios School of Personal Development',
+          2: 'Sexual Literacy & Conjugal Mastery School',
+          3: 'Marriage Systems & Fidelity School',
+          4: 'Civilization & Family Leadership School'
+        };
+
+        let dynamicHTML = '';
+
+        Object.keys(coursesBySchool).forEach(schoolId => {
+          const courses = coursesBySchool[schoolId];
+          if (courses.length === 0) return;
+
+          dynamicHTML += `
+            <div class="container" style="margin-bottom: 4rem;">
+              <h2 style="margin-bottom: 2rem; color: #2d3748;">${schoolNames[schoolId]}</h2>
+              <div class="product-grid" id="school-${schoolId}">
+          `;
+
+          courses.forEach(course => {
+            const badge = course.badge ? `<span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 8px;">${course.badge}</span>` : '';
+            
+            dynamicHTML += `
+              <div class="product">
+                ${badge}
+                <h4>${course.title}</h4>
+                <p>${course.description}</p>
+                <div class="course-features" style="margin: 16px 0;">
+                  <strong>Course Details:</strong>
+                  <ul style="margin-top: 8px;">
+                    <li><strong>Duration:</strong> ${course.duration_weeks} weeks</li>
+                    <li><strong>Modules:</strong> ${course.modules ? course.modules.length : 0} lessons</li>
+                    <li><strong>Format:</strong> Text-based + Reflections</li>
+                  </ul>
+                </div>
+                <p class="price" style="font-size: 28px; font-weight: 700; color: #667eea; margin: 16px 0;">$${course.price}</p>
+                <a href="payment.html?product=${course.courseId}" class="buy-button" data-role="cta-${course.courseId}">Enroll Now</a>
+              </div>
+            `;
+          });
+
+          dynamicHTML += `
+              </div>
+            </div>
+          `;
+        });
+
+        // Insert after the hero and static sections
+        const targetSection = document.querySelector('#courses');
+        if (targetSection) {
+          targetSection.innerHTML = dynamicHTML;
+        }
+
+      } catch (error) {
+        console.error('Error loading courses:', error);
+      }
+    }
+
+    // Load courses when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDynamicCourses);
+    } else {
+      loadDynamicCourses();
+    }
+  </script>
 </body>
 </html>
