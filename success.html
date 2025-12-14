@@ -103,30 +103,85 @@
     <div class="success-icon">
       <div class="checkmark"></div>
     </div>
-    <h1>🎉 Payment Successful!</h1>
-    <p>Thank you for your purchase of <span class="product-name" id="product-name">the eBook</span>.</p>
-    <p>Click the button below to download your eBook:</p>
+    <h1 id="success-title">🎉 Payment Successful!</h1>
+    <p id="success-message">Thank you for your purchase of <span class="product-name" id="product-name">the eBook</span>.</p>
     
-    <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+    <!-- For ebooks -->
+    <div id="ebook-download" style="display: none;">
+      <p>Click the button below to download your eBook:</p>
+      <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+    </div>
+    
+    <!-- For courses -->
+    <div id="course-access" style="display: none;">
+      <p style="margin-bottom: 20px;">🎓 You now have lifetime access to your course!</p>
+      <p style="font-size: 16px; color: #636e72; margin-bottom: 30px;">Check your email for course access details. We've sent you a welcome message with your enrollment confirmation.</p>
+      <a href="#" id="course-btn" class="download-btn">🚀 Access Your Course Now</a>
+      <br><br>
+      <a href="dashboard.html" style="color: #667eea; text-decoration: none; font-weight: 600;">📊 View Your Dashboard →</a>
+    </div>
     
     <br><br>
     <a href="https://marriageducation.com" class="home-link">← Return to Home</a>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('product_id') || 'sbd-founding';
-    
-    // Product names
-    const productNames = {
-      'sbd-founding': 'Save Before Divorce (Founding Member Edition)',
-      'sbd-regular': 'Save Before Divorce',
-      'default': 'your eBook'
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBnKMGPBu9LNi2_NfU6OhfxP3_2TmqY4jE",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "257768723041",
+      appId: "1:257768723041:web:7c3f8f5e7d3e8f5e7d3e8f"
     };
-    document.getElementById('product-name').textContent = productNames[productId] || productNames['default'];
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product_id') || urlParams.get('product') || 'sbd-founding';
     
-    // Set download link to PHP download handler
-    document.getElementById('download-btn').href = `download-ebook.php?product_id=${encodeURIComponent(productId)}`;
+    // Check if it's a course
+    const isCourse = await checkIfCourse(productId);
+    
+    if (isCourse) {
+      // Show course access UI
+      document.getElementById('course-access').style.display = 'block';
+      document.getElementById('ebook-download').style.display = 'none';
+      document.getElementById('success-message').innerHTML = 
+        `Congratulations! You're now enrolled in <span class="product-name" id="product-name">${isCourse.title}</span>.`;
+      document.getElementById('course-btn').href = `course-viewer.html?course=${productId}`;
+    } else {
+      // Show ebook download UI
+      document.getElementById('course-access').style.display = 'none';
+      document.getElementById('ebook-download').style.display = 'block';
+      
+      const productNames = {
+        'sbd-founding': 'Save Before Divorce (Founding Member Edition)',
+        'sbd-regular': 'Save Before Divorce',
+        'sbd-for-dummies': 'SBD for Dummies',
+        'default': 'your eBook'
+      };
+      
+      document.getElementById('product-name').textContent = productNames[productId] || productNames['default'];
+      document.getElementById('download-btn').href = `download-ebook.php?product_id=${encodeURIComponent(productId)}`;
+    }
+
+    async function checkIfCourse(productId) {
+      try {
+        const courseDoc = await getDoc(doc(db, 'courses', productId));
+        if (courseDoc.exists()) {
+          return courseDoc.data();
+        }
+        return null;
+      } catch (error) {
+        console.error('Error checking course:', error);
+        return null;
+      }
+    }
   </script>
 </body>
 </html>
