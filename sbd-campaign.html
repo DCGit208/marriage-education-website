@@ -424,14 +424,19 @@
         }
         
         .pressure-badge {
-            background: rgba(0, 184, 148, 0.1);
+            background: rgba(0, 184, 148, 0.15);
             border: 2px solid #00b894;
             border-radius: 12px;
             padding: 15px 25px;
-            color: #1f2937;
+            color: #ffffff;
             font-size: 1rem;
             display: inline-block;
             margin-top: 20px;
+        }
+        
+        .section:not(.section-alt):not(.vip-section) .pressure-badge {
+            color: #1f2937;
+            background: rgba(0, 184, 148, 0.1);
         }
         
         .pressure-badge i {
@@ -1821,7 +1826,7 @@
                 </div>
             </div>
             
-            <div class="pressure-badge" style="text-align: center; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; color: white;">
+            <div class="pressure-badge" style="text-align: center; margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto;">
                 <i class="fas fa-clock"></i> <strong>Founding Window:</strong> Institutional partners who join in the first 14 days will be recorded as Charter Institutional Partners in all launch materials.
             </div>
         </div>
