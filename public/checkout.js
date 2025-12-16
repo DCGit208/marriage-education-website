@@ -33,15 +33,14 @@ async function initialize() {
 
   try {
     // Detect environment and use appropriate API URL
-    const isProduction = window.location.hostname === 'marriageducation.com' || window.location.hostname === 'www.marriageducation.com';
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Production uses unified Render backend, local uses localhost:4567
-    const apiUrl = isProduction 
-      ? 'https://marriage-education-website.onrender.com/create-checkout-session'
-      : 'http://localhost:4567/create-checkout-session';
+    // Use Render backend for all non-localhost environments (Firebase, iPage, etc.)
+    const apiUrl = isLocal 
+      ? 'http://localhost:4567/create-checkout-session'
+      : 'https://marriage-education-website.onrender.com/create-checkout-session';
     
-    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isProduction ? 'PRODUCTION' : 'LOCAL');
+    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isLocal ? 'LOCAL' : 'PRODUCTION');
     
     // Build request body - include dynamic pricing if provided
     const requestBody = {
