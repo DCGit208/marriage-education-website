@@ -400,12 +400,12 @@
       userProgress: {},
       
       init() {
-        // Get course ID from URL
+        // Get course ID from URL (supports both ?id= and ?course=)
         const urlParams = new URLSearchParams(window.location.search);
-        this.courseId = urlParams.get('course');
+        this.courseId = urlParams.get('id') || urlParams.get('course');
         
         if (!this.courseId) {
-          this.showError('No course specified');
+          this.showError('No course specified. Add ?id=course-id to the URL');
           return;
         }
         
@@ -496,6 +496,10 @@
         if (!module) return;
         
         this.currentModule = moduleNum;
+        
+        // Remove loading state
+        const container = document.getElementById('lessonContainer');
+        container.classList.remove('loading');
         
         // Convert markdown to HTML
         const contentHtml = marked.parse(module.content);
