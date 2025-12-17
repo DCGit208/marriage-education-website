@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Course Data</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+    pre { background: white; padding: 20px; border-radius: 8px; overflow-x: auto; }
+    .error { background: #fee; color: #c00; padding: 10px; border-radius: 4px; }
+    .success { background: #efe; color: #060; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Debug: Course Data Structure</h1>
+  <div id="status">Loading...</div>
+  <pre id="output"></pre>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, doc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const statusDiv = document.getElementById('status');
+    const outputDiv = document.getElementById('output');
+
+    async function debug() {
+      try {
+        statusDiv.className = 'success';
+        statusDiv.textContent = '✅ Connected to Firebase';
+
+        // Check if teleios-blueprint exists (newly imported course)
+        const courseRef = doc(db, 'courses', 'teleios-blueprint');
+        const courseSnap = await getDoc(courseRef);
+
+        if (!courseSnap.exists()) {
+          statusDiv.className = 'error';
+          statusDiv.textContent = '❌ Course "teleios-blueprint" NOT FOUND in Firebase';
+          
+          // List all courses
+          const coursesSnap = await getDocs(collection(db, 'courses'));
+          const courseIds = coursesSnap.docs.map(doc => doc.id);
+          outputDiv.textContent = `Available courses in Firebase:\n${courseIds.join('\n')}`;
+          return;
+        }
+
+        const courseData = courseSnap.data();
+        
+        outputDiv.textContent = JSON.stringify(courseData, null, 2);
+        
+        statusDiv.textContent = `✅ Course found! Has ${courseData.modules?.length || 0} modules`;
+
+        // Check structure
+        if (!courseData.modules || courseData.modules.length === 0) {
+          statusDiv.textContent += ' ⚠️ WARNING: No modules array!';
+        }
+
+      } catch (error) {
+        statusDiv.className = 'error';
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+        outputDiv.textContent = error.stack;
+      }
+    }
+
+    debug();
+  </script>
+</body>
+</html>
