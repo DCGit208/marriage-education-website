@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courses - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Courses & Coaching</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="magazine.html">Magazine</a>
+        <a href="courses.html">Courses</a>
+        <a href="schools.html">Schools</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="modern-hero">
+    <div class="hero-background">
+      <div class="hero-gradient"></div>
+    </div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span>🎓 Complete SBD Academy Curriculum</span>
+          </div>
+          <h1 class="hero-title">
+            Sex By Design Academy —
+            <span class="highlight">Courses & Coaching Hub</span>
+          </h1>
+          <p class="hero-subtitle">
+            Turn God's design for marriage, sexuality, and human flourishing into daily practice. This is not "marriage advice" — this is a full curriculum of personal development, sexual literacy, and conjugal mastery for couples and individuals who refuse half-measures.
+          </p>
+          <div class="hero-stats">
+            <div class="stat">
+              <h3>19+</h3>
+              <p>Programs Available</p>
+            </div>
+            <div class="stat">
+              <h3>$25-$2.5K</h3>
+              <p>Price Range</p>
+            </div>
+            <div class="stat">
+              <h3>3</h3>
+              <p>Learning Pathways</p>
+            </div>
+          </div>
+          <div class="hero-buttons">
+            <a href="#courses" class="btn-primary" data-role="cta-view-programs">
+              <span>View All Programs</span>
+              <i>→</i>
+            </a>
+            <a href="contact.html" class="btn-secondary" data-role="cta-clarity-call">
+              <span>Book a Clarity Call</span>
+              <i>📞</i>
+            </a>
+          </div>
+          <div class="trust-indicators">
+            <p>✅ Entry Courses ($25) • ✅ Strategic Bundles • ✅ Premium Diplomas • ✅ Lifetime Access Available</p>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="card-content">
+              <h4>🎯 Start Here</h4>
+              <p>Sexual Literacy 101</p>
+              <div class="card-price">$25</div>
+            </div>
+          </div>
+          <div class="floating-elements">
+            <div class="floating-testimonial">
+              <p>"The courses transformed our marriage completely!"</p>
+              <cite>— Mark & Lisa</cite>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 High-Selling Points -->
+  <section class="featured-products" style="background: #f8f9fa;">
+    <div class="container">
+      <h3>Why SBD Academy Works When Most Marriage Help Fails</h3>
+      
+      <div class="product-grid">
+        <div class="product">
+          <h4>1. We start from design, not damage</h4>
+          <p>You are not a random accident in need of coping skills. You are created and redeemed <em>teleios</em> — whole by design. We train you to live from that identity.</p>
+        </div>
+
+        <div class="product">
+          <h4>2. We separate personal development from marital duty</h4>
+          <p>We don't use marriage to fix people. Teleios formation (behavioral, emotional, temperamental, mental maturity) is taught as your human responsibility; sexual fidelity and conjugal life are taught as your marital vocation.</p>
+        </div>
+
+        <div class="product">
+          <h4>3. We treat marriage as a sexual civilization, not a polite roommate contract</h4>
+          <p>SBD refuses vague "connection" language. We train nakedness, allure, seduction, and conjugal imagination as holy stewardship — not as taboo.</p>
+        </div>
+
+        <div class="product">
+          <h4>4. We teach sexuality as a lifestyle, not just "sex acts"</h4>
+          <p>Sex is the product. Sexuality is the lifestyle: wardrobe, scent, presence, timing, imagination, Pics & Pearls, Song of Songs liturgies — all ordered to one covenant.</p>
+        </div>
+
+        <div class="product">
+          <h4>5. We anchor everything in law and scripture, not trend and feelings</h4>
+          <p>Genesis 1–2, Hebrews 5:14, Matthew 5:48, 1 Corinthians 6–7, UDHR 16 & 26 — your marriage training is built on legal and theological first principles, not pop-psychology.</p>
+        </div>
+
+        <div class="product">
+          <h4>6. We design for practice, not inspiration</h4>
+          <p>Every course converts doctrine into daily liturgies: Presence, Words, Touch, Order, Worship, Sexual Routines. No vague motivation; everything becomes a repeatable rhythm.</p>
+        </div>
+
+        <div class="product">
+          <h4>7. We unify books, trainings, and coaching into one roadmap</h4>
+          <p>Each SBD book (<em>Sex By Design for Dummies</em>, <em>The Art of Marriage</em>, <em>The Art of Sexuality</em>, <em>Marriage = Porn & Beyond</em>, etc.) becomes a course pathway with drills, journaling, and live support options.</p>
+        </div>
+
+        <div class="product">
+          <h4>8. We speak plainly about porn, nakedness, and desire — without shame and without wokeness</h4>
+          <p>We don't pretend porn is the enemy while marriages stay cold. We teach couples to outperform porn by stewarding their own nakedness, allure, and imagination in covenant.</p>
+        </div>
+
+        <div class="product">
+          <h4>9. We scale from individual growth to civilizational impact</h4>
+          <p>We always keep the big frame in view: teleios persons → teleios families → teleios nations. Your home is the first parliament of justice and peace.</p>
+        </div>
+
+        <div class="product">
+          <h4>10. We sell transformation, not survival</h4>
+          <p>The goal is not "staying together somehow."<br>
+          The goal is abundant, intelligent, erotic, covenantal joy — marriages that children can safely imitate and nations can safely depend on.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Start Here Section -->
+  <section class="courses" style="background: white; padding: 3rem 0;">
+    <div class="container">
+      <h2 style="font-size: 2rem; margin-bottom: 1rem;">🎯 Start Here: Recommended First Steps</h2>
+      <p class="course-subtitle" style="text-align: center; max-width: 800px; margin: 0 auto 3rem auto;">
+        New to SBD Academy? Start with one of these foundational programs designed for immediate transformation.
+      </p>
+
+      <div class="product-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="product" style="border: 2px solid #e17055;">
+          <h4>Sexual Literacy 101</h4>
+          <p style="font-style: italic; color: #e17055; font-size: 0.9rem;">⭐ Most Popular Entry Course</p>
+          <p>Quick 90-minute introduction to understanding the human sexual system and how it works in covenant.</p>
+          <div class="course-features">
+            <strong>You'll discover:</strong>
+            <ul>
+              <li>What sexuality actually is (vs. sex acts)</li>
+              <li>How desire, arousal, and covenant connect</li>
+              <li>Why most marriage advice fails</li>
+              <li>The SBD framework overview</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 90 minutes | <strong>Format:</strong> Video course</p>
+          <p class="price">$25</p>
+          <a href="mailto:train@marriageducation.com?subject=Sexual Literacy 101 Enrollment&body=I would like to enroll in Sexual Literacy 101 ($25)" class="buy-button" data-role="cta-sexual-literacy-101">Start Learning</a>
+        </div>
+
+        <div class="product">
+          <h4>The Anatomy of Desire</h4>
+          <p>Understand how desire works, what triggers it, and how to steward it in marriage.</p>
+          <div class="course-features">
+            <strong>You'll learn:</strong>
+            <ul>
+              <li>The psychology and theology of desire</li>
+              <li>How attraction is formed and sustained</li>
+              <li>Desire in covenant vs. counterfeit desire</li>
+              <li>Practical desire cultivation habits</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 2 hours | <strong>Format:</strong> Video + workbook</p>
+          <p class="price">$49</p>
+          <a href="mailto:train@marriageducation.com?subject=Anatomy of Desire Enrollment&body=I would like to enroll in The Anatomy of Desire ($49)" class="buy-button" data-role="cta-anatomy-desire">Enroll Now</a>
+        </div>
+
+        <div class="product">
+          <h4>The Teleios Blueprint (Mini)</h4>
+          <p>Fast-track introduction to full human maturity and the wholeness required for covenant faithfulness.</p>
+          <div class="course-features">
+            <strong>You'll explore:</strong>
+            <ul>
+              <li>What <em>teleios</em> (wholeness) means</li>
+              <li>The 4 faculties of human development</li>
+              <li>Why personal development must come first</li>
+              <li>How to Practice From Perfection</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 2 hours | <strong>Format:</strong> Video + assessment</p>
+          <p class="price">$39</p>
+          <a href="mailto:train@marriageducation.com?subject=Teleios Blueprint Mini Enrollment&body=I would like to enroll in The Teleios Blueprint Mini ($39)" class="buy-button" data-role="cta-teleios-blueprint-mini">Begin Journey</a>
+        </div>
+
+        <div class="product">
+          <h4>Marriage Builds Nations (Intro)</h4>
+          <p>Discover why your marriage matters beyond your bedroom — and how it shapes civilization.</p>
+          <div class="course-features">
+            <strong>You'll understand:</strong>
+            <ul>
+              <li>UDHR 16: family as fundamental unit of society</li>
+              <li>How marriage creates or destroys nations</li>
+              <li>Your home as a "micro-parliament"</li>
+              <li>The civilizational vision for your family</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 90 minutes | <strong>Format:</strong> Video lecture</p>
+          <p class="price">$29</p>
+          <a href="mailto:train@marriageducation.com?subject=Marriage Builds Nations Intro&body=I would like to enroll in Marriage Builds Nations Intro ($29)" class="buy-button" data-role="cta-marriage-nations-intro">Discover Your Impact</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANE 1: Personal Development & Teleios Foundations -->
+  <section class="courses" id="courses">
+    <div class="container">
+      <h2>Personal Development & Teleios Foundations</h2>
+      <p class="course-subtitle" style="text-align: center; max-width: 800px; margin: 0 auto 3rem auto;">
+        For singles and couples — building the human maturity foundation that makes covenant faithfulness possible
+      </p>
+
+      <div class="product-grid">
+        <div class="product">
+          <h4>Personal Development: The Roadmap to Maturation (Teleios Level 1)</h4>
+          <p><strong>Who it's for:</strong> Singles, engaged, and married individuals who need full personal development before or alongside marriage work.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Behavioral maturity (self-command, reliability, peacekeeping)</li>
+              <li>Temperamental maturity (handling difference without contempt)</li>
+              <li>Emotional maturity (empathy, ordered affection)</li>
+              <li>Mental maturity (sound judgment about sex, covenant, and society)</li>
+              <li>UDHR 26(2) & "full development of the human personality" in real life</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 6 weeks | <strong>Format:</strong> Online program (video + workbook + weekly Q&A)</p>
+          <p class="price">$247</p>
+          <a href="mailto:train@marriageducation.com?subject=Teleios Level 1 Enrollment&body=I would like to enroll in Teleios Level 1 ($247)" class="buy-button" data-role="cta-teleios1">Enroll in Teleios Level 1</a>
+        </div>
+
+        <div class="product">
+          <h4>Teleios Level 2: Advanced Human Development & Relationship Readiness</h4>
+          <p><strong>Who it's for:</strong> Those who completed Level 1 or already practice strong self-command but want marriage-readiness at civilizational standard.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Epistemology (how you know what you know about love, sex, and marriage)</li>
+              <li>Axiology (value & value-judgment: how you rank what matters in home and nation)</li>
+              <li>Ontology (seeing marriage as divine system, not private experiment)</li>
+              <li>Etymology (language literacy: why definitions like "marriage," "sex," "fidelity" matter)</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 8 weeks | <strong>Format:</strong> Live cohort + assignments + feedback</p>
+          <p class="price">$397</p>
+          <a href="mailto:train@marriageducation.com?subject=Teleios Level 2 Application&body=I would like to apply for Teleios Level 2 ($397)" class="buy-button" data-role="cta-teleios2">Apply for Teleios Level 2</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANE 2: Marriage, Sexuality & SBD Book-Based Trainings -->
+  <section class="featured-products">
+    <div class="container">
+      <h3>Marriage, Sexuality & SBD Book-Based Trainings</h3>
+      <p class="course-subtitle" style="text-align: center; max-width: 900px; margin: 0 auto 3rem auto; color: #636e72;">
+        Comprehensive courses anchored in Sex By Design philosophy — for couples ready to build covenant-level intimacy
+      </p>
+
+      <div class="product-grid">
+        <div class="product">
+          <h4>Sex By Design for Dummies — Core Curriculum</h4>
+          <p style="font-style: italic; color: #e17055;">(The flagship course based on the book)</p>
+          <p><strong>Who it's for:</strong> Couples and serious singles who want the full SBD framework in a guided way.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Design: one flesh, naked and not ashamed</li>
+              <li>Wholeness math: 1 + 1 → 1 (no half-people equations)</li>
+              <li>Pics & Pearls basics: stewarding nakedness & imagination</li>
+              <li>UDHR 16 & 26 as marriage frame (family as fundamental unit)</li>
+              <li>Practice From Perfection: living from <em>teleios</em>, not chasing it</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 10 weeks | <strong>Format:</strong> Cohort or self-paced (videos, reading, exercises, couple dialogues)</p>
+          <p class="price">$497 (couple access)</p>
+          <a href="mailto:train@marriageducation.com?subject=SBD Core Curriculum Enrollment&body=I would like to enroll in Sex By Design Core Curriculum ($497)" class="buy-button" data-role="cta-sbd-core">Start Sex By Design Core</a>
+        </div>
+
+        <div class="product">
+          <h4>The Art of Marriage — Covenant, Nakedness & Civilization</h4>
+          <p><strong>Who it's for:</strong> Couples who already love each other but want a civilization-grade understanding of what their marriage is.</p>
+          <div class="course-features">
+            <strong>You'll explore:</strong>
+            <ul>
+              <li>Marriage as political theology of home (why nations rise or fall on marriage)</li>
+              <li>UDHR 16: family as fundamental unit of society</li>
+              <li>Genesis 2:24–25 + 1 Cor. 6:16 — the civilizational power of one flesh</li>
+              <li>How your home becomes a "micro-nation" with laws, liturgies, and culture</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 6 weeks | <strong>Format:</strong> Workshop (video lessons + case studies + home charters)</p>
+          <p class="price">$297</p>
+          <a href="mailto:train@marriageducation.com?subject=Art of Marriage Enrollment&body=I would like to enroll in The Art of Marriage ($297)" class="buy-button" data-role="cta-art-marriage">Enroll in The Art of Marriage</a>
+        </div>
+
+        <div class="product">
+          <h4>The Art of Sexuality — Lifestyle of Allure & Attraction in Marriage</h4>
+          <p><strong>Who it's for:</strong> Married couples who need to restore or upgrade sexual atmosphere, not just "frequency."</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Sexuality vs. sex: lifestyle vs. isolated act</li>
+              <li>A3 Model (Attitude → Attire → Allure) for both husband and wife</li>
+              <li>Muliebrity & Virility packs (home, outdoor, corporate, intimacy wardrobes)</li>
+              <li>Dressing for nakedness; stewarding scent, sound, and setting</li>
+              <li>Song of Songs liturgies for daily and weekly allure</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 8 weeks | <strong>Format:</strong> Practicum (demo lessons, wardrobe labs, exercises, reflection prompts)</p>
+          <p class="price">$397/couple</p>
+          <a href="mailto:train@marriageducation.com?subject=Art of Sexuality Enrollment&body=I would like to join The Art of Sexuality ($397)" class="buy-button" data-role="cta-art-sexuality">Join The Art of Sexuality</a>
+        </div>
+
+        <div class="product">
+          <h4>The Art of Seduction — Sacred Seduction for Husbands & Wives</h4>
+          <p><strong>Who it's for:</strong> Couples ready to outperform porn by learning holy seduction inside covenant.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Biblical eroticism (Song 1:2, 2:16, 4:7, 7:10)</li>
+              <li>Seduction as service, not manipulation</li>
+              <li>Pursuit patterns: how husbands and wives each initiate</li>
+              <li>Building predictably arousing rituals that stay within holiness</li>
+              <li>How to turn shyness into creative devotion (without shame)</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 6 weeks | <strong>Format:</strong> Live/online hybrid + homework drills</p>
+          <p class="price">$347</p>
+          <a href="mailto:train@marriageducation.com?subject=Art of Seduction Enrollment&body=I would like to unlock The Art of Seduction ($347)" class="buy-button" data-role="cta-art-seduction">Unlock The Art of Seduction</a>
+        </div>
+
+        <div class="product">
+          <h4>Marriage = Porn & Beyond — Desire, Imagery & Covenant Superiority</h4>
+          <p><strong>Who it's for:</strong> Individuals and couples wrestling with porn, or wanting a marriage that makes porn irrelevant.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Why porn "works" (unashamed imagery, curated nakedness) and why marriage must do it better</li>
+              <li>Covenant imagery (Pics & Pearls) vs. counterfeit imagery</li>
+              <li>How to direct imagination, memory, and arousal toward your spouse only</li>
+              <li>How to build a home where porn has nothing to offer</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 8 weeks | <strong>Format:</strong> Freedom lab (teaching + accountability + couple exercises)</p>
+          <p class="price">$447 individual / $597 couple</p>
+          <a href="mailto:train@marriageducation.com?subject=Marriage = Porn & Beyond Enrollment&body=I would like to start Marriage = Porn & Beyond" class="buy-button" data-role="cta-marriage-porn">Start Marriage = Porn & Beyond</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Strategic Bundles Section -->
+  <section class="lead-magnet" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe);">
+    <div class="container">
+      <h3>🎁 Strategic Bundles — Save Big, Transform Faster</h3>
+      <p style="max-width: 800px; margin: 0 auto 3rem auto;">
+        Accelerate your transformation with curated course bundles designed to give you complete mastery in key areas.
+      </p>
+
+      <div class="product-grid">
+        <div class="product" style="background: white; color: #2d3436;">
+          <h4 style="color: #e17055;">⭐ Sexual Mastery Bundle</h4>
+          <p style="font-weight: bold; margin-bottom: 1.5rem;">Complete sexual literacy and conjugal mastery pathway</p>
+          <div class="course-features">
+            <strong>Includes 4 flagship courses:</strong>
+            <ul style="text-align: left;">
+              <li>The Art of Sexuality ($397)</li>
+              <li>The Art of Seduction ($347)</li>
+              <li>The Art of Nakedness ($199)</li>
+              <li>Sexual Imagination Course ($249)</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Total Value:</strong> <span style="text-decoration: line-through;">$1,192</span></p>
+          </div>
+          <p class="price" style="font-size: 2rem;">$399</p>
+          <p style="color: #00b894; font-weight: bold; margin-bottom: 1rem;">Save $793 (67% off)</p>
+          <a href="mailto:train@marriageducation.com?subject=Sexual Mastery Bundle&body=I would like to enroll in the Sexual Mastery Bundle ($399)" class="buy-button" data-role="cta-bundle-sexual-mastery">Get Complete Bundle</a>
+        </div>
+
+        <div class="product" style="background: white; color: #2d3436;">
+          <h4 style="color: #0984e3;">Teleios Development Bundle</h4>
+          <p style="font-weight: bold; margin-bottom: 1.5rem;">Full personal development foundation for covenant readiness</p>
+          <div class="course-features">
+            <strong>Includes 4 core programs:</strong>
+            <ul style="text-align: left;">
+              <li>The Teleios Blueprint ($247)</li>
+              <li>Identity Mastery ($149)</li>
+              <li>The Heart of Relationship ($149)</li>
+              <li>Four Faculties Training ($199)</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Total Value:</strong> <span style="text-decoration: line-through;">$744</span></p>
+          </div>
+          <p class="price" style="font-size: 2rem;">$299</p>
+          <p style="color: #00b894; font-weight: bold; margin-bottom: 1rem;">Save $445 (60% off)</p>
+          <a href="mailto:train@marriageducation.com?subject=Teleios Development Bundle&body=I would like to enroll in the Teleios Development Bundle ($299)" class="buy-button" data-role="cta-bundle-teleios">Get Complete Bundle</a>
+        </div>
+
+        <div class="product" style="background: white; color: #2d3436;">
+          <h4 style="color: #00b894;">Marriage Governance Bundle</h4>
+          <p style="font-weight: bold; margin-bottom: 1.5rem;">Master marriage systems, communication, and household leadership</p>
+          <div class="course-features">
+            <strong>Includes 4 essential courses:</strong>
+            <ul style="text-align: left;">
+              <li>Marriage System Design ($297)</li>
+              <li>Covenant Governance ($249)</li>
+              <li>Daily Liturgies of Marriage ($149)</li>
+              <li>Communication Mastery ($199)</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Total Value:</strong> <span style="text-decoration: line-through;">$894</span></p>
+          </div>
+          <p class="price" style="font-size: 2rem;">$349</p>
+          <p style="color: #00b894; font-weight: bold; margin-bottom: 1rem;">Save $545 (61% off)</p>
+          <a href="mailto:train@marriageducation.com?subject=Marriage Governance Bundle&body=I would like to enroll in the Marriage Governance Bundle ($349)" class="buy-button" data-role="cta-bundle-marriage-governance">Get Complete Bundle</a>
+        </div>
+      </div>
+
+      <div style="margin-top: 3rem; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 10px;">
+        <h4 style="font-size: 1.5rem; margin-bottom: 1rem;">🌟 SBD Academy Lifetime Access Pass</h4>
+        <p style="max-width: 700px; margin: 0 auto 1rem auto;">
+          Get access to <strong>ALL current and future courses</strong>, all books, all updates, and lifetime membership in the SBD community.
+        </p>
+        <p style="font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem;">One-time payment: $1,997</p>
+        <a href="mailto:train@marriageducation.com?subject=Lifetime Access Pass&body=I would like to purchase the SBD Academy Lifetime Access Pass ($1,997)" class="cta-button" data-role="cta-lifetime-pass">Get Lifetime Access</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANE 3: Coaching, Retreats & Certification -->
+  <section class="courses" style="background: #f8f9fa;">
+    <div class="container">
+      <h2>Coaching, Retreats & Certification</h2>
+      <p class="course-subtitle" style="text-align: center; max-width: 800px; margin: 0 auto 3rem auto;">
+        Premium support and professional training for those seeking precision help or wanting to teach SBD
+      </p>
+
+      <div class="product-grid">
+        <div class="product">
+          <h4>SBD Private Coaching — 1:1 with Dr. Coach</h4>
+          <p><strong>Who it's for:</strong> Individuals or couples needing precision help, not generic advice.</p>
+          <div class="course-features">
+            <strong>You'll receive:</strong>
+            <ul>
+              <li>Deep diagnostic according to SBD & Teleios framework</li>
+              <li>Custom practice plan for 6–12 weeks</li>
+              <li>Support between sessions (email/WhatsApp)</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> Flexible | <strong>Format:</strong> 60-minute sessions (video/phone)</p>
+          <p class="price">$150/hour</p>
+          <p style="font-size: 0.9rem; color: #636e72;">(bundles available)</p>
+          <a href="mailto:train@marriageducation.com?subject=Private Coaching Application&body=I would like to apply for SBD Private Coaching" class="buy-button" data-role="cta-private-coaching">Apply for Private Coaching</a>
+        </div>
+
+        <div class="product">
+          <h4>SBD Marriage Labs — Weekend Intensives</h4>
+          <p><strong>Who it's for:</strong> Couples needing breakthrough in 48 hours — not another year of confusion.</p>
+          <div class="course-features">
+            <strong>You'll experience:</strong>
+            <ul>
+              <li>2 days of teaching, labs, and guided conversations</li>
+              <li>Sexual literacy labs (non-graphic, covenant-anchored)</li>
+              <li>Personal development + marital fidelity integration</li>
+              <li>Follow-up group calls after the retreat</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> Weekend | <strong>Format:</strong> In-person intensive</p>
+          <p class="price">from $899/couple</p>
+          <p style="font-size: 0.9rem; color: #636e72;">(depending on venue)</p>
+          <a href="mailto:train@marriageducation.com?subject=SBD Marriage Lab Inquiry&body=I would like to join the next SBD Marriage Lab" class="buy-button" data-role="cta-marriage-lab">Join the Next SBD Marriage Lab</a>
+        </div>
+
+        <div class="product">
+          <h4>SBD Certified Facilitator Training</h4>
+          <p><strong>Who it's for:</strong> Pastors, counselors, coaches, and serious couples who want to teach SBD in churches, communities, or practice.</p>
+          <div class="course-features">
+            <strong>You'll master:</strong>
+            <ul>
+              <li>Full SBD philosophy (teleios, marriage math, Pics & Pearls, sexuality as lifestyle)</li>
+              <li>How to run small groups and marriage labs</li>
+              <li>Ethical boundaries and scope of practice</li>
+              <li>Licensing model and support from MarriagEducation.com</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 12 weeks | <strong>Format:</strong> Certification (live + practicum + assessment)</p>
+          <p class="price">$1,497</p>
+          <a href="mailto:train@marriageducation.com?subject=Facilitator Training Application&body=I would like to apply for SBD Certified Facilitator Training ($1,497)" class="buy-button" data-role="cta-facilitator-training">Apply for Facilitator Training</a>
+        </div>
+
+        <div class="product" style="border: 3px solid #6c5ce7; background: linear-gradient(to bottom, #ffffff, #f8f9fa);">
+          <h4 style="color: #6c5ce7;">🎓 Diploma in Sexual Literacy & Conjugal Mastery</h4>
+          <p style="font-style: italic; color: #6c5ce7; font-size: 0.95rem; font-weight: bold;">⭐ Premium Certification Program</p>
+          <p><strong>Who it's for:</strong> Couples and individuals seeking the highest level of sexual literacy, conjugal intelligence, and covenantal mastery.</p>
+          <div class="course-features">
+            <strong>Complete curriculum includes:</strong>
+            <ul>
+              <li>All Sexual Mastery Bundle courses</li>
+              <li>Advanced modules: Arousal Mastery, Bedroom Governance, Erotic Devotion</li>
+              <li>Song of Solomon deep study</li>
+              <li>Pics & Pearls advanced practicum</li>
+              <li>12 live coaching sessions</li>
+              <li>Private community access</li>
+              <li>Official SBD Diploma certificate</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 16 weeks | <strong>Format:</strong> Comprehensive diploma program (online + live sessions)</p>
+          <p class="price" style="font-size: 1.8rem;">$2,500</p>
+          <p style="font-size: 0.9rem; color: #636e72; margin-top: 0.5rem;">Payment plans available</p>
+          <a href="mailto:train@marriageducation.com?subject=Diploma in Sexual Literacy Application&body=I would like to apply for the Diploma in Sexual Literacy & Conjugal Mastery ($2,500)" class="buy-button" style="background: #6c5ce7;" data-role="cta-diploma-sexual-literacy">Apply for Diploma</a>
+        </div>
+
+        <div class="product" style="border: 3px solid #0984e3; background: linear-gradient(to bottom, #ffffff, #f8f9fa);">
+          <h4 style="color: #0984e3;">🎓 Diploma in Teleios Personal Development</h4>
+          <p style="font-style: italic; color: #0984e3; font-size: 0.95rem; font-weight: bold;">⭐ Premium Certification Program</p>
+          <p><strong>Who it's for:</strong> Singles and married individuals committed to full human maturity and becoming whole persons ready for covenant life.</p>
+          <div class="course-features">
+            <strong>Complete curriculum includes:</strong>
+            <ul>
+              <li>All Teleios Development Bundle courses</li>
+              <li>Advanced modules: Anthropology of Wholeness, Science of Self-Command</li>
+              <li>Relationship Mastery Intensive (Levels 1-3)</li>
+              <li>Temperament & Emotional Intelligence deep work</li>
+              <li>10 private coaching sessions</li>
+              <li>Personalized maturity assessment & roadmap</li>
+              <li>Official SBD Teleios Diploma certificate</li>
+            </ul>
+          </div>
+          <p><strong>Duration:</strong> 14 weeks | <strong>Format:</strong> Comprehensive diploma program (online + coaching)</p>
+          <p class="price" style="font-size: 1.8rem;">$2,000</p>
+          <p style="font-size: 0.9rem; color: #636e72; margin-top: 0.5rem;">Payment plans available</p>
+          <a href="mailto:train@marriageducation.com?subject=Diploma in Teleios Development Application&body=I would like to apply for the Diploma in Teleios Personal Development ($2,000)" class="buy-button" style="background: #0984e3;" data-role="cta-diploma-teleios">Apply for Diploma</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials">
+    <div class="container">
+      <h3>Success Stories</h3>
+      <div class="testimonial-grid">
+        <blockquote>
+          <p>"The Intimacy Intensive completely transformed our marriage. We learned tools we never knew existed and our connection is deeper than ever."</p>
+          <cite>— Mark & Lisa, Married 8 years</cite>
+        </blockquote>
+        <blockquote>
+          <p>"Private coaching with Dr.Coach helped us navigate the most difficult season of our marriage. We're stronger now than when we first married."</p>
+          <cite>— James & Sarah, Married 15 years</cite>
+        </blockquote>
+        <blockquote>
+          <p>"The Marriage Mastery Program gave us a roadmap for the rest of our lives together. We can't recommend it highly enough."</p>
+          <cite>— David & Rachel, Married 3 years</cite>
+        </blockquote>
+        <blockquote>
+          <p>"Sex By Design Core Curriculum gave us the language and framework we'd been missing. We finally understand the 'why' behind marriage, not just the 'how.'"</p>
+          <cite>— Michael & Rebecca, Married 5 years</cite>
+        </blockquote>
+        <blockquote>
+          <p>"The Art of Sexuality course restored intimacy we thought was gone forever. We learned that sexuality is so much more than we'd been told."</p>
+          <cite>— Thomas & Jennifer, Married 12 years</cite>
+        </blockquote>
+        <blockquote>
+          <p>"Teleios Level 1 changed my life before I even got married. I came into covenant as a whole person, not expecting my spouse to complete me."</p>
+          <cite>— Daniel, Recently Married</cite>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing CTA Section -->
+  <section class="lead-magnet">
+    <div class="container">
+      <h3>Ready to Build a Teleios Marriage?</h3>
+      <p style="max-width: 800px; margin: 0 auto 1rem auto;">
+        Every course in this hub is designed to move you from theory to <em>teleios</em> — from knowing design, to living it, daily, in your body, your words, your bedroom, and your home.
+      </p>
+      <p style="max-width: 800px; margin: 0 auto 2rem auto;">
+        Choose your starting point: personal development, sexuality and marriage, or coaching and certification — and step into the marriage God designed, not the one culture tolerates.
+      </p>
+      <a href="#courses" class="cta-button" data-role="cta-final-explore">Explore All Courses</a>
+      <a href="contact.html" class="cta-button-secondary" data-role="cta-final-clarity">Book a Clarity Call</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="magazine.html">Magazine</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="schools.html">Schools</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p>Email: info@marriageducation.com</p>
+          <p>Training: train@marriageducation.com</p>
+          <p>Orders: orders@marriageducation.com</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBnKMGPBu9LNi2_NfU6OhfxP3_2TmqY4jE",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "257768723041",
+      appId: "1:257768723041:web:7c3f8f5e7d3e8f5e7d3e8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Load dynamic course cards from Firebase
+    async function loadDynamicCourses() {
+      try {
+        const coursesRef = collection(db, 'courses');
+        const q = query(coursesRef, orderBy('course_no', 'asc'));
+        const snapshot = await getDocs(q);
+        
+        const coursesBySchool = {
+          1: [],
+          2: [],
+          3: [],
+          4: []
+        };
+
+        snapshot.forEach(doc => {
+          const course = doc.data();
+          if (course.published !== false) {
+            coursesBySchool[course.school].push(course);
+          }
+        });
+
+        // Create dynamic sections for each school
+        const coursesSection = document.querySelector('#courses');
+        if (!coursesSection) return;
+
+        const schoolNames = {
+          1: 'Teleios School of Personal Development',
+          2: 'Sexual Literacy & Conjugal Mastery School',
+          3: 'Marriage Systems & Fidelity School',
+          4: 'Civilization & Family Leadership School'
+        };
+
+        let dynamicHTML = '';
+
+        Object.keys(coursesBySchool).forEach(schoolId => {
+          const courses = coursesBySchool[schoolId];
+          if (courses.length === 0) return;
+
+          dynamicHTML += `
+            <div class="container" style="margin-bottom: 4rem;">
+              <h2 style="margin-bottom: 2rem; color: #2d3748;">${schoolNames[schoolId]}</h2>
+              <div class="product-grid" id="school-${schoolId}">
+          `;
+
+          courses.forEach(course => {
+            const badge = course.badge ? `<span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 8px;">${course.badge}</span>` : '';
+            
+            dynamicHTML += `
+              <div class="product">
+                ${badge}
+                <h4>${course.title}</h4>
+                <p>${course.description}</p>
+                <div class="course-features" style="margin: 16px 0;">
+                  <strong>Course Details:</strong>
+                  <ul style="margin-top: 8px;">
+                    <li><strong>Duration:</strong> ${course.duration_weeks} weeks</li>
+                    <li><strong>Modules:</strong> ${course.modules ? course.modules.length : 0} lessons</li>
+                    <li><strong>Format:</strong> Text-based + Reflections</li>
+                  </ul>
+                </div>
+                <p class="price" style="font-size: 28px; font-weight: 700; color: #667eea; margin: 16px 0;">$${course.price}</p>
+                <a href="payment.html?product=${course.courseId}" class="buy-button" data-role="cta-${course.courseId}">Enroll Now</a>
+              </div>
+            `;
+          });
+
+          dynamicHTML += `
+              </div>
+            </div>
+          `;
+        });
+
+        // Insert after the hero and static sections
+        const targetSection = document.querySelector('#courses');
+        if (targetSection) {
+          targetSection.innerHTML = dynamicHTML;
+        }
+
+      } catch (error) {
+        console.error('Error loading courses:', error);
+      }
+    }
+
+    // Load courses when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDynamicCourses);
+    } else {
+      loadDynamicCourses();
+    }
+  </script>
+</body>
+</html>
