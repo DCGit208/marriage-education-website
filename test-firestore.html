@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Firestore Connection</title>
+</head>
+<body>
+  <h1>Testing Firestore...</h1>
+  <div id="output"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function testFirestore() {
+      const output = document.getElementById('output');
+      try {
+        output.innerHTML += '<p>🔄 Connecting to Firestore...</p>';
+        
+        const coursesRef = collection(db, 'courses');
+        const q = query(coursesRef, orderBy('course_no', 'asc'));
+        const snapshot = await getDocs(q);
+        
+        output.innerHTML += `<p>✅ Found ${snapshot.size} courses!</p>`;
+        
+        snapshot.forEach(doc => {
+          const course = doc.data();
+          output.innerHTML += `<p>- ${course.title} (School ${course.school})</p>`;
+        });
+        
+      } catch (error) {
+        output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+        console.error('Full error:', error);
+      }
+    }
+
+    testFirestore();
+  </script>
+</body>
+</html>
