@@ -387,18 +387,13 @@
           currency = 'FCFA';
         }
         
-        // Build MOMO checkout URL - point to unified Render server
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal 
-          ? 'http://localhost:4567/momo-checkout.html'
-          : 'https://marriage-education-website.onrender.com/momo-checkout.html';
-        
-        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
+        // Build manual MOMO payment URL (hosted on Render backend)
+        let checkoutUrl = 'https://marriage-education-website.onrender.com/public/momo-manual-payment.html?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
         checkoutUrl += '&price=' + encodeURIComponent(price);
         checkoutUrl += '&currency=' + encodeURIComponent(currency);
         
-        console.log('Redirecting to MOMO checkout:', checkoutUrl, 'Price:', price, 'Currency:', currency);
+        console.log('Redirecting to manual MOMO payment:', checkoutUrl, 'Price:', price, 'Currency:', currency);
         window.location.href = checkoutUrl;
       });
       

@@ -127,17 +127,14 @@ function pollPaymentStatus(referenceId, attempts) {
       
       if (data.success && data.status === 'SUCCESSFUL') {
         // Payment successful!
-        console.log('✅ Payment successful!');
-        showStatus('success', '🎉 Payment Successful!\n\nRedirecting to download page...');
+        console.log('✅ Payment successful - Payment is now pending admin approval');
+        showStatus('success', '🎉 Payment Successful!\n\nRedirecting to confirmation page...');
         
-        // Redirect to success page on MOMO server (absolute URL to ensure correct server)
-        const isLocal = window.location.hostname === 'localhost';
-        const successUrl = isLocal
-          ? `http://localhost:4243/success.html?session_id=${referenceId}&product_id=${productId}`
-          : `https://marriage-education-momo-rp92.onrender.com/success.html?session_id=${referenceId}&product_id=${productId}`;
+        // Redirect to payment-pending page (waiting for admin approval)
+        const pendingUrl = `https://marriageducation.com/payment-pending.html?reference=${referenceId}&product=${productId}`;
         
         setTimeout(() => {
-          window.location.href = successUrl;
+          window.location.href = pendingUrl;
         }, 1500);
         
       } else if (data.success && data.status === 'FAILED') {

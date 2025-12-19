@@ -252,7 +252,8 @@
   <script>
     // Get reference from URL
     const urlParams = new URLSearchParams(window.location.search);
-    const reference = urlParams.get('ref');
+    const reference = urlParams.get('reference') || urlParams.get('ref');
+    const productId = urlParams.get('product');
     
     if (reference) {
       document.getElementById('reference-display').textContent = reference;
@@ -262,7 +263,7 @@
 
     // Auto-check verification status every 10 seconds
     let checkCount = 0;
-    const maxChecks = 30; // Check for 5 minutes (30 * 10 seconds)
+    const maxChecks = 60; // Check for 10 minutes (60 * 10 seconds)
 
     const checkInterval = setInterval(async () => {
       if (!reference || checkCount >= maxChecks) {
@@ -273,33 +274,30 @@
       checkCount++;
 
       try {
-        // Check Firebase for payment status
-        if (typeof firebase !== 'undefined' && firebase.firestore) {
-          const salesRef = firebase.firestore().collection('sales');
-          const query = salesRef.where('referenceId', '==', reference).limit(1);
-          const snapshot = await query.get();
-
-          if (!snapshot.empty) {
-            const sale = snapshot.docs[0].data();
-            
-            if (sale.status === 'completed') {
-              // Payment verified!
-              window.location.href = 'payment-success.html?ref=' + reference;
-            } else if (sale.status === 'failed') {
-              // Payment failed
-              window.location.href = 'payment-failed.html?ref=' + reference;
-            }
+        // Check main server for payment approval status
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:4567'
+          : 'https://marriage-education-website.onrender.com';
+        
+        const response = await fetch(`${apiUrl}/check-payment-status?reference=${reference}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'approved' && data.download_url) {
+            // Payment approved! Redirect to success page with download link
+            window.location.href = `payment-success.html?ref=${reference}&token=${data.token}`;
+          } else if (data.status === 'rejected') {
+            // Payment rejected
+            window.location.href = `payment-failed.html?ref=${reference}&reason=${encodeURIComponent(data.reason || 'Payment verification failed')}`;
           }
+          // If still pending, continue polling
         }
       } catch (error) {
         console.error('Error checking payment status:', error);
+        // Continue polling even on error
       }
     }, 10000); // Check every 10 seconds
   </script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
 </body>
 </html>
