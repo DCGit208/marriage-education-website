@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Ambassador Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #00b894;
+        }
+        .test-button {
+            background: #00b894;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #00a085;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Ambassador Registration Test</h1>
+        <p>Test the ambassador registration system to ensure Firebase and email are working correctly.</p>
+
+        <button class="test-button" onclick="testEmailOnly()">
+            📧 Test Email Submission Only
+        </button>
+        
+        <button class="test-button" onclick="testFirebaseOnly()">
+            🔥 Test Firebase Only
+        </button>
+        
+        <button class="test-button" onclick="testFullSubmission()">
+            ✅ Test Full Submission (Email + Firebase)
+        </button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        const testData = {
+            firstName: 'Test',
+            lastName: 'Ambassador',
+            fullName: 'Test Ambassador',
+            email: 'test@example.com',
+            phone: '+237 600 000 000',
+            city: 'Douala',
+            region: 'Littoral',
+            instagram: 'testuser',
+            instagramFollowers: 500,
+            facebook: 'https://facebook.com/testuser',
+            facebookFollowers: 1000,
+            tiktok: '',
+            linkedin: '',
+            primaryPlatform: 'Instagram',
+            motivation: 'This is a test motivation with more than 50 words to ensure validation passes correctly. I am excited about this opportunity and want to help promote marriage education in my community.',
+            salesExperience: 'Yes - Side hustle',
+            commitment: '60',
+            referralSource: 'Website',
+            code: 'AMB-TEST-' + Date.now().toString().slice(-4),
+            status: 'pending',
+            booksSold: 0,
+            commissionEarned: 0,
+            level: 'Starter',
+            createdAt: new Date().toISOString()
+        };
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + type;
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = message;
+        }
+
+        async function testEmailOnly() {
+            showResult('⏳ Testing email submission...', 'info');
+            
+            try {
+                const response = await fetch('send-ambassador-email.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult(`
+                        <strong>✅ Email Test Successful!</strong><br>
+                        Email sent to ambassadors@marriageducation.com<br>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <strong>❌ Email Test Failed</strong><br>
+                        ${result.error}<br>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    <strong>❌ Email Test Error</strong><br>
+                    ${error.message}<br>
+                    <pre>${error.stack}</pre>
+                `, 'error');
+            }
+        }
+
+        async function testFirebaseOnly() {
+            showResult('⏳ Testing Firebase submission...', 'info');
+            
+            try {
+                if (typeof db === 'undefined') {
+                    throw new Error('Firebase not loaded');
+                }
+
+                const docRef = await db.collection('ambassadors').add(testData);
+                
+                showResult(`
+                    <strong>✅ Firebase Test Successful!</strong><br>
+                    Document ID: ${docRef.id}<br>
+                    Data saved to Firestore ambassadors collection
+                `, 'success');
+                
+                // Clean up test data
+                setTimeout(async () => {
+                    await docRef.delete();
+                    console.log('Test document deleted');
+                }, 3000);
+                
+            } catch (error) {
+                showResult(`
+                    <strong>❌ Firebase Test Failed</strong><br>
+                    ${error.message}<br>
+                    <pre>${error.stack}</pre>
+                `, 'error');
+            }
+        }
+
+        async function testFullSubmission() {
+            showResult('⏳ Testing full submission (Email + Firebase)...', 'info');
+            
+            const results = {
+                firebase: { success: false, message: '' },
+                email: { success: false, message: '' }
+            };
+
+            // Test Firebase
+            try {
+                if (typeof db !== 'undefined') {
+                    const docRef = await db.collection('ambassadors').add(testData);
+                    results.firebase.success = true;
+                    results.firebase.message = `Saved with ID: ${docRef.id}`;
+                    
+                    // Clean up
+                    setTimeout(async () => {
+                        await docRef.delete();
+                    }, 3000);
+                } else {
+                    results.firebase.message = 'Firebase not loaded';
+                }
+            } catch (error) {
+                results.firebase.message = error.message;
+            }
+
+            // Test Email
+            try {
+                const response = await fetch('send-ambassador-email.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                const emailResult = await response.json();
+                
+                results.email.success = emailResult.success;
+                results.email.message = emailResult.message || emailResult.error;
+            } catch (error) {
+                results.email.message = error.message;
+            }
+
+            // Show results
+            const firebaseStatus = results.firebase.success ? '✅' : '❌';
+            const emailStatus = results.email.success ? '✅' : '❌';
+            const overallSuccess = results.firebase.success && results.email.success;
+
+            showResult(`
+                <strong>${overallSuccess ? '✅' : '⚠️'} Full Submission Test Results</strong><br><br>
+                <strong>${firebaseStatus} Firebase:</strong> ${results.firebase.message}<br>
+                <strong>${emailStatus} Email:</strong> ${results.email.message}<br><br>
+                ${overallSuccess ? 
+                    '<strong style="color: #00b894;">✅ All systems working correctly!</strong>' : 
+                    '<strong style="color: #e74c3c;">⚠️ Some issues detected. Check details above.</strong>'}
+            `, overallSuccess ? 'success' : 'error');
+        }
+    </script>
+</body>
+</html>
