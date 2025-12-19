@@ -726,7 +726,7 @@
                 try {
                     // Check Firebase is loaded
                     if (typeof firebase === 'undefined' || typeof db === 'undefined') {
-                        throw new Error('Firebase not loaded. Please refresh the page.');
+                        console.warn('⚠️ Firebase not loaded, proceeding with email only');
                     }
                     
                     console.log('📝 Starting submission...');
@@ -769,26 +769,39 @@
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     
-                    // Save to Firebase
-                    console.log('📝 Saving to Firebase...');
-                    const docRef = await db.collection('ambassadors').add(completeData);
-                    console.log('✅ Saved to Firebase:', code);
-                    
-                    // Send email notification
-                    console.log('📧 Sending email...');
-                    try {
-                        const emailResponse = await fetch('send-ambassador-email.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(completeData)
-                        });
-                        const emailResult = await emailResponse.json();
-                        if (emailResult.success) {
-                            console.log('✅ Email sent');
+                    // Save to Firebase (if available)
+                    if (typeof db !== 'undefined') {
+                        console.log('📝 Saving to Firebase...');
+                        try {
+                            const docRef = await db.collection('ambassadors').add(completeData);
+                            console.log('✅ Saved to Firebase:', code);
+                        } catch (firebaseError) {
+                            console.warn('⚠️ Firebase save failed:', firebaseError.message);
+                            // Continue with email notification even if Firebase fails
                         }
-                    } catch (emailError) {
-                        console.warn('⚠️ Email error:', emailError);
                     }
+                    
+                    // Send email notification (REQUIRED)
+                    console.log('📧 Sending email to ambassadors@marriageducation.com...');
+                    const emailResponse = await fetch('send-ambassador-email.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(completeData)
+                    });
+                    
+                    if (!emailResponse.ok) {
+                        const errorText = await emailResponse.text();
+                        throw new Error('Email submission failed: ' + errorText);
+                    }
+                    
+                    const emailResult = await emailResponse.json();
+                    if (!emailResult.success) {
+                        console.error('❌ Email failed:', emailResult);
+                        throw new Error(emailResult.error || 'Email submission failed');
+                    }
+                    
+                    console.log('✅ Email sent successfully to:', emailResult.recipient);
+                    console.log('📧 Email details:', emailResult);
                     
                     // Show success modal
                     document.getElementById('successModal').classList.add('active');

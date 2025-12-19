@@ -172,26 +172,50 @@ $headers[] = "Reply-To: $email";
 $headers[] = "X-Mailer: PHP/" . phpversion();
 $headers[] = "X-Priority: 1"; // High priority
 
+// Log email attempt
+$logEntry = date('Y-m-d H:i:s') . " - Attempting to send email\n";
+$logEntry .= "To: $to\n";
+$logEntry .= "From: $from\n";
+$logEntry .= "Subject: $subject\n";
+$logEntry .= "Applicant: $fullName ($email)\n";
+$logEntry .= "---\n";
+@file_put_contents('logs/email-attempts.log', $logEntry, FILE_APPEND);
+
 // Send email using PHP mail() function (iPage supports this)
 $mailSent = mail($to, $subject, $emailBody, implode("\r\n", $headers));
 
 if ($mailSent) {
-    // Log successful submission (optional)
-    $logEntry = date('Y-m-d H:i:s') . " - Ambassador application: $fullName ($email)\n";
+    // Log successful submission
+    $logEntry = date('Y-m-d H:i:s') . " - ✅ SUCCESS - Email sent to $to\n";
+    $logEntry .= "Ambassador application: $fullName ($email)\n";
+    $logEntry .= "Phone: $phone | Location: $city, $region\n";
+    $logEntry .= "---\n";
     @file_put_contents('logs/ambassador-submissions.log', $logEntry, FILE_APPEND);
     
     http_response_code(200);
     echo json_encode([
         'success' => true,
         'message' => 'Application submitted successfully',
-        'emailSent' => true
+        'emailSent' => true,
+        'recipient' => $to,
+        'timestamp' => date('Y-m-d H:i:s')
     ]);
 } else {
+    // Log failure
+    $errorLog = date('Y-m-d H:i:s') . " - ❌ FAILED - Email to $to failed\n";
+    $errorLog .= "PHP mail() returned false\n";
+    $errorLog .= "Applicant: $fullName ($email)\n";
+    $errorLog .= "Error: " . error_get_last()['message'] ?? 'Unknown error' . "\n";
+    $errorLog .= "---\n";
+    @file_put_contents('logs/email-errors.log', $errorLog, FILE_APPEND);
+    
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Failed to send email notification',
-        'emailSent' => false
+        'error' => 'Failed to send email notification. The mail() function returned false.',
+        'emailSent' => false,
+        'recipient' => $to,
+        'debug' => error_get_last()
     ]);
 }
 ?>

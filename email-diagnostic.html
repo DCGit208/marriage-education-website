@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Diagnostic - Ambassador Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #00b894;
+            border-bottom: 3px solid #00b894;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2d3436;
+            margin-top: 30px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .btn {
+            background: #00b894;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #00a085;
+        }
+        .btn-secondary {
+            background: #636e72;
+        }
+        .btn-secondary:hover {
+            background: #2d3436;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00b894;
+            border-radius: 5px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #00b894;
+        }
+        code {
+            background: #2d3436;
+            color: #00b894;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        .checklist li:before {
+            content: "□ ";
+            font-size: 20px;
+            margin-right: 10px;
+            color: #00b894;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #00b894;
+            color: white;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Diagnostic Tool</h1>
+        <p>This tool helps diagnose why emails are not reaching <strong>ambassadors@marriageducation.com</strong></p>
+
+        <div class="alert alert-info">
+            <strong>📌 Current Situation:</strong><br>
+            ✅ Form submits successfully<br>
+            ✅ Success modal appears<br>
+            ❌ <strong>No emails received at ambassadors@marriageducation.com</strong>
+        </div>
+
+        <h2>🧪 Step 1: Test Email Delivery</h2>
+        <div class="step">
+            <h3>Run Simple Email Test</h3>
+            <p>Click the button below to send a test email directly to ambassadors@marriageducation.com</p>
+            <a href="test-email-simple.php" class="btn" target="_blank">
+                📧 Send Test Email Now
+            </a>
+            <p style="margin-top: 15px; font-size: 14px; color: #636e72;">
+                This will test if PHP mail() function works on your iPage server
+            </p>
+        </div>
+
+        <h2>✅ Verification Checklist</h2>
+        <div class="step">
+            <ul class="checklist">
+                <li>Email account <code>ambassadors@marriageducation.com</code> exists in iPage cPanel</li>
+                <li>Email account has enough storage space</li>
+                <li>Checked inbox for ambassadors@marriageducation.com</li>
+                <li>Checked spam/junk folder</li>
+                <li>Checked Gmail Promotions/Updates tab (if using Gmail)</li>
+                <li>Added noreply@marriageducation.com to safe senders</li>
+                <li>Verified sender email exists on the domain</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Common Issues & Solutions</h2>
+
+        <div class="step">
+            <h3>Issue 1: PHP mail() Function Disabled</h3>
+            <p><strong>Symptom:</strong> Form submits but mail() returns false</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Contact iPage support to verify PHP mail() is enabled</li>
+                <li>Check if SMTP is required instead of mail()</li>
+                <li>Verify server-side mail configuration</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Issue 2: Sender Email Not Configured</h3>
+            <p><strong>Symptom:</strong> Emails sent but never arrive</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Log into iPage cPanel</li>
+                <li>Go to Email Accounts</li>
+                <li>Create/verify email: <code>noreply@marriageducation.com</code></li>
+                <li>Create/verify email: <code>ambassadors@marriageducation.com</code></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Issue 3: Emails Going to Spam</h3>
+            <p><strong>Symptom:</strong> Emails sent but in spam folder</p>
+            <p><strong>Solution:</strong></p>
+            <ol>
+                <li>Check spam folder thoroughly</li>
+                <li>Add to safe senders list</li>
+                <li>Configure SPF/DKIM records in iPage DNS</li>
+                <li>Use authenticated sender email</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Issue 4: iPage Requires SMTP Instead of mail()</h3>
+            <p><strong>Symptom:</strong> mail() doesn't work on iPage</p>
+            <p><strong>Solution:</strong> Switch to SMTP (see instructions below)</p>
+        </div>
+
+        <h2>📋 iPage Email Settings Reference</h2>
+        <table>
+            <tr>
+                <th>Setting</th>
+                <th>Value for iPage</th>
+            </tr>
+            <tr>
+                <td>SMTP Server</td>
+                <td><code>mail.marriageducation.com</code></td>
+            </tr>
+            <tr>
+                <td>SMTP Port</td>
+                <td><code>587</code> (TLS) or <code>465</code> (SSL)</td>
+            </tr>
+            <tr>
+                <td>Username</td>
+                <td><code>noreply@marriageducation.com</code></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td>Your email password from cPanel</td>
+            </tr>
+            <tr>
+                <td>Authentication</td>
+                <td>Required</td>
+            </tr>
+        </table>
+
+        <h2>🔍 Check Email Logs</h2>
+        <div class="step">
+            <p>After submitting a test or real application, check the following log files:</p>
+            <ul>
+                <li><code>logs/email-attempts.log</code> - All email send attempts</li>
+                <li><code>logs/email-errors.log</code> - Failed email attempts</li>
+                <li><code>logs/ambassador-submissions.log</code> - Successful submissions</li>
+                <li><code>logs/email-test.log</code> - Test email results</li>
+            </ul>
+            <p><strong>Note:</strong> You'll need FTP or cPanel File Manager access to view these logs</p>
+        </div>
+
+        <h2>🚀 Recommended Next Steps</h2>
+        <div class="step">
+            <ol>
+                <li>
+                    <strong>Run the email test:</strong>
+                    <a href="test-email-simple.php" class="btn btn-secondary" style="margin-left: 10px;">Test Email</a>
+                </li>
+                <li>
+                    <strong>Check iPage Email Accounts:</strong>
+                    <ul>
+                        <li>Login to iPage cPanel</li>
+                        <li>Navigate to Email Accounts</li>
+                        <li>Verify both emails exist: ambassadors@ and noreply@</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Check for emails:</strong>
+                    <ul>
+                        <li>Webmail at <code>webmail.marriageducation.com</code></li>
+                        <li>Your email client (Gmail, Outlook, etc.)</li>
+                        <li>Spam/Junk folder</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>If still not working:</strong>
+                    Contact iPage support and ask:
+                    <ul>
+                        <li>"Is PHP mail() function enabled on my account?"</li>
+                        <li>"Do I need to use SMTP instead?"</li>
+                        <li>"Are there any email sending restrictions?"</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>⚠️ Important Note:</strong> iPage sometimes requires SMTP authentication instead of the basic mail() function. If the test email fails, we may need to switch to using SMTP with PHPMailer or a similar library.
+        </div>
+
+        <h2>🎯 Test the Full Form</h2>
+        <div class="step">
+            <p>Once email testing is successful, try the full registration form:</p>
+            <a href="ambassador-register.html" class="btn">
+                Go to Ambassador Registration
+            </a>
+            <p style="margin-top: 15px;">
+                Open browser console (F12) and look for:<br>
+                <code>✅ Email sent successfully to: ambassadors@marriageducation.com</code>
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+            <p style="color: #636e72;">
+                Need help? Check the logs or contact iPage support<br>
+                <small>Marriage Education - Ambassador Registration System</small>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
