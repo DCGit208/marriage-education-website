@@ -192,6 +192,24 @@ post '/create-momo-payment' do
 
     if response.code == 202
       puts "[MOMO] ✅ Payment request created successfully"
+      
+      # Save to pending payments for admin approval
+      save_pending_payment({
+        reference: reference_id,
+        external_id: external_id,
+        product_id: product_id,
+        product_name: product_name,
+        amount: amount,
+        currency: api_currency,
+        phone: phone_number,
+        email: data['email'] || 'no-email@example.com',
+        status: 'pending',
+        created_at: Time.now.iso8601
+      })
+      
+      # Send Telegram notification to admin
+      send_admin_telegram_notification(reference_id, product_name, amount, api_currency, phone_number)
+      
       return {
         success: true,
         reference_id: reference_id,
@@ -338,3 +356,82 @@ puts "[MOMO] 🚀 MTN Mobile Money server starting on port #{settings.port}..."
 puts "[MOMO] Environment: #{MTN_MOMO_ENVIRONMENT}"
 puts "[MOMO] Base URL: #{MTN_MOMO_BASE_URL}"
 puts "[MOMO] Ready to accept payment requests!"
+
+# ============================================================================
+# PENDING PAYMENTS MANAGEMENT (Admin Approval System)
+# ============================================================================
+
+PENDING_PAYMENTS_FILE = File.join(File.dirname(__FILE__), '../pending_payments.json')
+
+# Telegram Configuration
+TELEGRAM_BOT_TOKEN = ENV['TELEGRAM_BOT_TOKEN']
+TELEGRAM_CHAT_ID = ENV['TELEGRAM_CHAT_ID']
+TELEGRAM_ENABLED = !TELEGRAM_BOT_TOKEN.nil? && !TELEGRAM_BOT_TOKEN.empty?
+
+if TELEGRAM_ENABLED
+  puts "[TELEGRAM] ✅ Enabled - Admin notifications will be sent to Chat ID: #{TELEGRAM_CHAT_ID}"
+else
+  puts "[TELEGRAM] ⚠️  Disabled - Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to enable admin notifications"
+end
+
+# Initialize pending_payments.json if it doesn't exist
+unless File.exist?(PENDING_PAYMENTS_FILE)
+  File.write(PENDING_PAYMENTS_FILE, JSON.pretty_generate({ payments: [] }))
+  puts "[ADMIN] Created pending_payments.json"
+end
+
+# Save payment to pending_payments.json
+def save_pending_payment(payment_data)
+  begin
+    data = JSON.parse(File.read(PENDING_PAYMENTS_FILE))
+    data['payments'] ||= []
+    data['payments'] << payment_data
+    File.write(PENDING_PAYMENTS_FILE, JSON.pretty_generate(data))
+    puts "[ADMIN] Saved pending payment: #{payment_data[:reference]}"
+    true
+  rescue => e
+    puts "[ADMIN] ❌ Error saving payment: #{e.message}"
+    false
+  end
+end
+
+# Send Telegram notification to admin
+def send_admin_telegram_notification(reference, product_name, amount, currency, phone)
+  return unless TELEGRAM_ENABLED
+  
+  puts "[TELEGRAM] 📱 Sending admin notification..."
+  
+  begin
+    message = <<~MSG
+🔔 *New Payment Pending Approval*
+
+Reference: `#{reference}`
+Product: *#{product_name}*
+Amount: #{amount} #{currency}
+Phone: #{phone}
+
+👉 [Review & Approve](https://marriageducation.com/admin-payments.html)
+    MSG
+    
+    url = "https://api.telegram.org/bot#{TELEGRAM_BOT_TOKEN}/sendMessage"
+    
+    response = HTTParty.post(url,
+      body: {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      }
+    )
+    
+    if response.success?
+      puts "[TELEGRAM] ✅ Admin notification sent"
+      true
+    else
+      puts "[TELEGRAM] ❌ Failed: #{response.code} - #{response.body}"
+      false
+    end
+  rescue => e
+    puts "[TELEGRAM] ❌ Error: #{e.message}"
+    false
+  end
+end
