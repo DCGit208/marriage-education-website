@@ -338,13 +338,8 @@
           currency = 'XAF'; // MTN MOMO uses XAF for FCFA
         }
         
-        // Redirect to manual payment instructions page
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal 
-          ? 'http://localhost:4567/momo-manual-payment.html'
-          : 'https://marriageducation.com/momo-manual-payment.html';
-        
-        let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
+        // Redirect to manual payment page on Render backend
+        let checkoutUrl = 'https://marriage-education-website.onrender.com/public/momo-manual-payment.html?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
         checkoutUrl += '&price=' + encodeURIComponent(price);
         checkoutUrl += '&currency=' + encodeURIComponent(currency);
