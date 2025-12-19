@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+    .lms-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: #1e293b;
+      color: white;
+      padding: 0;
+      width: 300px;
+      min-width: 300px;
+      height: 100vh;
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+    }
+    .sidebar-header {
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h2 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .sidebar-header .course-meta {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .progress-section {
+      padding: 20px;
+      background: #0f172a;
+    }
+    .progress-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      background: #334155;
+      height: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .modules-nav {
+      padding: 20px 0;
+    }
+    .modules-nav h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      padding: 0 20px 15px;
+      font-weight: 600;
+    }
+    .module-item {
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      color: #cbd5e1;
+    }
+    .module-item:hover {
+      background: rgba(102, 126, 234, 0.1);
+      color: white;
+    }
+    .module-item.active {
+      background: rgba(102, 126, 234, 0.15);
+      border-left-color: #667eea;
+      color: white;
+    }
+    .module-item .icon {
+      width: 24px;
+      height: 24px;
+      background: #334155;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .module-item.active .icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .module-item .text {
+      flex: 1;
+    }
+    .module-item .title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .module-item .duration {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .main-content {
+      flex: 1;
+      background: white;
+      min-width: 0;
+    }
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .breadcrumbs {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .breadcrumbs a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      text-decoration: underline;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .content-area {
+      padding: 40px;
+      max-width: 1000px;
+    }
+    .content-header {
+      margin-bottom: 40px;
+    }
+    .content-header h1 {
+      font-size: 2.5rem;
+      color: #1e293b;
+      margin-bottom: 15px;
+      line-height: 1.2;
+    }
+    .content-meta {
+      display: flex;
+      gap: 20px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .content-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .content-section {
+      line-height: 1.8;
+      max-width: 850px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .content-section h2 {
+      font-size: 2rem;
+      color: #1e293b;
+      margin: 40px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+    }
+    .content-section h3 {
+      font-size: 1.5rem;
+      color: #334155;
+      margin: 30px 0 15px;
+    }
+    .content-section h4 {
+      font-size: 1.2rem;
+      color: #475569;
+      margin: 25px 0 12px;
+    }
+    .content-section p {
+      color: #475569;
+      margin: 15px 0;
+      line-height: 1.8;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: none;
+    }
+    .content-section blockquote {
+      background: #f8fafc;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 25px 0;
+      font-style: italic;
+      color: #475569;
+    }
+    .content-section ul, .content-section ol {
+      margin: 15px 0 15px 30px;
+      color: #475569;
+    }
+    .content-section li {
+      margin: 8px 0;
+    }
+    .content-section strong {
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .content-section code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #e11d48;
+    }
+    .content-section pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    .content-section hr {
+      border: none;
+      border-top: 2px solid #e2e8f0;
+      margin: 40px 0;
+    }
+    .downloads {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+    .download-card {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      padding: 20px;
+      border-radius: 12px;
+      color: white;
+      text-decoration: none;
+      display: block;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+    }
+    .download-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(74, 222, 128, 0.4);
+    }
+    .download-card strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+    @media (max-width: 768px) {
+      .lms-wrapper {
+        flex-direction: column;
+      }
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="lms-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 id="sidebarTitle">Loading...</h2>
+        <div class="course-meta">
+          <span id="courseDuration">6 weeks</span>
+          <span id="coursePrice">$247</span>
+        </div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-label">Course Progress</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text"><span id="progressPercent">0</span>% Complete</div>
+      </div>
+      <nav class="modules-nav">
+        <h3>Course Curriculum</h3>
+        <div id="modulesNav"></div>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="breadcrumbs">
+          <a href="courses.html">← All Courses</a>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-secondary">📥 Downloads</button>
+          <button class="btn btn-primary">Mark Complete</button>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="content-header">
+          <h1 id="moduleTitle">Loading...</h1>
+          <div class="content-meta">
+            <div class="content-meta-item">⏱️ <span id="moduleEstimate">45-60 min</span></div>
+            <div class="content-meta-item">📚 <span id="moduleLevel">Foundation Level</span></div>
+          </div>
+        </div>
+        <div id="tabsContent"></div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const courseId = getQueryParam('id');
+    let currentModuleIndex = 0;
+    
+    fetch('courses-catalogue.json?t=' + new Date().getTime())
+      .then(response => response.json())
+      .then(data => {
+        const courses = Array.isArray(data) ? data : [];
+        const course = courses.find(c => c.courseId === courseId);
+        
+        if (!course) {
+          document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Course not found</h2></div>';
+          return;
+        }
+
+        document.getElementById('sidebarTitle').textContent = course.title;
+        document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
+        document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
+        document.title = course.title;
+
+        const modulesNav = document.getElementById('modulesNav');
+        const tabsContent = document.getElementById('tabsContent');
+
+        // Create placeholder weeks if modules don't exist
+        const totalWeeks = course.duration_weeks || 6;
+        const modules = course.modules || [];
+        
+        for (let idx = 0; idx < totalWeeks; idx++) {
+          const module = modules[idx];
+          const isAvailable = idx < modules.length;
+          
+          // Sidebar navigation
+          const navItem = document.createElement('div');
+          navItem.className = 'module-item' + (idx === 0 ? ' active' : '');
+          navItem.innerHTML = `
+            <div class="icon">${idx + 1}</div>
+            <div class="text">
+              <div class="title">Week ${idx + 1}</div>
+              <div class="duration">${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}</div>
+            </div>
+          `;
+          if (isAvailable) {
+            navItem.onclick = () => switchModule(idx);
+          } else {
+            navItem.style.opacity = '0.5';
+            navItem.style.cursor = 'not-allowed';
+          }
+          modulesNav.appendChild(navItem);
+
+          // Content area
+          const content = document.createElement('div');
+          content.className = 'tab-content' + (idx === 0 ? ' active' : '');
+          content.id = `module-${idx}`;
+          
+          if (isAvailable) {
+            const parsed = marked.parse(module.content || '');
+            content.innerHTML = `<div class="content-section">${parsed}</div>`;
+
+            if (module.downloads && module.downloads.length > 0) {
+              const downloadsHtml = '<h3>📥 Downloads</h3><div class="downloads">' + 
+                module.downloads.map(d => `<a href="${d.url}" class="download-card"><strong>${d.title}</strong></a>`).join('') +
+                '</div>';
+              content.innerHTML += downloadsHtml;
+            }
+          } else {
+            content.innerHTML = `
+              <div style="text-align:center; padding:60px 20px; color:#64748b;">
+                <h2 style="color:#94a3b8; font-size:3rem; margin-bottom:20px;">🔒</h2>
+                <h3 style="color:#475569; margin-bottom:10px;">Week ${idx + 1} Coming Soon</h3>
+                <p>This module will be available once you complete the previous weeks.</p>
+              </div>
+            `;
+          }
+
+          tabsContent.appendChild(content);
+        }
+
+        // Update module title
+        if (modules.length > 0) {
+          document.getElementById('moduleTitle').textContent = modules[0].title || 'Week 1';
+        }
+
+        const progress = ((1 / totalWeeks) * 100);
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressPercent').textContent = Math.round(progress);
+      })
+      .catch(err => {
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Error: ' + err.message + '</h2></div>';
+      });
+
+    function switchModule(index) {
+      currentModuleIndex = index;
+      
+      document.querySelectorAll('.module-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+
+      // Update header title
+      const moduleTitle = document.querySelectorAll('.module-item .title')[index];
+      if (moduleTitle) {
+        document.getElementById('moduleTitle').textContent = moduleTitle.textContent;
+      }
+
+      // Scroll to top
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courses</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Courses</h1>
+  <div id="courses-list"></div>
+  <script>
+    fetch('courses-catalogue.json?t=' + new Date().getTime())
+      .then(response => response.json())
+      .then(data => {
+        const list = document.getElementById('courses-list');
+        const courses = Array.isArray(data) ? data : [];
+        if (courses.length > 0) {
+          courses.forEach(course => {
+            const div = document.createElement('div');
+            div.className = 'course-card';
+            div.innerHTML = `<h2>${course.title}</h2>
+              <p>${course.description || ''}</p>
+              <a href='course-viewer.html?id=${course.courseId}'>View Course</a>`;
+            list.appendChild(div);
+          });
+        } else {
+          list.innerHTML = '<p>No courses found.</p>';
+        }
+      })
+      .catch(err => {
+        document.getElementById('courses-list').innerHTML = '<p>Error loading courses: ' + err.message + '</p>';
+      });
+  </script>
+</body>
+</html>
