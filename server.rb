@@ -855,6 +855,125 @@ get '/admin/pending-payments' do
   payments_data.to_json
 end
 
+# Ambassador registration endpoint
+post '/submit-ambassador-application' do
+  content_type 'application/json'
+  
+  # Rate limit: 5 applications per hour per IP
+  check_rate_limit("ambassador_#{request.ip}", 5, 3600)
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    
+    # Validate required fields
+    required_fields = ['fullName', 'email', 'phone', 'city', 'region', 'motivation', 'commitment']
+    missing_fields = required_fields.select { |field| data[field].nil? || data[field].to_s.strip.empty? }
+    
+    if missing_fields.any?
+      status 400
+      return { success: false, error: "Missing required fields: #{missing_fields.join(', ')}" }.to_json
+    end
+    
+    # Send email to ambassadors@marriageducation.com
+    ambassador_email = 'ambassadors@marriageducation.com'
+    subject = "🎯 New Ambassador Application - #{data['fullName']}"
+    
+    html_content = <<~HTML
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #00b894; }
+          .section h2 { color: #00b894; margin-top: 0; }
+          .field { margin-bottom: 12px; }
+          .field strong { display: inline-block; width: 180px; color: #555; }
+          .badge { background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+          .motivation-box { background: #fffbf0; padding: 15px; border-left: 3px solid #f39c12; border-radius: 4px; margin-top: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎯 New Ambassador Application</h1>
+            <p>Sex By Design Campaign</p>
+          </div>
+          
+          <div class="section">
+            <h2>👤 Personal Information</h2>
+            <div class="field"><strong>Full Name:</strong> #{data['fullName']}</div>
+            <div class="field"><strong>Email:</strong> <a href="mailto:#{data['email']}">#{data['email']}</a></div>
+            <div class="field"><strong>Phone/WhatsApp:</strong> #{data['phone']}</div>
+            <div class="field"><strong>Location:</strong> #{data['city']}, #{data['region']}</div>
+          </div>
+          
+          <div class="section">
+            <h2>📱 Social Media Presence</h2>
+            <div class="field"><strong>Primary Platform:</strong> <span class="badge">#{data['primaryPlatform'] || 'Not specified'}</span></div>
+            #{data['instagram'] ? "<div class='field'><strong>Instagram:</strong> @#{data['instagram']} (#{data['instagramFollowers'] || 0} followers)</div>" : ''}
+            #{data['facebook'] ? "<div class='field'><strong>Facebook:</strong> #{data['facebook']} (#{data['facebookFollowers'] || 0} friends/followers)</div>" : ''}
+            #{data['tiktok'] ? "<div class='field'><strong>TikTok:</strong> @#{data['tiktok']}</div>" : ''}
+            #{data['linkedin'] ? "<div class='field'><strong>LinkedIn:</strong> #{data['linkedin']}</div>" : ''}
+          </div>
+          
+          <div class="section">
+            <h2>🎯 Commitment & Experience</h2>
+            <div class="field"><strong>Target Commitment:</strong> <strong>#{data['commitment']} books</strong></div>
+            <div class="field"><strong>Sales Experience:</strong> #{data['salesExperience'] || 'Not specified'}</div>
+            <div class="field"><strong>Referral Source:</strong> #{data['referralSource'] || 'Not specified'}</div>
+          </div>
+          
+          <div class="section">
+            <h2>💡 Motivation</h2>
+            <div class="motivation-box">#{data['motivation']}</div>
+          </div>
+          
+          <div class="section" style="background: #e8f8f5;">
+            <h2>⚡ Next Steps</h2>
+            <p>
+              ✅ Review application<br>
+              ✅ Approve/Reject within 24-48 hours<br>
+              ✅ Send welcome email with ambassador code<br>
+              ✅ Grant access to dashboard and resources
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    HTML
+    
+    email_sent = send_email(ambassador_email, subject, html_content)
+    
+    if email_sent
+      puts "[AMBASSADOR] ✅ Application received from #{data['fullName']} (#{data['email']})"
+      status 200
+      { 
+        success: true, 
+        message: 'Application submitted successfully',
+        emailSent: true,
+        recipient: ambassador_email,
+        timestamp: Time.now.iso8601
+      }.to_json
+    else
+      puts "[AMBASSADOR] ❌ Failed to send email for #{data['fullName']}"
+      status 500
+      { success: false, error: 'Failed to send email notification' }.to_json
+    end
+    
+  rescue JSON::ParserError => e
+    status 400
+    { success: false, error: 'Invalid JSON data' }.to_json
+  rescue => e
+    puts "[ERROR] Ambassador submission failed: #{e.message}"
+    puts e.backtrace.join("\n")
+    status 500
+    { success: false, error: e.message }.to_json
+  end
+end
+
 # Approve payment and send download link
 post '/admin/approve-payment' do
   content_type 'application/json'
