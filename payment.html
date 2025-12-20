@@ -347,6 +347,19 @@
       const productId = getUrlParameter('product') || 'sbd-for-dummies';
       const productPrice = getUrlParameter('price') || '27';
       const productCurrency = getUrlParameter('currency') || 'USD';
+      const ambassadorRef = getUrlParameter('ref') || sessionStorage.getItem('ambassador_ref');
+      
+      // Store ref code for later use
+      if (ambassadorRef) {
+        sessionStorage.setItem('ambassador_ref', ambassadorRef);
+        console.log('🔗 Ambassador referral:', ambassadorRef);
+        
+        // Show referral indicator
+        const indicator = document.createElement('div');
+        indicator.style.cssText = 'background: #e8f8f5; color: #00b894; padding: 10px; text-align: center; font-size: 13px; border-bottom: 2px solid #00b894;';
+        indicator.innerHTML = `<i class="fas fa-user-friends"></i> Referred by Ambassador: <strong>${ambassadorRef}</strong>`;
+        document.body.insertBefore(indicator, document.body.firstChild);
+      }
       
       // Use name from URL or lookup from productId
       let productName = getUrlParameter('name');

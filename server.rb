@@ -792,6 +792,154 @@ def generate_download_email(product_name, download_url, expiry_date)
 end
 
 # Submit manual payment
+# ============================================================================
+# AMBASSADOR COMMISSION TRACKING
+# ============================================================================
+
+AMBASSADOR_SALES_FILE = File.join(File.dirname(__FILE__), 'ambassador_sales.json')
+
+# Helper: Read ambassador sales data
+def read_ambassador_sales
+  return { 'ambassadors' => {} } unless File.exist?(AMBASSADOR_SALES_FILE)
+  JSON.parse(File.read(AMBASSADOR_SALES_FILE))
+rescue => e
+  puts "[ERROR] Failed to read ambassador sales: #{e.message}"
+  { 'ambassadors' => {} }
+end
+
+# Helper: Write ambassador sales data
+def write_ambassador_sales(data)
+  File.write(AMBASSADOR_SALES_FILE, JSON.pretty_generate(data))
+  true
+rescue => e
+  puts "[ERROR] Failed to write ambassador sales: #{e.message}"
+  false
+end
+
+# Helper: Track a sale for an ambassador
+def track_ambassador_sale(ambassador_code, amount, reference)
+  sales_data = read_ambassador_sales
+  
+  # Initialize ambassador record if doesn't exist
+  sales_data['ambassadors'][ambassador_code] ||= {
+    'code' => ambassador_code,
+    'total_sales' => 0,
+    'total_commission' => 0,
+    'books_sold' => 0,
+    'sales' => [],
+    'level' => 'Starter'
+  }
+  
+  ambassador = sales_data['ambassadors'][ambassador_code]
+  
+  # Calculate commission based on tier
+  books_sold = ambassador['books_sold']
+  commission_rate = if books_sold < 20
+    1500  # Bronze: 1,500 FCFA per book
+  elsif books_sold < 40
+    1800  # Silver: 1,800 FCFA per book
+  elsif books_sold < 60
+    2000  # Gold: 2,000 FCFA per book
+  else
+    2500  # Super Seller: 2,500 FCFA per book
+  end
+  
+  # Book price is 15,000 FCFA, so 1 book per sale
+  books_from_sale = (amount / 15000.0).ceil
+  commission = commission_rate * books_from_sale
+  
+  # Update totals
+  ambassador['books_sold'] += books_from_sale
+  ambassador['total_sales'] += amount
+  ambassador['total_commission'] += commission
+  
+  # Update level
+  ambassador['level'] = if ambassador['books_sold'] >= 90
+    'Elite'
+  elsif ambassador['books_sold'] >= 60
+    'Super Seller'
+  elsif ambassador['books_sold'] >= 40
+    'Gold'
+  elsif ambassador['books_sold'] >= 20
+    'Silver'
+  else
+    'Bronze'
+  end
+  
+  # Add sale record
+  ambassador['sales'] << {
+    'reference' => reference,
+    'amount' => amount,
+    'books' => books_from_sale,
+    'commission' => commission,
+    'date' => Time.now.iso8601
+  }
+  
+  # Add completion bonus if exactly hit 60 books
+  if ambassador['books_sold'] >= 60 && !ambassador['completion_bonus_paid']
+    ambassador['total_commission'] += 10000
+    ambassador['completion_bonus_paid'] = true
+    puts "[BONUS] 🎉 #{ambassador_code} earned 10,000 FCFA completion bonus!"
+  end
+  
+  write_ambassador_sales(sales_data)
+  
+  puts "[COMMISSION] #{ambassador_code}: #{books_from_sale} books, #{commission} FCFA commission, Level: #{ambassador['level']}"
+  
+  ambassador
+end
+
+# ============================================================================
+# ROUTES
+# ============================================================================
+
+# Get ambassador leaderboard
+get '/api/ambassador-leaderboard' do
+  content_type 'application/json'
+  
+  sales_data = read_ambassador_sales
+  
+  leaderboard = sales_data['ambassadors'].values.sort_by { |a| -a['books_sold'] }.take(100)
+  
+  {
+    success: true,
+    leaderboard: leaderboard.map.with_index do |ambassador, index|
+      {
+        rank: index + 1,
+        code: ambassador['code'],
+        books_sold: ambassador['books_sold'],
+        total_commission: ambassador['total_commission'],
+        level: ambassador['level']
+      }
+    end,
+    updated_at: Time.now.iso8601
+  }.to_json
+end
+
+# Get individual ambassador stats
+get '/api/ambassador-stats/:code' do
+  content_type 'application/json'
+  
+  ambassador_code = params[:code].upcase
+  sales_data = read_ambassador_sales
+  
+  ambassador = sales_data['ambassadors'][ambassador_code]
+  
+  if ambassador
+    {
+      success: true,
+      ambassador: ambassador
+    }.to_json
+  else
+    status 404
+    { success: false, error: 'Ambassador not found' }.to_json
+  end
+end
+
+# ============================================================================
+# MANUAL PAYMENT SUBMISSION
+# ============================================================================
+
 post '/submit-manual-payment' do
   content_type 'application/json'
   
@@ -810,6 +958,7 @@ post '/submit-manual-payment' do
       'currency' => data['currency'],
       'phone' => data['phone'],
       'email' => data['email'],
+      'ambassador_ref' => data['ambassador_ref'] || '',
       'timestamp' => data['timestamp'],
       'status' => 'pending',
       'created_at' => Time.now.iso8601
@@ -820,6 +969,7 @@ post '/submit-manual-payment' do
     
     if write_pending_payments(payments_data)
       puts "[MANUAL PAYMENT] New payment submitted: #{payment['reference']} - #{payment['amount']} FCFA"
+      puts "[AMBASSADOR] Referred by: #{data['ambassador_ref']}" if data['ambassador_ref'] && !data['ambassador_ref'].empty?
       
       # Send admin notification email (non-blocking)
       Thread.new do
@@ -1095,6 +1245,12 @@ post '/admin/approve-payment' do
     if payment
       payment['status'] = 'approved'
       payment['approved_at'] = Time.now.iso8601
+      
+      # Track commission for ambassador if ref exists
+      if payment['ambassador_ref'] && !payment['ambassador_ref'].empty?
+        track_ambassador_sale(payment['ambassador_ref'], payment['amount'].to_f, payment['reference'])
+        puts "[COMMISSION] Tracked sale for #{payment['ambassador_ref']}: #{payment['amount']} FCFA"
+      end
       
       if write_pending_payments(payments_data)
         puts "[ADMIN] Payment approved: #{reference}"

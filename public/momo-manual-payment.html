@@ -410,6 +410,7 @@
 
       const phone = document.getElementById('phone').value;
       const email = document.getElementById('email').value;
+      const ambassadorRef = sessionStorage.getItem('ambassador_ref') || '';
 
       try {
         const response = await fetch('https://marriage-education-website.onrender.com/submit-manual-payment', {
@@ -425,6 +426,7 @@
             currency: currency,
             phone: phone,
             email: email,
+            ambassador_ref: ambassadorRef,
             timestamp: new Date().toISOString()
           })
         });
