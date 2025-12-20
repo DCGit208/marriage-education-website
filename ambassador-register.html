@@ -643,10 +643,18 @@
             </div>
 
             <div class="form-group">
+                <label>Who Referred You? (Optional)</label>
+                <input type="text" id="recruitedBy" name="recruitedBy" placeholder="e.g., AMB-JOHN-1234 or RD-SARAH-5678" style="text-transform: uppercase;">
+                <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> If a Regional Director or Ambassador recruited you, enter their code here. They'll earn override commissions on your sales!
+                </p>
+            </div>
+            
+            <div class="form-group">
                 <label>Ambassador Referral Code (Optional)</label>
                 <input type="text" name="referredBy" placeholder="e.g., AMB-JOHN-1234" style="text-transform: uppercase;">
                 <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
-                    <i class="fas fa-info-circle"></i> If an existing ambassador referred you, enter their code here. They'll earn bonus commissions on your sales!
+                    <i class="fas fa-user-friends"></i> If an existing ambassador introduced you to this opportunity (not necessarily your recruiter), enter their code for bonus recognition!
                 </p>
             </div>
 
@@ -768,6 +776,8 @@
                         salesExperience: data.salesExperience,
                         commitment: data.commitment,
                         referralSource: data.referralSource || '',
+                        recruitedBy: data.recruitedBy || '',  // NEW: Track who recruited this ambassador
+                        referredBy: data.referredBy || '',    // Keep for recognition purposes
                         code: code,
                         status: 'pending',
                         booksSold: 0,
@@ -857,6 +867,30 @@
         // Update counter on load and every 30 seconds
         window.addEventListener('load', function() {
             setTimeout(updateSpotsCounter, 2000);
+            
+            // Capture RD recruitment link parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const rdCode = urlParams.get('rd');
+            const ambCode = urlParams.get('amb');
+            
+            if (rdCode) {
+                document.getElementById('recruitedBy').value = rdCode.toUpperCase();
+                console.log('🔗 Recruited by Regional Director:', rdCode);
+                
+                // Show banner
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                banner.innerHTML = `<i class="fas fa-user-tie"></i> <strong>Recruited by Regional Director:</strong> ${rdCode.toUpperCase()} - You\'re joining their team!`;
+                document.body.prepend(banner);
+            } else if (ambCode) {
+                document.getElementById('recruitedBy').value = ambCode.toUpperCase();
+                console.log('🔗 Recruited by Ambassador:', ambCode);
+                
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                banner.innerHTML = `<i class="fas fa-user-friends"></i> <strong>Recruited by Ambassador:</strong> ${ambCode.toUpperCase()}`;
+                document.body.prepend(banner);
+            }
         });
         setInterval(updateSpotsCounter, 30000);
     </script>

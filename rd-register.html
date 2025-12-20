@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become a Regional Director | Marriage Education</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hero .subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .benefit-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .benefit-card i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .benefit-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .pricing-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .pricing-card li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .pricing-card li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-card li i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .checkbox-group label {
+            display: inline;
+            font-weight: normal;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #856404;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .form-container {
+                padding: 25px;
+            }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🏆 Become a Regional Director</h1>
+            <p class="subtitle">Build Your Team. Earn 10% Override Commissions. Lead Your Region.</p>
+        </div>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <i class="fas fa-users"></i>
+                <h3>500+</h3>
+                <p>Potential Ambassadors</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>10%</h3>
+                <p>Override Commission</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>112.5M</h3>
+                <p>FCFA Potential Earnings</p>
+            </div>
+            <div class="benefit-card">
+                <i class="fas fa-trophy"></i>
+                <h3>Diamond</h3>
+                <p>Tier Rewards</p>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Application Form</h2>
+                <p>Join the leadership team and build your ambassador network</p>
+            </div>
+
+            <div class="pricing-card">
+                <h3>🎯 Regional Director Package</h3>
+                <div class="price">50,000 FCFA</div>
+                <p>One-time registration fee</p>
+                <ul>
+                    <li><i class="fas fa-check"></i> Unique RD code (RD-NAME-XXXX)</li>
+                    <li><i class="fas fa-check"></i> Personal recruitment dashboard</li>
+                    <li><i class="fas fa-check"></i> 10% override on all team sales</li>
+                    <li><i class="fas fa-check"></i> Team management tools</li>
+                    <li><i class="fas fa-check"></i> Leadership training access</li>
+                    <li><i class="fas fa-check"></i> Milestone bonuses up to 10M FCFA</li>
+                    <li><i class="fas fa-check"></i> Priority support</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Auto-Qualification Option:</strong> Ambassadors who recruit 10+ ambassadors are automatically promoted to Regional Director for FREE!
+            </div>
+
+            <form id="rdForm">
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> Personal Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" name="lastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email Address <span class="required">*</span></label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number <span class="required">*</span></label>
+                            <input type="tel" name="phone" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City <span class="required">*</span></label>
+                            <input type="text" name="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Region <span class="required">*</span></label>
+                            <select name="region" required>
+                                <option value="">Select Region</option>
+                                <option value="Adamawa">Adamawa</option>
+                                <option value="Centre">Centre</option>
+                                <option value="East">East</option>
+                                <option value="Far North">Far North</option>
+                                <option value="Littoral">Littoral</option>
+                                <option value="North">North</option>
+                                <option value="Northwest">Northwest</option>
+                                <option value="South">South</option>
+                                <option value="Southwest">Southwest</option>
+                                <option value="West">West</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-briefcase"></i> Leadership Experience</h3>
+                    
+                    <div class="form-group">
+                        <label>Are you currently an ambassador? <span class="required">*</span></label>
+                        <select name="isAmbassador" id="isAmbassador" required>
+                            <option value="">Select</option>
+                            <option value="yes">Yes, I'm an existing ambassador</option>
+                            <option value="no">No, I'm applying directly for RD position</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="ambassadorCodeGroup" style="display: none;">
+                        <label>Your Ambassador Code</label>
+                        <input type="text" name="existingAmbCode" placeholder="e.g., AMB-JOHN-1234" style="text-transform: uppercase;">
+                        <p class="help-text">Enter your current ambassador code if you're upgrading</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Leadership/Team Management Experience <span class="required">*</span></label>
+                        <textarea name="leadershipExperience" rows="5" required placeholder="Describe your experience leading teams, managing people, or building networks..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Network Size Estimate</label>
+                        <select name="networkSize">
+                            <option value="">Select your current network reach</option>
+                            <option value="50-100">50-100 potential ambassadors</option>
+                            <option value="100-250">100-250 potential ambassadors</option>
+                            <option value="250-500">250-500 potential ambassadors</option>
+                            <option value="500+">500+ potential ambassadors</option>
+                        </select>
+                        <p class="help-text">How many people could you potentially recruit?</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-bullseye"></i> Goals & Commitment</h3>
+                    
+                    <div class="form-group">
+                        <label>Recruitment Target (First 90 Days) <span class="required">*</span></label>
+                        <select name="recruitmentTarget" required>
+                            <option value="">Select your target</option>
+                            <option value="10-25">10-25 ambassadors (Bronze RD)</option>
+                            <option value="26-50">26-50 ambassadors (Silver RD)</option>
+                            <option value="51-150">51-150 ambassadors (Gold RD)</option>
+                            <option value="150+">150+ ambassadors (Platinum RD)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Why do you want to become a Regional Director? <span class="required">*</span></label>
+                        <textarea name="motivation" rows="6" required placeholder="Share your vision for building a team and impacting your region..."></textarea>
+                        <p class="help-text">Minimum 100 words</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Payment Required:</strong> A one-time registration fee of 50,000 FCFA is required to activate your Regional Director account. Payment details will be provided after application approval.
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Method <span class="required">*</span></label>
+                        <select name="paymentMethod" required>
+                            <option value="">Select payment method</option>
+                            <option value="mtn-momo">MTN Mobile Money</option>
+                            <option value="orange-money">Orange Money</option>
+                            <option value="bank-transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="#" style="color: #667eea;">Regional Director Terms & Conditions</a> and commit to ethical recruitment practices <span class="required">*</span>
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="understand" name="understand" required>
+                    <label for="understand">
+                        I understand that commissions are based on verified sales from my recruited ambassadors, and I commit to supporting my team's success <span class="required">*</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-crown"></i> Submit Application & Proceed to Payment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://marriage-education-website.onrender.com';
+
+        // Show/hide ambassador code field
+        document.getElementById('isAmbassador').addEventListener('change', function() {
+            const codeGroup = document.getElementById('ambassadorCodeGroup');
+            codeGroup.style.display = this.value === 'yes' ? 'block' : 'none';
+        });
+
+        // Handle form submission
+        document.getElementById('rdForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Validate motivation length
+            const wordCount = data.motivation.trim().split(/\s+/).length;
+            if (wordCount < 100) {
+                alert(`❌ Please provide at least 100 words for your motivation. You have ${wordCount} words.`);
+                return;
+            }
+            
+            const submitBtn = this.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Application...';
+            
+            try {
+                // Generate RD code
+                const rdCode = 'RD-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+                
+                // Prepare submission data
+                const applicationData = {
+                    ...data,
+                    code: rdCode,
+                    status: 'pending_payment',
+                    applicationDate: new Date().toISOString(),
+                    registrationFee: 50000,
+                    downlineCount: 0,
+                    overrideCommission: 0,
+                    tier: 'Pending'
+                };
+                
+                // Submit to server
+                const response = await fetch(`${API_BASE}/register-regional-director`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(applicationData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Application submitted successfully!\n\nYour RD Code: ${rdCode}\n\nYou will receive payment instructions via email within 24 hours. Once payment is confirmed, your Regional Director account will be activated.`);
+                    
+                    // Redirect to confirmation page or payment page
+                    window.location.href = `rd-payment.html?code=${rdCode}&amount=50000`;
+                } else {
+                    throw new Error(result.message || 'Submission failed');
+                }
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('❌ Submission failed: ' + error.message + '\n\nPlease try again or contact support.');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-crown"></i> Submit Application & Proceed to Payment';
+            }
+        });
+    </script>
+</body>
+</html>
