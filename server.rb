@@ -875,8 +875,8 @@ post '/submit-ambassador-application' do
       return { success: false, error: "Missing required fields: #{missing_fields.join(', ')}" }.to_json
     end
     
-    # Send email to ambassadors@marriageducation.com
-    ambassador_email = 'ambassadors@marriageducation.com'
+    # Send email to orders@marriageducation.com
+    ambassador_email = 'orders@marriageducation.com'
     subject = "🎯 New Ambassador Application - #{data['fullName']}"
     
     html_content = <<~HTML
