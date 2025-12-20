@@ -797,6 +797,7 @@ end
 # ============================================================================
 
 AMBASSADOR_SALES_FILE = File.join(File.dirname(__FILE__), 'ambassador_sales.json')
+REGIONAL_DIRECTORS_FILE = File.join(File.dirname(__FILE__), 'regional_directors.json')
 
 # Helper: Read ambassador sales data
 def read_ambassador_sales
@@ -816,13 +817,109 @@ rescue => e
   false
 end
 
-# Helper: Track a sale for an ambassador
-def track_ambassador_sale(ambassador_code, amount, reference)
+# Helper: Read regional directors data
+def read_regional_directors
+  return { 'directors' => {} } unless File.exist?(REGIONAL_DIRECTORS_FILE)
+  JSON.parse(File.read(REGIONAL_DIRECTORS_FILE))
+rescue => e
+  puts "[ERROR] Failed to read regional directors: #{e.message}"
+  { 'directors' => {} }
+end
+
+# Helper: Write regional directors data
+def write_regional_directors(data)
+  File.write(REGIONAL_DIRECTORS_FILE, JSON.pretty_generate(data))
+  true
+rescue => e
+  puts "[ERROR] Failed to write regional directors: #{e.message}"
+  false
+end
+
+# Helper: Track override commission for Regional Director
+def track_rd_override(rd_code, ambassador_code, sale_amount, books_count, reference)
+  rd_data = read_regional_directors
+  
+  return unless rd_data['directors'][rd_code]
+  
+  rd = rd_data['directors'][rd_code]
+  
+  # Calculate 10% override commission
+  override_commission = sale_amount * 0.10
+  
+  # Update RD totals
+  rd['override_commission'] ||= 0
+  rd['override_commission'] += override_commission
+  rd['team_books_sold'] ||= 0
+  rd['team_books_sold'] += books_count
+  rd['downline_count'] ||= 0  # Will be updated when ambassadors register
+  
+  # Update tier based on downline count
+  downline = rd['downline_count'] || 0
+  rd['tier'] = if downline >= 501
+    'Diamond RD'
+  elsif downline >= 301
+    'Platinum RD'
+  elsif downline >= 151
+    'Gold RD'
+  elsif downline >= 51
+    'Silver RD'
+  elsif downline >= 10
+    'Bronze RD'
+  else
+    'Pending'
+  end
+  
+  # Track override history
+  rd['override_history'] ||= []
+  rd['override_history'] << {
+    'reference' => reference,
+    'ambassador_code' => ambassador_code,
+    'sale_amount' => sale_amount,
+    'books_count' => books_count,
+    'override' => override_commission,
+    'date' => Time.now.iso8601
+  }
+  
+  # Check for milestone bonuses
+  check_rd_milestones(rd)
+  
+  write_regional_directors(rd_data)
+  
+  puts "[RD OVERRIDE] #{rd_code} earned #{override_commission} FCFA override from #{ambassador_code}"
+  
+  rd
+end
+
+# Helper: Check and award RD milestone bonuses
+def check_rd_milestones(rd)
+  downline = rd['downline_count'] || 0
+  rd['milestones_reached'] ||= []
+  
+  milestones = [
+    { count: 10, bonus: 100000, name: 'First 10 Ambassadors' },
+    { count: 50, bonus: 500000, name: 'First 50 Ambassadors' },
+    { count: 100, bonus: 2000000, name: 'First 100 Ambassadors' },
+    { count: 500, bonus: 10000000, name: 'First 500 Ambassadors' }
+  ]
+  
+  milestones.each do |milestone|
+    if downline >= milestone[:count] && !rd['milestones_reached'].include?(milestone[:name])
+      rd['override_commission'] ||= 0
+      rd['override_commission'] += milestone[:bonus]
+      rd['milestones_reached'] << milestone[:name]
+      puts "[MILESTONE] 🎉 #{rd['code']} reached #{milestone[:name]} - #{milestone[:bonus]} FCFA bonus!"
+    end
+  end
+end
+
+# Helper: Track a sale for an ambassador (with RD override)
+def track_ambassador_sale(ambassador_code, amount, reference, recruited_by = nil)
   sales_data = read_ambassador_sales
   
   # Initialize ambassador record if doesn't exist
   sales_data['ambassadors'][ambassador_code] ||= {
     'code' => ambassador_code,
+    'recruited_by' => recruited_by,
     'total_sales' => 0,
     'total_commission' => 0,
     'books_sold' => 0,
@@ -886,6 +983,11 @@ def track_ambassador_sale(ambassador_code, amount, reference)
   
   puts "[COMMISSION] #{ambassador_code}: #{books_from_sale} books, #{commission} FCFA commission, Level: #{ambassador['level']}"
   
+  # Track RD override if ambassador was recruited by an RD
+  if ambassador['recruited_by'] && ambassador['recruited_by'].start_with?('RD-')
+    track_rd_override(ambassador['recruited_by'], ambassador_code, amount, books_from_sale, reference)
+  end
+  
   ambassador
 end
 
@@ -933,6 +1035,161 @@ get '/api/ambassador-stats/:code' do
   else
     status 404
     { success: false, error: 'Ambassador not found' }.to_json
+  end
+end
+
+# ============================================================================
+# REGIONAL DIRECTOR API ENDPOINTS
+# ============================================================================
+
+# Get RD leaderboard
+get '/api/rd-leaderboard' do
+  content_type 'application/json'
+  
+  rd_data = read_regional_directors
+  
+  leaderboard = rd_data['directors'].values.sort_by { |rd| -(rd['team_books_sold'] || 0) }.take(100)
+  
+  {
+    success: true,
+    leaderboard: leaderboard.map.with_index do |rd, index|
+      {
+        rank: index + 1,
+        code: rd['code'],
+        name: rd['name'],
+        downline_count: rd['downline_count'] || 0,
+        team_books_sold: rd['team_books_sold'] || 0,
+        override_commission: rd['override_commission'] || 0,
+        tier: rd['tier'] || 'Pending'
+      }
+    end,
+    updated_at: Time.now.iso8601
+  }.to_json
+end
+
+# Get individual RD stats
+get '/api/rd-stats/:code' do
+  content_type 'application/json'
+  
+  rd_code = params[:code].upcase
+  rd_data = read_regional_directors
+  
+  rd = rd_data['directors'][rd_code]
+  
+  if rd
+    {
+      success: true,
+      rd: rd
+    }.to_json
+  else
+    status 404
+    { success: false, error: 'Regional Director not found' }.to_json
+  end
+end
+
+# Get RD team (all ambassadors recruited by this RD)
+get '/api/rd-team/:code' do
+  content_type 'application/json'
+  
+  rd_code = params[:code].upcase
+  sales_data = read_ambassador_sales
+  
+  # Filter ambassadors recruited by this RD
+  team = sales_data['ambassadors'].values.select { |amb| amb['recruited_by'] == rd_code }
+  
+  {
+    success: true,
+    team: team,
+    count: team.length
+  }.to_json
+end
+
+# Register new Regional Director
+post '/register-regional-director' do
+  content_type 'application/json'
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    
+    rd_code = data['code']
+    
+    rd_data = read_regional_directors
+    rd_data['directors'] ||= {}
+    
+    # Create new RD record
+    rd_data['directors'][rd_code] = {
+      'code' => rd_code,
+      'name' => "#{data['firstName']} #{data['lastName']}",
+      'email' => data['email'],
+      'phone' => data['phone'],
+      'city' => data['city'],
+      'region' => data['region'],
+      'is_ambassador' => data['isAmbassador'],
+      'existing_amb_code' => data['existingAmbCode'],
+      'leadership_experience' => data['leadershipExperience'],
+      'network_size' => data['networkSize'],
+      'recruitment_target' => data['recruitmentTarget'],
+      'motivation' => data['motivation'],
+      'payment_method' => data['paymentMethod'],
+      'registration_fee' => data['registrationFee'] || 50000,
+      'status' => 'pending_payment',
+      'downline_count' => 0,
+      'team_books_sold' => 0,
+      'override_commission' => 0,
+      'tier' => 'Pending',
+      'milestones_reached' => [],
+      'override_history' => [],
+      'application_date' => Time.now.iso8601
+    }
+    
+    write_regional_directors(rd_data)
+    
+    # Send notification email
+    send_rd_application_email(rd_data['directors'][rd_code])
+    
+    puts "[RD REGISTRATION] ✅ #{rd_code} - #{data['firstName']} #{data['lastName']}"
+    
+    {
+      success: true,
+      message: 'Regional Director application submitted successfully',
+      code: rd_code
+    }.to_json
+    
+  rescue => e
+    puts "[RD REGISTRATION ERROR] #{e.message}"
+    status 500
+    { success: false, error: e.message }.to_json
+  end
+end
+
+# Helper: Send RD application notification email
+def send_rd_application_email(rd)
+  begin
+    subject = "New Regional Director Application - #{rd['code']}"
+    body = <<~EMAIL
+      New Regional Director Application Received
+      
+      Code: #{rd['code']}
+      Name: #{rd['name']}
+      Email: #{rd['email']}
+      Phone: #{rd['phone']}
+      Region: #{rd['region']}
+      
+      Recruitment Target: #{rd['recruitment_target']}
+      Network Size: #{rd['network_size']}
+      Registration Fee: #{rd['registration_fee']} FCFA
+      Payment Method: #{rd['payment_method']}
+      
+      Status: Pending Payment
+      
+      Please review and send payment instructions to: #{rd['email']}
+    EMAIL
+    
+    send_email(FROM_EMAIL, subject, body)
+    puts "[RD EMAIL] ✅ Notification sent for #{rd['code']}"
+  rescue => e
+    puts "[RD EMAIL ERROR] #{e.message}"
   end
 end
 
@@ -1033,9 +1290,43 @@ post '/submit-ambassador-application' do
     # Generate referral link
     referral_link = "https://marriageducation.com/sbd-campaign.html?ref=#{ambassador_code}"
     
-    # Track referrer if provided
+    # Track recruiter (RD or Ambassador) and update their downline
+    recruited_by = data['recruitedBy']&.strip&.upcase
+    if recruited_by && recruited_by.start_with?('RD-')
+      # Update RD downline count
+      rd_data = read_regional_directors
+      if rd_data['directors'][recruited_by]
+        rd_data['directors'][recruited_by]['downline_count'] ||= 0
+        rd_data['directors'][recruited_by]['downline_count'] += 1
+        
+        # Check for milestones
+        check_rd_milestones(rd_data['directors'][recruited_by])
+        
+        write_regional_directors(rd_data)
+        puts "[RD DOWNLINE] #{recruited_by} now has #{rd_data['directors'][recruited_by]['downline_count']} ambassadors"
+      end
+    end
+    
+    # Track ambassador record in sales file with recruited_by
+    sales_data = read_ambassador_sales
+    sales_data['ambassadors'][ambassador_code] = {
+      'code' => ambassador_code,
+      'name' => data['fullName'],
+      'email' => data['email'],
+      'recruited_by' => recruited_by || '',
+      'total_sales' => 0,
+      'total_commission' => 0,
+      'books_sold' => 0,
+      'sales' => [],
+      'level' => 'Starter',
+      'joined_at' => Time.now.iso8601
+    }
+    write_ambassador_sales(sales_data)
+    
+    # Track referrer if provided (for recognition, different from recruited_by)
     referred_by = data['referredBy']&.strip&.upcase
     referrer_bonus_note = referred_by && !referred_by.empty? ? "\n<div class='field'><strong>Referred By:</strong> #{referred_by} (Eligible for 5% referral bonus)</div>" : ''
+    recruiter_note = recruited_by && !recruited_by.empty? ? "\n<div class='field'><strong>Recruited By:</strong> #{recruited_by} (Will earn 10% override on all sales)</div>" : ''
     
     # Send notification to orders@marriageducation.com
     admin_email = 'orders@marriageducation.com'
@@ -1087,7 +1378,7 @@ post '/submit-ambassador-application' do
             <div class="field"><strong>Referral Link:</strong> <a href="#{referral_link}">#{referral_link}</a></div>
             <div class="field"><strong>Target Commitment:</strong> <strong>#{data['commitment']} books</strong></div>
             <div class="field"><strong>Sales Experience:</strong> #{data['salesExperience'] || 'Not specified'}</div>
-            <div class="field"><strong>Referral Source:</strong> #{data['referralSource'] || 'Not specified'}</div>#{referrer_bonus_note}
+            <div class="field"><strong>Referral Source:</strong> #{data['referralSource'] || 'Not specified'}</div>#{recruiter_note}#{referrer_bonus_note}
           </div>
           
           <div class="section">
@@ -1248,7 +1539,14 @@ post '/admin/approve-payment' do
       
       # Track commission for ambassador if ref exists
       if payment['ambassador_ref'] && !payment['ambassador_ref'].empty?
-        track_ambassador_sale(payment['ambassador_ref'], payment['amount'].to_f, payment['reference'])
+        # Get ambassador's recruited_by info
+        sales_data = read_ambassador_sales
+        recruited_by = nil
+        if sales_data['ambassadors'][payment['ambassador_ref']]
+          recruited_by = sales_data['ambassadors'][payment['ambassador_ref']]['recruited_by']
+        end
+        
+        track_ambassador_sale(payment['ambassador_ref'], payment['amount'].to_f, payment['reference'], recruited_by)
         puts "[COMMISSION] Tracked sale for #{payment['ambassador_ref']}: #{payment['amount']} FCFA"
       end
       
