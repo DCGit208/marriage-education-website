@@ -875,9 +875,21 @@ post '/submit-ambassador-application' do
       return { success: false, error: "Missing required fields: #{missing_fields.join(', ')}" }.to_json
     end
     
-    # Send email to orders@marriageducation.com
-    ambassador_email = 'orders@marriageducation.com'
-    subject = "🎯 New Ambassador Application - #{data['fullName']}"
+    # Generate unique ambassador code
+    timestamp = Time.now.to_i.to_s[-4..-1]
+    name_part = data['fullName'].split.first.upcase.gsub(/[^A-Z]/, '')[0..3] || 'AMB'
+    ambassador_code = "AMB-#{name_part}-#{timestamp}"
+    
+    # Generate referral link
+    referral_link = "https://marriageducation.com/sbd-campaign.html?ref=#{ambassador_code}"
+    
+    # Track referrer if provided
+    referred_by = data['referredBy']&.strip&.upcase
+    referrer_bonus_note = referred_by && !referred_by.empty? ? "\n<div class='field'><strong>Referred By:</strong> #{referred_by} (Eligible for 5% referral bonus)</div>" : ''
+    
+    # Send notification to orders@marriageducation.com
+    admin_email = 'orders@marriageducation.com'
+    admin_subject = "🎯 New Ambassador Application - #{data['fullName']}"
     
     html_content = <<~HTML
       <!DOCTYPE html>
@@ -921,9 +933,11 @@ post '/submit-ambassador-application' do
           
           <div class="section">
             <h2>🎯 Commitment & Experience</h2>
+            <div class="field"><strong>Ambassador Code:</strong> <strong style="color: #00b894;">#{ambassador_code}</strong></div>
+            <div class="field"><strong>Referral Link:</strong> <a href="#{referral_link}">#{referral_link}</a></div>
             <div class="field"><strong>Target Commitment:</strong> <strong>#{data['commitment']} books</strong></div>
             <div class="field"><strong>Sales Experience:</strong> #{data['salesExperience'] || 'Not specified'}</div>
-            <div class="field"><strong>Referral Source:</strong> #{data['referralSource'] || 'Not specified'}</div>
+            <div class="field"><strong>Referral Source:</strong> #{data['referralSource'] || 'Not specified'}</div>#{referrer_bonus_note}
           </div>
           
           <div class="section">
@@ -945,16 +959,102 @@ post '/submit-ambassador-application' do
       </html>
     HTML
     
-    email_sent = send_email(ambassador_email, subject, html_content)
+    admin_email_sent = send_email(admin_email, admin_subject, html_content)
     
-    if email_sent
+    # Send welcome email to the ambassador with their referral link
+    welcome_subject = "🎉 Welcome Ambassador! Here's Your Referral Link"
+    welcome_html = <<~HTML
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .code-box { background: #2d3436; color: #00b894; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+          .code-box h2 { font-size: 32px; margin: 0; letter-spacing: 2px; }
+          .link-box { background: #f8f9fa; padding: 15px; border-radius: 8px; word-break: break-all; margin: 15px 0; }
+          .section { padding: 20px; }
+          .earnings { background: #e8f8f5; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Welcome to the Ambassador Program!</h1>
+            <p>Start Earning Commissions Today</p>
+          </div>
+          <div class="section">
+            <p>Hi <strong>#{data['fullName']}</strong>,</p>
+            <p>Congratulations! Your ambassador application has been received. Here's your unique referral code and link to start promoting immediately:</p>
+            
+            <div class="code-box">
+              <p style="margin:0; font-size: 14px; opacity: 0.9;">Your Ambassador Code</p>
+              <h2>#{ambassador_code}</h2>
+            </div>
+            
+            <div class="link-box">
+              <strong>Your Referral Link:</strong><br>
+              <a href="#{referral_link}" style="color: #00b894;">#{referral_link}</a>
+            </div>
+            
+            <div class="earnings">
+              <h3 style="color: #00b894; margin-top: 0;">💰 How You Earn</h3>
+              <p><strong>Every sale through your link:</strong></p>
+              <ul>
+                <li>Books 1-20: 1,500 FCFA per book</li>
+                <li>Books 21-40: 1,800 FCFA per book</li>
+                <li>Books 41-60: 2,000 FCFA per book</li>
+                <li><strong>Complete 60 books: +10,000 FCFA bonus!</strong></li>
+              </ul>
+            </div>
+            
+            <h3 style="color: #00b894;">📢 How to Promote:</h3>
+            <ol>
+              <li><strong>Share your link</strong> on Facebook, Instagram, WhatsApp</li>
+              <li><strong>Tell people about Sex By Design</strong> and why it matters</li>
+              <li><strong>Track your sales</strong> in real-time via your dashboard</li>
+              <li><strong>Get paid</strong> every 2 weeks via Mobile Money</li>
+            </ol>
+            
+            <h3 style="color: #00b894;">🚀 Next Steps:</h3>
+            <p>
+              ✅ Save your referral link and code<br>
+              ✅ Join our WhatsApp group for training and support<br>
+              ✅ Access your dashboard (link will be sent within 24 hours)<br>
+              ✅ Start sharing and earning!
+            </p>
+            
+            <p style="text-align: center; margin-top: 30px;">
+              <a href="https://marriageducation.com/ambassador-login.html" style="background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Access Ambassador Portal</a>
+            </p>
+            
+            <p style="color: #636e72; font-size: 14px; margin-top: 30px;">
+              Questions? Reply to this email or WhatsApp us at +237 XXX XXX XXX
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    HTML
+    
+    ambassador_email_sent = send_email(data['email'], welcome_subject, welcome_html)
+    
+    if admin_email_sent
       puts "[AMBASSADOR] ✅ Application received from #{data['fullName']} (#{data['email']})"
+      puts "[AMBASSADOR] 🔗 Generated code: #{ambassador_code}"
+      puts "[AMBASSADOR] 📧 Welcome email sent: #{ambassador_email_sent ? 'Yes' : 'No'}"
+      puts "[AMBASSADOR] 👥 Referred by: #{referred_by || 'None'}" if referred_by
+      
       status 200
       { 
         success: true, 
         message: 'Application submitted successfully',
+        ambassadorCode: ambassador_code,
+        referralLink: referral_link,
         emailSent: true,
-        recipient: ambassador_email,
+        welcomeEmailSent: ambassador_email_sent,
+        recipient: admin_email,
         timestamp: Time.now.iso8601
       }.to_json
     else
