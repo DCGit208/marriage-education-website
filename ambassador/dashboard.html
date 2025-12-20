@@ -1274,49 +1274,77 @@
     <script src="../js/firebase-config.js"></script>
     
     <script>
-        // Load real ambassador data from Firebase
+        const API_BASE = 'https://marriage-education-website.onrender.com';
+        
+        // Load real ambassador data from API
         async function loadAmbassadorData() {
             try {
-                // Get ambassador ID from localStorage (set during login)
-                const ambassadorId = localStorage.getItem('ambassadorId');
+                // Get ambassador code from localStorage (set during login)
+                const ambassadorCode = localStorage.getItem('ambassadorCode');
                 
-                if (!ambassadorId) {
+                if (!ambassadorCode) {
                     alert('❌ Please log in to view your dashboard');
                     window.location.href = '../ambassador-login.html';
                     return;
                 }
                 
-                // Fetch real data
-                const stats = await FirebaseHelper.getAmbassadorStats(ambassadorId);
+                // Fetch real data from API
+                const response = await fetch(`${API_BASE}/api/ambassador-stats/${ambassadorCode}`);
                 
-                if (!stats) {
+                if (!response.ok) {
+                    throw new Error('Failed to load ambassador data');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success || !data.ambassador) {
                     throw new Error('Ambassador not found');
                 }
                 
+                const stats = data.ambassador;
+                
                 // Update global ambassadorData
                 Object.assign(ambassadorData, {
-                    name: stats.firstName,
+                    name: ambassadorCode.split('-')[1] || 'Ambassador',
                     code: stats.code,
-                    booksSold: stats.booksSold || 0,
-                    commissionEarned: stats.commissionEarned || 0,
-                    rank: stats.rank || 0,
+                    booksSold: stats.books_sold || 0,
+                    commissionEarned: stats.total_commission || 0,
+                    rank: 0,  // Will be loaded from leaderboard
                     level: stats.level || 'Starter',
-                    recentSales: stats.recentSales || []
+                    recentSales: stats.sales || []
                 });
+                
+                // Load leaderboard rank
+                await loadLeaderboardRank(ambassadorCode);
                 
                 // Refresh display
                 initDashboard();
-                
-                // Load notifications
-                await loadNotifications(ambassadorId);
                 
                 // Check for new badge unlocks
                 checkBadgeUnlocks(ambassadorData.booksSold);
                 
             } catch (error) {
                 console.error('Error loading ambassador data:', error);
-                // Fallback to demo data for testing
-                console.warn('Using demo data');
+                alert('Failed to load dashboard data. Please try logging in again.');
+                window.location.href = '../ambassador-login.html';
+            }
+        }
+        
+        // Load leaderboard rank
+        async function loadLeaderboardRank(ambassadorCode) {
+            try {
+                const response = await fetch(`${API_BASE}/api/ambassador-leaderboard`);
+                
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                
+                if (data.success && data.leaderboard) {
+                    const myRank = data.leaderboard.findIndex(a => a.code === ambassadorCode) + 1;
+                    ambassadorData.rank = myRank > 0 ? myRank : 0;
+                }
+            } catch (error) {
+                console.error('Leaderboard error:', error);
             }
         }
         
