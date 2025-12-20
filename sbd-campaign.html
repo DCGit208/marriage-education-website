@@ -2303,6 +2303,56 @@
     </script>
     
     <!-- Referral Tracking System -->
-    <script src="js/referral-tracking.js"></script>
+    <script>
+        // Capture referral code from URL and append to all payment links
+        (function() {
+            // Get ref parameter from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            
+            if (refCode) {
+                console.log('🔗 Referral code detected:', refCode);
+                
+                // Store in sessionStorage for persistence across pages
+                sessionStorage.setItem('ambassador_ref', refCode);
+                
+                // Display referral banner
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,184,148,0.3); z-index: 9999; font-size: 14px; max-width: 300px;';
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-user-friends" style="font-size: 24px;"></i>
+                        <div>
+                            <strong>Ambassador Link Activated!</strong><br>
+                            <span style="font-size: 12px; opacity: 0.9;">Referred by: ${refCode}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: auto;">&times;</button>
+                    </div>
+                `;
+                document.body.appendChild(banner);
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => banner.remove(), 8000);
+            }
+            
+            // Get ref code from either URL or sessionStorage
+            const ambassadorRef = refCode || sessionStorage.getItem('ambassador_ref');
+            
+            if (ambassadorRef) {
+                // Add ref parameter to all payment links
+                document.addEventListener('DOMContentLoaded', function() {
+                    const paymentLinks = document.querySelectorAll('a[href*="payment.html"]');
+                    
+                    paymentLinks.forEach(link => {
+                        const url = new URL(link.href, window.location.origin);
+                        url.searchParams.set('ref', ambassadorRef);
+                        link.href = url.toString();
+                    });
+                    
+                    console.log(`✅ Updated ${paymentLinks.length} payment links with ref=${ambassadorRef}`);
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
