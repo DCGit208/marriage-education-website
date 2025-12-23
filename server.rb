@@ -827,7 +827,7 @@ rescue => e
   { 'directors' => {} }
 end
 
-# Helper: Write regional directors data
+# Helper: Write regional directors data  
 def write_regional_directors(data)
   File.write(REGIONAL_DIRECTORS_FILE, JSON.pretty_generate(data))
   true
