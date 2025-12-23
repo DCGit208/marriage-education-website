@@ -348,6 +348,7 @@
       const productPrice = getUrlParameter('price') || '27';
       const productCurrency = getUrlParameter('currency') || 'USD';
       const ambassadorRef = getUrlParameter('ref') || sessionStorage.getItem('ambassador_ref');
+      const referralCode = getUrlParameter('referral') || sessionStorage.getItem('referral_code');
       
       // Store ref code for later use
       if (ambassadorRef) {
@@ -358,6 +359,18 @@
         const indicator = document.createElement('div');
         indicator.style.cssText = 'background: #e8f8f5; color: #00b894; padding: 10px; text-align: center; font-size: 13px; border-bottom: 2px solid #00b894;';
         indicator.innerHTML = `<i class="fas fa-user-friends"></i> Referred by Ambassador: <strong>${ambassadorRef}</strong>`;
+        document.body.insertBefore(indicator, document.body.firstChild);
+      }
+      
+      // Store referral code for Book Sharer Rewards
+      if (referralCode) {
+        sessionStorage.setItem('referral_code', referralCode);
+        console.log('🎁 Referral code (Book Sharer):', referralCode);
+        
+        // Show referral indicator
+        const indicator = document.createElement('div');
+        indicator.style.cssText = 'background: #dcfce7; color: #059669; padding: 10px; text-align: center; font-size: 13px; border-bottom: 2px solid #10b981;';
+        indicator.innerHTML = `<i class="fas fa-gift"></i> Shared by: <strong>${referralCode}</strong> 🎁`;
         document.body.insertBefore(indicator, document.body.firstChild);
       }
       

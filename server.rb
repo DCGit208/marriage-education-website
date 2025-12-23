@@ -798,6 +798,7 @@ end
 
 AMBASSADOR_SALES_FILE = File.join(File.dirname(__FILE__), 'ambassador_sales.json')
 REGIONAL_DIRECTORS_FILE = File.join(File.dirname(__FILE__), 'regional_directors.json')
+REFERRAL_CODES_FILE = File.join(File.dirname(__FILE__), 'referral_codes.json')
 
 # Helper: Read ambassador sales data
 def read_ambassador_sales
@@ -832,6 +833,24 @@ def write_regional_directors(data)
   true
 rescue => e
   puts "[ERROR] Failed to write regional directors: #{e.message}"
+  false
+end
+
+# Helper: Read referral codes data
+def read_referral_codes
+  return { 'referrals' => {} } unless File.exist?(REFERRAL_CODES_FILE)
+  JSON.parse(File.read(REFERRAL_CODES_FILE))
+rescue => e
+  puts "[ERROR] Failed to read referral codes: #{e.message}"
+  { 'referrals' => {} }
+end
+
+# Helper: Write referral codes data
+def write_referral_codes(data)
+  File.write(REFERRAL_CODES_FILE, JSON.pretty_generate(data))
+  true
+rescue => e
+  puts "[ERROR] Failed to write referral codes: #{e.message}"
   false
 end
 
@@ -910,6 +929,204 @@ def check_rd_milestones(rd)
       puts "[MILESTONE] 🎉 #{rd['code']} reached #{milestone[:name]} - #{milestone[:bonus]} FCFA bonus!"
     end
   end
+end
+
+# Helper: Track referral sale (Book Sharer Rewards)
+def track_referral_sale(referral_code, amount)
+  return unless referral_code && !referral_code.empty?
+  
+  referral_data = read_referral_codes
+  
+  return unless referral_data['referrals'][referral_code]
+  
+  referral = referral_data['referrals'][referral_code]
+  referral['sales_count'] ||= 0
+  referral['sales_count'] += 1
+  referral['total_revenue'] ||= 0
+  referral['total_revenue'] += amount.to_f
+  referral['last_sale_date'] = Time.now.iso8601
+  
+  # Check for milestone (every 10 sales = 10,000 FCFA)
+  previous_milestones = (referral['sales_count'] - 1) / 10
+  current_milestones = referral['sales_count'] / 10
+  
+  if current_milestones > previous_milestones
+    # New milestone reached!
+    referral['commission_earned'] ||= 0
+    referral['commission_pending'] ||= 0
+    referral['commission_pending'] += 10000
+    referral['commission_earned'] += 10000
+    referral['milestones_reached'] ||= []
+    referral['milestones_reached'] << current_milestones * 10
+    
+    puts "[REFERRAL MILESTONE] 🎉 #{referral_code} reached #{current_milestones * 10} sales - 10,000 FCFA earned!"
+    
+    # Send notifications
+    send_referral_milestone_email(referral, current_milestones * 10)
+  end
+  
+  write_referral_codes(referral_data)
+  puts "[REFERRAL SALE] #{referral_code} - Sale count: #{referral['sales_count']}"
+  
+  referral
+end
+
+# Helper: Send referral milestone email (Book Sharer Rewards)
+def send_referral_milestone_email(referral, milestone_sales)
+  # Email to referrer
+  referrer_subject = "🎉 You Earned 10,000 FCFA! #{milestone_sales} Sales Milestone Reached"
+  referrer_body = <<-HTML
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+        .milestone { font-size: 48px; font-weight: bold; color: #10b981; text-align: center; margin: 20px 0; }
+        .amount { font-size: 36px; font-weight: bold; color: #059669; text-align: center; margin: 20px 0; }
+        .stats { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+        .stat-label { color: #6b7280; }
+        .stat-value { font-weight: bold; color: #1f2937; }
+        .next-milestone { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; color: #6b7280; margin-top: 30px; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Milestone Achieved!</h1>
+          <p>Your Book Sharing is Paying Off</p>
+        </div>
+        <div class="content">
+          <div class="milestone">#{milestone_sales} Sales</div>
+          <div class="amount">+10,000 FCFA Earned</div>
+          
+          <div class="stats">
+            <div class="stat-row">
+              <span class="stat-label">Referral Code:</span>
+              <span class="stat-value">#{referral['code']}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Total Sales:</span>
+              <span class="stat-value">#{referral['sales_count']}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Total Earned:</span>
+              <span class="stat-value">#{referral['commission_earned']} FCFA</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Pending Payment:</span>
+              <span class="stat-value">#{referral['commission_pending']} FCFA</span>
+            </div>
+          </div>
+          
+          <div class="next-milestone">
+            <strong>💡 Next Milestone:</strong> Just #{10 - (referral['sales_count'] % 10)} more sales to earn another 10,000 FCFA!
+          </div>
+          
+          <p><strong>What happens next?</strong></p>
+          <ol>
+            <li>Our admin team has been notified of your achievement</li>
+            <li>They will verify and approve your commission within 1-2 business days</li>
+            <li>Payment will be sent to your registered phone number via Mobile Money</li>
+          </ol>
+          
+          <p><strong>Keep sharing!</strong> Every 10 sales = 10,000 FCFA. There's no limit to how much you can earn.</p>
+          
+          <div class="footer">
+            <p>Marriage Education<br>
+            Email: orders@marriageducation.com<br>
+            Questions? Reply to this email.</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  HTML
+  
+  send_email(referral['email'], referrer_subject, referrer_body)
+  
+  # Email to admin
+  admin_subject = "🎁 Referral Milestone: #{referral['code']} - 10,000 FCFA Commission Pending"
+  admin_body = <<-HTML
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 20px; text-align: center; }
+        .content { background: #f9fafb; padding: 20px; }
+        .alert { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+        .stats { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>📊 Book Sharer Milestone Reached</h2>
+        </div>
+        <div class="content">
+          <div class="alert">
+            <strong>⚠️ Action Required:</strong> Approve and release 10,000 FCFA commission payment
+          </div>
+          
+          <div class="stats">
+            <div class="stat-row">
+              <span><strong>Referral Code:</strong></span>
+              <span>#{referral['code']}</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Email:</strong></span>
+              <span>#{referral['email']}</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Milestone:</strong></span>
+              <span>#{milestone_sales} sales</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Commission Due:</strong></span>
+              <span style="color: #10b981; font-weight: bold;">10,000 FCFA</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Total Sales:</strong></span>
+              <span>#{referral['sales_count']}</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Total Earned:</strong></span>
+              <span>#{referral['commission_earned']} FCFA</span>
+            </div>
+            <div class="stat-row">
+              <span><strong>Pending Payment:</strong></span>
+              <span>#{referral['commission_pending']} FCFA</span>
+            </div>
+          </div>
+          
+          <p><strong>Next Steps:</strong></p>
+          <ol>
+            <li>Verify the milestone achievement in the admin panel</li>
+            <li>Process Mobile Money payment of 10,000 FCFA</li>
+            <li>Mark commission as paid in the system</li>
+          </ol>
+          
+          <p><em>The referrer has been notified and is awaiting payment confirmation.</em></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  HTML
+  
+  send_email('orders@marriageducation.com', admin_subject, admin_body)
+  
+  puts "[EMAIL] Referral milestone notifications sent for #{referral['code']}"
+  true
+rescue => e
+  puts "[ERROR] Failed to send referral milestone email: #{e.message}"
+  false
 end
 
 # Helper: Track a sale for an ambassador (with RD override)
@@ -994,6 +1211,77 @@ end
 # ============================================================================
 # ROUTES
 # ============================================================================
+
+# Register new referral code (Book Sharer Rewards)
+post '/register-referral-code' do
+  content_type 'application/json'
+  
+  begin
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    
+    email = data['email']
+    
+    unless email && email.match?(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+      return { success: false, error: 'Valid email address required' }.to_json
+    end
+    
+    referral_data = read_referral_codes
+    
+    # Check if email already has a referral code
+    existing = referral_data['referrals'].values.find { |r| r['email'] == email }
+    if existing
+      return {
+        success: true,
+        code: existing['code'],
+        existing: true,
+        message: 'Welcome back! Here is your existing referral code.'
+      }.to_json
+    end
+    
+    # Generate unique referral code from email
+    # Format: First 4 letters of email + random 3 digits
+    email_prefix = email.split('@').first.gsub(/[^a-zA-Z]/, '').upcase[0..3] || 'USER'
+    code = "#{email_prefix}#{rand(100..999)}"
+    
+    # Ensure uniqueness
+    while referral_data['referrals'][code]
+      code = "#{email_prefix}#{rand(100..999)}"
+    end
+    
+    # Create referral record
+    referral_data['referrals'][code] = {
+      'code' => code,
+      'email' => email,
+      'sales_count' => 0,
+      'total_revenue' => 0,
+      'commission_earned' => 0,
+      'commission_pending' => 0,
+      'commission_paid' => 0,
+      'milestones_reached' => [],
+      'created_at' => Time.now.iso8601,
+      'last_sale_date' => nil
+    }
+    
+    write_referral_codes(referral_data)
+    
+    puts "[REFERRAL CODE] Created: #{code} for #{email}"
+    
+    {
+      success: true,
+      code: code,
+      message: 'Referral code created successfully! Share your link and start earning.'
+    }.to_json
+    
+  rescue JSON::ParserError => e
+    status 400
+    { success: false, error: 'Invalid JSON' }.to_json
+  rescue => e
+    puts "[ERROR] /register-referral-code: #{e.message}"
+    status 500
+    { success: false, error: 'Server error' }.to_json
+  end
+end
 
 # Get ambassador leaderboard
 get '/api/ambassador-leaderboard' do
@@ -1346,6 +1634,7 @@ post '/submit-manual-payment' do
       'phone' => data['phone'],
       'email' => data['email'],
       'ambassador_ref' => data['ambassador_ref'] || '',
+      'referral_code' => data['referral_code'] || '',
       'timestamp' => data['timestamp'],
       'status' => 'pending',
       'created_at' => Time.now.iso8601
@@ -1357,6 +1646,7 @@ post '/submit-manual-payment' do
     if write_pending_payments(payments_data)
       puts "[MANUAL PAYMENT] New payment submitted: #{payment['reference']} - #{payment['amount']} FCFA"
       puts "[AMBASSADOR] Referred by: #{data['ambassador_ref']}" if data['ambassador_ref'] && !data['ambassador_ref'].empty?
+      puts "[REFERRAL] Book Sharer code: #{data['referral_code']}" if data['referral_code'] && !data['referral_code'].empty?
       
       # Send admin notification email (non-blocking)
       Thread.new do
@@ -1721,6 +2011,12 @@ post '/admin/approve-payment' do
         
         track_ambassador_sale(payment['ambassador_ref'], payment['amount'].to_f, payment['reference'], recruited_by)
         puts "[COMMISSION] Tracked sale for #{payment['ambassador_ref']}: #{payment['amount']} FCFA"
+      end
+      
+      # Track referral sale if referral_code exists (Book Sharer Rewards)
+      if payment['referral_code'] && !payment['referral_code'].empty?
+        track_referral_sale(payment['referral_code'], payment['amount'].to_f)
+        puts "[REFERRAL] Tracked sale for referral code #{payment['referral_code']}: #{payment['amount']} FCFA"
       end
       
       if write_pending_payments(payments_data)
