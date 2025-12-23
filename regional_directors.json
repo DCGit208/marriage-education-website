@@ -1,0 +1,30 @@
+{
+  "directors": {
+    "RD-AYIN-5087": {
+      "code": "RD-AYIN-5087",
+      "name": "Ayinwi Promise Imbih",
+      "email": "ayinwipromise@gmail.com",
+      "phone": "237677604100",
+      "city": "Buea",
+      "region": "South West",
+      "is_ambassador": false,
+      "existing_amb_code": "",
+      "leadership_experience": "",
+      "network_size": "",
+      "recruitment_target": "",
+      "motivation": "",
+      "payment_method": "Mobile Money",
+      "registration_fee": 50000,
+      "status": "active",
+      "downline": [],
+      "downline_count": 0,
+      "team_books_sold": 0,
+      "override_commission": 0,
+      "tier": "Bronze RD",
+      "milestones_reached": [],
+      "override_history": [],
+      "application_date": "2025-12-23T00:00:00Z",
+      "activation_date": "2025-12-23T02:50:00Z"
+    }
+  }
+}
