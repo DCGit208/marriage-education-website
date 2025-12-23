@@ -1113,14 +1113,14 @@ post '/register-regional-director' do
     data = JSON.parse(request.body.read)
     
     rd_code = data['code']
+    registration_fee = data['registrationFee'] || 50000
     
-    rd_data = read_regional_directors
-    rd_data['directors'] ||= {}
-    
-    # Create new RD record
-    rd_data['directors'][rd_code] = {
+    # Store RD data temporarily in pending_payments.json with metadata
+    # Actual RD record will be created upon payment approval
+    rd_metadata = {
       'code' => rd_code,
-      'name' => "#{data['firstName']} #{data['lastName']}",
+      'firstName' => data['firstName'],
+      'lastName' => data['lastName'],
       'email' => data['email'],
       'phone' => data['phone'],
       'city' => data['city'],
@@ -1132,29 +1132,43 @@ post '/register-regional-director' do
       'recruitment_target' => data['recruitmentTarget'],
       'motivation' => data['motivation'],
       'payment_method' => data['paymentMethod'],
-      'registration_fee' => data['registrationFee'] || 50000,
-      'status' => 'pending_payment',
-      'downline_count' => 0,
-      'team_books_sold' => 0,
-      'override_commission' => 0,
-      'tier' => 'Pending',
-      'milestones_reached' => [],
-      'override_history' => [],
       'application_date' => Time.now.iso8601
     }
     
-    write_regional_directors(rd_data)
+    # Create pending payment record
+    payment = {
+      'reference' => rd_code,
+      'product_id' => 'rd-registration',
+      'product_name' => "Regional Director Registration - #{data['firstName']} #{data['lastName']}",
+      'amount' => registration_fee.to_s,
+      'currency' => 'XAF',
+      'phone' => data['phone'],
+      'email' => data['email'],
+      'ambassador_ref' => '',
+      'rd_code' => rd_code,
+      'rd_metadata' => rd_metadata,
+      'timestamp' => Time.now.iso8601,
+      'status' => 'pending',
+      'created_at' => Time.now.iso8601
+    }
     
-    # Send notification email
-    send_rd_application_email(rd_data['directors'][rd_code])
+    payments_data = read_pending_payments
+    payments_data['payments'] << payment
     
-    puts "[RD REGISTRATION] ✅ #{rd_code} - #{data['firstName']} #{data['lastName']}"
-    
-    {
-      success: true,
-      message: 'Regional Director application submitted successfully',
-      code: rd_code
-    }.to_json
+    if write_pending_payments(payments_data)
+      # Send notification email to admin
+      send_rd_application_email(rd_metadata, registration_fee)
+      
+      puts "[RD REGISTRATION] ✅ #{rd_code} - #{data['firstName']} #{data['lastName']} - Payment pending"
+      
+      {
+        success: true,
+        message: 'Regional Director application submitted successfully',
+        code: rd_code
+      }.to_json
+    else
+      halt 500, { success: false, error: 'Failed to save application' }.to_json
+    end
     
   rescue => e
     puts "[RD REGISTRATION ERROR] #{e.message}"
@@ -1163,33 +1177,141 @@ post '/register-regional-director' do
   end
 end
 
-# Helper: Send RD application notification email
-def send_rd_application_email(rd)
+# Helper: Send RD application notification email (to admin)
+def send_rd_application_email(rd, registration_fee)
   begin
+    full_name = "#{rd['firstName']} #{rd['lastName']}"
     subject = "New Regional Director Application - #{rd['code']}"
     body = <<~EMAIL
       New Regional Director Application Received
       
       Code: #{rd['code']}
-      Name: #{rd['name']}
+      Name: #{full_name}
       Email: #{rd['email']}
       Phone: #{rd['phone']}
       Region: #{rd['region']}
       
       Recruitment Target: #{rd['recruitment_target']}
       Network Size: #{rd['network_size']}
-      Registration Fee: #{rd['registration_fee']} FCFA
+      Registration Fee: #{registration_fee} FCFA
       Payment Method: #{rd['payment_method']}
-      
       Status: Pending Payment
       
       Please review and send payment instructions to: #{rd['email']}
     EMAIL
     
     send_email(FROM_EMAIL, subject, body)
-    puts "[RD EMAIL] ✅ Notification sent for #{rd['code']}"
+    puts "[RD APPLICATION EMAIL] Sent notification to admin"
   rescue => e
-    puts "[RD EMAIL ERROR] #{e.message}"
+    puts "[RD APPLICATION EMAIL ERROR] #{e.message}"
+  end
+end
+
+# Helper: Send RD credentials email (to new RD after payment approval)
+def send_rd_credentials_email(rd_code, name, email)
+  begin
+    dashboard_url = "https://marriageducation.com/regional-director/dashboard.html"
+    login_url = "https://marriageducation.com/rd-login.html"
+    recruitment_url = "https://marriageducation.com/ambassador-register.html?rd=#{rd_code}"
+    
+    subject = "👑 Welcome to Regional Director Program - Your Login Credentials"
+    
+    html_content = <<~HTML
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
+          .header { background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); color: #fff; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
+          .header .logo { font-size: 64px; margin-bottom: 10px; }
+          .content { background: #fff; padding: 30px; border-radius: 0 0 12px 12px; }
+          .credentials-box { background: #f3e8ff; padding: 25px; border-left: 4px solid #9333ea; margin: 20px 0; border-radius: 8px; }
+          .rd-code { font-size: 32px; font-weight: 700; color: #7c3aed; font-family: 'Courier New', monospace; letter-spacing: 2px; margin: 10px 0; }
+          .button { display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); color: #fff !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 15px 10px; }
+          .recruitment-link { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; }
+          .benefits { background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .benefits ul { padding-left: 20px; }
+          .benefits li { margin: 8px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">👑</div>
+            <h1>Welcome to the Regional Director Program!</h1>
+            <p>Your payment has been approved</p>
+          </div>
+          <div class="content">
+            <p>Dear #{name},</p>
+            
+            <p><strong>Congratulations! Your Regional Director registration payment has been approved and your account is now active.</strong></p>
+            
+            <div class="credentials-box">
+              <strong>Your Regional Director Code:</strong><br>
+              <div class="rd-code">#{rd_code}</div>
+              <p style="color: #6b21a8; margin-top: 10px;">Save this code - you'll use it to log in to your dashboard</p>
+            </div>
+            
+            <p style="text-align: center;">
+              <a href="#{dashboard_url}" class="button">🚀 Access Your Dashboard</a>
+              <a href="#{login_url}" class="button">🔐 Login Page</a>
+            </p>
+            
+            <div class="benefits">
+              <h3 style="color: #7c3aed; margin-bottom: 15px;">👑 What You Can Do Now:</h3>
+              <ul>
+                <li>✓ Access your Regional Director Dashboard</li>
+                <li>✓ View your team statistics and earnings</li>
+                <li>✓ Track milestone bonuses (10/50/100/500 ambassadors)</li>
+                <li>✓ Start recruiting ambassadors using your link below</li>
+                <li>✓ Earn 10% override on ALL team sales</li>
+                <li>✓ Monitor your tier progression (Bronze → Diamond)</li>
+              </ul>
+            </div>
+            
+            <h3 style="color: #1f2937; margin-top: 30px;">📣 Your Personal Recruitment Link:</h3>
+            <div class="recruitment-link">
+              <a href="#{recruitment_url}" style="color: #7c3aed; font-weight: 600;">#{recruitment_url}</a>
+            </div>
+            <p style="font-size: 14px; color: #666;">Share this link with potential ambassadors. When they register using this link, they'll be automatically assigned to your team.</p>
+            
+            <h3 style="color: #1f2937; margin-top: 30px;">💰 Your Earning Structure:</h3>
+            <ul style="line-height: 2;">
+              <li><strong>10% Override Commission</strong> on every book sold by your team</li>
+              <li><strong>Milestone Bonuses:</strong> 100K (10 amb) → 500K (50) → 2M (100) → 10M (500)</li>
+              <li><strong>Monthly Bonuses:</strong> 50K-5M FCFA based on your tier</li>
+            </ul>
+            
+            <p style="margin-top: 30px; padding: 20px; background: #fef3c7; border-radius: 8px; border: 2px solid #fbbf24;">
+              <strong style="color: #78350f;">🚀 Next Steps:</strong><br>
+              <span style="color: #78350f;">
+                1. Log in to your dashboard using your RD code<br>
+                2. Share your recruitment link with your network<br>
+                3. Support your ambassadors as they sell books<br>
+                4. Watch your override commissions grow automatically!
+              </span>
+            </p>
+            
+            <p style="margin-top: 20px; color: #666; font-size: 14px;">
+              Questions? Contact us at <a href="mailto:orders@marriageducation.com" style="color: #7c3aed;">orders@marriageducation.com</a>
+            </p>
+            
+            <p style="margin-top: 30px;">
+              <strong>Welcome to the team!</strong><br>
+              Marriage Education Team
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    HTML
+    
+    send_email(email, subject, html_content)
+    puts "[RD CREDENTIALS EMAIL] ✅ Sent to #{email} (#{rd_code})"
+  rescue => e
+    puts "[RD CREDENTIALS EMAIL ERROR] #{e.message}"
   end
 end
 
@@ -1537,6 +1659,48 @@ post '/admin/approve-payment' do
       payment['status'] = 'approved'
       payment['approved_at'] = Time.now.iso8601
       
+      # Handle RD registration payment
+      if payment['product_id'] == 'rd-registration' && payment['rd_metadata']
+        rd_metadata = payment['rd_metadata']
+        rd_code = payment['rd_code']
+        
+        # Create actual RD record in regional_directors.json
+        rd_data = read_regional_directors
+        rd_data['directors'] ||= {}
+        
+        rd_data['directors'][rd_code] = {
+          'code' => rd_code,
+          'name' => "#{rd_metadata['firstName']} #{rd_metadata['lastName']}",
+          'email' => rd_metadata['email'],
+          'phone' => rd_metadata['phone'],
+          'city' => rd_metadata['city'],
+          'region' => rd_metadata['region'],
+          'is_ambassador' => rd_metadata['is_ambassador'],
+          'existing_amb_code' => rd_metadata['existing_amb_code'],
+          'leadership_experience' => rd_metadata['leadership_experience'],
+          'network_size' => rd_metadata['network_size'],
+          'recruitment_target' => rd_metadata['recruitment_target'],
+          'motivation' => rd_metadata['motivation'],
+          'payment_method' => rd_metadata['payment_method'],
+          'registration_fee' => payment['amount'].to_i,
+          'status' => 'active',
+          'downline_count' => 0,
+          'team_books_sold' => 0,
+          'override_commission' => 0,
+          'tier' => 'Bronze RD',
+          'milestones_reached' => [],
+          'override_history' => [],
+          'application_date' => rd_metadata['application_date'],
+          'activation_date' => Time.now.iso8601
+        }
+        
+        write_regional_directors(rd_data)
+        puts "[RD ACTIVATION] ✅ #{rd_code} - #{rd_metadata['firstName']} #{rd_metadata['lastName']} activated"
+        
+        # Send credentials email to new RD
+        send_rd_credentials_email(rd_code, "#{rd_metadata['firstName']} #{rd_metadata['lastName']}", rd_metadata['email'])
+      end
+      
       # Track commission for ambassador if ref exists
       if payment['ambassador_ref'] && !payment['ambassador_ref'].empty?
         # Get ambassador's recruited_by info
@@ -1553,26 +1717,28 @@ post '/admin/approve-payment' do
       if write_pending_payments(payments_data)
         puts "[ADMIN] Payment approved: #{reference}"
         
-        # Generate secure download token
-        token_data = generate_download_token(payment)
-        tokens = read_download_tokens
-        tokens['tokens'] << token_data
-        write_download_tokens(tokens)
-        
-        # Build download URL with token - must point to Render backend
-        backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
-        download_url = "#{backend_url}/download?token=#{token_data['token']}"
-        
-        # Send email automatically
-        expiry_date = Time.parse(token_data['expires_at']).strftime('%B %d, %Y at %I:%M %p')
-        email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
-        email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
-        
-        # Send download link to CUSTOMER via Telegram/WhatsApp
-        telegram_sent = false
-        whatsapp_sent = false
-        
-        customer_msg = <<~MSG
+        # Skip download token generation for RD registration
+        unless payment['product_id'] == 'rd-registration'
+          # Generate secure download token
+          token_data = generate_download_token(payment)
+          tokens = read_download_tokens
+          tokens['tokens'] << token_data
+          write_download_tokens(tokens)
+          
+          # Build download URL with token - must point to Render backend
+          backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+          download_url = "#{backend_url}/download?token=#{token_data['token']}"
+          
+          # Send email automatically
+          expiry_date = Time.parse(token_data['expires_at']).strftime('%B %d, %Y at %I:%M %p')
+          email_html = generate_download_email(payment['product_name'], download_url, expiry_date)
+          email_sent = send_email(payment['email'], '📥 Your eBook is Ready to Download', email_html)
+          
+          # Send download link to CUSTOMER via Telegram/WhatsApp
+          telegram_sent = false
+          whatsapp_sent = false
+          
+          customer_msg = <<~MSG
 📚 *Marriage Education - Payment Approved*
 
 Hi! Your payment has been approved.
@@ -1587,21 +1753,21 @@ Hi! Your payment has been approved.
 📊 Downloads allowed: 5 times
 
 Thank you for your purchase!
-        MSG
-        
-        # Try Telegram first (if customer provided username/phone)
-        if TELEGRAM_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
-          telegram_sent = send_customer_telegram(payment['phone'], customer_msg)
-        end
-        
-        # Also try WhatsApp if CallMeBot is configured
-        if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
-          whatsapp_sent = send_customer_whatsapp(payment['phone'], customer_msg)
-        end
-        
-        # Send Telegram notification to ADMIN that payment was approved
-        if TELEGRAM_ENABLED
-          admin_msg = <<~MSG
+          MSG
+          
+          # Try Telegram first (if customer provided username/phone)
+          if TELEGRAM_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
+            telegram_sent = send_customer_telegram(payment['phone'], customer_msg)
+          end
+          
+          # Also try WhatsApp if CallMeBot is configured
+          if WHATSAPP_ENABLED && payment['phone'] && !payment['phone'].to_s.empty?
+            whatsapp_sent = send_customer_whatsapp(payment['phone'], customer_msg)
+          end
+          
+          # Send Telegram notification to ADMIN that payment was approved
+          if TELEGRAM_ENABLED
+            admin_msg = <<~MSG
 ✅ *Payment Approved & Sent*
 
 Reference: `#{payment['reference']}`
@@ -1615,20 +1781,29 @@ Amount: #{payment['amount']} #{payment['currency']}
 📱 WhatsApp: #{whatsapp_sent ? '✅' : '❌'}
 
 Download link: #{download_url}
-          MSG
-          send_telegram(admin_msg)
+            MSG
+            send_telegram(admin_msg)
+          end
+          
+          {
+            success: true,
+            message: 'Payment approved',
+            download_url: download_url,
+            email: payment['email'],
+            email_sent: email_sent,
+            whatsapp_sent: whatsapp_sent,
+            token: token_data['token'],
+            expires_at: token_data['expires_at']
+          }.to_json
+        else
+          # RD registration approved - credentials already sent
+          {
+            success: true,
+            message: 'RD registration approved and credentials sent',
+            email: payment['email'],
+            rd_code: payment['rd_code']
+          }.to_json
         end
-        
-        {
-          success: true,
-          message: 'Payment approved',
-          download_url: download_url,
-          email: payment['email'],
-          email_sent: email_sent,
-          whatsapp_sent: whatsapp_sent,
-          token: token_data['token'],
-          expires_at: token_data['expires_at']
-        }.to_json
       else
         halt 500, { error: 'Failed to update payment' }.to_json
       end
