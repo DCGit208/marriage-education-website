@@ -37,5 +37,31 @@ service cloud.firestore {
       allow create: if true; // Allow public registration
       allow update, delete: if request.auth != null && request.auth.token.admin == true;
     }
+    
+    // ============================================
+    // NEW COLLECTIONS (RD & Payment System)
+    // ============================================
+    
+    // Regional Directors - RD can read own data, admin can read/write all
+    match /regional_directors/{rdCode} {
+      allow read: if request.auth != null && 
+                     (request.auth.token.rd_code == rdCode || 
+                      request.auth.token.admin == true);
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Pending Payments - Temporarily allow reads for testing (TODO: Add proper admin auth)
+    match /pending_payments/{paymentRef} {
+      allow read: if true; // TEMPORARY: Allow reads for testing
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow create: if true; // Allow unauthenticated payment submissions
+    }
+    
+    // Referral Codes - Public can create and read for validation, admin can update
+    match /referral_codes/{referralCode} {
+      allow read: if true; // Public read for validation
+      allow create: if true; // Anyone can register a code
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
   }
 }

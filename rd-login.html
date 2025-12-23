@@ -181,6 +181,7 @@
     <div class="login-container">
         <div class="logo-section">
             <i class="fas fa-crown"></i>
+            <div style="background: #ffc107; color: #333; padding: 6px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 10px;">🔥 FIREBASE TEST</div>
             <h1>Regional Director</h1>
             <p>Login to Your Dashboard</p>
         </div>
@@ -213,8 +214,14 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+
     <script>
-        const API_BASE = 'https://marriage-education-website.onrender.com';
+        // Firebase Cloud Functions
+        const functions = firebase.functions();
         const errorMsg = document.getElementById('errorMessage');
         const successMsg = document.getElementById('successMessage');
 
@@ -256,32 +263,26 @@
             hideMessages();
             
             try {
-                // Verify RD exists via API
-                const response = await fetch(`${API_BASE}/api/rd-stats/${rdCode}`);
+                // Call Firebase Cloud Function
+                const getRDStats = functions.httpsCallable('getRDStats');
+                const result = await getRDStats({ code: rdCode, email: email });
                 
-                if (!response.ok) {
-                    throw new Error('Regional Director code not found. Please check your code or apply.');
+                if (!result.data.success || !result.data.rd) {
+                    throw new Error('Invalid Regional Director code or email. Please try again.');
                 }
                 
-                const data = await response.json();
-                
-                if (!data.success || !data.rd) {
-                    throw new Error('Invalid Regional Director code. Please try again.');
-                }
-                
-                // Verify email matches
-                if (data.rd.email.toLowerCase() !== email) {
-                    throw new Error('Email does not match our records. Please check and try again.');
-                }
+                const rd = result.data.rd;
                 
                 // Check payment status
-                if (data.rd.status === 'pending_payment') {
+                if (rd.status === 'pending_payment') {
                     throw new Error('Your payment is pending. Please complete payment to activate your account. Check your email for instructions.');
                 }
                 
-                // Store RD code in localStorage
+                // Store RD data in localStorage
                 localStorage.setItem('rdCode', rdCode);
                 localStorage.setItem('rdEmail', email);
+                localStorage.setItem('rdName', rd.name);
+                localStorage.setItem('rdData', JSON.stringify(rd));
                 
                 // Show success
                 showSuccess('✅ Login successful! Redirecting to dashboard...');
@@ -293,7 +294,20 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
+                
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.code === 'functions/not-found') {
+                    errorMessage = 'Regional Director code not found. Please check your code or apply.';
+                } else if (error.code === 'functions/permission-denied') {
+                    errorMessage = 'Email does not match our records. Please check and try again.';
+                } else if (error.code === 'functions/invalid-argument') {
+                    errorMessage = 'Please provide both RD code and email address.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showError(errorMessage);
                 
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to Dashboard';

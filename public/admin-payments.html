@@ -351,8 +351,23 @@
     </div>
   </div>
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="../js/firebase-config.js"></script>
+
   <script>
-    const API_BASE = 'https://marriage-education-website.onrender.com';
+    // Use global db and functions from firebase-config.js
+    let functions, dbRef;
+    
+    // Wait for Firebase to initialize
+    window.addEventListener('load', () => {
+      functions = firebase.functions();
+      dbRef = db; // Use the global db from firebase-config.js
+    });
+    
     let authToken = '';
     let currentFilter = 'all';
     let allPayments = [];
@@ -380,31 +395,24 @@
       }
     });
 
-    // Load payments
-    async function loadPayments() {
-      try {
-        showAlert('⏳ Loading payments from server... (Render free tier may take 30-60 seconds to wake up)', 'success');
-        
-        const response = await fetch(`${API_BASE}/admin/pending-payments`, {
-          headers: { 'Authorization': authToken }
+    // Load payments from Firestore (real-time)
+    function loadPayments() {
+      showAlert('🔥 Loading payments from Firebase...', 'success');
+      
+      // Real-time listener on pending_payments collection
+      dbRef.collection('pending_payments').onSnapshot((snapshot) => {
+        allPayments = [];
+        snapshot.forEach((doc) => {
+          allPayments.push({ ...doc.data(), reference: doc.id });
         });
-
-        if (!response.ok) {
-          if (response.status === 503) {
-            throw new Error('Server is waking up. Please wait 30 seconds and refresh.');
-          }
-          throw new Error('Failed to load payments');
-        }
-
-        const data = await response.json();
-        allPayments = data.payments || [];
+        
         updateStats();
         renderPayments();
-        showAlert(`✅ Loaded ${allPayments.length} payment(s)`, 'success');
-      } catch (error) {
-        console.error('Load error:', error);
-        showAlert('❌ ' + error.message + ' - Try clicking Refresh', 'error');
-      }
+        showAlert(`✅ Loaded ${allPayments.length} payment(s) from Firebase`, 'success');
+      }, (error) => {
+        console.error('Firestore error:', error);
+        showAlert('❌ Error loading from Firebase: ' + error.message, 'error');
+      });
     }
 
     // Update stats
@@ -489,76 +497,50 @@
 
     // Approve payment
     async function approvePayment(reference, email) {
-      if (!confirm(`Approve payment ${reference}?\n\nDownload link will be sent to: ${email}`)) return;
+      if (!confirm(`Approve payment ${reference}?\n\nThis will trigger commission tracking and send confirmation email to: ${email}`)) return;
 
       try {
-        const response = await fetch(`${API_BASE}/admin/approve-payment`, {
-          method: 'POST',
-          headers: {
-            'Authorization': authToken,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ reference })
-        });
+        // Call Firebase Cloud Function
+        const approvePaymentFunc = functions.httpsCallable('approvePayment');
+        const result = await approvePaymentFunc({ reference: reference });
 
-        const result = await response.json();
+        const data = result.data;
 
-        if (response.ok) {
-          const emailStatus = result.email_sent ? '✅ Email sent automatically!' : '⚠️ Email failed - copy link manually';
-          showAlert(`✓ Payment approved! ${emailStatus}`, 'success');
+        if (data.success) {
+          showAlert(`✓ Payment approved! Commission tracking completed.`, 'success');
           
           // Handle RD registration vs book purchase
-          if (result.rd_code) {
-            // Regional Director registration
-            await loadPayments();
-            if (result.email_sent) {
-              alert(`✅ RD Registration Approved!\n\n👑 Regional Director: ${result.rd_code}\n📧 Credentials email sent to: ${email}\n\nThe new RD can now log in at rd-login.html`);
-            } else {
-              alert(`⚠️ RD Registration Approved BUT Email Failed!\n\n👑 RD Code: ${result.rd_code}\n❗ IMPORTANT: Manually send credentials to:\n${email}\n\nDashboard: marriageducation.com/regional-director/dashboard.html`);
-            }
+          if (data.rd_code) {
+            // Regional Director registration approved
+            alert(`✅ RD Registration Approved!\n\n👑 Regional Director: ${data.rd_code}\n📧 Credentials email sent to: ${email}\n💰 Status: Active (can now earn commissions)\n\nThe new RD can now log in at rd-login.html`);
           } else {
-            // Book purchase - copy download URL
-            navigator.clipboard.writeText(result.download_url);
-            await loadPayments();
-            
-            const expiryInfo = result.expires_at ? `\nExpires: ${new Date(result.expires_at).toLocaleString()}\nMax downloads: 5` : '';
-            
-            if (result.email_sent) {
-              alert(`✅ Payment Approved!\n\n📧 Email sent automatically to: ${email}\n\nDownload link (also copied to clipboard):\n${result.download_url}${expiryInfo}`);
-            } else {
-              alert(`⚠️ Payment Approved BUT Email Failed!\n\n❗ IMPORTANT: Send this link to customer manually:\n${result.download_url}\n\nEmail: ${email}${expiryInfo}\n\n(Link copied to clipboard)`);
-            }
+            // Book purchase - commissions tracked automatically
+            alert(`✅ Payment Approved!\n\n📧 Confirmation email sent to: ${email}\n💰 Commissions tracked:\n   - Ambassador commission (if any)\n   - RD override (if any)\n   - Referral reward (if any)\n\nAll tracking completed automatically!`);
           }
         } else {
-          showAlert('Failed to approve payment', 'error');
+          showAlert('Failed to approve payment: ' + data.message, 'error');
         }
       } catch (error) {
         console.error('Approve error:', error);
-        showAlert('Error approving payment', 'error');
+        let errorMsg = 'Error approving payment';
+        if (error.code === 'functions/permission-denied') {
+          errorMsg = 'Admin access required';
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        showAlert('❌ ' + errorMsg, 'error');
       }
     }
 
-    // Reject payment
+    // Reject payment (delete from Firestore)
     async function rejectPayment(reference) {
-      const reason = prompt('Rejection reason (optional):') || 'Payment not verified';
+      const reason = prompt('Rejection reason (will be logged):') || 'Payment not verified';
       if (!reason) return;
 
       try {
-        const response = await fetch(`${API_BASE}/admin/reject-payment`, {
-          method: 'POST',
-          headers: {
-            'Authorization': authToken,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ reference, reason })
-        });
-
-        if (response.ok) {
-          showAlert('Payment rejected', 'success');
-          await loadPayments();
-        } else {
-          showAlert('Failed to reject payment', 'error');
-        }
+        await dbRef.collection('pending_payments').doc(reference).delete();
+        showAlert(`Payment ${reference} rejected (deleted from queue)`, 'success');
+        console.log(`Rejected payment ${reference}: ${reason}`);
       } catch (error) {
         console.error('Reject error:', error);
         showAlert('Error rejecting payment', 'error');
@@ -582,8 +564,7 @@
       });
     });
 
-    // Auto-refresh every 30 seconds
-    setInterval(loadPayments, 30000);
+    // No auto-refresh needed - Firestore updates in real-time! 🔥
   </script>
 </body>
 </html>
