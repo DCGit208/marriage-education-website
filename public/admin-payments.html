@@ -507,18 +507,27 @@
           const emailStatus = result.email_sent ? '✅ Email sent automatically!' : '⚠️ Email failed - copy link manually';
           showAlert(`✓ Payment approved! ${emailStatus}`, 'success');
           
-          // Copy download URL to clipboard
-          navigator.clipboard.writeText(result.download_url);
-          
-          // Reload payments
-          await loadPayments();
-          
-          const expiryInfo = result.expires_at ? `\nExpires: ${new Date(result.expires_at).toLocaleString()}\nMax downloads: 5` : '';
-          
-          if (result.email_sent) {
-            alert(`✅ Payment Approved!\n\n📧 Email sent automatically to: ${email}\n\nDownload link (also copied to clipboard):\n${result.download_url}${expiryInfo}`);
+          // Handle RD registration vs book purchase
+          if (result.rd_code) {
+            // Regional Director registration
+            await loadPayments();
+            if (result.email_sent) {
+              alert(`✅ RD Registration Approved!\n\n👑 Regional Director: ${result.rd_code}\n📧 Credentials email sent to: ${email}\n\nThe new RD can now log in at rd-login.html`);
+            } else {
+              alert(`⚠️ RD Registration Approved BUT Email Failed!\n\n👑 RD Code: ${result.rd_code}\n❗ IMPORTANT: Manually send credentials to:\n${email}\n\nDashboard: marriageducation.com/regional-director/dashboard.html`);
+            }
           } else {
-            alert(`⚠️ Payment Approved BUT Email Failed!\n\n❗ IMPORTANT: Send this link to customer manually:\n${result.download_url}\n\nEmail: ${email}${expiryInfo}\n\n(Link copied to clipboard)`);
+            // Book purchase - copy download URL
+            navigator.clipboard.writeText(result.download_url);
+            await loadPayments();
+            
+            const expiryInfo = result.expires_at ? `\nExpires: ${new Date(result.expires_at).toLocaleString()}\nMax downloads: 5` : '';
+            
+            if (result.email_sent) {
+              alert(`✅ Payment Approved!\n\n📧 Email sent automatically to: ${email}\n\nDownload link (also copied to clipboard):\n${result.download_url}${expiryInfo}`);
+            } else {
+              alert(`⚠️ Payment Approved BUT Email Failed!\n\n❗ IMPORTANT: Send this link to customer manually:\n${result.download_url}\n\nEmail: ${email}${expiryInfo}\n\n(Link copied to clipboard)`);
+            }
           }
         } else {
           showAlert('Failed to approve payment', 'error');

@@ -1277,7 +1277,13 @@ def send_rd_credentials_email(rd_code, name, email)
             </div>
             <p style="font-size: 14px; color: #666;">Share this link with potential ambassadors. When they register using this link, they'll be automatically assigned to your team.</p>
             
-            <h3 style="color: #1f2937; margin-top: 30px;">💰 Your Earning Structure:</h3>
+            <h3 style="color: #1f2937; margin-top: 30px;">� Your Free Book Access:</h3>
+            <p style="margin-bottom: 15px;">As a Regional Director, you get FREE access to the Sex By Design book:</p>
+            <p style="text-align: center; margin: 20px 0;">
+              <a href="https://marriageducation.com/course-viewer.html?courseId=sex-by-design-for-dummies" style="display: inline-block; background: #10b981; color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold;">📖 Access Your Book</a>
+            </p>
+            
+            <h3 style="color: #1f2937; margin-top: 30px;">�💰 Your Earning Structure:</h3>
             <ul style="line-height: 2;">
               <li><strong>10% Override Commission</strong> on every book sold by your team</li>
               <li><strong>Milestone Bonuses:</strong> 100K (10 amb) → 500K (50) → 2M (100) → 10M (500)</li>
@@ -1308,10 +1314,12 @@ def send_rd_credentials_email(rd_code, name, email)
       </html>
     HTML
     
-    send_email(email, subject, html_content)
+    email_result = send_email(email, subject, html_content)
     puts "[RD CREDENTIALS EMAIL] ✅ Sent to #{email} (#{rd_code})"
+    return email_result
   rescue => e
     puts "[RD CREDENTIALS EMAIL ERROR] #{e.message}"
+    return false
   end
 end
 
@@ -1697,8 +1705,9 @@ post '/admin/approve-payment' do
         write_regional_directors(rd_data)
         puts "[RD ACTIVATION] ✅ #{rd_code} - #{rd_metadata['firstName']} #{rd_metadata['lastName']} activated"
         
-        # Send credentials email to new RD
-        send_rd_credentials_email(rd_code, "#{rd_metadata['firstName']} #{rd_metadata['lastName']}", rd_metadata['email'])
+        # Send credentials email to new RD and capture result
+        email_sent_to_rd = send_rd_credentials_email(rd_code, "#{rd_metadata['firstName']} #{rd_metadata['lastName']}", rd_metadata['email'])
+        payment['email_sent_to_rd'] = email_sent_to_rd
       end
       
       # Track commission for ambassador if ref exists
@@ -1797,10 +1806,12 @@ Download link: #{download_url}
           }.to_json
         else
           # RD registration approved - credentials already sent
+          email_sent_successfully = payment['email_sent_to_rd'] || false
           {
             success: true,
             message: 'RD registration approved and credentials sent',
             email: payment['email'],
+            email_sent: email_sent_successfully,
             rd_code: payment['rd_code']
           }.to_json
         end
