@@ -411,6 +411,7 @@
       const phone = document.getElementById('phone').value;
       const email = document.getElementById('email').value;
       const ambassadorRef = sessionStorage.getItem('ambassador_ref') || '';
+      const referralCode = sessionStorage.getItem('referral_code') || '';
 
       try {
         const response = await fetch('https://marriage-education-website.onrender.com/submit-manual-payment', {
@@ -427,6 +428,7 @@
             phone: phone,
             email: email,
             ambassador_ref: ambassadorRef,
+            referral_code: referralCode,
             timestamp: new Date().toISOString()
           })
         });
