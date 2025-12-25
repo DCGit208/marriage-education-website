@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // eBooks - Generate signed URLs from Cloud Functions only
+    match /ebooks/{ebookFile} {
+      allow read: if false; // No direct public access
+      allow write: if false; // Upload only via admin
+    }
+  }
+}
