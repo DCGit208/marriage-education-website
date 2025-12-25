@@ -463,8 +463,13 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
     <script>
-        const API_BASE = 'https://marriage-education-website.onrender.com';
 
         // Show/hide ambassador code field
         document.getElementById('isAmbassador').addEventListener('change', function() {
@@ -491,39 +496,34 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Application...';
             
             try {
-                // Generate RD code
-                const rdCode = 'RD-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
-                
                 // Prepare submission data
                 const applicationData = {
-                    ...data,
-                    code: rdCode,
-                    status: 'pending_payment',
-                    applicationDate: new Date().toISOString(),
-                    registrationFee: 50000,
-                    downlineCount: 0,
-                    overrideCommission: 0,
-                    tier: 'Pending'
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    phone: data.phone,
+                    city: data.city,
+                    country: data.country,
+                    experience: data.experience,
+                    motivation: data.motivation,
+                    isAmbassador: data.isAmbassador,
+                    ambassadorCode: data.ambassadorCode || '',
+                    agreeTerms: data.agreeTerms === 'on'
                 };
                 
-                // Submit to server
-                const response = await fetch(`${API_BASE}/register-regional-director`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(applicationData)
-                });
+                // Submit to Firebase Cloud Function
+                const registerRD = firebase.functions().httpsCallable('registerRD');
+                const result = await registerRD(applicationData);
                 
-                const result = await response.json();
+                const rdCode = result.data.code;
                 
-                if (result.success) {
+                if (result.data.success) {
                     alert(`✅ Application submitted successfully!\n\nYour RD Code: ${rdCode}\n\nYou will receive payment instructions via email within 24 hours. Once payment is confirmed, your Regional Director account will be activated.`);
                     
                     // Redirect to confirmation page or payment page
                     window.location.href = `rd-payment.html?code=${rdCode}&amount=50000`;
                 } else {
-                    throw new Error(result.message || 'Submission failed');
+                    throw new Error(result.data.message || 'Submission failed');
                 }
                 
             } catch (error) {
