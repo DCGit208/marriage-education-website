@@ -3,9 +3,20 @@ const admin = require('firebase-admin');
 const stripe = require('stripe')(functions.config().stripe?.secret_key);
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
+const axios = require('axios');
+
+// UUID - generate random tokens
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 admin.initializeApp();
 const db = admin.firestore();
+const bucket = admin.storage().bucket();
 
 // Initialize SendGrid if available
 const SENDGRID_API_KEY = functions.config().sendgrid?.api_key;
@@ -13,22 +24,201 @@ if (SENDGRID_API_KEY) {
   sgMail.setApiKey(SENDGRID_API_KEY);
 }
 
-// Email transporter (configure with your SMTP)
+// Telegram Configuration
+const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
+const TELEGRAM_CHAT_ID = functions.config().telegram?.chat_id;
+
+// SMTP Configuration (iPage)
+const SMTP_CONFIG = {
+  host: functions.config().smtp?.host || 'smtp.ipage.com',
+  port: parseInt(functions.config().smtp?.port || '587'),
+  user: functions.config().smtp?.user || 'orders@marriageducation.com',
+  pass: functions.config().smtp?.pass || '',
+  from: functions.config().smtp?.from || 'orders@marriageducation.com'
+};
+
+// Email transporter
 let transporter;
 try {
-  transporter = nodemailer.createTransport({
-    host: 'mail.marriageducation.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: functions.config().email?.user || 'train@marriageducation.com',
-      pass: functions.config().email?.password || ''
-    }
-  });
+  if (SMTP_CONFIG.user && SMTP_CONFIG.pass) {
+    transporter = nodemailer.createTransport({
+      host: SMTP_CONFIG.host,
+      port: SMTP_CONFIG.port,
+      secure: false, // STARTTLS
+      auth: {
+        user: SMTP_CONFIG.user,
+        pass: SMTP_CONFIG.pass
+      },
+      tls: {
+        rejectUnauthorized: false // For iPage compatibility
+      }
+    });
+    console.log('[SMTP] Configured:', SMTP_CONFIG.host);
+  }
 } catch (error) {
-  console.log('Nodemailer not configured, using SendGrid only');
+  console.log('[SMTP] Not configured:', error.message);
   transporter = null;
 }
+
+// ========== HELPER FUNCTIONS ==========
+
+/**
+ * Send Telegram message to admin
+ */
+async function sendTelegram(message) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.log('[Telegram] Not configured');
+    return false;
+  }
+  
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'Markdown'
+    });
+    console.log('[Telegram] Message sent');
+    return true;
+  } catch (error) {
+    console.error('[Telegram] Error:', error.message);
+    return false;
+  }
+}
+
+/**
+ * Generate signed download URL from Firebase Storage
+ */
+async function generateDownloadURL(productId) {
+  // Map product IDs to PDF filenames
+  const productMap = {
+    'sbd-book': 'sbd-for-dummies.pdf',
+    'sbd-for-dummies': 'sbd-for-dummies.pdf',
+    'sbd-standard': 'sbd-standard.pdf',
+    'sbd-canonical': 'sbd-canonical.pdf',
+    'complete-sbd-library': 'complete-sbd-library.pdf',
+    'the-arts-of-marriage': 'the-arts-of-marriage.pdf',
+    'naked-not-ashamed': 'naked-not-ashamed.pdf',
+    // Add more mappings as needed
+  };
+  
+  const filename = productMap[productId] || 'sbd-for-dummies.pdf';
+  const file = bucket.file(`ebooks/${filename}`);
+  
+  try {
+    // Check if file exists first
+    const [exists] = await file.exists();
+    console.log(`[Storage] File ${filename} exists: ${exists}`);
+    
+    if (!exists) {
+      console.error(`[Storage] File not found: ebooks/${filename}`);
+      throw new Error(`Book file '${filename}' not found in Firebase Storage. Please upload the file first.`);
+    }
+    
+    // Get or create a download token
+    const [metadata] = await file.getMetadata();
+    let token = metadata.metadata?.firebaseStorageDownloadTokens;
+    
+    if (!token) {
+      // Generate a new token if one doesn't exist
+      token = uuidv4();
+      await file.setMetadata({
+        metadata: {
+          firebaseStorageDownloadTokens: token
+        }
+      });
+      console.log(`[Storage] Created new download token for ${filename}`);
+    } else {
+      console.log(`[Storage] Using existing download token for ${filename}`);
+    }
+    
+    // Construct the public download URL with token
+    const bucketName = bucket.name;
+    const encodedFilename = encodeURIComponent(`ebooks/${filename}`);
+    const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFilename}?alt=media&token=${token}`;
+    
+    console.log(`[Storage] Generated download URL for ${filename}`);
+    return url;
+  } catch (error) {
+    console.error(`[Storage] Error with ${filename}:`, error.message);
+    throw error;
+  }
+}
+
+/**
+ * Send download email to customer
+ */
+async function sendDownloadEmail(email, productName, downloadUrl) {
+  const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2d3748; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #f7fafc; padding: 30px; }
+    .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #718096; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📚 Your eBook is Ready!</h1>
+    </div>
+    <div class="content">
+      <h2>Payment Approved</h2>
+      <p>Thank you for your purchase! Your payment has been approved and your eBook is ready to download.</p>
+      
+      <p><strong>Product:</strong> ${productName}</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${downloadUrl}" class="button">📥 Download Now</a>
+      </div>
+      
+      <p><strong>Download expires:</strong> ${expiryDate}</p>
+      
+      <p>If the button doesn't work, copy and paste this link into your browser:</p>
+      <p style="word-break: break-all; background: #edf2f7; padding: 10px; border-radius: 5px;">${downloadUrl}</p>
+      
+      <p>Thank you for supporting Marriage Education!</p>
+    </div>
+    <div class="footer">
+      <p>Marriage Education | marriageducation.com</p>
+      <p>Questions? Reply to this email</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+  
+  try {
+    if (transporter) {
+      await transporter.sendMail({
+        from: `"Marriage Education" <${SMTP_CONFIG.from}>`,
+        to: email,
+        subject: `📥 Your eBook is Ready - ${productName}`,
+        html: html
+      });
+      console.log(`[Email] Sent to ${email}`);
+      return true;
+    } else {
+      console.log('[Email] Transporter not configured');
+      return false;
+    }
+  } catch (error) {
+    console.error('[Email] Error:', error.message);
+    return false;
+  }
+}
+
+// ========== END HELPER FUNCTIONS ==========
 
 /**
  * Stripe Webhook Handler
@@ -539,34 +729,88 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
       approved_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
+    console.log(`[APPROVE] Payment ${reference} approved`);
+
     // Handle RD registration activation
     if (payment.product_id === 'rd-registration' && payment.rd_code) {
       await activateRD(payment);
+      
+      // Send Telegram notification for RD registration
+      if (TELEGRAM_BOT_TOKEN) {
+        const rdMsg = `✅ *RD Registration Approved*\n\n` +
+          `👑 Code: \`${payment.rd_code}\`\n` +
+          `👤 Name: ${payment.name || 'N/A'}\n` +
+          `📧 Email: ${payment.email}\n` +
+          `📱 Phone: ${payment.phone}\n` +
+          `💰 Fee: ${payment.amount} ${payment.currency}`;
+        await sendTelegram(rdMsg);
+      }
+
+      return {
+        success: true,
+        message: 'RD registration approved',
+        rd_code: payment.rd_code,
+        email_sent: true
+      };
     }
 
     // Track ambassador commission
     if (payment.ambassador_ref) {
       await trackAmbassadorSale(payment.ambassador_ref, payment.amount);
+      console.log(`[COMMISSION] Ambassador ${payment.ambassador_ref}: ${payment.amount}`);
     }
 
     // Track referral commission
     if (payment.referral_code) {
       await trackReferralSale(payment.referral_code, payment.amount);
+      console.log(`[REFERRAL] Code ${payment.referral_code}: ${payment.amount}`);
     }
 
-    // Send customer approval email
-    if (SENDGRID_API_KEY) {
-      await sendCustomerApprovalEmail(payment);
-    } else {
-      await sendCustomerApprovalEmailSMTP(payment);
+    // Generate download URL for book purchase
+    const downloadUrl = await generateDownloadURL(payment.product_id);
+    console.log(`[DOWNLOAD] URL generated: ${downloadUrl.substring(0, 50)}...`);
+
+    // Send download email to customer
+    const emailSent = await sendDownloadEmail(
+      payment.email,
+      payment.product_name,
+      downloadUrl
+    );
+
+    // Send comprehensive Telegram notification to admin
+    if (TELEGRAM_BOT_TOKEN) {
+      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      const adminMsg = `✅ *Payment Approved & Sent*\n\n` +
+        `📋 Reference: \`${payment.reference}\`\n` +
+        `👤 Customer: ${payment.email}\n` +
+        `📱 Phone: ${payment.phone || 'N/A'}\n` +
+        `📚 Product: *${payment.product_name}*\n` +
+        `💰 Amount: ${payment.amount} ${payment.currency}\n\n` +
+        `📧 Email: ${emailSent ? '✅' : '❌'}\n` +
+        `${payment.ambassador_ref ? `🎯 Ambassador: ${payment.ambassador_ref}\n` : ''}` +
+        `${payment.referral_code ? `🔗 Referral: ${payment.referral_code}\n` : ''}` +
+        `${payment.rd_code ? `👑 RD: ${payment.rd_code}\n` : ''}\n` +
+        `📥 Download (expires ${expiryDate}):\n${downloadUrl}`;
+      
+      await sendTelegram(adminMsg);
+      console.log('[Telegram] Admin notification sent');
     }
 
     return {
       success: true,
-      message: 'Payment approved successfully'
+      message: 'Payment approved successfully',
+      download_url: downloadUrl,
+      email_sent: emailSent,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
   } catch (error) {
     console.error('approvePayment error:', error);
+    
+    // Send error notification to admin
+    if (TELEGRAM_BOT_TOKEN) {
+      await sendTelegram(`❌ *Payment Approval Error*\n\nReference: \`${data.reference}\`\nError: ${error.message}`);
+    }
+    
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
@@ -920,3 +1164,108 @@ async function sendReferralMilestoneEmailSMTP(referral, milestone, commission) {
   await transporter.sendMail(mailOptions);
 }
 
+/**
+ * Upload Books to Storage - Helper function to upload ebooks
+ */
+exports.uploadBooksToStorage = functions.https.onRequest(async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    
+    const ebooksDir = path.join(__dirname, 'ebooks');
+    
+    // Check if we can access the directory
+    if (!fs.existsSync(ebooksDir)) {
+      return res.status(400).json({ 
+        error: 'Ebooks directory not found',
+        path: ebooksDir,
+        cwd: __dirname
+      });
+    }
+    
+    const files = fs.readdirSync(ebooksDir).filter(f => f.endsWith('.pdf'));
+    const results = [];
+    
+    console.log(`Found ${files.length} PDF files to upload`);
+    
+    for (const filename of files) {
+      const filePath = path.join(ebooksDir, filename);
+      const fileSize = fs.statSync(filePath).size;
+      const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+      
+      console.log(`Uploading ${filename} (${fileSizeMB} MB)...`);
+      
+      try {
+        await bucket.upload(filePath, {
+          destination: `ebooks/${filename}`,
+          metadata: {
+            contentType: 'application/pdf',
+            cacheControl: 'public, max-age=31536000',
+          }
+        });
+        
+        results.push({ 
+          filename, 
+          status: 'success',
+          size: fileSizeMB + ' MB'
+        });
+        
+        console.log(`✅ Uploaded: ${filename}`);
+      } catch (uploadError) {
+        results.push({ 
+          filename, 
+          status: 'error', 
+          error: uploadError.message 
+        });
+        console.error(`❌ Failed: ${filename}`, uploadError);
+      }
+    }
+    
+    const succeeded = results.filter(r => r.status === 'success').length;
+    const failed = results.filter(r => r.status === 'error').length;
+    
+    res.json({
+      message: `Upload complete: ${succeeded} succeeded, ${failed} failed`,
+      total: files.length,
+      succeeded,
+      failed,
+      results
+    });
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Debug Storage - List all buckets and files
+ */
+exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
+  try {
+    const storage = admin.storage();
+    
+    // Get the default bucket
+    const defaultBucket = storage.bucket();
+    console.log('Default bucket:', defaultBucket.name);
+    
+    // Try to list files in the ebooks folder
+    const [files] = await defaultBucket.getFiles({ prefix: 'ebooks/' });
+    
+    const fileList = files.map(file => ({
+      name: file.name,
+      bucket: file.bucket.name,
+      size: file.metadata.size
+    }));
+    
+    res.json({
+      defaultBucket: defaultBucket.name,
+      filesCount: files.length,
+      files: fileList
+    });
+    
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});

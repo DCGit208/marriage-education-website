@@ -28,6 +28,11 @@ var contestsRef = db.collection('contests');
 var badgesRef = db.collection('badges');
 var settingsRef = db.collection('settings');
 
+// NEW: RD & Payment System collections
+var regionalDirectorsRef = db.collection('regional_directors');
+var pendingPaymentsRef = db.collection('pending_payments');
+var referralCodesRef = db.collection('referral_codes');
+
 // Helper Functions
 const FirebaseHelper = {
     // Generate unique ambassador code

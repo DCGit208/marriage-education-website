@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Admin Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+    .header {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 28px;
+      color: #2d3436;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2d3436;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #636e72;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .filters {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 2px solid #dfe6e9;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .filter-btn:hover {
+      border-color: #FFCB05;
+    }
+    .filter-btn.active {
+      background: #FFCB05;
+      border-color: #FFCB05;
+      color: #000;
+    }
+    .refresh-btn {
+      margin-left: auto;
+      padding: 8px 20px;
+      background: #000;
+      color: #FFCB05;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .refresh-btn:hover {
+      background: #333;
+    }
+    .payments-grid {
+      display: grid;
+      gap: 15px;
+    }
+    .payment-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: start;
+      transition: transform 0.2s;
+    }
+    .payment-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .payment-info {
+      display: grid;
+      gap: 10px;
+    }
+    .payment-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .reference {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2d3436;
+      font-family: 'Courier New', monospace;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status-approved {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .product-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3436;
+    }
+    .payment-amount {
+      font-size: 24px;
+      font-weight: 700;
+      color: #FFCB05;
+    }
+    .payment-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .detail {
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-label {
+      font-size: 12px;
+      color: #636e72;
+      margin-bottom: 4px;
+    }
+    .detail-value {
+      font-size: 14px;
+      color: #2d3436;
+      font-weight: 500;
+    }
+    .payment-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .action-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .approve-btn {
+      background: #00b894;
+      color: white;
+    }
+    .approve-btn:hover {
+      background: #00a383;
+    }
+    .reject-btn {
+      background: #d63031;
+      color: white;
+    }
+    .reject-btn:hover {
+      background: #c0392b;
+    }
+    .copy-btn {
+      background: #636e72;
+      color: white;
+    }
+    .copy-btn:hover {
+      background: #4a5568;
+    }
+    .empty-state {
+      background: white;
+      border-radius: 12px;
+      padding: 60px;
+      text-align: center;
+      color: #636e72;
+    }
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .alert {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert.show {
+      display: block;
+    }
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+    .login-container h2 {
+      margin-bottom: 30px;
+      text-align: center;
+      color: #2d3436;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2d3436;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #dfe6e9;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #FFCB05;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #000;
+      color: #FFCB05;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-btn:hover {
+      background: #333;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-container">
+    <h2>🔐 Admin Login</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="admin-password" placeholder="Enter admin password" required>
+      </div>
+      <button type="submit" class="login-btn">Login</button>
+    </form>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-dashboard" class="hidden">
+    <div class="container">
+      <div class="header">
+        <h1>💰 Payment Management</h1>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="pending-count">0</div>
+            <div class="stat-label">Pending</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="approved-count">0</div>
+            <div class="stat-label">Approved</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="total-amount">0</div>
+            <div class="stat-label">Total (FCFA)</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="approved">Approved</button>
+          <button class="filter-btn" data-filter="rejected">Rejected</button>
+        </div>
+        <button class="refresh-btn" onclick="loadPayments()">🔄 Refresh</button>
+      </div>
+
+      <div id="payments-container" class="payments-grid">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No payments yet</h3>
+          <p>Payments will appear here when customers submit manual MOMO transfers</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="../js/firebase-config.js"></script>
+
+  <script>
+    // Use global db and functions from firebase-config.js
+    let functions, dbRef;
+    
+    // Wait for Firebase to initialize
+    window.addEventListener('load', () => {
+      functions = firebase.functions();
+      dbRef = db; // Use the global db from firebase-config.js
+    });
+    
+    let authToken = '';
+    let currentFilter = 'all';
+    let allPayments = [];
+
+    // Show alert
+    function showAlert(message, type) {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = `alert ${type} show`;
+      setTimeout(() => alert.classList.remove('show'), 5000);
+    }
+
+    // Login
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const password = document.getElementById('admin-password').value;
+      
+      if (password === 'admin-secret-2024') { // Change this!
+        authToken = 'Bearer admin-secret-2024';
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        loadPayments();
+      } else {
+        alert('Invalid password');
+      }
+    });
+
+    // Load payments from Firestore (real-time)
+    function loadPayments() {
+      showAlert('🔥 Loading payments from Firebase...', 'success');
+      
+      // Real-time listener on pending_payments collection
+      dbRef.collection('pending_payments').onSnapshot((snapshot) => {
+        allPayments = [];
+        snapshot.forEach((doc) => {
+          allPayments.push({ ...doc.data(), reference: doc.id });
+        });
+        
+        updateStats();
+        renderPayments();
+        showAlert(`✅ Loaded ${allPayments.length} payment(s) from Firebase`, 'success');
+      }, (error) => {
+        console.error('Firestore error:', error);
+        showAlert('❌ Error loading from Firebase: ' + error.message, 'error');
+      });
+    }
+
+    // Update stats
+    function updateStats() {
+      const pending = allPayments.filter(p => p.status === 'pending').length;
+      const approved = allPayments.filter(p => p.status === 'approved').length;
+      const total = allPayments
+        .filter(p => p.status === 'approved')
+        .reduce((sum, p) => sum + parseInt(p.amount), 0);
+
+      document.getElementById('pending-count').textContent = pending;
+      document.getElementById('approved-count').textContent = approved;
+      document.getElementById('total-amount').textContent = total.toLocaleString();
+    }
+
+    // Render payments
+    function renderPayments() {
+      const container = document.getElementById('payments-container');
+      
+      let filteredPayments = allPayments;
+      if (currentFilter !== 'all') {
+        filteredPayments = allPayments.filter(p => p.status === currentFilter);
+      }
+
+      // Sort by newest first
+      filteredPayments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (filteredPayments.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>No ${currentFilter} payments</h3>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredPayments.map(payment => `
+        <div class="payment-card">
+          <div class="payment-info">
+            <div class="payment-header">
+              <span class="reference">${payment.reference}</span>
+              <span class="status-badge status-${payment.status}">${payment.status}</span>
+            </div>
+            <div class="product-name">${payment.product_name}</div>
+            <div class="payment-amount">${parseInt(payment.amount).toLocaleString()} FCFA</div>
+            <div class="payment-details">
+              <div class="detail">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value">${payment.phone}</div>
+              </div>
+              <div class="detail">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">${payment.email}</div>
+              </div>
+              <div class="detail">
+                <div class="detail-label">Product ID</div>
+                <div class="detail-value">${payment.product_id}</div>
+              </div>
+              <div class="detail">
+                <div class="detail-label">Submitted</div>
+                <div class="detail-value">${new Date(payment.created_at).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          <div class="payment-actions">
+            ${payment.status === 'pending' ? `
+              <button class="action-btn approve-btn" onclick="approvePayment('${payment.reference}', '${payment.email}')">
+                ✓ Approve
+              </button>
+              <button class="action-btn reject-btn" onclick="rejectPayment('${payment.reference}')">
+                ✗ Reject
+              </button>
+            ` : ''}
+            <button class="action-btn copy-btn" onclick="copyReference('${payment.reference}')">
+              📋 Copy Ref
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Approve payment
+    async function approvePayment(reference, email) {
+      if (!confirm(`Approve payment ${reference}?\n\nThis will trigger commission tracking and send confirmation email to: ${email}`)) return;
+
+      try {
+        // Call Firebase Cloud Function
+        const approvePaymentFunc = functions.httpsCallable('approvePayment');
+        const result = await approvePaymentFunc({ reference: reference });
+
+        const data = result.data;
+
+        if (data.success) {
+          showAlert(`✓ Payment approved! Commission tracking completed.`, 'success');
+          
+          // Handle RD registration vs book purchase
+          if (data.rd_code) {
+            // Regional Director registration approved
+            alert(`✅ RD Registration Approved!\n\n👑 Regional Director: ${data.rd_code}\n📧 Credentials email sent to: ${email}\n💰 Status: Active (can now earn commissions)\n\nThe new RD can now log in at rd-login.html`);
+          } else {
+            // Book purchase - commissions tracked automatically
+            alert(`✅ Payment Approved!\n\n📧 Confirmation email sent to: ${email}\n💰 Commissions tracked:\n   - Ambassador commission (if any)\n   - RD override (if any)\n   - Referral reward (if any)\n\nAll tracking completed automatically!`);
+          }
+        } else {
+          showAlert('Failed to approve payment: ' + data.message, 'error');
+        }
+      } catch (error) {
+        console.error('Approve error:', error);
+        let errorMsg = 'Error approving payment';
+        if (error.code === 'functions/permission-denied') {
+          errorMsg = 'Admin access required';
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        showAlert('❌ ' + errorMsg, 'error');
+      }
+    }
+
+    // Reject payment (delete from Firestore)
+    async function rejectPayment(reference) {
+      const reason = prompt('Rejection reason (will be logged):') || 'Payment not verified';
+      if (!reason) return;
+
+      try {
+        await dbRef.collection('pending_payments').doc(reference).delete();
+        showAlert(`Payment ${reference} rejected (deleted from queue)`, 'success');
+        console.log(`Rejected payment ${reference}: ${reason}`);
+      } catch (error) {
+        console.error('Reject error:', error);
+        showAlert('Error rejecting payment', 'error');
+      }
+    }
+
+    // Copy reference
+    function copyReference(reference) {
+      navigator.clipboard.writeText(reference).then(() => {
+        showAlert('Reference copied!', 'success');
+      });
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderPayments();
+      });
+    });
+
+    // No auto-refresh needed - Firestore updates in real-time! 🔥
+  </script>
+</body>
+</html>
