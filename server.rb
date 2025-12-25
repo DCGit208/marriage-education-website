@@ -541,7 +541,7 @@ def send_admin_notification(payment)
           </div>
           
           <p style="text-align: center;">
-            <a href="https://marriageducation.com/admin-payments.html" class="button">
+            <a href="https://marriageducation.com/public/admin-dashboard.html" class="button">
               👉 Review & Approve Payment
             </a>
           </p>
