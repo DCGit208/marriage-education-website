@@ -24,6 +24,14 @@
         { "fieldPath": "school", "order": "ASCENDING" },
         { "fieldPath": "course_no", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "pending_payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
