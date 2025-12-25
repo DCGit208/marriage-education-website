@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Marriage Education</title>
+    <title>Administrative Dashboard | Marriage Education</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
@@ -31,6 +31,102 @@
             font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
+        }
+
+        /* Login Screen Styles */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 420px;
+            width: 90%;
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text);
+            font-size: 1.8rem;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            background: #fee;
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         /* Header */
@@ -104,6 +200,22 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: var(--primary);
         }
 
         /* Layout */
@@ -495,6 +607,26 @@
     </style>
 </head>
 <body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-logo">🔐</div>
+            <h2>Administrative Dashboard Login</h2>
+            <div id="login-error" class="login-error">Invalid password. Please try again.</div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" placeholder="Enter admin password" required autofocus>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (Hidden until authenticated) -->
+    <div id="main-dashboard" class="hidden">
     <!-- Header -->
     <div class="header">
         <div class="header-left">
@@ -513,6 +645,9 @@
                 </div>
                 <span id="adminName">Admin</span>
             </div>
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </div>
     </div>
 
@@ -1446,12 +1581,73 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication on page load
+            checkAuthentication();
+            
             // Load initial data
             loadDashboardData();
             
             // Set admin name
             document.getElementById('adminName').textContent = 'Administrator';
         });
+
+        // ==============================================
+        // AUTHENTICATION SYSTEM
+        // ==============================================
+
+        const ADMIN_PASSWORD = 'admin-secret-2024';
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            const isAuthenticated = sessionStorage.getItem('adminAuthenticated');
+            
+            if (isAuthenticated === 'true') {
+                // User is authenticated, show dashboard
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+            } else {
+                // User is not authenticated, show login
+                document.getElementById('login-overlay').classList.remove('hidden');
+                document.getElementById('main-dashboard').classList.add('hidden');
+            }
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            if (password === ADMIN_PASSWORD) {
+                // Correct password
+                sessionStorage.setItem('adminAuthenticated', 'true');
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                
+                // Load dashboard data
+                loadDashboardData();
+            } else {
+                // Incorrect password
+                errorDiv.classList.add('show');
+                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-password').focus();
+                
+                setTimeout(() => {
+                    errorDiv.classList.remove('show');
+                }, 3000);
+            }
+        });
+
+        // Handle logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('adminAuthenticated');
+                document.getElementById('login-overlay').classList.remove('hidden');
+                document.getElementById('main-dashboard').classList.add('hidden');
+                document.getElementById('admin-password').value = '';
+            }
+        });
     </script>
+    </div> <!-- Close main-dashboard -->
 </body>
 </html>
