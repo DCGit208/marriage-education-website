@@ -167,12 +167,19 @@
             position: relative;
             cursor: pointer;
             font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255,255,255,0.2);
         }
 
         .notification-badge {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: -2px;
+            right: -2px;
             background: var(--danger);
             color: white;
             border-radius: 50%;
@@ -182,6 +189,119 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 360px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 2000;
+            display: none;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .mark-all-read {
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .notification-item:hover {
+            background: var(--bg);
+        }
+
+        .notification-item.unread {
+            background: #f0f4ff;
+        }
+
+        .notification-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-item-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .notification-item-time {
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+
+        .notification-item-message {
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+
+        .empty-notifications {
+            padding: 3rem;
+            text-align: center;
+            color: #636e72;
+        }
+
+        .empty-notifications i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
         }
 
         .admin-info {
@@ -582,18 +702,59 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .admin-info span {
+                display: none;
+            }
+
+            .logout-btn span {
+                display: none;
+            }
+
+            .logout-btn {
+                padding: 8px 12px;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s;
+                z-index: 1500;
             }
 
             .sidebar.active {
                 transform: translateX(0);
             }
 
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 1400;
+            }
+
+            .mobile-overlay.show {
+                display: block;
+            }
+
             .main-content {
                 margin-left: 0;
                 width: 100%;
+                padding: 1rem;
             }
 
             .stats-grid {
@@ -602,6 +763,25 @@
 
             .charts-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .notification-dropdown {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            .table-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-box {
+                width: 100%;
             }
         }
     </style>
@@ -630,12 +810,15 @@
     <!-- Header -->
     <div class="header">
         <div class="header-left">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="logo">
                 <i class="fas fa-heart"></i> Marriage Education
             </div>
         </div>
         <div class="header-right">
-            <div class="notification-bell">
+            <div class="notification-bell" id="notificationBell">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge" id="notificationCount">0</span>
             </div>
@@ -643,13 +826,30 @@
                 <div class="admin-avatar">
                     <i class="fas fa-user"></i>
                 </div>
-                <span id="adminName">Admin</span>
+                <span id="adminName">Administrator</span>
             </div>
             <button id="logout-btn" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
             </button>
         </div>
     </div>
+
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <span class="mark-all-read" id="markAllRead">Mark all as read</span>
+        </div>
+        <div id="notificationList">
+            <div class="empty-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <p>No new notifications</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <!-- Container -->
     <div class="container">
@@ -1056,6 +1256,109 @@
     <script src="../js/firebase-config.js"></script>
 
     <script>
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            mobileOverlay.classList.toggle('show');
+        });
+
+        mobileOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            mobileOverlay.classList.remove('show');
+        });
+
+        // Close mobile menu when clicking a nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.remove('show');
+                }
+            });
+        });
+
+        // Notification Bell Toggle
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationDropdown.classList.toggle('show');
+        });
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!notificationDropdown.contains(e.target) && !notificationBell.contains(e.target)) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const snapshot = await db.collection('pending_payments')
+                    .where('status', '==', 'pending')
+                    .orderBy('created_at', 'desc')
+                    .limit(10)
+                    .get();
+
+                const count = snapshot.size;
+                document.getElementById('notificationCount').textContent = count;
+
+                if (count === 0) {
+                    document.getElementById('notificationList').innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No new notifications</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.created_at ? 
+                        new Date(data.created_at.seconds * 1000).toLocaleString() : 'Just now';
+                    
+                    html += `
+                        <div class="notification-item unread" onclick="viewPayment('${doc.id}')">
+                            <div class="notification-item-header">
+                                <div class="notification-item-title">💰 New Payment - ${data.amount} ${data.currency || 'FCFA'}</div>
+                                <div class="notification-item-time">${date}</div>
+                            </div>
+                            <div class="notification-item-message">
+                                ${data.product_name} - ${data.email}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('notificationList').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        // View payment from notification
+        function viewPayment(paymentId) {
+            // Switch to payments section
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('[data-section="payments"]').classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('payments').classList.add('active');
+            
+            // Close notification dropdown
+            notificationDropdown.classList.remove('show');
+            
+            // Load payments
+            loadPaymentsTable();
+        }
+
         // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -1587,9 +1890,15 @@
             
             // Load initial data
             loadDashboardData();
+            loadNotifications();
             
             // Set admin name
             document.getElementById('adminName').textContent = 'Administrator';
+
+            // Refresh notifications every 30 seconds
+            setInterval(() => {
+                loadNotifications();
+            }, 30000);
         });
 
         // ==============================================
