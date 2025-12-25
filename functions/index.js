@@ -691,6 +691,22 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       await sendAdminPaymentNotificationSMTP(paymentData);
     }
 
+    // Send Telegram notification for new pending payment
+    if (TELEGRAM_BOT_TOKEN) {
+      const pendingMsg = `🔔 *New Payment Pending Approval*\n\n` +
+        `📋 Reference: \`${reference}\`\n` +
+        `📚 Product: *${product_name}*\n` +
+        `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
+        `👤 Customer: ${email}\n` +
+        `📱 Phone: ${phone || 'N/A'}\n` +
+        `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
+        `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
+        `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
+        `👉 [Review & Approve](https://marriageducation.com/public/admin-dashboard.html)`;
+      
+      await sendTelegram(pendingMsg);
+    }
+
     return {
       success: true,
       message: 'Payment submitted for approval'
