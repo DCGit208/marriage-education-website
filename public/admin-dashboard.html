@@ -727,9 +727,15 @@
             }
 
             .sidebar {
+                position: fixed;
+                left: 0;
+                top: 65px;
+                width: 280px;
+                height: calc(100vh - 65px);
                 transform: translateX(-100%);
-                transition: transform 0.3s;
+                transition: transform 0.3s ease;
                 z-index: 1500;
+                box-shadow: 2px 0 20px rgba(0,0,0,0.3);
             }
 
             .sidebar.active {
@@ -837,13 +843,14 @@
     <!-- Notification Dropdown -->
     <div class="notification-dropdown" id="notificationDropdown">
         <div class="notification-header">
-            <h3>Notifications</h3>
-            <span class="mark-all-read" id="markAllRead">Mark all as read</span>
+            <h3>🔔 Notifications</h3>
+            <span class="mark-all-read" id="markAllRead" style="display: none;">Mark all read</span>
         </div>
         <div id="notificationList">
             <div class="empty-notifications">
                 <i class="fas fa-bell-slash"></i>
-                <p>No new notifications</p>
+                <p><strong>No pending payments</strong></p>
+                <small style="color: #95a5a6;">You'll see new payment notifications here</small>
             </div>
         </div>
     </div>
@@ -1307,17 +1314,30 @@
                     .get();
 
                 const count = snapshot.size;
-                document.getElementById('notificationCount').textContent = count;
+                const badge = document.getElementById('notificationCount');
+                badge.textContent = count;
+                
+                // Show/hide badge
+                if (count > 0) {
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
 
                 if (count === 0) {
                     document.getElementById('notificationList').innerHTML = `
                         <div class="empty-notifications">
                             <i class="fas fa-bell-slash"></i>
-                            <p>No new notifications</p>
+                            <p><strong>No pending payments</strong></p>
+                            <small style="color: #95a5a6;">You'll see new payment notifications here</small>
                         </div>
                     `;
+                    document.getElementById('markAllRead').style.display = 'none';
                     return;
                 }
+
+                // Show mark all read button
+                document.getElementById('markAllRead').style.display = 'block';
 
                 let html = '';
                 snapshot.forEach(doc => {
@@ -1332,7 +1352,8 @@
                                 <div class="notification-item-time">${date}</div>
                             </div>
                             <div class="notification-item-message">
-                                ${data.product_name} - ${data.email}
+                                ${data.product_name} - ${data.email}<br>
+                                <small style="color: #667eea; font-weight: 600;">👆 Click to review payment</small>
                             </div>
                         </div>
                     `;
