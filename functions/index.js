@@ -1017,7 +1017,7 @@ async function sendAdminPaymentNotification(payment) {
       <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
       <p><strong>Email:</strong> ${payment.email}</p>
       <p><strong>Phone:</strong> ${payment.phone}</p>
-      <p><a href="https://marriageducation.com/admin-payments.html">Approve Payment</a></p>
+      <p><a href="https://marriageducation.com/public/admin-dashboard.html">Approve Payment</a></p>
     `
   };
 
@@ -1107,7 +1107,7 @@ async function sendAdminPaymentNotificationSMTP(payment) {
       <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
       <p><strong>Email:</strong> ${payment.email}</p>
       <p><strong>Phone:</strong> ${payment.phone}</p>
-      <p><a href="https://marriageducation.com/admin-payments.html">Approve Payment</a></p>
+      <p><a href="https://marriageducation.com/public/admin-dashboard.html">Approve Payment</a></p>
     `
   };
 
