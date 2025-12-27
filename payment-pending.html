@@ -277,7 +277,7 @@
         // Check main server for payment approval status
         const apiUrl = window.location.hostname === 'localhost' 
           ? 'http://localhost:4567'
-          : 'https://marriage-education-website.onrender.com';
+          : 'https://marriageducation.com';
         
         const response = await fetch(`${apiUrl}/check-payment-status?reference=${reference}`);
         

@@ -1285,3 +1285,90 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
+
+/**
+ * Create Stripe Checkout Session
+ * HTTPS endpoint to replace Render backend for Stripe payments
+ */
+exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  
+  try {
+    const { product_id, name, price, currency } = req.body;
+    
+    if (!product_id) {
+      res.status(400).json({ error: 'Missing product_id' });
+      return;
+    }
+    
+    console.log('[Stripe] Creating checkout session for:', product_id);
+    
+    // Default product configurations
+    const products = {
+      'sbd-for-dummies': {
+        name: 'Sex Before Dating - For Dummies Edition',
+        price: 2000, // $20.00 USD
+        currency: 'usd'
+      },
+      'sbd-standard': {
+        name: 'Sex Before Dating - Standard Edition',
+        price: 3500,
+        currency: 'usd'
+      },
+      'complete-sbd-library': {
+        name: 'Complete SBD Library Bundle',
+        price: 9900,
+        currency: 'usd'
+      }
+      // Add more products as needed
+    };
+    
+    // Use provided values or defaults
+    const productInfo = products[product_id] || {};
+    const finalName = name || productInfo.name || 'Marriage Education Product';
+    const finalPrice = price || productInfo.price || 2000;
+    const finalCurrency = (currency || productInfo.currency || 'usd').toLowerCase();
+    
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: finalCurrency,
+          product_data: {
+            name: finalName,
+          },
+          unit_amount: finalPrice, // Amount in cents
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `https://marriageducation.com/payment-success.html?session_id={CHECKOUT_SESSION_ID}&product=${product_id}`,
+      cancel_url: `https://marriageducation.com/payment.html?cancelled=true`,
+      metadata: {
+        product_id: product_id,
+      }
+    });
+    
+    console.log('[Stripe] Checkout session created:', session.id);
+    
+    res.json({ url: session.url });
+    
+  } catch (error) {
+    console.error('[Stripe] Checkout error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});

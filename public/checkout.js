@@ -1,7 +1,7 @@
 // Redirect to Stripe hosted checkout (works over HTTP for local testing)
 // Version banner to confirm the exact script loaded in the browser
-// v8: Production uses Render backend at marriage-education-stripe.onrender.com
-console.log('✅ checkout.js v8 loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
+// v9: Production uses Firebase Cloud Functions for Stripe checkout
+console.log('✅ checkout.js v9 loaded (redirect mode) -', new Date().toISOString(), 'origin:', window.location.origin);
 console.log('🔧 Hostname:', window.location.hostname, 'Pathname:', window.location.pathname);
 initialize();
 
@@ -35,12 +35,12 @@ async function initialize() {
     // Detect environment and use appropriate API URL
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Use Render backend for all non-localhost environments (Firebase, iPage, etc.)
+    // Use Firebase Cloud Function for all environments
     const apiUrl = isLocal 
-      ? 'http://localhost:4567/create-checkout-session'
-      : 'https://marriage-education-website.onrender.com/create-checkout-session';
+      ? 'http://localhost:5001/marriage-education/us-central1/createCheckoutSession'
+      : 'https://us-central1-marriage-education.cloudfunctions.net/createCheckoutSession';
     
-    console.log('📡 Calling API to create checkout session...', apiUrl, 'product:', productId, 'env:', isLocal ? 'LOCAL' : 'PRODUCTION');
+    console.log('📡 Calling Firebase Cloud Function...', apiUrl, 'product:', productId, 'env:', isLocal ? 'LOCAL' : 'PRODUCTION');
     
     // Build request body - include dynamic pricing if provided
     const requestBody = {
