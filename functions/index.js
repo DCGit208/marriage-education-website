@@ -1339,7 +1339,23 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
     // Use provided values or defaults
     const productInfo = products[product_id] || {};
     const finalName = name || productInfo.name || 'Marriage Education Product';
-    const finalPrice = price || productInfo.price || 2000;
+    
+    // Convert price to cents if provided (URL passes dollars, Stripe expects cents)
+    let finalPrice;
+    if (price) {
+      // If price is provided in URL, it's in dollars - convert to cents
+      finalPrice = Math.round(parseFloat(price) * 100);
+      console.log(`[Stripe] Price conversion: $${price} → ${finalPrice} cents`);
+    } else {
+      // Use default product price (already in cents)
+      finalPrice = productInfo.price || 2000;
+    }
+    
+    // Validate minimum Stripe amount ($0.50 USD = 50 cents)
+    if (finalPrice < 50) {
+      throw new Error(`Price too low: ${finalPrice} cents. Minimum is 50 cents ($0.50)`);
+    }
+    
     const finalCurrency = (currency || productInfo.currency || 'usd').toLowerCase();
     
     // Create Stripe checkout session
