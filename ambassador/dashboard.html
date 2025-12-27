@@ -1274,9 +1274,10 @@
     <script src="../js/firebase-config.js"></script>
     
     <script>
-        const API_BASE = 'https://marriage-education-website.onrender.com';
+        // Note: Ambassador data should be fetched from Firebase Firestore
+        // const API_BASE = 'https://marriageducation.com'; // Legacy endpoint
         
-        // Load real ambassador data from API
+        // Load real ambassador data from Firebase
         async function loadAmbassadorData() {
             try {
                 // Get ambassador code from localStorage (set during login)

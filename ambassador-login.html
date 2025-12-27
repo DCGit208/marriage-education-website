@@ -249,7 +249,7 @@
             
             try {
                 // Verify ambassador stats from API
-                const response = await fetch(`https://marriage-education-website.onrender.com/api/ambassador-stats/${code}`);
+                const response = await fetch(`https://marriageducation.com/api/ambassador-stats/${code}`);
                 
                 if (!response.ok) {
                     throw new Error('Ambassador code not found. Please check your code or register.');
