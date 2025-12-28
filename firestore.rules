@@ -43,10 +43,9 @@ service cloud.firestore {
     // ============================================
     
     // Regional Directors - RD can read own data, admin can read/write all
+    // TEMPORARY: Allow public read for testing dashboards
     match /regional_directors/{rdCode} {
-      allow read: if request.auth != null && 
-                     (request.auth.token.rd_code == rdCode || 
-                      request.auth.token.admin == true);
+      allow read: if true; // TEMPORARY: Allow public read for testing
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
     

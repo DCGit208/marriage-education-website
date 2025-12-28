@@ -467,31 +467,60 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs - Must load in this order -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
     <script>
-        // Note: RD data should be fetched from Firebase Firestore
-        const API_BASE = 'https://marriageducation.com';
+        // Initialize Firebase directly
+        const firebaseConfig = {
+            apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+            authDomain: "marriage-education.firebaseapp.com",
+            projectId: "marriage-education",
+            storageBucket: "marriage-education.firebasestorage.app",
+            messagingSenderId: "730854285800",
+            appId: "1:730854285800:web:2176d278397398fd41045d"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+
+        // Use Firebase Firestore directly
         let rdCode = localStorage.getItem('rdCode');
         let rdData = null;
 
         if (!rdCode) {
+            console.log('No RD code found, redirecting to login');
             window.location.href = '../rd-login.html';
         }
 
         async function loadDashboard() {
             try {
-                const response = await fetch(`${API_BASE}/api/rd-stats/${rdCode}`);
+                console.log('Loading dashboard for RD:', rdCode);
                 
-                if (!response.ok) {
-                    throw new Error('Failed to load RD stats');
+                if (!rdCode || rdCode.trim() === '') {
+                    throw new Error('No RD code found in localStorage');
+                }
+                
+                console.log('Firebase db object:', typeof db);
+                
+                // Load RD data from Firestore
+                const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
+                
+                console.log('RD doc exists:', rdDoc.exists);
+                
+                if (!rdDoc.exists) {
+                    throw new Error('RD not found in Firestore');
                 }
 
-                const data = await response.json();
+                rdData = rdDoc.data();
+                console.log('RD data loaded:', rdData);
                 
-                if (!data.success || !data.rd) {
-                    throw new Error('Invalid data received');
-                }
-
-                rdData = data.rd;
                 updateDashboard();
                 await loadLeaderboardRank();
                 await loadTeam();
@@ -500,8 +529,10 @@
                 document.getElementById('dashboardContent').style.display = 'block';
                 
             } catch (error) {
-                console.error('Dashboard error:', error);
-                alert('Failed to load dashboard. Please try logging in again.');
+                console.error('Dashboard error details:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                alert('Failed to load dashboard: ' + error.message + '\n\nCheck browser console for details.');
                 logout();
             }
         }
@@ -567,16 +598,20 @@
 
         async function loadLeaderboardRank() {
             try {
-                const response = await fetch(`${API_BASE}/api/rd-leaderboard`);
+                // Get all RDs sorted by team_books_sold
+                const snapshot = await db.collection('regional_directors')
+                    .where('status', '==', 'active')
+                    .orderBy('team_books_sold', 'desc')
+                    .get();
                 
-                if (!response.ok) return;
+                let rank = 0;
+                snapshot.forEach((doc, index) => {
+                    if (doc.id === rdCode) {
+                        rank = index + 1;
+                    }
+                });
                 
-                const data = await response.json();
-                
-                if (data.success && data.leaderboard) {
-                    const myRank = data.leaderboard.findIndex(rd => rd.code === rdCode) + 1;
-                    document.getElementById('leaderboardRank').textContent = myRank > 0 ? `#${myRank}` : '#-';
-                }
+                document.getElementById('leaderboardRank').textContent = rank > 0 ? `#${rank}` : '#-';
             } catch (error) {
                 console.error('Leaderboard error:', error);
             }
@@ -584,26 +619,33 @@
 
         async function loadTeam() {
             try {
-                const response = await fetch(`${API_BASE}/api/rd-team/${rdCode}`);
+                // Get all ambassadors recruited by this RD
+                const snapshot = await db.collection('ambassadors')
+                    .where('rdCode', '==', rdCode)
+                    .where('status', '==', 'approved')
+                    .get();
                 
-                if (!response.ok) return;
-                
-                const data = await response.json();
-                
-                if (!data.success || !data.team || data.team.length === 0) {
+                if (snapshot.empty) {
                     return;
                 }
                 
                 const tbody = document.getElementById('teamTableBody');
-                tbody.innerHTML = data.team.map(ambassador => {
-                    const override = ambassador.total_commission * 0.10;
+                const teamMembers = [];
+                
+                snapshot.forEach(doc => {
+                    const ambassador = doc.data();
+                    teamMembers.push(ambassador);
+                });
+                
+                tbody.innerHTML = teamMembers.map(ambassador => {
+                    const override = (ambassador.commissionEarned || 0) * 0.10;
                     return `
                         <tr>
                             <td><strong>${ambassador.code}</strong></td>
-                            <td>${ambassador.name || 'N/A'}</td>
-                            <td>${ambassador.books_sold}</td>
-                            <td>${ambassador.total_commission.toLocaleString()} FCFA</td>
-                            <td><span class="level-badge level-${ambassador.level.toLowerCase().replace(' ', '-')}">${ambassador.level}</span></td>
+                            <td>${ambassador.firstName} ${ambassador.lastName}</td>
+                            <td>${ambassador.booksSold || 0}</td>
+                            <td>${(ambassador.commissionEarned || 0).toLocaleString()} FCFA</td>
+                            <td><span class="level-badge level-${(ambassador.level || 'starter').toLowerCase().replace(' ', '-')}">${ambassador.level || 'Starter'}</span></td>
                             <td><strong>${override.toLocaleString()} FCFA</strong></td>
                         </tr>
                     `;
