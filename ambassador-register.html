@@ -807,8 +807,8 @@
                     
                     // Send email notification (REQUIRED)
                     console.log('📧 Sending email to ambassadors@marriageducation.com...');
-                    // Submit to Firebase Cloud Functions (not Render)
-                    const emailResponse = await fetch('https://marriageducation.com/submit-ambassador-application', {
+                    // Submit to Firebase Cloud Functions
+                    const emailResponse = await fetch('https://us-central1-marriage-education.cloudfunctions.net/submitAmbassadorApplication', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(completeData)
