@@ -248,16 +248,103 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .hero {
+                padding: 30px 15px;
+            }
+
             .hero h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1rem;
             }
 
             .form-container {
-                padding: 25px;
+                padding: 25px 20px;
+            }
+
+            .form-header h2 {
+                font-size: 1.8rem;
+            }
+
+            .form-header p {
+                font-size: 0.95rem;
             }
 
             .benefits-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .benefit-card {
+                padding: 20px;
+            }
+
+            .benefit-card i {
+                font-size: 2.5rem;
+            }
+
+            .benefit-card h3 {
+                font-size: 1.3rem;
+            }
+
+            .pricing-card {
+                padding: 25px 20px;
+            }
+
+            .pricing-card .price {
+                font-size: 2.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                font-size: 1rem;
+                padding: 15px;
+            }
+
+            .alert {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .form-container {
+                padding: 20px 15px;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .pricing-card .price {
+                font-size: 2rem;
+            }
+
+            .benefit-card h3 {
+                font-size: 1.1rem;
             }
         }
     </style>
