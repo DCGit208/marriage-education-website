@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become an Ambassador - Earn 90,000 FCFA | Marriage Education</title>
+    <meta name="description" content="Join 500 ambassadors selling 60 books each. Earn up to 90,000 FCFA in commissions. Start your journey today!">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .ambassador-hero {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 4rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ambassador-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,184,148,0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        .ambassador-hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ambassador-hero .subtitle {
+            font-size: 1.3rem;
+            color: #636e72;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ambassador-hero .highlight {
+            color: #00b894;
+            font-weight: 600;
+        }
+
+        .opportunity-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .calculator-section {
+            background: white;
+            max-width: 900px;
+            margin: -3rem auto 3rem;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .calculator-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .calculator-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .calc-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #00b894;
+            text-align: center;
+        }
+
+        .calc-card .icon {
+            font-size: 2.5rem;
+            color: #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .calc-card .label {
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .calc-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .calc-card .subvalue {
+            font-size: 0.95rem;
+            color: #636e72;
+            margin-top: 0.25rem;
+        }
+
+        .earnings-breakdown {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .earnings-breakdown h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .tier-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .tier-item:last-child {
+            border-bottom: none;
+        }
+
+        .tier-label {
+            font-size: 1rem;
+        }
+
+        .tier-amount {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .total-earnings {
+            background: rgba(255,255,255,0.2);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .total-earnings .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        .spots-counter {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .spots-counter .counter-box {
+            display: inline-block;
+            background: white;
+            padding: 1.5rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #00b894;
+        }
+
+        .spots-counter .label {
+            font-size: 0.9rem;
+            color: #636e72;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spots-counter .count {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00b894;
+            margin-top: 0.5rem;
+        }
+
+        .form-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .form-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #2d3436;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .form-section p {
+            text-align: center;
+            color: #636e72;
+            margin-bottom: 3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00b894;
+            box-shadow: 0 0 0 3px rgba(0,184,148,0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3436;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #00b894;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-modal.active {
+            display: flex;
+        }
+
+        .success-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-content .icon {
+            font-size: 4rem;
+            color: #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .success-content h3 {
+            font-size: 2rem;
+            color: #2d3436;
+            margin-bottom: 1rem;
+        }
+
+        .success-content p {
+            color: #636e72;
+            margin-bottom: 2rem;
+        }
+
+        .success-content .btn {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .ambassador-hero h1 {
+                font-size: 2rem;
+            }
+
+            .ambassador-hero .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .calculator-section {
+                margin: -2rem 1rem 2rem;
+                padding: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .calc-card .value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="ambassador-hero">
+        <div class="opportunity-badge">
+            <i class="fas fa-fire"></i> Limited Time Opportunity
+        </div>
+        <h1>Become a Marriage Education Ambassador</h1>
+        <p class="subtitle">
+            Join <span class="highlight">500 ambassadors</span> earning up to <span class="highlight">90,000 FCFA</span> by selling 60 books in 14 days
+        </p>
+    </section>
+
+    <!-- Calculator Section -->
+    <section class="calculator-section">
+        <div class="calculator-header">
+            <h2>Your Earning Potential</h2>
+            <p style="color: #636e72;">Here's what you can earn as an ambassador</p>
+        </div>
+
+        <div class="calculator-grid">
+            <div class="calc-card">
+                <div class="icon"><i class="fas fa-book"></i></div>
+                <div class="label">Your Target</div>
+                <div class="value">60</div>
+                <div class="subvalue">Books to Sell</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="label">Commission per Book</div>
+                <div class="value">1,500</div>
+                <div class="subvalue">FCFA (10%)</div>
+            </div>
+
+            <div class="calc-card">
+                <div class="icon"><i class="fas fa-chart-line"></i></div>
+                <div class="label">Total Earnings</div>
+                <div class="value">90,000</div>
+                <div class="subvalue">FCFA + Bonuses</div>
+            </div>
+        </div>
+
+        <div class="earnings-breakdown">
+            <h3><i class="fas fa-trophy"></i> Commission Breakdown</h3>
+            <div class="tier-item">
+                <span class="tier-label"><i class="fas fa-star"></i> Books 1-20 (Bronze)</span>
+                <span class="tier-amount">30,000 FCFA</span>
+            </div>
+            <div class="tier-item">
+                <span class="tier-label"><i class="fas fa-star"></i> Books 21-40 (Silver)</span>
+                <span class="tier-amount">36,000 FCFA</span>
+            </div>
+            <div class="tier-item">
+                <span class="tier-label"><i class="fas fa-star"></i> Books 41-60 (Gold)</span>
+                <span class="tier-amount">40,000 FCFA</span>
+            </div>
+            <div class="tier-item">
+                <span class="tier-label"><i class="fas fa-gift"></i> Completion Bonus (60 books)</span>
+                <span class="tier-amount">+10,000 FCFA</span>
+            </div>
+            <div class="total-earnings">
+                <div>When You Complete 60 Books, You Earn:</div>
+                <span class="amount">106,000 FCFA</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #636e72; font-size: 0.95rem;">
+            <i class="fas fa-info-circle"></i> Super Sellers who exceed 60 books earn even more: 2,500 FCFA per book (61-90) and 3,000 FCFA per book (91-120)
+        </div>
+    </section>
+
+    <!-- Spots Counter -->
+    <section class="spots-counter">
+        <div class="counter-box">
+            <div class="label">Ambassador Spots Available</div>
+            <div class="count" id="spotsAvailable">463/500</div>
+        </div>
+        <p style="margin-top: 1rem; color: #e74c3c; font-weight: 600;">
+            <i class="fas fa-clock"></i> Hurry! Spots filling up fast
+        </p>
+    </section>
+
+    <!-- Registration Form -->
+    <section class="form-section">
+        <h2>Ambassador Application Form</h2>
+        <p>Fill out the form below to join our exclusive ambassador program</p>
+
+        <form id="ambassadorForm">
+            <!-- Personal Information -->
+            <div class="form-section-title"><i class="fas fa-user"></i> Personal Information</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" name="firstName" required placeholder="Enter your first name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" name="lastName" required placeholder="Enter your last name">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email Address <span class="required">*</span></label>
+                    <input type="email" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone/WhatsApp Number <span class="required">*</span></label>
+                    <input type="tel" name="phone" required placeholder="+237 6XX XXX XXX">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>City <span class="required">*</span></label>
+                    <input type="text" name="city" required placeholder="e.g., Douala, Yaoundé">
+                </div>
+                <div class="form-group">
+                    <label>Region <span class="required">*</span></label>
+                    <select name="region" required>
+                        <option value="">Select your region</option>
+                        <option value="Adamawa">Adamawa</option>
+                        <option value="Centre">Centre</option>
+                        <option value="East">East</option>
+                        <option value="Far North">Far North</option>
+                        <option value="Littoral">Littoral</option>
+                        <option value="North">North</option>
+                        <option value="Northwest">Northwest</option>
+                        <option value="South">South</option>
+                        <option value="Southwest">Southwest</option>
+                        <option value="West">West</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Social Media Presence -->
+            <div class="form-section-title"><i class="fas fa-share-nodes"></i> Social Media Presence</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Instagram Handle</label>
+                    <input type="text" name="instagram" placeholder="@username">
+                </div>
+                <div class="form-group">
+                    <label>Instagram Followers</label>
+                    <input type="number" name="instagramFollowers" placeholder="e.g., 500">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Facebook Profile URL</label>
+                    <input type="url" name="facebook" placeholder="https://facebook.com/...">
+                </div>
+                <div class="form-group">
+                    <label>Facebook Friends/Followers</label>
+                    <input type="number" name="facebookFollowers" placeholder="e.g., 1200">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>TikTok Handle (Optional)</label>
+                    <input type="text" name="tiktok" placeholder="@username">
+                </div>
+                <div class="form-group">
+                    <label>LinkedIn Profile (Optional)</label>
+                    <input type="url" name="linkedin" placeholder="https://linkedin.com/in/...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Primary Platform for Promotion <span class="required">*</span></label>
+                <select name="primaryPlatform" required>
+                    <option value="">Select your main platform</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="In-Person">In-Person/Events</option>
+                </select>
+            </div>
+
+            <!-- Ambassador Motivation -->
+            <div class="form-section-title"><i class="fas fa-lightbulb"></i> Tell Us About Yourself</div>
+
+            <div class="form-group">
+                <label>Why do you want to become an ambassador? <span class="required">*</span></label>
+                <textarea name="motivation" required placeholder="Share your motivation for joining our ambassador program (minimum 50 words)"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Have you sold products before? <span class="required">*</span></label>
+                    <select name="salesExperience" required>
+                        <option value="">Select an option</option>
+                        <option value="Yes - Professional">Yes - Professional salesperson</option>
+                        <option value="Yes - Side hustle">Yes - As a side hustle</option>
+                        <option value="Yes - Occasionally">Yes - Occasionally</option>
+                        <option value="No - First time">No - This is my first time</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>How many books can you commit to selling? <span class="required">*</span></label>
+                    <select name="commitment" required>
+                        <option value="">Select your target</option>
+                        <option value="60">60 books (Minimum - 90,000 FCFA)</option>
+                        <option value="90">90 books (Super Seller - 181,000 FCFA)</option>
+                        <option value="120">120 books (Elite - 271,000 FCFA)</option>
+                        <option value="120+">120+ books (Top Performer)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>How did you hear about this opportunity?</label>
+                <select name="referralSource">
+                    <option value="">Select source</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Friend/Family">Friend/Family</option>
+                    <option value="Website">Website</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Who Referred You? (Optional)</label>
+                <input type="text" id="recruitedBy" name="recruitedBy" placeholder="e.g., AMB-JOHN-1234 or RD-SARAH-5678" style="text-transform: uppercase;">
+                <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
+                    <i class="fas fa-info-circle"></i> If a Regional Director or Ambassador recruited you, enter their code here. They'll earn override commissions on your sales!
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label>Ambassador Referral Code (Optional)</label>
+                <input type="text" name="referredBy" placeholder="e.g., AMB-JOHN-1234" style="text-transform: uppercase;">
+                <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
+                    <i class="fas fa-user-friends"></i> If an existing ambassador introduced you to this opportunity (not necessarily your recruiter), enter their code for bonus recognition!
+                </p>
+            </div>
+
+            <!-- Agreement -->
+            <div class="form-section-title"><i class="fas fa-file-contract"></i> Agreement</div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="targetCommitment" name="targetCommitment" required>
+                <label for="targetCommitment">
+                    I commit to selling a minimum of 60 books within the 14-day campaign period <span class="required">*</span>
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">
+                    I agree to the <a href="#" style="color: #00b894;">Terms and Conditions</a> and <a href="#" style="color: #00b894;">Ambassador Code of Conduct</a> <span class="required">*</span>
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="dataConsent" name="dataConsent" required>
+                <label for="dataConsent">
+                    I consent to receiving marketing materials, training resources, and updates via email and WhatsApp <span class="required">*</span>
+                </label>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i> Submit Application
+            </button>
+
+            <p style="text-align: center; color: #636e72; margin-top: 1rem; font-size: 0.9rem;">
+                <i class="fas fa-clock"></i> Applications are reviewed within 24-48 hours
+            </p>
+            
+            <p style="text-align: center; margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                <a href="rd-register.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                    <i class="fas fa-crown"></i> Want to recruit ambassadors and earn 10% override commissions? Become a Regional Director →
+                </a>
+            </p>
+        </form>
+    </section>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <div class="icon"><i class="fas fa-check-circle"></i></div>
+            <h3>Application Submitted!</h3>
+            <p>Thank you for applying to become a Marriage Education Ambassador. We'll review your application and get back to you within 24-48 hours via email and WhatsApp.</p>
+            <p style="font-weight: 600; color: #00b894;">What happens next?</p>
+            <ul style="text-align: left; color: #636e72; margin-bottom: 1.5rem;">
+                <li>✓ We review your application</li>
+                <li>✓ You receive your unique referral code</li>
+                <li>✓ Access to your ambassador dashboard</li>
+                <li>✓ Marketing materials and training</li>
+                <li>✓ Start selling and earning commissions!</li>
+            </ul>
+            <a href="sbd-campaign.html" class="btn">Back to Campaign</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        // Form submission handler
+        document.getElementById('ambassadorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Validate motivation length
+            if (data.motivation.split(' ').length < 50) {
+                alert('❌ Please provide at least 50 words for your motivation.');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.submit-btn');
+            const formElement = this;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            
+            // Use setTimeout to ensure async operations work properly
+            setTimeout(async function() {
+                try {
+                    // Check Firebase is loaded
+                    if (typeof firebase === 'undefined' || typeof db === 'undefined') {
+                        console.warn('⚠️ Firebase not loaded, proceeding with email only');
+                    }
+                    
+                    console.log('📝 Starting submission...');
+                    console.log('Form data:', data);
+                    
+                    // Validate required fields
+                    if (!data.firstName || !data.lastName) {
+                        throw new Error('First name and last name are required');
+                    }
+                    
+                    // Generate ambassador code
+                    const code = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+                    
+                    // Prepare complete data
+                    const completeData = {
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        fullName: data.firstName + ' ' + data.lastName,
+                        email: data.email,
+                        phone: data.phone,
+                        city: data.city,
+                        region: data.region,
+                        instagram: data.instagram || '',
+                        facebook: data.facebook || '',
+                        tiktok: data.tiktok || '',
+                        linkedin: data.linkedin || '',
+                        instagramFollowers: parseInt(data.instagramFollowers) || 0,
+                        facebookFollowers: parseInt(data.facebookFollowers) || 0,
+                        primaryPlatform: data.primaryPlatform,
+                        motivation: data.motivation,
+                        salesExperience: data.salesExperience,
+                        commitment: data.commitment,
+                        referralSource: data.referralSource || '',
+                        recruitedBy: data.recruitedBy || '',  // NEW: Track who recruited this ambassador
+                        referredBy: data.referredBy || '',    // Keep for recognition purposes
+                        code: code,
+                        status: 'pending',
+                        booksSold: 0,
+                        commissionEarned: 0,
+                        level: 'Starter',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    // Save to Firebase (if available)
+                    if (typeof db !== 'undefined') {
+                        console.log('📝 Saving to Firebase...');
+                        try {
+                            const docRef = await db.collection('ambassadors').add(completeData);
+                            console.log('✅ Saved to Firebase:', code);
+                        } catch (firebaseError) {
+                            console.warn('⚠️ Firebase save failed:', firebaseError.message);
+                            // Continue with email notification even if Firebase fails
+                        }
+                    }
+                    
+                    // Send email notification (REQUIRED)
+                    console.log('📧 Sending email to ambassadors@marriageducation.com...');
+                    // Submit to Firebase Cloud Functions
+                    const emailResponse = await fetch('https://us-central1-marriage-education.cloudfunctions.net/submitAmbassadorApplication', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(completeData)
+                    });
+                    
+                    if (!emailResponse.ok) {
+                        const errorText = await emailResponse.text();
+                        throw new Error('Email submission failed: ' + errorText);
+                    }
+                    
+                    const emailResult = await emailResponse.json();
+                    if (!emailResult.success) {
+                        console.error('❌ Email failed:', emailResult);
+                        throw new Error(emailResult.error || 'Email submission failed');
+                    }
+                    
+                    console.log('✅ Email sent successfully to:', emailResult.recipient);
+                    console.log('📧 Email details:', emailResult);
+                    
+                    // Show success modal
+                    document.getElementById('successModal').classList.add('active');
+                    
+                    // Reset form
+                    formElement.reset();
+                    
+                    // Update counter
+                    updateSpotsCounter();
+                    
+                } catch (error) {
+                    console.error('❌ Error:', error);
+                    alert('❌ Error: ' + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
+                }
+            }, 100);
+        });
+
+        // Update spots counter from Firebase
+        function updateSpotsCounter() {
+            setTimeout(async function() {
+                try {
+                    if (typeof db === 'undefined') return;
+                    
+                    const ambassadorsSnapshot = await db.collection('ambassadors').get();
+                    
+                    const totalSpots = 500;
+                    const spotsTaken = ambassadorsSnapshot.size;
+                    const spotsAvailable = totalSpots - spotsTaken;
+                    
+                    const counter = document.getElementById('spotsAvailable');
+                    if (counter) {
+                        counter.textContent = `${spotsAvailable}/${totalSpots}`;
+                    }
+                    
+                    console.log('✅ Counter updated:', spotsAvailable, 'spots left');
+                } catch (error) {
+                    console.warn('Counter error:', error);
+                }
+            }, 500);
+        }
+        
+        // Update counter on load and every 30 seconds
+        window.addEventListener('load', function() {
+            setTimeout(updateSpotsCounter, 2000);
+            
+            // Capture RD recruitment link parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const rdCode = urlParams.get('rd');
+            const ambCode = urlParams.get('amb');
+            
+            if (rdCode) {
+                document.getElementById('recruitedBy').value = rdCode.toUpperCase();
+                console.log('🔗 Recruited by Regional Director:', rdCode);
+                
+                // Show banner
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                banner.innerHTML = `<i class="fas fa-user-tie"></i> <strong>Recruited by Regional Director:</strong> ${rdCode.toUpperCase()} - You\'re joining their team!`;
+                document.body.prepend(banner);
+            } else if (ambCode) {
+                document.getElementById('recruitedBy').value = ambCode.toUpperCase();
+                console.log('🔗 Recruited by Ambassador:', ambCode);
+                
+                const banner = document.createElement('div');
+                banner.style.cssText = 'background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+                banner.innerHTML = `<i class="fas fa-user-friends"></i> <strong>Recruited by Ambassador:</strong> ${ambCode.toUpperCase()}`;
+                document.body.prepend(banner);
+            }
+        });
+        setInterval(updateSpotsCounter, 30000);
+    </script>
+</body>
+</html>

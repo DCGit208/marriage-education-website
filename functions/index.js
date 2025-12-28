@@ -1390,3 +1390,241 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * Submit Ambassador Application
+ * Receives ambassador registration data and sends email notification
+ */
+exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  
+  try {
+    const data = req.body;
+    
+    console.log('[Ambassador] Received application:', data.fullName);
+    
+    // Validate required fields
+    const requiredFields = ['fullName', 'email', 'phone', 'city', 'region', 'motivation', 'commitment'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+    
+    // Save to Firestore for backup (in addition to client-side save)
+    try {
+      await db.collection('ambassadors').add({
+        ...data,
+        submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: 'cloud_function'
+      });
+      console.log('[Ambassador] Saved to Firestore:', data.code);
+    } catch (firestoreError) {
+      console.warn('[Ambassador] Firestore save failed:', firestoreError.message);
+      // Continue with email even if Firestore fails
+    }
+    
+    // Prepare email content
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #8B0000; margin-bottom: 20px;">🎯 New Ambassador Application</h2>
+          
+          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin: 5px 0;"><strong>Ambassador Code:</strong> ${data.code}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: orange;">Pending Approval</span></p>
+          </div>
+          
+          <h3 style="color: #333; margin-top: 25px;">Personal Information</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Full Name:</td>
+              <td style="padding: 8px 0;">${data.fullName}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Email:</td>
+              <td style="padding: 8px 0;">${data.email}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
+              <td style="padding: 8px 0;">${data.phone}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">City:</td>
+              <td style="padding: 8px 0;">${data.city}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Region:</td>
+              <td style="padding: 8px 0;">${data.region}</td>
+            </tr>
+          </table>
+          
+          <h3 style="color: #333; margin-top: 25px;">Social Media Presence</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            ${data.instagram ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Instagram:</td>
+              <td style="padding: 8px 0;">${data.instagram} (${data.instagramFollowers || 0} followers)</td>
+            </tr>` : ''}
+            ${data.facebook ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Facebook:</td>
+              <td style="padding: 8px 0;">${data.facebook} (${data.facebookFollowers || 0} followers)</td>
+            </tr>` : ''}
+            ${data.tiktok ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">TikTok:</td>
+              <td style="padding: 8px 0;">${data.tiktok}</td>
+            </tr>` : ''}
+            ${data.linkedin ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">LinkedIn:</td>
+              <td style="padding: 8px 0;">${data.linkedin}</td>
+            </tr>` : ''}
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Primary Platform:</td>
+              <td style="padding: 8px 0;">${data.primaryPlatform}</td>
+            </tr>
+          </table>
+          
+          <h3 style="color: #333; margin-top: 25px;">Application Details</h3>
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <p style="margin: 0 0 10px 0;"><strong>Motivation:</strong></p>
+            <p style="margin: 0; color: #555;">${data.motivation}</p>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Sales Experience:</td>
+              <td style="padding: 8px 0;">${data.salesExperience}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Commitment Level:</td>
+              <td style="padding: 8px 0;">${data.commitment}</td>
+            </tr>
+            ${data.referralSource ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Referral Source:</td>
+              <td style="padding: 8px 0;">${data.referralSource}</td>
+            </tr>` : ''}
+            ${data.recruitedBy ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Recruited By:</td>
+              <td style="padding: 8px 0;"><span style="color: #8B0000; font-weight: bold;">${data.recruitedBy}</span></td>
+            </tr>` : ''}
+            ${data.referredBy ? `
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Referred By:</td>
+              <td style="padding: 8px 0;">${data.referredBy}</td>
+            </tr>` : ''}
+          </table>
+          
+          <div style="margin-top: 30px; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;">
+            <p style="margin: 0; color: #856404;"><strong>⚠️ Action Required:</strong> Please review this application and approve/reject via the admin dashboard.</p>
+          </div>
+          
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="https://marriageducation.com/admin/ambassador-applications.html" 
+               style="display: inline-block; padding: 12px 30px; background-color: #8B0000; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Review Application
+            </a>
+          </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>This is an automated notification from Marriage Education Ambassador Program</p>
+        </div>
+      </div>
+    `;
+    
+    // Send email via SMTP (iPage)
+    let emailSent = false;
+    let emailMethod = 'none';
+    
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: SMTP_CONFIG.from,
+          to: 'ambassadors@marriageducation.com',
+          replyTo: data.email,
+          subject: `🎯 New Ambassador Application - ${data.fullName} (${data.code})`,
+          html: emailHtml
+        });
+        emailSent = true;
+        emailMethod = 'SMTP';
+        console.log('[Ambassador] Email sent via SMTP');
+      } catch (smtpError) {
+        console.warn('[Ambassador] SMTP failed:', smtpError.message);
+      }
+    }
+    
+    // Fallback to SendGrid if SMTP fails
+    if (!emailSent && SENDGRID_API_KEY) {
+      try {
+        await sgMail.send({
+          from: 'ambassadors@marriageducation.com',
+          to: 'ambassadors@marriageducation.com',
+          replyTo: data.email,
+          subject: `🎯 New Ambassador Application - ${data.fullName} (${data.code})`,
+          html: emailHtml
+        });
+        emailSent = true;
+        emailMethod = 'SendGrid';
+        console.log('[Ambassador] Email sent via SendGrid');
+      } catch (sendgridError) {
+        console.warn('[Ambassador] SendGrid failed:', sendgridError.message);
+      }
+    }
+    
+    // Send Telegram notification
+    try {
+      await sendTelegram(
+        `🎯 *NEW AMBASSADOR APPLICATION*\n\n` +
+        `*Code:* ${data.code}\n` +
+        `*Name:* ${data.fullName}\n` +
+        `*Email:* ${data.email}\n` +
+        `*Phone:* ${data.phone}\n` +
+        `*Location:* ${data.city}, ${data.region}\n` +
+        `*Platform:* ${data.primaryPlatform}\n` +
+        `*Status:* Pending Approval\n\n` +
+        `[Review Application](https://marriageducation.com/admin/ambassador-applications.html)`
+      );
+      console.log('[Ambassador] Telegram notification sent');
+    } catch (telegramError) {
+      console.warn('[Ambassador] Telegram failed:', telegramError.message);
+    }
+    
+    if (!emailSent) {
+      throw new Error('Failed to send email notification via any method');
+    }
+    
+    // Return success
+    res.json({
+      success: true,
+      message: 'Ambassador application submitted successfully',
+      code: data.code,
+      recipient: 'ambassadors@marriageducation.com',
+      method: emailMethod
+    });
+    
+  } catch (error) {
+    console.error('[Ambassador] Submission error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
