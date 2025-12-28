@@ -267,6 +267,25 @@
             min-height: 120px;
         }
 
+        .uppercase-input {
+            text-transform: uppercase;
+        }
+
+        /* Override browser autofill styles */
+        .form-group input:-webkit-autofill,
+        .form-group input:-webkit-autofill:hover,
+        .form-group input:-webkit-autofill:focus,
+        .form-group input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            border: 2px solid #e0e0e0 !important;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:-webkit-autofill:focus {
+            border-color: #00b894 !important;
+            box-shadow: 0 0 0 3px rgba(0,184,148,0.1) !important;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -644,17 +663,17 @@
 
             <div class="form-group">
                 <label>Who Referred You? (Optional)</label>
-                <input type="text" id="recruitedBy" name="recruitedBy" placeholder="e.g., AMB-JOHN-1234 or RD-SARAH-5678" style="text-transform: uppercase;">
+                <input type="text" id="recruitedBy" name="recruitedBy" placeholder="e.g., AMB-JOHN-1234 or RD-SARAH-5678" class="uppercase-input">
                 <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
-                    <i class="fas fa-info-circle"></i> If a Regional Director or Ambassador recruited you, enter their code here. They'll earn override commissions on your sales!
+                    <i class="fas fa-info-circle"></i> Enter RD or Ambassador code if recruited by someone
                 </p>
             </div>
             
             <div class="form-group">
                 <label>Ambassador Referral Code (Optional)</label>
-                <input type="text" name="referredBy" placeholder="e.g., AMB-JOHN-1234" style="text-transform: uppercase;">
+                <input type="text" name="referredBy" placeholder="e.g., AMB-JOHN-1234" class="uppercase-input">
                 <p style="font-size: 0.85rem; color: #636e72; margin-top: 0.5rem;">
-                    <i class="fas fa-user-friends"></i> If an existing ambassador introduced you to this opportunity (not necessarily your recruiter), enter their code for bonus recognition!
+                    <i class="fas fa-user-friends"></i> Enter ambassador code if someone introduced you
                 </p>
             </div>
 
