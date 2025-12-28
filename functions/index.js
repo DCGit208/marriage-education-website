@@ -600,31 +600,33 @@ exports.getRDStats = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Register New RD (Admin Only)
+ * Register New RD (Public - Allow registration, create pending record)
  */
 exports.registerRD = functions.https.onCall(async (data, context) => {
-  // Require admin authentication
-  if (!context.auth || !context.auth.token.admin) {
-    throw new functions.https.HttpsError('permission-denied', 'Admin access required');
-  }
-
   try {
-    const { name, email, phone, city, region } = data;
+    const { firstName, lastName, email, phone, city, region, leadershipExperience, motivation, networkSize, recruitmentTarget, isAmbassador, existingAmbCode } = data;
 
-    // Generate RD code
-    const nameParts = name.split(' ');
-    const lastName = nameParts[nameParts.length - 1].substring(0, 4).toUpperCase();
+    // Generate RD code from last name
+    const lastName4 = lastName.substring(0, 4).toUpperCase();
     const random = Math.floor(1000 + Math.random() * 9000);
-    const code = `RD-${lastName}-${random}`;
+    const code = `RD-${lastName4}-${random}`;
 
     const rdData = {
       code,
-      name,
+      name: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
       email,
       phone,
       city: city || '',
       region: region || '',
-      status: 'pending',
+      leadershipExperience: leadershipExperience || '',
+      motivation: motivation || '',
+      networkSize: networkSize || '',
+      recruitmentTarget: recruitmentTarget || '',
+      isAmbassador: isAmbassador === 'yes',
+      existingAmbCode: existingAmbCode || '',
+      status: 'pending_payment',
       tier: 'Bronze RD',
       downline: [],
       downline_count: 0,
@@ -641,7 +643,7 @@ exports.registerRD = functions.https.onCall(async (data, context) => {
     return {
       success: true,
       code,
-      message: 'RD registered successfully'
+      message: 'RD registered successfully. Please proceed to payment.'
     };
   } catch (error) {
     console.error('registerRD error:', error);
