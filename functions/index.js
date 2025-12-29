@@ -1001,14 +1001,42 @@ async function activateAmbassador(payment) {
   const bookUrl = await generateDownloadURL('book');
   
   // Send ambassador credentials + book link email
-  await sendAmbassadorCredentialsEmail({
-    email: payment.email,
-    fullName: ambassadorData.fullName,
-    code: ambassadorCode,
-    bookUrl: bookUrl
-  });
+  let emailSent = false;
+  let emailError = null;
+  try {
+    await sendAmbassadorCredentialsEmail({
+      email: payment.email,
+      fullName: ambassadorData.fullName,
+      code: ambassadorCode,
+      bookUrl: bookUrl
+    });
+    emailSent = true;
+    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email}`);
+  } catch (error) {
+    emailError = error.message;
+    console.error(`[EMAIL ERROR] Failed to send credentials to ${payment.email}:`, error);
+  }
+
+  // Send Telegram notification with email status
+  if (TELEGRAM_BOT_TOKEN) {
+    const statusEmoji = emailSent ? '✅' : '❌';
+    const statusText = emailSent ? 'Email sent successfully' : `Email FAILED: ${emailError}`;
+    const manualAction = emailSent ? '' : `\n\n⚠️ MANUAL ACTION REQUIRED:\nSend credentials manually to ${payment.email}\nCode: ${ambassadorCode}\nBook: ${bookUrl}`;
+    
+    const msg = `${statusEmoji} *Ambassador Activated*\n\n` +
+      `🎯 Code: \`${ambassadorCode}\`\n` +
+      `👤 Name: ${ambassadorData.fullName}\n` +
+      `📧 Email: ${payment.email}\n` +
+      `${payment.regional_director ? `👑 RD: ${payment.regional_director}\n` : ''}` +
+      `\n📧 Email Status: ${statusText}${manualAction}`;
+    
+    await sendTelegram(msg);
+  }
   
-  console.log(`[EMAIL] Ambassador credentials sent to ${payment.email}`);
+  // Throw error if email failed to ensure admin is notified
+  if (!emailSent) {
+    throw new Error(`Ambassador activated but email failed: ${emailError}`);
+  }
 }
 
 async function sendAmbassadorCredentialsEmail(ambassador) {
@@ -1067,23 +1095,33 @@ async function sendAmbassadorCredentialsEmail(ambassador) {
 
   try {
     if (SENDGRID_API_KEY) {
+      console.log(`[EMAIL] Attempting SendGrid to ${ambassador.email}`);
       await sgMail.send({
         to: ambassador.email,
         from: SMTP_CONFIG.from,
         subject: subject,
         html: htmlContent
       });
+      console.log(`✅ SendGrid email sent to ${ambassador.email}`);
     } else if (transporter) {
+      console.log(`[EMAIL] Attempting SMTP to ${ambassador.email}`);
       await transporter.sendMail({
         from: SMTP_CONFIG.from,
         to: ambassador.email,
         subject: subject,
         html: htmlContent
       });
+      console.log(`✅ SMTP email sent to ${ambassador.email}`);
+    } else {
+      const errorMsg = 'No email service configured (SendGrid or SMTP)';
+      console.error(`❌ ${errorMsg}`);
+      throw new Error(errorMsg);
     }
-    console.log(`✅ Ambassador credentials email sent to ${ambassador.email}`);
   } catch (error) {
     console.error('❌ Failed to send ambassador credentials email:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    // Rethrow to notify admin via Telegram
+    throw error;
   }
 }
 
