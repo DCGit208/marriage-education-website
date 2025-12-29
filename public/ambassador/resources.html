@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Resources | Ambassador Program</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .nav-breadcrumb {
+            max-width: 1400px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+        }
+
+        .nav-breadcrumb a {
+            color: #00b894;
+            text-decoration: none;
+            margin-right: 0.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .resource-category {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .resource-category h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .resource-category p {
+            color: #636e72;
+            margin-bottom: 1.5rem;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .resource-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .resource-card:hover {
+            border-color: #00b894;
+            box-shadow: 0 4px 15px rgba(0,184,148,0.1);
+            transform: translateY(-2px);
+        }
+
+        .resource-card .icon {
+            font-size: 2rem;
+            color: #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .resource-card h3 {
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .resource-card p {
+            color: #636e72;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .resource-card .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .resource-card .btn:hover {
+            background: #00a085;
+        }
+
+        .copy-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .copy-section h4 {
+            color: #2d3436;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-text {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #2d3436;
+            margin-bottom: 0.75rem;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            padding: 0.5rem 1rem;
+            background: #00b894;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .copy-btn:hover {
+            background: #00a085;
+        }
+
+        .tip-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .tip-box h4 {
+            color: #856404;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-box ul {
+            margin-left: 1.5rem;
+            color: #856404;
+        }
+
+        .tip-box li {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-folder-open"></i> Marketing Resources</h1>
+        <p>Everything you need to sell 60+ books successfully</p>
+    </div>
+
+    <div class="nav-breadcrumb">
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a> / 
+        <span>Resources</span>
+    </div>
+
+    <div class="container">
+        <!-- Social Media Templates -->
+        <div class="resource-category">
+            <h2><i class="fab fa-instagram"></i> Social Media Templates</h2>
+            <p>Ready-to-use graphics and designs for your social media platforms</p>
+            
+            <div class="resource-grid">
+                <div class="resource-card">
+                    <div class="icon"><i class="fab fa-instagram"></i></div>
+                    <h3>Instagram Story Templates (10)</h3>
+                    <p>9:16 vertical stories with book cover, quotes, and call-to-action</p>
+                    <button class="btn" onclick="window.open('https://canva.com', '_blank')">
+                        <i class="fas fa-download"></i> Open in Canva
+                    </button>
+                </div>
+
+                <div class="resource-card">
+                    <div class="icon"><i class="fab fa-facebook"></i></div>
+                    <h3>Facebook Post Graphics (8)</h3>
+                    <p>1080x1080 square posts with engaging visuals and messaging</p>
+                    <button class="btn" onclick="window.open('https://canva.com', '_blank')">
+                        <i class="fas fa-download"></i> Open in Canva
+                    </button>
+                </div>
+
+                <div class="resource-card">
+                    <div class="icon"><i class="fab fa-whatsapp"></i></div>
+                    <h3>WhatsApp Status Images (5)</h3>
+                    <p>Vertical images optimized for WhatsApp status updates</p>
+                    <button class="btn" onclick="window.open('https://canva.com', '_blank')">
+                        <i class="fas fa-download"></i> Open in Canva
+                    </button>
+                </div>
+
+                <div class="resource-card">
+                    <div class="icon"><i class="fas fa-quote-left"></i></div>
+                    <h3>Quote Graphics (25)</h3>
+                    <p>Powerful quotes from the book formatted as shareable images</p>
+                    <button class="btn" onclick="window.open('https://canva.com', '_blank')">
+                        <i class="fas fa-download"></i> Open in Canva
+                    </button>
+                </div>
+
+                <div class="resource-card">
+                    <div class="icon"><i class="fab fa-tiktok"></i></div>
+                    <h3>TikTok/Reels Templates (6)</h3>
+                    <p>9:16 vertical video templates with text overlays</p>
+                    <button class="btn" onclick="window.open('https://canva.com', '_blank')">
+                        <i class="fas fa-download"></i> Open in Canva
+                    </button>
+                </div>
+
+                <div class="resource-card">
+                    <div class="icon"><i class="fas fa-image"></i></div>
+                    <h3>Book Cover Images (High-Res)</h3>
+                    <p>Professional book cover in various formats and sizes</p>
+                    <button class="btn" onclick="alert('Download link will be provided via email')">
+                        <i class="fas fa-download"></i> Download ZIP
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copy-Paste Messages -->
+        <div class="resource-category">
+            <h2><i class="fas fa-comments"></i> Copy-Paste Messages</h2>
+            <p>Pre-written messages for different platforms and audiences</p>
+
+            <div class="tip-box">
+                <h4><i class="fas fa-lightbulb"></i> Pro Tip:</h4>
+                <ul>
+                    <li>Personalize each message with your own touch</li>
+                    <li>Add your unique referral link before sending</li>
+                    <li>Test different versions to see what works best</li>
+                    <li>Follow up with interested prospects within 24 hours</li>
+                </ul>
+            </div>
+
+            <!-- WhatsApp Messages -->
+            <div class="copy-section">
+                <h4><i class="fab fa-whatsapp"></i> WhatsApp Broadcast Message #1 (General)</h4>
+                <div class="copy-text" id="whatsapp1">🔥 Hey! Quick question - are you married or planning to get married soon?
+
+I just discovered this AMAZING book "Sex By Design for Dummies" that's transforming marriages across Cameroon! 🇨🇲
+
+✨ What makes it special:
+• Biblical + practical marriage wisdom
+• Covers intimacy, communication, purpose
+• Written for African couples
+• Only 15,000 FCFA (14-day launch special!)
+
+📚 This is a 14-day exclusive campaign - after that, price goes up!
+
+Interested? I can send you the link to get your copy. Just reply "YES" 😊
+
+[Your referral link here]</div>
+                <button class="copy-btn" onclick="copyToClipboard('whatsapp1')">
+                    <i class="fas fa-copy"></i> Copy Message
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4><i class="fab fa-whatsapp"></i> WhatsApp Broadcast Message #2 (Urgency)</h4>
+                <div class="copy-text" id="whatsapp2">⏰ LAST CHANCE! Only 3 days left in the 14-day launch!
+
+"Sex By Design for Dummies" - the marriage book everyone is talking about - campaign ends this week!
+
+Why you should act NOW:
+✅ Launch price: 15,000 FCFA (Regular: 20,000 FCFA)
+✅ Limited founder's edition bonuses
+✅ Exclusive access to online community
+✅ Digital + physical options available
+
+💑 Perfect for:
+- Married couples seeking deeper connection
+- Engaged couples preparing for marriage
+- Anyone who values healthy relationships
+
+Don't miss out! Get yours here:
+[Your referral link]
+
+Questions? Just reply! 📩</div>
+                <button class="copy-btn" onclick="copyToClipboard('whatsapp2')">
+                    <i class="fas fa-copy"></i> Copy Message
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4><i class="fab fa-whatsapp"></i> WhatsApp Broadcast Message #3 (Testimonial Style)</h4>
+                <div class="copy-text" id="whatsapp3">I just finished reading "Sex By Design for Dummies" and WOW! 🤯
+
+This book addresses things most marriage books won't touch:
+• True meaning of intimacy (it's not just physical!)
+• How to build covenant, not just commitment
+• Understanding gender roles without losing yourself
+• Biblical sexuality that actually makes sense
+
+If you've ever felt like something was missing in your marriage education, THIS IS IT.
+
+Campaign ends in a few days - 15,000 FCFA only!
+
+Get your copy: [Your referral link]
+
+Trust me, you'll thank me later! 😊</div>
+                <button class="copy-btn" onclick="copyToClipboard('whatsapp3')">
+                    <i class="fas fa-copy"></i> Copy Message
+                </button>
+            </div>
+
+            <!-- Facebook Posts -->
+            <div class="copy-section">
+                <h4><i class="fab fa-facebook"></i> Facebook Post #1</h4>
+                <div class="copy-text" id="facebook1">🚨 ATTENTION ALL MARRIED & ENGAGED COUPLES! 🚨
+
+I'm so excited to share this with you! "Sex By Design for Dummies" is launching in Cameroon and it's EXACTLY what our community needs! 💕
+
+This isn't your typical marriage book - it goes DEEP into:
+✨ Biblical foundations of marriage
+✨ Intimacy that transforms
+✨ Understanding your spouse's design
+✨ Building covenant, not just contracts
+
+📍 Why I'm recommending this:
+Because too many marriages are struggling in silence. We need resources that speak to OUR culture, OUR challenges, OUR context.
+
+💰 LAUNCH SPECIAL: 15,000 FCFA (14 days only!)
+
+Get yours here: [Your referral link]
+
+Tag someone who needs this! 👇
+
+#MarriageEducation #SexByDesign #CameroonCouples #HealthyMarriages #BookLaunch</div>
+                <button class="copy-btn" onclick="copyToClipboard('facebook1')">
+                    <i class="fas fa-copy"></i> Copy Post
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4><i class="fab fa-facebook"></i> Facebook Post #2 (Question Hook)</h4>
+                <div class="copy-text" id="facebook2">❓ HONEST QUESTION: When was the last time you invested in your marriage? 💑
+
+Not financially... but with intentional learning, growth, and understanding?
+
+I'm reading "Sex By Design for Dummies" right now and it's challenging everything I thought I knew about marriage! 📖
+
+Some chapters are making me uncomfortable (in a good way!) because they're exposing blind spots I didn't know I had.
+
+If you're serious about having a marriage that thrives (not just survives), this book is a MUST-READ.
+
+⏰ 14-day launch campaign - after that, the price goes up!
+
+Link to order: [Your referral link]
+
+Who's joining me on this journey? Drop a 💍 if you're in!
+
+#MarriageGoals #PersonalGrowth #RelationshipGoals #AfricanMarriages</div>
+                <button class="copy-btn" onclick="copyToClipboard('facebook2')">
+                    <i class="fas fa-copy"></i> Copy Post
+                </button>
+            </div>
+
+            <!-- Instagram Captions -->
+            <div class="copy-section">
+                <h4><i class="fab fa-instagram"></i> Instagram Caption #1</h4>
+                <div class="copy-text" id="instagram1">Your marriage deserves more than guesswork. 💍✨
+
+"Sex By Design for Dummies" is the marriage manual you wish you had before saying "I do."
+
+✨ What's inside:
+→ Biblical wisdom meets practical action
+→ Intimacy that goes beyond the bedroom
+→ Understanding covenant vs commitment
+→ Gender roles that empower (not restrict)
+→ Communication that actually works
+
+🔥 14-day launch special: 15,000 FCFA
+
+Link in bio or DM me "BOOK" for details!
+
+Swipe for a sneak peek of the chapters 👉
+
+#MarriageEducation #SexByDesign #CameroonBooks #HealthyRelationships #CoupleGoals #AfricanMarriage #BookRecommendation #MarriageTips #RelationshipGoals #IntentionalMarriage</div>
+                <button class="copy-btn" onclick="copyToClipboard('instagram1')">
+                    <i class="fas fa-copy"></i> Copy Caption
+                </button>
+            </div>
+
+            <!-- DM Templates -->
+            <div class="copy-section">
+                <h4><i class="fas fa-envelope"></i> Direct Message Template (Cold Outreach)</h4>
+                <div class="copy-text" id="dm1">Hey [Name]! 👋
+
+I hope this doesn't come across as random, but I saw your post about [relationship/marriage topic] and thought of you!
+
+There's this incredible book launching right now called "Sex By Design for Dummies" - it's specifically written for African couples and addresses things most marriage resources ignore.
+
+I'm sharing it with people I think would genuinely benefit. Would you be interested in learning more? 😊
+
+No pressure at all - just thought it might resonate with you!
+
+[Your name]</div>
+                <button class="copy-btn" onclick="copyToClipboard('dm1')">
+                    <i class="fas fa-copy"></i> Copy Template
+                </button>
+            </div>
+        </div>
+
+        <!-- Video Scripts -->
+        <div class="resource-category">
+            <h2><i class="fas fa-video"></i> Video Content Scripts</h2>
+            <p>Short video scripts for TikTok, Instagram Reels, and YouTube Shorts</p>
+
+            <div class="copy-section">
+                <h4><i class="fas fa-film"></i> 30-Second Pitch Script</h4>
+                <div class="copy-text" id="video1">[Hook - 3 seconds]
+"If you're married or getting married, STOP scrolling!"
+
+[Problem - 7 seconds]
+"Most marriage advice is either too religious or too secular. Nothing speaks to OUR reality as Africans."
+
+[Solution - 10 seconds]
+"'Sex By Design for Dummies' is different. It's biblical, practical, and REAL. Covers intimacy, purpose, communication - everything!"
+
+[Call to Action - 10 seconds]
+"14-day launch: 15,000 FCFA only! Link in bio or comment 'BOOK' for details. Your marriage deserves this investment!"
+
+[Visual suggestions: Show book cover, flip through pages, point to camera]</div>
+                <button class="copy-btn" onclick="copyToClipboard('video1')">
+                    <i class="fas fa-copy"></i> Copy Script
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4><i class="fas fa-film"></i> 60-Second Review Script</h4>
+                <div class="copy-text" id="video2">[Opening - 5 seconds]
+"I just finished this book and I'm shook. Let me tell you why."
+
+[Context - 15 seconds]
+"As someone who's been married for [X years] / preparing for marriage, I thought I knew it all. But 'Sex By Design for Dummies' exposed so many blind spots!"
+
+[Key Takeaways - 25 seconds]
+"Three things that hit me:
+1. Intimacy isn't just physical - it's emotional, spiritual, intellectual
+2. Covenant vs commitment - HUGE difference!
+3. Gender roles done RIGHT - empowering, not limiting"
+
+[Social Proof - 10 seconds]
+"Everyone I've recommended this to thanks me later. It's that good!"
+
+[CTA - 5 seconds]
+"Link in bio - 15,000 FCFA for 14 days only. Don't sleep on this!"
+
+[Visual: Hold book, show specific pages, speak passionately]</div>
+                <button class="copy-btn" onclick="copyToClipboard('video2')">
+                    <i class="fas fa-copy"></i> Copy Script
+                </button>
+            </div>
+        </div>
+
+        <!-- Sales Scripts -->
+        <div class="resource-category">
+            <h2><i class="fas fa-handshake"></i> Sales Objection Handlers</h2>
+            <p>Responses to common objections and questions</p>
+
+            <div class="copy-section">
+                <h4>💰 "It's too expensive"</h4>
+                <div class="copy-text">I totally understand budget concerns! But think about it this way:
+
+• A dinner date costs 10,000-15,000 FCFA (gone in 2 hours)
+• A movie ticket costs 5,000 FCFA (gone in 90 minutes)
+• This book? 15,000 FCFA for LIFETIME marriage wisdom
+
+Plus, this is the LAUNCH price - it goes up to 20,000 FCFA after 14 days. You're actually saving 5,000 FCFA by getting it now!
+
+Investment in your marriage > Entertainment expenses, right? 😊</div>
+                <button class="copy-btn" onclick="copyToClipboard('objection1')">
+                    <i class="fas fa-copy"></i> Copy Response
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4>⏰ "I'll buy it later"</h4>
+                <div class="copy-text">I hear you! But here's the thing:
+
+1. Launch price (15,000 FCFA) ends in [X days] - then it's 20,000 FCFA
+2. Founder's edition bonuses are only for this 14-day window
+3. The longer you wait, the longer your marriage goes without these insights
+
+I'm not trying to pressure you, but I'd hate for you to miss out and regret it later. Can I send you the link so you at least have it saved? You can decide today or tomorrow 😊</div>
+                <button class="copy-btn" onclick="copyToClipboard('objection2')">
+                    <i class="fas fa-copy"></i> Copy Response
+                </button>
+            </div>
+
+            <div class="copy-section">
+                <h4>📚 "I don't read books"</h4>
+                <div class="copy-text">Totally get it - not everyone is a bookworm! But here's what makes this different:
+
+• It's called "For Dummies" for a reason - super practical, easy to digest
+• You don't have to read cover-to-cover; jump to chapters that interest you
+• Many people read 1 chapter per week with their spouse (15-20 min)
+• Also comes in audiobook format (just listen while driving!)
+
+Plus, if it can save your marriage from even ONE major conflict, isn't it worth trying? Your relationship is more important than your reading habits, right? 💕</div>
+                <button class="copy-btn" onclick="copyToClipboard('objection3')">
+                    <i class="fas fa-copy"></i> Copy Response
+                </button>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="dashboard.html" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background: #00b894; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '#00b894';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>
