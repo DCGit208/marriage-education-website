@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regional Director Registration Payment</title>
+  <title>Registration Payment - Marriage Education</title>
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -55,6 +55,11 @@
       margin-bottom: 15px;
     }
     .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    #page-title {
       font-size: 28px;
       font-weight: 700;
       margin-bottom: 10px;
@@ -339,16 +344,16 @@
   <div class="container">
     <div class="header">
       <div class="logo">👑</div>
-      <h1>Regional Director Registration</h1>
-      <p>Complete your payment to activate your account</p>
+      <h1 id="page-title">Loading...</h1>
+      <p id="page-subtitle">Complete your payment to activate your account</p>
     </div>
 
     <div class="content">
       <!-- Registration Info -->
       <div class="registration-info">
-        <div class="registration-label">Your Regional Director Code</div>
-        <div class="registration-code" id="rd-code">Loading...</div>
-        <div class="registration-price" id="registration-price">50,000 FCFA</div>
+        <div class="registration-label" id="code-label">Loading...</div>
+        <div class="registration-code" id="registration-code">Loading...</div>
+        <div class="registration-price" id="registration-price">Loading...</div>
       </div>
 
       <!-- Benefits -->
@@ -490,14 +495,26 @@
     }
 
     // Initialize page
-    const rdCode = getUrlParameter('code') || 'RD-UNKNOWN';
-    const amount = getUrlParameter('amount') || '50000';
+    const registrationType = getUrlParameter('type') || 'rd';
+    const code = getUrlParameter('code') || (registrationType === 'ambassador' ? 'AMB-UNKNOWN' : 'RD-UNKNOWN');
+    const amount = getUrlParameter('amount') || (registrationType === 'ambassador' ? '15000' : '50000');
     
-    // Use RD code as reference for payment tracking
-    const reference = rdCode;
+    // Use code as reference for payment tracking
+    const reference = code;
+
+    // Update page content based on type
+    if (registrationType === 'ambassador') {
+      document.getElementById('page-title').textContent = 'Ambassador Registration';
+      document.getElementById('page-subtitle').textContent = 'Complete your registration by paying for your book package';
+      document.getElementById('code-label').textContent = 'YOUR AMBASSADOR CODE';
+    } else {
+      document.getElementById('page-title').textContent = 'Regional Director Registration';
+      document.getElementById('page-subtitle').textContent = 'Complete your registration by paying the fee';
+      document.getElementById('code-label').textContent = 'YOUR RD CODE';
+    }
 
     // Update page content
-    document.getElementById('rd-code').textContent = rdCode;
+    document.getElementById('registration-code').textContent = code;
     document.getElementById('registration-price').textContent = `${amount} FCFA`;
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
@@ -514,28 +531,55 @@
       const email = document.getElementById('email').value;
 
       try {
-        // Call Firebase Cloud Function instead of Render backend
-        const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
-        const result = await submitManualPayment({
+        // Get ambassador data from sessionStorage if ambassador type
+        let ambassadorData = null;
+        if (registrationType === 'ambassador') {
+          const storedData = sessionStorage.getItem('ambassadorData');
+          if (storedData) {
+            ambassadorData = JSON.parse(storedData);
+            console.log('📝 Retrieved ambassador data:', ambassadorData);
+          }
+        }
+
+        // Prepare payment data
+        const paymentData = {
           reference: reference,
-          product_id: 'rd-registration',
-          product_name: `Regional Director Registration - ${rdCode}`,
+          product_id: registrationType === 'ambassador' ? 'ambassador-registration' : 'rd-registration',
+          product_name: registrationType === 'ambassador' 
+            ? `Ambassador Registration - ${code}` 
+            : `Regional Director Registration - ${code}`,
           amount: amount,
           currency: 'XAF',
           phone: phone,
           email: email,
-          rd_code: rdCode,
-          ambassador_ref: '',
-          referral_code: ''
-        });
+          type: registrationType
+        };
+
+        // Add type-specific fields
+        if (registrationType === 'ambassador') {
+          paymentData.ambassador_code = code;
+          paymentData.regional_director = ambassadorData?.recruitedBy || '';
+          paymentData.ambassador_data = ambassadorData;
+        } else {
+          paymentData.rd_code = code;
+        }
+
+        // Call Firebase Cloud Function
+        const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
+        const result = await submitManualPayment(paymentData);
 
         if (result.data.success) {
           showAlert('✓ Payment submitted! You will receive your login credentials within 15 minutes.', 'success');
           document.getElementById('confirmation-form').reset();
           
+          // Clear sessionStorage for ambassadors
+          if (registrationType === 'ambassador') {
+            sessionStorage.removeItem('ambassadorData');
+          }
+          
           // Redirect to pending page after 3 seconds
           setTimeout(() => {
-            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=rd-registration`;
+            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=${registrationType === 'ambassador' ? 'ambassador-registration' : 'rd-registration'}`;
           }, 3000);
         } else {
           showAlert('❌ ' + (result.data.message || 'Failed to submit payment. Please try again.'), 'error');

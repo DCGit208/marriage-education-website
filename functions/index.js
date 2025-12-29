@@ -666,7 +666,11 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       phone,
       ambassador_ref,
       referral_code,
-      rd_code
+      rd_code,
+      type,
+      ambassador_code,
+      regional_director,
+      ambassador_data
     } = data;
 
     const paymentData = {
@@ -680,9 +684,17 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       ambassador_ref: ambassador_ref || '',
       referral_code: referral_code || '',
       rd_code: rd_code || '',
+      type: type || 'book-purchase',
       status: 'pending',
       created_at: admin.firestore.FieldValue.serverTimestamp()
     };
+
+    // Add ambassador-specific data
+    if (type === 'ambassador' && ambassador_data) {
+      paymentData.ambassador_code = ambassador_code;
+      paymentData.regional_director = regional_director || '';
+      paymentData.ambassador_data = ambassador_data;
+    }
 
     await db.collection('pending_payments').doc(reference).set(paymentData);
 
@@ -695,12 +707,17 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
 
     // Send Telegram notification for new pending payment
     if (TELEGRAM_BOT_TOKEN) {
+      const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' : 
+                       type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
       const pendingMsg = `🔔 *New Payment Pending Approval*\n\n` +
         `📋 Reference: \`${reference}\`\n` +
-        `📚 Product: *${product_name}*\n` +
+        `📚 Type: *${typeLabel}*\n` +
+        `📦 Product: ${product_name}\n` +
         `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
         `👤 Customer: ${email}\n` +
         `📱 Phone: ${phone || 'N/A'}\n` +
+        `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
+        `${regional_director ? `👑 Recruited By: ${regional_director}\n` : ''}` +
         `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
         `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
         `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
@@ -768,6 +785,30 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
         success: true,
         message: 'RD registration approved',
         rd_code: payment.rd_code,
+        email_sent: true
+      };
+    }
+
+    // Handle Ambassador registration activation
+    if (payment.product_id === 'ambassador-registration' && payment.ambassador_data) {
+      await activateAmbassador(payment);
+      
+      // Send Telegram notification for Ambassador registration
+      if (TELEGRAM_BOT_TOKEN) {
+        const ambMsg = `✅ *Ambassador Registration Approved*\n\n` +
+          `🎯 Code: \`${payment.ambassador_code}\`\n` +
+          `👤 Name: ${payment.ambassador_data.fullName}\n` +
+          `📧 Email: ${payment.email}\n` +
+          `📱 Phone: ${payment.phone}\n` +
+          `👑 Recruited By: ${payment.regional_director || 'Direct'}\n` +
+          `💰 Fee: ${payment.amount} ${payment.currency}`;
+        await sendTelegram(ambMsg);
+      }
+
+      return {
+        success: true,
+        message: 'Ambassador registration approved',
+        ambassador_code: payment.ambassador_code,
         email_sent: true
       };
     }
@@ -911,6 +952,138 @@ async function activateRD(payment) {
     await sendRDCredentialsEmail(rd);
   } else {
     await sendRDCredentialsEmailSMTP(rd);
+  }
+}
+
+async function activateAmbassador(payment) {
+  const ambassadorCode = payment.ambassador_code;
+  const ambassadorData = payment.ambassador_data;
+  
+  if (!ambassadorCode || !ambassadorData) {
+    console.error('Missing ambassador code or data');
+    return;
+  }
+
+  // Create ambassador account in Firestore
+  const ambassadorAccount = {
+    ...ambassadorData,
+    status: 'active',
+    booksSold: 0,
+    commissionEarned: 0,
+    level: 'Starter',
+    activated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: admin.firestore.FieldValue.serverTimestamp(),
+    updated_at: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  await db.collection('ambassadors').doc(ambassadorCode).set(ambassadorAccount);
+  console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
+
+  // Update RD statistics if recruited by RD
+  if (payment.regional_director && payment.regional_director.startsWith('RD-')) {
+    try {
+      const rdRef = db.collection('regional_directors').doc(payment.regional_director);
+      const rdDoc = await rdRef.get();
+      
+      if (rdDoc.exists) {
+        await rdRef.update({
+          team_ambassadors: admin.firestore.FieldValue.increment(1),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`[RD] Updated ${payment.regional_director} ambassador count`);
+      }
+    } catch (error) {
+      console.error('Error updating RD stats:', error);
+    }
+  }
+
+  // Generate book download URL
+  const bookUrl = await generateDownloadURL('book');
+  
+  // Send ambassador credentials + book link email
+  await sendAmbassadorCredentialsEmail({
+    email: payment.email,
+    fullName: ambassadorData.fullName,
+    code: ambassadorCode,
+    bookUrl: bookUrl
+  });
+  
+  console.log(`[EMAIL] Ambassador credentials sent to ${payment.email}`);
+}
+
+async function sendAmbassadorCredentialsEmail(ambassador) {
+  const subject = '🎉 Welcome Ambassador! Your Login & Book Download';
+  
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+        .credentials { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894; }
+        .btn { display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+        .code { font-family: monospace; font-size: 24px; color: #00b894; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎯 Welcome, Ambassador ${ambassador.fullName}!</h1>
+        </div>
+        <div class="content">
+          <p>Congratulations! Your ambassador registration has been approved.</p>
+          
+          <div class="credentials">
+            <h3>📋 Your Ambassador Credentials</h3>
+            <p><strong>Ambassador Code:</strong> <span class="code">${ambassador.code}</span></p>
+            <p><strong>Email:</strong> ${ambassador.email}</p>
+            <p><strong>Dashboard:</strong> <a href="https://marriageducation.com/ambassador-login.html">Login Here</a></p>
+          </div>
+          
+          <div class="credentials">
+            <h3>📚 Your Book Download</h3>
+            <p>Download your book package now. This link expires in 7 days.</p>
+            <a href="${ambassador.bookUrl}" class="btn">📥 Download Book</a>
+          </div>
+          
+          <h3>🚀 Next Steps:</h3>
+          <ol>
+            <li>Download and read your book package</li>
+            <li>Log in to your ambassador dashboard</li>
+            <li>Get your unique referral link</li>
+            <li>Start sharing and earning commissions!</li>
+          </ol>
+          
+          <p><strong>Questions?</strong> Reply to this email or contact support@marriageducation.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    if (SENDGRID_API_KEY) {
+      await sgMail.send({
+        to: ambassador.email,
+        from: SMTP_CONFIG.from,
+        subject: subject,
+        html: htmlContent
+      });
+    } else if (transporter) {
+      await transporter.sendMail({
+        from: SMTP_CONFIG.from,
+        to: ambassador.email,
+        subject: subject,
+        html: htmlContent
+      });
+    }
+    console.log(`✅ Ambassador credentials email sent to ${ambassador.email}`);
+  } catch (error) {
+    console.error('❌ Failed to send ambassador credentials email:', error);
   }
 }
 
