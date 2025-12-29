@@ -792,18 +792,6 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     // Handle Ambassador registration activation
     if (payment.product_id === 'ambassador-registration' && payment.ambassador_data) {
       await activateAmbassador(payment);
-      
-      // Send Telegram notification for Ambassador registration
-      if (TELEGRAM_BOT_TOKEN) {
-        const ambMsg = `✅ *Ambassador Registration Approved*\n\n` +
-          `🎯 Code: \`${payment.ambassador_code}\`\n` +
-          `👤 Name: ${payment.ambassador_data.fullName}\n` +
-          `📧 Email: ${payment.email}\n` +
-          `📱 Phone: ${payment.phone}\n` +
-          `👑 Recruited By: ${payment.regional_director || 'Direct'}\n` +
-          `💰 Fee: ${payment.amount} ${payment.currency}`;
-        await sendTelegram(ambMsg);
-      }
 
       return {
         success: true,
@@ -999,12 +987,13 @@ async function activateAmbassador(payment) {
 
   // Generate book download URL
   const bookUrl = await generateDownloadURL('book');
+  console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
   
   // Send ambassador credentials + book link email
   let emailSent = false;
   let emailError = null;
   try {
-    await sendAmbassadorCredentialsEmail({
+    await sendAmbassadorCredentialsEmailSMTP({
       email: payment.email,
       fullName: ambassadorData.fullName,
       code: ambassadorCode,
@@ -1017,65 +1006,52 @@ async function activateAmbassador(payment) {
     console.error(`[EMAIL ERROR] Failed to send credentials to ${payment.email}:`, error);
   }
 
-  // Send Telegram notification with email status
+  // Send Telegram notification with ALL details including book link
   if (TELEGRAM_BOT_TOKEN) {
-    const statusEmoji = emailSent ? '✅' : '❌';
-    const statusText = emailSent ? 'Email sent successfully' : `Email FAILED: ${emailError}`;
-    const manualAction = emailSent ? '' : `\n\n⚠️ MANUAL ACTION REQUIRED:\nSend credentials manually to ${payment.email}\nCode: ${ambassadorCode}\nBook: ${bookUrl}`;
+    const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
+    const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
     
-    const msg = `${statusEmoji} *Ambassador Activated*\n\n` +
+    const msg = `✅ *Ambassador Registration Approved*\n\n` +
       `🎯 Code: \`${ambassadorCode}\`\n` +
       `👤 Name: ${ambassadorData.fullName}\n` +
       `📧 Email: ${payment.email}\n` +
-      `${payment.regional_director ? `👑 RD: ${payment.regional_director}\n` : ''}` +
-      `\n📧 Email Status: ${statusText}${manualAction}`;
+      `📱 Phone: ${payment.phone}\n` +
+      `${payment.regional_director ? `👑 Recruited By: ${payment.regional_director}\n` : ''}` +
+      `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
+      `📧 Email Status: ${emailStatus}\n` +
+      `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
+      `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
     
     await sendTelegram(msg);
   }
   
-  // Throw error if email failed to ensure admin is notified
-  if (!emailSent) {
-    throw new Error(`Ambassador activated but email failed: ${emailError}`);
-  }
+  console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
 }
 
-async function sendAmbassadorCredentialsEmail(ambassador) {
-  const subject = '🎉 Welcome Ambassador! Your Login & Book Download';
-  
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-        .credentials { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894; }
-        .btn { display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
-        .code { font-family: monospace; font-size: 24px; color: #00b894; font-weight: bold; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
+async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
+  const mailOptions = {
+    from: 'orders@marriageducation.com',
+    to: ambassador.email,
+    subject: `🎉 Welcome Ambassador - ${ambassador.code}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
           <h1>🎯 Welcome, Ambassador ${ambassador.fullName}!</h1>
         </div>
-        <div class="content">
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
           <p>Congratulations! Your ambassador registration has been approved.</p>
           
-          <div class="credentials">
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894;">
             <h3>📋 Your Ambassador Credentials</h3>
-            <p><strong>Ambassador Code:</strong> <span class="code">${ambassador.code}</span></p>
+            <p><strong>Ambassador Code:</strong> <span style="font-family: monospace; font-size: 20px; color: #00b894;">${ambassador.code}</span></p>
             <p><strong>Email:</strong> ${ambassador.email}</p>
-            <p><strong>Dashboard:</strong> <a href="https://marriageducation.com/ambassador-login.html">Login Here</a></p>
+            <p><strong>Dashboard:</strong> <a href="https://marriageducation.com/ambassador-login.html" style="color: #00b894;">Login Here</a></p>
           </div>
           
-          <div class="credentials">
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894;">
             <h3>📚 Your Book Download</h3>
             <p>Download your book package now. This link expires in 7 days.</p>
-            <a href="${ambassador.bookUrl}" class="btn">📥 Download Book</a>
+            <a href="${ambassador.bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0;">📥 Download Book</a>
           </div>
           
           <h3>🚀 Next Steps:</h3>
@@ -1089,38 +1065,15 @@ async function sendAmbassadorCredentialsEmail(ambassador) {
           <p><strong>Questions?</strong> Reply to this email or contact support@marriageducation.com</p>
         </div>
       </div>
-    </body>
-    </html>
-  `;
+    `
+  };
 
   try {
-    if (SENDGRID_API_KEY) {
-      console.log(`[EMAIL] Attempting SendGrid to ${ambassador.email}`);
-      await sgMail.send({
-        to: ambassador.email,
-        from: SMTP_CONFIG.from,
-        subject: subject,
-        html: htmlContent
-      });
-      console.log(`✅ SendGrid email sent to ${ambassador.email}`);
-    } else if (transporter) {
-      console.log(`[EMAIL] Attempting SMTP to ${ambassador.email}`);
-      await transporter.sendMail({
-        from: SMTP_CONFIG.from,
-        to: ambassador.email,
-        subject: subject,
-        html: htmlContent
-      });
-      console.log(`✅ SMTP email sent to ${ambassador.email}`);
-    } else {
-      const errorMsg = 'No email service configured (SendGrid or SMTP)';
-      console.error(`❌ ${errorMsg}`);
-      throw new Error(errorMsg);
-    }
+    console.log(`[EMAIL] Sending ambassador credentials to ${ambassador.email}`);
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ SMTP email sent to ${ambassador.email}`);
   } catch (error) {
     console.error('❌ Failed to send ambassador credentials email:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
-    // Rethrow to notify admin via Telegram
     throw error;
   }
 }
