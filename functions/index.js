@@ -955,6 +955,8 @@ async function activateAmbassador(payment) {
   // Create ambassador account in Firestore
   const ambassadorAccount = {
     ...ambassadorData,
+    ambassadorCode: ambassadorCode,
+    code: ambassadorCode,  // For consistency with queries
     status: 'active',
     booksSold: 0,
     commissionEarned: 0,
@@ -1080,15 +1082,15 @@ async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
 
 async function trackAmbassadorSale(ambassadorCode, amount) {
   try {
-    const ambassadorQuery = await db.collection('ambassadors')
-      .where('code', '==', ambassadorCode)
-      .limit(1)
-      .get();
+    // Query ambassador by document ID (ambassadorCode is the document ID)
+    const ambassadorRef = db.collection('ambassadors').doc(ambassadorCode);
+    const ambassadorDoc = await ambassadorRef.get();
 
-    if (ambassadorQuery.empty) return;
+    if (!ambassadorDoc.exists) {
+      console.error(`Ambassador not found: ${ambassadorCode}`);
+      return;
+    }
 
-    const ambassadorDoc = ambassadorQuery.docs[0];
-    const ambassadorRef = ambassadorDoc.ref;
     const ambassador = ambassadorDoc.data();
 
     // Calculate commission (10% tiered)
@@ -1098,6 +1100,8 @@ async function trackAmbassadorSale(ambassadorCode, amount) {
       booksSold: admin.firestore.FieldValue.increment(1),
       commissionEarned: admin.firestore.FieldValue.increment(commissionAmount)
     });
+    
+    console.log(`[COMMISSION] ${ambassadorCode}: +${commissionAmount} FCFA (Total books: ${(ambassador.booksSold || 0) + 1})`);
 
     // Track RD override if recruited
     if (ambassador.recruited_by) {
