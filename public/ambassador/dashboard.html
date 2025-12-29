@@ -1274,10 +1274,7 @@
     <script src="../js/firebase-config.js"></script>
     
     <script>
-        // Note: Ambassador data should be fetched from Firebase Firestore
-        // const API_BASE = 'https://marriageducation.com'; // Legacy endpoint
-        
-        // Load real ambassador data from Firebase
+        // Load real ambassador data from Firebase Firestore
         async function loadAmbassadorData() {
             try {
                 // Get ambassador code from localStorage (set during login)
@@ -1289,27 +1286,28 @@
                     return;
                 }
                 
-                // Fetch real data from API
-                const response = await fetch(`${API_BASE}/api/ambassador-stats/${ambassadorCode}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load ambassador data');
+                // Check if Firebase is initialized
+                if (!firebase.apps.length) {
+                    throw new Error('Firebase not initialized');
                 }
                 
-                const data = await response.json();
+                const db = firebase.firestore();
                 
-                if (!data.success || !data.ambassador) {
+                // Fetch ambassador data from Firestore
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
                     throw new Error('Ambassador not found');
                 }
                 
-                const stats = data.ambassador;
+                const stats = ambassadorDoc.data();
                 
                 // Update global ambassadorData
                 Object.assign(ambassadorData, {
                     name: ambassadorCode.split('-')[1] || 'Ambassador',
-                    code: stats.code,
-                    booksSold: stats.books_sold || 0,
-                    commissionEarned: stats.total_commission || 0,
+                    code: stats.ambassadorCode || ambassadorCode,
+                    booksSold: stats.booksSold || 0,
+                    commissionEarned: stats.commissionEarned || 0,
                     rank: 0,  // Will be loaded from leaderboard
                     level: stats.level || 'Starter',
                     recentSales: stats.sales || []
@@ -1334,16 +1332,28 @@
         // Load leaderboard rank
         async function loadLeaderboardRank(ambassadorCode) {
             try {
-                const response = await fetch(`${API_BASE}/api/ambassador-leaderboard`);
-                
-                if (!response.ok) return;
-                
-                const data = await response.json();
-                
-                if (data.success && data.leaderboard) {
-                    const myRank = data.leaderboard.findIndex(a => a.code === ambassadorCode) + 1;
-                    ambassadorData.rank = myRank > 0 ? myRank : 0;
+                // Check if Firebase is initialized
+                if (!firebase.apps.length) {
+                    return;
                 }
+                
+                const db = firebase.firestore();
+                
+                // Query ambassadors ordered by books sold
+                const snapshot = await db.collection('ambassadors')
+                    .where('active', '==', true)
+                    .orderBy('booksSold', 'desc')
+                    .get();
+                
+                // Find rank
+                let rank = 0;
+                snapshot.forEach((doc, index) => {
+                    if (doc.id === ambassadorCode) {
+                        rank = index + 1;
+                    }
+                });
+                
+                ambassadorData.rank = rank;
             } catch (error) {
                 console.error('Leaderboard error:', error);
             }
