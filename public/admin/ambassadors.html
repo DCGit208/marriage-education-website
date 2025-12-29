@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador Admin Panel | Marriage Education</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .admin-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #00b894;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .stat-card .subvalue {
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-top: 0.25rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #636e72;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: #00b894;
+        }
+
+        .tab-btn.active {
+            color: #00b894;
+            border-bottom-color: #00b894;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .applications-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .application-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .application-item:last-child {
+            border-bottom: none;
+        }
+
+        .application-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .applicant-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #2d3436;
+            font-size: 1.3rem;
+        }
+
+        .applicant-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: #636e72;
+            flex-wrap: wrap;
+        }
+
+        .applicant-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .application-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .detail-section h4 {
+            color: #00b894;
+            margin: 0 0 0.75rem 0;
+            font-size: 1rem;
+        }
+
+        .detail-section p {
+            margin: 0.5rem 0;
+            color: #2d3436;
+            font-size: 0.95rem;
+        }
+
+        .detail-section .label {
+            color: #636e72;
+            font-size: 0.85rem;
+        }
+
+        .motivation-text {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #2d3436;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-approve {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+        }
+
+        .btn-reject {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-view {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #636e72;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #00b894;
+            color: #00b894;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1rem 0;
+            color: #2d3436;
+        }
+
+        .modal-content .close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #636e72;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .referral-code-display {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .referral-code-display .code {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00b894;
+            font-family: monospace;
+        }
+
+        .no-applications {
+            text-align: center;
+            padding: 3rem;
+            color: #636e72;
+        }
+
+        .no-applications i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .application-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1><i class="fas fa-users-cog"></i> Ambassador Admin Panel</h1>
+        <p>Review and manage ambassador applications</p>
+    </div>
+
+    <div class="admin-container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Pending Applications</div>
+                <div class="value" id="pendingCount">3</div>
+                <div class="subvalue">Awaiting review</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Active Ambassadors</div>
+                <div class="value" id="activeCount">37</div>
+                <div class="subvalue">Out of 500 spots</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Applications</div>
+                <div class="value" id="totalCount">42</div>
+                <div class="subvalue">All time</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Rejection Rate</div>
+                <div class="value" id="rejectionRate">4.8%</div>
+                <div class="subvalue">2 rejected</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('pending')">
+                <i class="fas fa-clock"></i> Pending (3)
+            </button>
+            <button class="tab-btn" onclick="switchTab('approved')">
+                <i class="fas fa-check-circle"></i> Approved (37)
+            </button>
+            <button class="tab-btn" onclick="switchTab('rejected')">
+                <i class="fas fa-times-circle"></i> Rejected (2)
+            </button>
+        </div>
+
+        <!-- Pending Applications -->
+        <div id="pending-tab" class="tab-content active">
+            <div class="applications-list">
+                <!-- Sample Application 1 -->
+                <div class="application-item">
+                    <div class="application-header">
+                        <div class="applicant-info">
+                            <h3>Jean-Paul Kamga</h3>
+                            <div class="applicant-meta">
+                                <span><i class="fas fa-envelope"></i> jp.kamga@email.com</span>
+                                <span><i class="fas fa-phone"></i> +237 677 123 456</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Douala, Littoral</span>
+                                <span><i class="fas fa-calendar"></i> Applied 2 hours ago</span>
+                            </div>
+                        </div>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+
+                    <div class="application-details">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-share-nodes"></i> Social Media</h4>
+                            <p><span class="label">Instagram:</span> @jpkamga (2,400 followers)</p>
+                            <p><span class="label">Facebook:</span> 3,800 friends</p>
+                            <p><span class="label">Primary Platform:</span> Instagram</p>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-bullseye"></i> Commitment</h4>
+                            <p><span class="label">Target:</span> 60 books (90,000 FCFA)</p>
+                            <p><span class="label">Sales Experience:</span> Yes - Side hustle</p>
+                            <p><span class="label">Source:</span> Instagram</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-comment"></i> Motivation</h4>
+                        <div class="motivation-text">
+                            "I've been following Marriage Education for over a year and deeply believe in the mission. I run a small business selling beauty products online and have built a loyal community. I want to use my platform to promote healthy marriages in our culture. With 2,400 followers actively engaged, I'm confident I can reach my 60-book target and possibly exceed it. Marriage education is personal to me as I'm engaged and preparing for my own marriage."
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="approveAmbassador('JP001', 'Jean-Paul Kamga', 'JEANPAUL')">
+                            <i class="fas fa-check"></i> Approve Application
+                        </button>
+                        <button class="btn btn-reject" onclick="rejectAmbassador('JP001')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewFullApplication('JP001')">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sample Application 2 -->
+                <div class="application-item">
+                    <div class="application-header">
+                        <div class="applicant-info">
+                            <h3>Grace Ngufor</h3>
+                            <div class="applicant-meta">
+                                <span><i class="fas fa-envelope"></i> grace.ngufor@email.com</span>
+                                <span><i class="fas fa-phone"></i> +237 699 234 567</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Yaoundé, Centre</span>
+                                <span><i class="fas fa-calendar"></i> Applied 5 hours ago</span>
+                            </div>
+                        </div>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+
+                    <div class="application-details">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-share-nodes"></i> Social Media</h4>
+                            <p><span class="label">Facebook:</span> 5,200 friends</p>
+                            <p><span class="label">WhatsApp:</span> 15 active groups</p>
+                            <p><span class="label">Primary Platform:</span> WhatsApp</p>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-bullseye"></i> Commitment</h4>
+                            <p><span class="label">Target:</span> 90 books (181,000 FCFA)</p>
+                            <p><span class="label">Sales Experience:</span> Yes - Professional</p>
+                            <p><span class="label">Source:</span> WhatsApp</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-comment"></i> Motivation</h4>
+                        <div class="motivation-text">
+                            "As a professional network marketer with 8 years experience, I know how to sell and build communities. I'm passionate about marriage and family values, and I've seen firsthand the crisis in many homes. I want to be part of the solution. I'm committing to 90 books because I have a proven system and a network ready to support this. I see this as more than income—it's a ministry."
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="approveAmbassador('GN001', 'Grace Ngufor', 'GRACE')">
+                            <i class="fas fa-check"></i> Approve Application
+                        </button>
+                        <button class="btn btn-reject" onclick="rejectAmbassador('GN001')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewFullApplication('GN001')">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sample Application 3 -->
+                <div class="application-item">
+                    <div class="application-header">
+                        <div class="applicant-info">
+                            <h3>Samuel Tabe</h3>
+                            <div class="applicant-meta">
+                                <span><i class="fas fa-envelope"></i> samuel.tabe@email.com</span>
+                                <span><i class="fas fa-phone"></i> +237 650 345 678</span>
+                                <span><i class="fas fa-map-marker-alt"></i> Bamenda, Northwest</span>
+                                <span><i class="fas fa-calendar"></i> Applied 1 day ago</span>
+                            </div>
+                        </div>
+                        <span class="status-badge pending">Pending</span>
+                    </div>
+
+                    <div class="application-details">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-share-nodes"></i> Social Media</h4>
+                            <p><span class="label">LinkedIn:</span> 1,200 connections</p>
+                            <p><span class="label">Facebook:</span> 2,100 friends</p>
+                            <p><span class="label">Primary Platform:</span> In-Person/Events</p>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-bullseye"></i> Commitment</h4>
+                            <p><span class="label">Target:</span> 120 books (271,000 FCFA)</p>
+                            <p><span class="label">Sales Experience:</span> Yes - Professional salesperson</p>
+                            <p><span class="label">Source:</span> Friend/Family</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4><i class="fas fa-comment"></i> Motivation</h4>
+                        <div class="motivation-text">
+                            "I'm a church youth leader and marriage counselor working with couples regularly. I've wanted a resource like 'Sex By Design for Dummies' for years. My plan is to sell to church members, youth groups, and couples I counsel. I have access to 3 churches (500+ members each) and host quarterly marriage seminars. I'm confident in hitting 120 books through bulk orders from churches and corporate partnerships I've already cultivated."
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="approveAmbassador('ST001', 'Samuel Tabe', 'SAMUEL')">
+                            <i class="fas fa-check"></i> Approve Application
+                        </button>
+                        <button class="btn btn-reject" onclick="rejectAmbassador('ST001')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewFullApplication('ST001')">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approved Tab -->
+        <div id="approved-tab" class="tab-content">
+            <div class="no-applications">
+                <i class="fas fa-check-circle"></i>
+                <p>Approved ambassadors will appear here</p>
+            </div>
+        </div>
+
+        <!-- Rejected Tab -->
+        <div id="rejected-tab" class="tab-content">
+            <div class="no-applications">
+                <i class="fas fa-times-circle"></i>
+                <p>Rejected applications will appear here</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div class="modal" id="approvalModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('approvalModal')">&times;</span>
+            <h3><i class="fas fa-check-circle" style="color: #00b894;"></i> Approve Ambassador</h3>
+            
+            <p style="margin-bottom: 1.5rem; color: #636e72;">
+                Review the generated referral code and send approval email to the ambassador.
+            </p>
+
+            <div class="referral-code-display">
+                <div style="font-size: 0.9rem; color: #636e72; margin-bottom: 0.5rem;">Generated Referral Code:</div>
+                <div class="code" id="generatedCode">AMB-JEANPAUL-001</div>
+            </div>
+
+            <div class="form-group">
+                <label>Ambassador Name</label>
+                <input type="text" id="ambassadorName" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Email Subject</label>
+                <input type="text" id="emailSubject" value="🎉 Welcome to the Ambassador Program!">
+            </div>
+
+            <div class="form-group">
+                <label>Email Message</label>
+                <textarea id="emailMessage" rows="8">Congratulations! Your application has been approved.
+
+Your unique referral code: [CODE]
+Your tracking link: https://marriageeducation.com/sbd-campaign.html?ref=[CODE]
+
+Next Steps:
+1. Log in to your dashboard: ambassador-dashboard.html
+2. Download your marketing materials
+3. Start sharing your referral link
+4. Track your sales in real-time
+
+Target: 60 books = 90,000 FCFA commission
+Remember: You're building a movement, not just earning income.
+
+Welcome to the team!
+
+Best regards,
+Marriage Education Team</textarea>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-approve" onclick="confirmApproval()">
+                    <i class="fas fa-paper-plane"></i> Send Approval Email
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('approvalModal')">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.tab-btn').classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Generate referral code
+        function generateReferralCode(name) {
+            // Format: AMB-NAME-XXX
+            const cleanName = name.toUpperCase().replace(/[^A-Z]/g, '');
+            const randomNum = String(Math.floor(Math.random() * 900) + 100);
+            return `AMB-${cleanName}-${randomNum}`;
+        }
+
+        // Approve ambassador
+        function approveAmbassador(id, name, nameCode) {
+            const code = generateReferralCode(nameCode);
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('ambassadorName').value = name;
+            
+            const message = document.getElementById('emailMessage').value;
+            document.getElementById('emailMessage').value = message.replace(/\[CODE\]/g, code);
+            
+            document.getElementById('approvalModal').classList.add('active');
+        }
+
+        // Store current ambassador ID for approval
+        let currentAmbassadorId = null;
+
+        // Approve ambassador
+        function approveAmbassador(id, name, nameCode) {
+            currentAmbassadorId = id;
+            const code = generateReferralCode(nameCode);
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('ambassadorName').value = name;
+            
+            const message = document.getElementById('emailMessage').value;
+            document.getElementById('emailMessage').value = message.replace(/\[CODE\]/g, code);
+            
+            document.getElementById('approvalModal').classList.add('active');
+        }
+
+        // Confirm approval
+        async function confirmApproval() {
+            const code = document.getElementById('generatedCode').textContent;
+            const name = document.getElementById('ambassadorName').value;
+            
+            try {
+                // Update status in Firebase
+                await db.collection('ambassadors').doc(currentAmbassadorId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                alert(`✅ Ambassador approved!\n\nReferral Code: ${code}\n\nIn production, email would be sent to ${name}`);
+                
+                closeModal('approvalModal');
+                
+                // Refresh the applications list
+                await loadPendingApplications();
+                
+                // TODO: Send actual email via Firebase Functions or email service
+                // Email template:
+                // Subject: 🎉 Welcome to Marriage Education Ambassador Program!
+                // Body: Include code, login link, getting started guide
+                
+            } catch (error) {
+                console.error('Error approving ambassador:', error);
+                alert('❌ Error approving ambassador. Please try again.');
+            }
+        }
+
+        // Reject ambassador
+        async function rejectAmbassador(id) {
+            if (confirm('Are you sure you want to reject this application?')) {
+                try {
+                    await db.collection('ambassadors').doc(id).update({
+                        status: 'rejected',
+                        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    alert('❌ Application rejected. In production, notification email would be sent.');
+                    
+                    // Refresh the applications list
+                    await loadPendingApplications();
+                    
+                } catch (error) {
+                    console.error('Error rejecting ambassador:', error);
+                    alert('❌ Error rejecting application. Please try again.');
+                }
+            }
+        }
+
+        // View full application
+        function viewFullApplication(id) {
+            alert('Full application details for: ' + id);
+            // TODO: Open detailed view modal
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    
+    <script>
+        // Load pending applications from Firebase
+        async function loadPendingApplications() {
+            try {
+                const snapshot = await db.collection('ambassadors')
+                    .where('status', '==', 'pending')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                console.log(`✅ Loaded ${snapshot.size} pending applications`);
+                
+                // TODO: Update the DOM with real data
+                // For now, just log to verify it's working
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log('Pending:', data.firstName, data.lastName, data.email);
+                });
+                
+                // Update stats
+                const totalPending = snapshot.size;
+                
+                const approvedSnapshot = await db.collection('ambassadors')
+                    .where('status', '==', 'approved')
+                    .get();
+                
+                const totalApproved = approvedSnapshot.size;
+                
+                // Update stat cards
+                console.log('Stats:', { pending: totalPending, approved: totalApproved });
+                
+            } catch (error) {
+                console.error('Error loading applications:', error);
+            }
+        }
+        
+        // Load on page load
+        loadPendingApplications();
+        
+        // Refresh every 60 seconds
+        setInterval(loadPendingApplications, 60000);
+        
+        // Real-time listener for new applications
+        db.collection('ambassadors')
+            .where('status', '==', 'pending')
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        console.log('🔔 New application:', data.firstName, data.lastName);
+                        // TODO: Show notification or update UI
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
