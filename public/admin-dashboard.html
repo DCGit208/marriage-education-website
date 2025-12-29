@@ -1048,6 +1048,7 @@
                         <thead>
                             <tr>
                                 <th>Reference</th>
+                                <th>Type</th>
                                 <th>Customer</th>
                                 <th>Product</th>
                                 <th>Amount</th>
@@ -1058,7 +1059,7 @@
                         </thead>
                         <tbody id="paymentsTableBody">
                             <tr>
-                                <td colspan="7" class="loading">
+                                <td colspan="8" class="loading">
                                     <div class="spinner"></div>
                                     <p>Loading payments...</p>
                                 </td>
@@ -1584,7 +1585,7 @@
                     .get();
                 
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #636e72;">No pending payments</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #636e72;">No pending payments</td></tr>';
                     return;
                 }
                 
@@ -1593,12 +1594,30 @@
                     const data = doc.data();
                     const date = data.created_at ? new Date(data.created_at.seconds * 1000).toLocaleString() : 'N/A';
                     
+                    // Determine payment type badge
+                    let typeBadge = '<span class="badge badge-secondary">Book</span>';
+                    if (data.product_id === 'ambassador-registration' || data.type === 'ambassador') {
+                        typeBadge = '<span class="badge" style="background: #00b894;">🎯 Ambassador</span>';
+                    } else if (data.product_id === 'rd-registration' || data.type === 'rd') {
+                        typeBadge = '<span class="badge" style="background: #9333ea;">👑 RD</span>';
+                    }
+                    
+                    // Show RD code or ambassador code if available
+                    let additionalInfo = '';
+                    if (data.regional_director) {
+                        additionalInfo = `<br><small style="color: #9333ea;">👑 RD: ${data.regional_director}</small>`;
+                    }
+                    if (data.ambassador_code) {
+                        additionalInfo += `<br><small style="color: #00b894;">🎯 Code: ${data.ambassador_code}</small>`;
+                    }
+                    
                     html += `
                         <tr>
                             <td><code>${data.reference || doc.id}</code></td>
+                            <td>${typeBadge}</td>
                             <td>
                                 <strong>${data.email}</strong><br>
-                                <small>${data.phone || 'N/A'}</small>
+                                <small>${data.phone || 'N/A'}</small>${additionalInfo}
                             </td>
                             <td>${data.product_name || 'N/A'}</td>
                             <td><strong>${data.amount} ${data.currency || 'FCFA'}</strong></td>
@@ -1620,7 +1639,7 @@
                 
             } catch (error) {
                 console.error('Error loading payments:', error);
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d63031;">Error loading payments</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #d63031;">Error loading payments</td></tr>';
             }
         }
 

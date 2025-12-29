@@ -755,114 +755,45 @@
                 return;
             }
             
-            // Show loading state
-            const submitBtn = this.querySelector('.submit-btn');
-            const formElement = this;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            // Validate required fields
+            if (!data.firstName || !data.lastName || !data.email || !data.phone) {
+                alert('❌ Please fill in all required fields.');
+                return;
+            }
             
-            // Use setTimeout to ensure async operations work properly
-            setTimeout(async function() {
-                try {
-                    // Check Firebase is loaded
-                    if (typeof firebase === 'undefined' || typeof db === 'undefined') {
-                        console.warn('⚠️ Firebase not loaded, proceeding with email only');
-                    }
-                    
-                    console.log('📝 Starting submission...');
-                    console.log('Form data:', data);
-                    
-                    // Validate required fields
-                    if (!data.firstName || !data.lastName) {
-                        throw new Error('First name and last name are required');
-                    }
-                    
-                    // Generate ambassador code
-                    const code = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
-                    
-                    // Prepare complete data
-                    const completeData = {
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        fullName: data.firstName + ' ' + data.lastName,
-                        email: data.email,
-                        phone: data.phone,
-                        city: data.city,
-                        region: data.region,
-                        instagram: data.instagram || '',
-                        facebook: data.facebook || '',
-                        tiktok: data.tiktok || '',
-                        linkedin: data.linkedin || '',
-                        instagramFollowers: parseInt(data.instagramFollowers) || 0,
-                        facebookFollowers: parseInt(data.facebookFollowers) || 0,
-                        primaryPlatform: data.primaryPlatform,
-                        motivation: data.motivation,
-                        salesExperience: data.salesExperience,
-                        commitment: data.commitment,
-                        referralSource: data.referralSource || '',
-                        recruitedBy: data.recruitedBy || '',  // NEW: Track who recruited this ambassador
-                        referredBy: data.referredBy || '',    // Keep for recognition purposes
-                        code: code,
-                        status: 'pending',
-                        booksSold: 0,
-                        commissionEarned: 0,
-                        level: 'Starter',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    
-                    // Save to Firebase (if available)
-                    if (typeof db !== 'undefined') {
-                        console.log('📝 Saving to Firebase...');
-                        try {
-                            const docRef = await db.collection('ambassadors').add(completeData);
-                            console.log('✅ Saved to Firebase:', code);
-                        } catch (firebaseError) {
-                            console.warn('⚠️ Firebase save failed:', firebaseError.message);
-                            // Continue with email notification even if Firebase fails
-                        }
-                    }
-                    
-                    // Send email notification (REQUIRED)
-                    console.log('📧 Sending email to ambassadors@marriageducation.com...');
-                    // Submit to Firebase Cloud Functions
-                    const emailResponse = await fetch('https://us-central1-marriage-education.cloudfunctions.net/submitAmbassadorApplication', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(completeData)
-                    });
-                    
-                    if (!emailResponse.ok) {
-                        const errorText = await emailResponse.text();
-                        throw new Error('Email submission failed: ' + errorText);
-                    }
-                    
-                    const emailResult = await emailResponse.json();
-                    if (!emailResult.success) {
-                        console.error('❌ Email failed:', emailResult);
-                        throw new Error(emailResult.error || 'Email submission failed');
-                    }
-                    
-                    console.log('✅ Email sent successfully to:', emailResult.recipient);
-                    console.log('📧 Email details:', emailResult);
-                    
-                    // Show success modal
-                    document.getElementById('successModal').classList.add('active');
-                    
-                    // Reset form
-                    formElement.reset();
-                    
-                    // Update counter
-                    updateSpotsCounter();
-                    
-                } catch (error) {
-                    console.error('❌ Error:', error);
-                    alert('❌ Error: ' + error.message);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Application';
-                }
-            }, 100);
+            // Generate ambassador code
+            const ambCode = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
+            
+            // Store data in sessionStorage for payment page
+            sessionStorage.setItem('ambassadorData', JSON.stringify({
+                firstName: data.firstName,
+                lastName: data.lastName,
+                fullName: data.firstName + ' ' + data.lastName,
+                email: data.email,
+                phone: data.phone,
+                city: data.city,
+                region: data.region,
+                instagram: data.instagram || '',
+                facebook: data.facebook || '',
+                tiktok: data.tiktok || '',
+                linkedin: data.linkedin || '',
+                instagramFollowers: parseInt(data.instagramFollowers) || 0,
+                facebookFollowers: parseInt(data.facebookFollowers) || 0,
+                primaryPlatform: data.primaryPlatform,
+                motivation: data.motivation,
+                salesExperience: data.salesExperience,
+                commitment: data.commitment,
+                referralSource: data.referralSource || '',
+                recruitedBy: data.recruitedBy || '',
+                referredBy: data.referredBy || '',
+                code: ambCode
+            }));
+            
+            console.log('✅ Ambassador registration data prepared:', ambCode);
+            console.log('🔄 Redirecting to payment page...');
+            
+            // Redirect to payment page with ambassador type and code
+            window.location.href = `rd-payment.html?type=ambassador&code=${ambCode}&amount=15000`;
         });
 
         // Update spots counter from Firebase
