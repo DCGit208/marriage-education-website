@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador Login | Marriage Education</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .login-header p {
+            color: #636e72;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2d3436;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00b894;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            color: #636e72;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .alternative-actions {
+            text-align: center;
+        }
+
+        .alternative-actions a {
+            color: #00b894;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .alternative-actions a:hover {
+            color: #00a085;
+        }
+
+        .error-message {
+            background: #ff7675;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #00b894;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 2rem;
+            }
+
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Ambassador Login</h1>
+            <p>Access your dashboard and track your earnings</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="ambassadorCode">Ambassador Code</label>
+                <input 
+                    type="text" 
+                    id="ambassadorCode" 
+                    name="ambassadorCode" 
+                    placeholder="AMB-YOURNAME-XXX"
+                    required
+                    pattern="AMB-[A-Z]+-\d{3}"
+                    title="Format: AMB-NAME-123"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="your.email@example.com"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+            </button>
+        </form>
+
+        <div class="divider">OR</div>
+
+        <div class="alternative-actions">
+            <p>Don't have an account?</p>
+            <a href="ambassador-register.html">
+                <i class="fas fa-user-plus"></i> Become an Ambassador
+            </a>
+        </div>
+
+        <div class="alternative-actions" style="margin-top: 1rem;">
+            <p>Forgot your code?</p>
+            <a href="#" id="forgotCodeLink">
+                <i class="fas fa-envelope"></i> Email Me My Code
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        const errorMsg = document.getElementById('errorMessage');
+        const successMsg = document.getElementById('successMessage');
+
+        // Login form handler - API-based authentication
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('ambassadorCode').value.toUpperCase();
+            const email = document.getElementById('email').value.toLowerCase();
+            
+            const submitBtn = this.querySelector('.btn-login');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            
+            hideMessages();
+            
+            try {
+                // Verify ambassador stats from API
+                const response = await fetch(`https://marriageducation.com/api/ambassador-stats/${code}`);
+                
+                if (!response.ok) {
+                    throw new Error('Ambassador code not found. Please check your code or register.');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success || !data.ambassador) {
+                    throw new Error('Invalid ambassador code. Please try again.');
+                }
+                
+                // Store ambassador info in localStorage
+                localStorage.setItem('ambassadorCode', code);
+                localStorage.setItem('ambassadorEmail', email);
+                localStorage.setItem('ambassadorData', JSON.stringify(data.ambassador));
+                
+                // Show success
+                showSuccess('✅ Login successful! Redirecting to dashboard...');
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'ambassador/dashboard.html';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to Dashboard';
+            }
+        });
+
+        // Forgot code handler
+        document.getElementById('forgotCodeLink').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const email = prompt('Enter your email address:');
+            
+            if (!email) return;
+            
+            try {
+                // Find ambassador by email
+                const snapshot = await db.collection('ambassadors')
+                    .where('email', '==', email.toLowerCase())
+                    .get();
+                
+                if (snapshot.empty) {
+                    throw new Error('No ambassador found with this email address.');
+                }
+                
+                const ambassador = snapshot.docs[0].data();
+                
+                showSuccess(`✅ Your code is: ${ambassador.code}\n\n(In production, this would be sent via email)`);
+                
+                // TODO: Send email with code using Firebase Functions or email service
+                
+            } catch (error) {
+                console.error('Forgot code error:', error);
+                showError(error.message || 'Could not retrieve code. Please contact support.');
+            }
+        });
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        }
+
+        // Auto-fill code from URL parameter (if coming from approval email)
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('code');
+        if (codeParam) {
+            document.getElementById('ambassadorCode').value = codeParam;
+        }
+    </script>
+</body>
+</html>

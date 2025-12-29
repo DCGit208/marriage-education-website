@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Contact Us</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+        <a href="magazine.html">Magazine</a>
+        <a href="courses.html">Courses</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="contact">
+    <div class="container">
+      <h2>We'd Love to Hear From You</h2>
+      <p>Have questions about our courses, books, or coaching? Want to share your success story? We're here to help and would love to connect with you.</p>
+      
+      <form action="mailto:info@marriageducation.com" method="POST" enctype="text/plain">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required />
+        
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" required />
+        
+        <label for="subject">Subject:</label>
+        <select id="subject" name="subject" required>
+          <option value="">Please select a topic</option>
+          <option value="General Inquiry">General Inquiry</option>
+          <option value="Course Information">Course Information</option>
+          <option value="Book Orders">Book Orders</option>
+          <option value="Coaching Inquiry">Coaching Inquiry</option>
+          <option value="Technical Support">Technical Support</option>
+          <option value="Partnership/Media">Partnership/Media</option>
+        </select>
+        
+        <label for="message">Your Message:</label>
+        <textarea id="message" name="message" rows="6" placeholder="Please share your questions, comments, or how we can help you..." required></textarea>
+        
+        <button type="submit">Send Message</button>
+      </form>
+      
+      <div class="contact-info">
+        <h3>Other Ways to Reach Us</h3>
+        <div class="contact-methods">
+          <div class="contact-method">
+            <h4>📧 Email Us</h4>
+            <p><strong>General Inquiries:</strong> info@marriageducation.com</p>
+            <p><strong>Course & Training:</strong> train@marriageducation.com</p>
+            <p><strong>Book Orders:</strong> orders@marriageducation.com</p>
+          </div>
+          
+          <div class="contact-method">
+            <h4>⏰ Response Time</h4>
+            <p>We typically respond to all inquiries within 24-48 hours during business days.</p>
+          </div>
+          
+          <div class="contact-method">
+            <h4>📚 Free Resources</h4>
+            <p>While you're here, don't forget to download our free guide: "5 Secrets to Lasting Intimacy"</p>
+            <a href="mailto:info@marriageducation.com?subject=Free Guide Request" class="buy-button">Request Free Guide</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Marriage Education</h4>
+          <p>Transforming relationships through proven methodologies and deep wisdom.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="magazine.html">Magazine</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p>Email: info@marriageducation.com</p>
+          <p>Training: train@marriageducation.com</p>
+          <p>Orders: orders@marriageducation.com</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Marriage Education. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
