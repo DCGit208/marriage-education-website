@@ -186,7 +186,7 @@
                     name="ambassadorCode" 
                     placeholder="AMB-YOURNAME-XXXX"
                     required
-                    pattern="AMB-[A-Z]+-\d{4}"
+                    pattern="AMB-[A-Z]+-[0-9]{4}"
                     title="Format: AMB-NAME-1234"
                 >
             </div>
@@ -280,9 +280,9 @@
                 // Show success
                 showSuccess('✅ Login successful! Redirecting to dashboard...');
                 
-                // Redirect to dashboard
+                // Redirect to dashboard (absolute path from public root)
                 setTimeout(() => {
-                    window.location.href = 'ambassador/dashboard.html';
+                    window.location.href = '/ambassador/dashboard.html';
                 }, 1500);
                 
             } catch (error) {
