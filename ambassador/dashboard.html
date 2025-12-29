@@ -1282,7 +1282,7 @@
                 
                 if (!ambassadorCode) {
                     alert('❌ Please log in to view your dashboard');
-                    window.location.href = '../ambassador-login.html';
+                    window.location.href = '/ambassador-login.html';
                     return;
                 }
                 
@@ -1325,7 +1325,7 @@
             } catch (error) {
                 console.error('Error loading ambassador data:', error);
                 alert('Failed to load dashboard data. Please try logging in again.');
-                window.location.href = '../ambassador-login.html';
+                window.location.href = '/ambassador-login.html';
             }
         }
         
