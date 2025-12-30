@@ -53,6 +53,18 @@
           }
         ]
       }
+    ],
+    "redirects": [
+      {
+        "source": "/ambassador-login.html",
+        "destination": "https://marriage-education.web.app/ambassador-login.html",
+        "type": 302
+      },
+      {
+        "source": "/ambassador/**",
+        "destination": "https://marriage-education.web.app/ambassador/:splat",
+        "type": 302
+      }
     ]
   },
   "storage": {
