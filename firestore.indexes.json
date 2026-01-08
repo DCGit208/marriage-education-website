@@ -1,13 +1,6 @@
 {
   "indexes": [
     {
-      "collectionGroup": "ambassadors",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "sales_count", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "enrollments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -38,6 +31,23 @@
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "admin_notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "regional_directors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "team_books_sold", "order": "DESCENDING" }
       ]
     }
   ],
