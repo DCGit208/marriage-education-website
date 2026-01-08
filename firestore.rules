@@ -62,5 +62,11 @@ service cloud.firestore {
       allow create: if true; // Anyone can register a code
       allow update, delete: if request.auth != null && request.auth.token.admin == true;
     }
+    
+    // Admin Notifications - Allow public read/write for admin dashboard (TEMPORARY: no auth yet)
+    match /admin_notifications/{notificationId} {
+      allow read: if true; // TEMPORARY: Allow reads for admin dashboard
+      allow write: if true; // TEMPORARY: Allow writes for marking as paid
+    }
   }
 }
