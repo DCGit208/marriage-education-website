@@ -705,7 +705,7 @@
                 // Get all ambassadors recruited by this RD
                 const snapshot = await db.collection('ambassadors')
                     .where('rdCode', '==', rdCode)
-                    .where('status', '==', 'approved')
+                    .where('status', 'in', ['active', 'approved'])
                     .get();
                 
                 if (snapshot.empty) {

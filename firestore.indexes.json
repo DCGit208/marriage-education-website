@@ -1,6 +1,13 @@
 {
   "indexes": [
     {
+      "collectionGroup": "ambassadors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sales_count", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "enrollments",
       "queryScope": "COLLECTION",
       "fields": [
