@@ -263,12 +263,15 @@
                 const ambassadorData = ambassadorDoc.data();
                 
                 // Verify email matches
+                if (!ambassadorData.email) {
+                    throw new Error('Your account is missing email information. Please contact admin.');
+                }
                 if (ambassadorData.email.toLowerCase() !== email) {
                     throw new Error('Email does not match the ambassador code. Please check your credentials.');
                 }
                 
-                // Check if account is active
-                if (ambassadorData.status !== 'active') {
+                // Check if account is active or approved
+                if (ambassadorData.status !== 'active' && ambassadorData.status !== 'approved') {
                     throw new Error('Your account is pending approval. Please wait for admin confirmation.');
                 }
                 

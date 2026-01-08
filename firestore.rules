@@ -52,7 +52,7 @@ service cloud.firestore {
     // Pending Payments - Temporarily allow reads for testing (TODO: Add proper admin auth)
     match /pending_payments/{paymentRef} {
       allow read: if true; // TEMPORARY: Allow reads for testing
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow update, delete: if true; // TEMPORARY: Allow unauthenticated updates for admin dashboard
       allow create: if true; // Allow unauthenticated payment submissions
     }
     

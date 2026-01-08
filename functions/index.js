@@ -63,24 +63,41 @@ try {
 // ========== HELPER FUNCTIONS ==========
 
 /**
+ * Escape special characters for Telegram Markdown
+ */
+function escapeMarkdown(text) {
+  // Escape special Markdown characters: _ * [ ] ( ) ~ ` > # + - = | { } . !
+  return String(text).replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+}
+
+/**
  * Send Telegram message to admin
  */
-async function sendTelegram(message) {
+async function sendTelegram(message, useMarkdown = false) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     console.log('[Telegram] Not configured');
     return false;
   }
   
   try {
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const payload = {
       chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: 'Markdown'
-    });
+      text: message
+    };
+    
+    // Only add parse_mode if explicitly requested
+    if (useMarkdown) {
+      payload.parse_mode = 'Markdown';
+    }
+    
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, payload);
     console.log('[Telegram] Message sent');
     return true;
   } catch (error) {
     console.error('[Telegram] Error:', error.message);
+    if (error.response) {
+      console.error('[Telegram] Response:', error.response.data);
+    }
     return false;
   }
 }
@@ -705,13 +722,13 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       await sendAdminPaymentNotificationSMTP(paymentData);
     }
 
-    // Send Telegram notification for new pending payment
+    // Send Telegram notification for new pending payment (plain text)
     if (TELEGRAM_BOT_TOKEN) {
       const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' : 
                        type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
-      const pendingMsg = `🔔 *New Payment Pending Approval*\n\n` +
-        `📋 Reference: \`${reference}\`\n` +
-        `📚 Type: *${typeLabel}*\n` +
+      const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
+        `📋 Reference: ${reference}\n` +
+        `📚 Type: ${typeLabel}\n` +
         `📦 Product: ${product_name}\n` +
         `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
         `👤 Customer: ${email}\n` +
@@ -721,9 +738,9 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
         `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
         `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
         `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
-        `👉 [Review & Approve](https://marriageducation.com/public/admin-dashboard.html)`;
+        `👉 Review: https://marriageducation.com/public/admin-dashboard.html`;
       
-      await sendTelegram(pendingMsg);
+      await sendTelegram(pendingMsg, false);
     }
 
     return {
@@ -770,15 +787,15 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     if (payment.product_id === 'rd-registration' && payment.rd_code) {
       await activateRD(payment);
       
-      // Send Telegram notification for RD registration
+      // Send Telegram notification for RD registration (plain text)
       if (TELEGRAM_BOT_TOKEN) {
-        const rdMsg = `✅ *RD Registration Approved*\n\n` +
-          `👑 Code: \`${payment.rd_code}\`\n` +
+        const rdMsg = `✅ RD REGISTRATION APPROVED\n\n` +
+          `👑 Code: ${payment.rd_code}\n` +
           `👤 Name: ${payment.name || 'N/A'}\n` +
           `📧 Email: ${payment.email}\n` +
           `📱 Phone: ${payment.phone}\n` +
           `💰 Fee: ${payment.amount} ${payment.currency}`;
-        await sendTelegram(rdMsg);
+        await sendTelegram(rdMsg, false);
       }
 
       return {
@@ -824,14 +841,14 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
       downloadUrl
     );
 
-    // Send comprehensive Telegram notification to admin
+    // Send comprehensive Telegram notification to admin (plain text)
     if (TELEGRAM_BOT_TOKEN) {
       const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
-      const adminMsg = `✅ *Payment Approved & Sent*\n\n` +
-        `📋 Reference: \`${payment.reference}\`\n` +
+      const adminMsg = `✅ PAYMENT APPROVED & SENT\n\n` +
+        `📋 Reference: ${payment.reference}\n` +
         `👤 Customer: ${payment.email}\n` +
         `📱 Phone: ${payment.phone || 'N/A'}\n` +
-        `📚 Product: *${payment.product_name}*\n` +
+        `📚 Product: ${payment.product_name}\n` +
         `💰 Amount: ${payment.amount} ${payment.currency}\n\n` +
         `📧 Email: ${emailSent ? '✅' : '❌'}\n` +
         `${payment.ambassador_ref ? `🎯 Ambassador: ${payment.ambassador_ref}\n` : ''}` +
@@ -839,7 +856,7 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
         `${payment.rd_code ? `👑 RD: ${payment.rd_code}\n` : ''}\n` +
         `📥 Download (expires ${expiryDate}):\n${downloadUrl}`;
       
-      await sendTelegram(adminMsg);
+      await sendTelegram(adminMsg, false);
       console.log('[Telegram] Admin notification sent');
     }
 
@@ -853,12 +870,341 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('approvePayment error:', error);
     
-    // Send error notification to admin
+    // Send error notification to admin (plain text)
     if (TELEGRAM_BOT_TOKEN) {
-      await sendTelegram(`❌ *Payment Approval Error*\n\nReference: \`${data.reference}\`\nError: ${error.message}`);
+      await sendTelegram(`❌ PAYMENT APPROVAL ERROR\n\nReference: ${data.reference}\nError: ${error.message}`, false);
     }
     
     throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Reject Payment (Admin Only)
+ */
+/**
+ * Reject Payment (Admin Only) - HTTP endpoint (unauthenticated)
+ */
+exports.rejectPaymentHttp = functions.https.onRequest(async (req, res) => {
+  // Enable CORS for all requests
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('[REJECT] HTTP Function called with data:', req.body);
+    const { reference, reason } = req.body;
+
+    if (!reference) {
+      return res.status(400).json({ error: 'Payment reference required' });
+    }
+
+    console.log(`[REJECT] Fetching payment document: ${reference}`);
+    const paymentRef = db.collection('pending_payments').doc(reference);
+    const paymentDoc = await paymentRef.get();
+
+    if (!paymentDoc.exists) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    console.log(`[REJECT] Payment found. Current status: ${paymentDoc.data().status}`);
+
+    // Update payment status to rejected
+    console.log(`[REJECT] Updating payment ${reference} to rejected status`);
+    await paymentRef.update({
+      status: 'rejected',
+      rejection_reason: reason || 'No reason provided',
+      rejected_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`[REJECT] Payment ${reference} successfully updated to rejected`);
+
+    // Send Telegram notification
+    if (TELEGRAM_BOT_TOKEN) {
+      const payment = paymentDoc.data();
+      const rejectMsg = `❌ PAYMENT REJECTED\n\n` +
+        `📋 Reference: ${reference}\n` +
+        `👤 Customer: ${payment.email}\n` +
+        `💰 Amount: ${payment.amount} ${payment.currency}\n` +
+        `📝 Reason: ${reason || 'Not specified'}`;
+      
+      await sendTelegram(rejectMsg, false);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment rejected successfully'
+    });
+  } catch (error) {
+    console.error('[REJECT] Error:', error.code, error.message);
+    console.error('[REJECT] Full error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Reject Payment (Admin Only) - Cloud Function version (keeping for backwards compatibility)
+ */
+exports.rejectPayment = functions.https.onCall(async (data, context) => {
+  // TODO: Re-enable admin authentication after implementing Firebase Auth in admin panel
+  // TEMPORARY: Disabled for testing
+  // if (!context.auth || !context.auth.token.admin) {
+  //   throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+  // }
+
+  try {
+    console.log('[REJECT] Function called with data:', data);
+    const { reference, reason } = data;
+
+    if (!reference) {
+      throw new functions.https.HttpsError('invalid-argument', 'Payment reference required');
+    }
+
+    console.log(`[REJECT] Fetching payment document: ${reference}`);
+    const paymentRef = db.collection('pending_payments').doc(reference);
+    const paymentDoc = await paymentRef.get();
+
+    if (!paymentDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Payment not found');
+    }
+
+    console.log(`[REJECT] Payment found. Current status: ${paymentDoc.data().status}`);
+
+    // Update payment status to rejected
+    console.log(`[REJECT] Updating payment ${reference} to rejected status`);
+    await paymentRef.update({
+      status: 'rejected',
+      rejection_reason: reason || 'No reason provided',
+      rejected_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log(`[REJECT] Payment ${reference} successfully updated to rejected`);
+
+    // Send Telegram notification
+    if (TELEGRAM_BOT_TOKEN) {
+      const payment = paymentDoc.data();
+      const rejectMsg = `❌ PAYMENT REJECTED\n\n` +
+        `📋 Reference: ${reference}\n` +
+        `👤 Customer: ${payment.email}\n` +
+        `💰 Amount: ${payment.amount} ${payment.currency}\n` +
+        `📝 Reason: ${reason || 'Not specified'}`;
+      
+      await sendTelegram(rejectMsg, false);
+    }
+
+    return {
+      success: true,
+      message: 'Payment rejected successfully'
+    };
+  } catch (error) {
+    console.error('[REJECT] Error:', error.code, error.message);
+    console.error('[REJECT] Full error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Mark RD Recruitment Payment as Paid (Admin Only)
+ */
+exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
+  try {
+    const { notification_id, rd_code, amount } = data;
+
+    console.log(`[RD PAYMENT] Marking payment as paid:`, { notification_id, rd_code, amount });
+
+    // Update notification status
+    await db.collection('admin_notifications').doc(notification_id).update({
+      status: 'paid',
+      paid_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update RD's pending balance
+    const rdRef = db.collection('regional_directors').doc(rd_code);
+    const rdDoc = await rdRef.get();
+    
+    if (rdDoc.exists) {
+      await rdRef.update({
+        recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
+        recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update recruitment_history status
+      const rdData = rdDoc.data();
+      const recruitmentHistory = rdData.recruitment_history || [];
+      const updatedHistory = recruitmentHistory.map(entry => {
+        if (entry.status === 'pending' && entry.amount === amount) {
+          return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
+        }
+        return entry;
+      });
+
+      await rdRef.update({
+        recruitment_history: updatedHistory
+      });
+
+      console.log(`[RD PAYMENT] ${rd_code} payment marked as paid: ${amount} FCFA`);
+
+      // Send Telegram confirmation
+      if (TELEGRAM_BOT_TOKEN) {
+        const remainingPending = (rdData.recruitment_bonus_pending || 0) - amount;
+        const telegramMsg = `✅ RD PAYMENT MARKED AS PAID\n\n` +
+          `RD: ${rd_code}\n` +
+          `Name: ${rdData.name || 'Unknown'}\n` +
+          `Amount Paid: ${amount.toLocaleString()} FCFA\n` +
+          `Remaining Pending: ${remainingPending.toLocaleString()} FCFA`;
+        
+        await sendTelegram(telegramMsg, false);
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Payment marked as paid successfully'
+    };
+  } catch (error) {
+    console.error('[RD PAYMENT] Error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+/**
+ * Fix All Ambassador Statuses to 'active' (Admin utility)
+ */
+exports.fixAllAmbassadorStatuses = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  
+  try {
+    console.log('[STATUS-FIX] Starting ambassador status fix to active...');
+    
+    const ambassadorsSnapshot = await db.collection('ambassadors').get();
+    console.log(`[STATUS-FIX] Found ${ambassadorsSnapshot.size} ambassadors`);
+    
+    let updated = 0;
+    let alreadyActive = 0;
+    const statusList = {};
+    
+    for (const doc of ambassadorsSnapshot.docs) {
+      const ambassador = doc.data();
+      const code = doc.id;
+      const currentStatus = ambassador.status || 'no-status';
+      
+      // Track status distribution
+      statusList[currentStatus] = (statusList[currentStatus] || 0) + 1;
+      
+      if (currentStatus === 'active') {
+        alreadyActive++;
+        continue;
+      }
+      
+      // Update to 'active'
+      await db.collection('ambassadors').doc(code).update({
+        status: 'active',
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      console.log(`[STATUS-FIX] ${code}: ${currentStatus} → active`);
+      updated++;
+    }
+    
+    const result = {
+      success: true,
+      total: ambassadorsSnapshot.size,
+      updated: updated,
+      alreadyActive: alreadyActive,
+      statusDistribution: statusList
+    };
+    
+    console.log('[STATUS-FIX] Complete:', result);
+    return res.status(200).json(result);
+    
+  } catch (error) {
+    console.error('[STATUS-FIX] Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Fix Missing Email Fields in Ambassador Records (One-time admin utility)
+ */
+exports.fixAmbassadorEmails = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  
+  try {
+    console.log('[FIX] Starting ambassador email fix...');
+    
+    // Get all ambassadors
+    const ambassadorsSnapshot = await db.collection('ambassadors').get();
+    console.log(`[FIX] Found ${ambassadorsSnapshot.size} ambassadors`);
+    
+    let fixed = 0;
+    let alreadyHaveEmail = 0;
+    let noPaymentFound = 0;
+    
+    for (const doc of ambassadorsSnapshot.docs) {
+      const ambassador = doc.data();
+      const code = doc.id;
+      
+      if (ambassador.email) {
+        alreadyHaveEmail++;
+        continue;
+      }
+      
+      console.log(`[FIX] ${code} missing email, searching payments...`);
+      
+      // Find corresponding payment
+      const paymentsSnapshot = await db.collection('pending_payments')
+        .where('ambassador_code', '==', code)
+        .limit(1)
+        .get();
+      
+      if (paymentsSnapshot.empty) {
+        console.log(`[FIX] ${code} - No payment found`);
+        noPaymentFound++;
+        continue;
+      }
+      
+      const payment = paymentsSnapshot.docs[0].data();
+      
+      if (payment.email) {
+        await db.collection('ambassadors').doc(code).update({
+          email: payment.email,
+          phone: payment.phone || '',
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`[FIX] ${code} - Added email: ${payment.email}`);
+        fixed++;
+      }
+    }
+    
+    const result = {
+      success: true,
+      total: ambassadorsSnapshot.size,
+      fixed: fixed,
+      alreadyHaveEmail: alreadyHaveEmail,
+      noPaymentFound: noPaymentFound
+    };
+    
+    console.log('[FIX] Complete:', result);
+    return res.status(200).json(result);
+    
+  } catch (error) {
+    console.error('[FIX] Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -957,7 +1303,10 @@ async function activateAmbassador(payment) {
     ...ambassadorData,
     ambassadorCode: ambassadorCode,
     code: ambassadorCode,  // For consistency with queries
-    status: 'active',
+    email: payment.email,  // Ensure email is included for login
+    phone: payment.phone,  // Ensure phone is included
+    rdCode: payment.regional_director || '',  // Store RD code for team queries
+    status: 'active',  // Both old and new login pages accept 'active'
     booksSold: 0,
     commissionEarned: 0,
     level: 'Starter',
@@ -976,11 +1325,62 @@ async function activateAmbassador(payment) {
       const rdDoc = await rdRef.get();
       
       if (rdDoc.exists) {
+        const recruitmentBonus = 1500; // 10% of 15,000 FCFA signup fee
+        
+        // Update RD with recruitment bonus
         await rdRef.update({
+          downline_count: admin.firestore.FieldValue.increment(1),
           team_ambassadors: admin.firestore.FieldValue.increment(1),
+          recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
+          recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
+          recruitment_count: admin.firestore.FieldValue.increment(1),
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log(`[RD] Updated ${payment.regional_director} ambassador count`);
+        
+        // Add to recruitment history
+        const rdData = rdDoc.data();
+        const recruitmentHistory = rdData.recruitment_history || [];
+        recruitmentHistory.push({
+          ambassador_code: ambassadorCode,
+          ambassador_name: ambassadorData.fullName,
+          amount: recruitmentBonus,
+          date: new Date().toISOString(),
+          status: 'pending'
+        });
+        
+        await rdRef.update({
+          recruitment_history: recruitmentHistory
+        });
+        
+        console.log(`[RD] Updated ${payment.regional_director} - earned ${recruitmentBonus} FCFA recruitment bonus`);
+        
+        // Create admin notification for RD payment
+        await db.collection('admin_notifications').add({
+          type: 'rd_recruitment_bonus',
+          rd_code: payment.regional_director,
+          rd_name: rdData.name || 'Unknown',
+          ambassador_code: ambassadorCode,
+          ambassador_name: ambassadorData.fullName,
+          amount: recruitmentBonus,
+          status: 'pending',
+          created_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Send Telegram notification to admin about RD recruitment bonus
+        if (TELEGRAM_BOT_TOKEN) {
+          const rdTotalPending = (rdData.recruitment_bonus_pending || 0) + recruitmentBonus;
+          const rdMsg = `💰 RD RECRUITMENT BONUS\n\n` +
+            `RD: ${payment.regional_director}\n` +
+            `Name: ${rdData.name || 'Unknown'}\n` +
+            `New Ambassador: ${ambassadorCode}\n` +
+            `Ambassador Name: ${ambassadorData.fullName}\n` +
+            `Bonus: 1,500 FCFA\n\n` +
+            `RD Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
+            `👉 Admin Dashboard: https://marriageducation.com/public/admin-dashboard.html`;
+          
+          await sendTelegram(rdMsg, false);
+          console.log('[Telegram] RD recruitment bonus notification sent');
+        }
       }
     } catch (error) {
       console.error('Error updating RD stats:', error);
@@ -1013,8 +1413,8 @@ async function activateAmbassador(payment) {
     const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
     const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
     
-    const msg = `✅ *Ambassador Registration Approved*\n\n` +
-      `🎯 Code: \`${ambassadorCode}\`\n` +
+    const msg = `✅ AMBASSADOR REGISTRATION APPROVED\n\n` +
+      `🎯 Code: ${ambassadorCode}\n` +
       `👤 Name: ${ambassadorData.fullName}\n` +
       `📧 Email: ${payment.email}\n` +
       `📱 Phone: ${payment.phone}\n` +
@@ -1024,7 +1424,7 @@ async function activateAmbassador(payment) {
       `🔐 Dashboard: https://marriage-education.web.app/ambassador-login.html\n\n` +
       `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
     
-    await sendTelegram(msg);
+    await sendTelegram(msg, false);
   }
   
   console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
@@ -1757,18 +2157,19 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
       }
     }
     
-    // Send Telegram notification
+    // Send Telegram notification (plain text for reliability)
     try {
       await sendTelegram(
-        `🎯 *NEW AMBASSADOR APPLICATION*\n\n` +
-        `*Code:* ${data.code}\n` +
-        `*Name:* ${data.fullName}\n` +
-        `*Email:* ${data.email}\n` +
-        `*Phone:* ${data.phone}\n` +
-        `*Location:* ${data.city}, ${data.region}\n` +
-        `*Platform:* ${data.primaryPlatform}\n` +
-        `*Status:* Pending Approval\n\n` +
-        `[Review Application](https://marriageducation.com/admin/ambassador-applications.html)`
+        `🎯 NEW AMBASSADOR APPLICATION\n\n` +
+        `Code: ${data.code}\n` +
+        `Name: ${data.fullName}\n` +
+        `Email: ${data.email}\n` +
+        `Phone: ${data.phone}\n` +
+        `Location: ${data.city}, ${data.region}\n` +
+        `Platform: ${data.primaryPlatform}\n` +
+        `Status: Pending Approval\n\n` +
+        `Review: https://marriageducation.com/admin/ambassador-applications.html`,
+        false // Don't use Markdown
       );
       console.log('[Ambassador] Telegram notification sent');
     } catch (telegramError) {

@@ -1034,6 +1034,39 @@
             <div class="section" id="payments">
                 <h1 style="margin-bottom: 2rem;">Payment Approval Center</h1>
                 
+                <!-- RD Recruitment Bonuses -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header">
+                        <h2>🎯 RD Recruitment Bonuses (Immediate Payment Required)</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadRDPaymentsTable()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>RD Code</th>
+                                <th>RD Name</th>
+                                <th>New Ambassador</th>
+                                <th>Ambassador Name</th>
+                                <th>Bonus Amount</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rdPaymentsTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <div class="spinner"></div>
+                                    <p>Loading RD payments...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
                 <div class="table-card">
                     <div class="table-header">
                         <h2>Pending Payments</h2>
@@ -1261,7 +1294,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="../js/firebase-config.js"></script>
+    <script src="/js/firebase-config.js"></script>
 
     <script>
         // Mobile Menu Toggle
@@ -1431,14 +1464,24 @@
                 });
                 
                 // Get ambassadors count
-                const ambassadorsSnapshot = await db.collection('ambassadors').get();
+                let ambassadorCount = 0;
+                try {
+                    const ambassadorsSnapshot = await db.collection('ambassadors').get();
+                    ambassadorCount = ambassadorsSnapshot.size;
+                    console.log('[Dashboard] Ambassadors loaded:', ambassadorCount);
+                } catch (ambassadorError) {
+                    console.error('[Dashboard] Error loading ambassadors:', ambassadorError);
+                    ambassadorCount = 0;
+                }
                 
                 // Update stats
                 document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString();
                 document.getElementById('totalSales').textContent = totalSales;
-                document.getElementById('totalAmbassadors').textContent = ambassadorsSnapshot.size;
+                document.getElementById('totalAmbassadors').textContent = ambassadorCount;
                 document.getElementById('pendingPayments').textContent = paymentsSnapshot.size;
                 document.getElementById('notificationCount').textContent = paymentsSnapshot.size;
+                
+                console.log('[Dashboard] Stats updated - Revenue:', totalRevenue, 'Sales:', totalSales, 'Ambassadors:', ambassadorCount);
                 
                 // Load charts
                 loadRevenueChart();
@@ -1447,17 +1490,29 @@
                 // Load activity feed
                 loadActivityFeed();
                 
+                // Load ambassadors table
+                loadAmbassadorsTable();
+                
+                // Load RD payments table
+                loadRDPaymentsTable();
+                
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
         }
 
         // Load Revenue Chart
+        let revenueChartInstance = null;
         function loadRevenueChart() {
             const ctx = document.getElementById('revenueChart');
             if (!ctx) return;
             
-            new Chart(ctx, {
+            // Destroy existing chart if it exists
+            if (revenueChartInstance) {
+                revenueChartInstance.destroy();
+            }
+            
+            revenueChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -1492,11 +1547,17 @@
         }
 
         // Load Products Chart
+        let productsChartInstance = null;
         function loadProductsChart() {
             const ctx = document.getElementById('productsChart');
             if (!ctx) return;
             
-            new Chart(ctx, {
+            // Destroy existing chart if it exists
+            if (productsChartInstance) {
+                productsChartInstance.destroy();
+            }
+            
+            productsChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['SBD Dummies', 'Complete Library', 'Arts of Marriage', 'Other'],
@@ -1570,6 +1631,80 @@
             } catch (error) {
                 console.error('Error loading activity:', error);
                 feed.innerHTML = '<p style="text-align: center; color: #d63031;">Error loading activity</p>';
+            }
+        }
+
+        // Load RD Payments Table
+        async function loadRDPaymentsTable() {
+            try {
+                console.log('[Dashboard] Loading RD payments table...');
+                const snapshot = await db.collection('admin_notifications')
+                    .where('type', '==', 'rd_recruitment_bonus')
+                    .where('status', '==', 'pending')
+                    .orderBy('created_at', 'desc')
+                    .get();
+                
+                const tbody = document.getElementById('rdPaymentsTableBody');
+                
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#636e72;"><i class="fas fa-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>No pending RD payments</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.created_at ? data.created_at.toDate().toLocaleString() : 'N/A';
+                    
+                    html += `
+                        <tr>
+                            <td><strong style="color:var(--primary);">${data.rd_code || 'N/A'}</strong></td>
+                            <td>${data.rd_name || 'N/A'}</td>
+                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span></td>
+                            <td>${data.ambassador_name || 'N/A'}</td>
+                            <td><strong style="color:var(--success);font-size:1.1rem;">${(data.amount || 0).toLocaleString()} FCFA</strong></td>
+                            <td style="font-size:0.85rem;color:#636e72;">${date}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="markRDPaymentPaid('${doc.id}', '${data.rd_code}', ${data.amount})" title="Mark as Paid">
+                                    <i class="fas fa-check"></i> Pay
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+                console.log('[Dashboard] RD payments table loaded:', snapshot.size);
+            } catch (error) {
+                console.error('[Dashboard] Error loading RD payments:', error);
+                const tbody = document.getElementById('rdPaymentsTableBody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> Error loading RD payments</td></tr>';
+            }
+        }
+
+        async function markRDPaymentPaid(notificationId, rdCode, amount) {
+            if (!confirm(`Mark ${amount.toLocaleString()} FCFA payment to ${rdCode} as PAID?`)) {
+                return;
+            }
+            
+            try {
+                // Call Cloud Function to mark as paid
+                const markRDPaymentPaidFn = firebase.functions().httpsCallable('markRDPaymentPaid');
+                const result = await markRDPaymentPaidFn({ 
+                    notification_id: notificationId,
+                    rd_code: rdCode,
+                    amount: amount
+                });
+                
+                if (result.data.success) {
+                    showAlert('✅ Payment marked as paid!', 'success');
+                    loadRDPaymentsTable();
+                } else {
+                    showAlert('❌ Failed to mark payment as paid', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking payment as paid:', error);
+                showAlert('❌ Error: ' + error.message, 'error');
             }
         }
 
@@ -1669,21 +1804,42 @@
 
         // Reject Payment
         async function rejectPayment(paymentId) {
-            const reason = prompt('Reason for rejection:');
-            if (!reason) return;
+            const reason = prompt('Reason for rejection (optional):');
+            if (reason === null) return; // User clicked cancel
+            
+            if (!confirm(`Reject payment ${paymentId}?`)) return;
             
             try {
-                await db.collection('pending_payments').doc(paymentId).update({
-                    status: 'rejected',
-                    rejection_reason: reason,
-                    rejected_at: firebase.firestore.FieldValue.serverTimestamp()
+                console.log('[Admin] Calling rejectPaymentHttp with:', { reference: paymentId, reason });
+                const response = await fetch('https://us-central1-marriage-education.cloudfunctions.net/rejectPaymentHttp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reference: paymentId,
+                        reason: reason || 'No reason provided'
+                    })
                 });
                 
-                alert('✅ Payment rejected');
-                loadPaymentsTable();
-                loadDashboardData();
+                const result = await response.json();
+                console.log('[Admin] rejectPaymentHttp response:', result);
+                
+                if (!response.ok) {
+                    alert('❌ Error: ' + (result.error || result.message || 'Unknown error'));
+                    return;
+                }
+                
+                if (result.success) {
+                    alert('✅ Payment rejected');
+                    loadPaymentsTable();
+                    loadDashboardData();
+                } else {
+                    alert('❌ Error: ' + (result.error || result.message || 'Unknown error'));
+                }
             } catch (error) {
-                console.error('Error rejecting payment:', error);
+                console.error('[Admin] Error rejecting payment:', error);
+                console.error('[Admin] Error message:', error.message);
                 alert('❌ Error: ' + error.message);
             }
         }
@@ -1818,21 +1974,26 @@
             
             try {
                 const snapshot = await db.collection('ambassadors')
-                    .orderBy('sales_count', 'desc')
                     .get();
                 
                 if (snapshot.empty) {
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #636e72;">No ambassadors yet</td></tr>';
-                    leaderboardBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #636e72;">No data yet</td></tr>';
+                    if (leaderboardBody) leaderboardBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #636e72;">No data yet</td></tr>';
                     return;
                 }
+                
+                // Sort by sales count in JavaScript
+                const ambassadors = [];
+                snapshot.forEach(doc => {
+                    ambassadors.push({ id: doc.id, ...doc.data() });
+                });
+                ambassadors.sort((a, b) => (b.sales_count || 0) - (a.sales_count || 0));
                 
                 let html = '';
                 let leaderboardHtml = '';
                 let rank = 1;
                 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                ambassadors.forEach(data => {
                     
                     // Leaderboard (top 10)
                     if (rank <= 10) {
@@ -1962,40 +2123,58 @@
             }
         }
 
-        // Handle login form submission
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const password = document.getElementById('admin-password').value;
-            const errorDiv = document.getElementById('login-error');
+        // Initialize authentication after DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication on page load
+            checkAuthentication();
             
-            if (password === ADMIN_PASSWORD) {
-                // Correct password
-                sessionStorage.setItem('adminAuthenticated', 'true');
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('main-dashboard').classList.remove('hidden');
+            // Handle login form submission
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const password = document.getElementById('admin-password').value;
+                const errorDiv = document.getElementById('login-error');
                 
-                // Load dashboard data
-                loadDashboardData();
-            } else {
-                // Incorrect password
-                errorDiv.classList.add('show');
-                document.getElementById('admin-password').value = '';
-                document.getElementById('admin-password').focus();
-                
-                setTimeout(() => {
-                    errorDiv.classList.remove('show');
-                }, 3000);
-            }
-        });
+                if (password === ADMIN_PASSWORD) {
+                    // Correct password
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('main-dashboard').classList.remove('hidden');
+                    
+                    // Load dashboard data
+                    loadDashboardData();
+                } else {
+                    // Incorrect password
+                    errorDiv.classList.add('show');
+                    document.getElementById('admin-password').value = '';
+                    document.getElementById('admin-password').focus();
+                    
+                    setTimeout(() => {
+                        errorDiv.classList.remove('show');
+                    }, 3000);
+                }
+            });
 
-        // Handle logout
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('adminAuthenticated');
-                document.getElementById('login-overlay').classList.remove('hidden');
-                document.getElementById('main-dashboard').classList.add('hidden');
-                document.getElementById('admin-password').value = '';
-            }
+            // Handle logout
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    sessionStorage.removeItem('adminAuthenticated');
+                    document.getElementById('login-overlay').classList.remove('hidden');
+                    document.getElementById('main-dashboard').classList.add('hidden');
+                    document.getElementById('admin-password').value = '';
+                }
+            });
+            
+            // Load initial data
+            loadDashboardData();
+            loadNotifications();
+            
+            // Set admin name
+            document.getElementById('adminName').textContent = 'Administrator';
+
+            // Refresh notifications every 30 seconds
+            setInterval(() => {
+                loadNotifications();
+            }, 30000);
         });
     </script>
     </div> <!-- Close main-dashboard -->
