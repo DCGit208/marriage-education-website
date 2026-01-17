@@ -16,17 +16,30 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Initialize services (use var for global scope)
-var db = firebase.firestore();
-var auth = firebase.auth();
+// Initialize services (use var for global scope) - Check if libraries are loaded
+var db = null;
+var auth = null;
 
-// Collection references (use var for global scope)
-var ambassadorsRef = db.collection('ambassadors');
-var salesRef = db.collection('sales');
-var notificationsRef = db.collection('notifications');
-var contestsRef = db.collection('contests');
-var badgesRef = db.collection('badges');
-var settingsRef = db.collection('settings');
+if (typeof firebase.firestore === 'function') {
+    db = firebase.firestore();
+}
+
+if (typeof firebase.auth === 'function') {
+    auth = firebase.auth();
+}
+
+// Collection references (use var for global scope) - Only if db is initialized
+var ambassadorsRef = db ? db.collection('ambassadors') : null;
+var salesRef = db ? db.collection('sales') : null;
+var notificationsRef = db ? db.collection('notifications') : null;
+var contestsRef = db ? db.collection('contests') : null;
+var badgesRef = db ? db.collection('badges') : null;
+var settingsRef = db ? db.collection('settings') : null;
+
+// NEW: RD & Payment System collections
+var regionalDirectorsRef = db ? db.collection('regional_directors') : null;
+var pendingPaymentsRef = db ? db.collection('pending_payments') : null;
+var referralCodesRef = db ? db.collection('referral_codes') : null;
 
 // Helper Functions
 const FirebaseHelper = {

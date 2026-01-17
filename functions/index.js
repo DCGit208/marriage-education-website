@@ -1647,13 +1647,13 @@ async function sendReferralMilestoneEmail(referral, milestone, commission) {
   const msg = {
     to: referral.email,
     from: 'orders@marriageducation.com',
-    subject: `🎉 Milestone Reached: ${milestone} Sales!`,
+    subject: `🎉 Milestone Reached: ${milestone} Access Units Deployed!`,
     html: `
       <h2>Congratulations! 🎉</h2>
-      <p>You've reached <strong>${milestone} sales</strong> with your referral link!</p>
-      <p><strong>Commission Earned:</strong> ${commission} FCFA</p>
-      <p><strong>Total Sales:</strong> ${milestone}</p>
-      <p>Keep sharing to earn more!</p>
+      <p>You've deployed <strong>${milestone} access units</strong> to Marriage Foundation education!</p>
+      <p><strong>Advocacy Earnings:</strong> ${commission} FCFA</p>
+      <p><strong>Total Access Units:</strong> ${milestone}</p>
+      <p>Keep sharing the Marriage Foundation to earn more!</p>
     `
   };
 
@@ -1737,13 +1737,13 @@ async function sendReferralMilestoneEmailSMTP(referral, milestone, commission) {
   const mailOptions = {
     from: 'orders@marriageducation.com',
     to: referral.email,
-    subject: `🎉 Milestone Reached: ${milestone} Sales!`,
+    subject: `🎉 Milestone Reached: ${milestone} Access Units Deployed!`,
     html: `
       <h2>Congratulations! 🎉</h2>
-      <p>You've reached <strong>${milestone} sales</strong> with your referral link!</p>
-      <p><strong>Commission Earned:</strong> ${commission} FCFA</p>
-      <p><strong>Total Sales:</strong> ${milestone}</p>
-      <p>Keep sharing to earn more!</p>
+      <p>You've deployed <strong>${milestone} access units</strong> to Marriage Foundation education!</p>
+      <p><strong>Advocacy Earnings:</strong> ${commission} FCFA</p>
+      <p><strong>Total Access Units:</strong> ${milestone}</p>
+      <p>Keep sharing the Marriage Foundation to earn more!</p>
     `
   };
 
