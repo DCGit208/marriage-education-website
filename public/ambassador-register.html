@@ -3,257 +3,1524 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Become an Ambassador - Earn 90,000 FCFA Monthly | Marriage Education</title>
-    <meta name="description" content="Join 500 ambassadors selling 60 books each. Earn up to 90,000 FCFA in commissions with 5,000 XAF per sale. Weekly payouts, free training, and support. Start your profitable side business today!">
-    <meta name="keywords" content="ambassador program, earn money online, side business, commission sales, work from home, passive income, book sales ambassador, marriage education business, referral program, make money Cameroon" />
-    <link rel="canonical" href="https://marriageducation.com/ambassador-register.html" />
-    
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://marriageducation.com/ambassador-register.html" />
-    <meta property="og:title" content="Earn 90,000 FCFA Monthly as a Marriage Education Ambassador" />
-    <meta property="og:description" content="Join our ambassador program and earn 5,000 XAF per book sale. Free training included." />
-    <meta property="og:image" content="https://marriageducation.com/images/ambassador-opportunity.jpg" />
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="Earn 90,000 FCFA Monthly as Marriage Education Ambassador" />
-    <meta property="twitter:description" content="Join our ambassador program and earn 5,000 XAF per book sale." />
-    
+    <title>Marriage Literacy Ambassador - Women's Track | Marriage Education</title>
+    <meta name="description" content="Deploy Marriage Foundation Access powered by The Teleios Blueprint ($247 course scholarship included). Earn CRLA credential through 6-week Foundation School. Entry: 15,000 FCFA.">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .ambassador-hero {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 4rem 2rem 3rem;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #2d3436;
+            background: #ffffff;
+        }
+
+        /* Modern Hero - Clean Design like Landing Page */
+        .modern-hero {
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            min-height: 80vh;
+            padding: 60px 0;
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 184, 148, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 40%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            padding: 40px 0;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-text {
+            color: #2d3436;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: #2d3436;
+        }
+
+        .hero-title .highlight {
+            color: #00b894;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 8px;
+            color: #636e72;
+            font-weight: 400;
+        }
+
+        .hero-mission {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #00b894;
+            margin: 20px 0 32px;
+            font-style: italic;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #00b894;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2d3436;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #00b894;
+            transform: translateY(-2px);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .stat {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00b894;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .stat p {
+            font-size: 0.9rem;
+            color: #636e72;
+            font-weight: 500;
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            transform: rotate(2deg);
+            transition: transform 0.3s ease;
+        }
+
+        .hero-card:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-visual {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            padding: 60px 40px;
             text-align: center;
+            color: white;
+        }
+
+        .card-visual i {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .card-visual h4 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+
+        .card-content {
+            padding: 32px;
+            background: white;
+        }
+
+        .card-content h4 {
+            font-size: 1.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+        }
+
+        .card-content p {
+            color: #636e72;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .card-highlight {
+            background: #fff3cd;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid #FFD700;
+        }
+
+        .card-highlight strong {
+            color: #2d3436;
+            font-size: 1.1rem;
+        }
+
+        .card-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        .floating-scholarship {
+            position: absolute;
+            top: 20px;
+            right: -10px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #2d3436;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(255, 165, 0, 0.5);
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav-tabs .container {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 20px 32px;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #636e72;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #00b894;
+            background: #f8f9fa;
+        }
+
+        .tab-button.active {
+            color: #00b894;
+            border-bottom-color: #00b894;
+            background: #f8f9fa;
+        }
+
+        .tab-button i {
+            margin-right: 8px;
+        }
+
+        /* Content Sections */
+        .tab-content {
+            display: none;
+            padding: 60px 0;
+            background: #f8f9fa;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            color: #2d3436;
+            margin-bottom: 16px;
+        }
+
+        .section-header .lead {
+            font-size: 1.2rem;
+            color: #636e72;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Accordion Styles */
+        .accordion {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .accordion-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .accordion-header {
+            padding: 24px 32px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: #f8f9fa;
+        }
+
+        .accordion-header.active {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .accordion-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .accordion-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 3000px;
+        }
+
+        .accordion-body {
+            padding: 32px;
+            border-top: 1px solid #e9ecef;
+            line-height: 1.8;
+        }
+
+        .accordion-body p {
+            margin-bottom: 16px;
+            color: #636e72;
+        }
+
+        .accordion-body ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .accordion-body li {
+            padding: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .accordion-body li:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-body li:before {
+            content: "✓";
+            color: #00b894;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .highlight-box {
+            background: white;
+            color: #2d3436;
+            padding: 40px;
+            border-radius: 16px;
+            margin: 40px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 2px solid #00b894;
+            position: relative;
+            text-align: center;
+        }
+
+        .highlight-box:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00b894 0%, #00a085 100%);
+        }
+
+        .highlight-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            color: #00b894;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .highlight-box p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            color: #2d3436;
+        }
+
+        .highlight-box strong {
+            color: #00b894;
+        }
+
+        /* Role & Earnings Card */
+        .role-earnings-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 50px;
+            border-radius: 20px;
+            margin: 50px 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 40px;
+            padding-bottom: 32px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.25);
+        }
+
+        .role-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .role-header h3 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: #2d3436;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .role-header p {
+            font-size: 1.1rem;
+            color: #636e72;
+            margin: 0;
+        }
+
+        .earnings-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .earnings-item {
+            text-align: center;
+            padding: 32px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .earnings-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .earnings-highlight {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%);
+        }
+
+        .earnings-label {
+            font-size: 0.95rem;
+            color: #636e72;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .earnings-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 8px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .earnings-amount.primary {
+            color: #00b894;
+        }
+
+        .earnings-note {
+            font-size: 0.9rem;
+            color: #636e72;
+            font-style: italic;
+        }
+
+        .earnings-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00b894;
+            font-size: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .earnings-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .earnings-divider {
+                transform: rotate(90deg);
+            }
+
+            .role-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .role-earnings-card {
+                padding: 32px 24px;
+            }
+
+            .program-features {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .scholarship-banner {
+                padding: 32px 24px;
+            }
+
+            .scholarship-value {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .curriculum-week {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .dual-components {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .component-plus,
+            .component-equals {
+                transform: rotate(90deg);
+            }
+
+            .component {
+                min-width: 100%;
+            }
+        }
+
+        /* Program Section Styles */
+        .scholarship-banner {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            padding: 50px;
+            border-radius: 20px;
+            margin: 40px 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 184, 148, 0.3);
+        }
+
+        .scholarship-banner:before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        }
+
+        .scholarship-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scholarship-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .scholarship-content h3 {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .scholarship-content p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            opacity: 0.95;
+        }
+
+        .scholarship-value {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .value-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .value-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .value-bonus {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .program-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+            margin: 50px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            border-color: #00b894;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+
+        .feature-icon i {
+            font-size: 2.5rem;
+            color: #636e72;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon i {
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: #2d3436;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .feature-card p {
+            color: #636e72;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .feature-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .feature-stats span {
+            font-size: 0.85rem;
+            color: #636e72;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-stats i {
+            color: #00b894;
+            font-size: 0.9rem;
+        }
+
+        .curriculum-week {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #00b894;
+        }
+
+        .week-number {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #00b894;
+            display: flex;
+            align-items: center;
+        }
+
+        .week-content h4 {
+            font-size: 1.2rem;
+            color: #2d3436;
+            margin-bottom: 8px;
+        }
+
+        .week-content p {
+            color: #636e72;
+            margin: 0;
+        }
+
+        .curriculum-note {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 24px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .curriculum-note p {
+            margin: 0;
+            color: #1565c0;
+        }
+
+        .curriculum-note i {
+            color: #2196f3;
+            margin-right: 8px;
+        }
+
+        /* Dual Components Display */
+        .dual-components {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .component {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .component-result {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .component-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .component h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .component p {
+            font-size: 0.9rem;
+            margin: 0;
+            opacity: 0.95;
+        }
+
+        .component-plus,
+        .component-equals {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            opacity: 0.8;
+        }
+
+        /* Curriculum Week Components */
+        .curriculum-intro {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .curriculum-intro p {
+            margin: 0;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .week-components {
+            margin-top: 16px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+
+        .week-components p {
+            margin: 8px 0 16px 0;
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+
+        .component-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .component-tag.teleios {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .component-tag.advocacy {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        /* Earnings Section Styles */
+        .earnings-principle {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            border: 2px solid #e9ecef;
+        }
+
+        .principle-header h3 {
+            text-align: center;
+            font-size: 2rem;
+            color: #2d3436;
+            margin-bottom: 32px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .principle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+
+        .principle-column {
+            padding: 24px;
+            border-radius: 12px;
+        }
+
+        .principle-no {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .principle-yes {
+            background: #f0fdf9;
+            border-left: 4px solid #00b894;
+        }
+
+        .principle-column h4 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            color: #2d3436;
+        }
+
+        .principle-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .principle-column ul li {
+            padding: 8px 0;
+            color: #636e72;
+        }
+
+        .principle-tagline {
+            text-align: center;
+            font-size: 1.3rem;
+            color: #00b894;
+            font-style: italic;
+            margin: 24px 0 0 0;
+        }
+
+        .revenue-stacks-overview {
+            margin: 50px 0;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .stacks-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+        }
+
+        .stack-card {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .stack-card:hover {
+            transform: translateY(-5px);
+            border-color: #00b894;
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.15);
+        }
+
+        .stack-highlight {
+            background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%);
+            border-color: #00b894;
+        }
+
+        .stack-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+
+        .stack-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #2d3436;
+        }
+
+        .stack-card p {
+            font-size: 0.9rem;
+            color: #636e72;
+            line-height: 1.5;
+        }
+
+        .stack-intro {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .stack-intro p {
+            margin: 0;
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .stack-intro.important-frame {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .stack-intro.important-frame p {
+            color: #856404;
+        }
+
+        .earnings-breakdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .breakdown-item {
+            background: white;
+            padding: 20px 32px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .breakdown-item.highlight {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%);
+        }
+
+        .breakdown-label {
+            font-size: 0.9rem;
+            color: #636e72;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .breakdown-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3436;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .breakdown-item.highlight .breakdown-value {
+            color: #00b894;
+        }
+
+        .breakdown-note {
+            font-size: 0.85rem;
+            color: #636e72;
+            margin-top: 4px;
+        }
+
+        .breakdown-arrow {
+            font-size: 2rem;
+            color: #00b894;
+            font-weight: 700;
+        }
+
+        .sub-stack {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            margin: 24px 0;
+            border-left: 4px solid #00b894;
+        }
+
+        .sub-stack h4 {
+            font-size: 1.3rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+        }
+
+        .example-box {
+            background: #fff3cd;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 16px;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .example-box.highlight {
+            background: #f0fdf9;
+            border-left-color: #00b894;
+            color: #00695c;
+            font-weight: 600;
+        }
+
+        .stack-note {
+            background: #e3f2fd;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 24px;
+            border-left: 4px solid #2196f3;
+            color: #1565c0;
+        }
+
+        .stack-note.important {
+            background: #f0fdf9;
+            border-left-color: #00b894;
+            color: #00695c;
+        }
+
+        .stack-note i {
+            margin-right: 8px;
+        }
+
+        .feature-list {
+            margin: 24px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .feature-item i {
+            font-size: 1.8rem;
+            color: #00b894;
+            flex-shrink: 0;
+        }
+
+        .feature-item strong {
+            display: block;
+            color: #2d3436;
+            margin-bottom: 4px;
+        }
+
+        .feature-item p {
+            margin: 0;
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+
+        .career-ladder {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 32px;
+            border-radius: 16px;
+            border: 2px solid #e9ecef;
+        }
+
+        .ladder-step {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .ladder-step:hover {
+            transform: translateX(5px);
+            border-color: #00b894;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.1);
+        }
+
+        .ladder-top {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf9 100%);
+        }
+
+        .ladder-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .ladder-content {
+            flex: 1;
+        }
+
+        .ladder-content h5 {
+            font-size: 1.2rem;
+            color: #2d3436;
+            margin-bottom: 8px;
+        }
+
+        .ladder-content p {
+            color: #636e72;
+            margin-bottom: 8px;
+        }
+
+        .earning-potential {
+            background: #e8f5e9;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            color: #2e7d32;
+            font-size: 0.95rem;
+        }
+
+        .earning-potential.highlight {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            font-size: 1.05rem;
+        }
+
+        @media (max-width: 768px) {
+            .principle-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .stacks-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .earnings-breakdown {
+                flex-direction: column;
+            }
+
+            .breakdown-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        .highlight-box p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .highlight-box strong {
+            color: #FFD700;
+            font-size: 1.4rem;
+        }
+
+        /* Card Grid Layout */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid #00b894;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .info-card .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            font-size: 1.4rem;
+            color: #2d3436;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .info-card p {
+            color: #636e72;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+
+        .info-card ul li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #2d3436;
+        }
+
+        .info-card ul li:before {
+            content: "✔";
+            color: #00b894;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .access-pack-card {
+            background: white;
+            color: #2d3436;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.08);
+            margin: 40px 0;
+            border: 2px solid #00b894;
             position: relative;
             overflow: hidden;
         }
 
-        .ambassador-hero::before {
-            content: '';
+        .access-pack-card:before {
+            content: "";
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0,184,148,0.1) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #00b894 0%, #00a085 100%);
         }
 
-        .ambassador-hero h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            font-weight: 700;
-            color: #2d3436;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .ambassador-hero .subtitle {
-            font-size: 1.3rem;
-            color: #636e72;
-            margin-bottom: 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .ambassador-hero .highlight {
+        .access-pack-card h3 {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
             color: #00b894;
-            font-weight: 600;
-        }
-
-        .opportunity-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-            color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,184,148,0.3);
-            position: relative;
-            z-index: 1;
-        }
-
-        .calculator-section {
-            background: white;
-            max-width: 900px;
-            margin: -3rem auto 3rem;
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 2;
-        }
-
-        .calculator-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .calculator-header h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #2d3436;
-            margin-bottom: 0.5rem;
         }
 
-        .calculator-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .calc-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px solid #00b894;
-            text-align: center;
-        }
-
-        .calc-card .icon {
-            font-size: 2.5rem;
-            color: #00b894;
-            margin-bottom: 1rem;
-        }
-
-        .calc-card .label {
-            font-size: 0.9rem;
+        .access-pack-card .subtitle {
+            font-size: 1.15rem;
             color: #636e72;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-bottom: 24px;
+            font-weight: 500;
         }
 
-        .calc-card .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3436;
-        }
-
-        .calc-card .subvalue {
-            font-size: 0.95rem;
-            color: #636e72;
-            margin-top: 0.25rem;
-        }
-
-        .earnings-breakdown {
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-            color: white;
-            padding: 2rem;
+        .access-pack-card .pack-contents {
+            background: #f8f9fa;
+            padding: 32px;
             border-radius: 12px;
-            margin-bottom: 2rem;
+            margin-top: 20px;
+            border-left: 4px solid #00b894;
         }
 
-        .earnings-breakdown h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        .access-pack-card .pack-contents ul {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0 0;
         }
 
-        .tier-item {
+        .access-pack-card .pack-contents li {
+            padding: 12px 0;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 1.05rem;
+            color: #2d3436;
         }
 
-        .tier-item:last-child {
-            border-bottom: none;
-        }
-
-        .tier-label {
-            font-size: 1rem;
-        }
-
-        .tier-amount {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .total-earnings {
-            background: rgba(255,255,255,0.2);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-
-        .total-earnings .amount {
-            font-size: 2.5rem;
-            font-weight: 700;
-            display: block;
-            margin-top: 0.5rem;
-        }
-
-        .spots-counter {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .spots-counter .counter-box {
-            display: inline-block;
-            background: white;
-            padding: 1.5rem 3rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 3px solid #00b894;
-        }
-
-        .spots-counter .label {
-            font-size: 0.9rem;
-            color: #636e72;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .spots-counter .count {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .access-pack-card .pack-contents li:before {
+            content: "✓";
             color: #00b894;
-            margin-top: 0.5rem;
+            font-weight: bold;
+            font-size: 1.3rem;
+            flex-shrink: 0;
         }
 
-        .form-section {
+        .access-pack-card .price-tag {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 20px 32px;
+            border-radius: 12px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 24px;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        /* Registration Form */
+        .registration-form {
+            background: white;
             max-width: 800px;
             margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        .form-section h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            color: #2d3436;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .form-section p {
-            text-align: center;
-            color: #636e72;
-            margin-bottom: 3rem;
+            padding: 48px;
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
             font-weight: 600;
+            margin-bottom: 8px;
             color: #2d3436;
-            margin-bottom: 0.5rem;
         }
 
-        .form-group label .required {
+        .required {
             color: #e74c3c;
         }
 
@@ -261,7 +1528,7 @@
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 0.875rem;
+            padding: 14px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
@@ -282,50 +1549,34 @@
             min-height: 120px;
         }
 
-        .uppercase-input {
-            text-transform: uppercase;
-        }
-
-        /* Override browser autofill styles */
-        .form-group input:-webkit-autofill,
-        .form-group input:-webkit-autofill:hover,
-        .form-group input:-webkit-autofill:focus,
-        .form-group input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-            border: 2px solid #e0e0e0 !important;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:-webkit-autofill:focus {
-            border-color: #00b894 !important;
-            box-shadow: 0 0 0 3px rgba(0,184,148,0.1) !important;
-        }
-
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 20px;
         }
 
         .form-section-title {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
             color: #2d3436;
-            margin: 2rem 0 1rem;
-            padding-bottom: 0.5rem;
+            margin: 32px 0 20px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #00b894;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .checkbox-group {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 1rem;
+            margin-bottom: 16px;
         }
 
         .checkbox-group input[type="checkbox"] {
             width: auto;
-            margin-right: 0.75rem;
-            margin-top: 0.25rem;
+            margin-right: 12px;
+            margin-top: 4px;
         }
 
         .checkbox-group label {
@@ -335,16 +1586,16 @@
 
         .submit-btn {
             width: 100%;
-            padding: 1.25rem 2rem;
+            padding: 18px;
             background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1.2rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 2rem;
+            margin-top: 32px;
         }
 
         .submit-btn:hover {
@@ -352,415 +1603,1800 @@
             box-shadow: 0 8px 25px rgba(0,184,148,0.4);
         }
 
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .form-note {
+            background: #e3f2fd;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+            margin: 24px 0;
+            border-radius: 8px;
         }
 
-        .success-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 10000;
+        .form-note p {
+            margin: 8px 0;
+            color: #1565c0;
+        }
+
+        .form-note strong {
+            color: #0d47a1;
+        }
+
+        /* Mobile Responsive */
+        /* Footer Styles */
+        .footer {
+            background: #2d3436;
+            color: white;
+            padding: 80px 0 30px;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-section h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00b894;
+        }
+
+        .footer-section p {
+            color: #b2bec3;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #dfe6e9;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-links a:hover {
+            color: #00b894;
+            padding-left: 5px;
+        }
+
+        .footer-links a i {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .footer-cta {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .footer-cta h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .footer-cta p {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+            opacity: 0.95;
+        }
+
+        .footer-cta .btn-primary {
+            background: white;
+            color: #00b894;
+        }
+
+        .footer-cta .btn-primary:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-bottom p {
+            color: #b2bec3;
+            margin: 0;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .success-modal.active {
-            display: flex;
-        }
-
-        .success-content {
-            background: white;
-            padding: 3rem;
-            border-radius: 16px;
-            max-width: 500px;
-            text-align: center;
-            position: relative;
-            animation: slideUp 0.4s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .success-content .icon {
-            font-size: 4rem;
-            color: #00b894;
-            margin-bottom: 1rem;
-        }
-
-        .success-content h3 {
-            font-size: 2rem;
-            color: #2d3436;
-            margin-bottom: 1rem;
-        }
-
-        .success-content p {
-            color: #636e72;
-            margin-bottom: 2rem;
-        }
-
-        .success-content .btn {
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
             color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
             text-decoration: none;
-            display: inline-block;
-            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            background: #00b894;
+            transform: translateY(-3px);
         }
 
         @media (max-width: 768px) {
-            .ambassador-hero h1 {
+            .hero-content {
+                grid-template-columns: 1fr;
+                padding: 60px 0 40px;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-stats {
+                justify-content: center;
+                gap: 24px;
+            }
+
+            .stat h3 {
                 font-size: 2rem;
             }
 
-            .ambassador-hero .subtitle {
-                font-size: 1.1rem;
+            .tab-button {
+                padding: 16px 20px;
+                font-size: 0.9rem;
             }
 
-            .calculator-section {
-                margin: -2rem 1rem 2rem;
-                padding: 1.5rem;
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .accordion-header {
+                padding: 20px 24px;
+            }
+
+            .accordion-title {
+                font-size: 1.05rem;
             }
 
             .form-row {
                 grid-template-columns: 1fr;
             }
 
-            .calc-card .value {
-                font-size: 1.5rem;
+            .registration-form {
+                padding: 32px 24px;
+            }
+
+            .floating-scholarship {
+                position: static;
+                margin-top: 20px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="ambassador-hero">
-        <div class="opportunity-badge">
-            <i class="fas fa-fire"></i> Limited Time Opportunity
+    <!-- Modern Hero Section -->
+    <section class="modern-hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        <i class="fas fa-graduation-cap"></i> Women's Track • CRLA Credential • 6-Week School
+                    </div>
+                    <h1 class="hero-title">
+                        Become a<br>
+                        <span class="highlight">Marriage Literacy Ambassador</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Deploy Marriage Foundation Access to individuals, families, and communities. Earn the Certified Relationship Literacy Advocate (CRLA) credential through our 6-week Foundation School.
+                    </p>
+                    <p class="hero-mission">
+                        "You're not selling. You're deploying marriage literacy."
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#apply" class="btn-primary">
+                            <span>Start Application</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#learn-more" class="btn-secondary">
+                            <span>Learn More</span>
+                            <i class="fas fa-book"></i>
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <h3>15K</h3>
+                            <p>Entry Fee (FCFA)</p>
+                        </div>
+                        <div class="stat">
+                            <h3>$247</h3>
+                            <p>Course Scholarship</p>
+                        </div>
+                        <div class="stat">
+                            <h3>500</h3>
+                            <p>Spots Available</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-card">
+                        <div class="card-visual">
+                            <i class="fas fa-certificate"></i>
+                            <h4>CRLA Credential</h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-highlight">
+                                <strong>First 500 Ambassadors:</strong> Full $247 scholarship into The Teleios Blueprint course
+                            </div>
+                            <p><strong>What's Included:</strong></p>
+                            <ul style="list-style: none; padding: 0;">
+                                <li style="padding: 8px 0; display: flex; gap: 8px;"><i class="fas fa-check" style="color: #00b894;"></i> 6-Week Foundation School</li>
+                                <li style="padding: 8px 0; display: flex; gap: 8px;"><i class="fas fa-check" style="color: #00b894;"></i> CRLA Certification</li>
+                                <li style="padding: 8px 0; display: flex; gap: 8px;"><i class="fas fa-check" style="color: #00b894;"></i> Advocacy Training Tools</li>
+                                <li style="padding: 8px 0; display: flex; gap: 8px;"><i class="fas fa-check" style="color: #00b894;"></i> Deployment Resources</li>
+                            </ul>
+                            <div class="card-price">Entry: 15,000 FCFA</div>
+                        </div>
+                    </div>
+                    <div class="floating-scholarship">
+                        <div>🎓 BONUS</div>
+                        <div>Teleios Blueprint</div>
+                        <div style="font-size: 1.2rem;">$247 Course Free!</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h1>Become a Marriage Education Ambassador</h1>
-        <p class="subtitle">
-            Join <span class="highlight">500 ambassadors</span> earning up to <span class="highlight">90,000 FCFA</span> by selling 60 books in 14 days
-        </p>
     </section>
 
-    <!-- Calculator Section -->
-    <section class="calculator-section">
-        <div class="calculator-header">
-            <h2>Your Earning Potential</h2>
-            <p style="color: #636e72;">Here's what you can earn as an ambassador</p>
-        </div>
-
-        <div class="calculator-grid">
-            <div class="calc-card">
-                <div class="icon"><i class="fas fa-book"></i></div>
-                <div class="label">Your Target</div>
-                <div class="value">60</div>
-                <div class="subvalue">Books to Sell</div>
-            </div>
-
-            <div class="calc-card">
-                <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                <div class="label">Commission per Book</div>
-                <div class="value">1,500</div>
-                <div class="subvalue">FCFA (10%)</div>
-            </div>
-
-            <div class="calc-card">
-                <div class="icon"><i class="fas fa-chart-line"></i></div>
-                <div class="label">Total Earnings</div>
-                <div class="value">90,000</div>
-                <div class="subvalue">FCFA + Bonuses</div>
-            </div>
-        </div>
-
-        <div class="earnings-breakdown">
-            <h3><i class="fas fa-trophy"></i> Commission Breakdown</h3>
-            <div class="tier-item">
-                <span class="tier-label"><i class="fas fa-star"></i> Books 1-20 (Bronze)</span>
-                <span class="tier-amount">30,000 FCFA</span>
-            </div>
-            <div class="tier-item">
-                <span class="tier-label"><i class="fas fa-star"></i> Books 21-40 (Silver)</span>
-                <span class="tier-amount">36,000 FCFA</span>
-            </div>
-            <div class="tier-item">
-                <span class="tier-label"><i class="fas fa-star"></i> Books 41-60 (Gold)</span>
-                <span class="tier-amount">40,000 FCFA</span>
-            </div>
-            <div class="tier-item">
-                <span class="tier-label"><i class="fas fa-gift"></i> Completion Bonus (60 books)</span>
-                <span class="tier-amount">+10,000 FCFA</span>
-            </div>
-            <div class="total-earnings">
-                <div>When You Complete 60 Books, You Earn:</div>
-                <span class="amount">106,000 FCFA</span>
-            </div>
-        </div>
-
-        <div style="text-align: center; color: #636e72; font-size: 0.95rem;">
-            <i class="fas fa-info-circle"></i> Super Sellers who exceed 60 books earn even more: 2,500 FCFA per book (61-90) and 3,000 FCFA per book (91-120)
-        </div>
-    </section>
-
-    <!-- Spots Counter -->
-    <section class="spots-counter">
-        <div class="counter-box">
-            <div class="label">Ambassador Spots Available</div>
-            <div class="count" id="spotsAvailable">463/500</div>
-        </div>
-        <p style="margin-top: 1rem; color: #e74c3c; font-weight: 600;">
-            <i class="fas fa-clock"></i> Hurry! Spots filling up fast
-        </p>
-    </section>
-
-    <!-- Registration Form -->
-    <section class="form-section">
-        <h2>Ambassador Application Form</h2>
-        <p>Fill out the form below to join our exclusive ambassador program</p>
-
-        <form id="ambassadorForm">
-            <!-- Personal Information -->
-            <div class="form-section-title"><i class="fas fa-user"></i> Personal Information</div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>First Name <span class="required">*</span></label>
-                    <input type="text" name="firstName" required placeholder="Enter your first name">
-                </div>
-                <div class="form-group">
-                    <label>Last Name <span class="required">*</span></label>
-                    <input type="text" name="lastName" required placeholder="Enter your last name">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Email Address <span class="required">*</span></label>
-                    <input type="email" name="email" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Phone/WhatsApp Number <span class="required">*</span></label>
-                    <input type="tel" name="phone" required placeholder="+237 6XX XXX XXX">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>City <span class="required">*</span></label>
-                    <input type="text" name="city" required placeholder="e.g., Douala, Yaoundé">
-                </div>
-                <div class="form-group">
-                    <label>Region <span class="required">*</span></label>
-                    <select name="region" required>
-                        <option value="">Select your region</option>
-                        <option value="Adamawa">Adamawa</option>
-                        <option value="Centre">Centre</option>
-                        <option value="East">East</option>
-                        <option value="Far North">Far North</option>
-                        <option value="Littoral">Littoral</option>
-                        <option value="North">North</option>
-                        <option value="Northwest">Northwest</option>
-                        <option value="South">South</option>
-                        <option value="Southwest">Southwest</option>
-                        <option value="West">West</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Social Media Presence -->
-            <div class="form-section-title"><i class="fas fa-share-nodes"></i> Social Media Presence</div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Instagram Handle</label>
-                    <input type="text" name="instagram" placeholder="@username">
-                </div>
-                <div class="form-group">
-                    <label>Instagram Followers</label>
-                    <input type="number" name="instagramFollowers" placeholder="e.g., 500">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Facebook Profile URL</label>
-                    <input type="url" name="facebook" placeholder="https://facebook.com/...">
-                </div>
-                <div class="form-group">
-                    <label>Facebook Friends/Followers</label>
-                    <input type="number" name="facebookFollowers" placeholder="e.g., 1200">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>TikTok Handle (Optional)</label>
-                    <input type="text" name="tiktok" placeholder="@username">
-                </div>
-                <div class="form-group">
-                    <label>LinkedIn Profile (Optional)</label>
-                    <input type="url" name="linkedin" placeholder="https://linkedin.com/in/...">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Primary Platform for Promotion <span class="required">*</span></label>
-                <select name="primaryPlatform" required>
-                    <option value="">Select your main platform</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="Facebook">Facebook</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="TikTok">TikTok</option>
-                    <option value="LinkedIn">LinkedIn</option>
-                    <option value="In-Person">In-Person/Events</option>
-                </select>
-            </div>
-
-            <!-- Ambassador Motivation -->
-            <div class="form-section-title"><i class="fas fa-lightbulb"></i> Tell Us About Yourself</div>
-
-            <div class="form-group">
-                <label>Why do you want to become an ambassador? <span class="required">*</span></label>
-                <textarea name="motivation" required placeholder="Share your motivation for joining our ambassador program (minimum 50 words)"></textarea>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Have you sold products before? <span class="required">*</span></label>
-                    <select name="salesExperience" required>
-                        <option value="">Select an option</option>
-                        <option value="Yes - Professional">Yes - Professional salesperson</option>
-                        <option value="Yes - Side hustle">Yes - As a side hustle</option>
-                        <option value="Yes - Occasionally">Yes - Occasionally</option>
-                        <option value="No - First time">No - This is my first time</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>How many books can you commit to selling? <span class="required">*</span></label>
-                    <select name="commitment" required>
-                        <option value="">Select your target</option>
-                        <option value="60">60 books (Minimum - 90,000 FCFA)</option>
-                        <option value="90">90 books (Super Seller - 181,000 FCFA)</option>
-                        <option value="120">120 books (Elite - 271,000 FCFA)</option>
-                        <option value="120+">120+ books (Top Performer)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>How did you hear about this opportunity?</label>
-                <select name="referralSource">
-                    <option value="">Select source</option>
-                    <option value="Facebook">Facebook</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="Friend/Family">Friend/Family</option>
-                    <option value="Website">Website</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Who Referred You? (Optional)</label>
-                <input type="text" id="recruitedBy" name="recruitedBy" placeholder="e.g., AMB-JOHN-1234 or RD-SARAH-5678" class="uppercase-input">
-            </div>
-            
-            <div class="form-group">
-                <label>Ambassador Referral Code (Optional)</label>
-                <input type="text" name="referredBy" placeholder="e.g., AMB-JOHN-1234" class="uppercase-input">
-            </div>
-
-            <p style="font-size: 0.85rem; color: #636e72; margin-top: -0.5rem; margin-bottom: 1.5rem;">
-                <i class="fas fa-info-circle"></i> <strong>Who Referred You:</strong> Enter RD or Ambassador code if recruited by someone<br>
-                <i class="fas fa-user-friends"></i> <strong>Referral Code:</strong> Enter ambassador code if someone introduced you
-            </p>
-
-            <!-- Agreement -->
-            <div class="form-section-title"><i class="fas fa-file-contract"></i> Agreement</div>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="targetCommitment" name="targetCommitment" required>
-                <label for="targetCommitment">
-                    I commit to selling a minimum of 60 books within the 14-day campaign period <span class="required">*</span>
-                </label>
-            </div>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="terms" name="terms" required>
-                <label for="terms">
-                    I agree to the <a href="#" style="color: #00b894;">Terms and Conditions</a> and <a href="#" style="color: #00b894;">Ambassador Code of Conduct</a> <span class="required">*</span>
-                </label>
-            </div>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="dataConsent" name="dataConsent" required>
-                <label for="dataConsent">
-                    I consent to receiving marketing materials, training resources, and updates via email and WhatsApp <span class="required">*</span>
-                </label>
-            </div>
-
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-paper-plane"></i> Submit Application
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" id="navTabs">
+        <div class="container">
+            <button class="tab-button active" data-tab="overview">
+                <i class="fas fa-home"></i> Overview
             </button>
+            <button class="tab-button" data-tab="program">
+                <i class="fas fa-graduation-cap"></i> The Program
+            </button>
+            <button class="tab-button" data-tab="earnings">
+                <i class="fas fa-money-bill-wave"></i> Earnings
+            </button>
+            <button class="tab-button" data-tab="pathway">
+                <i class="fas fa-route"></i> Your Pathway
+            </button>
+            <button class="tab-button" data-tab="apply">
+                <i class="fas fa-pen-to-square"></i> Apply Now
+            </button>
+        </div>
+    </nav>
 
-            <p style="text-align: center; color: #636e72; margin-top: 1rem; font-size: 0.9rem;">
-                <i class="fas fa-clock"></i> Applications are reviewed within 24-48 hours
-            </p>
-            
-            <p style="text-align: center; margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                <a href="rd-register.html" style="color: white; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                    <i class="fas fa-crown"></i> Want to recruit ambassadors and earn 10% override commissions? Become a Regional Director →
-                </a>
-            </p>
-        </form>
+    <!-- TAB 1: Overview -->
+    <section class="tab-content active" id="overview">
+        <div class="container">
+            <div class="section-header">
+                <h2>What is Marriage Foundation Access?</h2>
+                <p class="lead">Foundational marriage literacy that transforms individuals, couples, and communities</p>
+            </div>
+
+            <!-- The Access Pack -->
+            <div class="access-pack-card">
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 16px;">📦</div>
+                    <h3>Marriage Foundation Access Pack</h3>
+                    <p class="subtitle">When someone pays 15,000 FCFA, they are NOT "buying a book"</p>
+                </div>
+                
+                <div class="pack-contents">
+                    <p style="font-weight: 600; margin-bottom: 12px; font-size: 1.2rem;">They are receiving:</p>
+                    <ul>
+                        <li>Foundational Marriage Literacy Content</li>
+                        <li>Personal & relational maturity framework</li>
+                        <li>Guidance for identity, covenant, emotional fluency, and responsibility</li>
+                        <li>A practical tool (<strong>Sex By Design for Dummies</strong>) used as a learning guide</li>
+                        <li>Access that supports families, youth, and communities</li>
+                    </ul>
+                </div>
+
+                <div class="price-tag">
+                    Access Price: 15,000 FCFA
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="card-grid">
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>The Infrastructure</h3>
+                    <p><strong>Sex By Design for Dummies</strong> is the foundational tool—a practical learning guide that delivers marriage literacy.</p>
+                    <p>This isn't just a book purchase. It's <strong>access</strong> to a complete framework for:</p>
+                    <ul>
+                        <li>Self-awareness and identity</li>
+                        <li>Covenant understanding</li>
+                        <li>Emotional fluency</li>
+                        <li>Personal responsibility</li>
+                        <li>Relational health</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Who Benefits</h3>
+                    <p>Marriage Foundation Access serves:</p>
+                    <ul>
+                        <li><strong>Singles:</strong> Building self-awareness before relationships</li>
+                        <li><strong>Dating couples:</strong> Establishing foundation before engagement</li>
+                        <li><strong>Engaged couples:</strong> Preparing for marriage (before counseling)</li>
+                        <li><strong>Churches:</strong> Equipping members preventatively</li>
+                        <li><strong>Communities:</strong> Supporting families proactively</li>
+                        <li><strong>Organizations:</strong> Investing in employee wellness</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>The Psychology</h3>
+                    <p>You're not selling. You're offering <strong>protection, relief, and hope:</strong></p>
+                    <ul>
+                        <li><strong>Protection:</strong> "Prevent divorce before you say 'I do'"</li>
+                        <li><strong>Relief:</strong> "Marriage doesn't have to be a mystery"</li>
+                        <li><strong>Hope:</strong> "Most marriages fail for lack of skill, not love"</li>
+                    </ul>
+                    <p style="margin-top: 16px;">You're a <strong>Marriage Literacy Advocate</strong>—making foundational access visible and accessible.</p>
+                </div>
+            </div>
+
+            <!-- Your Role & Earnings -->
+            <div class="role-earnings-card">
+                <div class="role-header">
+                    <div class="role-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3>Your Role as Ambassador</h3>
+                        <p>You deploy Marriage Foundation Access to individuals, families, and communities</p>
+                    </div>
+                </div>
+                
+                <div class="earnings-grid">
+                    <div class="earnings-item">
+                        <div class="earnings-label">Access Price</div>
+                        <div class="earnings-amount">15,000 FCFA</div>
+                        <div class="earnings-note">Per person/unit</div>
+                    </div>
+                    <div class="earnings-divider">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="earnings-item earnings-highlight">
+                        <div class="earnings-label">Your Advocacy Earnings</div>
+                        <div class="earnings-amount primary">1,500 FCFA</div>
+                        <div class="earnings-note">Per deployment (10%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deployment Examples (Simple Accordion) -->
+            <div class="accordion" style="max-width: 900px; margin: 40px auto;">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-calculator"></i>
+                            <span>Deployment Examples & Earnings Calculator</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p><strong>Individual Deployment:</strong></p>
+                            <ul>
+                                <li>1 person receives access = 15,000 FCFA | Your earnings: 1,500 FCFA</li>
+                                <li>10 people receive access = 150,000 FCFA | Your earnings: 15,000 FCFA</li>
+                                <li>20 people receive access = 300,000 FCFA | Your earnings: 30,000 FCFA</li>
+                            </ul>
+
+                            <p style="margin-top: 20px;"><strong>Couple Deployment:</strong></p>
+                            <ul>
+                                <li>1 couple (2 people) = 30,000 FCFA | Your earnings: 3,000 FCFA</li>
+                                <li>10 couples (20 people) = 300,000 FCFA | Your earnings: 30,000 FCFA</li>
+                            </ul>
+
+                            <p style="margin-top: 20px;"><strong>Community/Church Deployment:</strong></p>
+                            <ul>
+                                <li>Small group (20 members) = 300,000 FCFA | Your earnings: 30,000 FCFA</li>
+                                <li>Church congregation (50 members) = 750,000 FCFA | Your earnings: 75,000 FCFA</li>
+                                <li>Large community (100 members) = 1,500,000 FCFA | Your earnings: 150,000 FCFA</li>
+                            </ul>
+
+                            <p style="margin-top: 20px;"><strong>Corporate/Organization Deployment:</strong></p>
+                            <ul>
+                                <li>Company wellness program (30 employees) = 450,000 FCFA | Your earnings: 45,000 FCFA</li>
+                                <li>Educational institution (60 staff) = 900,000 FCFA | Your earnings: 90,000 FCFA</li>
+                            </ul>
+
+                            <div class="highlight-box" style="margin-top: 24px;">
+                                <p><strong>Remember:</strong> You're not selling books. You're deploying Marriage Foundation Access—a complete literacy package powered by Sex By Design for Dummies.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <!-- Success Modal -->
-    <div class="success-modal" id="successModal">
-        <div class="success-content">
-            <div class="icon"><i class="fas fa-check-circle"></i></div>
-            <h3>Application Submitted!</h3>
-            <p>Thank you for applying to become a Marriage Education Ambassador. We'll review your application and get back to you within 24-48 hours via email and WhatsApp.</p>
-            <p style="font-weight: 600; color: #00b894;">What happens next?</p>
-            <ul style="text-align: left; color: #636e72; margin-bottom: 1.5rem;">
-                <li>✓ We review your application</li>
-                <li>✓ You receive your unique referral code</li>
-                <li>✓ Access to your ambassador dashboard</li>
-                <li>✓ Marketing materials and training</li>
-                <li>✓ Start selling and earning commissions!</li>
-            </ul>
-            <a href="sbd-campaign.html" class="btn">Back to Campaign</a>
+    <!-- TAB 2: The Program -->
+    <section class="tab-content" id="program">
+        <div class="container">
+            <div class="section-header">
+                <h2>The Marriage Foundation School</h2>
+                <p class="lead">Earn your CRLA credential through our 6-week intensive program</p>
+            </div>
+
+            <!-- Scholarship Offer -->
+            <div class="scholarship-banner">
+                <div class="scholarship-badge">🎓 $247 VALUE - FREE FOR FIRST 500</div>
+                <div class="scholarship-content">
+                    <h3>Powered by The Teleios Blueprint Course</h3>
+                    <p>Marriage Foundation School integrates "The Teleios Blueprint: Full Human Maturity" course ($247 value) with specialized advocacy training to earn your CRLA credential.</p>
+                    <p style="margin-top: 12px;"><strong>📖 Your Textbook:</strong> <em>Sex By Design for Dummies</em> - shipped immediately after registration approval. This is your course textbook and the foundational tool you'll deploy to others.</p>
+                    <div class="dual-components">
+                        <div class="component">
+                            <div class="component-icon">📚</div>
+                            <h4>Teleios Blueprint Framework</h4>
+                            <p>Core content on human maturity & marriage literacy</p>
+                        </div>
+                        <div class="component-plus">+</div>
+                        <div class="component">
+                            <div class="component-icon">🎯</div>
+                            <h4>Advocacy Training</h4>
+                            <p>Deployment skills & empathy-based communication</p>
+                        </div>
+                        <div class="component-equals">=</div>
+                        <div class="component component-result">
+                            <div class="component-icon">🏆</div>
+                            <h4>CRLA Credential</h4>
+                            <p>Certified Relationship Literacy Advocate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Features Grid -->
+            <div class="program-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>Your Course Textbook</h3>
+                    <p><strong>Sex By Design for Dummies</strong> shipped immediately after registration - your learning guide and deployment tool.</p>
+                    <div class="feature-stats">
+                        <span><i class="fas fa-shipping-fast"></i> Immediate delivery</span>
+                        <span><i class="fas fa-book"></i> Physical copy</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>6-Week Curriculum</h3>
+                    <p>Structured learning path covering marriage literacy, deployment psychology, advocacy strategies, and leadership foundations.</p>
+                    <div class="feature-stats">
+                        <span><i class="fas fa-clock"></i> 3-5 hours/week</span>
+                        <span><i class="fas fa-video"></i> Video lessons</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>CRLA Credential</h3>
+                    <p>Earn the Certified Relationship Literacy Advocate credential - your professional certification for marriage advocacy work.</p>
+                    <div class="feature-stats">
+                        <span><i class="fas fa-award"></i> Official certificate</span>
+                        <span><i class="fas fa-badge-check"></i> Digital badge</span>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Community Support</h3>
+                    <p>Join a supportive cohort of Marriage Literacy Ambassadors with ongoing mentorship and peer learning.</p>
+                    <div class="feature-stats">
+                        <span><i class="fas fa-comments"></i> WhatsApp group</span>
+                        <span><i class="fas fa-user-friends"></i> Peer network</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-calendar-week"></i>
+                            <span>Integrated 6-Week Curriculum</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="curriculum-intro">
+                                <p><strong>Each week integrates Teleios Blueprint foundational content with practical advocacy training:</strong></p>
+                            </div>
+                            
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 1</div>
+                                <div class="week-content">
+                                    <h4>Foundations - You Were Created Teleios</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Understanding Teleios concept, created wholeness, marriage literacy foundations</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>Introduction to Marriage Foundation Access deployment, ambassador role overview</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 2</div>
+                                <div class="week-content">
+                                    <h4>The Four Integrated Faculties - Powers of the Whole Person</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Understanding mind, will, emotions, spirit - integrated human faculties</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>Deployment Psychology: Protection, Relief, Hope framework for empathy-based advocacy</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 3</div>
+                                <div class="week-content">
+                                    <h4>The Four Attributes of Personal Development</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Identity, covenant, emotional fluency, personal responsibility - core attributes</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>Empathy-first communication & community engagement strategies</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 4</div>
+                                <div class="week-content">
+                                    <h4>The Axiomatic Dimensions of Wholeness</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Foundational principles of wholeness, relational health, maturity frameworks</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>Advanced deployment models: Personal, sponsored, community access strategies</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 5</div>
+                                <div class="week-content">
+                                    <h4>The Civilizational Scaling of Teleios</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Impact beyond individual - family, community, societal transformation</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>Leadership foundations, regional impact, scaling your advocacy work</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-week">
+                                <div class="week-number">Week 6</div>
+                                <div class="week-content">
+                                    <h4>Teleios Marriage Readiness Assessment</h4>
+                                    <div class="week-components">
+                                        <div class="component-tag teleios">📚 Teleios Content</div>
+                                        <p>Marriage readiness framework, assessment tools, comprehensive review</p>
+                                        <div class="component-tag advocacy">🎯 Advocacy Training</div>
+                                        <p>CRLA certification assessment, pathway selection (Paid Advocacy, RD, Counselor)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="curriculum-note">
+                                <p><i class="fas fa-lightbulb"></i> <strong>Integrated Learning:</strong> Each week combines Teleios Blueprint knowledge (WHAT marriage literacy is) with Advocacy Training skills (HOW to deploy it). Both components are essential for earning your CRLA credential.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-certificate"></i>
+                            <span>CRLA Credential Benefits</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p><strong>Upon earning your Certified Relationship Literacy Advocate (CRLA) credential, you unlock:</strong></p>
+                            <ul>
+                                <li>Official CRLA certificate and digital badge</li>
+                                <li>Advanced training portal with deployment tools</li>
+                                <li>Eligibility for Paid Advocacy Track (higher earnings potential)</li>
+                                <li>Eligibility for Regional Director pathway</li>
+                                <li>Foundation for Marriage Counselor track</li>
+                                <li>Access to exclusive community and resources</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-clock"></i>
+                            <span>Timeline & Commitment</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p><strong>School starts immediately after registration approval.</strong></p>
+                            <ul>
+                                <li>6 weeks of structured content (est. 3-5 hours per week)</li>
+                                <li>Self-paced with weekly milestones</li>
+                                <li>Practical assignments and reflection exercises</li>
+                                <li>Community support via WhatsApp/email</li>
+                                <li>CRLA certification upon completion</li>
+                            </ul>
+                            <p style="margin-top: 20px;"><strong>You can begin deploying access during your school journey—no need to wait for completion.</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- TAB 3: Earnings -->
+    <section class="tab-content" id="earnings">
+        <div class="container">
+            <div class="section-header">
+                <h2>How You Earn: A Layered Pathway</h2>
+                <p class="lead">From access deployment to professional income - ethical, dignified, career-aligned</p>
+            </div>
+
+            <!-- First Principle -->
+            <div class="earnings-principle">
+                <div class="principle-header">
+                    <h3>💡 Our Approach</h3>
+                </div>
+                <div class="principle-grid">
+                    <div class="principle-column principle-no">
+                        <h4>❌ What We Don't Do</h4>
+                        <ul>
+                            <li>No aggressive selling</li>
+                            <li>No commission chaos</li>
+                            <li>No affiliate spam</li>
+                            <li>No pushy tactics</li>
+                        </ul>
+                    </div>
+                    <div class="principle-column principle-yes">
+                        <h4>✅ What We Are Doing</h4>
+                        <ul>
+                            <li>Rewarding access deployment</li>
+                            <li>Supporting advocacy work</li>
+                            <li>Building professional pathways</li>
+                            <li>Maintaining dignity & ethics</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="principle-tagline"><strong>You earn in layers.</strong> This is not a hustle. It's a pathway.</p>
+            </div>
+
+            <!-- Revenue Stacks Overview -->
+            <div class="revenue-stacks-overview">
+                <h3 style="text-align: center; margin-bottom: 32px; color: #2d3436;">Your Income Streams</h3>
+                <div class="stacks-grid">
+                    <div class="stack-card">
+                        <div class="stack-number">1</div>
+                        <h4>Access Deployment</h4>
+                        <p>Foundation income - 1,500 FCFA per unit</p>
+                    </div>
+                    <div class="stack-card">
+                        <div class="stack-number">2</div>
+                        <h4>Pathway Activation</h4>
+                        <p>Credits when users enroll in courses/schools</p>
+                    </div>
+                    <div class="stack-card">
+                        <div class="stack-number">3</div>
+                        <h4>Shop & Subscriptions</h4>
+                        <p>Passive recurring income from resources</p>
+                    </div>
+                    <div class="stack-card">
+                        <div class="stack-number">4</div>
+                        <h4>Service Routing</h4>
+                        <p>Credits for counseling & training referrals</p>
+                    </div>
+                    <div class="stack-card stack-highlight">
+                        <div class="stack-number">5</div>
+                        <h4>Career Progression</h4>
+                        <p>Professional income as certified counselor</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion">
+                <!-- Stack 1: Access Deployment -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Stack 1: Foundation Access Deployment</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>This is your entry income, not the ceiling.</strong></p>
+                            </div>
+                            <div class="earnings-breakdown">
+                                <div class="breakdown-item">
+                                    <div class="breakdown-label">Access Price</div>
+                                    <div class="breakdown-value">15,000 FCFA</div>
+                                </div>
+                                <div class="breakdown-arrow">→</div>
+                                <div class="breakdown-item highlight">
+                                    <div class="breakdown-label">Your Earnings</div>
+                                    <div class="breakdown-value">1,500 FCFA</div>
+                                    <div class="breakdown-note">(10%)</div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 24px;"><strong>Example Scenarios:</strong></p>
+                            <ul>
+                                <li>20 deployments = 30,000 FCFA</li>
+                                <li>60 deployments = 90,000 FCFA</li>
+                                <li>150 deployments = 225,000 FCFA</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack 2: Pathway Activation -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Stack 2: Pathway Activation Credits</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>When people you introduced go deeper into learning, you receive Pathway Activation Credits.</strong></p>
+                                <p style="margin-top: 12px; font-style: italic;">You didn't "sell" a course. You activated maturity continuation.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>📚 Course Enrollment Activation</h4>
+                                <p>When 10-20% of deployed users enroll in courses from <a href="https://marriageducation.com/courses.html" target="_blank">marriageducation.com/courses</a></p>
+                                <ul>
+                                    <li>Average course: $99-$297</li>
+                                    <li>Activation Credit: 5-8%</li>
+                                    <li>Paid as cash OR training credits (your choice)</li>
+                                </ul>
+                                <div class="example-box">
+                                    <strong>Example:</strong> 150 deployments → 15 enroll in $197 course → 7% credit = $207 (~125,000 FCFA)
+                                </div>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>🎓 School Enrollment Activation</h4>
+                                <p>For enrollments into advanced schools from <a href="https://marriageducation.com/schools.html" target="_blank">marriageducation.com/schools</a></p>
+                                <ul>
+                                    <li>School fees: $497-$997</li>
+                                    <li>Activation Credit: 8-12%</li>
+                                    <li>Higher credit because of greater commitment</li>
+                                </ul>
+                                <div class="example-box">
+                                    <strong>Example:</strong> 5 enrollments × $697 → 10% credit = $348 (~210,000 FCFA)
+                                </div>
+                            </div>
+
+                            <p class="stack-note"><i class="fas fa-plus-circle"></i> <strong>Stacked on top</strong> of your base deployment income</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack 3: Shop & Subscriptions -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Stack 3: Shop & Subscription Trails</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>Passive, long-tail income from resources, publications, and subscriptions.</strong></p>
+                            </div>
+                            <p>From <a href="https://marriageducation.com/shop.html" target="_blank">marriageducation.com/shop</a> - includes publications, bundles, subscriptions, toolkits</p>
+                            
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <i class="fas fa-id-card"></i>
+                                    <div>
+                                        <strong>Personal Access ID</strong>
+                                        <p>Any purchase linked to your ID earns 3-6%</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <div>
+                                        <strong>Recurring Credits</strong>
+                                        <p>Subscriptions pay monthly micro-credits</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="example-box">
+                                <strong>Example:</strong> 50 people subscribe to $10/month publication → 5% = $25/month recurring → $300/year from one cohort
+                            </div>
+
+                            <p class="stack-note"><i class="fas fa-chart-line"></i> This builds passive income over time, not just one-off earnings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack 4: Service Routing -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            <span>Stack 4: Counselor & Service Routing</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro important-frame">
+                                <p><strong>⚠️ Important Frame:</strong> Ambassadors do not counsel (unless trained). You route people to help.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>💼 Counseling Session Routing</h4>
+                                <p>When a deployed user books:</p>
+                                <ul>
+                                    <li>Pre-marital counseling</li>
+                                    <li>Marriage counseling</li>
+                                    <li>Family guidance</li>
+                                </ul>
+                                <p><strong>Routing Credit:</strong> 5,000-10,000 FCFA per completed counseling cycle (flat rate, ethical)</p>
+                                <p style="font-size: 0.9rem; color: #636e72; margin-top: 8px;">This avoids per-session exploitation</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>🏢 Training & Corporate Services Routing</h4>
+                                <p>When organizations, churches, schools, NGOs:</p>
+                                <ul>
+                                    <li>Book training programs</li>
+                                    <li>Commission custom services</li>
+                                    <li>Hire counselors</li>
+                                </ul>
+                                <p><strong>Finder's Honorarium:</strong> 5-10% of contract value</p>
+                                <div class="example-box highlight">
+                                    <strong>This is where six-figure monthly income becomes realistic for top ambassadors.</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack 5: Career Ladder -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-trophy"></i>
+                            <span>Stack 5: Training Credits & Career Ladder</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>This is the "more than money" part.</strong></p>
+                                <p style="margin-top: 12px;">You earn <strong>TRAINING CREDITS</strong>, not just cash. These credits can be used to:</p>
+                            </div>
+                            <ul style="margin-bottom: 32px;">
+                                <li>Pay for counseling certification</li>
+                                <li>Enter advanced schools</li>
+                                <li>Access faculty mentorship</li>
+                                <li>Reduce or eliminate tuition</li>
+                            </ul>
+
+                            <div class="career-ladder">
+                                <h4 style="text-align: center; margin-bottom: 24px; color: #00b894;">The Career Ladder</h4>
+                                
+                                <div class="ladder-step">
+                                    <div class="ladder-number">1</div>
+                                    <div class="ladder-content">
+                                        <h5>Marriage Literacy Ambassador</h5>
+                                        <p>Deploys access • Earns basic income</p>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step">
+                                    <div class="ladder-number">2</div>
+                                    <div class="ladder-content">
+                                        <h5>Senior Ambassador</h5>
+                                        <p>500+ deployments • Activates pathways • Gains priority credits</p>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step">
+                                    <div class="ladder-number">3</div>
+                                    <div class="ladder-content">
+                                        <h5>Certified Relationship Literacy Advocate (CRLA)</h5>
+                                        <p>Credentialed • Can co-facilitate programs • Higher routing credits</p>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step">
+                                    <div class="ladder-number">4</div>
+                                    <div class="ladder-content">
+                                        <h5>Associate Counselor</h5>
+                                        <p>Paid per session/program</p>
+                                        <div class="earning-potential">Monthly: 300k-800k FCFA</div>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step ladder-top">
+                                    <div class="ladder-number">5</div>
+                                    <div class="ladder-content">
+                                        <h5>Licensed / Lead Counselor</h5>
+                                        <p>Runs cohorts • Corporate & institutional contracts</p>
+                                        <div class="earning-potential highlight">Monthly: 1M+ FCFA</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stack-note important">
+                                <p><strong>This answers the "what can this become?" question clearly.</strong></p>
+                                <p style="margin-top: 12px;">You're not building a side hustle. You're building a profession.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment & Tracking -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-wallet"></i>
+                            <span>Payment & Tracking</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>All activities tracked in your personal dashboard</li>
+                                <li>Real-time visibility of deployments, activations, and routing credits</li>
+                                <li>Monthly payouts via Mobile Money or bank transfer</li>
+                                <li>Training credits tracked separately for career progression</li>
+                                <li>Transparent reporting with no hidden deductions</li>
+                                <li>Support for verification and confirmation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 4: Pathway -->
+    <section class="tab-content" id="pathway">
+        <div class="container">
+            <div class="section-header">
+                <h2>Your Career Pathway</h2>
+                <p class="lead">From Ambassador to Professional Counselor: A Clear, Credentialed Progression</p>
+            </div>
+
+            <!-- Pathway Overview -->
+            <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 40px; border-radius: 20px; margin-bottom: 40px; border: 2px solid #00b894;">
+                <h3 style="text-align: center; color: #00b894; margin-bottom: 24px; font-family: 'Playfair Display', serif;">This Is Not a Side Hustle. This Is a Profession.</h3>
+                <p style="text-align: center; font-size: 1.1rem; color: #2d3436; max-width: 800px; margin: 0 auto; line-height: 1.7;">
+                    The Marriage Literacy Ambassador program is a structured pathway from advocacy work to professional counseling—
+                    with credentials, training, income, and career progression at every stage.
+                </p>
+            </div>
+
+            <div class="accordion">
+                <!-- Phase 1: Entry & Foundation -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-door-open"></i>
+                            <span>Phase 1: Entry & Foundation (Month 1)</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>🎯 Goal:</strong> Become a credentialed Marriage Literacy Ambassador with immediate earning capacity</p>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 24px;">What Happens When You Join</h4>
+                            <div class="feature-list" style="margin-top: 16px;">
+                                <div class="feature-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <strong>Pay 15,000 FCFA</strong>
+                                        <p>One-time entry fee (no recurring costs, no monthly dues)</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-book"></i>
+                                    <div>
+                                        <strong>Receive SBD for Dummies Immediately</strong>
+                                        <p>Your foundational textbook—digital + physical copy shipped</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <div>
+                                        <strong>$247 Teleios Blueprint Scholarship</strong>
+                                        <p>First 500 ambassadors receive full access to our flagship personal development course</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-university"></i>
+                                    <div>
+                                        <strong>Enter Marriage Foundation School (6 Weeks)</strong>
+                                        <p>Teleios Blueprint content + Advocacy Training = CRLA credential pathway</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <div>
+                                        <strong>Start Earning Immediately</strong>
+                                        <p>Deploy access, earn 1,500 FCFA per unit—no waiting period</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="example-box highlight" style="margin-top: 24px;">
+                                <strong>🎓 Your First Week:</strong> Receive textbook → Access Foundation School → Begin advocacy work → Start earning while you learn
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Foundation School & CRLA -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-certificate"></i>
+                            <span>Phase 2: Foundation School & CRLA Credential (Weeks 2-6)</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>🎯 Goal:</strong> Master marriage literacy frameworks and earn your CRLA (Certified Relationship Literacy Advocate) credential</p>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 24px;">The 6-Week Integrated Curriculum</h4>
+                            <p>Each week combines <strong>Teleios Blueprint content</strong> (personal development) with <strong>Advocacy Training</strong> (deployment skills):</p>
+
+                            <div class="sub-stack" style="margin-top: 16px;">
+                                <h4>Week 1: Foundations</h4>
+                                <ul>
+                                    <li>Teleios: Self-awareness, core values mapping</li>
+                                    <li>Advocacy: Deployment psychology, first conversations</li>
+                                </ul>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Week 2: Relationships & Connection</h4>
+                                <ul>
+                                    <li>Teleios: Relational intelligence, boundaries</li>
+                                    <li>Advocacy: Story framing, objection handling</li>
+                                </ul>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Week 3: Communication</h4>
+                                <ul>
+                                    <li>Teleios: Effective communication patterns</li>
+                                    <li>Advocacy: Community building, cohort strategy</li>
+                                </ul>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Week 4: Maturity & Growth</h4>
+                                <ul>
+                                    <li>Teleios: Emotional intelligence, conflict resolution</li>
+                                    <li>Advocacy: Institutional deployment, bulk access</li>
+                                </ul>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Week 5: Purpose & Vision</h4>
+                                <ul>
+                                    <li>Teleios: Life design, goal alignment</li>
+                                    <li>Advocacy: Service routing, pathway activation</li>
+                                </ul>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Week 6: Integration & Launch</h4>
+                                <ul>
+                                    <li>Teleios: Building lifelong habits</li>
+                                    <li>Advocacy: Dashboard mastery, advanced strategies</li>
+                                </ul>
+                            </div>
+
+                            <div class="stack-note important" style="margin-top: 24px;">
+                                <p><strong>📜 Upon Completion:</strong> Earn CRLA credential + digital certificate + access to advanced pathways</p>
+                            </div>
+
+                            <div class="example-box" style="margin-top: 16px;">
+                                <strong>Format:</strong> Self-paced online learning • Weekly live Q&A sessions • Community support • Peer accountability groups
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3: Active Ambassador (Months 2-6) -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-rocket"></i>
+                            <span>Phase 3: Active Ambassador (Months 2-6)</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>🎯 Goal:</strong> Build consistent income through the 5 revenue stacks while gaining experience</p>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 24px;">What You're Building</h4>
+                            <div class="stacks-grid" style="margin-top: 16px;">
+                                <div class="stack-card">
+                                    <div class="stack-number">1</div>
+                                    <h4>Access Deployment</h4>
+                                    <p>1,500 FCFA per unit</p>
+                                </div>
+                                <div class="stack-card">
+                                    <div class="stack-number">2</div>
+                                    <h4>Pathway Credits</h4>
+                                    <p>5-12% on courses/schools</p>
+                                </div>
+                                <div class="stack-card">
+                                    <div class="stack-number">3</div>
+                                    <h4>Shop & Subscriptions</h4>
+                                    <p>3-6% recurring</p>
+                                </div>
+                                <div class="stack-card">
+                                    <div class="stack-number">4</div>
+                                    <h4>Service Routing</h4>
+                                    <p>5-10k FCFA per cycle</p>
+                                </div>
+                                <div class="stack-card">
+                                    <div class="stack-number">5</div>
+                                    <h4>Training Credits</h4>
+                                    <p>Build toward certification</p>
+                                </div>
+                            </div>
+
+                            <div class="example-box highlight" style="margin-top: 24px;">
+                                <strong>Typical Month 4 Ambassador:</strong> 30 deployments (45k) + 5 course enrollments (35k) + passive shop income (8k) + 2 counseling routings (15k) = <strong>103,000 FCFA monthly</strong>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 32px;">What You're Learning</h4>
+                            <ul style="margin-top: 12px;">
+                                <li>Real-world advocacy: How people actually respond to marriage literacy</li>
+                                <li>Community building: Creating cohorts, accountability groups, church partnerships</li>
+                                <li>Service awareness: Recognizing when people need counseling (routing, not counseling yourself)</li>
+                                <li>Dashboard fluency: Tracking deployments, activations, credits in real-time</li>
+                                <li>Professional conduct: Ethics, boundaries, integrity in advocacy work</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4: Senior Ambassador (Months 6-12) -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-award"></i>
+                            <span>Phase 4: Senior Ambassador (Months 6-12)</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>🎯 Milestone:</strong> 500+ deployments • Consistent monthly income • Advanced training access</p>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 24px;">What Changes</h4>
+                            <div class="feature-list" style="margin-top: 16px;">
+                                <div class="feature-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <div>
+                                        <strong>Higher Routing Credits</strong>
+                                        <p>Priority placement for service routing—increased honorariums</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-users"></i>
+                                    <div>
+                                        <strong>Cohort Leadership</strong>
+                                        <p>Eligible to co-facilitate Foundation School cohorts (paid)</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-trophy"></i>
+                                    <div>
+                                        <strong>Advanced Training Portal</strong>
+                                        <p>Access to leadership resources, institutional deployment strategies</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-handshake"></i>
+                                    <div>
+                                        <strong>Corporate Opportunities</strong>
+                                        <p>Introduced to corporate/institutional contracts (5-10% finder's honorarium)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="example-box highlight" style="margin-top: 24px;">
+                                <strong>Senior Ambassador Income:</strong> 150k-300k FCFA monthly (mix of all 5 stacks + leadership activities)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 5: CRLA to Associate Counselor (Year 2+) -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-user-md"></i>
+                            <span>Phase 5: Professional Counselor Track (Year 2+)</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="stack-intro">
+                                <p><strong>🎯 Goal:</strong> Transition from advocacy work to professional marriage counseling</p>
+                            </div>
+
+                            <h4 style="color: #00b894; margin-top: 24px;">The Bridge to Counseling</h4>
+                            <p>Your CRLA credential + 12+ months experience = eligibility for:</p>
+
+                            <div class="career-ladder" style="margin-top: 24px;">
+                                <div class="ladder-step">
+                                    <div class="ladder-number">1</div>
+                                    <div class="ladder-content">
+                                        <h5>Marriage Counseling Certification</h5>
+                                        <p>Use training credits earned as ambassador to offset tuition</p>
+                                        <p style="margin-top: 8px; color: #00b894; font-weight: 600;">Credits earned through advocacy work can reduce certification costs by 50-80%</p>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step">
+                                    <div class="ladder-number">2</div>
+                                    <div class="ladder-content">
+                                        <h5>Supervised Practice</h5>
+                                        <p>Work under licensed counselors, gain session hours, build competency</p>
+                                        <div class="earning-potential">Paid per session: 20k-40k FCFA</div>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step">
+                                    <div class="ladder-number">3</div>
+                                    <div class="ladder-content">
+                                        <h5>Associate Counselor</h5>
+                                        <p>Independent practice with faculty oversight • Run your own sessions and programs</p>
+                                        <div class="earning-potential">Monthly: 300k-800k FCFA</div>
+                                    </div>
+                                </div>
+
+                                <div class="ladder-step ladder-top">
+                                    <div class="ladder-number">4</div>
+                                    <div class="ladder-content">
+                                        <h5>Licensed / Lead Counselor</h5>
+                                        <p>Full credentials • Faculty status • Corporate contracts • Cohort leadership</p>
+                                        <div class="earning-potential highlight">Monthly: 1M+ FCFA</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stack-note important" style="margin-top: 32px;">
+                                <p><strong>This is the answer to "What can this become?"</strong></p>
+                                <p style="margin-top: 12px;">You're not stuck in advocacy work forever. The training credits, experience, and CRLA credential build toward professional counseling—a dignified, lucrative career with societal impact.</p>
+                            </div>
+
+                            <div class="example-box" style="margin-top: 16px;">
+                                <strong>Real Story:</strong> Ambassador deploys 800+ access units over 18 months → Uses training credits to cover 70% of counseling cert → Becomes Associate Counselor earning 500k/month → Builds to Lead Counselor (1.2M/month) within 4 years
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alternative Pathways -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-directions"></i>
+                            <span>Alternative Career Pathways</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p style="margin-bottom: 24px;">Not everyone wants to become a counselor. Here are other professional tracks:</p>
+
+                            <div class="sub-stack">
+                                <h4>🎯 Regional Director</h4>
+                                <p>Build and lead teams of ambassadors in your region</p>
+                                <ul style="margin-top: 12px;">
+                                    <li>Recruit and train new ambassadors</li>
+                                    <li>Coordinate regional events and cohorts</li>
+                                    <li>Earn leadership bonuses on team performance</li>
+                                    <li>Priority access to institutional partnerships</li>
+                                </ul>
+                                <div class="earning-potential" style="margin-top: 12px;">Potential: 400k-900k FCFA monthly</div>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>📚 Content Creator & Trainer</h4>
+                                <p>Develop resources, courses, and training materials</p>
+                                <ul style="margin-top: 12px;">
+                                    <li>Create marriage literacy resources for deployment</li>
+                                    <li>Lead workshops and seminars</li>
+                                    <li>Write for publications and platforms</li>
+                                    <li>Build passive income through content licensing</li>
+                                </ul>
+                                <div class="earning-potential" style="margin-top: 12px;">Potential: 250k-600k FCFA monthly</div>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>🏢 Corporate Deployment Specialist</h4>
+                                <p>Focus on institutional and corporate partnerships</p>
+                                <ul style="margin-top: 12px;">
+                                    <li>Build relationships with companies, churches, NGOs</li>
+                                    <li>Design custom marriage literacy programs for organizations</li>
+                                    <li>Coordinate bulk deployments and training services</li>
+                                    <li>Earn finder's honorariums on large contracts</li>
+                                </ul>
+                                <div class="earning-potential" style="margin-top: 12px;">Potential: 500k-1.5M FCFA monthly (contract-based)</div>
+                            </div>
+
+                            <div class="example-box highlight" style="margin-top: 24px;">
+                                <strong>Key Insight:</strong> All pathways begin with the same foundation (Ambassador → CRLA), but branch based on your strengths, interests, and long-term goals. You're not locked into one track.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQs -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <div class="accordion-title">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Frequently Asked Questions</span>
+                        </div>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="sub-stack">
+                                <h4>Q: Can I start earning before completing the Foundation School?</h4>
+                                <p>Yes! You can begin advocacy work (Stack 1: Access Deployment) immediately after registration. The Foundation School enhances your skills and unlocks advanced pathways, but you're not blocked from earning while you learn.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: What if I can't complete the 6-week school on time?</h4>
+                                <p>The curriculum is self-paced. Six weeks is recommended, but you can take longer if needed. The CRLA credential is awarded upon completion, not on a fixed timeline.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: Is the $247 Teleios Blueprint scholarship really included?</h4>
+                                <p>Yes, for the first 500 ambassadors. It's a launch incentive—full access to our flagship course at no additional cost. After the first 500, ambassadors will receive the Foundation School training separately.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: Do I need to become a counselor to be successful?</h4>
+                                <p>No. Many ambassadors build excellent careers through advocacy work, regional leadership, or corporate deployment without ever becoming counselors. The counseling track is one option, not the only option.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: How are training credits calculated and used?</h4>
+                                <p>Training credits are earned through sustained advocacy work (deployments, activations, service routing). They can be applied toward counseling certification tuition, advanced courses, or faculty mentorship programs—significantly reducing your out-of-pocket costs for professional development.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: Can organizations purchase bulk access for their members?</h4>
+                                <p>Absolutely. Churches, companies, schools, and NGOs can purchase access at 15,000 FCFA per member. Example: A church purchases access for 100 couples (200 people) = 3,000,000 FCFA → you earn 300,000 FCFA.</p>
+                            </div>
+
+                            <div class="sub-stack">
+                                <h4>Q: What's the difference between this and "selling books" or affiliate marketing?</h4>
+                                <p>Three critical differences:</p>
+                                <ol style="margin-top: 8px;">
+                                    <li><strong>Infrastructure:</strong> You're deploying access to a $247 scholarship program powered by a credentialed curriculum, not just selling a book.</li>
+                                    <li><strong>Credentialing:</strong> You earn a recognized credential (CRLA) and build toward professional certification.</li>
+                                    <li><strong>Career Pathway:</strong> This is a 5-year professional development arc from advocacy to counseling, not a side hustle.</li>
+                                </ol>
+                            </div>
+
+                            <div class="stack-note important" style="margin-top: 24px;">
+                                <p><strong>💡 Still have questions?</strong> Join our info session or reach out via WhatsApp: +237 XXX XXX XXX</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 5: Apply Now -->
+    <section class="tab-content" id="apply">
+        <div class="container">
+            <div class="section-header">
+                <h2>Ambassador Application</h2>
+                <p class="lead">Join the first 500 Marriage Literacy Ambassadors</p>
+            </div>
+
+            <form class="registration-form" id="ambassadorForm">
+                <!-- Personal Information -->
+                <div class="form-section-title">
+                    <i class="fas fa-user"></i> Personal Information
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name <span class="required">*</span></label>
+                        <input type="text" name="firstName" required placeholder="Enter your first name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name <span class="required">*</span></label>
+                        <input type="text" name="lastName" required placeholder="Enter your last name">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email Address <span class="required">*</span></label>
+                        <input type="email" name="email" required placeholder="your.email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number (WhatsApp) <span class="required">*</span></label>
+                        <input type="tel" name="phone" required placeholder="+237 XXX XXX XXX">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City <span class="required">*</span></label>
+                        <input type="text" name="city" required placeholder="e.g., Douala, Yaoundé">
+                    </div>
+                    <div class="form-group">
+                        <label>Region <span class="required">*</span></label>
+                        <select name="region" required>
+                            <option value="">Select your region</option>
+                            <option value="Adamawa">Adamawa</option>
+                            <option value="Centre">Centre</option>
+                            <option value="East">East</option>
+                            <option value="Far North">Far North</option>
+                            <option value="Littoral">Littoral</option>
+                            <option value="North">North</option>
+                            <option value="Northwest">Northwest</option>
+                            <option value="South">South</option>
+                            <option value="Southwest">Southwest</option>
+                            <option value="West">West</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <div class="form-section-title">
+                    <i class="fas fa-share-nodes"></i> Social Media Presence
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Instagram Handle</label>
+                        <input type="text" name="instagram" placeholder="@username">
+                    </div>
+                    <div class="form-group">
+                        <label>Facebook Profile</label>
+                        <input type="url" name="facebook" placeholder="https://facebook.com/...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Primary Platform for Advocacy <span class="required">*</span></label>
+                    <select name="primaryPlatform" required>
+                        <option value="">Select your main platform</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="In-Person">In-Person/Community Events</option>
+                        <option value="Church">Church/Religious Community</option>
+                    </select>
+                </div>
+
+                <!-- Motivation -->
+                <div class="form-section-title">
+                    <i class="fas fa-heart"></i> Your Story & Vision
+                </div>
+
+                <div class="form-group">
+                    <label>Why does marriage literacy matter to you? <span class="required">*</span></label>
+                    <textarea name="motivation" required placeholder="Share why you want to be part of building marriage literacy in communities (minimum 50 words)"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Have you done advocacy or community work before? <span class="required">*</span></label>
+                        <select name="experience" required>
+                            <option value="">Select an option</option>
+                            <option value="Professional">Yes - Professional advocacy/outreach</option>
+                            <option value="Volunteer">Yes - Community volunteer work</option>
+                            <option value="Occasionally">Yes - Occasionally</option>
+                            <option value="First time">No - This is my first time</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>How many access units do you plan to deploy? <span class="required">*</span></label>
+                        <select name="commitment" required>
+                            <option value="">Select your goal</option>
+                            <option value="20">20 units (Foundation Builder - 30,000 FCFA)</option>
+                            <option value="40">40 units (Community Advocate - 60,000 FCFA)</option>
+                            <option value="60">60 units (Literacy Champion - 90,000 FCFA)</option>
+                            <option value="100">100+ units (Regional Leader - 150,000+ FCFA)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-note">
+                    <p><strong>🌱 Remember:</strong> You're not "selling"—you're <strong>deploying access</strong> to foundational marriage literacy.</p>
+                    <p><strong>💡 Your role:</strong> Advocate for Marriage Foundation Access powered by The Teleios Blueprint ($247 course).</p>
+                    <p><strong>📚 After registration:</strong> You'll enter the Marriage Foundation School (6 weeks) to earn your CRLA credential.</p>
+                </div>
+
+                <!-- Referral -->
+                <div class="form-group">
+                    <label>Recruited by (Optional)</label>
+                    <input type="text" name="recruitedBy" placeholder="AMB-XXXX-1234 or RD-XXXX-5678" style="text-transform: uppercase;">
+                    <small style="color: #636e72;">Enter ambassador or regional director code if someone referred you</small>
+                </div>
+
+                <!-- Agreement -->
+                <div class="form-section-title">
+                    <i class="fas fa-file-contract"></i> Your Commitment
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="commitment-check" required>
+                    <label for="commitment-check">
+                        I commit to deploying Marriage Foundation Access to my selected goal and completing the 6-week Foundation School <span class="required">*</span>
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        I agree to the Terms and Conditions and Ambassador Code of Conduct <span class="required">*</span>
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="consent" required>
+                    <label for="consent">
+                        I consent to receiving training materials, school content, and updates via email and WhatsApp <span class="required">*</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Application & Pay 15,000 FCFA
+                </button>
+
+                <p style="text-align: center; color: #636e72; margin-top: 20px; font-size: 0.95rem;">
+                    <i class="fas fa-clock"></i> Applications reviewed within 24-48 hours. Payment processes after approval.
+                </p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <!-- Call to Action -->
+            <div class="footer-cta">
+                <h3>Ready to Transform Lives Through Marriage Literacy?</h3>
+                <p>Join 200,000+ couples worldwide who have discovered the power of biblical sexuality and design principles. Your extraordinary journey starts today.</p>
+                <a href="#apply" class="btn-primary">
+                    <span>Start Your Application</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Footer Content -->
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Marriage Education</h4>
+                    <p>Transforming relationships through proven methodologies and deep wisdom. Deploying marriage literacy to individuals, families, and communities worldwide.</p>
+                    <p style="margin-top: 20px;"><strong>Contact Info:</strong></p>
+                    <p>📧 info@marriageducation.com<br>
+                    🎓 train@marriageducation.com<br>
+                    📦 orders@marriageducation.com</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://marriageducation.com/about.html"><i class="fas fa-angle-right"></i> About Us</a></li>
+                        <li><a href="https://marriageducation.com/shop.html"><i class="fas fa-angle-right"></i> Shop</a></li>
+                        <li><a href="https://marriageducation.com/magazine.html"><i class="fas fa-angle-right"></i> Magazine</a></li>
+                        <li><a href="https://marriageducation.com/courses.html"><i class="fas fa-angle-right"></i> Courses</a></li>
+                        <li><a href="https://marriageducation.com/contact.html"><i class="fas fa-angle-right"></i> Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Join Our Team</h4>
+                    <ul class="footer-links">
+                        <li><a href="ambassador-register.html"><i class="fas fa-user-graduate"></i> Become an Ambassador</a></li>
+                        <li><a href="rd-register.html"><i class="fas fa-crown"></i> Become a Regional Director</a></li>
+                        <li><a href="ambassador-login.html"><i class="fas fa-sign-in-alt"></i> Ambassador Login</a></li>
+                        <li><a href="rd-login.html"><i class="fas fa-sign-in-alt"></i> RD Login</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#overview"><i class="fas fa-angle-right"></i> Program Overview</a></li>
+                        <li><a href="#program"><i class="fas fa-angle-right"></i> Foundation School</a></li>
+                        <li><a href="#earnings"><i class="fas fa-angle-right"></i> Earnings Model</a></li>
+                        <li><a href="#pathway"><i class="fas fa-angle-right"></i> Career Pathway</a></li>
+                        <li><a href="https://marriageducation.com/corporate.html"><i class="fas fa-angle-right"></i> Corporate Training</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p>© 2025 Marriage Education. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
 
     <script>
-        // Form submission handler
+        // Tab Navigation
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(targetTab).classList.add('active');
+
+                // Smooth scroll to content
+                document.querySelector('.nav-tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Accordion Functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const isActive = header.classList.contains('active');
+
+                // Close all accordions
+                document.querySelectorAll('.accordion-header').forEach(h => h.classList.remove('active'));
+                document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+
+                // Open clicked accordion if it wasn't active
+                if (!isActive) {
+                    header.classList.add('active');
+                    content.classList.add('active');
+                }
+            });
+        });
+
+        // Smooth scroll for hero buttons
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                
+                if (targetId === 'learn-more') {
+                    document.querySelector('.nav-tabs').scrollIntoView({ behavior: 'smooth' });
+                } else if (targetId === 'apply') {
+                    // Activate apply tab
+                    document.querySelector('[data-tab="apply"]').click();
+                }
+            });
+        });
+
+        // Form Submission
         document.getElementById('ambassadorForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get form data
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
             
@@ -770,100 +3406,23 @@
                 return;
             }
             
-            // Validate required fields
-            if (!data.firstName || !data.lastName || !data.email || !data.phone) {
-                alert('❌ Please fill in all required fields.');
-                return;
-            }
-            
             // Generate ambassador code
             const ambCode = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
             
-            // Store data in sessionStorage for payment page
+            // Store data for payment page
             sessionStorage.setItem('ambassadorData', JSON.stringify({
-                firstName: data.firstName,
-                lastName: data.lastName,
+                ...data,
+                code: ambCode,
                 fullName: data.firstName + ' ' + data.lastName,
-                email: data.email,
-                phone: data.phone,
-                city: data.city,
-                region: data.region,
-                instagram: data.instagram || '',
-                facebook: data.facebook || '',
-                tiktok: data.tiktok || '',
-                linkedin: data.linkedin || '',
-                instagramFollowers: parseInt(data.instagramFollowers) || 0,
-                facebookFollowers: parseInt(data.facebookFollowers) || 0,
-                primaryPlatform: data.primaryPlatform,
-                motivation: data.motivation,
-                salesExperience: data.salesExperience,
-                commitment: data.commitment,
-                referralSource: data.referralSource || '',
-                recruitedBy: data.recruitedBy || '',
-                referredBy: data.referredBy || '',
-                code: ambCode
+                role: 'Marriage Literacy Ambassador',
+                track: 'Women\'s Track'
             }));
             
-            console.log('✅ Ambassador registration data prepared:', ambCode);
-            console.log('🔄 Redirecting to payment page...');
+            console.log('✅ Ambassador registration prepared:', ambCode);
             
-            // Redirect to payment page with ambassador type and code
+            // Redirect to payment
             window.location.href = `rd-payment.html?type=ambassador&code=${ambCode}&amount=15000`;
         });
-
-        // Update spots counter from Firebase
-        function updateSpotsCounter() {
-            setTimeout(async function() {
-                try {
-                    if (typeof db === 'undefined') return;
-                    
-                    const ambassadorsSnapshot = await db.collection('ambassadors').get();
-                    
-                    const totalSpots = 500;
-                    const spotsTaken = ambassadorsSnapshot.size;
-                    const spotsAvailable = totalSpots - spotsTaken;
-                    
-                    const counter = document.getElementById('spotsAvailable');
-                    if (counter) {
-                        counter.textContent = `${spotsAvailable}/${totalSpots}`;
-                    }
-                    
-                    console.log('✅ Counter updated:', spotsAvailable, 'spots left');
-                } catch (error) {
-                    console.warn('Counter error:', error);
-                }
-            }, 500);
-        }
-        
-        // Update counter on load and every 30 seconds
-        window.addEventListener('load', function() {
-            setTimeout(updateSpotsCounter, 2000);
-            
-            // Capture RD recruitment link parameter
-            const urlParams = new URLSearchParams(window.location.search);
-            const rdCode = urlParams.get('rd');
-            const ambCode = urlParams.get('amb');
-            
-            if (rdCode) {
-                document.getElementById('recruitedBy').value = rdCode.toUpperCase();
-                console.log('🔗 Recruited by Regional Director:', rdCode);
-                
-                // Show banner
-                const banner = document.createElement('div');
-                banner.style.cssText = 'background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
-                banner.innerHTML = `<i class="fas fa-user-tie"></i> <strong>Recruited by Regional Director:</strong> ${rdCode.toUpperCase()} - You\'re joining their team!`;
-                document.body.prepend(banner);
-            } else if (ambCode) {
-                document.getElementById('recruitedBy').value = ambCode.toUpperCase();
-                console.log('🔗 Recruited by Ambassador:', ambCode);
-                
-                const banner = document.createElement('div');
-                banner.style.cssText = 'background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
-                banner.innerHTML = `<i class="fas fa-user-friends"></i> <strong>Recruited by Ambassador:</strong> ${ambCode.toUpperCase()}`;
-                document.body.prepend(banner);
-            }
-        });
-        setInterval(updateSpotsCounter, 30000);
     </script>
 </body>
 </html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marriage Foundation School - CRLA Certification | Marriage Education</title>
+    <meta name="description" content="6-week intensive training combining Teleios Blueprint and Advocacy Training to earn your CRLA credential">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .school-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .school-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .school-header .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        .progress-overview {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.15);
+            padding: 24px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-bar-container {
+            background: rgba(0,0,0,0.2);
+            height: 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #00b894 0%, #00ffd0 100%);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: width 0.5s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 16px;
+        }
+
+        .progress-stat {
+            text-align: center;
+        }
+
+        .progress-stat .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .progress-stat .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Navigation Tabs */
+        .curriculum-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .nav-tab {
+            padding: 16px 24px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 600;
+            color: #636e72;
+        }
+
+        .nav-tab:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .nav-tab.completed {
+            border-color: #00b894;
+            background: #f0fdf9;
+            color: #00b894;
+        }
+
+        .nav-tab .week-number {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Week Content */
+        .week-content {
+            display: none;
+        }
+
+        .week-content.active {
+            display: block;
+        }
+
+        .week-header {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 32px;
+        }
+
+        .week-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+        }
+
+        .week-header .theme {
+            font-size: 1.3rem;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+
+        .week-header .description {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .dual-track-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .track-column {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .track-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .track-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .track-icon.teleios {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .track-icon.advocacy {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .track-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .module-list {
+            list-style: none;
+        }
+
+        .module-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .module-item:hover {
+            padding-left: 8px;
+            color: #667eea;
+        }
+
+        .module-item:last-child {
+            border-bottom: none;
+        }
+
+        .module-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .module-checkbox.completed {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            border-color: transparent;
+            position: relative;
+        }
+
+        .module-checkbox.completed::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .module-text {
+            flex: 1;
+        }
+
+        .module-duration {
+            font-size: 0.85rem;
+            color: #636e72;
+            padding: 4px 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .week-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+            justify-content: center;
+        }
+
+        .crla-badge {
+            background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%);
+            padding: 32px;
+            border-radius: 16px;
+            border: 2px solid #00b894;
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .crla-badge h3 {
+            color: #00b894;
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .crla-badge p {
+            color: #636e72;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .school-header h1 {
+                font-size: 2rem;
+            }
+
+            .dual-track-container {
+                grid-template-columns: 1fr;
+            }
+
+            .curriculum-nav {
+                flex-wrap: wrap;
+            }
+
+            .nav-tab {
+                flex: 1;
+                min-width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="school-header">
+        <h1>Marriage Foundation School</h1>
+        <p class="subtitle">6-Week Intensive: Teleios Blueprint + Advocacy Training = CRLA Credential</p>
+        
+        <div class="progress-overview">
+            <h3 style="margin-bottom: 16px;">Your Progress</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="overallProgress" style="width: 42%;">
+                    42% Complete
+                </div>
+            </div>
+            <div class="progress-stats">
+                <div class="progress-stat">
+                    <div class="value" id="completedModules">15</div>
+                    <div class="label">Modules Done</div>
+                </div>
+                <div class="progress-stat">
+                    <div class="value" id="currentWeek">3</div>
+                    <div class="label">Current Week</div>
+                </div>
+                <div class="progress-stat">
+                    <div class="value" id="crlaStatus">In Progress</div>
+                    <div class="label">CRLA Status</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <div class="curriculum-nav">
+            <div class="nav-tab completed" onclick="showWeek(1)">
+                <div class="week-number">Week 1</div>
+                <div>Foundations</div>
+            </div>
+            <div class="nav-tab completed" onclick="showWeek(2)">
+                <div class="week-number">Week 2</div>
+                <div>Relationships</div>
+            </div>
+            <div class="nav-tab active" onclick="showWeek(3)">
+                <div class="week-number">Week 3</div>
+                <div>Communication</div>
+            </div>
+            <div class="nav-tab" onclick="showWeek(4)">
+                <div class="week-number">Week 4</div>
+                <div>Maturity</div>
+            </div>
+            <div class="nav-tab" onclick="showWeek(5)">
+                <div class="week-number">Week 5</div>
+                <div>Purpose</div>
+            </div>
+            <div class="nav-tab" onclick="showWeek(6)">
+                <div class="week-number">Week 6</div>
+                <div>Integration</div>
+            </div>
+        </div>
+
+        <!-- Week 1 Content -->
+        <div class="week-content" id="week1">
+            <div class="week-header">
+                <h2>Week 1: Foundations</h2>
+                <div class="theme">Self-Awareness & First Conversations</div>
+                <p class="description">Build the foundation for both personal development and effective advocacy work. Understand your own identity before helping others discover theirs.</p>
+            </div>
+
+            <div class="dual-track-container">
+                <!-- Teleios Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon teleios">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="track-title">Teleios Blueprint</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Introduction to Personal Development</div>
+                            <div class="module-duration">15 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Core Values Mapping</div>
+                            <div class="module-duration">20 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Self-Awareness Assessment</div>
+                            <div class="module-duration">25 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Identity vs. Performance</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Advocacy Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon advocacy">
+                            <i class="fas fa-hands-helping"></i>
+                        </div>
+                        <div class="track-title">Advocacy Training</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Deployment Psychology</div>
+                            <div class="module-duration">22 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">First Conversations: The Ask</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Why Marriage Literacy Matters</div>
+                            <div class="module-duration">15 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Practice Scenarios</div>
+                            <div class="module-duration">30 min</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="week-actions">
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Mark Week Complete
+                </a>
+            </div>
+        </div>
+
+        <!-- Week 2 Content -->
+        <div class="week-content" id="week2">
+            <div class="week-header">
+                <h2>Week 2: Relationships & Connection</h2>
+                <div class="theme">Relational Intelligence & Story Framing</div>
+                <p class="description">Master the dynamics of healthy relationships while learning how to frame compelling stories that connect with people's real needs.</p>
+            </div>
+
+            <div class="dual-track-container">
+                <!-- Teleios Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon teleios">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="track-title">Teleios Blueprint</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Relational Intelligence Framework</div>
+                            <div class="module-duration">20 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Healthy Boundaries</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Attachment Styles</div>
+                            <div class="module-duration">22 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Building Trust</div>
+                            <div class="module-duration">16 min</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Advocacy Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon advocacy">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="track-title">Advocacy Training</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Story Framing Techniques</div>
+                            <div class="module-duration">25 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Objection Handling</div>
+                            <div class="module-duration">20 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Connecting with Different Audiences</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Real Conversations Workshop</div>
+                            <div class="module-duration">35 min</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="week-actions">
+                <a href="#" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Mark Week Complete
+                </a>
+            </div>
+        </div>
+
+        <!-- Week 3 Content (Current) -->
+        <div class="week-content active" id="week3">
+            <div class="week-header">
+                <h2>Week 3: Communication</h2>
+                <div class="theme">Effective Patterns & Community Building</div>
+                <p class="description">Learn communication patterns that build understanding while developing strategies to create engaged communities around marriage literacy.</p>
+            </div>
+
+            <div class="dual-track-container">
+                <!-- Teleios Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon teleios">
+                            <i class="fas fa-podcast"></i>
+                        </div>
+                        <div class="track-title">Teleios Blueprint</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Communication Fundamentals</div>
+                            <div class="module-duration">20 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Active Listening Skills</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox"></div>
+                            <div class="module-text">Conflict Patterns</div>
+                            <div class="module-duration">22 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox"></div>
+                            <div class="module-text">Healthy Communication Habits</div>
+                            <div class="module-duration">16 min</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Advocacy Track -->
+                <div class="track-column">
+                    <div class="track-header">
+                        <div class="track-icon advocacy">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="track-title">Advocacy Training</div>
+                    </div>
+                    <ul class="module-list">
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox completed"></div>
+                            <div class="module-text">Community Building Principles</div>
+                            <div class="module-duration">25 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox"></div>
+                            <div class="module-text">Cohort Strategy</div>
+                            <div class="module-duration">20 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox"></div>
+                            <div class="module-text">Creating Engagement</div>
+                            <div class="module-duration">18 min</div>
+                        </li>
+                        <li class="module-item" onclick="toggleModule(this)">
+                            <div class="module-checkbox"></div>
+                            <div class="module-text">Build Your First Cohort</div>
+                            <div class="module-duration">30 min</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="week-actions">
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-play-circle"></i> Continue Week 3
+                </a>
+            </div>
+        </div>
+
+        <!-- Weeks 4-6 (Locked) -->
+        <div class="week-content" id="week4">
+            <div class="week-header">
+                <h2>Week 4: Maturity & Growth</h2>
+                <div class="theme">Emotional Intelligence & Institutional Deployment</div>
+                <p class="description">🔒 Complete Week 3 to unlock</p>
+            </div>
+        </div>
+
+        <div class="week-content" id="week5">
+            <div class="week-header">
+                <h2>Week 5: Purpose & Vision</h2>
+                <div class="theme">Life Design & Pathway Activation</div>
+                <p class="description">🔒 Complete Week 4 to unlock</p>
+            </div>
+        </div>
+
+        <div class="week-content" id="week6">
+            <div class="week-header">
+                <h2>Week 6: Integration & Launch</h2>
+                <div class="theme">Lifelong Habits & Advanced Strategies</div>
+                <p class="description">🔒 Complete Week 5 to unlock</p>
+            </div>
+        </div>
+
+        <!-- CRLA Badge -->
+        <div class="crla-badge">
+            <h3>🎓 Earn Your CRLA Credential</h3>
+            <p>Upon completion of all 6 weeks and final assessment, you'll earn the professional credential:<br><strong>Certified Relationship Literacy Advocate (CRLA)</strong></p>
+            <div class="btn btn-success" style="opacity: 0.5; cursor: not-allowed;">
+                <i class="fas fa-lock"></i> Final Assessment (Complete all weeks first)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showWeek(weekNumber) {
+            // Hide all weeks
+            document.querySelectorAll('.week-content').forEach(week => {
+                week.classList.remove('active');
+            });
+            
+            // Remove active class from tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected week
+            document.getElementById(`week${weekNumber}`).classList.add('active');
+            document.querySelectorAll('.nav-tab')[weekNumber - 1].classList.add('active');
+        }
+
+        function toggleModule(element) {
+            const checkbox = element.querySelector('.module-checkbox');
+            if (!checkbox.classList.contains('completed')) {
+                checkbox.classList.add('completed');
+                updateProgress();
+                // In production, save to database
+            }
+        }
+
+        function updateProgress() {
+            const totalModules = 36;
+            const completed = document.querySelectorAll('.module-checkbox.completed').length;
+            const percent = Math.round((completed / totalModules) * 100);
+            
+            const progressBar = document.getElementById('overallProgress');
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent + '% Complete';
+            
+            document.getElementById('completedModules').textContent = completed;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+        });
+    </script>
+</body>
+</html>

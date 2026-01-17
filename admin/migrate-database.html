@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Migration Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .migration-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #636e72;
+            margin-bottom: 32px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .warning-box p {
+            color: #856404;
+            margin: 4px 0;
+        }
+
+        .status-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            min-height: 100px;
+        }
+
+        .status-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .status-value {
+            color: #636e72;
+        }
+
+        #migrationLog {
+            background: #2d3436;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 24px;
+            display: none;
+        }
+
+        #migrationLog.active {
+            display: block;
+        }
+
+        .log-line {
+            margin: 4px 0;
+        }
+
+        .log-success { color: #00ff00; }
+        .log-error { color: #ff6b6b; }
+        .log-info { color: #74b9ff; }
+        .log-warning { color: #ffeaa7; }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 24px;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .field-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .field-list h3 {
+            color: #00b894;
+            margin-bottom: 16px;
+        }
+
+        .field-list ul {
+            list-style: none;
+        }
+
+        .field-list li {
+            padding: 8px 0;
+            color: #2d3436;
+        }
+
+        .field-list li:before {
+            content: "✓ ";
+            color: #00b894;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="migration-card">
+            <h1>🚀 Database Migration Tool</h1>
+            <p class="subtitle">Marriage Foundation Access Framework - Ambassador Schema Update</p>
+
+            <div class="warning-box">
+                <p><strong>⚠️ Important:</strong> This migration adds NEW fields while preserving all existing data.</p>
+                <p><strong>Safe to run:</strong> Does not delete or overwrite any existing ambassador records.</p>
+            </div>
+
+            <div class="field-list">
+                <h3>New Fields Being Added:</h3>
+                <ul>
+                    <li><strong>role:</strong> "Marriage Literacy Ambassador"</li>
+                    <li><strong>track:</strong> "Women's Track"</li>
+                    <li><strong>credentialStatus:</strong> "locked" | "in-progress" | "earned"</li>
+                    <li><strong>schoolProgress:</strong> { currentWeek, completedModules, crlaEligible }</li>
+                    <li><strong>accessUnitsDeployed:</strong> (mirrors booksSold for new terminology)</li>
+                    <li><strong>advocacyEarnings:</strong> (mirrors commissionEarned for new terminology)</li>
+                    <li><strong>deploymentStats:</strong> { familiesSupported, youthReached, communitiesImpacted }</li>
+                    <li><strong>eligibleFor:</strong> { foundationSchool, crlaCredential, advancedTraining }</li>
+                </ul>
+            </div>
+
+            <div class="status-box" id="statusBox">
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value" id="migrationStatus">Ready to begin</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Ambassadors Found:</span>
+                    <span class="status-value" id="ambassadorCount">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Migrated:</span>
+                    <span class="status-value" id="migratedCount">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Errors:</span>
+                    <span class="status-value" id="errorCount">0</span>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+
+            <button class="btn" id="migrateBtn" onclick="startMigration()">
+                🚀 Start Migration
+            </button>
+
+            <div id="migrationLog"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+
+    <script>
+        let migrationInProgress = false;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('migrationLog');
+            logDiv.classList.add('active');
+            const line = document.createElement('div');
+            line.className = `log-line log-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(field, value) {
+            const element = document.getElementById(field);
+            if (element) element.textContent = value;
+        }
+
+        function updateProgress(current, total) {
+            const percent = Math.round((current / total) * 100);
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.classList.add('active');
+            progressFill.style.width = `${percent}%`;
+            progressFill.textContent = `${percent}%`;
+        }
+
+        async function startMigration() {
+            if (migrationInProgress) {
+                alert('Migration already in progress!');
+                return;
+            }
+
+            if (!confirm('Start database migration? This will add new fields to all ambassador records.')) {
+                return;
+            }
+
+            migrationInProgress = true;
+            const btn = document.getElementById('migrateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Migration in progress...';
+
+            log('🚀 Starting Firestore Migration...', 'info');
+            updateStatus('migrationStatus', 'In Progress');
+
+            try {
+                // Get all ambassadors
+                log('📊 Fetching ambassador records...', 'info');
+                const snapshot = await db.collection('ambassadors').get();
+                const totalAmbassadors = snapshot.size;
+
+                log(`Found ${totalAmbassadors} ambassadors to migrate`, 'success');
+                updateStatus('ambassadorCount', totalAmbassadors);
+
+                let migratedCount = 0;
+                let errorCount = 0;
+                let skippedCount = 0;
+
+                // Process each ambassador
+                for (const doc of snapshot.docs) {
+                    try {
+                        const data = doc.data();
+                        const ambassadorId = doc.id;
+
+                        // Check if already migrated (has new fields)
+                        if (data.role && data.accessUnitsDeployed !== undefined) {
+                            log(`⏭️  Skipping ${data.firstName} ${data.lastName} (already migrated)`, 'warning');
+                            skippedCount++;
+                            migratedCount++;
+                            updateStatus('migratedCount', migratedCount);
+                            updateProgress(migratedCount, totalAmbassadors);
+                            continue;
+                        }
+
+                        // Build update object with new fields
+                        const updates = {
+                            // Role & Credential System
+                            role: data.role || 'Marriage Literacy Ambassador',
+                            track: data.track || "Women's Track",
+                            credentialStatus: data.credentialStatus || 'locked',
+                            credentialType: data.credentialType || 'CRLA',
+                            credentialEarnedAt: data.credentialEarnedAt || null,
+
+                            // School Progress
+                            schoolProgress: data.schoolProgress || {
+                                enrolled: false,
+                                currentWeek: 0,
+                                completedModules: [],
+                                totalModules: 0,
+                                crlaEligible: false,
+                                completionPercentage: 0
+                            },
+
+                            // Mirror old fields with new terminology
+                            accessUnitsDeployed: data.accessUnitsDeployed !== undefined ? data.accessUnitsDeployed : (data.booksSold || 0),
+                            advocacyEarnings: data.advocacyEarnings !== undefined ? data.advocacyEarnings : (data.commissionEarned || 0),
+
+                            // New deployment metrics
+                            deploymentStats: data.deploymentStats || {
+                                familiesSupported: Math.floor((data.booksSold || 0) * 0.7),
+                                youthReached: Math.floor((data.booksSold || 0) * 0.3),
+                                communitiesImpacted: Math.floor((data.booksSold || 0) / 20)
+                            },
+
+                            // Eligibility flags
+                            eligibleFor: data.eligibleFor || {
+                                foundationSchool: true,
+                                crlaCredential: false,
+                                advancedTraining: false,
+                                paidAdvocacy: false,
+                                regionalDirector: false
+                            },
+
+                            // Revenue stacks tracking
+                            revenueStacks: data.revenueStacks || {
+                                accessDeployment: data.commissionEarned || 0,
+                                pathwayActivation: 0,
+                                shopSubscriptions: 0,
+                                serviceRouting: 0,
+                                trainingCredits: 0
+                            },
+
+                            // Metadata
+                            updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+                            migrated_at: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+
+                        // Update the document
+                        await db.collection('ambassadors').doc(ambassadorId).update(updates);
+
+                        log(`✅ Migrated: ${data.firstName} ${data.lastName} (${data.email})`, 'success');
+                        migratedCount++;
+                        updateStatus('migratedCount', migratedCount);
+                        updateProgress(migratedCount, totalAmbassadors);
+
+                    } catch (error) {
+                        log(`❌ Error migrating ${doc.id}: ${error.message}`, 'error');
+                        errorCount++;
+                        updateStatus('errorCount', errorCount);
+                    }
+                }
+
+                // Final summary
+                log('', 'info');
+                log('═══════════════════════════════════', 'info');
+                log('✅ MIGRATION COMPLETE!', 'success');
+                log(`📊 Total Ambassadors: ${totalAmbassadors}`, 'info');
+                log(`✅ Successfully Migrated: ${migratedCount - skippedCount}`, 'success');
+                log(`⏭️  Already Migrated (Skipped): ${skippedCount}`, 'warning');
+                log(`❌ Errors: ${errorCount}`, errorCount > 0 ? 'error' : 'info');
+                log('═══════════════════════════════════', 'info');
+
+                updateStatus('migrationStatus', 'Complete');
+                btn.textContent = '✅ Migration Complete';
+                btn.style.background = 'linear-gradient(135deg, #00b894 0%, #00a085 100%)';
+
+            } catch (error) {
+                log(`❌ Migration failed: ${error.message}`, 'error');
+                updateStatus('migrationStatus', 'Failed');
+                btn.disabled = false;
+                btn.textContent = '🔄 Retry Migration';
+                migrationInProgress = false;
+            }
+        }
+    </script>
+</body>
+</html>

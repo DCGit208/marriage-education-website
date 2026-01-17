@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Teleios Blueprint: Full Human Maturity - Preview</title>
+    <link rel="stylesheet" href="css/course-viewer.css">
+    <style>
+        .preview-banner {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-banner">
+        <strong>📋 Preview Mode:</strong> Viewing Week 1 content without authentication
+    </div>
+    
+    <div id="courseContent"></div>
+
+    <script>
+        const courseData = {
+  "courseId": "teleios-blueprint",
+  "course_no": 1,
+  "school": 1,
+  "school_name": "Teleios School of Personal Development",
+  "category": "personal-development",
+  "title": "The Teleios Blueprint: Full Human Maturity",
+  "price": 247,
+  "duration_weeks": 6,
+  "badge": "Foundational Certificate",
+  "description": "A complete transformation of self, identity, maturity, anthropology, and human design. Learn the template of wholeness required for covenant.",
+  "modules": [
+    {
+      "title": "Week 1: Foundations - What Is Teleios and Why It Matters",
+      "description": "Discover the core principles of Teleios, the blueprint for full human maturity, and why it is essential for covenant relationships.",
+      "lessons": [
+        {
+          "title": "Introduction to Teleios",
+          "content": "<p>Welcome to Week 1! In this module, you'll learn what Teleios means, why it matters, and how it forms the foundation for all personal and relational growth.</p>"
+        },
+        {
+          "title": "Behavioral Capacity",
+          "content": "<ul><li>Do I keep my word even when it costs me?</li><li>Can I maintain discipline when no one is watching?</li><li>Do I follow through on commitments or make excuses?</li></ul>"
+        },
+        {
+          "title": "Temperamental Steadiness",
+          "content": "<ul><li>Can I remain calm under pressure?</li><li>Do I react or respond in conflict?</li><li>Can I hold tension without rage or retreat?</li></ul>"
+        },
+        {
+          "title": "Emotional Stewardship",
+          "content": "<ul><li>Do I use emotions to manipulate or inform?</li><li>Can I feel deeply without being ruled by feelings?</li><li>Do I take responsibility for the atmosphere I create?</li></ul>"
+        },
+        {
+          "title": "Mental Discernment",
+          "content": "<ul><li>Can I reason from fixed principles, not shifting feelings?</li><li>Do I think long-term or react short-term?</li><li>Can I separate truth from trend?</li></ul>"
+        },
+        {
+          "title": "Relational Responsibility",
+          "content": "<ul><li>Do I own my portion in conflict?</li><li>Can I apologize cleanly without excuses?</li><li>Do I demand from others what I refuse to become?</li></ul>"
+        }
+      ]
+    }
+  ]
+};
+
+function renderCourseContent() {
+    const container = document.getElementById('courseContent');
+    let html = `<h1>${courseData.title}</h1>`;
+    html += `<p><strong>Description:</strong> ${courseData.description}</p>`;
+    html += `<p><strong>Duration:</strong> ${courseData.duration_weeks} weeks</p>`;
+    html += `<h2>${courseData.modules[0].title}</h2>`;
+    html += `<p>${courseData.modules[0].description}</p>`;
+    html += '<div class="lessons">';
+    courseData.modules[0].lessons.forEach(lesson => {
+        html += `<div class="lesson"><h3>${lesson.title}</h3>${lesson.content}</div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+renderCourseContent();
+    </script>
+</body>
+</html>

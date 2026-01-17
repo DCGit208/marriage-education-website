@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ambassador Dashboard | Marriage Education</title>
+    <title>Marriage Literacy Ambassador Dashboard | Marriage Education</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -712,10 +712,10 @@
                 <p class="subtitle">Referral Code: <strong id="ambassadorCode">AMB-XXX-XXX</strong></p>
             </div>
             <div class="header-nav">
-                <a href="../sbd-campaign.html"><i class="fas fa-home"></i> Campaign</a>
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="../foundation-school.html"><i class="fas fa-graduation-cap"></i> Foundation School</a>
                 <a href="resources.html"><i class="fas fa-folder"></i> Resources</a>
                 <a href="leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
-                <a href="training.html"><i class="fas fa-graduation-cap"></i> Training</a>
             </div>
         </div>
     </div>
@@ -730,8 +730,8 @@
             <div class="contest-header">
                 <div class="contest-icon">🏆</div>
                 <div class="contest-info">
-                    <h3>Weekly Contest: Ambassador of the Week</h3>
-                    <p>Most books sold this week wins <strong>10,000 FCFA bonus!</strong></p>
+                    <h3>Weekly Recognition: Impact Leader</h3>
+                    <p>Most access units deployed this week wins <strong>10,000 FCFA bonus + Featured Story!</strong></p>
                 </div>
                 <div class="contest-countdown">
                     <div class="countdown-label">Ends in:</div>
@@ -760,9 +760,9 @@
         <!-- Performance Overview -->
         <div class="performance-grid">
             <div class="perf-card">
-                <div class="icon"><i class="fas fa-book"></i></div>
-                <div class="label">Books Sold</div>
-                <div class="value"><span id="booksSold">23</span>/60</div>
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <div class="label">Access Units Deployed</div>
+                <div class="value"><span id="accessUnitsDeployed">23</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
                 <div class="subvalue">38% Complete</div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="booksProgress" style="width: 38%"></div>
@@ -770,9 +770,9 @@
             </div>
 
             <div class="perf-card">
-                <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                <div class="label">Commission Earned</div>
-                <div class="value" id="commissionEarned">34,500</div>
+                <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
+                <div class="label">Advocacy Earnings</div>
+                <div class="value" id="advocacyEarnings">34,500</div>
                 <div class="subvalue">FCFA • Paid: 20,000 FCFA</div>
             </div>
 
@@ -787,7 +787,7 @@
                 <div class="icon"><i class="fas fa-star"></i></div>
                 <div class="label">Current Level</div>
                 <div class="value" id="currentLevel">Bronze</div>
-                <div class="subvalue">7 books to Silver</div>
+                <div class="subvalue" id="nextMilestone">27 units to Silver (150)</div>
             </div>
         </div>
 
@@ -815,6 +815,46 @@
             </div>
         </div>
 
+        <!-- Foundation School Progress -->
+        <div class="referral-section" id="schoolProgressSection" style="display: none;">
+            <h2><i class="fas fa-graduation-cap"></i> Marriage Foundation School - CRLA Progress</h2>
+            <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 24px; border-radius: 12px; border: 2px solid #00b894; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h3 style="color: #00b894; margin-bottom: 8px;">Week <span id="currentWeek">3</span> of 6</h3>
+                        <p style="color: #636e72; margin: 0;">Teleios Blueprint + Advocacy Training</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #00b894;" id="completionPercent">42%</div>
+                        <small style="color: #636e72;">Complete</small>
+                    </div>
+                </div>
+                <div class="progress-bar" style="height: 20px;">
+                    <div class="progress-fill" id="schoolProgress" style="width: 42%"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">Modules Completed</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3436;"><span id="completedModules">15</span>/<span id="totalModules">36</span></div>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">CRLA Status</div>
+                        <div style="font-size: 1.1rem; font-weight: 600;" id="crlaStatus">
+                            <span style="color: #ffc107;">⏳ In Progress</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="../foundation-school.html" class="btn btn-primary" style="flex: 1; min-width: 200px; text-align: center;">
+                    <i class="fas fa-play-circle"></i> Continue Learning
+                </a>
+                <a href="../foundation-school.html#curriculum" class="btn btn-secondary" style="flex: 1; min-width: 200px; text-align: center;">
+                    <i class="fas fa-list"></i> View Curriculum
+                </a>
+            </div>
+        </div>
+
         <!-- Target Progress -->
         <div class="milestone-section">
             <h2><i class="fas fa-bullseye"></i> Milestone Tracker</h2>
@@ -824,7 +864,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="milestone-details">
-                    <h3>🥉 Bronze Level (15 books)</h3>
+                    <h3>🥉 Bronze Level (50 units)</h3>
                     <p>Congratulations! You've reached Bronze status</p>
                 </div>
                 <div class="milestone-reward">
@@ -838,7 +878,7 @@
                     <i class="fas fa-spinner fa-pulse"></i>
                 </div>
                 <div class="milestone-details">
-                    <h3>🥈 Silver Level (30 books)</h3>
+                    <h3>🥈 Silver Level (150 units)</h3>
                     <p>Only 7 more books to unlock Silver status + Branded T-shirt</p>
                 </div>
                 <div class="milestone-reward">
@@ -852,7 +892,7 @@
                     <i class="fas fa-lock"></i>
                 </div>
                 <div class="milestone-details">
-                    <h3>🥇 Gold Level (45 books)</h3>
+                    <h3>🥇 Gold Level (300 units)</h3>
                     <p>VIP Launch Event Invitation + Featured Content</p>
                 </div>
                 <div class="milestone-reward">
@@ -866,7 +906,7 @@
                     <i class="fas fa-lock"></i>
                 </div>
                 <div class="milestone-details">
-                    <h3>💎 Diamond Level (60 books)</h3>
+                    <h3>💎 Senior Ambassador (500+ units)</h3>
                     <p>10,000 FCFA Bonus + Founding Ambassador Badge</p>
                 </div>
                 <div class="milestone-reward">
@@ -878,7 +918,7 @@
 
         <!-- Commission Breakdown -->
         <div class="commission-section">
-            <h2><i class="fas fa-calculator"></i> Your Earnings Breakdown</h2>
+            <h2><i class="fas fa-layer-group"></i> Your Revenue Stacks</h2>
             
             <div class="commission-tier completed">
                 <div class="tier-info">
@@ -933,7 +973,7 @@
 
         <!-- Recent Sales -->
         <div class="recent-sales">
-            <h2><i class="fas fa-history"></i> Recent Sales (Last 5)</h2>
+            <h2><i class="fas fa-history"></i> Recent Deployments (Last 5)</h2>
             
             <div class="sale-item">
                 <div class="sale-date">Nov 30, 2025 • 8:45 PM</div>
@@ -984,18 +1024,37 @@
         const ambassadorData = {
             name: 'Jean-Paul',
             code: 'AMB-JEANPAUL-001',
-            booksSold: 23,
-            targetBooks: 60,
-            commissionEarned: 34500,
+            role: 'Marriage Literacy Ambassador',
+            track: "Women's Track",
+            accessUnitsDeployed: 23,
+            booksSold: 23, // kept for backward compatibility
+            targetUnits: 500,
+            advocacyEarnings: 34500,
+            commissionEarned: 34500, // kept for backward compatibility
             commissionPaid: 20000,
             rank: 47,
             level: 'Bronze',
-            recentSales: [
-                { date: 'Nov 30, 2025', books: 3, commission: 4500 },
-                { date: 'Nov 29, 2025', books: 1, commission: 1500 },
-                { date: 'Nov 28, 2025', books: 5, commission: 7500 },
-                { date: 'Nov 27, 2025', books: 2, commission: 3000 },
-                { date: 'Nov 26, 2025', books: 4, commission: 6000 }
+            credentialStatus: 'in-progress', // locked | in-progress | earned
+            schoolProgress: {
+                enrolled: true,
+                currentWeek: 3,
+                completedModules: 15,
+                totalModules: 36,
+                crlaEligible: false
+            },
+            revenueStacks: {
+                accessDeployment: 34500,
+                pathwayActivation: 12000,
+                shopSubscriptions: 3200,
+                serviceRouting: 8000,
+                trainingCredits: 2500
+            },
+            recentDeployments: [
+                { date: 'Jan 15, 2026', units: 3, earnings: 4500, type: 'Individual' },
+                { date: 'Jan 14, 2026', units: 1, earnings: 1500, type: 'Individual' },
+                { date: 'Jan 12, 2026', units: 15, earnings: 22500, type: 'Church Group' },
+                { date: 'Jan 10, 2026', units: 2, earnings: 3000, type: 'Individual' },
+                { date: 'Jan 8, 2026', units: 4, earnings: 6000, type: 'Couples' }
             ]
         };
 
@@ -1003,16 +1062,47 @@
         function initDashboard() {
             document.getElementById('ambassadorName').textContent = ambassadorData.name;
             document.getElementById('ambassadorCode').textContent = ambassadorData.code;
-            document.getElementById('booksSold').textContent = ambassadorData.booksSold;
-            document.getElementById('commissionEarned').textContent = ambassadorData.commissionEarned.toLocaleString();
+            document.getElementById('accessUnitsDeployed').textContent = ambassadorData.accessUnitsDeployed;
+            document.getElementById('advocacyEarnings').textContent = ambassadorData.advocacyEarnings.toLocaleString();
             document.getElementById('currentRank').textContent = ambassadorData.rank;
             document.getElementById('currentLevel').textContent = ambassadorData.level;
             
-            const referralLink = `https://marriage-education.web.app/sbd-campaign.html?ref=${ambassadorData.code}`;
+            // Display CRLA badge if earned
+            const credentialBadge = document.getElementById('credentialBadge');
+            if (ambassadorData.credentialStatus === 'earned') {
+                credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
+            } else if (ambassadorData.credentialStatus === 'in-progress') {
+                credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+            }
+            
+            const referralLink = `https://marriage-education.web.app/ambassador-register.html?ref=${ambassadorData.code}`;
             document.getElementById('referralLink').textContent = referralLink;
             
-            const progress = (ambassadorData.booksSold / ambassadorData.targetBooks) * 100;
+            const progress = (ambassadorData.accessUnitsDeployed / ambassadorData.targetUnits) * 100;
             document.getElementById('booksProgress').style.width = progress + '%';
+            
+            // Calculate next milestone
+            const milestones = [
+                { level: 'Bronze', threshold: 50 },
+                { level: 'Silver', threshold: 150 },
+                { level: 'Gold', threshold: 300 },
+                { level: 'Senior Ambassador', threshold: 500 }
+            ];
+            const nextMilestone = milestones.find(m => m.threshold > ambassadorData.accessUnitsDeployed);
+            if (nextMilestone) {
+                const remaining = nextMilestone.threshold - ambassadorData.accessUnitsDeployed;
+                document.getElementById('nextMilestone').textContent = `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`;
+            } else {
+                document.getElementById('nextMilestone').textContent = '🌟 Senior Ambassador Status Achieved!';
+            }
+            
+            // Initialize revenue stacks display
+            displayRevenueStacks();
+            
+            // Initialize school progress if enrolled
+            if (ambassadorData.schoolProgress.enrolled) {
+                displaySchoolProgress();
+            }
         }
 
         // Copy referral link
@@ -1078,6 +1168,41 @@
                 }
             }, 5000);
         }
+
+        // Display School Progress
+        function displaySchoolProgress() {
+            const section = document.getElementById('schoolProgressSection');
+            if (!section) return;
+            
+            section.style.display = 'block';
+            
+            const { currentWeek, completedModules, totalModules, crlaEligible } = ambassadorData.schoolProgress;
+            const completionPercent = Math.round((completedModules / totalModules) * 100);
+            
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('completedModules').textContent = completedModules;
+            document.getElementById('totalModules').textContent = totalModules;
+            document.getElementById('completionPercent').textContent = completionPercent + '%';
+            document.getElementById('schoolProgress').style.width = completionPercent + '%';
+            
+            const crlaStatusEl = document.getElementById('crlaStatus');
+            if (ambassadorData.credentialStatus === 'earned') {
+                crlaStatusEl.innerHTML = '<span style="color: #00b894;">✓ CRLA Earned!</span>';
+            } else if (crlaEligible) {
+                crlaStatusEl.innerHTML = '<span style="color: #00b894;">✓ Eligible - Complete Final Assessment</span>';
+            } else {
+                crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+            }
+        }
+
+        // Display Revenue Stacks
+        function displayRevenueStacks() {
+            // This function can be used to dynamically update revenue stacks display
+            // For now, the static HTML shows the breakdown
+            const total = Object.values(ambassadorData.revenueStacks).reduce((a, b) => a + b, 0);
+            console.log('Total Revenue Across All Stacks:', total.toLocaleString(), 'FCFA');
+        }
+
         
         function closeNotification(button) {
             const notification = button.closest('.notification');

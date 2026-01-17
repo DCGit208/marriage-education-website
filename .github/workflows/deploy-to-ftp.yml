@@ -23,6 +23,9 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         
+        # Deploy only the /public/ directory
+        local-dir: public/
+        
         # Optional: specify the remote directory path on your FTP server
         server-dir: /public_html/
         

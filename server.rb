@@ -1823,7 +1823,7 @@ post '/submit-ambassador-application' do
     admin_email_sent = send_email(admin_email, admin_subject, html_content)
     
     # Send welcome email to the ambassador with their referral link
-    welcome_subject = "🎉 Welcome Ambassador! Here's Your Referral Link"
+    welcome_subject = "� Welcome Marriage Literacy Ambassador! Your CRLA Journey Begins"
     welcome_html = <<~HTML
       <!DOCTYPE html>
       <html>
@@ -1831,23 +1831,29 @@ post '/submit-ambassador-application' do
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
           .code-box { background: #2d3436; color: #00b894; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
           .code-box h2 { font-size: 32px; margin: 0; letter-spacing: 2px; }
           .link-box { background: #f8f9fa; padding: 15px; border-radius: 8px; word-break: break-all; margin: 15px 0; }
           .section { padding: 20px; }
-          .earnings { background: #e8f8f5; padding: 15px; border-radius: 8px; margin: 15px 0; }
+          .earnings { background: #f0fdf9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #00b894; }
+          .crla-badge { background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 20px; border-radius: 8px; border: 2px solid #00b894; text-align: center; margin: 20px 0; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Welcome to the Ambassador Program!</h1>
-            <p>Start Earning Commissions Today</p>
+            <h1>🎓 Welcome, Marriage Literacy Ambassador!</h1>
+            <p>Your Journey to CRLA Certification Starts Now</p>
           </div>
           <div class="section">
             <p>Hi <strong>#{data['fullName']}</strong>,</p>
-            <p>Congratulations! Your ambassador application has been received. Here's your unique referral code and link to start promoting immediately:</p>
+            <p>Congratulations! You've joined an elite cohort of ambassadors deploying <strong>Marriage Foundation Access</strong> to families and communities across Cameroon.</p>
+            
+            <div class="crla-badge">
+              <h3 style="color: #00b894; margin: 0 0 8px 0;">Your Track</h3>
+              <p style="margin: 0; font-size: 1.1rem;"><strong>Marriage Literacy Ambassador → CRLA Credential</strong></p>
+            </div>
             
             <div class="code-box">
               <p style="margin:0; font-size: 14px; opacity: 0.9;">Your Ambassador Code</p>
@@ -1855,42 +1861,54 @@ post '/submit-ambassador-application' do
             </div>
             
             <div class="link-box">
-              <strong>Your Referral Link:</strong><br>
+              <strong>Your Deployment Link:</strong><br>
               <a href="#{referral_link}" style="color: #00b894;">#{referral_link}</a>
             </div>
             
             <div class="earnings">
-              <h3 style="color: #00b894; margin-top: 0;">💰 How You Earn</h3>
-              <p><strong>Every sale through your link:</strong></p>
-              <ul>
-                <li>Books 1-20: 1,500 FCFA per book</li>
-                <li>Books 21-40: 1,800 FCFA per book</li>
-                <li>Books 41-60: 2,000 FCFA per book</li>
-                <li><strong>Complete 60 books: +10,000 FCFA bonus!</strong></li>
-              </ul>
+              <h3 style="color: #00b894; margin-top: 0;">💰 Your 5 Revenue Stacks</h3>
+              <p><strong>1. Access Deployment:</strong> 1,500 FCFA per unit (15,000 FCFA → 1,500)</p>
+              <p><strong>2. Pathway Activation:</strong> 5-12% on course/school enrollments</p>
+              <p><strong>3. Shop & Subscriptions:</strong> 3-6% recurring passive income</p>
+              <p><strong>4. Service Routing:</strong> 5-10k FCFA per counseling referral</p>
+              <p><strong>5. Training Credits:</strong> Build toward professional certification</p>
             </div>
             
-            <h3 style="color: #00b894;">📢 How to Promote:</h3>
+            <h3 style="color: #667eea;">📚 Marriage Foundation School (6 Weeks)</h3>
+            <p>You've been enrolled in our intensive training program:</p>
+            <ul>
+              <li><strong>Teleios Blueprint:</strong> Personal development & maturity ($247 scholarship)</li>
+              <li><strong>Advocacy Training:</strong> Deployment psychology & community building</li>
+              <li><strong>CRLA Credential:</strong> Certified Relationship Literacy Advocate upon completion</li>
+            </ul>
+            
+            <h3 style="color: #00b894;">🚀 Your First 48 Hours:</h3>
             <ol>
-              <li><strong>Share your link</strong> on Facebook, Instagram, WhatsApp</li>
-              <li><strong>Tell people about Sex By Design</strong> and why it matters</li>
-              <li><strong>Track your sales</strong> in real-time via your dashboard</li>
-              <li><strong>Get paid</strong> every 2 weeks via Mobile Money</li>
+              <li><strong>Access Foundation School:</strong> Begin Week 1 modules</li>
+              <li><strong>Join WhatsApp Community:</strong> Connect with fellow ambassadors</li>
+              <li><strong>Deploy Your First 3 Units:</strong> Start with close contacts</li>
+              <li><strong>Track Progress:</strong> Real-time dashboard access</li>
             </ol>
             
-            <h3 style="color: #00b894;">🚀 Next Steps:</h3>
-            <p>
-              ✅ Save your referral link and code<br>
-              ✅ Join our WhatsApp group for training and support<br>
-              ✅ Access your dashboard (link will be sent within 24 hours)<br>
-              ✅ Start sharing and earning!
-            </p>
+            <h3 style="color: #667eea;">💎 What Makes This Different?</h3>
+            <p>You're not "selling books." You're deploying access to a $247 scholarship program that includes:</p>
+            <ul>
+              <li>✓ Sex By Design for Dummies (textbook, delivered immediately)</li>
+              <li>✓ 6-week integrated curriculum (Teleios + Advocacy)</li>
+              <li>✓ Professional CRLA credential</li>
+              <li>✓ Career pathway to Licensed Counselor (1M+ FCFA monthly)</li>
+            </ul>
             
             <p style="text-align: center; margin-top: 30px;">
-              <a href="https://marriageducation.com/ambassador-login.html" style="background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Access Ambassador Portal</a>
+              <a href="https://marriageducation.com/foundation-school.html" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 8px;">Start Foundation School</a>
+              <a href="https://marriageducation.com/ambassador/dashboard.html" style="background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 8px;">View Dashboard</a>
             </p>
             
-            <p style="color: #636e72; font-size: 14px; margin-top: 30px;">
+            <p style="color: #636e72; font-size: 14px; margin-top: 30px; font-style: italic;">
+              "This is not a hustle. This is a pathway." - Welcome to professional marriage advocacy.
+            </p>
+            
+            <p style="color: #636e72; font-size: 14px; margin-top: 20px;">
               Questions? Reply to this email or WhatsApp us at +237 XXX XXX XXX
             </p>
           </div>
