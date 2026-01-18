@@ -3342,6 +3342,47 @@
     <script src="js/firebase-config.js"></script>
 
     <script>
+        // Capture RD referral code from URL on page load
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rdCode = urlParams.get('ref') || urlParams.get('rd');
+            
+            if (rdCode && (rdCode.startsWith('RD-') || rdCode.startsWith('AMB-'))) {
+                console.log('🔗 Referral code detected:', rdCode);
+                sessionStorage.setItem('rd_referral', rdCode);
+                
+                // Show notification
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(102,126,234,0.3); z-index: 9999; font-size: 14px; max-width: 300px;';
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-crown" style="font-size: 24px;"></i>
+                        <div>
+                            <strong>Referral Link Activated!</strong><br>
+                            <span style="font-size: 12px; opacity: 0.9;">Referred by: ${rdCode}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; margin-left: auto;">&times;</button>
+                    </div>
+                `;
+                document.body.appendChild(banner);
+                setTimeout(() => banner.remove(), 8000);
+            }
+        })();
+
+        // Auto-fill recruited by field when form loads
+        window.addEventListener('DOMContentLoaded', function() {
+            const rdCode = sessionStorage.getItem('rd_referral');
+            if (rdCode) {
+                const recruitedByField = document.querySelector('input[name="recruitedBy"]');
+                if (recruitedByField && !recruitedByField.value) {
+                    recruitedByField.value = rdCode;
+                    recruitedByField.style.background = '#e8f8f5';
+                    recruitedByField.style.borderColor = '#00b894';
+                }
+            }
+        });
+
+        // Tab Navigation
         // Tab Navigation
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
@@ -3409,19 +3450,28 @@
             // Generate ambassador code
             const ambCode = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
             
+            // Get RD referral from form or sessionStorage
+            const rdReferral = data.recruitedBy || sessionStorage.getItem('rd_referral') || '';
+            
             // Store data for payment page
             sessionStorage.setItem('ambassadorData', JSON.stringify({
                 ...data,
                 code: ambCode,
                 fullName: data.firstName + ' ' + data.lastName,
                 role: 'Marriage Literacy Ambassador',
-                track: 'Women\'s Track'
+                track: 'Women\'s Track',
+                recruitedBy: rdReferral
             }));
             
             console.log('✅ Ambassador registration prepared:', ambCode);
+            console.log('🔗 Recruited by:', rdReferral || 'None');
             
-            // Redirect to payment
-            window.location.href = `ambassador-payment.html?code=${ambCode}&amount=15000`;
+            // Redirect to payment with RD code if present
+            let paymentUrl = `ambassador-payment.html?code=${ambCode}&amount=15000`;
+            if (rdReferral) {
+                paymentUrl += `&rd=${encodeURIComponent(rdReferral)}`;
+            }
+            window.location.href = paymentUrl;
         });
     </script>
 </body>

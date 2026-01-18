@@ -157,6 +157,53 @@
             font-weight: 700;
         }
 
+        /* Omnisearch Bar */
+        .omnisearch {
+            position: relative;
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+        }
+
+        .omnisearch input {
+            width: 100%;
+            padding: 10px 20px 10px 45px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .omnisearch input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .omnisearch input:focus {
+            outline: none;
+            background: white;
+            color: var(--text);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .omnisearch input:focus::placeholder {
+            color: #95a5a6;
+        }
+
+        .omnisearch i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.7);
+            pointer-events: none;
+        }
+
+        .omnisearch input:focus + i {
+            color: var(--primary);
+        }
+
         .header-right {
             display: flex;
             align-items: center;
@@ -590,6 +637,57 @@
             font-size: 0.8rem;
         }
 
+        /* Bulk Action Buttons */
+        .bulk-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-bulk {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-bulk.approve-all {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-bulk.approve-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-bulk.export {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-bulk.export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(9, 132, 227, 0.4);
+        }
+
+        .btn-bulk.refresh {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-bulk.refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(253, 203, 110, 0.4);
+        }
+
         /* Activity Feed */
         .activity-feed {
             background: white;
@@ -823,6 +921,11 @@
                 <i class="fas fa-heart"></i> Marriage Education
             </div>
         </div>
+        <!-- Omnisearch -->
+        <div class="omnisearch">
+            <input type="text" id="omnisearchInput" placeholder="Search orders, customers, ambassadors, RDs..." />
+            <i class="fas fa-search"></i>
+        </div>
         <div class="header-right">
             <div class="notification-bell" id="notificationBell">
                 <i class="fas fa-bell"></i>
@@ -1033,6 +1136,19 @@
             <!-- Payments Section -->
             <div class="section" id="payments">
                 <h1 style="margin-bottom: 2rem;">Payment Approval Center</h1>
+                
+                <!-- Bulk Actions -->
+                <div class="bulk-actions">
+                    <button class="btn-bulk approve-all" id="approveAllBtn">
+                        <i class="fas fa-check-double"></i> Approve All Pending
+                    </button>
+                    <button class="btn-bulk export" id="exportPaymentsBtn">
+                        <i class="fas fa-download"></i> Export to CSV
+                    </button>
+                    <button class="btn-bulk refresh" id="refreshPaymentsBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
                 
                 <!-- RD Recruitment Bonuses -->
                 <div class="table-card" style="margin-bottom: 2rem;">
@@ -2176,6 +2292,167 @@
                 loadNotifications();
             }, 30000);
         });
+
+        // ==============================================
+        // POS ENHANCEMENTS
+        // ==============================================
+
+        // Omnisearch functionality
+        document.getElementById('omnisearchInput')?.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (searchTerm.length < 2) return;
+            
+            // Search across all tables in the active section
+            const activeSection = document.querySelector('.section.active');
+            const tables = activeSection?.querySelectorAll('table tbody');
+            
+            tables?.forEach(tbody => {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Clear search when changing sections
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                const omnisearch = document.getElementById('omnisearchInput');
+                if (omnisearch) omnisearch.value = '';
+            });
+        });
+
+        // Approve All Pending Payments
+        document.getElementById('approveAllBtn')?.addEventListener('click', async () => {
+            try {
+                const snapshot = await db.collection('pending_payments')
+                    .where('status', '==', 'pending')
+                    .get();
+                
+                if (snapshot.empty) {
+                    alert('✅ No pending payments to approve');
+                    return;
+                }
+                
+                const count = snapshot.size;
+                if (!confirm(`Approve ALL ${count} pending payments?\\n\\nThis will send download links to all customers.`)) {
+                    return;
+                }
+                
+                const btn = document.getElementById('approveAllBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Processing...';
+                
+                let approved = 0;
+                let failed = 0;
+                
+                const approveFunc = firebase.functions().httpsCallable('approvePayment');
+                
+                for (const doc of snapshot.docs) {
+                    const data = doc.data();
+                    try {
+                        await approveFunc({ reference: data.reference });
+                        approved++;
+                    } catch (error) {
+                        console.error('Failed to approve:', data.reference, error);
+                        failed++;
+                    }
+                }
+                
+                alert(`✅ Bulk approval complete!\\n\\nApproved: ${approved}\\nFailed: ${failed}`);
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class=\"fas fa-check-double\"></i> Approve All Pending';
+                
+                // Reload data
+                loadPaymentsTable();
+                loadDashboardData();
+                
+            } catch (error) {
+                console.error('Error in bulk approval:', error);
+                alert('❌ Error: ' + error.message);
+                const btn = document.getElementById('approveAllBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class=\"fas fa-check-double\"></i> Approve All Pending';
+            }
+        });
+
+        // Export Payments to CSV
+        document.getElementById('exportPaymentsBtn')?.addEventListener('click', async () => {
+            try {
+                const snapshot = await db.collection('pending_payments')
+                    .orderBy('created_at', 'desc')
+                    .get();
+                
+                if (snapshot.empty) {
+                    alert('No payments to export');
+                    return;
+                }
+                
+                // Build CSV
+                let csv = 'Reference,Customer Name,Email,Phone,Product,Amount,Currency,Status,Payment Method,RD Code,Ambassador Code,Referral Code,Created Date\\n';
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.created_at ? new Date(data.created_at.seconds * 1000).toISOString() : '';
+                    
+                    csv += `\"${data.reference}\",`;
+                    csv += `\"${data.name || ''}\",`;
+                    csv += `\"${data.email || ''}\",`;
+                    csv += `\"${data.phone || ''}\",`;
+                    csv += `\"${data.product_name || ''}\",`;
+                    csv += `\"${data.amount || 0}\",`;
+                    csv += `\"${data.currency || 'FCFA'}\",`;
+                    csv += `\"${data.status || 'pending'}\",`;
+                    csv += `\"${data.payment_method || 'MOMO'}\",`;
+                    csv += `\"${data.rd_code || ''}\",`;
+                    csv += `\"${data.ambassador_ref || ''}\",`;
+                    csv += `\"${data.referral_code || ''}\",`;
+                    csv += `\"${date}\"\\n`;
+                });
+                
+                // Download CSV
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `payments_export_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                alert('✅ Payments exported successfully!');
+                
+            } catch (error) {
+                console.error('Error exporting payments:', error);
+                alert('❌ Error exporting: ' + error.message);
+            }
+        });
+
+        // Refresh Payments
+        document.getElementById('refreshPaymentsBtn')?.addEventListener('click', () => {
+            loadPaymentsTable();
+            loadDashboardData();
+            alert('🔄 Data refreshed!');
+        });
+
+        // Auto-refresh dashboard every 30 seconds
+        setInterval(() => {
+            if (document.querySelector('.section.active')?.id === 'dashboard') {
+                loadDashboardData();
+            }
+            if (document.querySelector('.section.active')?.id === 'payments') {
+                loadPaymentsTable();
+                loadRDPaymentsTable();
+            }
+        }, 30000);
+
+        console.log('✅ POS enhancements loaded - Omnisearch, Bulk Actions, CSV Export, Auto-refresh');
     </script>
     </div> <!-- Close main-dashboard -->
 </body>
