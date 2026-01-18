@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Pending - Marriage Education</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pending-container {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 40px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .pending-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    .pending-title {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .pending-message {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .reference-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px 0;
+      border-left: 4px solid #ffcb05;
+    }
+    .reference-box strong {
+      display: block;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .reference-code {
+      font-family: monospace;
+      font-size: 18px;
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      color: #ffcb05;
+      font-weight: bold;
+    }
+    .timeline {
+      text-align: left;
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .timeline h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
+      padding-left: 30px;
+      position: relative;
+    }
+    .timeline-item::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      background: #4caf50;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .timeline-item.pending::before {
+      content: "⏳";
+      background: #ff9800;
+    }
+    .timeline-item .time {
+      color: #999;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: #4caf50;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #333;
+      border: 2px solid #e0e0e0;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    .help-box {
+      margin-top: 30px;
+      padding: 20px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .help-box h4 {
+      margin-bottom: 10px;
+      color: #1976d2;
+    }
+    .help-box p {
+      color: #555;
+      margin: 8px 0;
+    }
+    .contact-info {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .contact-info a {
+      color: #ffcb05;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .pending-container {
+        margin: 40px auto 20px;
+        padding: 30px 20px;
+      }
+      .pending-icon { font-size: 60px; }
+      .pending-title { font-size: 22px; }
+      .pending-message { font-size: 15px; }
+      .reference-code { font-size: 16px; padding: 10px; }
+      .timeline { padding: 15px; }
+      .btn { padding: 12px 24px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Marriage Education</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="shop.html">Shop</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="pending-section">
+    <div class="container">
+      <div class="pending-container">
+        <div class="pending-icon">⏳</div>
+        <h1 class="pending-title">Payment Being Verified</h1>
+        <p class="pending-message">
+          Thank you for submitting your payment! We're verifying your MTN Mobile Money transaction.
+          You'll receive confirmation via email and SMS within <strong>5 minutes</strong>.
+        </p>
+
+        <div class="reference-box">
+          <strong>Your Payment Reference:</strong>
+          <div class="reference-code" id="reference-display">Loading...</div>
+          <small>Save this reference for your records</small>
+        </div>
+
+        <div class="timeline">
+          <h3>What Happens Next:</h3>
+          
+          <div class="timeline-item">
+            <div>
+              <div>Payment submitted successfully</div>
+              <div class="time">Just now</div>
+            </div>
+          </div>
+
+          <div class="timeline-item pending">
+            <div>
+              <div>Verifying MTN transaction</div>
+              <div class="time">In progress (2-5 minutes)</div>
+            </div>
+          </div>
+
+          <div class="timeline-item pending">
+            <div>
+              <div>Confirmation email & SMS sent</div>
+              <div class="time">Once verified</div>
+            </div>
+          </div>
+
+          <div class="timeline-item pending">
+            <div>
+              <div>Book access granted</div>
+              <div class="time">Immediately after confirmation</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <a href="ambassador/dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+          <a href="shop.html" class="btn btn-secondary">Continue Shopping</a>
+        </div>
+
+        <div class="help-box">
+          <h4>💡 Verification Process</h4>
+          <p>We verify each payment against our MTN Mobile Money records to ensure:</p>
+          <ul>
+            <li id="amount-check">Correct amount received</li>
+            <li>Valid transaction ID</li>
+            <li>No duplicate payments</li>
+          </ul>
+          <p>This process is usually completed within 2-5 minutes during business hours.</p>
+        </div>
+
+        <div class="contact-info">
+          <p><strong>Questions or Issues?</strong></p>
+          <p>Contact us: <a href="mailto:support@marriageeducation.com">support@marriageeducation.com</a></p>
+          <p>WhatsApp: <a href="https://wa.me/237677604100">+237 677 604 100</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2024 Marriage Education. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Get reference from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('reference') || urlParams.get('ref');
+    const productId = urlParams.get('product');
+    
+    if (reference) {
+      document.getElementById('reference-display').textContent = reference;
+    } else {
+      document.getElementById('reference-display').textContent = 'No reference provided';
+    }
+
+    // Auto-check verification status every 10 seconds
+    let checkCount = 0;
+    const maxChecks = 60; // Check for 10 minutes (60 * 10 seconds)
+
+    const checkInterval = setInterval(async () => {
+      if (!reference || checkCount >= maxChecks) {
+        clearInterval(checkInterval);
+        return;
+      }
+
+      checkCount++;
+
+      try {
+        // Check main server for payment approval status
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:4567'
+          : 'https://marriageducation.com';
+        
+        const response = await fetch(`${apiUrl}/check-payment-status?reference=${reference}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'approved' && data.download_url) {
+            // Payment approved! Redirect to success page with download link
+            window.location.href = `payment-success.html?ref=${reference}&token=${data.token}`;
+          } else if (data.status === 'rejected') {
+            // Payment rejected
+            window.location.href = `payment-failed.html?ref=${reference}&reason=${encodeURIComponent(data.reason || 'Payment verification failed')}`;
+          }
+          // If still pending, continue polling
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+        // Continue polling even on error
+      }
+    }, 10000); // Check every 10 seconds
+  </script>
+</body>
+</html>

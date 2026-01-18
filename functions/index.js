@@ -715,11 +715,17 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
 
     await db.collection('pending_payments').doc(reference).set(paymentData);
 
-    // Send admin notification email
-    if (SENDGRID_API_KEY) {
-      await sendAdminPaymentNotification(paymentData);
-    } else {
-      await sendAdminPaymentNotificationSMTP(paymentData);
+    // Send admin notification email (non-blocking - don't fail payment if email fails)
+    try {
+      if (SENDGRID_API_KEY) {
+        await sendAdminPaymentNotification(paymentData);
+      } else {
+        await sendAdminPaymentNotificationSMTP(paymentData);
+      }
+      console.log('[EMAIL] Admin notification sent');
+    } catch (emailError) {
+      console.warn('[EMAIL] Admin notification failed (continuing anyway):', emailError.message);
+      // Don't throw - payment submission should succeed even if email fails
     }
 
     // Send Telegram notification for new pending payment (plain text)
