@@ -1060,26 +1060,46 @@
 
         // Initialize dashboard
         function initDashboard() {
-            document.getElementById('ambassadorName').textContent = ambassadorData.name;
-            document.getElementById('ambassadorCode').textContent = ambassadorData.code;
-            document.getElementById('accessUnitsDeployed').textContent = ambassadorData.accessUnitsDeployed;
-            document.getElementById('advocacyEarnings').textContent = ambassadorData.advocacyEarnings.toLocaleString();
-            document.getElementById('currentRank').textContent = ambassadorData.rank;
-            document.getElementById('currentLevel').textContent = ambassadorData.level;
+            // Safe element updates with null checks
+            const safeUpdate = (id, value, isHTML = false) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (isHTML) {
+                        element.innerHTML = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            };
+            
+            safeUpdate('ambassadorName', ambassadorData.name);
+            safeUpdate('ambassadorCode', ambassadorData.code);
+            safeUpdate('accessUnitsDeployed', ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0);
+            safeUpdate('advocacyEarnings', (ambassadorData.advocacyEarnings || ambassadorData.commissionEarned || 0).toLocaleString());
+            safeUpdate('currentRank', ambassadorData.rank);
+            safeUpdate('currentLevel', ambassadorData.level);
             
             // Display CRLA badge if earned
             const credentialBadge = document.getElementById('credentialBadge');
-            if (ambassadorData.credentialStatus === 'earned') {
-                credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
-            } else if (ambassadorData.credentialStatus === 'in-progress') {
-                credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+            if (credentialBadge) {
+                if (ambassadorData.credentialStatus === 'earned') {
+                    credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
+                } else if (ambassadorData.credentialStatus === 'in-progress') {
+                    credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+                }
             }
             
             const referralLink = `https://marriage-education.web.app/ambassador-register.html?ref=${ambassadorData.code}`;
-            document.getElementById('referralLink').textContent = referralLink;
+            safeUpdate('referralLink', referralLink);
             
-            const progress = (ambassadorData.accessUnitsDeployed / ambassadorData.targetUnits) * 100;
-            document.getElementById('booksProgress').style.width = progress + '%';
+            const unitsDeployed = ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0;
+            const targetUnits = ambassadorData.targetUnits || 500;
+            const progress = (unitsDeployed / targetUnits) * 100;
+            
+            const progressBar = document.getElementById('booksProgress');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
             
             // Calculate next milestone
             const milestones = [
@@ -1088,19 +1108,21 @@
                 { level: 'Gold', threshold: 300 },
                 { level: 'Senior Ambassador', threshold: 500 }
             ];
-            const nextMilestone = milestones.find(m => m.threshold > ambassadorData.accessUnitsDeployed);
+            const nextMilestone = milestones.find(m => m.threshold > unitsDeployed);
             if (nextMilestone) {
-                const remaining = nextMilestone.threshold - ambassadorData.accessUnitsDeployed;
-                document.getElementById('nextMilestone').textContent = `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`;
+                const remaining = nextMilestone.threshold - unitsDeployed;
+                safeUpdate('nextMilestone', `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`);
             } else {
-                document.getElementById('nextMilestone').textContent = '🌟 Senior Ambassador Status Achieved!';
+                safeUpdate('nextMilestone', '🌟 Senior Ambassador Status Achieved!');
             }
             
             // Initialize revenue stacks display
-            displayRevenueStacks();
+            if (typeof displayRevenueStacks === 'function') {
+                displayRevenueStacks();
+            }
             
             // Initialize school progress if enrolled
-            if (ambassadorData.schoolProgress.enrolled) {
+            if (ambassadorData.schoolProgress && ambassadorData.schoolProgress.enrolled && typeof displaySchoolProgress === 'function') {
                 displaySchoolProgress();
             }
         }
@@ -1400,13 +1422,15 @@
     
     <script>
         // Load real ambassador data from Firebase Firestore
-        // Version: 2025-12-30-v3 - Force Firebase propagation
+        // Version: 2026-01-18-v4 - Fixed name display and error handling
         async function loadAmbassadorData() {
             try {
                 // Get ambassador code from localStorage (set during login)
                 const ambassadorCode = localStorage.getItem('ambassadorCode');
+                const storedData = localStorage.getItem('ambassadorData');
                 
                 if (!ambassadorCode) {
+                    console.log('No ambassador code found, redirecting to login...');
                     alert('❌ Please log in to view your dashboard');
                     window.location.href = '/ambassador-login.html';
                     return;
@@ -1423,21 +1447,43 @@
                 const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
                 
                 if (!ambassadorDoc.exists) {
-                    throw new Error('Ambassador not found');
+                    throw new Error('Ambassador not found in database');
                 }
                 
                 const stats = ambassadorDoc.data();
+                console.log('Ambassador data loaded:', stats);
+                
+                // Get name - try multiple sources
+                let ambassadorName = 'Ambassador';
+                if (stats.name) {
+                    ambassadorName = stats.name;
+                } else if (stats.firstName && stats.lastName) {
+                    ambassadorName = `${stats.firstName} ${stats.lastName}`;
+                } else if (stats.firstName) {
+                    ambassadorName = stats.firstName;
+                } else if (storedData) {
+                    try {
+                        const parsed = JSON.parse(storedData);
+                        if (parsed.name) ambassadorName = parsed.name;
+                        else if (parsed.firstName && parsed.lastName) ambassadorName = `${parsed.firstName} ${parsed.lastName}`;
+                        else if (parsed.firstName) ambassadorName = parsed.firstName;
+                    } catch (e) {
+                        console.error('Error parsing stored data:', e);
+                    }
+                }
                 
                 // Update global ambassadorData
                 Object.assign(ambassadorData, {
-                    name: ambassadorCode.split('-')[1] || 'Ambassador',
-                    code: stats.ambassadorCode || ambassadorCode,
-                    booksSold: stats.booksSold || 0,
-                    commissionEarned: stats.commissionEarned || 0,
+                    name: ambassadorName,
+                    code: stats.code || ambassadorCode,
+                    booksSold: stats.sales_count || stats.booksSold || 0,
+                    commissionEarned: stats.commission_earned || stats.commissionEarned || 0,
                     rank: 0,  // Will be loaded from leaderboard
                     level: stats.level || 'Starter',
                     recentSales: stats.sales || []
                 });
+                
+                console.log('Ambassador data processed:', ambassadorData);
                 
                 // Load leaderboard rank
                 await loadLeaderboardRank(ambassadorCode);
@@ -1450,8 +1496,15 @@
                 
             } catch (error) {
                 console.error('Error loading ambassador data:', error);
-                alert('Failed to load dashboard data. Please try logging in again.');
-                window.location.href = '/ambassador-login.html';
+                alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
+                // Clear bad data
+                localStorage.removeItem('ambassadorCode');
+                localStorage.removeItem('ambassadorEmail');
+                localStorage.removeItem('ambassadorData');
+                // Redirect to login
+                setTimeout(() => {
+                    window.location.href = '/ambassador-login.html';
+                }, 2000);
             }
         }
         
@@ -1460,6 +1513,7 @@
             try {
                 // Check if Firebase is initialized
                 if (!firebase.apps.length) {
+                    console.log('Firebase not initialized, skipping leaderboard');
                     return;
                 }
                 
@@ -1467,21 +1521,23 @@
                 
                 // Query ambassadors ordered by books sold
                 const snapshot = await db.collection('ambassadors')
-                    .where('active', '==', true)
-                    .orderBy('booksSold', 'desc')
+                    .where('status', 'in', ['active', 'approved'])
+                    .orderBy('sales_count', 'desc')
                     .get();
                 
                 // Find rank
                 let rank = 0;
                 snapshot.forEach((doc, index) => {
-                    if (doc.id === ambassadorCode) {
+                    if (doc.id === ambassadorCode || doc.data().code === ambassadorCode) {
                         rank = index + 1;
                     }
                 });
                 
-                ambassadorData.rank = rank;
+                ambassadorData.rank = rank || 'N/A';
+                console.log('Leaderboard rank loaded:', rank);
             } catch (error) {
                 console.error('Leaderboard error:', error);
+                ambassadorData.rank = 'N/A';
             }
         }
         
