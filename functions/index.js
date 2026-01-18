@@ -744,7 +744,7 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
         `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
         `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
         `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
-        `👉 Review: https://marriageducation.com/public/admin-dashboard.html`;
+        `👉 Review: https://marriageducation.com/admin-dashboard.html`;
       
       await sendTelegram(pendingMsg, false);
     }
@@ -1382,7 +1382,7 @@ async function activateAmbassador(payment) {
             `Ambassador Name: ${ambassadorData.fullName}\n` +
             `Bonus: 1,500 FCFA\n\n` +
             `RD Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
-            `👉 Admin Dashboard: https://marriageducation.com/public/admin-dashboard.html`;
+            `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
           
           await sendTelegram(rdMsg, false);
           console.log('[Telegram] RD recruitment bonus notification sent');
@@ -1609,7 +1609,7 @@ async function sendAdminPaymentNotification(payment) {
       <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
       <p><strong>Email:</strong> ${payment.email}</p>
       <p><strong>Phone:</strong> ${payment.phone}</p>
-      <p><a href="https://marriageducation.com/public/admin-dashboard.html">Approve Payment</a></p>
+      <p><a href="https://marriageducation.com/admin-dashboard.html">Approve Payment</a></p>
     `
   };
 
@@ -1699,7 +1699,7 @@ async function sendAdminPaymentNotificationSMTP(payment) {
       <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
       <p><strong>Email:</strong> ${payment.email}</p>
       <p><strong>Phone:</strong> ${payment.phone}</p>
-      <p><a href="https://marriageducation.com/public/admin-dashboard.html">Approve Payment</a></p>
+      <p><a href="https://marriageducation.com/admin-dashboard.html">Approve Payment</a></p>
     `
   };
 
