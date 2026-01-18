@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ambassador Registration Payment - Marriage Education</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .header .logo {
+      font-size: 64px;
+      margin-bottom: 15px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 16px;
+      opacity: 0.95;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .registration-info {
+      background: linear-gradient(135deg, #e6f7f4 0%, #d1f2eb 100%);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+      border: 2px solid #00b894;
+    }
+    .registration-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #00796b;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .registration-code {
+      font-size: 32px;
+      font-weight: 700;
+      color: #00a085;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+    }
+    .registration-price {
+      font-size: 40px;
+      font-weight: 700;
+      color: #00b894;
+      margin-top: 10px;
+    }
+    .reference-code {
+      background: #1f2937;
+      color: #fbbf24;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .reference-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    .reference-value {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+    .copy-btn {
+      background: #fbbf24;
+      color: #1f2937;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .copy-btn:hover {
+      background: #f59e0b;
+      transform: translateY(-2px);
+    }
+    .instructions {
+      margin-bottom: 30px;
+    }
+    .instructions h2 {
+      font-size: 22px;
+      color: #1f2937;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 18px;
+      background: #f9fafb;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .step-number {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+    .step-text {
+      color: #4b5563;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .momo-number {
+      background: #1f2937;
+      color: #fbbf24;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 18px;
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+    }
+    .form-section {
+      background: #f9fafb;
+      padding: 30px;
+      border-radius: 12px;
+      margin-top: 30px;
+      border: 1px solid #e5e7eb;
+    }
+    .form-section h3 {
+      font-size: 20px;
+      color: #1f2937;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #00b894;
+    }
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      color: white;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 184, 148, 0.4);
+    }
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 15px;
+    }
+    .alert.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .alert.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .alert.show {
+      display: block;
+    }
+    .note {
+      background: #fef3c7;
+      border: 2px solid #fbbf24;
+      padding: 18px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #78350f;
+      line-height: 1.6;
+    }
+    .note strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    .benefits {
+      background: linear-gradient(135deg, #e6f7f4 0%, #d1f2eb 100%);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 2px solid #00b894;
+    }
+    .benefits h3 {
+      color: #00796b;
+      font-size: 18px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .benefits-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .benefits-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(0, 184, 148, 0.2);
+      font-size: 14px;
+      vertical-align: top;
+    }
+    .benefits-table tr:last-child td {
+      border-bottom: none;
+    }
+    .benefit-name {
+      font-weight: 600;
+      color: #00695c;
+      width: 45%;
+    }
+    .benefit-detail {
+      color: #00796b;
+      width: 55%;
+    }
+    
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .header { padding: 30px 20px; }
+      .header .logo { font-size: 48px; }
+      .header h1 { font-size: 22px; }
+      .header p { font-size: 14px; }
+      .content { padding: 25px 20px; }
+      .registration-code { font-size: 24px; }
+      .registration-price { font-size: 32px; }
+      .reference-value { font-size: 28px; }
+      .instructions h2 { font-size: 18px; }
+      .step-number { width: 32px; height: 32px; font-size: 16px; }
+      .step-content h3 { font-size: 16px; }
+      .form-group input { padding: 12px; font-size: 16px; }
+      .submit-btn { padding: 14px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">📚</div>
+      <h1>Ambassador Registration</h1>
+      <p>Complete your registration by paying for your book package</p>
+    </div>
+
+    <div class="content">
+      <!-- Registration Info -->
+      <div class="registration-info">
+        <div class="registration-label">YOUR AMBASSADOR CODE</div>
+        <div class="registration-code" id="registration-code">Loading...</div>
+        <div class="registration-price" id="registration-price">Loading...</div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="benefits">
+        <h3>📚 What You Get:</h3>
+        <table class="benefits-table">
+          <tbody>
+            <tr>
+              <td class="benefit-name">🎓 $247 Teleios Blueprint Course</td>
+              <td class="benefit-detail">Full scholarship (first 500 ambassadors)</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">📱 SBD For Dummies eBook</td>
+              <td class="benefit-detail">Digital access sent to your email</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">🎯 CRLA Credential Pathway</td>
+              <td class="benefit-detail">6-week Foundation School + certification</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">💰 10% Advocacy Earnings</td>
+              <td class="benefit-detail">1,500 FCFA per deployment (10% of 15,000 FCFA)</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">📊 Personal Dashboard</td>
+              <td class="benefit-detail">Track deployments, earnings & progress</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">🔗 Unique Recruitment Link</td>
+              <td class="benefit-detail">Share & track your referrals</td>
+            </tr>
+            <tr>
+              <td class="benefit-name">⚡ Immediate Earning Capacity</td>
+              <td class="benefit-detail">Start earning while you learn</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Reference Code -->
+      <div class="reference-code">
+        <div class="reference-label">Payment Reference Code</div>
+        <div class="reference-value" id="reference-code">Loading...</div>
+        <button class="copy-btn" onclick="copyReference()">📋 Copy Reference</button>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h2>📝 Payment Instructions</h2>
+        
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Open MTN MOMO App</div>
+            <div class="step-text">Launch your MTN Mobile Money app or dial <strong>*126#</strong></div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Transfer Money</div>
+            <div class="step-text">
+              Send <strong id="amount-text">15,000 FCFA</strong> to<br>
+              <span class="momo-number">237 677 604 100</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Include Reference Code</div>
+            <div class="step-text">
+              In the message/note field, include:<br>
+              <strong id="reference-text">Loading...</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">Confirm Payment Below</div>
+            <div class="step-text">After sending, confirm below to receive your login credentials via email</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Form -->
+      <div class="form-section">
+        <h3>✅ Confirm Your Payment</h3>
+        
+        <div id="alert" class="alert"></div>
+
+        <form id="confirmation-form">
+          <div class="form-group">
+            <label for="phone">Your MTN MOMO Phone Number</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              placeholder="237670000000" 
+              required
+              pattern="[0-9]{9,12}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address (for login credentials)</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="your@email.com" 
+              required
+            >
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            ✓ I've Sent the Payment
+          </button>
+        </form>
+
+        <div class="note">
+          <strong>⏱️ Processing Time:</strong>
+          Your payment will be verified within 5-15 minutes during business hours. Once confirmed, you'll receive your login credentials via email with your ambassador code and dashboard access link.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      const results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Copy reference to clipboard
+    function copyReference() {
+      const reference = document.getElementById('reference-code').textContent;
+      navigator.clipboard.writeText(reference).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    // Show alert
+    function showAlert(message, type) {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = `alert ${type} show`;
+      setTimeout(() => {
+        alert.classList.remove('show');
+      }, 5000);
+    }
+
+    // Initialize page
+    const code = getUrlParameter('code') || 'AMB-UNKNOWN';
+    const amount = getUrlParameter('amount') || '15000';
+    const reference = code;
+
+    // Update page content
+    document.getElementById('registration-code').textContent = code;
+    document.getElementById('registration-price').textContent = `${amount} FCFA`;
+    document.getElementById('reference-code').textContent = reference;
+    document.getElementById('reference-text').textContent = reference;
+    document.getElementById('amount-text').textContent = `${amount} FCFA`;
+
+    // Handle form submission
+    document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+
+      try {
+        // Get ambassador data from sessionStorage
+        let ambassadorData = null;
+        const storedData = sessionStorage.getItem('ambassadorData');
+        if (storedData) {
+          ambassadorData = JSON.parse(storedData);
+          console.log('📝 Retrieved ambassador data:', ambassadorData);
+        }
+
+        // Prepare payment data
+        const paymentData = {
+          reference: reference,
+          product_id: 'ambassador-registration',
+          product_name: `Ambassador Registration - ${code}`,
+          amount: amount,
+          currency: 'XAF',
+          phone: phone,
+          email: email,
+          type: 'ambassador',
+          ambassador_code: code,
+          regional_director: ambassadorData?.recruitedBy || '',
+          ambassador_data: ambassadorData
+        };
+
+        // Call Firebase Cloud Function
+        const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
+        const result = await submitManualPayment(paymentData);
+
+        if (result.data.success) {
+          showAlert('✓ Payment submitted! You will receive your login credentials within 15 minutes.', 'success');
+          document.getElementById('confirmation-form').reset();
+          sessionStorage.removeItem('ambassadorData');
+          
+          // Redirect to pending page after 3 seconds
+          setTimeout(() => {
+            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=ambassador-registration`;
+          }, 3000);
+        } else {
+          showAlert('❌ ' + (result.data.message || 'Failed to submit payment. Please try again.'), 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '✓ I\'ve Sent the Payment';
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        showAlert('❌ ' + (error.message || 'Connection error. Please check your internet and try again.'), 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✓ I\'ve Sent the Payment';
+      }
+    });
+  </script>
+</body>
+</html>
