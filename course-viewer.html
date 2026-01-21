@@ -3,657 +3,1017 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Course Viewer - SBD Academy</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Course Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <style>
-    * { box-sizing: border-box; }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
     }
-    
-    .course-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .course-header h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 2rem;
-    }
-    
-    .course-meta {
+    .lms-wrapper {
       display: flex;
-      gap: 2rem;
-      opacity: 0.9;
-      font-size: 0.95rem;
+      min-height: 100vh;
     }
-    
-    .course-layout {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 2rem;
-      padding: 2rem 1rem;
-    }
-    
     .sidebar {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      height: fit-content;
+      background: #1e293b;
+      color: white;
+      padding: 0;
+      width: 300px;
+      min-width: 300px;
+      height: 100vh;
+      overflow-y: auto;
       position: sticky;
-      top: 2rem;
+      top: 0;
     }
-    
+    .sidebar-header {
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h2 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .sidebar-header .course-meta {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
     .progress-section {
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 2px solid #f1f3f5;
+      padding: 20px;
+      background: #0f172a;
     }
-    
-    .progress-section h3 {
-      margin: 0 0 1rem 0;
-      color: #2d3436;
-      font-size: 1.1rem;
+    .progress-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
     }
-    
     .progress-bar {
-      height: 12px;
-      background: #e9ecef;
+      background: #334155;
+      height: 8px;
       border-radius: 10px;
       overflow: hidden;
-      margin-bottom: 0.5rem;
     }
-    
     .progress-fill {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
       height: 100%;
-      background: linear-gradient(90deg, #00b894, #00d2a0);
       transition: width 0.3s ease;
     }
-    
     .progress-text {
-      font-size: 0.9rem;
-      color: #6c757d;
-      text-align: center;
-      display: block;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 8px;
     }
-    
-    .modules-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .modules-nav {
+      padding: 20px 0;
     }
-    
+    .modules-nav h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      padding: 0 20px 15px;
+      font-weight: 600;
+    }
     .module-item {
-      padding: 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 8px;
+      padding: 15px 20px;
       cursor: pointer;
-      transition: all 0.2s;
-      border: 2px solid transparent;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 12px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      color: #cbd5e1;
     }
-    
     .module-item:hover {
-      background: #f8f9fa;
+      background: rgba(102, 126, 234, 0.1);
+      color: white;
     }
-    
     .module-item.active {
-      background: #e7e9fc;
-      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+      border-left-color: #667eea;
+      color: white;
     }
-    
-    .module-item.completed {
-      background: #d4edda;
+    .module-item .icon {
+      width: 24px;
+      height: 24px;
+      background: #334155;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
     }
-    
-    .module-item.locked {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .module-item.active .icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
-    .module-status {
-      font-size: 1.2rem;
-    }
-    
-    .module-info {
+    .module-item .text {
       flex: 1;
     }
-    
-    .module-title {
-      font-weight: 600;
-      color: #2d3436;
-      margin: 0 0 0.25rem 0;
+    .module-item .title {
       font-size: 0.95rem;
-    }
-    
-    .module-meta {
-      font-size: 0.85rem;
-      color: #6c757d;
-    }
-    
-    .main-content {
-      background: white;
-      border-radius: 12px;
-      padding: 3rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      min-height: 600px;
-    }
-    
-    .lesson-content {
-      max-width: 800px;
-      line-height: 1.8;
-      color: #2d3436;
-    }
-    
-    .lesson-content h2 {
-      color: #2d3436;
-      margin: 2rem 0 1rem 0;
-      font-size: 1.8rem;
-      border-bottom: 3px solid #667eea;
-      padding-bottom: 0.5rem;
-    }
-    
-    .lesson-content h3 {
-      color: #495057;
-      margin: 1.5rem 0 0.75rem 0;
-      font-size: 1.4rem;
-    }
-    
-    .lesson-content p {
-      margin: 1rem 0;
-    }
-    
-    .lesson-content ul,
-    .lesson-content ol {
-      margin: 1rem 0;
-      padding-left: 2rem;
-    }
-    
-    .lesson-content li {
-      margin: 0.5rem 0;
-    }
-    
-    .lesson-content strong {
-      color: #2d3436;
-      font-weight: 600;
-    }
-    
-    .lesson-content em {
-      color: #495057;
-    }
-    
-    .reflection-section {
-      background: #f8f9fa;
-      border-left: 4px solid #667eea;
-      padding: 2rem;
-      margin: 2rem 0;
-      border-radius: 8px;
-    }
-    
-    .reflection-section h3 {
-      margin: 0 0 1.5rem 0;
-      color: #2d3436;
-    }
-    
-    .reflection-question {
-      margin-bottom: 1.5rem;
-    }
-    
-    .reflection-question label {
-      display: block;
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-    
-    .reflection-question textarea {
-      width: 100%;
-      min-height: 100px;
-      padding: 0.75rem;
-      border: 2px solid #dee2e6;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 0.95rem;
-      resize: vertical;
-    }
-    
-    .reflection-question textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .save-reflection-btn {
-      padding: 0.75rem 1.5rem;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    
-    .save-reflection-btn:hover {
-      background: #5568d3;
-    }
-    
-    .downloads-section {
-      background: #fff3cd;
-      border-left: 4px solid #ffc107;
-      padding: 1.5rem;
-      margin: 2rem 0;
-      border-radius: 8px;
-    }
-    
-    .downloads-section h3 {
-      margin: 0 0 1rem 0;
-      color: #2d3436;
-    }
-    
-    .download-link {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      background: white;
-      color: #2d3436;
-      text-decoration: none;
-      border-radius: 6px;
-      margin: 0.25rem 0.5rem 0.25rem 0;
-      border: 1px solid #dee2e6;
       font-weight: 500;
-      transition: all 0.2s;
+      margin-bottom: 2px;
     }
-    
-    .download-link:hover {
-      background: #ffc107;
-      border-color: #ffc107;
+    .module-item .duration {
+      font-size: 0.75rem;
+      opacity: 0.7;
     }
-    
-    .navigation-buttons {
+    .main-content {
+      flex: 1;
+      background: white;
+      min-width: 0;
+    }
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 40px;
       display: flex;
       justify-content: space-between;
-      margin-top: 3rem;
-      padding-top: 2rem;
-      border-top: 2px solid #f1f3f5;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    
-    .nav-btn {
-      padding: 1rem 2rem;
-      border: none;
+    .breadcrumbs {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .breadcrumbs a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    .breadcrumbs a:hover {
+      text-decoration: underline;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
       border-radius: 8px;
-      font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.9rem;
       cursor: pointer;
+      border: none;
       transition: all 0.2s;
+      font-weight: 500;
     }
-    
-    .complete-btn {
-      background: #00b894;
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
-    
-    .complete-btn:hover {
-      background: #00a383;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
-    
-    .next-btn {
-      background: #667eea;
-      color: white;
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
     }
-    
-    .next-btn:hover {
-      background: #5568d3;
+    .btn-secondary:hover {
+      background: #e2e8f0;
     }
-    
-    .prev-btn {
-      background: #e9ecef;
-      color: #495057;
+    .content-area {
+      padding: 40px;
+      max-width: 1000px;
     }
-    
-    .prev-btn:hover {
-      background: #dee2e6;
+    .content-header {
+      margin-bottom: 40px;
     }
-    
-    .loading {
-      text-align: center;
-      padding: 4rem;
-      color: #6c757d;
+    .content-header h1 {
+      font-size: 2.5rem;
+      color: #1e293b;
+      margin-bottom: 15px;
+      line-height: 1.2;
     }
-    
-    .error {
-      background: #f8d7da;
-      color: #721c24;
-      padding: 2rem;
-      border-radius: 8px;
-      text-align: center;
+    .content-meta {
+      display: flex;
+      gap: 20px;
+      color: #64748b;
+      font-size: 0.9rem;
     }
-    
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      background: #00b894;
-      color: white;
-      border-radius: 20px;
-      font-size: 0.85rem;
+    .content-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .content-section {
+      line-height: 1.8;
+      max-width: 850px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .content-section h2 {
+      font-size: 2rem;
+      color: #1e293b;
+      margin: 40px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+    }
+    .content-section h3 {
+      font-size: 1.5rem;
+      color: #334155;
+      margin: 30px 0 15px;
+    }
+    .content-section h4 {
+      font-size: 1.2rem;
+      color: #475569;
+      margin: 25px 0 12px;
+    }
+    .content-section p {
+      color: #475569;
+      margin: 15px 0;
+      line-height: 1.8;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: none;
+    }
+    .content-section blockquote {
+      background: #f8fafc;
+      border-left: 4px solid #667eea;
+      padding: 20px;
+      margin: 25px 0;
+      font-style: italic;
+      color: #475569;
+    }
+    .content-section ul, .content-section ol {
+      margin: 15px 0 15px 30px;
+      color: #475569;
+    }
+    .content-section li {
+      margin: 8px 0;
+    }
+    .content-section strong {
+      color: #1e293b;
       font-weight: 600;
-      margin-left: 0.5rem;
+    }
+    .content-section code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #e11d48;
+    }
+    .content-section pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    .content-section hr {
+      border: none;
+      border-top: 2px solid #e2e8f0;
+      margin: 40px 0;
+    }
+    .downloads {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+    .download-card {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      padding: 20px;
+      border-radius: 12px;
+      color: white;
+      text-decoration: none;
+      display: block;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+    }
+    .download-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(74, 222, 128, 0.4);
+    }
+    .download-card strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+    @media (max-width: 768px) {
+      .lms-wrapper {
+        flex-direction: column;
+      }
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="course-header">
-    <h1 id="courseTitle">Loading Course...</h1>
-    <div class="course-meta">
-      <span id="courseDuration"></span>
-      <span id="coursePrice"></span>
-    </div>
-  </div>
-
-  <div class="course-layout">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="progress-section">
-        <h3>Your Progress</h3>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  <div class="lms-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 id="sidebarTitle">Loading...</h2>
+        <div class="course-meta">
+          <span id="courseDuration">6 weeks</span>
+          <span id="coursePrice">$247</span>
         </div>
-        <span class="progress-text" id="progressText">0% Complete</span>
       </div>
-      
-      <h3>Course Modules</h3>
-      <ul class="modules-list" id="modulesList">
-        <!-- Modules will be loaded here -->
-      </ul>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-      <div id="lessonContainer" class="loading">
-        <p>Loading course content...</p>
+      <div class="progress-section">
+        <div class="progress-label">Course Progress</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text"><span id="progressPercent">0</span>% Complete</div>
       </div>
-    </div>
+      <nav class="modules-nav">
+        <h3>Course Curriculum</h3>
+        <div id="modulesNav"></div>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="breadcrumbs">
+          <a href="courses.html">← All Courses</a>
+        </div>
+        <div class="top-actions">
+          <button class="btn btn-secondary">📥 Downloads</button>
+          <button class="btn btn-primary">Mark Complete</button>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="content-header">
+          <h1 id="moduleTitle">Loading...</h1>
+          <div class="content-meta">
+            <div class="content-meta-item">⏱️ <span id="moduleEstimate">45-60 min</span></div>
+            <div class="content-meta-item">📚 <span id="moduleLevel">Foundation Level</span></div>
+          </div>
+        </div>
+        <div id="tabsContent"></div>
+      </div>
+    </main>
   </div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-  <!-- Global Referral Tracking -->
-  <script src="js/referral-tracking.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   
   <script>
-    const courseViewer = {
-      courseId: null,
-      courseData: null,
-      currentModule: 1,
-      userId: null,
-      userProgress: {},
-      
-      init() {
-        // Get course ID from URL (supports both ?id= and ?course=)
-        const urlParams = new URLSearchParams(window.location.search);
-        this.courseId = urlParams.get('id') || urlParams.get('course');
-        
-        if (!this.courseId) {
-          this.showError('No course specified. Add ?id=course-id to the URL');
-          return;
-        }
-        
-        // Check authentication (optional for now)
-        auth.onAuthStateChanged(user => {
-          this.userId = user ? user.uid : 'guest';
-          this.loadCourse();
-        });
-      },
-      
-      async loadCourse() {
-        try {
-          const doc = await db.collection('courses').doc(this.courseId).get();
-          
-          if (!doc.exists) {
-            this.showError('Course not found');
-            return;
-          }
-          
-          this.courseData = doc.data();
-          this.displayCourseInfo();
-          this.displayModulesList();
-          await this.loadUserProgress();
-          this.displayModule(this.currentModule);
-          
-        } catch (error) {
-          console.error('Error loading course:', error);
-          this.showError('Error loading course: ' + error.message);
-        }
-      },
-      
-      displayCourseInfo() {
-        document.getElementById('courseTitle').textContent = this.courseData.title;
-        document.getElementById('courseDuration').textContent = `📅 ${this.courseData.duration_weeks} weeks`;
-        document.getElementById('coursePrice').textContent = `💰 $${this.courseData.price}`;
-      },
-      
-      displayModulesList() {
-        const modulesList = document.getElementById('modulesList');
-        modulesList.innerHTML = '';
-        
-        this.courseData.modules.forEach((module, index) => {
-          const moduleNum = index + 1;
-          const isCompleted = this.userProgress[moduleNum];
-          const isActive = moduleNum === this.currentModule;
-          const isLocked = moduleNum > 1 && !this.userProgress[moduleNum - 1];
-          
-          const li = document.createElement('li');
-          li.className = `module-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`;
-          li.innerHTML = `
-            <span class="module-status">${isCompleted ? '✅' : isLocked ? '🔒' : '▶️'}</span>
-            <div class="module-info">
-              <div class="module-title">Week ${moduleNum}: ${module.title}</div>
-              <div class="module-meta">${isCompleted ? 'Completed' : isLocked ? 'Locked' : 'Available'}</div>
-            </div>
-          `;
-          
-          if (!isLocked) {
-            li.onclick = () => this.displayModule(moduleNum);
-          }
-          
-          modulesList.appendChild(li);
-        });
-        
-        this.updateProgress();
-      },
-      
-      async loadUserProgress() {
-        if (this.userId === 'guest') return;
-        
-        try {
-          const doc = await db.collection('progress')
-            .doc(`${this.userId}_${this.courseId}`)
-            .get();
-          
-          if (doc.exists) {
-            const data = doc.data();
-            this.userProgress = data.completed_modules || {};
-            this.currentModule = data.current_module || 1;
-          }
-        } catch (error) {
-          console.error('Error loading progress:', error);
-        }
-      },
-      
-      displayModule(moduleNum) {
-        const module = this.courseData.modules[moduleNum - 1];
-        if (!module) return;
-        
-        this.currentModule = moduleNum;
-        
-        // Remove loading state
-        const container = document.getElementById('lessonContainer');
-        container.classList.remove('loading');
-        
-        // Convert markdown to HTML
-        const contentHtml = marked.parse(module.content);
-        
-        let html = `
-          <div class="lesson-content">
-            <h2>Week ${moduleNum}: ${module.title}</h2>
-            ${contentHtml}
-          </div>
-        `;
-        
-        // Add reflection questions
-        if (module.reflection_questions && module.reflection_questions.length > 0) {
-          html += `
-            <div class="reflection-section">
-              <h3>📝 Reflection Questions</h3>
-              ${module.reflection_questions.map((q, i) => `
-                <div class="reflection-question">
-                  <label>${i + 1}. ${q}</label>
-                  <textarea placeholder="Type your reflection here..." id="reflection-${i}"></textarea>
-                </div>
-              `).join('')}
-              <button class="save-reflection-btn" onclick="courseViewer.saveReflections(${moduleNum})">💾 Save Reflections</button>
-            </div>
-          `;
-        }
-        
-        // Add downloads (if any)
-        if (module.downloads && module.downloads.length > 0) {
-          html += `
-            <div class="downloads-section">
-              <h3>📥 Downloads</h3>
-              ${module.downloads.map(d => `
-                <a href="${d.url}" class="download-link" download>${d.title}</a>
-              `).join('')}
-            </div>
-          `;
-        }
-        
-        // Navigation buttons
-        const isCompleted = this.userProgress[moduleNum];
-        const isLastModule = moduleNum === this.courseData.modules.length;
-        const isFirstModule = moduleNum === 1;
-        
-        html += `
-          <div class="navigation-buttons">
-            <button class="nav-btn prev-btn" onclick="courseViewer.displayModule(${moduleNum - 1})" ${isFirstModule ? 'disabled style="opacity:0.5;"' : ''}>← Previous</button>
-            <div>
-              ${!isCompleted ? `<button class="nav-btn complete-btn" onclick="courseViewer.markComplete(${moduleNum})">✅ Mark as Complete</button>` : ''}
-              ${!isLastModule ? `<button class="nav-btn next-btn" onclick="courseViewer.displayModule(${moduleNum + 1})">Next Module →</button>` : ''}
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('lessonContainer').innerHTML = html;
-        
-        // Update sidebar
-        document.querySelectorAll('.module-item').forEach((item, index) => {
-          item.classList.toggle('active', index + 1 === moduleNum);
-        });
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-      },
-      
-      async markComplete(moduleNum) {
-        if (this.userId === 'guest') {
-          alert('Please log in to track your progress');
-          return;
-        }
-        
-        try {
-          this.userProgress[moduleNum] = true;
-          
-          await db.collection('progress')
-            .doc(`${this.userId}_${this.courseId}`)
-            .set({
-              user_id: this.userId,
-              course_id: this.courseId,
-              completed_modules: this.userProgress,
-              current_module: moduleNum + 1,
-              last_updated: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-          
-          this.displayModulesList();
-          
-          // Move to next module
-          if (moduleNum < this.courseData.modules.length) {
-            this.displayModule(moduleNum + 1);
-          } else {
-            alert('🎉 Congratulations! You completed the course!');
-          }
-          
-        } catch (error) {
-          console.error('Error marking complete:', error);
-          alert('Error saving progress: ' + error.message);
-        }
-      },
-      
-      async saveReflections(moduleNum) {
-        if (this.userId === 'guest') {
-          alert('Please log in to save reflections');
-          return;
-        }
-        
-        const reflections = [];
-        document.querySelectorAll('[id^="reflection-"]').forEach(textarea => {
-          reflections.push(textarea.value);
-        });
-        
-        try {
-          await db.collection('reflections')
-            .doc(`${this.userId}_${this.courseId}_${moduleNum}`)
-            .set({
-              user_id: this.userId,
-              course_id: this.courseId,
-              module_num: moduleNum,
-              reflections: reflections,
-              saved_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          
-          alert('✅ Reflections saved!');
-        } catch (error) {
-          console.error('Error saving reflections:', error);
-          alert('Error saving reflections: ' + error.message);
-        }
-      },
-      
-      updateProgress() {
-        const completedCount = Object.keys(this.userProgress).length;
-        const totalModules = this.courseData.modules.length;
-        const percentage = Math.round((completedCount / totalModules) * 100);
-        
-        document.getElementById('progressFill').style.width = percentage + '%';
-        document.getElementById('progressText').textContent = `${percentage}% Complete (${completedCount}/${totalModules} modules)`;
-      },
-      
-      showError(message) {
-        document.getElementById('lessonContainer').innerHTML = `
-          <div class="error">
-            <h2>❌ Error</h2>
-            <p>${message}</p>
-            <p><a href="courses.html">← Back to Courses</a></p>
-          </div>
-        `;
-      }
-    };
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const courseId = getQueryParam('id');
+    let currentModuleIndex = 0;
     
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', () => {
-      courseViewer.init();
-    });
+    fetch('courses-catalogue.json?t=' + new Date().getTime())
+      .then(response => response.json())
+      .then(data => {
+        const courses = Array.isArray(data) ? data : [];
+        const course = courses.find(c => c.courseId === courseId);
+        
+        if (!course) {
+          document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Course not found</h2></div>';
+          return;
+        }
+
+        document.getElementById('sidebarTitle').textContent = course.title;
+        document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
+        document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
+        document.title = course.title;
+
+        const modulesNav = document.getElementById('modulesNav');
+        const tabsContent = document.getElementById('tabsContent');
+
+        // Create placeholder weeks if modules don't exist
+        const totalWeeks = course.duration_weeks || 6;
+        const modules = course.modules || [];
+        
+        for (let idx = 0; idx < totalWeeks; idx++) {
+          const module = modules[idx];
+          const isAvailable = idx < modules.length;
+          
+          // Sidebar navigation
+          const navItem = document.createElement('div');
+          navItem.className = 'module-item' + (idx === 0 ? ' active' : '');
+          navItem.innerHTML = `
+            <div class="icon">${idx + 1}</div>
+            <div class="text">
+              <div class="title">Week ${idx + 1}</div>
+              <div class="duration">${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}</div>
+            </div>
+          `;
+          if (isAvailable) {
+            navItem.onclick = () => switchModule(idx);
+          } else {
+            navItem.style.opacity = '0.5';
+            navItem.style.cursor = 'not-allowed';
+          }
+          modulesNav.appendChild(navItem);
+
+          // Content area
+          const content = document.createElement('div');
+          content.className = 'tab-content' + (idx === 0 ? ' active' : '');
+          content.id = `module-${idx}`;
+          
+          if (isAvailable) {
+            const parsed = marked.parse(module.content || '');
+            content.innerHTML = `<div class="content-section">${parsed}</div>`;
+
+            if (module.downloads && module.downloads.length > 0) {
+              const downloadsHtml = '<h3>📥 Downloads</h3><div class="downloads">' + 
+                module.downloads.map(d => `<a href="${d.url}" class="download-card"><strong>${d.title}</strong></a>`).join('') +
+                '</div>';
+              content.innerHTML += downloadsHtml;
+            }
+          } else {
+            content.innerHTML = `
+              <div style="text-align:center; padding:60px 20px; color:#64748b;">
+                <h2 style="color:#94a3b8; font-size:3rem; margin-bottom:20px;">🔒</h2>
+                <h3 style="color:#475569; margin-bottom:10px;">Week ${idx + 1} Coming Soon</h3>
+                <p>This module will be available once you complete the previous weeks.</p>
+              </div>
+            `;
+          }
+
+          tabsContent.appendChild(content);
+        }
+        
+        // ============================================
+        // ADD FINAL EXAM/QUIZ MODULE
+        // ============================================
+        
+        // Add Final Exam to sidebar navigation
+        const examNavItem = document.createElement('div');
+        examNavItem.className = 'module-item exam-module';
+        examNavItem.innerHTML = `
+          <div class="icon">🎓</div>
+          <div class="text">
+            <div class="title">Final Exam</div>
+            <div class="duration">30 Questions • 80% Pass</div>
+          </div>
+        `;
+        examNavItem.onclick = () => switchToExam();
+        modulesNav.appendChild(examNavItem);
+        
+        // Add Final Exam content area
+        const examContent = document.createElement('div');
+        examContent.className = 'tab-content';
+        examContent.id = 'module-exam';
+        examContent.innerHTML = '<div id="exam-container"></div>';
+        tabsContent.appendChild(examContent);
+        
+        // Load quiz data
+        loadQuizInterface(courseId);
+
+        // Update module title
+        if (modules.length > 0) {
+          document.getElementById('moduleTitle').textContent = modules[0].title || 'Week 1';
+        }
+
+        const progress = ((1 / totalWeeks) * 100);
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressPercent').textContent = Math.round(progress);
+      })
+      .catch(err => {
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Error: ' + err.message + '</h2></div>';
+      });
+
+    function switchModule(index) {
+      currentModuleIndex = index;
+      
+      document.querySelectorAll('.module-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+
+      // Update header title
+      const moduleTitle = document.querySelectorAll('.module-item .title')[index];
+      if (moduleTitle) {
+        document.getElementById('moduleTitle').textContent = moduleTitle.textContent;
+      }
+
+      // Scroll to top
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+    
+    function switchToExam() {
+      // Deactivate all module items
+      document.querySelectorAll('.module-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Activate exam
+      document.querySelector('.exam-module').classList.add('active');
+      document.getElementById('module-exam').classList.add('active');
+      document.getElementById('moduleTitle').textContent = 'Final Exam';
+      
+      // Scroll to top
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+    
+    // ============================================
+    // QUIZ/EXAM SYSTEM
+    // ============================================
+    
+    let quizData = null;
+    let userAnswers = {};
+    let quizStartTime = null;
+    let quizTimer = null;
+    
+    async function loadQuizInterface(courseId) {
+      const container = document.getElementById('exam-container');
+      
+      try {
+        // Load quiz data from JSON file (you can also store this in Firestore)
+        const response = await fetch(`${courseId}-quiz.json`);
+        if (!response.ok) {
+          container.innerHTML = '<div style="padding:40px;text-align:center;"><p>Final exam not yet available for this course.</p></div>';
+          return;
+        }
+        
+        quizData = await response.json();
+        
+        // Check if user has already passed
+        // TODO: Check Firestore for quiz attempts
+        
+        displayQuizIntro(container);
+      } catch (error) {
+        console.error('Error loading quiz:', error);
+        container.innerHTML = '<div style="padding:40px;text-align:center;"><p>Error loading exam. Please try again.</p></div>';
+      }
+    }
+    
+    function displayQuizIntro(container) {
+      container.innerHTML = `
+        <div style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 1rem;">📝 ${quizData.quizTitle}</h1>
+            <p style="font-size: 1.1rem; color: #64748b;">Complete this assessment to earn your course certificate</p>
+          </div>
+          
+          <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+            <h3 style="color: #1e293b; margin-bottom: 20px;">📋 Instructions</h3>
+            <p style="color: #475569; line-height: 1.8; margin-bottom: 20px;">${quizData.instructions}</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">📝</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.questions.length}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Questions</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">⏱️</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.timeLimit}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Minutes</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.passingScore}%</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Pass Required</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.maxAttempts}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Attempts</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+            <p style="margin: 0; color: #92400e;"><strong>⚠️ Important:</strong> Once you start the exam, the timer will begin. Make sure you're ready and have a stable internet connection. You cannot pause the exam once started.</p>
+          </div>
+          
+          <div style="text-align: center;">
+            <button onclick="startQuiz()" style="
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 18px 48px;
+              font-size: 1.2rem;
+              font-weight: 600;
+              border: none;
+              border-radius: 12px;
+              cursor: pointer;
+              box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+              transition: all 0.3s;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 24px rgba(102, 126, 234, 0.5)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(102, 126, 234, 0.4)';">
+              🎯 Start Exam Now
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function startQuiz() {
+      const container = document.getElementById('exam-container');
+      userAnswers = {};
+      quizStartTime = Date.now();
+      
+      // Start timer
+      startQuizTimer();
+      
+      // Display quiz questions
+      displayQuizQuestions(container);
+    }
+    
+    function startQuizTimer() {
+      const timerDisplay = document.getElementById('quiz-timer');
+      const timeLimit = quizData.timeLimit * 60; // Convert to seconds
+      let timeLeft = timeLimit;
+      
+      quizTimer = setInterval(() => {
+        timeLeft--;
+        
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Change color when less than 5 minutes
+        if (timeLeft < 300) {
+          timerDisplay.style.color = '#dc2626';
+        }
+        
+        // Auto-submit when time runs out
+        if (timeLeft <= 0) {
+          clearInterval(quizTimer);
+          submitQuiz(true); // true = auto-submitted
+        }
+      }, 1000);
+    }
+    
+    function displayQuizQuestions(container) {
+      let questionsHtml = `
+        <div style="position: sticky; top: 0; background: white; padding: 20px; border-bottom: 2px solid #e2e8f0; z-index: 10; margin-bottom: 30px;">
+          <div style="max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h2 style="margin: 0; color: #1e293b;">Final Exam</h2>
+              <p style="margin: 5px 0 0 0; color: #64748b;">Answer all ${quizData.questions.length} questions</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 2rem; font-weight: 700; color: #667eea;" id="quiz-timer">60:00</div>
+              <div style="font-size: 0.85rem; color: #64748b;">Time Remaining</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="max-width: 800px; margin: 0 auto; padding: 0 20px 40px 20px;">
+      `;
+      
+      quizData.questions.forEach((q, index) => {
+        questionsHtml += `
+          <div class="quiz-question" style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 25px; border: 2px solid transparent;" id="question-${q.id}">
+            <div style="display: flex; align-items: start; gap: 15px; margin-bottom: 20px;">
+              <div style="background: #667eea; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                ${index + 1}
+              </div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 1.1rem; line-height: 1.6;">${q.question}</h3>
+            </div>
+            
+            <div class="quiz-options" style="display: flex; flex-direction: column; gap: 12px; padding-left: 55px;">
+              ${q.options.map((option, optIndex) => `
+                <label class="quiz-option" style="
+                  display: flex;
+                  align-items: center;
+                  padding: 16px;
+                  background: white;
+                  border: 2px solid #e2e8f0;
+                  border-radius: 8px;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                " onmouseover="this.style.borderColor='#667eea'; this.style.background='#f1f5f9';" onmouseout="if(!this.querySelector('input').checked) {this.style.borderColor='#e2e8f0'; this.style.background='white';}">
+                  <input type="radio" name="question-${q.id}" value="${optIndex}" onchange="selectAnswer(${q.id}, ${optIndex}, this)" style="width: 20px; height: 20px; margin-right: 12px; cursor: pointer;">
+                  <span style="color: #475569; font-size: 1rem;">${option}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      
+      questionsHtml += `
+          <div style="position: sticky; bottom: 0; background: white; padding: 30px 0; border-top: 2px solid #e2e8f0; margin-top: 40px;">
+            <div style="display: flex; gap: 20px; justify-content: center;">
+              <button onclick="submitQuiz(false)" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 18px 48px;
+                font-size: 1.2rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+              ">
+                ✅ Submit Exam
+              </button>
+            </div>
+            <p style="text-align: center; margin-top: 15px; color: #64748b; font-size: 0.9rem;">
+              Answered: <span id="answered-count">0</span> / ${quizData.questions.length}
+            </p>
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = questionsHtml;
+    }
+    
+    function selectAnswer(questionId, optionIndex, inputElement) {
+      userAnswers[questionId] = optionIndex;
+      
+      // Update answered count
+      const answeredCount = Object.keys(userAnswers).length;
+      const countElement = document.getElementById('answered-count');
+      if (countElement) {
+        countElement.textContent = answeredCount;
+      }
+      
+      // Style the selected option
+      const questionDiv = document.getElementById(`question-${questionId}`);
+      const options = questionDiv.querySelectorAll('.quiz-option');
+      options.forEach(opt => {
+        const input = opt.querySelector('input');
+        if (input.checked) {
+          opt.style.borderColor = '#667eea';
+          opt.style.background = '#eef2ff';
+        } else {
+          opt.style.borderColor = '#e2e8f0';
+          opt.style.background = 'white';
+        }
+      });
+    }
+    
+    async function submitQuiz(autoSubmit = false) {
+      // Stop timer
+      if (quizTimer) {
+        clearInterval(quizTimer);
+      }
+      
+      // Check if all questions answered
+      const answeredCount = Object.keys(userAnswers).length;
+      if (answeredCount < quizData.questions.length && !autoSubmit) {
+        const unanswered = quizData.questions.length - answeredCount;
+        if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) {
+          return;
+        }
+      }
+      
+      // Calculate score
+      let correctCount = 0;
+      quizData.questions.forEach(q => {
+        if (userAnswers[q.id] === q.correctAnswer) {
+          correctCount++;
+        }
+      });
+      
+      const score = Math.round((correctCount / quizData.questions.length) * 100);
+      const passed = score >= quizData.passingScore;
+      
+      // Store score globally for certificate generation
+      window.lastQuizScore = score;
+      
+      // Save quiz attempt to Firestore
+      await saveQuizAttempt(score, passed, userAnswers);
+      
+      // Display results
+      displayQuizResults(score, passed, correctCount, autoSubmit);
+      
+      // If passed, trigger certificate generation
+      if (passed) {
+        await generateCourseCertificate();
+      }
+    }
+    
+    async function saveQuizAttempt(score, passed, answers) {
+      try {
+        // TODO: Get current user and enrollment
+        console.log('Saving quiz attempt:', { score, passed });
+        
+        // This would save to Firestore enrollments collection
+        // For now, just log
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+    
+    function displayQuizResults(score, passed, correctCount, autoSubmit) {
+      const container = document.getElementById('exam-container');
+      
+      const statusColor = passed ? '#10b981' : '#ef4444';
+      const statusBg = passed ? '#d1fae5' : '#fee2e2';
+      const statusIcon = passed ? '🎉' : '😔';
+      const statusText = passed ? 'Congratulations! You Passed!' : 'Not Quite There Yet';
+      
+      container.innerHTML = `
+        <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; padding: 60px 40px; background: ${statusBg}; border-radius: 16px; margin-bottom: 40px;">
+            <div style="font-size: 5rem; margin-bottom: 20px;">${statusIcon}</div>
+            <h1 style="font-size: 2.5rem; color: ${statusColor}; margin-bottom: 15px;">${statusText}</h1>
+            <div style="font-size: 4rem; font-weight: 700; color: ${statusColor}; margin: 30px 0;">${score}%</div>
+            <p style="font-size: 1.2rem; color: #475569;">
+              You answered <strong>${correctCount} out of ${quizData.questions.length}</strong> questions correctly
+            </p>
+            ${autoSubmit ? '<p style="color: #dc2626; margin-top: 20px;"><strong>⚠️ Time expired - exam was auto-submitted</strong></p>' : ''}
+          </div>
+          
+          ${passed ? `
+            <div style="background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 30px; margin-bottom: 30px; text-align: center;">
+              <h2 style="color: #065f46; margin-bottom: 15px;">🏆 Certificate Unlocked!</h2>
+              <p style="color: #047857; margin-bottom: 20px; line-height: 1.6;">
+                Your certificate is being generated and will be available in your dashboard shortly. You'll also receive it via email.
+              </p>
+              <button onclick="window.location.href='student-dashboard.html'" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 15px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+              ">
+                📜 View My Certificates
+              </button>
+            </div>
+          ` : `
+            <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+              <h3 style="color: #991b1b; margin-bottom: 15px;">What Now?</h3>
+              <p style="color: #7f1d1d; line-height: 1.6; margin-bottom: 15px;">
+                You need ${quizData.passingScore}% to pass. Review the course material and try again. 
+                You have <strong>${quizData.maxAttempts - 1} more attempt(s)</strong> remaining.
+              </p>
+              <ul style="color: #7f1d1d; line-height: 1.8; padding-left: 20px;">
+                <li>Review the weeks you struggled with</li>
+                <li>Study the explanations below</li>
+                <li>Take notes on key concepts</li>
+                <li>Try the exam again when ready</li>
+              </ul>
+            </div>
+          `}
+          
+          <div style="margin-bottom: 40px;">
+            <h2 style="color: #1e293b; margin-bottom: 20px;">📊 Detailed Results</h2>
+            ${quizData.questions.map((q, index) => {
+              const userAnswer = userAnswers[q.id];
+              const isCorrect = userAnswer === q.correctAnswer;
+              
+              return `
+                <div style="background: ${isCorrect ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${isCorrect ? '#10b981' : '#ef4444'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 15px;">
+                    <div style="background: ${isCorrect ? '#10b981' : '#ef4444'}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">
+                      ${index + 1}
+                    </div>
+                    <div style="flex: 1;">
+                      <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1rem;">${q.question}</h4>
+                      <div style="margin-bottom: 10px;">
+                        <strong style="color: ${isCorrect ? '#065f46' : '#991b1b'};">
+                          ${isCorrect ? '✅ Correct' : '❌ Incorrect'}
+                        </strong>
+                      </div>
+                      ${userAnswer !== undefined ? `
+                        <p style="margin: 5px 0; color: #475569;">
+                          <strong>Your answer:</strong> ${q.options[userAnswer]}
+                        </p>
+                      ` : '<p style="margin: 5px 0; color: #ef4444;"><strong>Not answered</strong></p>'}
+                      ${!isCorrect ? `
+                        <p style="margin: 5px 0; color: #065f46;">
+                          <strong>Correct answer:</strong> ${q.options[q.correctAnswer]}
+                        </p>
+                      ` : ''}
+                      <p style="margin: 10px 0 0 0; padding: 12px; background: white; border-radius: 6px; color: #475569; font-size: 0.95rem; line-height: 1.6;">
+                        <strong>💡 Explanation:</strong> ${q.explanation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          <div style="text-align: center;">
+            ${passed ? `
+              <button onclick="window.location.href='student-dashboard.html'" style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+                margin-right: 15px;
+              ">
+                📊 Go to Dashboard
+              </button>
+            ` : `
+              <button onclick="loadQuizInterface('${courseId}')" style="
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+                margin-right: 15px;
+              ">
+                🔄 Retake Exam
+              </button>
+            `}
+            <button onclick="switchModule(0)" style="
+              background: #f1f5f9;
+              color: #475569;
+              padding: 16px 40px;
+              font-size: 1.1rem;
+              font-weight: 600;
+              border: 2px solid #e2e8f0;
+              border-radius: 10px;
+              cursor: pointer;
+            ">
+              📚 Review Course
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function generateCourseCertificate() {
+      try {
+        console.log('[Certificate] Requesting certificate generation...');
+        
+        // Get current user
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          console.error('[Certificate] User not authenticated');
+          return;
+        }
+        
+        // Get courseId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+        
+        if (!courseId) {
+          console.error('[Certificate] No courseId found');
+          return;
+        }
+        
+        // Calculate the quiz score from the last quiz attempt
+        // This should already be calculated in submitQuiz()
+        // For now, we'll pass it from the quiz results
+        const lastScore = window.lastQuizScore || 80; // Fallback to 80 if not set
+        
+        console.log('[Certificate] Calling Firebase Function with:', { courseId, quizScore: lastScore });
+        
+        // Call Firebase Function
+        const generateCertificate = firebase.functions().httpsCallable('generateCourseCertificate');
+        const result = await generateCertificate({
+          courseId: courseId,
+          quizScore: lastScore
+        });
+        
+        console.log('[Certificate] Success:', result.data);
+        
+        // Show success notification
+        if (result.data.success) {
+          console.log('[Certificate] Certificate generated:', result.data.certificateNumber);
+          console.log('[Certificate] PDF URL:', result.data.pdfUrl);
+        }
+        
+      } catch (error) {
+        console.error('[Certificate] Error generating certificate:', error);
+        // Don't show error to user - certificate generation is a background process
+      }
+    }
   </script>
 </body>
 </html>
