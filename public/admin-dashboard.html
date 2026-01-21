@@ -895,6 +895,22 @@
                 </a></li>
             </ul>
         </div>
+        
+        <!-- Book Sharer Details Modal -->
+        <div class="modal" id="bookSharerModal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2 id="modal-title">Book Sharer Details</h2>
+                    <span class="modal-close" onclick="closeBookSharerModal()">&times;</span>
+                </div>
+                <div id="modal-body">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -2201,9 +2217,198 @@
         }
         
         // View Book Sharer Details
-        function viewBookSharerDetails(code) {
-            alert(`View details for ${code}\n\n(Feature coming soon: View full history, sales breakdown, commission timeline)`);
+        async function viewBookSharerDetails(code) {
+            const modal = document.getElementById('bookSharerModal');
+            const modalBody = document.getElementById('modal-body');
+            const modalTitle = document.getElementById('modal-title');
+            
+            // Show modal with loading state
+            modal.classList.add('active');
+            modalBody.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading details...</p>
+                </div>
+            `;
+            
+            try {
+                const doc = await db.collection('referral_codes').doc(code).get();
+                
+                if (!doc.exists) {
+                    modalBody.innerHTML = '<p style="text-align: center; color: #d63031;">Book Sharer not found.</p>';
+                    return;
+                }
+                
+                const data = doc.data();
+                modalTitle.textContent = `${data.name || 'Book Sharer'} - ${code}`;
+                
+                // Format dates
+                const formatDate = (timestamp) => {
+                    if (!timestamp) return 'N/A';
+                    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                    return date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                };
+                
+                // Calculate progress to next milestone
+                const salesCount = data.sales_count || 0;
+                const nextMilestone = Math.ceil(salesCount / 10) * 10;
+                const salesToMilestone = nextMilestone - salesCount;
+                const progressPercent = ((salesCount % 10) / 10) * 100;
+                
+                // Build sales history HTML
+                let salesHistoryHTML = '<p style="color: #b2bec3; text-align: center; padding: 1rem;">No sales yet</p>';
+                if (data.sales_history && data.sales_history.length > 0) {
+                    salesHistoryHTML = `
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                                    <th style="padding: 0.75rem; text-align: left;">Date</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.sales_history.slice(-10).reverse().map(sale => `
+                                    <tr style="border-bottom: 1px solid #f1f3f5;">
+                                        <td style="padding: 0.75rem;">${formatDate(sale.date)}</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600;">${sale.amount.toLocaleString()} FCFA</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // Build milestones HTML
+                let milestonesHTML = '<p style="color: #b2bec3; text-align: center; padding: 1rem;">No milestones reached yet</p>';
+                if (data.milestones_reached && data.milestones_reached.length > 0) {
+                    milestonesHTML = `
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                                    <th style="padding: 0.75rem; text-align: left;">Date</th>
+                                    <th style="padding: 0.75rem; text-align: center;">Milestone</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.milestones_reached.reverse().map(milestone => `
+                                    <tr style="border-bottom: 1px solid #f1f3f5;">
+                                        <td style="padding: 0.75rem;">${formatDate(milestone.date)}</td>
+                                        <td style="padding: 0.75rem; text-align: center;">
+                                            <span style="background: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+                                                ${milestone.sales_count} Sales
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 700; color: #00b894;">${milestone.commission.toLocaleString()} FCFA</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // Render details
+                modalBody.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.85rem; color: #636e72; margin-bottom: 0.5rem;">Email</div>
+                            <div style="font-weight: 600;">${data.email}</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.85rem; color: #636e72; margin-bottom: 0.5rem;">Referral Code</div>
+                            <div style="font-weight: 600; font-family: monospace;">${code}</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.85rem; color: #636e72; margin-bottom: 0.5rem;">Dashboard Access</div>
+                            <div style="font-weight: 600; color: ${data.auth_uid ? '#00b894' : '#fdcb6e'};">
+                                ${data.auth_uid ? '✓ Active' : '⏰ Pending'}
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.85rem; color: #636e72; margin-bottom: 0.5rem;">Member Since</div>
+                            <div style="font-weight: 600;">${formatDate(data.created_at)}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${salesCount}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">Total Sales</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${(data.total_revenue || 0).toLocaleString()}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">Revenue (FCFA)</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">${(data.commission_earned || 0).toLocaleString()}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;">Commission (FCFA)</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #dbeafe; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #3b82f6;">
+                        <h3 style="margin-bottom: 1rem; color: #1e40af; font-size: 1rem;">
+                            <i class="fas fa-trophy"></i> Next Milestone Progress
+                        </h3>
+                        <div style="background: #e5e7eb; height: 30px; border-radius: 15px; overflow: hidden; margin-bottom: 0.75rem;">
+                            <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${progressPercent}%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.85rem; transition: width 0.5s;">
+                                ${Math.round(progressPercent)}%
+                            </div>
+                        </div>
+                        <div style="color: #1e40af; font-size: 0.9rem;">
+                            <strong>${salesToMilestone}</strong> more sales to earn <strong>10,000 FCFA</strong> (${salesCount % 10}/10 sales)
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: #2d3436; font-size: 1.1rem;">
+                            <i class="fas fa-shopping-cart"></i> Recent Sales (Last 10)
+                        </h3>
+                        ${salesHistoryHTML}
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: #2d3436; font-size: 1.1rem;">
+                            <i class="fas fa-award"></i> Commission Milestones
+                        </h3>
+                        ${milestonesHTML}
+                    </div>
+                    
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e9ecef; display: flex; gap: 1rem; justify-content: flex-end;">
+                        ${!data.auth_uid ? `
+                            <button class="btn btn-warning" onclick="sendDashboardCredentials('${code}')">
+                                <i class="fas fa-envelope"></i> Send Credentials
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="closeBookSharerModal()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading Book Sharer details:', error);
+                modalBody.innerHTML = '<p style="text-align: center; color: #d63031;">Error loading details. Please try again.</p>';
+            }
         }
+        
+        // Close Book Sharer Modal
+        function closeBookSharerModal() {
+            document.getElementById('bookSharerModal').classList.remove('active');
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('bookSharerModal');
+            if (e.target === modal) {
+                closeBookSharerModal();
+            }
+        });
         
         // Send Dashboard Credentials
         async function sendDashboardCredentials(code) {
