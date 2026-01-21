@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Your Dashboard | Marriage Education</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .claim-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #10b981;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .info-box p {
+            font-size: 14px;
+            color: #1e40af;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .password-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .btn-claim {
+            width: 100%;
+            padding: 14px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn-claim:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .btn-claim:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .links a {
+            color: #10b981;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0 10px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #059669;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #10b981;
+        }
+        
+        .success-container {
+            display: none;
+            text-align: center;
+        }
+        
+        .success-container.active {
+            display: block;
+        }
+        
+        .success-icon {
+            font-size: 64px;
+            color: #10b981;
+            margin-bottom: 20px;
+        }
+        
+        .success-container h2 {
+            color: #059669;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .success-container p {
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .btn-login {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-login:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .claim-container {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="claim-container">
+        <div class="header">
+            <h1><i class="fas fa-key"></i> Claim Your Dashboard</h1>
+            <p>Already have a referral code? Set up your dashboard access here.</p>
+        </div>
+        
+        <!-- Claim Form -->
+        <div id="claim-form-container">
+            <div class="info-box">
+                <p>
+                    <strong><i class="fas fa-info-circle"></i> Existing Book Sharer?</strong>
+                    If you generated a referral link before January 2026, use this form to set up your dashboard access and track your earnings.
+                </p>
+            </div>
+            
+            <div id="message"></div>
+            
+            <form id="claim-form">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" placeholder="The email you used to generate your referral code" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" id="name" placeholder="Your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Choose a Password</label>
+                    <input type="password" id="password" placeholder="Create a secure password" required minlength="8">
+                    <div class="password-hint">Minimum 8 characters</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm-password"><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="confirm-password" placeholder="Re-enter your password" required>
+                </div>
+                
+                <button type="submit" class="btn-claim" id="claim-btn">
+                    <i class="fas fa-check-circle"></i> Claim Dashboard Access
+                </button>
+            </form>
+            
+            <div class="links">
+                <a href="/book-sharer-dashboard"><i class="fas fa-sign-in-alt"></i> Already have access? Login</a>
+                <br><br>
+                <a href="/sbd-campaign#earn-money"><i class="fas fa-link"></i> Generate new referral code</a>
+            </div>
+        </div>
+        
+        <!-- Success Message -->
+        <div class="success-container" id="success-container">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Dashboard Claimed Successfully!</h2>
+            <p>Your Book Sharer dashboard is now ready. Use your email and password to login and start tracking your earnings.</p>
+            <a href="/book-sharer-dashboard" class="btn-login">
+                <i class="fas fa-chart-line"></i> Go to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    
+    <script>
+        document.getElementById('claim-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const name = document.getElementById('name').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const claimBtn = document.getElementById('claim-btn');
+            
+            // Validation
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match. Please try again.', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showMessage('Password must be at least 8 characters long.', 'error');
+                return;
+            }
+            
+            claimBtn.disabled = true;
+            claimBtn.textContent = 'Claiming...';
+            clearMessage();
+            
+            try {
+                const functions = firebase.functions();
+                const claimDashboard = functions.httpsCallable('claimBookSharerDashboard');
+                const result = await claimDashboard({ email, name, password });
+                
+                if (result.data.success) {
+                    // Show success message
+                    document.getElementById('claim-form-container').style.display = 'none';
+                    document.getElementById('success-container').classList.add('active');
+                } else {
+                    showMessage('Failed to claim dashboard. Please try again.', 'error');
+                    claimBtn.disabled = false;
+                    claimBtn.innerHTML = '<i class="fas fa-check-circle"></i> Claim Dashboard Access';
+                }
+            } catch (error) {
+                console.error('Claim error:', error);
+                
+                let errorMessage = 'An error occurred. Please try again.';
+                
+                if (error.code === 'not-found') {
+                    errorMessage = 'No referral account found for this email. Please generate a new referral code on the campaign page first.';
+                } else if (error.code === 'already-exists') {
+                    errorMessage = 'This email already has dashboard access. Use the "Forgot Password" link on the login page if you need to reset your password.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showMessage(errorMessage, 'error');
+                claimBtn.disabled = false;
+                claimBtn.innerHTML = '<i class="fas fa-check-circle"></i> Claim Dashboard Access';
+            }
+        });
+        
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+        }
+        
+        function clearMessage() {
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = '';
+        }
+    </script>
+</body>
+</html>

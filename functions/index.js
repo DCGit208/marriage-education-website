@@ -1420,6 +1420,202 @@ async function sendBookSharerWelcomeEmail(email, name, code, password, isReminde
   return transporter.sendMail(mailOptions);
 }
 
+/**
+ * migrateExistingBookSharers
+ * - One-time migration for existing referral codes without auth accounts
+ * - Generates passwords, creates Firebase Auth users, sends welcome emails
+ */
+exports.migrateExistingBookSharers = functions.https.onCall(async (data, context) => {
+  try {
+    // Get all referral codes without auth_uid
+    const snapshot = await db.collection('referral_codes')
+      .where('auth_uid', '==', null)
+      .get();
+    
+    if (snapshot.empty) {
+      return {
+        success: true,
+        message: 'No users to migrate',
+        migrated: 0
+      };
+    }
+    
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+    
+    for (const doc of snapshot.docs) {
+      const code = doc.id;
+      const data = doc.data();
+      
+      try {
+        // Skip if no email
+        if (!data.email) {
+          results.failed++;
+          results.errors.push({ code, error: 'No email found' });
+          continue;
+        }
+        
+        // Generate random password
+        const passwordChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
+        const password = Array.from({ length: 12 }, () => 
+          passwordChars.charAt(Math.floor(Math.random() * passwordChars.length))
+        ).join('');
+        
+        // Create Firebase Auth user
+        let authUserId = null;
+        try {
+          const userRecord = await admin.auth().createUser({
+            email: data.email.toLowerCase(),
+            password: password,
+            displayName: data.name || 'Book Sharer',
+            emailVerified: false
+          });
+          authUserId = userRecord.uid;
+        } catch (authError) {
+          // User might already exist in Auth but not linked
+          if (authError.code === 'auth/email-already-exists') {
+            const existingUser = await admin.auth().getUserByEmail(data.email.toLowerCase());
+            authUserId = existingUser.uid;
+            // Update password for existing auth user
+            await admin.auth().updateUser(authUserId, { password });
+          } else {
+            throw authError;
+          }
+        }
+        
+        // Update Firestore
+        await db.collection('referral_codes').doc(code).update({
+          name: data.name || 'Book Sharer',
+          password: password,
+          auth_uid: authUserId,
+          migrated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Send welcome email
+        try {
+          await sendBookSharerWelcomeEmail(
+            data.email,
+            data.name || 'Book Sharer',
+            code,
+            password,
+            true // isReminder = true (since they're existing users)
+          );
+        } catch (emailError) {
+          console.error(`Failed to send email to ${data.email}:`, emailError);
+          // Don't throw - migration succeeded even if email failed
+        }
+        
+        results.success++;
+        console.log(`✅ Migrated: ${code} - ${data.email}`);
+        
+      } catch (error) {
+        results.failed++;
+        results.errors.push({ code, error: error.message });
+        console.error(`❌ Failed to migrate ${code}:`, error);
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Migrated ${results.success} users, ${results.failed} failed`,
+      migrated: results.success,
+      failed: results.failed,
+      errors: results.errors
+    };
+    
+  } catch (error) {
+    console.error('Migration error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * claimBookSharerDashboard
+ * - Self-service function for existing users to claim their dashboard
+ * - User provides email, name, and sets their own password
+ */
+exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) => {
+  try {
+    const { email, name, password } = data;
+    
+    if (!email || !name || !password) {
+      throw new functions.https.HttpsError('invalid-argument', 'Email, name, and password required');
+    }
+    
+    if (password.length < 8) {
+      throw new functions.https.HttpsError('invalid-argument', 'Password must be at least 8 characters');
+    }
+    
+    // Find existing referral code by email
+    const snapshot = await db.collection('referral_codes')
+      .where('email', '==', email.toLowerCase())
+      .limit(1)
+      .get();
+    
+    if (snapshot.empty) {
+      throw new functions.https.HttpsError('not-found', 'No referral account found for this email. Please generate a new referral code first.');
+    }
+    
+    const doc = snapshot.docs[0];
+    const code = doc.id;
+    const existingData = doc.data();
+    
+    // Check if already has auth account
+    if (existingData.auth_uid) {
+      throw new functions.https.HttpsError('already-exists', 'Dashboard already set up. Use "Forgot Password" if you need to reset.');
+    }
+    
+    // Create Firebase Auth user
+    let authUserId = null;
+    try {
+      const userRecord = await admin.auth().createUser({
+        email: email.toLowerCase(),
+        password: password,
+        displayName: name,
+        emailVerified: false
+      });
+      authUserId = userRecord.uid;
+    } catch (authError) {
+      if (authError.code === 'auth/email-already-exists') {
+        throw new functions.https.HttpsError('already-exists', 'Email already has an account. Use "Forgot Password" to reset.');
+      }
+      throw authError;
+    }
+    
+    // Update Firestore with auth details
+    await db.collection('referral_codes').doc(code).update({
+      name: name,
+      password: password,
+      auth_uid: authUserId,
+      claimed_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Send confirmation email
+    try {
+      await sendBookSharerWelcomeEmail(email, name, code, password, false);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Don't throw - claim succeeded
+    }
+    
+    return {
+      success: true,
+      message: 'Dashboard claimed successfully! You can now login.',
+      code: code
+    };
+    
+  } catch (error) {
+    console.error('Claim dashboard error:', error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
