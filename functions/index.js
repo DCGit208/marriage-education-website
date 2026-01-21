@@ -1427,16 +1427,32 @@ async function sendBookSharerWelcomeEmail(email, name, code, password, isReminde
  */
 exports.migrateExistingBookSharers = functions.https.onCall(async (data, context) => {
   try {
-    // Get all referral codes without auth_uid
-    const snapshot = await db.collection('referral_codes')
-      .where('auth_uid', '==', null)
-      .get();
+    // Get ALL referral codes, then filter those without auth_uid
+    // (Can't query for missing fields in Firestore)
+    const snapshot = await db.collection('referral_codes').get();
     
     if (snapshot.empty) {
       return {
         success: true,
-        message: 'No users to migrate',
-        migrated: 0
+        message: 'No referral codes found in database',
+        migrated: 0,
+        failed: 0
+      };
+    }
+    
+    // Filter to only those without auth_uid
+    const usersToMigrate = snapshot.docs.filter(doc => {
+      const data = doc.data();
+      return !data.auth_uid; // Missing or null auth_uid
+    });
+    
+    if (usersToMigrate.length === 0) {
+      return {
+        success: true,
+        message: 'All users already have dashboard access',
+        migrated: 0,
+        failed: 0,
+        total: snapshot.docs.length
       };
     }
     
@@ -1446,7 +1462,7 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
       errors: []
     };
     
-    for (const doc of snapshot.docs) {
+    for (const doc of usersToMigrate) {
       const code = doc.id;
       const data = doc.data();
       
@@ -1520,9 +1536,10 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
     
     return {
       success: true,
-      message: `Migrated ${results.success} users, ${results.failed} failed`,
+      message: `Migrated ${results.success} users, ${results.failed} failed (out of ${usersToMigrate.length} total)`,
       migrated: results.success,
       failed: results.failed,
+      total: usersToMigrate.length,
       errors: results.errors
     };
     
