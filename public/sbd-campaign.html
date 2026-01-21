@@ -1199,9 +1199,59 @@
                 font-size: 1.6rem;
             }
         }
+        
+        /* Floating Book Sharer Login Button */
+        .floating-login-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .floating-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6);
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 30px rgba(16, 185, 129, 0.7);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .floating-login-btn {
+                top: 10px;
+                right: 10px;
+                padding: 10px 18px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Floating Book Sharer Login Button -->
+    <a href="/book-sharer-dashboard" class="floating-login-btn">
+        <i class="fas fa-chart-line"></i>
+        <span>Book Sharer Login</span>
+    </a>
+    
     <!-- Hero Section -->
     <section class="campaign-hero">
         <div class="hero-background">
@@ -1749,6 +1799,15 @@
             <div class="section-header">
                 <h2>🎁 Book Sharer Rewards — Earn Cash by Sharing</h2>
                 <p class="subtitle">No registration • No selling • Just share your link and earn 10,000 FCFA per 10 sales</p>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="/book-sharer-dashboard" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 1rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login to Dashboard
+                    </a>
+                    <p style="margin-top: 0.75rem; font-size: 0.9rem; color: #6b7280;">
+                        Already have a referral link? <a href="/claim-dashboard" style="color: #10b981; text-decoration: underline; font-weight: 500;">Claim dashboard access</a>
+                    </p>
+                </div>
             </div>
             
             <!-- Distinction Badge -->
