@@ -1,0 +1,371 @@
+{
+  "courseId": "teleios-blueprint",
+  "quizTitle": "Teleios Blueprint Final Assessment",
+  "passingScore": 80,
+  "allowRetakes": true,
+  "maxAttempts": 3,
+  "timeLimit": 60,
+  "instructions": "This assessment covers all 6 weeks of The Teleios Blueprint course. You need 80% (24/30 questions) to pass and receive your certificate. You have 60 minutes to complete the quiz and can retake it up to 3 times if needed.",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What does the Greek word τέλειος (teleios) mean?",
+      "options": [
+        "Perfect, complete, whole, mature",
+        "Strong and powerful",
+        "Wise and knowledgeable",
+        "Holy and righteous"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Teleios (τέλειος) means complete, full-grown, brought to proper end, entire, whole, having achieved its purpose. It comes from telos (τέλος) meaning end, goal, or consummation."
+    },
+    {
+      "id": 2,
+      "question": "According to Matthew 5:48, what command does Jesus give?",
+      "options": [
+        "Be strong, therefore, as your Father in heaven is strong",
+        "Be wise, therefore, as your Father in heaven is wise",
+        "Be perfect (teleios), therefore, as your Father in heaven is perfect",
+        "Be holy, therefore, as your Father in heaven is holy"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Matthew 5:48 states: 'Be ye therefore perfect (teleioi), even as your Father which is in heaven is perfect.' This is a call to wholeness and maturity, not moral perfection."
+    },
+    {
+      "id": 3,
+      "question": "What is the UDHR Article 16:1 requirement for marriage?",
+      "options": [
+        "Men and women of any age can marry",
+        "Men and women of full age have the right to marry",
+        "Only married people can have children",
+        "Marriage requires parental consent"
+      ],
+      "correctAnswer": 1,
+      "explanation": "UDHR Article 16:1 states: 'Men and women of full age, without any limitation due to race, nationality or religion, have the right to marry and to found a family.' Full age refers to teleios maturity, not chronological age."
+    },
+    {
+      "id": 4,
+      "question": "What is the WRONG equation for marriage according to the course?",
+      "options": [
+        "1 + 1 = One Flesh",
+        "0.5 + 0.5 = 'You complete me'",
+        "Teleios + Teleios = Covenant",
+        "Whole person + Whole person = Marriage"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The wrong cultural equation is 0.5 + 0.5 = 'You complete me' (two incomplete people hoping the other will fill their void). The right equation is 1 + 1 = One Flesh (two complete persons entering covenantal union)."
+    },
+    {
+      "id": 5,
+      "question": "What are the 5 Teleios Capacities/Faculties?",
+      "options": [
+        "Love, Joy, Peace, Patience, Kindness",
+        "Behavioral, Appetitive, Relational, Temperamental, Moral",
+        "Faith, Hope, Love, Wisdom, Knowledge",
+        "Reading, Writing, Listening, Speaking, Thinking"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The 5 Teleios Capacities are: Behavioral (self-governance), Appetitive (desire stewardship), Relational (conflict repair), Temperamental (emotional maturity), and Moral (responsibility/ownership)."
+    },
+    {
+      "id": 6,
+      "question": "According to Ephesians 4:22-24, what is the three-part movement?",
+      "options": [
+        "Read, Pray, Obey",
+        "Put Off, Be Renewed, Put On",
+        "Believe, Repent, Be Baptized",
+        "Hear, Understand, Apply"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Ephesians 4:22-24 teaches: Put Off the old man (corrupted patterns), Be Renewed in the spirit of your mind (renovate thinking), Put On the new man (live FROM righteousness)."
+    },
+    {
+      "id": 7,
+      "question": "What is the difference between righteousness (δικαιοσύνη) and true holiness (ὁσιότης)?",
+      "options": [
+        "They mean the same thing",
+        "Righteousness is your STATE, holiness is your DUTY",
+        "Holiness is your state, righteousness is your duty",
+        "Righteousness is for Jews, holiness is for Christians"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Righteousness (δικαιοσύνη) = STATE (your status before God—declared right, justified). True Holiness (ὁσιότης) = DUTY (your responsibility to live according to that righteousness). You practice FROM righteousness (state), not TO righteousness."
+    },
+    {
+      "id": 8,
+      "question": "What does 'Practice FROM Perfection' mean?",
+      "options": [
+        "Try to become perfect through practice",
+        "Practice until you achieve perfection",
+        "Live from the wholeness you were created with and Christ secured",
+        "Perfect people don't need to practice"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Practice FROM Perfection means operating from your original design (created teleios) and your current standing (justified in Christ). You don't practice TO become righteous—you practice FROM the righteousness already given."
+    },
+    {
+      "id": 9,
+      "question": "What are the Four Integrated Faculties?",
+      "options": [
+        "Mind, Body, Soul, Spirit",
+        "Conative (Will), Cognitive (Mind), Affective (Heart), Psychomotor (Body)",
+        "Physical, Emotional, Mental, Spiritual",
+        "Reading, Writing, Speaking, Listening"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Four Integrated Faculties are: Conative (Will/promise-muscle), Cognitive (Mind/clarity engine), Affective (Heart/ordered loves), Psychomotor (Body/embodied presence)."
+    },
+    {
+      "id": 10,
+      "question": "What is the Conative Faculty?",
+      "options": [
+        "The power of thinking and reasoning",
+        "The power of feeling and emotion",
+        "The power of will, commitment, and perseverance",
+        "The power of physical strength"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Conative Faculty is your promise-muscle—the capacity to commit, keep, endure, and finish. From Latin 'conatus' (effort, endeavor, striving), it's the faculty of volition and perseverance."
+    },
+    {
+      "id": 11,
+      "question": "What does it mean when your faculties are 'integrated'?",
+      "options": [
+        "You are very intelligent",
+        "What you think, feel, will, and do all move in the same direction",
+        "You have no emotions",
+        "You never make mistakes"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Integration means your whole person moves in one direction: what you THINK aligns with what you FEEL, what you FEEL aligns with what you WILL, what you WILL aligns with what you DO. Teleios persons are not fragmented; their powers are harmonized."
+    },
+    {
+      "id": 12,
+      "question": "According to Mark 12:30, loving God requires which faculties?",
+      "options": [
+        "Only your heart",
+        "Heart, Soul, Mind, and Strength (all four faculties)",
+        "Just your mind and soul",
+        "Only your strength"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Mark 12:30 says: 'Love the Lord thy God with all thy HEART (affective), and with all thy SOUL (conative), and with all thy MIND (cognitive), and with all thy STRENGTH (psychomotor).' Covenant requires the whole person."
+    },
+    {
+      "id": 13,
+      "question": "What is the Design Paradigm's central principle?",
+      "options": [
+        "Focus on damage and fix what's broken",
+        "Start from design, not damage",
+        "Ignore problems and stay positive",
+        "Marriage doesn't need a design"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Design Paradigm teaches: Start from DESIGN, not damage. You are not a random accident needing coping skills. You are created and redeemed teleios—whole by design. We train you to live from that identity."
+    },
+    {
+      "id": 14,
+      "question": "What are the 4 Elements of Design?",
+      "options": [
+        "Earth, Water, Fire, Air",
+        "Intent, Blueprint, Load-bearing requirements, Consequences",
+        "Love, Joy, Peace, Patience",
+        "Reading, Writing, Speaking, Listening"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The 4 Elements of Design are: INTENT (purpose/why), BLUEPRINT (plan/how), LOAD-BEARING requirements (what must hold), CONSEQUENCES (what happens when violated)."
+    },
+    {
+      "id": 15,
+      "question": "What is the difference between Design and Preference?",
+      "options": [
+        "They are the same thing",
+        "Design is non-negotiable; Preference is flexible",
+        "Preference is more important than design",
+        "Design changes based on feelings"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Design = Non-negotiable (God's blueprint for how things work). Preference = Flexible (cultural expressions, styles, methods). You can't violate design without consequences, but preferences are open to adaptation."
+    },
+    {
+      "id": 16,
+      "question": "What is the Design Lens Framework's 3-question diagnostic?",
+      "options": [
+        "What, When, Where?",
+        "What does design say? What's the current deviation? What's the smallest action today?",
+        "Why, How, Who?",
+        "Can I, Should I, Will I?"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Design Lens Framework asks: Q1: What does design say? Q2: What's the current deviation from design? Q3: What's the smallest structural action I can take today?"
+    },
+    {
+      "id": 17,
+      "question": "What is an Axiom in marriage?",
+      "options": [
+        "A personal opinion",
+        "A cultural tradition",
+        "A non-negotiable foundation/self-evident truth",
+        "A temporary rule"
+      ],
+      "correctAnswer": 2,
+      "explanation": "An Axiom is a non-negotiable foundation—a self-evident truth that doesn't need proof. Axioms vs. Opinions: Axioms are structural (violate them and things break); Opinions are preferences (flexible)."
+    },
+    {
+      "id": 18,
+      "question": "What are the 5 Axiomatic Dimensions of Marriage?",
+      "options": [
+        "Physical, Emotional, Spiritual, Mental, Social",
+        "Theological, Ontological, Anthropological, Relational, Teleological",
+        "Love, Trust, Respect, Communication, Intimacy",
+        "Faith, Hope, Love, Joy, Peace"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The 5 Axiomatic Dimensions are: Theological (God's design), Ontological (being & identity), Anthropological (human nature), Relational (covenant dynamics), Teleological (purpose & telos)."
+    },
+    {
+      "id": 19,
+      "question": "What does 'Formation vs Information' mean?",
+      "options": [
+        "They are the same thing",
+        "Formation is structural change; Information is cosmetic knowledge",
+        "Information is more important than formation",
+        "Formation only happens in childhood"
+      ],
+      "correctAnswer": 1,
+      "explanation": "FORMATION = Structural change through practice over time (builds capacity). INFORMATION = Cosmetic knowledge (awareness without transformation). Marriage requires formation, not just information."
+    },
+    {
+      "id": 20,
+      "question": "What is Civilizational Scaling?",
+      "options": [
+        "Building taller buildings",
+        "How teleios maturity scales from Personal → Domestic → Civil order",
+        "Growing a large church",
+        "Expanding your business"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Civilizational Scaling shows how marriage impacts beyond the couple: PERSONAL (your maturity) → DOMESTIC (your marriage/family) → CIVIL (your community/nation). Teleios marriages build stable civilizations."
+    },
+    {
+      "id": 21,
+      "question": "According to Genesis 2:24, what is the order for marriage?",
+      "options": [
+        "Meet, Date, Marry",
+        "Leave, Cleave, One Flesh",
+        "Fall in love, Get engaged, Have wedding",
+        "Cleave, Leave, One Flesh"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Genesis 2:24 establishes the order: LEAVE (separation, independence, self-governance) → CLEAVE (commitment, fidelity, covenant bond) → ONE FLESH (union of two complete persons). You cannot cleave if you've never left."
+    },
+    {
+      "id": 22,
+      "question": "What is the Covenant Anatomy framework about?",
+      "options": [
+        "Physical anatomy of humans",
+        "The structure of covenant: boundaries, fidelity, exclusivity",
+        "Medical training for couples",
+        "Body parts in marriage"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Covenant Anatomy framework examines the structure of covenant relationships: boundaries (what defines us), fidelity (faithfulness), exclusivity (one flesh union), and the load-bearing requirements of covenant."
+    },
+    {
+      "id": 23,
+      "question": "What is the Repair Cycle?",
+      "options": [
+        "Fixing broken appliances",
+        "Confession, Forgiveness, Reconciliation",
+        "Arguing until someone wins",
+        "Ignoring problems until they go away"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Repair Cycle has three phases: CONFESSION (own your portion), FORGIVENESS (release the debt), RECONCILIATION (restore relationship). This is the biblical pattern for repairing covenant breaches."
+    },
+    {
+      "id": 24,
+      "question": "According to Ephesians 4:26, what is the repair timeline?",
+      "options": [
+        "Repair whenever you feel like it",
+        "Let not the sun go down upon your wrath (24-hour repair window)",
+        "Wait a week to cool down",
+        "Never bring it up again"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Ephesians 4:26 commands: 'Be ye angry, and sin not: let not the sun go down upon your wrath.' This establishes a 24-hour repair window for conflict resolution."
+    },
+    {
+      "id": 25,
+      "question": "What is the Marriage Readiness Assessment based on?",
+      "options": [
+        "How much money you have",
+        "How attractive you are",
+        "The 10 Readiness Domains (spiritual, emotional, financial, relational, etc.)",
+        "Your age"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Marriage Readiness Assessment evaluates 10 Readiness Domains: Spiritual maturity, Emotional health, Financial stability, Relational skills, Conflict competence, Desire alignment, Family preparation, Life planning, Biblical literacy, Support network. Minimum threshold: 70% overall."
+    },
+    {
+      "id": 26,
+      "question": "What does 'Readiness vs Perfection' mean?",
+      "options": [
+        "You must be perfect before marrying",
+        "Readiness means preparation matters, but no one is perfect",
+        "Perfection is required for marriage",
+        "Readiness and perfection are the same"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Readiness vs Perfection: No one is 'ready' in the sense of being perfect, but PREPARATION MATTERS. You build covenant capacity through formation—practicing FROM the perfection you were created to embody."
+    },
+    {
+      "id": 27,
+      "question": "What is the daily practice commitment for teleios formation?",
+      "options": [
+        "5 minutes per week",
+        "25 minutes per day (morning + evening practice)",
+        "1 hour on Sundays",
+        "No practice needed"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The daily practice is 25 minutes: Morning Practice (10 min: declare identity, identify weakness, set intention) + Evening Practice (15 min: review day, record failure/success, plan tomorrow). Formation happens through practice over time."
+    },
+    {
+      "id": 28,
+      "question": "What does 'As He is, so are we' (1 John 4:17) mean?",
+      "options": [
+        "We will be like Jesus someday",
+        "We are already complete in Christ NOW, in this world",
+        "We can never be like Jesus",
+        "Only Jesus is perfect"
+      ],
+      "correctAnswer": 1,
+      "explanation": "1 John 4:17 states: 'As he is, so are we in this world.' Not 'so we hope to become' or 'so we strive toward.' As He is, so are we—NOW, in this world, justified and complete in Christ."
+    },
+    {
+      "id": 29,
+      "question": "What is the Teleios Audit?",
+      "options": [
+        "A financial audit",
+        "A diagnostic assessment of your covenant capacities across the 5 faculties",
+        "A marriage license application",
+        "A church membership form"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Teleios Audit is a self-assessment tool where you rate yourself (1-10) across the 5 teleios capacities: Behavioral, Appetitive, Relational, Temperamental, Moral. Your lowest score is your starting point for formation."
+    },
+    {
+      "id": 30,
+      "question": "What is the key takeaway of the Teleios Blueprint?",
+      "options": [
+        "Marriage is about finding your soulmate",
+        "Marriage doesn't complete you—it reveals whether you're complete",
+        "Love is all you need",
+        "Marriage fixes broken people"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The key takeaway: 'Marriage doesn't complete you. It reveals whether you're complete.' The question isn't 'Will my spouse make me whole?' but 'Am I practicing FROM the wholeness Christ has already secured?'"
+    }
+  ]
+}

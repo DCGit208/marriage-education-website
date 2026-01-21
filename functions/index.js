@@ -4,6 +4,7 @@ const stripe = require('stripe')(functions.config().stripe?.secret_key);
 const nodemailer = require('nodemailer');
 const sgMail = require('@sendgrid/mail');
 const axios = require('axios');
+const { jsPDF } = require('jspdf');
 
 // UUID - generate random tokens
 function uuidv4() {
@@ -1219,10 +1220,10 @@ exports.fixAmbassadorEmails = functions.https.onRequest(async (req, res) => {
  */
 exports.registerReferralCode = functions.https.onCall(async (data, context) => {
   try {
-    const { email } = data;
+    const { name, email } = data;
 
-    if (!email) {
-      throw new functions.https.HttpsError('invalid-argument', 'Email required');
+    if (!name || !email) {
+      throw new functions.https.HttpsError('invalid-argument', 'Name and email required');
     }
 
     // Check if email already has a code
@@ -1233,6 +1234,14 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
 
     if (!existingQuery.empty) {
       const existingCode = existingQuery.docs[0].data();
+      
+      // Send reminder email with existing credentials
+      try {
+        await sendBookSharerWelcomeEmail(existingCode.email, existingCode.name, existingCode.code, existingCode.password, true);
+      } catch (emailError) {
+        console.error('Failed to send reminder email:', emailError);
+      }
+      
       return {
         success: true,
         code: existingCode.code,
@@ -1245,9 +1254,34 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
     const random = Math.floor(100 + Math.random() * 900);
     const code = `${prefix}${random}`;
 
+    // Generate random password (12 characters: uppercase, lowercase, numbers, special)
+    const passwordChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
+    const password = Array.from({ length: 12 }, () => 
+      passwordChars.charAt(Math.floor(Math.random() * passwordChars.length))
+    ).join('');
+
+    // Create Firebase Auth user
+    let authUserId = null;
+    try {
+      const userRecord = await admin.auth().createUser({
+        email: email.toLowerCase(),
+        password: password,
+        displayName: name,
+        emailVerified: false
+      });
+      authUserId = userRecord.uid;
+      console.log(`✅ Created Firebase Auth user: ${authUserId} for ${email}`);
+    } catch (authError) {
+      console.error('Firebase Auth creation error:', authError);
+      // Continue even if Auth creation fails - user can reset password later
+    }
+
     const referralData = {
       code,
+      name,
       email: email.toLowerCase(),
+      password, // Store for reference (user can change in dashboard)
+      auth_uid: authUserId,
       sales_count: 0,
       total_revenue: 0,
       commission_earned: 0,
@@ -1260,6 +1294,15 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
 
     await db.collection('referral_codes').doc(code).set(referralData);
 
+    // Send welcome email with credentials
+    try {
+      await sendBookSharerWelcomeEmail(email, name, code, password, false);
+      console.log(`✅ Sent welcome email to ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't throw - user still has access via code
+    }
+
     return {
       success: true,
       code,
@@ -1270,6 +1313,112 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
+
+/**
+ * sendBookSharerWelcomeEmail
+ * - Sends welcome email with dashboard credentials
+ */
+async function sendBookSharerWelcomeEmail(email, name, code, password, isReminder) {
+  const subject = isReminder 
+    ? '✅ Your Book Sharer Dashboard Login Details'
+    : '🎉 Welcome to Book Sharer Rewards - Your Dashboard is Ready!';
+  
+  const referralUrl = `https://marriageducation.com/sbd-campaign?referral=${code}`;
+  const dashboardUrl = 'https://marriageducation.com/book-sharer-dashboard';
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; }
+        .credentials { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981; }
+        .credential-item { margin: 10px 0; font-size: 14px; }
+        .credential-label { font-weight: 600; color: #6b7280; }
+        .credential-value { font-family: 'Courier New', monospace; background: white; padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 5px; }
+        .button { display: inline-block; background: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 10px 5px; }
+        .referral-box { background: #dbeafe; padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+        .highlight { color: #10b981; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0;">${isReminder ? '🔑 Your Login Details' : '🎉 Welcome, ' + name + '!'}</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">${isReminder ? 'Access your dashboard below' : 'Your Book Sharer Dashboard is Ready'}</p>
+        </div>
+        
+        <div class="content">
+          ${isReminder ? '' : `
+          <h2 style="color: #10b981; margin-top: 0;">Start Earning Today! 💰</h2>
+          <p>You're now part of the <strong>Book Sharer Rewards Program</strong>. Share your unique link and earn <span class="highlight">1,000 FCFA per sale</span> (paid every 10 sales).</p>
+          `}
+          
+          <div class="credentials">
+            <h3 style="margin-top: 0; color: #059669;">🔐 Your Dashboard Login</h3>
+            
+            <div class="credential-item">
+              <div class="credential-label">📧 Email:</div>
+              <div class="credential-value">${email}</div>
+            </div>
+            
+            <div class="credential-item">
+              <div class="credential-label">🔑 Password:</div>
+              <div class="credential-value">${password}</div>
+            </div>
+            
+            <div class="credential-item">
+              <div class="credential-label">💼 Referral Code:</div>
+              <div class="credential-value">${code}</div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${dashboardUrl}" class="button">🚀 Go to Dashboard</a>
+          </div>
+          
+          <h3 style="color: #059669;">📣 Your Referral Link:</h3>
+          <div class="referral-box">
+            <a href="${referralUrl}" style="color: #2563eb; word-break: break-all;">${referralUrl}</a>
+          </div>
+          
+          <h3 style="color: #059669;">💡 What's Next?</h3>
+          <ol style="line-height: 1.8;">
+            <li><strong>Login to Dashboard:</strong> Track sales, commission, and milestone progress in real-time</li>
+            <li><strong>Share Your Link:</strong> Post on WhatsApp, Facebook, or email to friends/family</li>
+            <li><strong>Watch Earnings Grow:</strong> Get 1,000 FCFA per sale, paid every 10 sales (10,000 FCFA payout)</li>
+            <li><strong>Change Password:</strong> Go to Settings in your dashboard to update your password</li>
+          </ol>
+          
+          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #f59e0b;">
+            <p style="margin: 0; color: #92400e; font-size: 14px;">
+              <strong>💼 Pro Tip:</strong> The more you share, the more you earn! Every 10 sales = 10,000 FCFA direct payment.
+            </p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>Need help? Contact us at <a href="mailto:orders@marriageducation.com" style="color: #10b981;">orders@marriageducation.com</a></p>
+          <p style="font-size: 12px; color: #9ca3af;">Marriage Education | Building Strong Families</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: '"Marriage Education" <orders@marriageducation.com>',
+    to: email,
+    subject: subject,
+    html: html
+  };
+
+  return transporter.sendMail(mailOptions);
+}
 
 // ============================================
 // HELPER FUNCTIONS
@@ -1288,10 +1437,27 @@ async function activateRD(payment) {
   const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
   const rd = rdDoc.data();
   
-  if (SENDGRID_API_KEY) {
-    await sendRDCredentialsEmail(rd);
-  } else {
+  // Send email via SMTP (same as ambassador - working solution)
+  try {
     await sendRDCredentialsEmailSMTP(rd);
+    console.log(`✅ RD credentials email sent to ${rd.email}`);
+  } catch (error) {
+    console.error(`❌ Failed to send RD credentials email to ${rd.email}:`, error);
+    
+    // Send Telegram notification if email fails
+    if (TELEGRAM_BOT_TOKEN) {
+      const msg = `⚠️ RD EMAIL FAILED - Manual Delivery Needed\n\n` +
+        `Code: ${rd.code}\n` +
+        `Name: ${rd.name}\n` +
+        `Email: ${rd.email}\n` +
+        `Phone: ${rd.phone}\n\n` +
+        `❌ Error: ${error.message}\n\n` +
+        `📧 Please manually send credentials to ${rd.email}:\n` +
+        `Login: https://marriageducation.com/rd-login.html`;
+      
+      await sendTelegram(msg, false);
+      console.log('[RD EMAIL] Failure notification sent to admin via Telegram');
+    }
   }
 }
 
@@ -1438,7 +1604,7 @@ async function activateAmbassador(payment) {
 
 async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
   const mailOptions = {
-    from: 'orders@marriageducation.com',
+    from: `"Marriage Education" <${SMTP_CONFIG.from}>`,
     to: ambassador.email,
     subject: `🎉 Welcome Ambassador - ${ambassador.code}`,
     html: `
@@ -1723,20 +1889,74 @@ async function sendCustomerApprovalEmailSMTP(payment) {
 }
 
 async function sendRDCredentialsEmailSMTP(rd) {
+  if (!transporter) {
+    throw new Error('SMTP not configured');
+  }
+  
   const mailOptions = {
-    from: 'orders@marriageducation.com',
+    from: `"Marriage Education" <${SMTP_CONFIG.from}>`,
     to: rd.email,
-    subject: `Welcome Regional Director - ${rd.code}`,
+    subject: `👑 Welcome Regional Director - ${rd.code}`,
     html: `
-      <h2>Welcome, Regional Director!</h2>
-      <p>Your RD account has been activated.</p>
-      <p><strong>RD Code:</strong> ${rd.code}</p>
-      <p><strong>Name:</strong> ${rd.name}</p>
-      <p><a href="https://marriageducation.com/rd-login.html">Login to Dashboard</a></p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+          .credentials { background: white; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+          .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 30px; padding: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 28px;">👑 Welcome, Regional Director!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Your account is now active</p>
+          </div>
+          
+          <div class="content">
+            <p>Dear ${rd.name},</p>
+            
+            <p>Congratulations! Your Regional Director account has been approved and activated.</p>
+            
+            <div class="credentials">
+              <h3 style="margin-top: 0; color: #667eea;">Your Credentials</h3>
+              <p><strong>RD Code:</strong> ${rd.code}</p>
+              <p><strong>Name:</strong> ${rd.name}</p>
+              <p><strong>Email:</strong> ${rd.email}</p>
+              <p><strong>Phone:</strong> ${rd.phone}</p>
+            </div>
+            
+            <p>You can now access your Regional Director dashboard to:</p>
+            <ul>
+              <li>View your team of ambassadors</li>
+              <li>Track sales and commissions</li>
+              <li>Recruit new ambassadors</li>
+              <li>Monitor your region's performance</li>
+            </ul>
+            
+            <div style="text-align: center;">
+              <a href="https://marriageducation.com/rd-login.html" class="btn">Login to Dashboard</a>
+            </div>
+            
+            <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">Use your RD code and phone number to login.</p>
+          </div>
+          
+          <div class="footer">
+            <p>Marriage Education | Regional Director Program</p>
+            <p>Questions? Contact us at support@marriageducation.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
     `
   };
 
-  await transporter.sendMail(mailOptions);
+  return await transporter.sendMail(mailOptions);
 }
 
 async function sendReferralMilestoneEmailSMTP(referral, milestone, commission) {
@@ -2203,3 +2423,315 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
     });
   }
 });
+
+// ============================================
+// CERTIFICATE GENERATION SYSTEM
+// ============================================
+
+/**
+ * Generate Course Certificate
+ * Called after student passes the final exam with 80%+
+ * Creates PDF certificate, uploads to Storage, creates Firestore record
+ */
+exports.generateCourseCertificate = functions.https.onCall(async (data, context) => {
+  try {
+    // Verify authentication
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const userId = context.auth.uid;
+    const { courseId, quizScore } = data;
+
+    if (!courseId || quizScore === undefined) {
+      throw new functions.https.HttpsError('invalid-argument', 'courseId and quizScore are required');
+    }
+
+    console.log(`[Certificate] Generating for user ${userId}, course ${courseId}, score ${quizScore}%`);
+
+    // Fetch user data
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'User not found');
+    }
+    const userData = userDoc.data();
+    const studentName = userData.displayName || userData.email || 'Student';
+
+    // Fetch course data
+    const courseDoc = await db.collection('courses').doc(courseId).get();
+    if (!courseDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Course not found');
+    }
+    const courseData = courseDoc.data();
+    const courseTitle = courseData.title || 'Course';
+
+    // Check if certificate already exists
+    const existingCert = await db.collection('certificates')
+      .where('userId', '==', userId)
+      .where('courseId', '==', courseId)
+      .where('type', '==', 'course')
+      .limit(1)
+      .get();
+
+    if (!existingCert.empty) {
+      console.log('[Certificate] Certificate already exists, returning existing');
+      const certData = existingCert.docs[0].data();
+      return {
+        success: true,
+        certificateId: existingCert.docs[0].id,
+        pdfUrl: certData.pdfUrl,
+        message: 'Certificate already issued'
+      };
+    }
+
+    // Generate certificate number
+    const year = new Date().getFullYear();
+    const random = Math.floor(100000 + Math.random() * 900000);
+    const certificateNumber = `CERT-${year}-${random}`;
+
+    // Create PDF certificate
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Certificate styling
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Border
+    doc.setLineWidth(2);
+    doc.setDrawColor(102, 126, 234); // #667eea
+    doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(118, 75, 162); // #764ba2
+    doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
+
+    // Header
+    doc.setFontSize(16);
+    doc.setTextColor(102, 126, 234);
+    doc.text('MARRIAGE EDUCATION', pageWidth / 2, 30, { align: 'center' });
+
+    // Certificate of Completion
+    doc.setFontSize(40);
+    doc.setTextColor(30, 41, 59); // #1e293b
+    doc.text('Certificate of Completion', pageWidth / 2, 55, { align: 'center' });
+
+    // Awarded to
+    doc.setFontSize(14);
+    doc.setTextColor(100, 116, 139);
+    doc.text('This is to certify that', pageWidth / 2, 75, { align: 'center' });
+
+    // Student name
+    doc.setFontSize(32);
+    doc.setTextColor(102, 126, 234);
+    doc.setFont(undefined, 'bold');
+    doc.text(studentName, pageWidth / 2, 95, { align: 'center' });
+
+    // Has successfully completed
+    doc.setFontSize(14);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont(undefined, 'normal');
+    doc.text('has successfully completed the course', pageWidth / 2, 110, { align: 'center' });
+
+    // Course title
+    doc.setFontSize(24);
+    doc.setTextColor(30, 41, 59);
+    doc.setFont(undefined, 'bold');
+    doc.text(courseTitle, pageWidth / 2, 130, { align: 'center' });
+
+    // Score
+    doc.setFontSize(16);
+    doc.setTextColor(16, 185, 129); // Green
+    doc.text(`Final Score: ${quizScore}%`, pageWidth / 2, 145, { align: 'center' });
+
+    // Date
+    doc.setFontSize(12);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont(undefined, 'normal');
+    const completionDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    doc.text(`Completion Date: ${completionDate}`, pageWidth / 2, 160, { align: 'center' });
+
+    // Certificate number
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`Certificate No: ${certificateNumber}`, pageWidth / 2, 175, { align: 'center' });
+
+    // Signature line
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(pageWidth / 2 - 40, 190, pageWidth / 2 + 40, 190);
+
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Dr. Achu-Favour Chungwi-Ibiam', pageWidth / 2, 197, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Founder & Lead Instructor', pageWidth / 2, 203, { align: 'center' });
+
+    // Convert PDF to buffer
+    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
+    // Upload to Firebase Storage
+    const fileName = `certificates/${userId}/${courseId}_${Date.now()}.pdf`;
+    const file = bucket.file(fileName);
+
+    await file.save(pdfBuffer, {
+      metadata: {
+        contentType: 'application/pdf',
+        metadata: {
+          userId: userId,
+          courseId: courseId,
+          certificateNumber: certificateNumber,
+          generatedAt: new Date().toISOString()
+        }
+      }
+    });
+
+    // Make the file publicly accessible
+    await file.makePublic();
+
+    // Get public URL
+    const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    // Create Firestore certificate record
+    const certificateRef = await db.collection('certificates').add({
+      userId: userId,
+      courseId: courseId,
+      type: 'course',
+      certificateNumber: certificateNumber,
+      studentName: studentName,
+      courseTitle: courseTitle,
+      quizScore: quizScore,
+      issuedAt: admin.firestore.FieldValue.serverTimestamp(),
+      completionDate: completionDate,
+      pdfUrl: pdfUrl,
+      fileName: fileName,
+      verificationUrl: `https://marriageducation.com/verify-certificate?cert=${certificateNumber}`
+    });
+
+    // Update enrollment record to mark certificate as issued
+    const enrollmentQuery = await db.collection('enrollments')
+      .where('userId', '==', userId)
+      .where('courseId', '==', courseId)
+      .limit(1)
+      .get();
+
+    if (!enrollmentQuery.empty) {
+      await enrollmentQuery.docs[0].ref.update({
+        certificateIssued: true,
+        certificateId: certificateRef.id,
+        certificateIssuedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Send email with certificate
+    try {
+      await sendCertificateEmail(userData.email, studentName, courseTitle, pdfUrl, certificateNumber);
+      console.log('[Certificate] Email sent successfully');
+    } catch (emailError) {
+      console.warn('[Certificate] Failed to send email:', emailError.message);
+    }
+
+    console.log(`[Certificate] Generated successfully: ${certificateRef.id}`);
+
+    return {
+      success: true,
+      certificateId: certificateRef.id,
+      certificateNumber: certificateNumber,
+      pdfUrl: pdfUrl,
+      message: 'Certificate generated successfully'
+    };
+
+  } catch (error) {
+    console.error('[Certificate] Error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Send certificate email notification
+ */
+async function sendCertificateEmail(recipientEmail, studentName, courseTitle, pdfUrl, certificateNumber) {
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+        .certificate-box { background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 30px; padding: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">You've Earned Your Certificate</p>
+        </div>
+        
+        <div class="content">
+          <p>Dear ${studentName},</p>
+          
+          <p>Congratulations on successfully completing <strong>${courseTitle}</strong>!</p>
+          
+          <div class="certificate-box">
+            <h2 style="color: #667eea; margin-top: 0;">📜 Certificate Ready</h2>
+            <p style="color: #6b7280; margin: 10px 0;">Certificate No: <strong>${certificateNumber}</strong></p>
+            <a href="${pdfUrl}" class="btn">Download Certificate</a>
+          </div>
+          
+          <p>Your certificate is a testament to your commitment and achievement. You can:</p>
+          <ul>
+            <li>Download and print your certificate</li>
+            <li>Share it on social media (LinkedIn, Facebook, etc.)</li>
+            <li>Add it to your professional portfolio</li>
+            <li>Access it anytime from your student dashboard</li>
+          </ul>
+          
+          <p>Keep up the great work on your learning journey!</p>
+          
+          <p style="margin-top: 30px;">
+            <strong>The Marriage Education Team</strong><br>
+            <a href="https://marriageducation.com">marriageducation.com</a>
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p>Marriage Education | Building Strong Foundations for Lasting Relationships</p>
+          <p>This email was sent to ${recipientEmail}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Try SendGrid first, fallback to SMTP
+  if (SENDGRID_API_KEY) {
+    await sgMail.send({
+      to: recipientEmail,
+      from: 'certificates@marriageducation.com',
+      subject: `🎉 Your Certificate is Ready - ${courseTitle}`,
+      html: emailHtml
+    });
+  } else if (transporter) {
+    await transporter.sendMail({
+      from: SMTP_CONFIG.from,
+      to: recipientEmail,
+      subject: `🎉 Your Certificate is Ready - ${courseTitle}`,
+      html: emailHtml
+    });
+  } else {
+    throw new Error('No email service configured');
+  }
+}

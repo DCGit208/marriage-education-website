@@ -708,7 +708,7 @@
     <div class="dashboard-header">
         <div class="header-content">
             <div>
-                <h1>Welcome back, <span id="ambassadorName">Ambassador</span>! 👋</h1>
+                <h1>Welcome back, <span id="ambassadorName">Ambassador</span><span id="credentialBadge"></span>! 👋</h1>
                 <p class="subtitle">Referral Code: <strong id="ambassadorCode">AMB-XXX-XXX</strong></p>
             </div>
             <div class="header-nav">
@@ -1069,13 +1069,15 @@
             
             // Display CRLA badge if earned
             const credentialBadge = document.getElementById('credentialBadge');
-            if (ambassadorData.credentialStatus === 'earned') {
-                credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
-            } else if (ambassadorData.credentialStatus === 'in-progress') {
-                credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+            if (credentialBadge) {
+                if (ambassadorData.credentialStatus === 'earned') {
+                    credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
+                } else if (ambassadorData.credentialStatus === 'in-progress') {
+                    credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+                }
             }
             
-            const referralLink = `https://marriage-education.web.app/ambassador-register.html?ref=${ambassadorData.code}`;
+            const referralLink = `https://marriageducation.com/sbd-campaign.html?ref=${ambassadorData.code}`;
             document.getElementById('referralLink').textContent = referralLink;
             
             const progress = (ambassadorData.accessUnitsDeployed / ambassadorData.targetUnits) * 100;
@@ -1466,6 +1468,7 @@
                 const db = firebase.firestore();
                 
                 // Query ambassadors ordered by books sold
+                // Note: This query requires a composite index
                 const snapshot = await db.collection('ambassadors')
                     .where('active', '==', true)
                     .orderBy('booksSold', 'desc')
@@ -1482,6 +1485,8 @@
                 ambassadorData.rank = rank;
             } catch (error) {
                 console.error('Leaderboard error:', error);
+                // Gracefully handle missing index - don't break the dashboard
+                ambassadorData.rank = 0;
             }
         }
         
