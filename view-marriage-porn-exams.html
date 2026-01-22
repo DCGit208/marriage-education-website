@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marriage=Porn & Beyond — Course Exams Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #2d3436;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+    
+    .course-info {
+      background: #f1f3f5;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+    
+    .exam-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .exam-btn {
+      padding: 0.75rem 1.5rem;
+      background: #e9ecef;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .exam-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .exam-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .exam-content {
+      display: none;
+    }
+    
+    .exam-content.active {
+      display: block;
+    }
+    
+    .exam-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+    
+    .exam-header h2 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .exam-stats {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.95rem;
+    }
+    
+    .question-card {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid #667eea;
+    }
+    
+    .question-number {
+      color: #667eea;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 1rem;
+    }
+    
+    .options {
+      list-style: none;
+      margin-bottom: 1rem;
+    }
+    
+    .option {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: white;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .option:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+    
+    .option.correct {
+      border-color: #51cf66;
+      background: #d3f9d8;
+    }
+    
+    .option.selected {
+      border-color: #667eea;
+      background: #e7f5ff;
+    }
+    
+    .correct-indicator {
+      display: inline-block;
+      background: #51cf66;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    
+    .explanation {
+      background: #e7f5ff;
+      border-left: 4px solid #339af0;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+      display: none;
+    }
+    
+    .explanation.show {
+      display: block;
+    }
+    
+    .explanation-label {
+      font-weight: bold;
+      color: #339af0;
+      margin-bottom: 0.5rem;
+    }
+    
+    .show-answers-btn {
+      background: #667eea;
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .show-answers-btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .summary {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+      text-align: center;
+    }
+    
+    .summary h3 {
+      color: #2d3436;
+      margin-bottom: 1rem;
+    }
+    
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .stat-box {
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      border: 2px solid #dee2e6;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .stat-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Marriage=Porn & Beyond — Course Exams</h1>
+    
+    <div class="course-info">
+      <strong>📚 5-Day Freedom Lab</strong><br>
+      Total: <strong>55 questions</strong> across 5 comprehensive exams<br>
+      Each exam must be passed to proceed to the next day
+    </div>
+    
+    <div class="exam-selector">
+      <button class="exam-btn active" onclick="showExam('day1')">Day 1 Exam</button>
+      <button class="exam-btn" onclick="showExam('day2')">Day 2 Exam</button>
+      <button class="exam-btn" onclick="showExam('day3')">Day 3 Exam</button>
+      <button class="exam-btn" onclick="showExam('day4')">Day 4 Exam</button>
+      <button class="exam-btn" onclick="showExam('day5')">Day 5 Final Exam</button>
+    </div>
+    
+    <div id="examContainer"></div>
+  </div>
+  
+  <script>
+    let courseData = null;
+    let currentExam = 'day1';
+    
+    // Load course data
+    fetch('courses-catalogue.json')
+      .then(response => response.json())
+      .then(data => {
+        // Find Marriage=Porn course
+        courseData = data.find(course => course.courseId === 'marriage-porn-beyond');
+        if (courseData && courseData.exams) {
+          showExam('day1');
+        } else {
+          document.getElementById('examContainer').innerHTML = '<p style="color: red;">Error: Exams not found in course data.</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading course data:', error);
+        document.getElementById('examContainer').innerHTML = '<p style="color: red;">Error loading course data.</p>';
+      });
+    
+    function showExam(examId) {
+      if (!courseData || !courseData.exams) return;
+      
+      currentExam = examId;
+      
+      // Update active button
+      document.querySelectorAll('.exam-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      const exam = courseData.exams[`${examId}_exam`];
+      if (!exam) return;
+      
+      let html = `
+        <div class="exam-header">
+          <h2>${exam.title}</h2>
+          <div class="exam-stats">
+            <div>📝 Questions: ${exam.questions.length}</div>
+            <div>🎯 Passing Score: ${exam.passing_score}%</div>
+          </div>
+        </div>
+      `;
+      
+      exam.questions.forEach((q, index) => {
+        html += `
+          <div class="question-card">
+            <div class="question-number">Question ${index + 1} of ${exam.questions.length}</div>
+            <div class="question-text">${q.question}</div>
+            <ul class="options">
+              ${q.options.map((option, optIndex) => `
+                <li class="option ${optIndex === q.correct ? 'correct-answer' : ''}" data-question="${index}" data-option="${optIndex}">
+                  ${option}
+                  ${optIndex === q.correct ? '<span class="correct-indicator">✓ CORRECT</span>' : ''}
+                </li>
+              `).join('')}
+            </ul>
+            <div class="explanation show">
+              <div class="explanation-label">💡 Explanation:</div>
+              <div>${q.explanation}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+        <div class="summary">
+          <h3>📊 Exam Summary</h3>
+          <div class="summary-stats">
+            <div class="stat-box">
+              <div class="stat-number">${exam.questions.length}</div>
+              <div class="stat-label">Total Questions</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number">${exam.passing_score}%</div>
+              <div class="stat-label">Passing Score</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number">${Math.ceil(exam.questions.length * exam.passing_score / 100)}</div>
+              <div class="stat-label">Minimum Correct</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('examContainer').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
