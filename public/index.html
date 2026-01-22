@@ -197,6 +197,24 @@
         font-size: 0.9rem;
       }
     }
+    
+    /* Featured Insight Responsive */
+    @media (max-width: 968px) {
+      .featured-insight .container > div {
+        grid-template-columns: 1fr !important;
+        gap: 2rem !important;
+        text-align: center;
+      }
+      
+      .featured-insight h2 {
+        font-size: 2rem !important;
+      }
+      
+      .featured-insight img {
+        max-width: 300px;
+        margin: 0 auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -322,6 +340,46 @@
     </div>
   </section>
 
+  <!-- Featured: Marriage=Porn & Beyond -->
+  <section class="featured-insight" style="background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); padding: 4rem 0; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: 350px 1fr; gap: 4rem; align-items: center; max-width: 1200px; margin: 0 auto;">
+        <!-- Book Image -->
+        <div style="position: relative;">
+          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);" />
+          <div style="position: absolute; top: -15px; right: -15px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 8px 20px; border-radius: 25px; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);">CONTROVERSIAL</div>
+        </div>
+        
+        <!-- Content -->
+        <div>
+          <h2 style="font-size: 2.5rem; line-height: 1.2; margin: 0 0 1.5rem 0; color: #111827; font-weight: 700;">
+            Why Porn Works — <br/>
+            <span style="color: #dc2626;">And Why Marriage Must Do Better</span>
+          </h2>
+          
+          <p style="font-size: 1.2rem; line-height: 1.8; color: #4b5563; margin: 0 0 1rem 0;">
+            Porn doesn't win because it's right.
+          </p>
+          
+          <p style="font-size: 1.2rem; line-height: 1.8; color: #4b5563; margin: 0 0 2rem 0;">
+            It wins because it takes <strong>nakedness, imagery, desire, and seduction</strong> seriously — while many marriages don't.
+          </p>
+          
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1.5rem; margin: 0 0 2rem 0; border-radius: 8px;">
+            <p style="margin: 0; color: #78350f; font-size: 1rem; font-style: italic; line-height: 1.7;">
+              "This is not a 'don't watch porn' sermon. This is the philosophical infrastructure for building a marriage that makes porn irrelevant."
+            </p>
+          </div>
+          
+          <a href="shop.html?reveal=marriage-porn-beyond" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); transition: all 0.3s;">
+            Explore the Insight
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Value Proposition Section -->
   <section class="value-proposition">
     <div class="container">
@@ -416,29 +474,6 @@
             <div class="product-footer">
               <div class="price">$50/year</div>
               <a href="magazine.html" class="btn-product">Subscribe</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card mystery-card">
-          <div class="product-badge" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">Controversial</div>
-          <div class="product-image" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); display: flex; align-items: center; justify-content: center; min-height: 250px;">
-            <div style="text-align: center; color: white;">
-              <i class="fas fa-question-circle" style="font-size: 5rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-              <p style="font-size: 1.5rem; font-weight: 700; margin: 0; opacity: 0.5;">?</p>
-            </div>
-          </div>
-          <div class="product-content" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white;">
-            <h3 style="color: #ef4444; font-size: 1.4rem; font-weight: 700;">The P-Word Every Couple Avoids</h3>
-            <p style="color: #d1d5db;">Face the hidden struggle. Reclaim your intimacy.</p>
-            <div class="product-features">
-              <span style="color: #fca5a5;">⚠️ Real issue. Real solutions</span>
-              <span style="color: #fca5a5;">🔓 Break the silence</span>
-              <span style="color: #fca5a5;">💪 Transform your marriage</span>
-            </div>
-            <div class="product-footer">
-              <div class="price" style="color: white; opacity: 0.5; text-decoration: line-through;">Hidden</div>
-              <a href="shop.html?reveal=marriage-porn-beyond" class="btn-product" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">Discover The Truth</a>
             </div>
           </div>
         </div>
