@@ -88,12 +88,19 @@
       display: flex;
       gap: 2rem;
       margin-bottom: 2rem;
+      align-items: flex-start;
     }
     .book-reveal img {
-      width: 200px;
+      width: 250px;
+      min-width: 250px;
       height: auto;
       border-radius: 8px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      object-fit: cover;
+      display: block;
+    }
+    .book-details {
+      flex: 1;
     }
     .book-details h3 {
       color: #dc2626;
