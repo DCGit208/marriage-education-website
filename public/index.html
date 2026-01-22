@@ -215,6 +215,146 @@
         margin: 0 auto;
       }
     }
+    
+    /* Modal Styles */
+    .reveal-modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      animation: fadeIn 0.3s ease;
+    }
+    .reveal-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reveal-modal-content {
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      padding: 0;
+      border-radius: 16px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.4s ease;
+      position: relative;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 16px 16px 0 0;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+    .modal-body {
+      padding: 2rem;
+    }
+    .book-reveal {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      align-items: flex-start;
+    }
+    .book-reveal img {
+      width: 250px;
+      min-width: 250px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      object-fit: cover;
+      display: block;
+    }
+    .book-details {
+      flex: 1;
+    }
+    .book-details h3 {
+      color: #dc2626;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .modal-features {
+      background: #f3f4f6;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .modal-features ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-features li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+    .modal-features li:last-child {
+      border-bottom: none;
+    }
+    .modal-cta {
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e5e7eb;
+    }
+    .modal-buy-button {
+      display: inline-block;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+    .modal-buy-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 768px) {
+      .book-reveal {
+        flex-direction: column;
+        align-items: center;
+      }
+      .book-reveal img {
+        width: 150px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -475,10 +615,10 @@
             </p>
           </div>
           
-          <a href="shop.html?reveal=marriage-porn-beyond" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); transition: all 0.3s;">
+          <button onclick="openRevealModal()" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 32px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); transition: all 0.3s; border: none; cursor: pointer;">
             Explore the Insight
             <i class="fas fa-arrow-right"></i>
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -712,10 +852,104 @@
     </div>
   </footer>
 
+  <!-- Reveal Modal -->
+  <div id="revealModal" class="reveal-modal">
+    <div class="reveal-modal-content">
+      <div class="modal-header">
+        <span class="modal-close" onclick="closeRevealModal()">&times;</span>
+        <h2 style="margin: 0; font-size: 2rem;">The Truth About Why Porn Works</h2>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">And why your marriage must do it better</p>
+      </div>
+      <div class="modal-body">
+        <div class="book-reveal">
+          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" />
+          <div class="book-details">
+            <h3>Marriage=Porn & Beyond</h3>
+            <p style="color: #6b7280; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
+              This is not another "don't watch porn" sermon. It's an honest reckoning with <strong>why pornography has power</strong> — and how covenant marriage can outperform it completely.
+            </p>
+            <p style="color: #6b7280; font-size: 1rem; line-height: 1.7;">
+              This book teaches what most marriage resources refuse to address: porn succeeds because it takes nakedness, imagery, desire, and seduction seriously... <strong>while many marriages abandon these divine assets entirely.</strong>
+            </p>
+            <p style="color: #dc2626; font-size: 1rem; font-weight: 600; margin-top: 1rem; font-style: italic;">
+              The solution isn't shame. It's sexual fidelity as marital stewardship.
+            </p>
+          </div>
+        </div>
+        <div class="modal-features">
+          <h4 style="color: #111827; margin-bottom: 1rem; font-size: 1.3rem;">What You'll Master:</h4>
+          <ul>
+            <li><strong>Why Porn "Works"</strong> — Understanding unashamed imagery, curated nakedness, and directed desire (and why these belong in marriage, not screens)</li>
+            <li><strong>Covenant Imagery: Pics & Pearls</strong> — How to build your own exclusive erotic imagination, memory, and visual catalog within covenant (not outside it)</li>
+            <li><strong>Nakedness as Divine Asset</strong> — Genesis 2:25 teaches nakedness is covenant property, not private shame. Learn to steward it like porn never could</li>
+            <li><strong>Marriage = Sexuality = Sex</strong> — Sexuality is a lifestyle, not just sex acts. How you dress, smell, present, seduce — that IS marital fidelity</li>
+            <li><strong>Directing Imagination & Arousal</strong> — Every affair and porn habit starts in imagination. Learn to govern it toward your spouse only</li>
+            <li><strong>Building a Marriage Porn Can't Compete With</strong> — Make counterfeits irrelevant by out-practicing them in allure, devotion, and erotic covenant joy</li>
+          </ul>
+        </div>
+        <div style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+          <p style="margin: 0; color: #78350f; font-weight: 600; font-size: 1rem; line-height: 1.6;">
+            <i class="fas fa-quote-left"></i> "You do not defeat porn by shame. You defeat porn by a marriage that is more naked, more devoted, more alluring, more erotic, more faithful, and more complete than any counterfeit." <i class="fas fa-quote-right"></i>
+          </p>
+          <p style="margin: 0.5rem 0 0 0; color: #92400e; font-size: 0.9rem; text-align: right;">— The SBD Directive</p>
+        </div>
+        <div class="modal-cta">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; border: 2px solid #e5e7eb; text-align: center;">
+              <h4 style="color: #374151; margin: 0 0 0.5rem 0; font-size: 1.1rem;">📖 Book Only</h4>
+              <div style="font-size: 2.5rem; color: #059669; font-weight: 700; margin: 0.5rem 0;">$50</div>
+              <p style="color: #6b7280; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Complete written guide</p>
+              <a href="payment.html?product=marriage-porn-beyond-book&price=50" class="modal-buy-button" style="padding: 0.75rem 1.5rem; font-size: 1rem; width: 100%; box-sizing: border-box;">Get the Book</a>
+            </div>
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 8px; border: 3px solid #f59e0b; text-align: center; position: relative;">
+              <div style="position: absolute; top: -12px; right: 10px; background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">BEST VALUE</div>
+              <h4 style="color: #78350f; margin: 0 0 0.5rem 0; font-size: 1.1rem;">📚 Book + 5-Day Course</h4>
+              <div style="font-size: 2.5rem; color: #dc2626; font-weight: 700; margin: 0.5rem 0;">$250</div>
+              <p style="color: #92400e; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Book + Live implementation</p>
+              <a href="payment.html?product=marriage-porn-beyond-course&price=250" class="modal-buy-button" style="padding: 0.75rem 1.5rem; font-size: 1rem; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">Get Book + Course</a>
+            </div>
+          </div>
+          <p style="margin-top: 1rem; color: #6b7280; font-size: 0.9rem; text-align: center;">Instant download • Secure payment • 30-day guarantee</p>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 0.5rem 0;"><strong>Companion Resources:</strong></p>
+            <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">The Art of Sexuality • The Art of Nakedness • Muliebrity & Virility Baron • Pics & Pearls Journal</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/email-marketing.js"></script>
   <script src="js/analytics.js"></script>
   
   <script>
+    // Modal Functions
+    function openRevealModal() {
+      document.getElementById('revealModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeRevealModal() {
+      document.getElementById('revealModal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('revealModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeRevealModal();
+        }
+      });
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeRevealModal();
+      }
+    });
+    
     // Campaign Banner Countdown Timer
     function updateCampaignTimer() {
       // Set campaign end date (14 days from December 4, 2025)
