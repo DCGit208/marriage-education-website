@@ -24,6 +24,146 @@
   <meta property="twitter:description" content="Professional marriage and relationship resources for individuals, couples, and organizations." />
   
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Modal Styles */
+    .reveal-modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      animation: fadeIn 0.3s ease;
+    }
+    .reveal-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reveal-modal-content {
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      padding: 0;
+      border-radius: 16px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.4s ease;
+      position: relative;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 16px 16px 0 0;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+    .modal-body {
+      padding: 2rem;
+    }
+    .book-reveal {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .book-reveal img {
+      width: 200px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .book-details h3 {
+      color: #dc2626;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .book-details .price {
+      font-size: 2rem;
+      color: #059669;
+      font-weight: 700;
+      margin: 1rem 0;
+    }
+    .modal-features {
+      background: #f3f4f6;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .modal-features ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-features li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+    .modal-features li:last-child {
+      border-bottom: none;
+    }
+    .modal-cta {
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e5e7eb;
+    }
+    .modal-buy-button {
+      display: inline-block;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+    .modal-buy-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 768px) {
+      .book-reveal {
+        flex-direction: column;
+        align-items: center;
+      }
+      .book-reveal img {
+        width: 150px;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -492,6 +632,42 @@
     </div>
   </section>
 
+  <!-- Reveal Modal -->
+  <div id="revealModal" class="reveal-modal">
+    <div class="reveal-modal-content">
+      <div class="modal-header">
+        <span class="modal-close" onclick="closeRevealModal()">&times;</span>
+        <h2 style="margin: 0; font-size: 2rem;">The Truth Revealed</h2>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Face what others won't discuss</p>
+      </div>
+      <div class="modal-body">
+        <div class="book-reveal">
+          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" />
+          <div class="book-details">
+            <h3>Marriage=Porn & Beyond</h3>
+            <p style="color: #6b7280; font-size: 1.1rem; line-height: 1.6;">A groundbreaking exploration of the intersection between marriage and modern sexual culture. Navigate the complexities of intimacy in the digital age with biblical wisdom.</p>
+            <div class="price">$29.99</div>
+          </div>
+        </div>
+        <div class="modal-features">
+          <h4 style="color: #111827; margin-bottom: 1rem;">What You'll Discover:</h4>
+          <ul>
+            <li>✓ Understanding modern sexual culture's impact on marriage</li>
+            <li>✓ Biblical perspective on intimacy challenges</li>
+            <li>✓ Practical strategies for couples to rebuild connection</li>
+            <li>✓ Breaking free from destructive patterns</li>
+            <li>✓ Reclaiming authentic intimacy in your relationship</li>
+            <li>✓ Tools for difficult but necessary conversations</li>
+          </ul>
+        </div>
+        <div class="modal-cta">
+          <a href="payment.html?product=marriage-porn-beyond&price=29.99" class="modal-buy-button" onclick="purchaseProduct('marriage-porn-beyond', 29.99, 'Marriage=Porn & Beyond')">Get This Book Now</a>
+          <p style="margin-top: 1rem; color: #6b7280; font-size: 0.9rem;">Instant download • Secure payment • 30-day guarantee</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div class="container">
       <div class="footer-content">
@@ -592,6 +768,48 @@
     });
   </script>
   
+  <!-- Reveal Modal JavaScript -->
+  <script>
+    // Check for reveal parameter on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const reveal = urlParams.get('reveal');
+      
+      if (reveal === 'marriage-porn-beyond') {
+        // Scroll to the product first
+        const product = document.getElementById('marriage-porn-beyond');
+        if (product) {
+          product.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Open modal after a short delay
+        setTimeout(function() {
+          document.getElementById('revealModal').classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }, 800);
+      }
+    });
+
+    function closeRevealModal() {
+      document.getElementById('revealModal').classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('revealModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRevealModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeRevealModal();
+      }
+    });
+  </script>
+
   <!-- SEO Enhancements -->
   <script src="/js/seo-enhancements.js"></script>
   <script src="/js/analytics-tracking.js"></script>
