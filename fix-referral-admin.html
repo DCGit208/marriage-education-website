@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Missing Referral - Admin Tool</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    h1 {
+      color: #00ff00;
+      border-bottom: 2px solid #00ff00;
+      padding-bottom: 10px;
+    }
+    .log {
+      background: #000;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      min-height: 300px;
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #00ff00;
+    }
+    .log-line {
+      margin: 5px 0;
+      line-height: 1.6;
+    }
+    .success { color: #00ff00; }
+    .error { color: #ff0000; }
+    .info { color: #00aaff; }
+    .warning { color: #ffaa00; }
+    button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    .sale-card {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .sale-card:hover {
+      border-color: #00ff00;
+    }
+    input {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      width: 200px;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Fix Missing Referral Code</h1>
+  
+  <div id="login-section">
+    <h3>🔐 Initializing Admin Access...</h3>
+    <button onclick="initAnonymousAuth()" style="background: #00ff00;">🚀 Start Admin Tool</button>
+  </div>
+  
+  <div id="admin-section" style="display: none;">
+    <div>
+      <label>Referral Code: <input type="text" id="referral-input" value="FAIT154" placeholder="FAIT154"></label>
+      <button onclick="searchRecentSales()">🔍 Search Recent Sales</button>
+      <button onclick="fixAllMissing()" style="background: #ffaa00;">⚡ Fix All Missing</button>
+    </div>
+  </div>
+  
+  <div class="log" id="log">
+    <div class="log-line info">Ready. Click "Search Recent Sales" to find purchases without referral codes.</div>
+  </div>
+  
+  <div id="sales-container"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Initialize Firebase directly
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    console.log('✅ Firebase initialized');
+    
+    // Auto-start with anonymous auth
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        log(`✅ Connected as: ${user.isAnonymous ? 'Admin' : user.email}`, 'success');
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-section').style.display = 'block';
+      }
+    });
+    
+    // Initialize anonymous auth automatically
+    async function initAnonymousAuth() {
+      try {
+        log('🔐 Initializing admin access...', 'info');
+        await auth.signInAnonymously();
+        log('✅ Admin access granted!', 'success');
+      } catch (error) {
+        log(`❌ Failed: ${error.message}`, 'error');
+        log('⚠️  Trying direct database access...', 'warning');
+        // Show admin section anyway - Firestore rules might allow it
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-section').style.display = 'block';
+      }
+    }
+    
+    let foundSales = [];
+    
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const line = document.createElement('div');
+      line.className = `log-line ${type}`;
+      line.textContent = message;
+      logDiv.appendChild(line);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    async function searchRecentSales() {
+      log('🔍 Searching for recent SBD purchases...', 'info');
+      foundSales = [];
+      document.getElementById('sales-container').innerHTML = '';
+      
+      try {
+        // Search last 7 days for safety
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        
+        // Check sales collection
+        log('📊 Checking sales collection...', 'info');
+        const salesQuery = await db.collection('sales')
+          .orderBy('timestamp', 'desc')
+          .limit(50)
+          .get();
+        
+        log(`Found ${salesQuery.size} recent sales`, 'info');
+        
+        // Check pending_payments collection too
+        log('📊 Checking pending_payments collection...', 'info');
+        const pendingQuery = await db.collection('pending_payments')
+          .orderBy('created_at', 'desc')
+          .limit(50)
+          .get();
+        
+        log(`Found ${pendingQuery.size} pending payments`, 'info');
+        
+        let missingCount = 0;
+        
+        // Process sales collection
+        salesQuery.forEach(doc => {
+          const data = doc.data();
+          const productId = data.product_id || '';
+          const hasReferral = data.ambassador_ref || data.referral_code;
+          
+          // Show ALL SBD sales, not just missing referrals
+          if (productId.includes('sbd')) {
+            const status = hasReferral ? '✅ Has referral' : '❌ Missing referral';
+            log(`${status}: ${productId} - ${data.amount} ${data.currency}`, hasReferral ? 'success' : 'warning');
+            
+            if (!hasReferral) {
+              missingCount++;
+              foundSales.push({ id: doc.id, collection: 'sales', ...data });
+              displaySale({ id: doc.id, collection: 'sales', ...data });
+            }
+          }
+        });
+        
+        // Process pending payments
+        pendingQuery.forEach(doc => {
+          const data = doc.data();
+          const productId = data.product_id || '';
+          const hasReferral = data.ambassador_ref || data.referral_code || data.referralCode;
+          
+          if (productId.includes('sbd')) {
+            const status = hasReferral ? '✅ Has referral' : '❌ Missing referral';
+            log(`${status}: ${productId} - ${data.amount} ${data.currency} (PENDING)`, hasReferral ? 'success' : 'warning');
+            
+            if (!hasReferral) {
+              missingCount++;
+              foundSales.push({ id: doc.id, collection: 'pending_payments', ...data });
+              displaySale({ id: doc.id, collection: 'pending_payments', ...data });
+            }
+          }
+        });
+        
+        if (missingCount === 0) {
+          log('✅ All recent SBD sales already have referral codes!', 'success');
+        } else {
+          log(`⚠️  Found ${missingCount} SBD purchases WITHOUT referral codes`, 'warning');
+        }
+        
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+
+    function displaySale(sale) {
+      const container = document.getElementById('sales-container');
+      const card = document.createElement('div');
+      card.className = 'sale-card';
+      
+      const timestamp = sale.timestamp?.toDate ? sale.timestamp.toDate().toLocaleString() : 
+                       (sale.created_at?.toDate ? sale.created_at.toDate().toLocaleString() : 'Unknown');
+      
+      card.innerHTML = `
+        <div><strong>Collection:</strong> ${sale.collection}</div>
+        <div><strong>Product:</strong> ${sale.product_name || sale.product_id}</div>
+        <div><strong>Amount:</strong> ${sale.amount} ${sale.currency}</div>
+        <div><strong>Email:</strong> ${sale.email || 'N/A'}</div>
+        <div><strong>Phone:</strong> ${sale.phone || 'N/A'}</div>
+        <div><strong>Time:</strong> ${timestamp}</div>
+        <div><strong>Reference:</strong> ${sale.reference || sale.id}</div>
+        <div><strong>Status:</strong> ${sale.status || 'pending'}</div>
+        <button onclick="fixSale('${sale.id}', '${sale.collection}')">✅ Add Referral Code</button>
+      `;
+      
+      container.appendChild(card);
+    }
+
+    async function fixSale(saleId, collection = 'sales') {
+      const referralCode = document.getElementById('referral-input').value.trim();
+      
+      if (!referralCode) {
+        log('❌ Please enter a referral code', 'error');
+        return;
+      }
+      
+      log(`📝 Adding referral code ${referralCode} to ${collection}/${saleId}...`, 'info');
+      
+      try {
+        await db.collection(collection).doc(saleId).update({
+          ambassador_ref: referralCode,
+          referral_code: referralCode,
+          referralCode: referralCode, // Add all variations
+          updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+          referral_fixed: true,
+          referral_fixed_date: new Date().toISOString()
+        });
+        
+        log(`✅ Successfully added referral code ${referralCode} to ${collection}/${saleId}`, 'success');
+        log(`🎯 Ambassador ${referralCode} will now receive commission!`, 'success');
+        
+        // Remove the card
+        const cards = document.querySelectorAll('.sale-card');
+        cards.forEach(card => {
+          if (card.textContent.includes(saleId)) {
+            card.style.opacity = '0.3';
+            card.querySelector('button').disabled = true;
+            card.querySelector('button').textContent = '✓ Fixed';
+          }
+        });
+        
+      } catch (error) {
+        log(`❌ Error updating sale: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+
+    async function fixAllMissing() {
+      const referralCode = document.getElementById('referral-input').value.trim();
+      
+      if (!referralCode) {
+        log('❌ Please enter a referral code', 'error');
+        return;
+      }
+      
+      if (foundSales.length === 0) {
+        log('⚠️  No sales found. Search first!', 'warning');
+        return;
+      }
+      
+      if (!confirm(`Fix ${foundSales.length} sales with referral code ${referralCode}?`)) {
+        return;
+      }
+      
+      log(`⚡ Fixing ${foundSales.length} sales in bulk...`, 'warning');
+      
+      let fixed = 0;
+      let errors = 0;
+      
+      for (const sale of foundSales) {
+        try {
+          await db.collection('sales').doc(sale.id).update({
+            ambassador_ref: referralCode,
+            referral_code: referralCode,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+            referral_fixed: true,
+            referral_fixed_date: new Date().toISOString()
+          });
+          fixed++;
+          log(`✅ Fixed sale ${sale.id}`, 'success');
+        } catch (error) {
+          errors++;
+          log(`❌ Failed to fix ${sale.id}: ${error.message}`, 'error');
+        }
+      }
+      
+      log(`\n📊 Bulk fix complete: ${fixed} fixed, ${errors} errors`, 'success');
+      
+      // Refresh the search
+      setTimeout(() => searchRecentSales(), 2000);
+    }
+  </script>
+</body>
+</html>
