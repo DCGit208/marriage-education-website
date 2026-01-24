@@ -419,12 +419,20 @@
     const productName = getUrlParameter('name') || 'Sex By Design For Dummies';
     const productPrice = getUrlParameter('price') || '17712';
     const currency = getUrlParameter('currency') || 'XAF';
+    const referralCode = getUrlParameter('ref') || getUrlParameter('referral') || '';
     const reference = generateReference();
 
-    // Store reference in sessionStorage
+    // Store reference and referral code in sessionStorage
     sessionStorage.setItem('payment_reference', reference);
     sessionStorage.setItem('product_id', productId);
     sessionStorage.setItem('product_price', productPrice);
+    
+    // Save referral code for commission tracking
+    if (referralCode) {
+      sessionStorage.setItem('referral_code', referralCode);
+      sessionStorage.setItem('ambassador_ref', referralCode); // Also save as ambassador_ref for compatibility
+      console.log('✅ Captured referral code:', referralCode);
+    }
 
     // Update page content
     document.getElementById('product-name').textContent = productName;
