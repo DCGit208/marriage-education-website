@@ -305,6 +305,7 @@
       const productId = getUrlParameter('product') || 'sbd-for-dummies';
       const productPrice = getUrlParameter('price') || '27';
       const productCurrency = getUrlParameter('currency') || 'USD';
+      const referralCode = getUrlParameter('ref') || getUrlParameter('referral') || '';
       
       // Use name from URL or lookup from productId
       let productName = getUrlParameter('name');
@@ -351,6 +352,12 @@
         checkoutUrl += '&price=' + encodeURIComponent(price);
         checkoutUrl += '&currency=' + encodeURIComponent(currency);
         
+        // Pass through referral code for commission tracking
+        if (referralCode) {
+          checkoutUrl += '&ref=' + encodeURIComponent(referralCode);
+          console.log('✅ Forwarding referral code:', referralCode);
+        }
+        
         console.log('Redirecting to manual MOMO payment:', checkoutUrl, 'Price:', price, 'Currency:', currency);
         window.location.href = checkoutUrl;
       });
@@ -374,11 +381,16 @@
           checkoutUrl += '&currency=' + encodeURIComponent(currency);
         }
         
+        // Pass through referral code for commission tracking
+        if (referralCode) {
+          checkoutUrl += '&ref=' + encodeURIComponent(referralCode);
+        }
+        
         console.log('Redirecting to Stripe checkout:', checkoutUrl);
         window.location.href = checkoutUrl;
       });
       
-      console.log('✅ Payment page loaded:', { productId, productName, productPrice, productCurrency });
+      console.log('✅ Payment page loaded:', { productId, productName, productPrice, productCurrency, referralCode });
     });
   </script>
 </body>
