@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambassador Dashboard | Marriage Education</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-info .code {
+            opacity: 0.95;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+
+        .btn-white {
+            background: white;
+            color: #00b894;
+        }
+
+        .btn-white:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Monthly Target Tracker */
+        .target-tracker {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .target-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .target-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .target-amount {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 12px;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-weight: 700;
+            color: #d97706;
+            font-size: 14px;
+        }
+
+        .target-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .target-stat {
+            text-align: center;
+        }
+
+        .target-stat .label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .target-stat .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Performance Grid */
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .perf-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #00b894;
+        }
+
+        .perf-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #00b894;
+        }
+
+        .perf-card .label {
+            font-size: 0.875rem;
+            color: #636e72;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .perf-card .value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+        }
+
+        .perf-card .subvalue {
+            font-size: 1rem;
+            color: #636e72;
+            margin-top: 0.5rem;
+        }
+
+        /* Portfolio Table */
+        .portfolio-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .portfolio-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #2d3436;
+        }
+
+        .portfolio-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .portfolio-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #636e72;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .portfolio-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .portfolio-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .portfolio-table .category-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .portfolio-table .category-name {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .portfolio-table .number {
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .portfolio-table tfoot {
+            font-weight: 700;
+            background: #f8f9fa;
+        }
+
+        /* Referral Section */
+        .referral-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .referral-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .referral-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .referral-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .referral-card h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #636e72;
+        }
+
+        .referral-link {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 2px dashed #00b894;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .copy-btn {
+            background: #00b894;
+            color: white;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: #00a085;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00b894;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .target-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .portfolio-table {
+                font-size: 0.875rem;
+            }
+
+            .portfolio-table th,
+            .portfolio-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-info">
+                <h1 id="ambassadorName">Loading...</h1>
+                <p class="code" id="ambassadorCode">●●●-●-●●●</p>
+            </div>
+            <div class="header-nav">
+                <button class="btn btn-white" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <p>Loading your dashboard...</p>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="mainDashboard" class="dashboard-container" style="display: none;">
+        
+        <!-- Monthly Target Tracker -->
+        <div class="target-tracker">
+            <div class="target-header">
+                <div>
+                    <h2>🎯 Monthly Target</h2>
+                    <p>$3,000 USD (1,800,000 FCFA)</p>
+                </div>
+                <div class="target-amount" id="currentEarnings">0 FCFA</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+            </div>
+            <div class="target-stats">
+                <div class="target-stat">
+                    <div class="label">Remaining</div>
+                    <div class="value" id="remaining">1,800,000</div>
+                </div>
+                <div class="target-stat">
+                    <div class="label">Progress</div>
+                    <div class="value" id="progressPercent">0%</div>
+                </div>
+                <div class="target-stat">
+                    <div class="label">Days Left</div>
+                    <div class="value" id="daysLeft">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Cards -->
+        <div class="performance-grid">
+            <div class="perf-card">
+                <div class="icon">💰</div>
+                <div class="label">Total Advocacy Earnings</div>
+                <div class="value" id="totalEarnings">0</div>
+                <div class="subvalue">FCFA</div>
+            </div>
+            <div class="perf-card">
+                <div class="icon">📦</div>
+                <div class="label">Access Units Deployed</div>
+                <div class="value" id="unitsDeployed">0</div>
+                <div class="subvalue">Total deployments</div>
+            </div>
+            <div class="perf-card">
+                <div class="icon">👥</div>
+                <div class="label">Customer Base</div>
+                <div class="value" id="customerCount">0</div>
+                <div class="subvalue">Lifetime attributed</div>
+            </div>
+            <div class="perf-card">
+                <div class="icon">📈</div>
+                <div class="label">Ambassador Level</div>
+                <div class="value" id="ambassadorLevel">Starter</div>
+                <div class="subvalue" id="nextMilestone">Keep deploying!</div>
+            </div>
+        </div>
+
+        <!-- Deployment Portfolio -->
+        <div class="portfolio-section">
+            <h2>📊 Deployment Portfolio</h2>
+            <table class="portfolio-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th style="text-align: center;">Units Deployed</th>
+                        <th style="text-align: right;">Revenue Generated</th>
+                        <th style="text-align: right;">Advocacy Earnings</th>
+                        <th style="text-align: right;">% of Income</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolioTableBody">
+                    <tr>
+                        <td><span class="category-icon">📚</span><span class="category-name">Books</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-icon">🎓</span><span class="category-name">Schools</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-icon">📖</span><span class="category-name">Courses</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-icon">💼</span><span class="category-name">Premium Services</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-icon">🏢</span><span class="category-name">Corporate/Institutional</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="category-icon">🤝</span><span class="category-name">Community Projects</span></td>
+                        <td style="text-align: center;"><span class="number">0</span></td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">0%</span></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>TOTAL</strong></td>
+                        <td style="text-align: center;"><span class="number" id="totalUnits">0</span></td>
+                        <td style="text-align: right;"><span class="number" id="totalRevenue">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number" id="totalCommission">0</span> FCFA</td>
+                        <td style="text-align: right;"><span class="number">100%</span></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Referral Links -->
+        <div class="referral-section">
+            <h2>🔗 Deploy Access to Resources</h2>
+            <p style="margin-bottom: 1rem; color: #636e72;">Share your referral links to facilitate access to marriage education resources</p>
+            
+            <div class="referral-grid">
+                <div class="referral-card">
+                    <h3>📚 Books - Entry Point</h3>
+                    <div class="referral-link" id="bookLink">Loading...</div>
+                    <button class="btn copy-btn" onclick="copyLink('book')">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+                <div class="referral-card">
+                    <h3>🎓 Foundation School</h3>
+                    <div class="referral-link" id="schoolLink">Loading...</div>
+                    <button class="btn copy-btn" onclick="copyLink('school')">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+                <div class="referral-card">
+                    <h3>📖 Courses - Mid Ticket</h3>
+                    <div class="referral-link" id="courseLink">Loading...</div>
+                    <button class="btn copy-btn" onclick="copyLink('course')">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoxtWEU_dBfGBs_x5Bde-_fLlwHcVLnzI",
+            authDomain: "marriage-education.firebaseapp.com",
+            projectId: "marriage-education",
+            storageBucket: "marriage-education.firebasestorage.app",
+            messagingSenderId: "746853352612",
+            appId: "1:746853352612:web:7f65963f1e8f1c4e64dc9f"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get ambassador code from localStorage (set by login page)
+        const ambassadorCode = localStorage.getItem('ambassadorCode');
+        
+        // Redirect to login if not authenticated
+        if (!ambassadorCode) {
+            window.location.href = '/ambassador-login.html';
+        }
+
+        // Load Dashboard Data
+        async function loadDashboard() {
+            try {
+                const doc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!doc.exists) {
+                    alert('Ambassador not found');
+                    return;
+                }
+
+                const data = doc.data();
+                console.log('Ambassador data:', data);
+
+                // Update header
+                document.getElementById('ambassadorName').textContent = data.fullName || data.name || 'Ambassador';
+                document.getElementById('ambassadorCode').textContent = data.code || ambassadorCode;
+
+                // Monthly target calculations
+                const now = new Date();
+                const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const monthlyEarnings = data.monthly_earnings?.[monthKey]?.total || 0;
+                const target = 1800000;
+                const remaining = Math.max(0, target - monthlyEarnings);
+                const progress = Math.min(100, (monthlyEarnings / target) * 100);
+
+                // Days left in month
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const daysLeft = lastDay - now.getDate();
+
+                // Update target tracker
+                document.getElementById('currentEarnings').textContent = monthlyEarnings.toLocaleString() + ' FCFA';
+                document.getElementById('remaining').textContent = remaining.toLocaleString();
+                document.getElementById('progressPercent').textContent = progress.toFixed(1) + '%';
+                document.getElementById('daysLeft').textContent = daysLeft;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = progress.toFixed(0) + '%';
+
+                // Update performance cards
+                document.getElementById('totalEarnings').textContent = (data.commissionEarned || 0).toLocaleString();
+                document.getElementById('unitsDeployed').textContent = data.access_units_deployed || 0;
+                document.getElementById('ambassadorLevel').textContent = data.level || 'Starter';
+
+                // Update portfolio table
+                const categories = {
+                    books: { icon: '📚', name: 'Books', units: 0, revenue: 0, earnings: 0 },
+                    schools: { icon: '🎓', name: 'Schools', units: 0, revenue: 0, earnings: 0 },
+                    courses: { icon: '📖', name: 'Courses', units: 0, revenue: 0, earnings: 0 },
+                    premium: { icon: '💼', name: 'Premium Services', units: 0, revenue: 0, earnings: 0 },
+                    corporate: { icon: '🏢', name: 'Corporate/Institutional', units: 0, revenue: 0, earnings: 0 },
+                    community: { icon: '🤝', name: 'Community Projects', units: 0, revenue: 0, earnings: 0 }
+                };
+
+                // Fill in actual data
+                for (const [key, cat] of Object.entries(categories)) {
+                    cat.units = data.deployment_by_category?.[key] || 0;
+                    cat.earnings = data.revenue_by_category?.[key] || 0;
+                    cat.revenue = cat.earnings * 10; // Approximate (earnings is 10% of revenue)
+                }
+
+                // Build table
+                const tbody = document.getElementById('portfolioTableBody');
+                tbody.innerHTML = '';
+                
+                let totalUnits = 0;
+                let totalRevenue = 0;
+                let totalCommission = 0;
+
+                for (const cat of Object.values(categories)) {
+                    totalUnits += cat.units;
+                    totalRevenue += cat.revenue;
+                    totalCommission += cat.earnings;
+
+                    const percentage = totalCommission > 0 ? ((cat.earnings / totalCommission) * 100).toFixed(1) : '0';
+                    
+                    const row = `
+                        <tr>
+                            <td><span class="category-icon">${cat.icon}</span><span class="category-name">${cat.name}</span></td>
+                            <td style="text-align: center;"><span class="number">${cat.units}</span></td>
+                            <td style="text-align: right;"><span class="number">${cat.revenue.toLocaleString()}</span> FCFA</td>
+                            <td style="text-align: right;"><span class="number">${cat.earnings.toLocaleString()}</span> FCFA</td>
+                            <td style="text-align: right;"><span class="number">${percentage}%</span></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                }
+
+                // Update totals
+                document.getElementById('totalUnits').textContent = totalUnits;
+                document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString();
+                document.getElementById('totalCommission').textContent = totalCommission.toLocaleString();
+
+                // Generate referral links
+                const baseUrl = 'https://marriageducation.com';
+                document.getElementById('bookLink').textContent = `${baseUrl}/sbd-campaign.html?ref=${ambassadorCode}`;
+                document.getElementById('schoolLink').textContent = `${baseUrl}/foundation-school.html?ref=${ambassadorCode}`;
+                document.getElementById('courseLink').textContent = `${baseUrl}/courses.html?ref=${ambassadorCode}`;
+
+                // Show dashboard
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainDashboard').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading dashboard: ' + error.message);
+            }
+        }
+
+        function copyLink(type) {
+            const linkMap = {
+                book: 'bookLink',
+                school: 'schoolLink',
+                course: 'courseLink'
+            };
+            
+            const linkElement = document.getElementById(linkMap[type]);
+            const link = linkElement.textContent;
+            
+            navigator.clipboard.writeText(link).then(() => {
+                alert('✅ Link copied to clipboard!');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('ambassadorCode');
+            localStorage.removeItem('ambassadorEmail');
+            localStorage.removeItem('ambassadorData');
+            window.location.href = '/ambassador-login.html';
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+    </script>
+</body>
+</html>
