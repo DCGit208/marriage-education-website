@@ -3416,6 +3416,16 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     console.log(`🎉 Promoting ${ambassadorCode} to Senior Ambassador (reason: ${reason})`);
     
     const ambassadorRef = db.collection('ambassadors').doc(ambassadorCode);
+    
+    // Fetch full current ambassador data if not provided
+    let fullAmbassadorData = ambassadorData;
+    if (!ambassadorData || !ambassadorData.email) {
+      const ambassadorSnap = await ambassadorRef.get();
+      if (ambassadorSnap.exists) {
+        fullAmbassadorData = ambassadorSnap.data();
+      }
+    }
+    
     const batch = db.batch();
     
     // 1. Update ambassador record
@@ -3430,7 +3440,7 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     // 2. Create senior_ambassadors record (for easier querying)
     const seniorRef = db.collection('senior_ambassadors').doc(ambassadorCode);
     batch.set(seniorRef, {
-      ...ambassadorData,
+      ...fullAmbassadorData,
       ambassador_type: 'senior',
       promotion_date: admin.firestore.FieldValue.serverTimestamp(),
       promotion_reason: reason,
@@ -3464,11 +3474,12 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     }
     
     // 4. Create promotion notification
+    const reasonText = reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors';
     const notificationRef = db.collection('notifications').doc();
     batch.set(notificationRef, {
       type: 'promotion',
       title: '🎉 Congratulations! You\'re now a Senior Ambassador!',
-      message: `You've been promoted to Senior Ambassador for ${reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors'}. You can now build your team and earn 5% override commissions!`,
+      message: `You've been promoted to Senior Ambassador for ${reasonText}. You can now build your team and earn 5% override commissions!`,
       ambassador_code: ambassadorCode,
       read: false,
       created_at: admin.firestore.FieldValue.serverTimestamp()
@@ -3478,14 +3489,61 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     
     console.log(`✅ ${ambassadorCode} promoted to Senior Ambassador successfully`);
     
+    // Send email notification to promoted ambassador
+    if (fullAmbassadorData.email && transporter) {
+      try {
+        const reasonText = reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors';
+        await transporter.sendMail({
+          from: SMTP_CONFIG.from,
+          to: fullAmbassadorData.email,
+          subject: '🎉 You\'ve Been Promoted to Senior Ambassador!',
+          html: `
+            <h2>🎉 Congratulations, ${fullAmbassadorData.fullName || fullAmbassadorData.firstName}!</h2>
+            <p>You've been promoted to <strong>Senior Ambassador</strong> for ${reasonText}!</p>
+            
+            <h3>What This Means:</h3>
+            <ul>
+              <li>✅ You can now <strong>build your own team</strong></li>
+              <li>✅ Earn <strong>5% override commissions</strong> on all team sales</li>
+              <li>✅ Access the <strong>Senior Dashboard</strong> with team management tools</li>
+              <li>✅ Target: <strong>$18,000/month</strong> with a team of 10 active ambassadors</li>
+            </ul>
+            
+            <h3>Your Stats:</h3>
+            <ul>
+              <li>Units Deployed: ${fullAmbassadorData.units_deployed || 0}</li>
+              <li>Team Recruited: ${fullAmbassadorData.recruits_count || 0}</li>
+            </ul>
+            
+            <h3>Next Steps:</h3>
+            <ol>
+              <li>Login to your dashboard: <a href="https://marriageducation.com/ambassador-login.html">Ambassador Login</a></li>
+              <li>Access your Senior Dashboard to see team management tools</li>
+              <li>Share your recruitment link: <br><code>https://marriageducation.com/ambassador-register.html?senior=${ambassadorCode}</code></li>
+              <li>Start building your team and earning override commissions!</li>
+            </ol>
+            
+            <p><strong>Your team override earnings will show on your dashboard.</strong></p>
+            
+            <p>Questions? Reply to this email.</p>
+            
+            <p>Best regards,<br>Marriage Education Team</p>
+          `
+        });
+        console.log(`📧 Promotion email sent to ${fullAmbassadorData.email}`);
+      } catch (emailError) {
+        console.error('Failed to send promotion email:', emailError);
+      }
+    }
+    
     // Send Telegram notification
     if (TELEGRAM_BOT_TOKEN) {
       const msg = `🎉 SENIOR AMBASSADOR PROMOTION!\n\n` +
         `Ambassador: ${ambassadorCode}\n` +
-        `Name: ${ambassadorData.fullName || 'Unknown'}\n` +
+        `Name: ${fullAmbassadorData.fullName || 'Unknown'}\n` +
         `Reason: ${reason === 'units_threshold' ? '500+ Units Deployed' : '10+ Ambassadors Recruited'}\n` +
-        `Units: ${ambassadorData.units_deployed || 0}\n` +
-        `Recruits: ${ambassadorData.recruits_count || 0}\n\n` +
+        `Units: ${fullAmbassadorData.units_deployed || 0}\n` +
+        `Recruits: ${fullAmbassadorData.recruits_count || 0}\n\n` +
         `They can now earn 5% team override commissions!`;
       
       await sendTelegram(msg, false);
