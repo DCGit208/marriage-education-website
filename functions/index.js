@@ -3279,30 +3279,27 @@ exports.checkAmbassadorPromotion = functions.https.onCall(async (data, context) 
       return { eligible: false, reason: 'already_senior' };
     }
     
-    // Check criteria
-    const unitsDeployed = ambassador.units_deployed || ambassador.access_units_deployed || 0;
+    // Check criteria - ONLY recruits count (no units threshold)
     const recruitsCount = ambassador.recruits_count || 0;
     
-    const meetsUnitsThreshold = unitsDeployed >= 500;
     const meetsRecruitsThreshold = recruitsCount >= 10;
     
-    if (meetsUnitsThreshold || meetsRecruitsThreshold) {
+    if (meetsRecruitsThreshold) {
       // Promote to senior
-      const reason = meetsUnitsThreshold ? 'units_threshold' : 'recruits_threshold';
-      await promoteToSenior(ambassador_code, reason, ambassador);
+      await promoteToSenior(ambassador_code, 'recruits_threshold', ambassador);
       
       return {
         success: true,
         eligible: true,
-        reason: reason,
-        data: { unitsDeployed, recruitsCount }
+        reason: 'recruits_threshold',
+        data: { recruitsCount }
       };
     }
     
     return {
       eligible: false,
-      reason: 'thresholds_not_met',
-      data: { unitsDeployed, recruitsCount, unitsNeeded: 500 - unitsDeployed, recruitsNeeded: 10 - recruitsCount }
+      reason: 'threshold_not_met',
+      data: { recruitsCount, recruitsNeeded: 10 - recruitsCount }
     };
     
   } catch (error) {
@@ -3326,28 +3323,23 @@ exports.onAmbassadorUpdate = functions.firestore
       return null;
     }
     
-    // Check if units or recruits changed
-    const unitsChanged = (after.units_deployed || 0) !== (before.units_deployed || 0);
+    // Check if recruits changed (ONLY criteria for promotion)
     const recruitsChanged = (after.recruits_count || 0) !== (before.recruits_count || 0);
     
-    if (!unitsChanged && !recruitsChanged) {
+    if (!recruitsChanged) {
       return null;
     }
     
-    console.log(`📊 ${ambassadorCode} stats changed, checking promotion eligibility...`);
+    console.log(`📊 ${ambassadorCode} recruits changed, checking promotion eligibility...`);
     
-    const unitsDeployed = after.units_deployed || after.access_units_deployed || 0;
     const recruitsCount = after.recruits_count || 0;
-    
-    const meetsUnitsThreshold = unitsDeployed >= 500;
     const meetsRecruitsThreshold = recruitsCount >= 10;
     
-    if (meetsUnitsThreshold || meetsRecruitsThreshold) {
-      const reason = meetsUnitsThreshold ? 'units_threshold' : 'recruits_threshold';
-      console.log(`🎯 ${ambassadorCode} is eligible for promotion!`);
-      await promoteToSenior(ambassadorCode, reason, after);
+    if (meetsRecruitsThreshold) {
+      console.log(`🎯 ${ambassadorCode} is eligible for promotion! (${recruitsCount} recruits)`);
+      await promoteToSenior(ambassadorCode, 'recruits_threshold', after);
     } else {
-      console.log(`⏳ ${ambassadorCode} not yet eligible:`, { unitsDeployed, recruitsCount });
+      console.log(`⏳ ${ambassadorCode} not yet eligible: ${recruitsCount}/10 recruits`);
     }
     
     return null;
@@ -3474,12 +3466,11 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     }
     
     // 4. Create promotion notification
-    const reasonText = reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors';
     const notificationRef = db.collection('notifications').doc();
     batch.set(notificationRef, {
       type: 'promotion',
       title: '🎉 Congratulations! You\'re now a Senior Ambassador!',
-      message: `You've been promoted to Senior Ambassador for ${reasonText}. You can now build your team and earn 5% override commissions!`,
+      message: `You've been promoted to Senior Ambassador for recruiting 10 ambassadors! You can now earn 5% override commissions on your team's sales. Target: $18,000/month with an active team.`,
       ambassador_code: ambassadorCode,
       read: false,
       created_at: admin.firestore.FieldValue.serverTimestamp()
@@ -3492,14 +3483,13 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     // Send email notification to promoted ambassador
     if (fullAmbassadorData.email && transporter) {
       try {
-        const reasonText = reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors';
         await transporter.sendMail({
           from: SMTP_CONFIG.from,
           to: fullAmbassadorData.email,
           subject: '🎉 You\'ve Been Promoted to Senior Ambassador!',
           html: `
             <h2>🎉 Congratulations, ${fullAmbassadorData.fullName || fullAmbassadorData.firstName}!</h2>
-            <p>You've been promoted to <strong>Senior Ambassador</strong> for ${reasonText}!</p>
+            <p>You've been promoted to <strong>Senior Ambassador</strong> for recruiting 10 ambassadors!</p>
             
             <h3>What This Means:</h3>
             <ul>
@@ -3541,10 +3531,10 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
       const msg = `🎉 SENIOR AMBASSADOR PROMOTION!\n\n` +
         `Ambassador: ${ambassadorCode}\n` +
         `Name: ${fullAmbassadorData.fullName || 'Unknown'}\n` +
-        `Reason: ${reason === 'units_threshold' ? '500+ Units Deployed' : '10+ Ambassadors Recruited'}\n` +
-        `Units: ${fullAmbassadorData.units_deployed || 0}\n` +
-        `Recruits: ${fullAmbassadorData.recruits_count || 0}\n\n` +
-        `They can now earn 5% team override commissions!`;
+        `Reason: Recruited 10 Ambassadors\n` +
+        `Team Size: ${fullAmbassadorData.recruits_count || 0}\n\n` +
+        `They can now earn 5% team override commissions!\n` +
+        `Target: $18K/month with active team.`;
       
       await sendTelegram(msg, false);
     }

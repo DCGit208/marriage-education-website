@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foundation School - Marriage Literacy Certification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .progress-overview {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #00b894;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: #636e72;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        .curriculum {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .curriculum h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .week-module {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #dfe6e9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .week-module.completed {
+            border-left-color: #00b894;
+            background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%);
+        }
+
+        .week-module.current {
+            border-left-color: #667eea;
+            background: linear-gradient(135deg, #e8eaf6 0%, #ffffff 100%);
+        }
+
+        .week-module:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .week-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2d3436;
+        }
+
+        .week-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .week-status.completed {
+            color: #00b894;
+        }
+
+        .week-status.current {
+            color: #667eea;
+        }
+
+        .week-status.locked {
+            color: #b2bec3;
+        }
+
+        .week-description {
+            color: #636e72;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-list {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dfe6e9;
+        }
+
+        .lesson-list.expanded {
+            display: block;
+        }
+
+        .lesson-item {
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lesson-item.completed {
+            opacity: 0.7;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #2d3436;
+            border: 2px solid #dfe6e9;
+        }
+
+        .enrollment-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .enrollment-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1rem;
+        }
+
+        .enrollment-card p {
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-graduation-cap"></i> Foundation School</h1>
+            <p>Marriage Literacy Certification - CRLA Program</p>
+        </div>
+
+        <!-- Welcome Banner (all ambassadors have access) -->
+        <div class="enrollment-card" id="welcomeBanner">
+            <h2>🎓 Welcome to Foundation School</h2>
+            <p><strong>6-Week Dual-Track Program:</strong> Teleios Blueprint + Advocacy Training</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 1rem;">Both tracks run parallel for 6 weeks, concluding with your <strong>CRLA (Certified Relationship Literacy Advocate)</strong> credential</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: left;">
+                    <h3 style="color: #667eea; margin-bottom: 0.5rem;">📘 Track 1: Teleios Blueprint</h3>
+                    <p style="font-size: 0.9rem; color: #636e72;">Full Human Maturity - Understanding wholeness, faculties, attributes, and covenant capacity</p>
+                </div>
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; text-align: left;">
+                    <h3 style="color: #00b894; margin-bottom: 0.5rem;">💼 Track 2: Advocacy Training</h3>
+                    <p style="font-size: 0.9rem; color: #636e72;">Professional Skills - Counseling ethics, client intake, treatment planning, and CRLA practice</p>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="../course-viewer.html?course=teleios-blueprint" class="btn btn-primary">
+                    <i class="fas fa-play-circle"></i> Start Teleios Blueprint
+                </a>
+                <a href="../course-viewer.html?course=advocacy-training" class="btn btn-primary" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%);">
+                    <i class="fas fa-briefcase"></i> Start Advocacy Training
+                </a>
+                <a href="dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Progress Overview (shown if enrolled) -->
+        <div class="progress-overview" id="progressOverview" style="display: none;">
+            <h2 style="font-family: 'Playfair Display', serif; color: #2d3436; margin-bottom: 1rem;">
+                Your Foundation School Progress
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <!-- Teleios Blueprint Progress -->
+                <div style="background: linear-gradient(135deg, #e8eaf6 0%, #ffffff 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid #667eea;">
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">📘 Teleios Blueprint</h3>
+                    <div class="stat-card" style="margin-bottom: 0.5rem;">
+                        <div class="label">Current Week</div>
+                        <div class="value"><span id="teleiosWeek">1</span>/6</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Lessons Completed</div>
+                        <div class="value"><span id="teleiosLessons">0</span>/18</div>
+                    </div>
+                </div>
+                
+                <!-- Advocacy Training Progress -->
+                <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid #00b894;">
+                    <h3 style="color: #00b894; margin-bottom: 1rem;">💼 Advocacy Training</h3>
+                    <div class="stat-card" style="margin-bottom: 0.5rem;">
+                        <div class="label">Current Week</div>
+                        <div class="value"><span id="advocacyWeek">1</span>/6</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Lessons Completed</div>
+                        <div class="value"><span id="advocacyLessons">0</span>/18</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <div class="label">Overall Progress</div>
+                    <div class="value"><span id="overallProgress">0</span>%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">CRLA Status</div>
+                    <div class="value" style="font-size: 1.2rem;" id="crlaStatus">
+                        <span style="color: #636e72;">⭕ Not Started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Curriculum Section -->
+        <div class="curriculum" id="curriculumSection">
+            <h2>📚 6-Week Curriculum</h2>
+            <p style="color: #636e72; margin-bottom: 2rem;">Complete all modules to earn your CRLA certification</p>
+            
+            <div id="weeksList">
+                <!-- Dynamically generated week modules -->
+            </div>
+        </div>
+
+        <div class="action-buttons" style="margin-top: 2rem;">
+            <a href="dashboard.html" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtyr9aU5yPMJ23S2jwZXaWHCOsF1VxJVk",
+            authDomain: "marriage-education-hub.firebaseapp.com",
+            projectId: "marriage-education-hub",
+            storageBucket: "marriage-education-hub.firebasestorage.app",
+            messagingSenderId: "994596788106",
+            appId: "1:994596788106:web:abc3211cea7c8c4f59fd8c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Load Teleios Blueprint course from LMS
+        async function loadSchoolData() {
+            try {
+                const ambassadorCode = localStorage.getItem('ambassadorCode');
+                if (!ambassadorCode) {
+                    alert('❌ Please log in first');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+
+                // Redirect to LMS course viewer for Teleios Blueprint
+                window.location.href = '../course-viewer.html?course=teleios-blueprint';
+
+            } catch (error) {
+                console.error('Error loading school data:', error);
+                alert('❌ Error loading school data: ' + error.message);
+            }
+        }
+
+        // Load data on page load - redirect to LMS
+        window.addEventListener('DOMContentLoaded', () => {
+            // Show welcome banner, then user clicks to access course in LMS
+            console.log('Foundation School: Ambassadors access Teleios Blueprint course via LMS');
+        });
+                showEnrolledView();
+
+                // Render curriculum
+                renderCurriculum();
+
+            } catch (error) {
+                console.error('Error loading school data:', error);
+                alert('❌ Error loading school data: ' + error.message);
+            }
+        }
+
+        function showEnrolledView() {
+            document.getElementById('enrollmentCard').style.display = 'none';
+            document.getElementById('progressOverview').style.display = 'block';
+
+            // Update progress stats
+            const completedLessons = schoolEnrollment.completed_lessons ? schoolEnrollment.completed_lessons.length : 0;
+            const currentWeek = schoolEnrollment.current_week || 1;
+            const overallProgress = Math.round((completedLessons / 36) * 100);
+            
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('completedLessons').textContent = completedLessons;
+            document.getElementById('overallProgress').textContent = overallProgress;
+
+            if (completedLessons === 36 && schoolEnrollment.exam_passed) {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #00b894;">✅ Certified</span>';
+            } else if (overallProgress > 0) {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+            }
+        }
+
+        function renderCurriculum() {
+            const weeksList = document.getElementById('weeksList');
+            weeksList.innerHTML = '';
+
+            curriculum.forEach((week) => {
+                const completedLessons = schoolEnrollment ? 
+                    schoolEnrollment.completed_lessons.filter(l => l.startsWith(`W${week.week}-`)).length : 0;
+                const totalLessons = week.lessons.length;
+                const isCompleted = completedLessons === totalLessons;
+                const isCurrent = schoolEnrollment ? week.week === schoolEnrollment.current_week : week.week === 1;
+                const isLocked = schoolEnrollment ? week.week > schoolEnrollment.current_week : week.week > 1;
+
+                let statusClass = 'locked';
+                let statusIcon = '🔒';
+                let statusText = 'Locked';
+
+                if (isCompleted) {
+                    statusClass = 'completed';
+                    statusIcon = '✅';
+                    statusText = 'Completed';
+                } else if (isCurrent) {
+                    statusClass = 'current';
+                    statusIcon = '▶️';
+                    statusText = 'Current';
+                }
+
+                const weekDiv = document.createElement('div');
+                weekDiv.className = `week-module ${statusClass}`;
+                weekDiv.innerHTML = `
+                    <div class="week-header">
+                        <div class="week-title">${week.title}</div>
+                        <div class="week-status ${statusClass}">
+                            <span>${statusIcon} ${statusText}</span>
+                            <span style="margin-left: 1rem; color: #636e72;">${completedLessons}/${totalLessons} lessons</span>
+                        </div>
+                    </div>
+                    <div class="week-description">${week.description}</div>
+                    <div class="lesson-list" id="week-${week.week}-lessons">
+                        ${week.lessons.map((lesson, index) => {
+                            const lessonId = `W${week.week}-L${index + 1}`;
+                            const lessonCompleted = schoolEnrollment && schoolEnrollment.completed_lessons.includes(lessonId);
+                            return `
+                                <div class="lesson-item ${lessonCompleted ? 'completed' : ''}">
+                                    <div>
+                                        <span style="margin-right: 0.5rem;">${lessonCompleted ? '✅' : '⭕'}</span>
+                                        ${lesson.title}
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; align-items: center;">
+                                        <span style="color: #636e72; font-size: 0.85rem;">${lesson.duration}</span>
+                                        ${!isLocked && !lessonCompleted ? `
+                                            <a href="../course-viewer.html?course=foundation-school&week=${week.week}&lesson=${index + 1}" class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">
+                                                <i class="fas fa-play"></i> Start
+                                            </a>
+                                        ` : lessonCompleted ? `
+                                            <a href="../course-viewer.html?course=foundation-school&week=${week.week}&lesson=${index + 1}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">
+                                                <i class="fas fa-redo"></i> Review
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // Toggle expansion on click
+                weekDiv.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn')) {
+                        const lessonList = weekDiv.querySelector('.lesson-list');
+                        lessonList.classList.toggle('expanded');
+                    }
+                });
+
+                weeksList.appendChild(weekDiv);
+            });
+        }
+
+        async function completeLesson(lessonId, weekNumber) {
+            try {
+                const ambassadorCode = localStorage.getItem('ambassadorCode');
+                
+                // Update completed lessons array
+                await db.collection('ambassadors').doc(ambassadorCode).update({
+                    'school_enrollment.foundation_school.completed_lessons': firebase.firestore.FieldValue.arrayUnion(lessonId),
+                    'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Check if week is complete, advance to next week
+                const weekLessons = curriculum.find(w => w.week === weekNumber).lessons.length;
+                const completedInWeek = schoolEnrollment.completed_lessons.filter(l => l.startsWith(`W${weekNumber}-`)).length + 1;
+
+                if (completedInWeek === weekLessons && weekNumber < 6) {
+                    await db.collection('ambassadors').doc(ambassadorCode).update({
+                        'school_enrollment.foundation_school.current_week': weekNumber + 1
+                    });
+                }
+
+                alert('✅ Lesson completed!');
+                window.location.reload();
+
+            } catch (error) {
+                console.error('Error completing lesson:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', loadSchoolData);
+    </script>
+</body>
+</html>
