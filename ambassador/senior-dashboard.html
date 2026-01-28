@@ -1059,6 +1059,23 @@
         // Load senior ambassador data
         async function loadSeniorData() {
             try {
+                // Check if promoted to Regional Director
+                const ambassadorRef = doc(db, 'ambassadors', seniorCode);
+                const ambassadorSnap = await getDoc(ambassadorRef);
+                
+                if (ambassadorSnap.exists() && ambassadorSnap.data().ambassador_type === 'regional_director') {
+                    console.log('👑 Regional Director detected - redirecting to RD dashboard...');
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;padding:20px 30px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10000;font-size:18px;font-weight:600;text-align:center;';
+                    notification.innerHTML = '👑 Congratulations, Regional Director!<br><small style="font-size:14px;opacity:0.9;">Redirecting to your RD Dashboard...</small>';
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        window.location.href = '/regional-director/rd-dashboard.html';
+                    }, 2000);
+                    return;
+                }
+                
                 const seniorRef = doc(db, 'senior_ambassadors', seniorCode);
                 const seniorSnap = await getDoc(seniorRef);
 
