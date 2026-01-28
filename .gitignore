@@ -32,6 +32,10 @@ temp/
 .env.test.local
 .env.production.local
 
+# Firebase credentials (NEVER COMMIT)
+serviceAccountKey.json
+functions/serviceAccountKey.json
+
 # Payment configuration (keep secure)
 # Note: Make sure to keep payment credentials secure
 stripe/node_modules/
