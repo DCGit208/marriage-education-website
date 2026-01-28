@@ -77,32 +77,37 @@
         <h1>🧪 Test Commission System</h1>
         <p>Test the multi-product commission engine with sample data</p>
 
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 5px 0;">💰 High-Value Test Recommended</h3>
+            <p style="margin: 0; font-size: 14px;">Try Foundation School to see 120,000 FCFA commission!</p>
+        </div>
+
         <label>Product:</label>
         <select id="productId">
-            <option value="sbd-dummies-book">SBD for Dummies - 15,000 FCFA</option>
-            <option value="marriage-porn-beyond-book">Marriage=Porn - 50,000 FCFA</option>
-            <option value="foundation-school">Foundation School - 1,200,000 FCFA</option>
-            <option value="sbd-dummies-course">SBD Course - 300,000 FCFA</option>
-            <option value="coaching-package-basic">Basic Coaching - 500,000 FCFA</option>
-            <option value="corporate-training-basic">Corporate Training - 5,000,000 FCFA</option>
+            <option value="foundation-school" selected>🔥 Foundation School - 1,200,000 FCFA (120K commission)</option>
+            <option value="corporate-training-basic">🏢 Corporate Training - 5,000,000 FCFA (500K commission)</option>
+            <option value="coaching-package-basic">💼 Basic Coaching - 500,000 FCFA (50K commission)</option>
+            <option value="sbd-dummies-course">📚 SBD Course - 300,000 FCFA (30K commission)</option>
+            <option value="marriage-porn-beyond-book">📖 Marriage=Porn - 50,000 FCFA (5K commission)</option>
+            <option value="sbd-dummies-book">📕 SBD for Dummies - 15,000 FCFA (1.5K commission)</option>
         </select>
 
         <label>Customer Email:</label>
-        <input type="email" id="customerEmail" value="test@example.com" placeholder="test@example.com">
+        <input type="email" id="customerEmail" value="school.student@example.com" placeholder="test@example.com">
 
         <label>Customer Name:</label>
-        <input type="text" id="customerName" value="Test Customer" placeholder="John Doe">
+        <input type="text" id="customerName" value="School Student" placeholder="John Doe">
 
         <label>Customer Phone:</label>
-        <input type="tel" id="customerPhone" value="+237678901234" placeholder="+237678901234">
+        <input type="tel" id="customerPhone" value="+237699887766" placeholder="+237678901234">
 
         <label>Ambassador Referral Code:</label>
         <input type="text" id="refCode" value="AMB-X-001" placeholder="AMB-X-001">
 
         <label>Payment Reference:</label>
-        <input type="text" id="paymentId" value="TEST-PAY-001" placeholder="PAY-12345">
+        <input type="text" id="paymentId" value="TEST-SCHOOL-001" placeholder="PAY-12345">
 
-        <button onclick="testCommission()">🚀 Test Commission Processing</button>
+        <button onclick="testCommission()">🚀 Test High-Value Commission</button>
 
         <div id="result" class="result"></div>
     </div>
