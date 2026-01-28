@@ -3551,3 +3551,231 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     throw error;
   }
 }
+
+// ============================================
+// REGIONAL DIRECTOR PROMOTION SYSTEM
+// ============================================
+
+/**
+ * Check if senior ambassador qualifies for RD promotion
+ * Callable function
+ */
+exports.checkRDPromotion = functions.https.onCall(async (data, context) => {
+  try {
+    const { ambassador_code } = data;
+    
+    if (!ambassador_code) {
+      throw new functions.https.HttpsError('invalid-argument', 'Ambassador code required');
+    }
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassador_code);
+    const ambassadorSnap = await ambassadorRef.get();
+    
+    if (!ambassadorSnap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Ambassador not found');
+    }
+    
+    const ambassador = ambassadorSnap.data();
+    
+    // Must be senior first
+    if (ambassador.ambassador_type !== 'senior') {
+      return { eligible: false, reason: 'not_senior' };
+    }
+    
+    // Check RD criteria: 50 seniors recruited
+    const seniorsRecruited = ambassador.seniors_recruited || 0;
+    const meetsRDThreshold = seniorsRecruited >= 50;
+    
+    if (meetsRDThreshold) {
+      // Promote to RD
+      await promoteToRD(ambassador_code, ambassador);
+      
+      return {
+        success: true,
+        eligible: true,
+        reason: 'rd_threshold',
+        data: { seniorsRecruited }
+      };
+    }
+    
+    return {
+      eligible: false,
+      reason: 'threshold_not_met',
+      data: { seniorsRecruited, seniorsNeeded: 50 - seniorsRecruited }
+    };
+    
+  } catch (error) {
+    console.error('Error checking RD promotion:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Firestore Trigger: Auto-check RD promotion when senior recruits seniors
+ */
+exports.onSeniorUpdate = functions.firestore
+  .document('ambassadors/{ambassadorCode}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    const ambassadorCode = context.params.ambassadorCode;
+    
+    // Only check if they're already a senior
+    if (after.ambassador_type !== 'senior') {
+      return null;
+    }
+    
+    // Check if seniors_recruited changed
+    const seniorsChanged = (after.seniors_recruited || 0) !== (before.seniors_recruited || 0);
+    
+    if (!seniorsChanged) {
+      return null;
+    }
+    
+    console.log(`📊 ${ambassadorCode} seniors count changed, checking RD eligibility...`);
+    
+    const seniorsRecruited = after.seniors_recruited || 0;
+    const meetsRDThreshold = seniorsRecruited >= 50;
+    
+    if (meetsRDThreshold) {
+      console.log(`👑 ${ambassadorCode} is eligible for RD promotion! (${seniorsRecruited} seniors)`);
+      await promoteToRD(ambassadorCode, after);
+    } else {
+      console.log(`⏳ ${ambassadorCode} not yet eligible: ${seniorsRecruited}/50 seniors`);
+    }
+    
+    return null;
+  });
+
+/**
+ * Promote senior ambassador to Regional Director
+ */
+async function promoteToRD(ambassadorCode, ambassadorData) {
+  try {
+    console.log(`👑 Promoting ${ambassadorCode} to Regional Director`);
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassadorCode);
+    
+    // Fetch full current data if not provided
+    let fullAmbassadorData = ambassadorData;
+    if (!ambassadorData || !ambassadorData.email) {
+      const ambassadorSnap = await ambassadorRef.get();
+      if (ambassadorSnap.exists) {
+        fullAmbassadorData = ambassadorSnap.data();
+      }
+    }
+    
+    const batch = db.batch();
+    
+    // 1. Update ambassador record
+    batch.update(ambassadorRef, {
+      ambassador_type: 'regional_director',
+      rd_promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      promoted_to_rd_at: new Date().toISOString(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 2. Create/update regional_directors record
+    const rdCode = ambassadorCode.replace('AMB-', 'RD-');
+    const rdRef = db.collection('regional_directors').doc(rdCode);
+    batch.set(rdRef, {
+      ...fullAmbassadorData,
+      code: rdCode,
+      rd_code: rdCode,
+      ambassador_code: ambassadorCode,
+      ambassador_type: 'regional_director',
+      promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      network_size: fullAmbassadorData.seniors_recruited || 50,
+      network_ambassadors: 0, // Will be calculated from team
+      network_override_earned: 0,
+      monthly_network_earnings: 0,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 3. Create promotion notification
+    const notificationRef = db.collection('notifications').doc();
+    batch.set(notificationRef, {
+      type: 'rd_promotion',
+      title: '👑 Congratulations! You\'re now a Regional Director!',
+      message: `You've been promoted to Regional Director for recruiting 50 senior ambassadors! You can now earn 5% network override on 500+ ambassadors. Target: $450K-$750K/month.`,
+      ambassador_code: ambassadorCode,
+      read: false,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    await batch.commit();
+    
+    console.log(`✅ ${ambassadorCode} promoted to Regional Director successfully`);
+    
+    // Send email notification
+    if (fullAmbassadorData.email && transporter) {
+      try {
+        await transporter.sendMail({
+          from: SMTP_CONFIG.from,
+          to: fullAmbassadorData.email,
+          subject: '👑 You\'ve Been Promoted to Regional Director!',
+          html: `
+            <h2>👑 Congratulations, ${fullAmbassadorData.fullName || fullAmbassadorData.firstName}!</h2>
+            <p>You've been promoted to <strong>Regional Director</strong> for recruiting 50 senior ambassadors!</p>
+            
+            <h3>What This Means:</h3>
+            <ul>
+              <li>✅ Manage a <strong>network of 50 seniors × ~10 ambassadors = 500 total</strong></li>
+              <li>✅ Earn <strong>5% network override</strong> on all network sales</li>
+              <li>✅ Access the <strong>RD Dashboard</strong> with network management tools</li>
+              <li>✅ Target: <strong>$450K-$750K/month</strong> with active network</li>
+            </ul>
+            
+            <h3>Your Network:</h3>
+            <ul>
+              <li>Senior Ambassadors: ${fullAmbassadorData.seniors_recruited || 0}</li>
+              <li>Total Network: ~${(fullAmbassadorData.seniors_recruited || 0) * 10} ambassadors</li>
+            </ul>
+            
+            <h3>Next Steps:</h3>
+            <ol>
+              <li>Login to your dashboard: <a href="https://marriageducation.com/ambassador-login.html">Ambassador Login</a></li>
+              <li>Access your Regional Director Dashboard</li>
+              <li>Monitor network performance and senior development</li>
+              <li>Your network override earnings will show on your dashboard</li>
+            </ol>
+            
+            <p><strong>Your RD Code: ${rdCode}</strong></p>
+            
+            <p>Questions? Reply to this email.</p>
+            
+            <p>Best regards,<br>Marriage Education Team</p>
+          `
+        });
+        console.log(`📧 RD promotion email sent to ${fullAmbassadorData.email}`);
+      } catch (emailError) {
+        console.error('Failed to send RD promotion email:', emailError);
+      }
+    }
+    
+    // Send Telegram notification
+    if (TELEGRAM_BOT_TOKEN) {
+      const msg = `👑 REGIONAL DIRECTOR PROMOTION!\n\n` +
+        `Ambassador: ${ambassadorCode}\n` +
+        `Name: ${fullAmbassadorData.fullName || 'Unknown'}\n` +
+        `Seniors Recruited: ${fullAmbassadorData.seniors_recruited || 0}\n` +
+        `Network Size: ~${(fullAmbassadorData.seniors_recruited || 0) * 10} ambassadors\n\n` +
+        `RD Code: ${rdCode}\n` +
+        `Target: $450K-$750K/month network override!`;
+      
+      await sendTelegram(msg, false);
+    }
+    
+    return {
+      success: true,
+      ambassadorCode: ambassadorCode,
+      rdCode: rdCode,
+      newStatus: 'regional_director'
+    };
+    
+  } catch (error) {
+    console.error(`❌ Error promoting ${ambassadorCode} to RD:`, error);
+    throw error;
+  }
+}

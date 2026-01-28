@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regional Director Dashboard | Marriage Education</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .header-top h1 {
+            font-size: 32px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .rd-badge {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .rd-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .rd-info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .rd-info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .rd-info-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-change {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        /* Income Tracker */
+        .income-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .income-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .income-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .income-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 16px;
+        }
+        
+        .income-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .income-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        /* Senior Performance Table */
+        .table-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .table-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .performance-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .performance-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+        
+        .performance-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .performance-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .senior-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d1f4e0;
+            color: #10b981;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #f59e0b;
+        }
+        
+        /* Network Map */
+        .network-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .network-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .network-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .network-stat {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .network-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .network-stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <h1>
+                    👑 Regional Director Dashboard
+                    <span class="rd-badge">RD STATUS</span>
+                </h1>
+                <button onclick="logout()" style="padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Logout</button>
+            </div>
+            
+            <div class="rd-info">
+                <div class="rd-info-item">
+                    <div class="rd-info-label">Your Name</div>
+                    <div class="rd-info-value" id="rdName">Loading...</div>
+                </div>
+                <div class="rd-info-item">
+                    <div class="rd-info-label">RD Code</div>
+                    <div class="rd-info-value" id="rdCode">Loading...</div>
+                </div>
+                <div class="rd-info-item">
+                    <div class="rd-info-label">Email</div>
+                    <div class="rd-info-value" style="font-size: 16px;" id="rdEmail">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Senior Ambassadors</div>
+                <div class="stat-value" id="seniorCount">0</div>
+                <div class="stat-change">+3 this month</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">🌐</div>
+                <div class="stat-label">Total Network</div>
+                <div class="stat-value" id="totalAmbassadors">0</div>
+                <div class="stat-change">~500 capacity</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-label">Network Override</div>
+                <div class="stat-value" id="networkOverride">$0</div>
+                <div class="stat-change">5% on all network sales</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">Monthly Target</div>
+                <div class="stat-value">$750K</div>
+                <div class="stat-change" id="targetProgress">0% of target</div>
+            </div>
+        </div>
+        
+        <!-- Income Tracker -->
+        <div class="income-section">
+            <h2>💵 Monthly Income Breakdown</h2>
+            <div class="income-grid">
+                <div class="income-card">
+                    <div class="income-label">Personal Commission</div>
+                    <div class="income-value" id="personalIncome">$3,000</div>
+                </div>
+                <div class="income-card">
+                    <div class="income-label">Team Override (Senior)</div>
+                    <div class="income-value" id="teamOverride">$15,000</div>
+                </div>
+                <div class="income-card">
+                    <div class="income-label">Network Override (RD)</div>
+                    <div class="income-value" id="rdOverride">$450,000</div>
+                </div>
+                <div class="income-card" style="background: linear-gradient(135deg, #FFD700, #FFA500);">
+                    <div class="income-label">Total Monthly</div>
+                    <div class="income-value" id="totalIncome">$468,000</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Senior Performance Table -->
+        <div class="table-section">
+            <h2>⭐ Senior Ambassador Performance</h2>
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Senior Code</th>
+                        <th>Name</th>
+                        <th>Team Size</th>
+                        <th>Team Units</th>
+                        <th>Team Revenue</th>
+                        <th>Override Earned</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="seniorTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">Loading senior ambassadors...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Network Stats -->
+        <div class="network-section">
+            <h2>🌐 Network Statistics</h2>
+            <div class="network-stats">
+                <div class="network-stat">
+                    <div class="network-stat-value" id="activeAmbassadors">0</div>
+                    <div class="network-stat-label">Active Ambassadors</div>
+                </div>
+                <div class="network-stat">
+                    <div class="network-stat-value" id="totalUnits">0</div>
+                    <div class="network-stat-label">Total Units Deployed</div>
+                </div>
+                <div class="network-stat">
+                    <div class="network-stat-value" id="totalRevenue">$0</div>
+                    <div class="network-stat-label">Total Network Revenue</div>
+                </div>
+                <div class="network-stat">
+                    <div class="network-stat-value" id="avgPerAmbassador">$0</div>
+                    <div class="network-stat-label">Avg per Ambassador</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+            authDomain: "marriage-education.firebaseapp.com",
+            projectId: "marriage-education",
+            storageBucket: "marriage-education.firebasestorage.app",
+            messagingSenderId: "730854285800",
+            appId: "1:730854285800:web:2176d278397398fd41045d"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        
+        // Get RD code from localStorage
+        const rdCode = localStorage.getItem('ambassadorCode');
+        
+        if (!rdCode) {
+            alert('Please login first');
+            window.location.href = '/ambassador-login.html';
+        }
+        
+        // Load RD dashboard data
+        async function loadDashboard() {
+            try {
+                // Load RD data
+                const rdDoc = await db.collection('ambassadors').doc(rdCode).get();
+                
+                if (!rdDoc.exists) {
+                    throw new Error('RD not found');
+                }
+                
+                const rdData = rdDoc.data();
+                
+                // Update header
+                document.getElementById('rdName').textContent = rdData.fullName || rdData.name || 'Regional Director';
+                document.getElementById('rdCode').textContent = rdCode;
+                document.getElementById('rdEmail').textContent = rdData.email || '';
+                
+                // Load seniors (ambassadors with ambassador_type = 'senior' AND recruited by this RD or seniors in their network)
+                const seniorsQuery = await db.collection('ambassadors')
+                    .where('ambassador_type', '==', 'senior')
+                    .where('recruited_by', '==', rdCode)
+                    .get();
+                
+                const seniors = [];
+                seniorsQuery.forEach(doc => {
+                    seniors.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Also get seniors who were promoted by this RD's direct ambassadors
+                const allAmbassadorsQuery = await db.collection('ambassadors')
+                    .where('senior_code', '==', rdCode)
+                    .get();
+                
+                allAmbassadorsQuery.forEach(doc => {
+                    const data = doc.data();
+                    if (data.ambassador_type === 'senior' && !seniors.find(s => s.id === doc.id)) {
+                        seniors.push({ id: doc.id, ...data });
+                    }
+                });
+                
+                // Update senior count
+                document.getElementById('seniorCount').textContent = seniors.length;
+                
+                // Calculate network size (seniors × their team size)
+                let totalAmbassadors = 0;
+                seniors.forEach(senior => {
+                    totalAmbassadors += (senior.team_count || 0);
+                });
+                document.getElementById('totalAmbassadors').textContent = totalAmbassadors;
+                
+                // Calculate network override
+                const networkOverride = rdData.network_override_earned || 0;
+                document.getElementById('networkOverride').textContent = '$' + networkOverride.toLocaleString();
+                
+                // Calculate target progress
+                const targetMonthly = 750000; // $750K
+                const progress = (networkOverride / targetMonthly * 100).toFixed(1);
+                document.getElementById('targetProgress').textContent = progress + '% of target';
+                
+                // Render senior performance table
+                renderSeniorTable(seniors);
+                
+                // Calculate network stats
+                calculateNetworkStats(seniors);
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading dashboard: ' + error.message);
+            }
+        }
+        
+        function renderSeniorTable(seniors) {
+            const tbody = document.getElementById('seniorTableBody');
+            
+            if (seniors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #999;">No senior ambassadors yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = seniors.map(senior => {
+                const teamSize = senior.team_count || 0;
+                const teamUnits = senior.team_units_deployed || 0;
+                const teamRevenue = teamUnits * 300; // Assume $300 avg
+                const overrideEarned = senior.team_override_earned || 0;
+                const isActive = teamSize >= 5;
+                
+                return `
+                    <tr>
+                        <td><span class="senior-name">${senior.code || senior.id}</span></td>
+                        <td>${senior.fullName || senior.name || 'N/A'}</td>
+                        <td>${teamSize}</td>
+                        <td>${teamUnits}</td>
+                        <td>$${teamRevenue.toLocaleString()}</td>
+                        <td>$${overrideEarned.toLocaleString()}</td>
+                        <td><span class="badge ${isActive ? 'badge-success' : 'badge-warning'}">${isActive ? 'Active' : 'Building'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function calculateNetworkStats(seniors) {
+            let totalUnits = 0;
+            let totalRevenue = 0;
+            let activeCount = 0;
+            
+            seniors.forEach(senior => {
+                const units = senior.team_units_deployed || 0;
+                totalUnits += units;
+                totalRevenue += units * 300; // $300 avg
+                if ((senior.team_count || 0) >= 5) activeCount++;
+            });
+            
+            document.getElementById('activeAmbassadors').textContent = activeCount;
+            document.getElementById('totalUnits').textContent = totalUnits.toLocaleString();
+            document.getElementById('totalRevenue').textContent = '$' + totalRevenue.toLocaleString();
+            
+            const avgPerAmbassador = seniors.length > 0 ? (totalRevenue / seniors.length) : 0;
+            document.getElementById('avgPerAmbassador').textContent = '$' + avgPerAmbassador.toLocaleString();
+        }
+        
+        function logout() {
+            localStorage.removeItem('ambassadorCode');
+            localStorage.removeItem('ambassadorEmail');
+            window.location.href = '/ambassador-login.html';
+        }
+        
+        // Load dashboard on page load
+        loadDashboard();
+    </script>
+</body>
+</html>
