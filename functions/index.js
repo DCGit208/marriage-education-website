@@ -3248,3 +3248,258 @@ async function checkMonthlyTarget(userId, userType) {
     await sendTelegram(msg, false);
   }
 }
+
+// ============================================
+// PROMOTION ENGINE (Senior Ambassador System)
+// ============================================
+
+/**
+ * Check if ambassador qualifies for promotion to senior
+ * Callable function - can be triggered manually or by schedule
+ */
+exports.checkAmbassadorPromotion = functions.https.onCall(async (data, context) => {
+  try {
+    const { ambassador_code } = data;
+    
+    if (!ambassador_code) {
+      throw new functions.https.HttpsError('invalid-argument', 'Ambassador code required');
+    }
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassador_code);
+    const ambassadorSnap = await ambassadorRef.get();
+    
+    if (!ambassadorSnap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Ambassador not found');
+    }
+    
+    const ambassador = ambassadorSnap.data();
+    
+    // Skip if already senior
+    if (ambassador.ambassador_type === 'senior') {
+      return { eligible: false, reason: 'already_senior' };
+    }
+    
+    // Check criteria
+    const unitsDeployed = ambassador.units_deployed || ambassador.access_units_deployed || 0;
+    const recruitsCount = ambassador.recruits_count || 0;
+    
+    const meetsUnitsThreshold = unitsDeployed >= 500;
+    const meetsRecruitsThreshold = recruitsCount >= 10;
+    
+    if (meetsUnitsThreshold || meetsRecruitsThreshold) {
+      // Promote to senior
+      const reason = meetsUnitsThreshold ? 'units_threshold' : 'recruits_threshold';
+      await promoteToSenior(ambassador_code, reason, ambassador);
+      
+      return {
+        success: true,
+        eligible: true,
+        reason: reason,
+        data: { unitsDeployed, recruitsCount }
+      };
+    }
+    
+    return {
+      eligible: false,
+      reason: 'thresholds_not_met',
+      data: { unitsDeployed, recruitsCount, unitsNeeded: 500 - unitsDeployed, recruitsNeeded: 10 - recruitsCount }
+    };
+    
+  } catch (error) {
+    console.error('Error checking promotion:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Firestore Trigger: Auto-check promotion when ambassador data changes
+ */
+exports.onAmbassadorUpdate = functions.firestore
+  .document('ambassadors/{ambassadorCode}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    const ambassadorCode = context.params.ambassadorCode;
+    
+    // Skip if already senior
+    if (after.ambassador_type === 'senior') {
+      return null;
+    }
+    
+    // Check if units or recruits changed
+    const unitsChanged = (after.units_deployed || 0) !== (before.units_deployed || 0);
+    const recruitsChanged = (after.recruits_count || 0) !== (before.recruits_count || 0);
+    
+    if (!unitsChanged && !recruitsChanged) {
+      return null;
+    }
+    
+    console.log(`📊 ${ambassadorCode} stats changed, checking promotion eligibility...`);
+    
+    const unitsDeployed = after.units_deployed || after.access_units_deployed || 0;
+    const recruitsCount = after.recruits_count || 0;
+    
+    const meetsUnitsThreshold = unitsDeployed >= 500;
+    const meetsRecruitsThreshold = recruitsCount >= 10;
+    
+    if (meetsUnitsThreshold || meetsRecruitsThreshold) {
+      const reason = meetsUnitsThreshold ? 'units_threshold' : 'recruits_threshold';
+      console.log(`🎯 ${ambassadorCode} is eligible for promotion!`);
+      await promoteToSenior(ambassadorCode, reason, after);
+    } else {
+      console.log(`⏳ ${ambassadorCode} not yet eligible:`, { unitsDeployed, recruitsCount });
+    }
+    
+    return null;
+  });
+
+/**
+ * Firestore Trigger: Update recruiter stats when new ambassador registered
+ */
+exports.onNewAmbassadorCreated = functions.firestore
+  .document('ambassadors/{ambassadorCode}')
+  .onCreate(async (snap, context) => {
+    const newAmbassador = snap.data();
+    const seniorCode = newAmbassador.senior_code;
+    
+    if (!seniorCode) {
+      console.log('No senior_code found for new ambassador');
+      return null;
+    }
+    
+    console.log(`👥 New ambassador ${context.params.ambassadorCode} recruited by ${seniorCode}`);
+    
+    // Increment recruits_count for the senior
+    const seniorRef = db.collection('ambassadors').doc(seniorCode);
+    const seniorSnap = await seniorRef.get();
+    
+    if (!seniorSnap.exists) {
+      console.log(`Senior ${seniorCode} not found`);
+      return null;
+    }
+    
+    await seniorRef.update({
+      recruits_count: admin.firestore.FieldValue.increment(1),
+      team_count: admin.firestore.FieldValue.increment(1),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Also update in senior_ambassadors if exists
+    const seniorAmbRef = db.collection('senior_ambassadors').doc(seniorCode);
+    const seniorAmbSnap = await seniorAmbRef.get();
+    if (seniorAmbSnap.exists) {
+      await seniorAmbRef.update({
+        team_count: admin.firestore.FieldValue.increment(1)
+      });
+    }
+    
+    console.log(`✅ Updated recruits count for ${seniorCode}`);
+    
+    // Send notification to senior about new team member
+    await db.collection('notifications').add({
+      type: 'new_recruit',
+      title: '👥 New Team Member!',
+      message: `${newAmbassador.fullName} just joined your team!`,
+      ambassador_code: seniorCode,
+      read: false,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return null;
+  });
+
+/**
+ * Promote ambassador to senior status
+ */
+async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
+  try {
+    console.log(`🎉 Promoting ${ambassadorCode} to Senior Ambassador (reason: ${reason})`);
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassadorCode);
+    const batch = db.batch();
+    
+    // 1. Update ambassador record
+    batch.update(ambassadorRef, {
+      ambassador_type: 'senior',
+      promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      promotion_reason: reason,
+      promoted_at: new Date().toISOString(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 2. Create senior_ambassadors record (for easier querying)
+    const seniorRef = db.collection('senior_ambassadors').doc(ambassadorCode);
+    batch.set(seniorRef, {
+      ...ambassadorData,
+      ambassador_type: 'senior',
+      promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      promotion_reason: reason,
+      team_count: 0,
+      team_override_earned: 0,
+      seniors_recruited: 0, // Track for RD promotion later
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 3. Update recruiter's senior count if they have one
+    if (ambassadorData.recruited_by || ambassadorData.senior_code) {
+      const recruiterCode = ambassadorData.recruited_by || ambassadorData.senior_code;
+      const recruiterRef = db.collection('ambassadors').doc(recruiterCode);
+      const recruiterSnap = await recruiterRef.get();
+      
+      if (recruiterSnap.exists) {
+        const recruiterData = recruiterSnap.data();
+        if (recruiterData.ambassador_type === 'senior') {
+          // Increment seniors_recruited for RD promotion tracking
+          batch.update(recruiterRef, {
+            seniors_recruited: admin.firestore.FieldValue.increment(1)
+          });
+          
+          // Also update in senior_ambassadors collection
+          batch.update(db.collection('senior_ambassadors').doc(recruiterCode), {
+            seniors_recruited: admin.firestore.FieldValue.increment(1)
+          });
+        }
+      }
+    }
+    
+    // 4. Create promotion notification
+    const notificationRef = db.collection('notifications').doc();
+    batch.set(notificationRef, {
+      type: 'promotion',
+      title: '🎉 Congratulations! You\'re now a Senior Ambassador!',
+      message: `You've been promoted to Senior Ambassador for ${reason === 'units_threshold' ? 'deploying 500+ units' : 'recruiting 10 ambassadors'}. You can now build your team and earn 5% override commissions!`,
+      ambassador_code: ambassadorCode,
+      read: false,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    await batch.commit();
+    
+    console.log(`✅ ${ambassadorCode} promoted to Senior Ambassador successfully`);
+    
+    // Send Telegram notification
+    if (TELEGRAM_BOT_TOKEN) {
+      const msg = `🎉 SENIOR AMBASSADOR PROMOTION!\n\n` +
+        `Ambassador: ${ambassadorCode}\n` +
+        `Name: ${ambassadorData.fullName || 'Unknown'}\n` +
+        `Reason: ${reason === 'units_threshold' ? '500+ Units Deployed' : '10+ Ambassadors Recruited'}\n` +
+        `Units: ${ambassadorData.units_deployed || 0}\n` +
+        `Recruits: ${ambassadorData.recruits_count || 0}\n\n` +
+        `They can now earn 5% team override commissions!`;
+      
+      await sendTelegram(msg, false);
+    }
+    
+    return {
+      success: true,
+      ambassadorCode: ambassadorCode,
+      newStatus: 'senior',
+      reason: reason
+    };
+    
+  } catch (error) {
+    console.error(`❌ Error promoting ${ambassadorCode}:`, error);
+    throw error;
+  }
+}
