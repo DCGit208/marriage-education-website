@@ -283,9 +283,9 @@
                 // Show success
                 showSuccess('✅ Login successful! Redirecting to dashboard...');
                 
-                // Redirect to dashboard (absolute path from public root)
+                // Redirect to dashboard (relative path)
                 setTimeout(() => {
-                    window.location.href = '/ambassador/dashboard.html';
+                    window.location.href = 'ambassador/dashboard.html';
                 }, 1500);
                 
             } catch (error) {
