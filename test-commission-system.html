@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Commission System</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #00b894; }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dfe6e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🧪 Test Commission System</h1>
+        <p>Test the multi-product commission engine with sample data</p>
+
+        <label>Product:</label>
+        <select id="productId">
+            <option value="sbd-dummies-book">SBD for Dummies - 15,000 FCFA</option>
+            <option value="marriage-porn-beyond-book">Marriage=Porn - 50,000 FCFA</option>
+            <option value="foundation-school">Foundation School - 1,200,000 FCFA</option>
+            <option value="sbd-dummies-course">SBD Course - 300,000 FCFA</option>
+            <option value="coaching-package-basic">Basic Coaching - 500,000 FCFA</option>
+            <option value="corporate-training-basic">Corporate Training - 5,000,000 FCFA</option>
+        </select>
+
+        <label>Customer Email:</label>
+        <input type="email" id="customerEmail" value="test@example.com" placeholder="test@example.com">
+
+        <label>Customer Name:</label>
+        <input type="text" id="customerName" value="Test Customer" placeholder="John Doe">
+
+        <label>Customer Phone:</label>
+        <input type="tel" id="customerPhone" value="+237678901234" placeholder="+237678901234">
+
+        <label>Ambassador Referral Code:</label>
+        <input type="text" id="refCode" value="AMB-X-001" placeholder="AMB-X-001">
+
+        <label>Payment Reference:</label>
+        <input type="text" id="paymentId" value="TEST-PAY-001" placeholder="PAY-12345">
+
+        <button onclick="testCommission()">🚀 Test Commission Processing</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoxtWEU_dBfGBs_x5Bde-_fLlwHcVLnzI",
+            authDomain: "marriage-education.firebaseapp.com",
+            projectId: "marriage-education",
+            storageBucket: "marriage-education.firebasestorage.app",
+            messagingSenderId: "746853352612",
+            appId: "1:746853352612:web:7f65963f1e8f1c4e64dc9f"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const functions = firebase.functions();
+
+        async function testCommission() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<p>⏳ Processing...</p>';
+
+            try {
+                const processDeployment = functions.httpsCallable('processProductDeployment');
+                
+                const data = {
+                    product_id: document.getElementById('productId').value,
+                    customer_email: document.getElementById('customerEmail').value,
+                    customer_name: document.getElementById('customerName').value,
+                    customer_phone: document.getElementById('customerPhone').value,
+                    ref_code: document.getElementById('refCode').value,
+                    payment_id: document.getElementById('paymentId').value,
+                    amount_paid: 0 // Will use product price
+                };
+
+                console.log('Sending data:', data);
+                const result = await processDeployment(data);
+                
+                console.log('Result:', result);
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h3>✅ Commission Processed Successfully!</h3>
+                    <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                    <p><strong>Check Firestore:</strong></p>
+                    <ul>
+                        <li>📦 <strong>products</strong> collection - Product details</li>
+                        <li>👤 <strong>customers</strong> collection - Customer attribution</li>
+                        <li>💰 <strong>sales</strong> collection - Sale record</li>
+                        <li>🎯 <strong>ambassadors</strong> collection - Updated earnings</li>
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p><strong>Message:</strong> ${error.message}</p>
+                    <pre>${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
