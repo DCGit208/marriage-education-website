@@ -384,6 +384,7 @@
         // Pass through referral code for commission tracking
         if (referralCode) {
           checkoutUrl += '&ref=' + encodeURIComponent(referralCode);
+          console.log('✅ Forwarding referral code to Stripe:', referralCode);
         }
         
         console.log('Redirecting to Stripe checkout:', checkoutUrl);

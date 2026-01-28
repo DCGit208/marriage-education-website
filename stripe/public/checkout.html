@@ -40,6 +40,14 @@
       }
       const productName = getUrlParameter('name');
       const productPrice = getUrlParameter('price');
+      const referralCode = getUrlParameter('ref');
+      
+      // Store referral code for return.html
+      if (referralCode) {
+        sessionStorage.setItem('ambassador_ref', referralCode);
+        console.log('📌 Stored referral code:', referralCode);
+      }
+      
       if (productName && productPrice) {
         document.getElementById('product-summary').innerHTML = `<div class='summary-card'><span class='summary-label'>Product:</span> <span class='summary-value'>${productName}</span><br><span class='summary-label'>Price:</span> <span class='summary-value'>$${productPrice}</span></div>`;
       }
