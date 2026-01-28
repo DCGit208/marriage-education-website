@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marriage Literacy Ambassador Dashboard | Marriage Education</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-content .subtitle {
+            opacity: 0.9;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .header-nav a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Performance Cards */
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .perf-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .perf-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+
+        .perf-card .icon {
+            font-size: 2rem;
+            color: #00b894;
+            margin-bottom: 1rem;
+        }
+
+        .perf-card .label {
+            font-size: 0.9rem;
+            color: #636e72;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .perf-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .perf-card .subvalue {
+            font-size: 1rem;
+            color: #636e72;
+            margin-top: 0.5rem;
+        }
+
+        .perf-card .progress-ring {
+            margin-top: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894 0%, #00a085 100%);
+            border-radius: 20px;
+            transition: width 1s ease-out;
+        }
+
+        /* Referral Section */
+        .referral-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .referral-section h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .referral-link-container {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid #00b894;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .referral-link {
+            flex: 1;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #2d3436;
+            word-break: break-all;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #00b894;
+            border: 2px solid #00b894;
+        }
+
+        .btn-secondary:hover {
+            background: #00b894;
+            color: white;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .share-buttons .btn {
+            flex: 1;
+            justify-content: center;
+            min-width: 150px;
+        }
+
+        /* Milestone Tracker */
+        .milestone-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .milestone-section h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .milestone-item.achieved {
+            background: linear-gradient(135deg, rgba(0,184,148,0.1) 0%, rgba(0,160,133,0.1) 100%);
+            border: 2px solid #00b894;
+        }
+
+        .milestone-item.current {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+
+        .milestone-item.locked {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            opacity: 0.6;
+        }
+
+        .milestone-icon {
+            font-size: 2.5rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .milestone-icon.achieved {
+            color: #00b894;
+        }
+
+        .milestone-icon.current {
+            color: #ffc107;
+        }
+
+        .milestone-icon.locked {
+            color: #636e72;
+        }
+
+        .milestone-details {
+            flex: 1;
+        }
+
+        .milestone-details h3 {
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+        }
+
+        .milestone-details p {
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+
+        .milestone-reward {
+            text-align: right;
+            font-weight: 600;
+            color: #00b894;
+        }
+
+        /* Commission Breakdown */
+        .commission-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .commission-section h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .commission-tier {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+        }
+
+        .commission-tier.completed {
+            background: linear-gradient(135deg, rgba(0,184,148,0.1) 0%, rgba(0,160,133,0.1) 100%);
+            border-left: 4px solid #00b894;
+        }
+
+        .commission-tier.active {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .tier-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tier-badge {
+            font-size: 1.5rem;
+        }
+
+        .tier-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        .total-commission {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .total-commission h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .total-commission .amount {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        /* Recent Sales */
+        .recent-sales {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .recent-sales h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .sale-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sale-item:last-child {
+            border-bottom: none;
+        }
+
+        .sale-date {
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        .sale-books {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .sale-commission {
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        /* Leaderboard Preview */
+        .leaderboard-preview {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .leaderboard-preview h2 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 1.5rem;
+        }
+
+        .rank-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .rank-display .rank-number {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+
+        .rank-display .rank-label {
+            font-size: 1.1rem;
+            color: #636e72;
+            margin-top: 0.5rem;
+        }
+
+        /* Notifications */
+        #notificationsContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #00b894;
+        }
+
+        .notification.success {
+            border-left-color: #00b894;
+        }
+
+        .notification.rank {
+            border-left-color: #ffc107;
+        }
+
+        .notification.milestone {
+            border-left-color: #9b59b6;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-content .title {
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-content .message {
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: #636e72;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .notification-close:hover {
+            background: #f8f9fa;
+            color: #2d3436;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        /* Weekly Contest Banner */
+        .contest-banner {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(253,203,110,0.3);
+        }
+
+        .contest-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contest-icon {
+            font-size: 3rem;
+        }
+
+        .contest-info {
+            flex: 1;
+        }
+
+        .contest-info h3 {
+            font-family: 'Playfair Display', serif;
+            color: #2d3436;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .contest-info p {
+            color: #636e72;
+            font-size: 1rem;
+        }
+
+        .contest-countdown {
+            text-align: center;
+            background: rgba(255,255,255,0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            min-width: 150px;
+        }
+
+        .countdown-label {
+            font-size: 0.85rem;
+            color: #636e72;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .countdown-timer {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3436;
+            font-family: monospace;
+        }
+
+        .contest-leaderboard-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            background: rgba(255,255,255,0.5);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .contest-leader {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .contest-leader:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .contest-leader.highlight {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .contest-leader .position {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contest-leader .name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .contest-leader .books {
+            display: block;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .contest-leader.highlight .position,
+        .contest-leader.highlight .name,
+        .contest-leader.highlight .books {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .referral-link-container {
+                flex-direction: column;
+            }
+
+            .share-buttons {
+                flex-direction: column;
+            }
+
+            .share-buttons .btn {
+                width: 100%;
+            }
+
+            #notificationsContainer {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+
+            .contest-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .contest-leaderboard-mini {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div>
+                <h1>Welcome back, <span id="ambassadorName">Ambassador</span>! 👋</h1>
+                <p class="subtitle">Referral Code: <strong id="ambassadorCode">AMB-XXX-XXX</strong></p>
+            </div>
+            <div class="header-nav">
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="../foundation-school.html"><i class="fas fa-graduation-cap"></i> Foundation School</a>
+                <a href="resources.html"><i class="fas fa-folder"></i> Resources</a>
+                <a href="leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        <!-- Notifications Bar -->
+        <div id="notificationsContainer"></div>
+
+        <!-- Weekly Contest Banner -->
+        <div class="contest-banner">
+            <div class="contest-header">
+                <div class="contest-icon">🏆</div>
+                <div class="contest-info">
+                    <h3>Weekly Recognition: Impact Leader</h3>
+                    <p>Most access units deployed this week wins <strong>10,000 FCFA bonus + Featured Story!</strong></p>
+                </div>
+                <div class="contest-countdown">
+                    <div class="countdown-label">Ends in:</div>
+                    <div class="countdown-timer" id="contestCountdown">2d 14h 32m</div>
+                </div>
+            </div>
+            <div class="contest-leaderboard-mini">
+                <div class="contest-leader">
+                    <span class="position">🥇 1st</span>
+                    <span class="name">Grace M.</span>
+                    <span class="books">12 books</span>
+                </div>
+                <div class="contest-leader">
+                    <span class="position">🥈 2nd</span>
+                    <span class="name">Paul K.</span>
+                    <span class="books">10 books</span>
+                </div>
+                <div class="contest-leader highlight">
+                    <span class="position">🔥 5th</span>
+                    <span class="name">You</span>
+                    <span class="books">7 books</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview -->
+        <div class="performance-grid">
+            <div class="perf-card">
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <div class="label">Access Units Deployed</div>
+                <div class="value"><span id="accessUnitsDeployed">23</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
+                <div class="subvalue">38% Complete</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="booksProgress" style="width: 38%"></div>
+                </div>
+            </div>
+
+            <div class="perf-card">
+                <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
+                <div class="label">Advocacy Earnings</div>
+                <div class="value" id="advocacyEarnings">34,500</div>
+                <div class="subvalue">FCFA • Paid: 20,000 FCFA</div>
+            </div>
+
+            <div class="perf-card">
+                <div class="icon"><i class="fas fa-chart-line"></i></div>
+                <div class="label">Your Rank</div>
+                <div class="value">#<span id="currentRank">47</span></div>
+                <div class="subvalue">Out of 500 ambassadors</div>
+            </div>
+
+            <div class="perf-card">
+                <div class="icon"><i class="fas fa-star"></i></div>
+                <div class="label">Current Level</div>
+                <div class="value" id="currentLevel">Bronze</div>
+                <div class="subvalue" id="nextMilestone">27 units to Silver (150)</div>
+            </div>
+        </div>
+
+        <!-- Referral Link Section -->
+        <div class="referral-section">
+            <h2><i class="fas fa-link"></i> Your Unique Referral Link</h2>
+            <div class="referral-link-container">
+                <div class="referral-link" id="referralLink">
+                    https://marriageeducation.com/sbd-campaign.html?ref=AMB-XXX-XXX
+                </div>
+                <button class="btn btn-primary" onclick="copyReferralLink()">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+            </div>
+            <div class="share-buttons">
+                <button class="btn btn-secondary" onclick="shareWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                </button>
+                <button class="btn btn-secondary" onclick="shareFacebook()">
+                    <i class="fab fa-facebook"></i> Share on Facebook
+                </button>
+                <button class="btn btn-secondary" onclick="shareInstagram()">
+                    <i class="fab fa-instagram"></i> Copy for Instagram
+                </button>
+            </div>
+        </div>
+
+        <!-- Foundation School Progress -->
+        <div class="referral-section" id="schoolProgressSection" style="display: none;">
+            <h2><i class="fas fa-graduation-cap"></i> Marriage Foundation School - CRLA Progress</h2>
+            <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 24px; border-radius: 12px; border: 2px solid #00b894; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h3 style="color: #00b894; margin-bottom: 8px;">Week <span id="currentWeek">3</span> of 6</h3>
+                        <p style="color: #636e72; margin: 0;">Teleios Blueprint + Advocacy Training</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #00b894;" id="completionPercent">42%</div>
+                        <small style="color: #636e72;">Complete</small>
+                    </div>
+                </div>
+                <div class="progress-bar" style="height: 20px;">
+                    <div class="progress-fill" id="schoolProgress" style="width: 42%"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
+                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">Modules Completed</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3436;"><span id="completedModules">15</span>/<span id="totalModules">36</span></div>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">CRLA Status</div>
+                        <div style="font-size: 1.1rem; font-weight: 600;" id="crlaStatus">
+                            <span style="color: #ffc107;">⏳ In Progress</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="../foundation-school.html" class="btn btn-primary" style="flex: 1; min-width: 200px; text-align: center;">
+                    <i class="fas fa-play-circle"></i> Continue Learning
+                </a>
+                <a href="../foundation-school.html#curriculum" class="btn btn-secondary" style="flex: 1; min-width: 200px; text-align: center;">
+                    <i class="fas fa-list"></i> View Curriculum
+                </a>
+            </div>
+        </div>
+
+        <!-- Target Progress -->
+        <div class="milestone-section">
+            <h2><i class="fas fa-bullseye"></i> Milestone Tracker</h2>
+            
+            <div class="milestone-item achieved">
+                <div class="milestone-icon achieved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥉 Bronze Level (50 units)</h3>
+                    <p>Congratulations! You've reached Bronze status</p>
+                </div>
+                <div class="milestone-reward">
+                    ✅ Achieved<br>
+                    <small>22,500 FCFA earned</small>
+                </div>
+            </div>
+
+            <div class="milestone-item current">
+                <div class="milestone-icon current">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥈 Silver Level (150 units)</h3>
+                    <p>Only 7 more books to unlock Silver status + Branded T-shirt</p>
+                </div>
+                <div class="milestone-reward">
+                    7 books away<br>
+                    <small>Next: 36,000 FCFA</small>
+                </div>
+            </div>
+
+            <div class="milestone-item locked">
+                <div class="milestone-icon locked">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥇 Gold Level (300 units)</h3>
+                    <p>VIP Launch Event Invitation + Featured Content</p>
+                </div>
+                <div class="milestone-reward">
+                    🔒 Locked<br>
+                    <small>40,000 FCFA potential</small>
+                </div>
+            </div>
+
+            <div class="milestone-item locked">
+                <div class="milestone-icon locked">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>💎 Senior Ambassador (500+ units)</h3>
+                    <p>10,000 FCFA Bonus + Founding Ambassador Badge</p>
+                </div>
+                <div class="milestone-reward">
+                    🔒 Locked<br>
+                    <small>+10,000 FCFA bonus</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commission Breakdown -->
+        <div class="commission-section">
+            <h2><i class="fas fa-layer-group"></i> Your Revenue Stacks</h2>
+            
+            <div class="commission-tier completed">
+                <div class="tier-info">
+                    <div class="tier-badge">🥉</div>
+                    <div>
+                        <strong>Books 1-20 (Bronze)</strong><br>
+                        <small>1,500 FCFA per book</small>
+                    </div>
+                </div>
+                <div class="tier-amount">30,000 FCFA ✅</div>
+            </div>
+
+            <div class="commission-tier active">
+                <div class="tier-info">
+                    <div class="tier-badge">🥈</div>
+                    <div>
+                        <strong>Books 21-40 (Silver)</strong><br>
+                        <small>1,800 FCFA per book • 3/20 completed</small>
+                    </div>
+                </div>
+                <div class="tier-amount">5,400 FCFA ⏳</div>
+            </div>
+
+            <div class="commission-tier">
+                <div class="tier-info">
+                    <div class="tier-badge">🥇</div>
+                    <div>
+                        <strong>Books 41-60 (Gold)</strong><br>
+                        <small>2,000 FCFA per book</small>
+                    </div>
+                </div>
+                <div class="tier-amount">40,000 FCFA 🔒</div>
+            </div>
+
+            <div class="commission-tier">
+                <div class="tier-info">
+                    <div class="tier-badge">🎁</div>
+                    <div>
+                        <strong>Completion Bonus</strong><br>
+                        <small>When you hit 60 books</small>
+                    </div>
+                </div>
+                <div class="tier-amount">+10,000 FCFA 🔒</div>
+            </div>
+
+            <div class="total-commission">
+                <h3>Your Total Potential</h3>
+                <div class="amount">106,000 FCFA</div>
+                <p style="margin-top: 1rem; opacity: 0.9;">When you complete all 60 books</p>
+            </div>
+        </div>
+
+        <!-- Recent Sales -->
+        <div class="recent-sales">
+            <h2><i class="fas fa-history"></i> Recent Deployments (Last 5)</h2>
+            
+            <div class="sale-item">
+                <div class="sale-date">Nov 30, 2025 • 8:45 PM</div>
+                <div class="sale-books">3 books</div>
+                <div class="sale-commission">4,500 FCFA</div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-date">Nov 29, 2025 • 2:30 PM</div>
+                <div class="sale-books">1 book</div>
+                <div class="sale-commission">1,500 FCFA</div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-date">Nov 28, 2025 • 6:15 PM</div>
+                <div class="sale-books">5 books</div>
+                <div class="sale-commission">7,500 FCFA</div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-date">Nov 27, 2025 • 10:20 AM</div>
+                <div class="sale-books">2 books</div>
+                <div class="sale-commission">3,000 FCFA</div>
+            </div>
+
+            <div class="sale-item">
+                <div class="sale-date">Nov 26, 2025 • 4:50 PM</div>
+                <div class="sale-books">4 books</div>
+                <div class="sale-commission">6,000 FCFA</div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Preview -->
+        <div class="leaderboard-preview">
+            <h2><i class="fas fa-trophy"></i> Your Position</h2>
+            <div class="rank-display">
+                <div class="rank-number">#47</div>
+                <div class="rank-label">Current Ranking (Out of 500)</div>
+            </div>
+            <a href="leaderboard.html" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fas fa-chart-bar"></i> View Full Leaderboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Simulate logged-in ambassador data
+        const ambassadorData = {
+            name: 'Jean-Paul',
+            code: 'AMB-JEANPAUL-001',
+            role: 'Marriage Literacy Ambassador',
+            track: "Women's Track",
+            accessUnitsDeployed: 23,
+            booksSold: 23, // kept for backward compatibility
+            targetUnits: 500,
+            advocacyEarnings: 34500,
+            commissionEarned: 34500, // kept for backward compatibility
+            commissionPaid: 20000,
+            rank: 47,
+            level: 'Bronze',
+            credentialStatus: 'in-progress', // locked | in-progress | earned
+            schoolProgress: {
+                enrolled: true,
+                currentWeek: 3,
+                completedModules: 15,
+                totalModules: 36,
+                crlaEligible: false
+            },
+            revenueStacks: {
+                accessDeployment: 34500,
+                pathwayActivation: 12000,
+                shopSubscriptions: 3200,
+                serviceRouting: 8000,
+                trainingCredits: 2500
+            },
+            recentDeployments: [
+                { date: 'Jan 15, 2026', units: 3, earnings: 4500, type: 'Individual' },
+                { date: 'Jan 14, 2026', units: 1, earnings: 1500, type: 'Individual' },
+                { date: 'Jan 12, 2026', units: 15, earnings: 22500, type: 'Church Group' },
+                { date: 'Jan 10, 2026', units: 2, earnings: 3000, type: 'Individual' },
+                { date: 'Jan 8, 2026', units: 4, earnings: 6000, type: 'Couples' }
+            ]
+        };
+
+        // Initialize dashboard
+        function initDashboard() {
+            // Safe element updates with null checks
+            const safeUpdate = (id, value, isHTML = false) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (isHTML) {
+                        element.innerHTML = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            };
+            
+            safeUpdate('ambassadorName', ambassadorData.name);
+            safeUpdate('ambassadorCode', ambassadorData.code);
+            safeUpdate('accessUnitsDeployed', ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0);
+            safeUpdate('advocacyEarnings', (ambassadorData.advocacyEarnings || ambassadorData.commissionEarned || 0).toLocaleString());
+            safeUpdate('currentRank', ambassadorData.rank);
+            safeUpdate('currentLevel', ambassadorData.level);
+            
+            // Display CRLA badge if earned
+            const credentialBadge = document.getElementById('credentialBadge');
+            if (credentialBadge) {
+                if (ambassadorData.credentialStatus === 'earned') {
+                    credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
+                } else if (ambassadorData.credentialStatus === 'in-progress') {
+                    credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
+                }
+            }
+            
+            const referralLink = `https://marriage-education.web.app/ambassador-register.html?ref=${ambassadorData.code}`;
+            safeUpdate('referralLink', referralLink);
+            
+            const unitsDeployed = ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0;
+            const targetUnits = ambassadorData.targetUnits || 500;
+            const progress = (unitsDeployed / targetUnits) * 100;
+            
+            const progressBar = document.getElementById('booksProgress');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            // Calculate next milestone
+            const milestones = [
+                { level: 'Bronze', threshold: 50 },
+                { level: 'Silver', threshold: 150 },
+                { level: 'Gold', threshold: 300 },
+                { level: 'Senior Ambassador', threshold: 500 }
+            ];
+            const nextMilestone = milestones.find(m => m.threshold > unitsDeployed);
+            if (nextMilestone) {
+                const remaining = nextMilestone.threshold - unitsDeployed;
+                safeUpdate('nextMilestone', `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`);
+            } else {
+                safeUpdate('nextMilestone', '🌟 Senior Ambassador Status Achieved!');
+            }
+            
+            // Initialize revenue stacks display
+            if (typeof displayRevenueStacks === 'function') {
+                displayRevenueStacks();
+            }
+            
+            // Initialize school progress if enrolled
+            if (ambassadorData.schoolProgress && ambassadorData.schoolProgress.enrolled && typeof displaySchoolProgress === 'function') {
+                displaySchoolProgress();
+            }
+        }
+
+        // Copy referral link
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('✅ Referral link copied to clipboard!');
+            });
+        }
+
+        // Share on WhatsApp
+        function shareWhatsApp() {
+            const message = `🔥 Transform your marriage with "Sex By Design for Dummies"!\n\n✨ 14-day exclusive launch\n💰 Only 15,000 FCFA\n📚 Life-changing wisdom\n\nGet your copy here: ${document.getElementById('referralLink').textContent}`;
+            const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        // Share on Facebook
+        function shareFacebook() {
+            const link = document.getElementById('referralLink').textContent;
+            const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+            window.open(url, '_blank');
+        }
+
+        // Copy for Instagram
+        function shareInstagram() {
+            const message = `🔥 Transform your marriage!\n\n"Sex By Design for Dummies" - 14-day launch\n💰 15,000 FCFA only\n\nLink in bio or DM me for details!\n\n#MarriageEducation #SexByDesign #CameroonBooks`;
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ Instagram caption copied! Paste it with your post and add your referral link.');
+            });
+        }
+
+        // Notification System
+        let notificationQueue = [];
+        
+        function showNotification(type, title, message) {
+            const container = document.getElementById('notificationsContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icons = {
+                success: '🎉',
+                rank: '⬆️',
+                milestone: '🏆'
+            };
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icons[type] || '📢'}</div>
+                <div class="notification-content">
+                    <div class="title">${title}</div>
+                    <div class="message">${message}</div>
+                </div>
+                <button class="notification-close" onclick="closeNotification(this)">×</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Display School Progress
+        function displaySchoolProgress() {
+            const section = document.getElementById('schoolProgressSection');
+            if (!section) return;
+            
+            section.style.display = 'block';
+            
+            const { currentWeek, completedModules, totalModules, crlaEligible } = ambassadorData.schoolProgress;
+            const completionPercent = Math.round((completedModules / totalModules) * 100);
+            
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('completedModules').textContent = completedModules;
+            document.getElementById('totalModules').textContent = totalModules;
+            document.getElementById('completionPercent').textContent = completionPercent + '%';
+            document.getElementById('schoolProgress').style.width = completionPercent + '%';
+            
+            const crlaStatusEl = document.getElementById('crlaStatus');
+            if (ambassadorData.credentialStatus === 'earned') {
+                crlaStatusEl.innerHTML = '<span style="color: #00b894;">✓ CRLA Earned!</span>';
+            } else if (crlaEligible) {
+                crlaStatusEl.innerHTML = '<span style="color: #00b894;">✓ Eligible - Complete Final Assessment</span>';
+            } else {
+                crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+            }
+        }
+
+        // Display Revenue Stacks
+        function displayRevenueStacks() {
+            // This function can be used to dynamically update revenue stacks display
+            // For now, the static HTML shows the breakdown
+            const total = Object.values(ambassadorData.revenueStacks).reduce((a, b) => a + b, 0);
+            console.log('Total Revenue Across All Stacks:', total.toLocaleString(), 'FCFA');
+        }
+
+        
+        function closeNotification(button) {
+            const notification = button.closest('.notification');
+            notification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }
+        
+        // Weekly Contest Countdown
+        function updateContestCountdown() {
+            // Calculate time until next Sunday 23:59:59
+            const now = new Date();
+            const nextSunday = new Date(now);
+            nextSunday.setDate(now.getDate() + (7 - now.getDay()));
+            nextSunday.setHours(23, 59, 59, 999);
+            
+            const diff = nextSunday - now;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            const countdownElement = document.getElementById('contestCountdown');
+            if (countdownElement) {
+                countdownElement.textContent = `${days}d ${hours}h ${minutes}m`;
+            }
+        }
+        
+        // Check for badge unlocks
+        function checkBadgeUnlocks(booksSold) {
+            const badges = [
+                { level: 'Bronze', threshold: 15 },
+                { level: 'Silver', threshold: 30 },
+                { level: 'Gold', threshold: 45 },
+                { level: 'Diamond', threshold: 60 }
+            ];
+            
+            badges.forEach(badge => {
+                if (booksSold === badge.threshold) {
+                    showNotification('milestone', 
+                        `🎊 ${badge.level} Level Unlocked!`, 
+                        `Congratulations! You've reached ${badge.threshold} books!`
+                    );
+                }
+            });
+        }
+        
+        // Simulate real-time notifications (demo purposes)
+        function simulateNotifications() {
+            const notifications = [
+                { type: 'success', title: 'New Sale!', message: '+3 books from Sarah K. via WhatsApp' },
+                { type: 'rank', title: 'Rank Update', message: 'You moved up 2 positions to #47!' },
+                { type: 'milestone', title: 'Almost there!', message: 'Just 7 more books to reach Silver level!' }
+            ];
+            
+            let delay = 3000;
+            notifications.forEach((notif, index) => {
+                setTimeout(() => {
+                    showNotification(notif.type, notif.title, notif.message);
+                }, delay + (index * 6000));
+            });
+        }
+        
+        // Initialize on load
+        initDashboard();
+        updateContestCountdown();
+        
+        // Update countdown every minute
+        setInterval(updateContestCountdown, 60000);
+        
+        // Show demo notifications after 3 seconds
+        setTimeout(simulateNotifications, 3000);
+    </script>
+
+    <!-- Badge Achievement Modal -->
+    <div id="badgeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 3rem; border-radius: 20px; max-width: 500px; text-align: center; position: relative; animation: scaleIn 0.5s ease-out;">
+            <button onclick="closeBadgeModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 2rem; cursor: pointer; color: #636e72;">×</button>
+            
+            <div id="badgeIcon" style="font-size: 6rem; margin-bottom: 1.5rem;">🏆</div>
+            <h2 id="badgeTitle" style="font-family: 'Playfair Display', serif; color: #2d3436; margin-bottom: 1rem; font-size: 2rem;">Achievement Unlocked!</h2>
+            <div id="badgeDescription" style="color: #636e72; font-size: 1.1rem; margin-bottom: 2rem;">You've reached an incredible milestone!</div>
+            
+            <div id="badgeReward" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 1rem; border-radius: 12px; margin-bottom: 2rem; font-weight: 600; font-size: 1.2rem;">
+                +5,000 FCFA Bonus Unlocked!
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="shareBadge('whatsapp')" style="padding: 0.75rem 1.5rem; background: #25D366; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fab fa-whatsapp"></i> Share
+                </button>
+                <button onclick="shareBadge('facebook')" style="padding: 0.75rem 1.5rem; background: #1877F2; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fab fa-facebook"></i> Share
+                </button>
+                <button onclick="closeBadgeModal()" style="padding: 0.75rem 1.5rem; background: #f8f9fa; color: #2d3436; border: 2px solid #00b894; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        function showBadgeModal(level, books, bonus) {
+            const modal = document.getElementById('badgeModal');
+            const badges = {
+                'Bronze': { icon: '🥉', color: '#CD7F32' },
+                'Silver': { icon: '🥈', color: '#C0C0C0' },
+                'Gold': { icon: '🥇', color: '#FFD700' },
+                'Diamond': { icon: '💎', color: '#B9F2FF' }
+            };
+            
+            document.getElementById('badgeIcon').textContent = badges[level].icon;
+            document.getElementById('badgeTitle').textContent = `${level} Level Unlocked!`;
+            document.getElementById('badgeDescription').textContent = `Congratulations! You've sold ${books} books and reached ${level} level!`;
+            document.getElementById('badgeReward').textContent = `+${bonus.toLocaleString()} FCFA Bonus Unlocked!`;
+            
+            modal.style.display = 'flex';
+            
+            // Add confetti effect (simple version)
+            createConfetti();
+        }
+        
+        function closeBadgeModal() {
+            document.getElementById('badgeModal').style.display = 'none';
+        }
+        
+        function shareBadge(platform) {
+            const level = document.getElementById('badgeTitle').textContent;
+            const message = `🎉 I just unlocked ${level} as a Marriage Education Ambassador!\n\nJoin me in transforming marriages across Cameroon!\n\n#MarriageEducation #Ambassador #${level.split(' ')[0]}Achievement`;
+            
+            if (platform === 'whatsapp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+            } else if (platform === 'facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://marriageeducation.com/ambassador-register.html')}&quote=${encodeURIComponent(message)}`, '_blank');
+            }
+        }
+        
+        function createConfetti() {
+            const colors = ['#00b894', '#ffc107', '#e74c3c', '#3498db', '#9b59b6'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.opacity = '1';
+                confetti.style.zIndex = '2001';
+                confetti.style.pointerEvents = 'none';
+                confetti.style.borderRadius = '50%';
+                
+                document.body.appendChild(confetti);
+                
+                const duration = Math.random() * 3 + 2;
+                const angle = Math.random() * 360;
+                
+                confetti.animate([
+                    { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translateY(${window.innerHeight + 20}px) rotate(${angle * 4}deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+                
+                setTimeout(() => confetti.remove(), duration * 1000);
+            }
+        }
+        
+        // Demo: Show badge modal after 10 seconds (remove in production)
+        // setTimeout(() => {
+        //     showBadgeModal('Silver', 30, 5000);
+        // }, 10000);
+    </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    
+    <script>
+        // Load real ambassador data from Firebase Firestore
+        // Version: 2026-01-18-v4 - Fixed name display and error handling
+        async function loadAmbassadorData() {
+            try {
+                // Get ambassador code from localStorage (set during login)
+                const ambassadorCode = localStorage.getItem('ambassadorCode');
+                const storedData = localStorage.getItem('ambassadorData');
+                
+                if (!ambassadorCode) {
+                    console.log('No ambassador code found, redirecting to login...');
+                    alert('❌ Please log in to view your dashboard');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+                
+                // Check if Firebase is initialized
+                if (!firebase.apps.length) {
+                    throw new Error('Firebase not initialized');
+                }
+                
+                const db = firebase.firestore();
+                
+                // Fetch ambassador data from Firestore
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
+                    throw new Error('Ambassador not found in database');
+                }
+                
+                const stats = ambassadorDoc.data();
+                console.log('Ambassador data loaded:', stats);
+                
+                // Get name - try multiple sources
+                let ambassadorName = 'Ambassador';
+                if (stats.name) {
+                    ambassadorName = stats.name;
+                } else if (stats.firstName && stats.lastName) {
+                    ambassadorName = `${stats.firstName} ${stats.lastName}`;
+                } else if (stats.firstName) {
+                    ambassadorName = stats.firstName;
+                } else if (storedData) {
+                    try {
+                        const parsed = JSON.parse(storedData);
+                        if (parsed.name) ambassadorName = parsed.name;
+                        else if (parsed.firstName && parsed.lastName) ambassadorName = `${parsed.firstName} ${parsed.lastName}`;
+                        else if (parsed.firstName) ambassadorName = parsed.firstName;
+                    } catch (e) {
+                        console.error('Error parsing stored data:', e);
+                    }
+                }
+                
+                // Update global ambassadorData
+                Object.assign(ambassadorData, {
+                    name: ambassadorName,
+                    code: stats.code || ambassadorCode,
+                    booksSold: stats.sales_count || stats.booksSold || 0,
+                    commissionEarned: stats.commission_earned || stats.commissionEarned || 0,
+                    rank: 0,  // Will be loaded from leaderboard
+                    level: stats.level || 'Starter',
+                    recentSales: stats.sales || []
+                });
+                
+                console.log('Ambassador data processed:', ambassadorData);
+                
+                // Load leaderboard rank
+                await loadLeaderboardRank(ambassadorCode);
+                
+                // Refresh display
+                initDashboard();
+                
+                // Check for new badge unlocks
+                checkBadgeUnlocks(ambassadorData.booksSold);
+                
+            } catch (error) {
+                console.error('Error loading ambassador data:', error);
+                alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
+                // Clear bad data
+                localStorage.removeItem('ambassadorCode');
+                localStorage.removeItem('ambassadorEmail');
+                localStorage.removeItem('ambassadorData');
+                // Redirect to login
+                setTimeout(() => {
+                    window.location.href = '/ambassador-login.html';
+                }, 2000);
+            }
+        }
+        
+        // Load leaderboard rank
+        async function loadLeaderboardRank(ambassadorCode) {
+            try {
+                // Check if Firebase is initialized
+                if (!firebase.apps.length) {
+                    console.log('Firebase not initialized, skipping leaderboard');
+                    return;
+                }
+                
+                const db = firebase.firestore();
+                
+                // Query ambassadors ordered by books sold
+                const snapshot = await db.collection('ambassadors')
+                    .where('status', 'in', ['active', 'approved'])
+                    .orderBy('sales_count', 'desc')
+                    .get();
+                
+                // Find rank
+                let rank = 0;
+                snapshot.forEach((doc, index) => {
+                    if (doc.id === ambassadorCode || doc.data().code === ambassadorCode) {
+                        rank = index + 1;
+                    }
+                });
+                
+                ambassadorData.rank = rank || 'N/A';
+                console.log('Leaderboard rank loaded:', rank);
+            } catch (error) {
+                console.error('Leaderboard error:', error);
+                ambassadorData.rank = 'N/A';
+            }
+        }
+        
+        // Load notifications from Firebase
+        async function loadNotifications(ambassadorId) {
+            try {
+                const notifications = await FirebaseHelper.getNotifications(ambassadorId, 5);
+                
+                // Show unread notifications
+                notifications.forEach(notif => {
+                    if (!notif.read) {
+                        showNotification(notif.type, notif.title, notif.message);
+                        // Mark as read
+                        FirebaseHelper.markNotificationRead(notif.id);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        // Real-time updates listener
+        function setupRealtimeListeners() {
+            const ambassadorId = localStorage.getItem('ambassadorId');
+            if (!ambassadorId) return;
+            
+            // Listen for new sales
+            db.collection('sales')
+                .where('referralCode', '==', ambassadorData.code)
+                .orderBy('timestamp', 'desc')
+                .limit(1)
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            // Reload stats when new sale detected
+                            loadAmbassadorData();
+                        }
+                    });
+                });
+            
+            // Listen for new notifications
+            db.collection('notifications')
+                .where('ambassadorId', '==', ambassadorId)
+                .where('read', '==', false)
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            const notif = change.doc.data();
+                            showNotification(notif.type, notif.title, notif.message);
+                            FirebaseHelper.markNotificationRead(change.doc.id);
+                        }
+                    });
+                });
+        }
+        
+        // Initialize with real data
+        loadAmbassadorData().then(() => {
+            setupRealtimeListeners();
+        });
+    </script>
+</body>
+</html>
