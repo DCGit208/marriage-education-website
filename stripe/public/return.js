@@ -46,6 +46,24 @@ async function initialize() {
     document.getElementById('success').classList.remove('hidden');
     document.getElementById('customer-email').textContent = session.customer_email;
 
+    // Process commission if referral code exists
+    const referralCode = getReferralCode();
+    if (referralCode && session.product_id) {
+      try {
+        const firestoreProductId = mapProductId(session.product_id);
+        await processCommission({
+          productId: firestoreProductId,
+          customerEmail: session.customer_email,
+          customerName: session.customer_email.split('@')[0], // Extract name from email
+          referralCode: referralCode
+        });
+        console.log('✅ Commission credited to', referralCode);
+      } catch (error) {
+        console.error('❌ Commission processing failed:', error);
+        // Don't block success page if commission fails
+      }
+    }
+
     // Use secure token for download (preferred) or fallback to product_id
     if (session.download_token) {
       const downloadUrl = `/download?token=${encodeURIComponent(session.download_token)}`;
