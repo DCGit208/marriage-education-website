@@ -1051,6 +1051,12 @@
         // Get senior code from URL or localStorage
         const urlParams = new URLSearchParams(window.location.search);
         const seniorCode = urlParams.get('code') || localStorage.getItem('ambassadorCode') || localStorage.getItem('seniorCode') || 'SEN-DEMO-001';
+        
+        console.log('🔍 Senior Dashboard Loading:');
+        console.log('  URL param code:', urlParams.get('code'));
+        console.log('  localStorage.ambassadorCode:', localStorage.getItem('ambassadorCode'));
+        console.log('  localStorage.seniorCode:', localStorage.getItem('seniorCode'));
+        console.log('  Final seniorCode:', seniorCode);
 
         if (urlParams.get('code')) {
             localStorage.setItem('ambassadorCode', seniorCode);
@@ -1084,12 +1090,18 @@
                 if (seniorSnap.exists()) {
                     const data = seniorSnap.data();
                     console.log('✅ Loaded from senior_ambassadors:', data);
+                    console.log('   Name field:', data.name);
                     updateDashboard(data);
                     await loadTeamData(data);
                 } else if (ambassadorSnap.exists()) {
                     // Fall back to ambassadors collection
                     const ambassadorData = ambassadorSnap.data();
                     console.log('✅ Loaded from ambassadors collection:', ambassadorData);
+                    console.log('   Fields available:', Object.keys(ambassadorData));
+                    console.log('   name:', ambassadorData.name);
+                    console.log('   fullName:', ambassadorData.fullName);
+                    console.log('   firstName:', ambassadorData.firstName);
+                    console.log('   lastName:', ambassadorData.lastName);
                     
                     // Check if this is actually a senior
                     if (ambassadorData.ambassador_type !== 'senior') {
@@ -1112,7 +1124,11 @@
                     updateDashboard(seniorData);
                     await loadTeamData(seniorData);
                 } else {
-                    console.warn('❌ No data found for senior code:', seniorCode);
+                    console.error('❌ No data found for senior code:', seniorCode);
+                    console.error('   senior_ambassadors exists?', seniorSnap.exists());
+                    console.error('   ambassadors exists?', ambassadorSnap.exists());
+                    console.error('   This should not happen - data should exist!');
+                    alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease check the browser console (F12) for details.');
                     loadDemoData();
                 }
             } catch (error) {
