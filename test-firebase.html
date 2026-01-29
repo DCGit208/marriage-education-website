@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2d2d2d;
+            border-left: 4px solid #00ff00;
+        }
+        .error {
+            border-left-color: #ff0000;
+            color: #ff0000;
+        }
+        .success {
+            border-left-color: #00ff00;
+            color: #00ff00;
+        }
+        .loading {
+            border-left-color: #ffff00;
+            color: #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase Connection Test</h1>
+    <div id="results"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function log(message, type = 'loading') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        async function runTests() {
+            log('🚀 Starting Firebase tests...', 'loading');
+            
+            // Test 1: Firebase loaded
+            log('Test 1: Checking if Firebase SDK is loaded...', 'loading');
+            if (typeof firebase !== 'undefined') {
+                log('✅ Test 1 PASSED: Firebase SDK loaded', 'success');
+            } else {
+                log('❌ Test 1 FAILED: Firebase SDK not loaded', 'error');
+                return;
+            }
+
+            // Test 2: Firebase initialized
+            log('Test 2: Checking if Firebase is initialized...', 'loading');
+            if (firebase.apps.length > 0) {
+                log('✅ Test 2 PASSED: Firebase initialized', 'success');
+            } else {
+                log('❌ Test 2 FAILED: Firebase not initialized', 'error');
+                return;
+            }
+
+            // Test 3: Firestore loaded
+            log('Test 3: Checking if Firestore is available...', 'loading');
+            if (typeof db !== 'undefined' && db !== null) {
+                log('✅ Test 3 PASSED: Firestore db object exists', 'success');
+            } else {
+                log('❌ Test 3 FAILED: Firestore db object not found', 'error');
+                return;
+            }
+
+            // Test 4: Query a test document
+            log('Test 4: Attempting to query ambassadors collection...', 'loading');
+            try {
+                const testDoc = await db.collection('ambassadors').doc('AMB-DEWI-9055').get();
+                if (testDoc.exists) {
+                    const data = testDoc.data();
+                    log('✅ Test 4 PASSED: Successfully queried ambassador', 'success');
+                    log(`   Ambassador: ${data.fullName || data.name || 'Unknown'}`, 'success');
+                    log(`   Email: ${data.email}`, 'success');
+                    log(`   Type: ${data.ambassador_type || 'regular'}`, 'success');
+                } else {
+                    log('⚠️  Test 4 WARNING: Ambassador AMB-DEWI-9055 not found', 'loading');
+                }
+            } catch (error) {
+                log('❌ Test 4 FAILED: ' + error.message, 'error');
+                log('   Error details: ' + JSON.stringify(error), 'error');
+                return;
+            }
+
+            log('', 'loading');
+            log('🎉 ALL TESTS PASSED! Firebase is working correctly.', 'success');
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
