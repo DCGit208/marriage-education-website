@@ -257,10 +257,6 @@
             
             console.log('🔐 Login form submitted');
             
-            // CRITICAL: Clear ALL localStorage before login to prevent cached redirects
-            console.log('🧹 Clearing old localStorage data...');
-            localStorage.clear();
-            
             const code = document.getElementById('ambassadorCode').value.toUpperCase();
             const email = document.getElementById('email').value.toLowerCase();
             
@@ -319,11 +315,16 @@
                     throw new Error(`Your account is ${accountStatus}. Please wait for admin confirmation or contact support.`);
                 }
                 
-                // Store ambassador info in localStorage
+                // Store ambassador info in localStorage FIRST before redirect
                 console.log('💾 Storing in localStorage...');
                 localStorage.setItem('ambassadorCode', code);
                 localStorage.setItem('ambassadorEmail', email);
                 localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+                
+                console.log('✅ localStorage stored:', {
+                    ambassadorCode: localStorage.getItem('ambassadorCode'),
+                    ambassadorEmail: localStorage.getItem('ambassadorEmail')
+                });
                 
                 // Check ambassador type and redirect to appropriate dashboard
                 const ambassadorType = ambassadorData.ambassador_type || 'regular';
@@ -345,12 +346,9 @@
                 // Show success
                 showSuccess(welcomeMsg);
                 
-                // Redirect to appropriate dashboard with cache busting
-                setTimeout(() => {
-                    console.log('🚀 Executing redirect...');
-                    // Add timestamp to force fresh load and prevent cache
-                    window.location.href = dashboardUrl + '?t=' + Date.now();
-                }, 1500);
+                // Redirect IMMEDIATELY without delay
+                console.log('🚀 Executing immediate redirect...');
+                window.location.replace(dashboardUrl);
                 
             } catch (error) {
                 console.error('Login error:', error);
