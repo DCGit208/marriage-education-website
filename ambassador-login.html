@@ -284,12 +284,25 @@
                 localStorage.setItem('ambassadorEmail', email);
                 localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
                 
-                // Show success
-                showSuccess('✅ Login successful! Redirecting to dashboard...');
+                // Check ambassador type and redirect to appropriate dashboard
+                const ambassadorType = ambassadorData.ambassador_type || 'regular';
+                let dashboardUrl = 'ambassador/dashboard.html';
+                let welcomeMsg = '✅ Login successful! Redirecting to dashboard...';
                 
-                // Redirect to dashboard (relative path)
+                if (ambassadorType === 'regional_director') {
+                    dashboardUrl = 'regional-director/rd-dashboard.html';
+                    welcomeMsg = '👑 Welcome, Regional Director! Redirecting...';
+                } else if (ambassadorType === 'senior') {
+                    dashboardUrl = 'ambassador/senior-dashboard.html';
+                    welcomeMsg = '🎉 Welcome, Senior Ambassador! Redirecting...';
+                }
+                
+                // Show success
+                showSuccess(welcomeMsg);
+                
+                // Redirect to appropriate dashboard
                 setTimeout(() => {
-                    window.location.href = 'ambassador/dashboard.html';
+                    window.location.href = dashboardUrl;
                 }, 1500);
                 
             } catch (error) {
