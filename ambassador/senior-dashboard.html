@@ -1050,9 +1050,10 @@
 
         // Get senior code from URL or localStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const seniorCode = urlParams.get('code') || localStorage.getItem('seniorCode') || 'SEN-DEMO-001';
+        const seniorCode = urlParams.get('code') || localStorage.getItem('ambassadorCode') || localStorage.getItem('seniorCode') || 'SEN-DEMO-001';
 
         if (urlParams.get('code')) {
+            localStorage.setItem('ambassadorCode', seniorCode);
             localStorage.setItem('seniorCode', seniorCode);
         }
 
@@ -1076,15 +1077,42 @@
                     return;
                 }
                 
+                // Try senior_ambassadors collection first
                 const seniorRef = doc(db, 'senior_ambassadors', seniorCode);
                 const seniorSnap = await getDoc(seniorRef);
 
                 if (seniorSnap.exists()) {
                     const data = seniorSnap.data();
+                    console.log('✅ Loaded from senior_ambassadors:', data);
                     updateDashboard(data);
                     await loadTeamData(data);
+                } else if (ambassadorSnap.exists()) {
+                    // Fall back to ambassadors collection
+                    const ambassadorData = ambassadorSnap.data();
+                    console.log('✅ Loaded from ambassadors collection:', ambassadorData);
+                    
+                    // Check if this is actually a senior
+                    if (ambassadorData.ambassador_type !== 'senior') {
+                        console.warn('⚠️ User is not a senior ambassador');
+                        alert('Access denied: This dashboard is for Senior Ambassadors only.');
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+
+                    // Convert ambassadors data format to senior dashboard format
+                    const seniorData = {
+                        senior_code: seniorCode,
+                        name: ambassadorData.name || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim(),
+                        email: ambassadorData.email,
+                        team_count: ambassadorData.recruits_count || 0,
+                        monthly_team_sales: ambassadorData.monthly_team_sales || 0,
+                        total_override_earnings: ambassadorData.total_override_earnings || 0,
+                        promotion_date: ambassadorData.promotion_date || ambassadorData.createdAt
+                    };
+                    updateDashboard(seniorData);
+                    await loadTeamData(seniorData);
                 } else {
-                    // Load demo data if senior not found
+                    console.warn('❌ No data found for senior code:', seniorCode);
                     loadDemoData();
                 }
             } catch (error) {
@@ -1579,6 +1607,7 @@
 
         window.logout = function() {
             localStorage.removeItem('seniorCode');
+            localStorage.removeItem('ambassadorCode');
             window.location.href = '../index.html';
         };
 
