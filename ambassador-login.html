@@ -270,9 +270,13 @@
                     throw new Error('Email does not match the ambassador code. Please check your credentials.');
                 }
                 
-                // Check if account is active or approved
-                if (ambassadorData.status !== 'active' && ambassadorData.status !== 'approved') {
-                    throw new Error('Your account is pending approval. Please wait for admin confirmation.');
+                // Check if account is active - accept multiple status values
+                // Some ambassadors might not have a status field (legacy accounts)
+                const accountStatus = ambassadorData.status || ambassadorData.account_status || 'active';
+                const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
+                
+                if (!validStatuses.includes(accountStatus.toLowerCase())) {
+                    throw new Error(`Your account is ${accountStatus}. Please wait for admin confirmation or contact support.`);
                 }
                 
                 // Store ambassador info in localStorage
