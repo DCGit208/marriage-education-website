@@ -1688,20 +1688,18 @@
                 
                 console.log('Ambassador data processed:', ambassadorData);
                 
-                // Check if ambassador is Regional Director - auto-redirect
+                // Check if ambassador is Regional Director - prevent access
                 if (stats.ambassador_type === 'regional_director') {
-                    console.log('👑 Regional Director detected - redirecting to RD dashboard...');
-                    // Redirect immediately to RD dashboard
-                    window.location.href = '../regional-director/rd-dashboard.html';
+                    alert('⚠️ Regional Directors should use the RD Dashboard.\n\nRedirecting...');
+                    window.location.replace('../regional-director/rd-dashboard.html');
                     return;
                 }
                 
-                // Check if ambassador is promoted to senior - auto-redirect
+                // Check if ambassador is Senior - prevent access  
                 if (stats.ambassador_type === 'senior') {
-                    console.log('🎉 Senior Ambassador detected - redirecting to senior dashboard...');
-                    // Redirect immediately to senior dashboard
-                    window.location.href = 'senior-dashboard.html';
-                    return; // Stop regular dashboard initialization
+                    alert('⚠️ Senior Ambassadors should use the Senior Dashboard.\n\nRedirecting...');
+                    window.location.replace('senior-dashboard.html');
+                    return;
                 }
                 
                 // Update Foundation School progress
