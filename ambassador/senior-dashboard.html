@@ -1102,7 +1102,7 @@
                     // Convert ambassadors data format to senior dashboard format
                     const seniorData = {
                         senior_code: seniorCode,
-                        name: ambassadorData.name || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim(),
+                        name: ambassadorData.name || ambassadorData.fullName || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim() || 'Senior Ambassador',
                         email: ambassadorData.email,
                         team_count: ambassadorData.recruits_count || 0,
                         monthly_team_sales: ambassadorData.monthly_team_sales || 0,
