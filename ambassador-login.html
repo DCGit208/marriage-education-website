@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Ambassador Login | Marriage Education</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -254,6 +257,10 @@
             
             console.log('🔐 Login form submitted');
             
+            // CRITICAL: Clear ALL localStorage before login to prevent cached redirects
+            console.log('🧹 Clearing old localStorage data...');
+            localStorage.clear();
+            
             const code = document.getElementById('ambassadorCode').value.toUpperCase();
             const email = document.getElementById('email').value.toLowerCase();
             
@@ -338,10 +345,11 @@
                 // Show success
                 showSuccess(welcomeMsg);
                 
-                // Redirect to appropriate dashboard
+                // Redirect to appropriate dashboard with cache busting
                 setTimeout(() => {
                     console.log('🚀 Executing redirect...');
-                    window.location.href = dashboardUrl;
+                    // Add timestamp to force fresh load and prevent cache
+                    window.location.href = dashboardUrl + '?t=' + Date.now();
                 }, 1500);
                 
             } catch (error) {
