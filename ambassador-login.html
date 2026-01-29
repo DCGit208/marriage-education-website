@@ -231,15 +231,34 @@
     <script src="js/firebase-config.js"></script>
 
     <script>
+        console.log('🔥 Login page script loaded');
+        console.log('Firebase app:', typeof firebase);
+        console.log('Firebase db:', typeof db);
+        
         const errorMsg = document.getElementById('errorMessage');
         const successMsg = document.getElementById('successMessage');
+
+        // Check Firebase on page load
+        window.addEventListener('load', function() {
+            console.log('✅ Page loaded');
+            console.log('Firebase available?', typeof firebase !== 'undefined');
+            console.log('db available?', typeof db !== 'undefined');
+            if (typeof db === 'undefined') {
+                showError('⚠️ Firebase not loaded. Please refresh the page.');
+            }
+        });
 
         // Login form handler - Firestore-based authentication
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            console.log('🔐 Login form submitted');
+            
             const code = document.getElementById('ambassadorCode').value.toUpperCase();
             const email = document.getElementById('email').value.toLowerCase();
+            
+            console.log('Code:', code);
+            console.log('Email:', email);
             
             const submitBtn = this.querySelector('.btn-login');
             submitBtn.disabled = true;
@@ -249,24 +268,35 @@
             
             try {
                 // Check if Firebase is loaded
+                console.log('Checking Firebase...');
                 if (typeof db === 'undefined') {
+                    console.error('❌ db is undefined!');
                     throw new Error('Database connection failed. Please refresh the page.');
                 }
+                
+                console.log('✅ Firebase OK, querying Firestore...');
+                console.log('✅ Firebase OK, querying Firestore...');
                 
                 // Query Firestore for ambassador by code
                 const ambassadorDoc = await db.collection('ambassadors').doc(code).get();
                 
+                console.log('Document exists?', ambassadorDoc.exists);
+                
                 if (!ambassadorDoc.exists) {
+                    console.error('❌ Ambassador not found:', code);
                     throw new Error('Ambassador code not found. Please check your code or register.');
                 }
                 
                 const ambassadorData = ambassadorDoc.data();
+                console.log('✅ Ambassador data:', ambassadorData);
                 
                 // Verify email matches
                 if (!ambassadorData.email) {
+                    console.error('❌ No email in ambassador data');
                     throw new Error('Your account is missing email information. Please contact admin.');
                 }
                 if (ambassadorData.email.toLowerCase() !== email) {
+                    console.error('❌ Email mismatch. Expected:', ambassadorData.email, 'Got:', email);
                     throw new Error('Email does not match the ambassador code. Please check your credentials.');
                 }
                 
@@ -275,17 +305,23 @@
                 const accountStatus = ambassadorData.status || ambassadorData.account_status || 'active';
                 const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
                 
+                console.log('Account status:', accountStatus, 'Valid?', validStatuses.includes(accountStatus.toLowerCase()));
+                
                 if (!validStatuses.includes(accountStatus.toLowerCase())) {
+                    console.error('❌ Invalid account status:', accountStatus);
                     throw new Error(`Your account is ${accountStatus}. Please wait for admin confirmation or contact support.`);
                 }
                 
                 // Store ambassador info in localStorage
+                console.log('💾 Storing in localStorage...');
                 localStorage.setItem('ambassadorCode', code);
                 localStorage.setItem('ambassadorEmail', email);
                 localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
                 
                 // Check ambassador type and redirect to appropriate dashboard
                 const ambassadorType = ambassadorData.ambassador_type || 'regular';
+                console.log('Ambassador type:', ambassadorType);
+                
                 let dashboardUrl = 'ambassador/dashboard.html';
                 let welcomeMsg = '✅ Login successful! Redirecting to dashboard...';
                 
@@ -297,11 +333,14 @@
                     welcomeMsg = '🎉 Welcome, Senior Ambassador! Redirecting...';
                 }
                 
+                console.log('🎯 Redirecting to:', dashboardUrl);
+                
                 // Show success
                 showSuccess(welcomeMsg);
                 
                 // Redirect to appropriate dashboard
                 setTimeout(() => {
+                    console.log('🚀 Executing redirect...');
                     window.location.href = dashboardUrl;
                 }, 1500);
                 
