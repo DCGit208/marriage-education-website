@@ -176,6 +176,13 @@ try {
     $mail->SMTPSecure = 'tls';
     $mail->Port = $SMTP_PORT;
     $mail->CharSet = 'UTF-8';
+    $mail->SMTPOptions = array(
+        'ssl' => array(
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        )
+    );
     
     // Sender and recipient
     $mail->setFrom($FROM_EMAIL, $FROM_NAME);
