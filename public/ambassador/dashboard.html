@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Marriage Literacy Ambassador Dashboard | Marriage Education</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -62,6 +65,82 @@
 
         .header-nav a:hover {
             background: rgba(255,255,255,0.2);
+        }
+
+        /* Senior Promotion Banner */
+        .senior-promotion-banner {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .senior-promotion-banner.show {
+            display: flex;
+        }
+
+        .senior-promotion-icon {
+            font-size: 4rem;
+        }
+
+        .senior-promotion-content {
+            flex: 1;
+        }
+
+        .senior-promotion-content h3 {
+            color: #2d3436;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .senior-promotion-content p {
+            color: #636e72;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .senior-promotion-benefits {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .senior-benefit {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #2d3436;
+            font-size: 0.9rem;
+        }
+
+        .senior-promotion-action {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-upgrade {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-upgrade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         /* Main Container */
@@ -704,11 +783,16 @@
     </style>
 </head>
 <body>
+    <!-- Version Check Banner -->
+    <div style="background: #ffc107; color: #000; padding: 8px; text-align: center; font-weight: 600; font-size: 12px;">
+        ✅ DASHBOARD v2026.01.30-FINAL - UPGRADED | Last update: <?php echo date('Y-m-d H:i:s'); ?>
+    </div>
+    
     <!-- Header -->
     <div class="dashboard-header">
         <div class="header-content">
             <div>
-                <h1>Welcome back, <span id="ambassadorName">Ambassador</span><span id="credentialBadge"></span>! 👋</h1>
+                <h1>Welcome back, <span id="ambassadorName">Ambassador</span>! 👋</h1>
                 <p class="subtitle">Referral Code: <strong id="ambassadorCode">AMB-XXX-XXX</strong></p>
             </div>
             <div class="header-nav">
@@ -716,6 +800,7 @@
                 <a href="../foundation-school.html"><i class="fas fa-graduation-cap"></i> Foundation School</a>
                 <a href="resources.html"><i class="fas fa-folder"></i> Resources</a>
                 <a href="leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+                <button onclick="logout()" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
     </div>
@@ -753,6 +838,34 @@
                     <span class="position">🔥 5th</span>
                     <span class="name">You</span>
                     <span class="books">7 books</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Target Tracker -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯 Monthly Target</h2>
+                    <p style="opacity: 0.95;">$3,000 USD (1,800,000 FCFA)</p>
+                </div>
+                <div style="font-size: 2rem; font-weight: 800;" id="monthlyEarnings">0 FCFA</div>
+            </div>
+            <div class="progress-bar" style="height: 24px; background: rgba(255,255,255,0.2);">
+                <div class="progress-fill" id="monthlyProgressFill" style="width: 0%; background: white; color: #764ba2; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;">0%</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">Remaining</div>
+                    <div style="font-size: 1.5rem; font-weight: 700;" id="monthlyRemaining">1,800,000</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">Progress</div>
+                    <div style="font-size: 1.5rem; font-weight: 700;" id="monthlyProgress">0%</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">Days Left</div>
+                    <div style="font-size: 1.5rem; font-weight: 700;" id="daysLeftInMonth">--</div>
                 </div>
             </div>
         </div>
@@ -796,7 +909,7 @@
             <h2><i class="fas fa-link"></i> Your Unique Referral Link</h2>
             <div class="referral-link-container">
                 <div class="referral-link" id="referralLink">
-                    https://marriageeducation.com/sbd-campaign.html?ref=AMB-XXX-XXX
+                    https://marriageducation.com/sbd-campaign.html?ref=AMB-XXX-XXX
                 </div>
                 <button class="btn btn-primary" onclick="copyReferralLink()">
                     <i class="fas fa-copy"></i> Copy Link
@@ -816,7 +929,7 @@
         </div>
 
         <!-- Foundation School Progress -->
-        <div class="referral-section" id="schoolProgressSection" style="display: none;">
+        <div class="referral-section" id="schoolProgressSection">
             <h2><i class="fas fa-graduation-cap"></i> Marriage Foundation School - CRLA Progress</h2>
             <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 24px; border-radius: 12px; border: 2px solid #00b894; margin-bottom: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -846,11 +959,11 @@
                 </div>
             </div>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="../foundation-school.html" class="btn btn-primary" style="flex: 1; min-width: 200px; text-align: center;">
+                <a href="../course-viewer.html?course=foundation-school" class="btn btn-primary" style="flex: 1; min-width: 200px; text-align: center;">
                     <i class="fas fa-play-circle"></i> Continue Learning
                 </a>
-                <a href="../foundation-school.html#curriculum" class="btn btn-secondary" style="flex: 1; min-width: 200px; text-align: center;">
-                    <i class="fas fa-list"></i> View Curriculum
+                <a href="foundation-school.html" class="btn btn-secondary" style="flex: 1; min-width: 200px; text-align: center;">
+                    <i class="fas fa-list"></i> View All Courses
                 </a>
             </div>
         </div>
@@ -971,6 +1084,75 @@
             </div>
         </div>
 
+        <!-- Multi-Product Deployment Portfolio -->
+        <div class="recent-sales" style="overflow-x: auto;">
+            <h2><i class="fas fa-chart-pie"></i> Multi-Product Deployment Portfolio</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 1rem; text-align: left; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Category</th>
+                        <th style="padding: 1rem; text-align: center; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Units</th>
+                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Revenue</th>
+                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Earnings</th>
+                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">% Income</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolioTableBody">
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">📚</span><span style="font-weight: 600;">Books</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">🎓</span><span style="font-weight: 600;">Schools</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">📖</span><span style="font-weight: 600;">Courses</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">💼</span><span style="font-weight: 600;">Premium</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">🏢</span><span style="font-weight: 600;">Corporate</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">🤝</span><span style="font-weight: 600;">Community</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f8f9fa; font-weight: 700;">
+                        <td style="padding: 1rem;"><strong>TOTAL</strong></td>
+                        <td style="padding: 1rem; text-align: center; font-family: monospace;" id="portfolioTotalUnits">0</td>
+                        <td style="padding: 1rem; text-align: right; font-family: monospace;" id="portfolioTotalRevenue">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; font-family: monospace; color: #00b894;" id="portfolioTotalEarnings">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; font-family: monospace;">100%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
         <!-- Recent Sales -->
         <div class="recent-sales">
             <h2><i class="fas fa-history"></i> Recent Deployments (Last 5)</h2>
@@ -1058,14 +1240,50 @@
             ]
         };
 
+        // Check if ambassador qualifies for senior status
+        function checkSeniorEligibility() {
+            const unitsDeployed = ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0;
+            const seniorThreshold = 500;
+            
+            if (unitsDeployed >= seniorThreshold) {
+                const seniorBanner = document.getElementById('seniorPromotionBanner');
+                const dismissed = localStorage.getItem('seniorBannerDismissed');
+                
+                if (seniorBanner && !dismissed) {
+                    seniorBanner.classList.add('show');
+                }
+            }
+        }
+
+        // Dismiss senior promotion banner
+        function dismissSeniorBanner() {
+            const seniorBanner = document.getElementById('seniorPromotionBanner');
+            if (seniorBanner) {
+                seniorBanner.classList.remove('show');
+                localStorage.setItem('seniorBannerDismissed', 'true');
+            }
+        }
+
         // Initialize dashboard
         function initDashboard() {
-            document.getElementById('ambassadorName').textContent = ambassadorData.name;
-            document.getElementById('ambassadorCode').textContent = ambassadorData.code;
-            document.getElementById('accessUnitsDeployed').textContent = ambassadorData.accessUnitsDeployed;
-            document.getElementById('advocacyEarnings').textContent = ambassadorData.advocacyEarnings.toLocaleString();
-            document.getElementById('currentRank').textContent = ambassadorData.rank;
-            document.getElementById('currentLevel').textContent = ambassadorData.level;
+            // Safe element updates with null checks
+            const safeUpdate = (id, value, isHTML = false) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (isHTML) {
+                        element.innerHTML = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            };
+            
+            safeUpdate('ambassadorName', ambassadorData.name);
+            safeUpdate('ambassadorCode', ambassadorData.code);
+            safeUpdate('accessUnitsDeployed', ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0);
+            safeUpdate('advocacyEarnings', (ambassadorData.advocacyEarnings || ambassadorData.commissionEarned || 0).toLocaleString());
+            safeUpdate('currentRank', ambassadorData.rank);
+            safeUpdate('currentLevel', ambassadorData.level);
             
             // Display CRLA badge if earned
             const credentialBadge = document.getElementById('credentialBadge');
@@ -1077,11 +1295,17 @@
                 }
             }
             
-            const referralLink = `https://marriageducation.com/sbd-campaign.html?ref=${ambassadorData.code}`;
-            document.getElementById('referralLink').textContent = referralLink;
+            const referralLink = `https://marriage-education.web.app/ambassador-register.html?ref=${ambassadorData.code}`;
+            safeUpdate('referralLink', referralLink);
             
-            const progress = (ambassadorData.accessUnitsDeployed / ambassadorData.targetUnits) * 100;
-            document.getElementById('booksProgress').style.width = progress + '%';
+            const unitsDeployed = ambassadorData.accessUnitsDeployed || ambassadorData.booksSold || 0;
+            const targetUnits = ambassadorData.targetUnits || 500;
+            const progress = (unitsDeployed / targetUnits) * 100;
+            
+            const progressBar = document.getElementById('booksProgress');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
             
             // Calculate next milestone
             const milestones = [
@@ -1090,21 +1314,25 @@
                 { level: 'Gold', threshold: 300 },
                 { level: 'Senior Ambassador', threshold: 500 }
             ];
-            const nextMilestone = milestones.find(m => m.threshold > ambassadorData.accessUnitsDeployed);
+            const nextMilestone = milestones.find(m => m.threshold > unitsDeployed);
             if (nextMilestone) {
-                const remaining = nextMilestone.threshold - ambassadorData.accessUnitsDeployed;
-                document.getElementById('nextMilestone').textContent = `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`;
+                const remaining = nextMilestone.threshold - unitsDeployed;
+                safeUpdate('nextMilestone', `${remaining} units to ${nextMilestone.level} (${nextMilestone.threshold})`);
             } else {
-                document.getElementById('nextMilestone').textContent = '🌟 Senior Ambassador Status Achieved!';
+                safeUpdate('nextMilestone', '🌟 Senior Ambassador Status Achieved!');
             }
             
             // Initialize revenue stacks display
-            displayRevenueStacks();
+            if (typeof displayRevenueStacks === 'function') {
+                displayRevenueStacks();
+            }
             
             // Initialize school progress if enrolled
-            if (ambassadorData.schoolProgress.enrolled) {
+            if (ambassadorData.schoolProgress && ambassadorData.schoolProgress.enrolled && typeof displaySchoolProgress === 'function') {
                 displaySchoolProgress();
             }
+            
+            checkSeniorEligibility();
         }
 
         // Copy referral link
@@ -1350,7 +1578,7 @@
             if (platform === 'whatsapp') {
                 window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
             } else if (platform === 'facebook') {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://marriageeducation.com/ambassador-register.html')}&quote=${encodeURIComponent(message)}`, '_blank');
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://marriageducation.com/ambassador-register.html')}&quote=${encodeURIComponent(message)}`, '_blank');
             }
         }
         
@@ -1402,13 +1630,15 @@
     
     <script>
         // Load real ambassador data from Firebase Firestore
-        // Version: 2025-12-30-v3 - Force Firebase propagation
+        // Version: 2026-01-18-v4 - Fixed name display and error handling
         async function loadAmbassadorData() {
             try {
                 // Get ambassador code from localStorage (set during login)
                 const ambassadorCode = localStorage.getItem('ambassadorCode');
+                const storedData = localStorage.getItem('ambassadorData');
                 
                 if (!ambassadorCode) {
+                    console.log('No ambassador code found, redirecting to login...');
                     alert('❌ Please log in to view your dashboard');
                     window.location.href = '/ambassador-login.html';
                     return;
@@ -1425,21 +1655,66 @@
                 const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
                 
                 if (!ambassadorDoc.exists) {
-                    throw new Error('Ambassador not found');
+                    throw new Error('Ambassador not found in database');
                 }
                 
                 const stats = ambassadorDoc.data();
+                console.log('Ambassador data loaded:', stats);
+                
+                // Get name - try multiple sources
+                let ambassadorName = 'Ambassador';
+                if (stats.name) {
+                    ambassadorName = stats.name;
+                } else if (stats.firstName && stats.lastName) {
+                    ambassadorName = `${stats.firstName} ${stats.lastName}`;
+                } else if (stats.firstName) {
+                    ambassadorName = stats.firstName;
+                } else if (storedData) {
+                    try {
+                        const parsed = JSON.parse(storedData);
+                        if (parsed.name) ambassadorName = parsed.name;
+                        else if (parsed.firstName && parsed.lastName) ambassadorName = `${parsed.firstName} ${parsed.lastName}`;
+                        else if (parsed.firstName) ambassadorName = parsed.firstName;
+                    } catch (e) {
+                        console.error('Error parsing stored data:', e);
+                    }
+                }
                 
                 // Update global ambassadorData
                 Object.assign(ambassadorData, {
-                    name: ambassadorCode.split('-')[1] || 'Ambassador',
-                    code: stats.ambassadorCode || ambassadorCode,
-                    booksSold: stats.booksSold || 0,
-                    commissionEarned: stats.commissionEarned || 0,
+                    name: ambassadorName,
+                    code: stats.code || ambassadorCode,
+                    booksSold: stats.sales_count || stats.booksSold || 0,
+                    commissionEarned: stats.commission_earned || stats.commissionEarned || 0,
                     rank: 0,  // Will be loaded from leaderboard
                     level: stats.level || 'Starter',
                     recentSales: stats.sales || []
                 });
+                
+                console.log('Ambassador data processed:', ambassadorData);
+                
+                // Check if ambassador is Regional Director - prevent access
+                if (stats.ambassador_type === 'regional_director') {
+                    alert('⚠️ Regional Directors should use the RD Dashboard.\n\nRedirecting...');
+                    window.location.replace('../regional-director/rd-dashboard.html');
+                    return;
+                }
+                
+                // Check if ambassador is Senior - prevent access  
+                if (stats.ambassador_type === 'senior') {
+                    alert('⚠️ Senior Ambassadors should use the Senior Dashboard.\n\nRedirecting...');
+                    window.location.replace('senior-dashboard.html');
+                    return;
+                }
+                
+                // Update Foundation School progress
+                updateFoundationSchool(stats);
+                
+                // Update monthly target tracker
+                updateMonthlyTarget(stats);
+                
+                // Update portfolio table
+                updatePortfolioTable(stats);
                 
                 // Load leaderboard rank
                 await loadLeaderboardRank(ambassadorCode);
@@ -1452,8 +1727,15 @@
                 
             } catch (error) {
                 console.error('Error loading ambassador data:', error);
-                alert('Failed to load dashboard data. Please try logging in again.');
-                window.location.href = '/ambassador-login.html';
+                alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
+                // Clear bad data
+                localStorage.removeItem('ambassadorCode');
+                localStorage.removeItem('ambassadorEmail');
+                localStorage.removeItem('ambassadorData');
+                // Redirect to login
+                setTimeout(() => {
+                    window.location.href = '/ambassador-login.html';
+                }, 2000);
             }
         }
         
@@ -1462,31 +1744,31 @@
             try {
                 // Check if Firebase is initialized
                 if (!firebase.apps.length) {
+                    console.log('Firebase not initialized, skipping leaderboard');
                     return;
                 }
                 
                 const db = firebase.firestore();
                 
                 // Query ambassadors ordered by books sold
-                // Note: This query requires a composite index
                 const snapshot = await db.collection('ambassadors')
-                    .where('active', '==', true)
-                    .orderBy('booksSold', 'desc')
+                    .where('status', 'in', ['active', 'approved'])
+                    .orderBy('sales_count', 'desc')
                     .get();
                 
                 // Find rank
                 let rank = 0;
                 snapshot.forEach((doc, index) => {
-                    if (doc.id === ambassadorCode) {
+                    if (doc.id === ambassadorCode || doc.data().code === ambassadorCode) {
                         rank = index + 1;
                     }
                 });
                 
-                ambassadorData.rank = rank;
+                ambassadorData.rank = rank || 'N/A';
+                console.log('Leaderboard rank loaded:', rank);
             } catch (error) {
                 console.error('Leaderboard error:', error);
-                // Gracefully handle missing index - don't break the dashboard
-                ambassadorData.rank = 0;
+                ambassadorData.rank = 'N/A';
             }
         }
         
@@ -1541,6 +1823,139 @@
                     });
                 });
         }
+        
+        // Update Foundation School Progress
+        function updateFoundationSchool(stats) {
+            try {
+                const schoolSection = document.getElementById('schoolProgressSection');
+                const enrollment = stats.school_enrollment?.foundation_school;
+                
+                if (enrollment) {
+                    // Ambassador is enrolled - show progress
+                    const completedLessons = enrollment.completed_lessons?.length || 0;
+                    const currentWeek = enrollment.current_week || 1;
+                    const totalLessons = 36;
+                    const completionPercent = Math.round((completedLessons / totalLessons) * 100);
+                    
+                    document.getElementById('currentWeek').textContent = currentWeek;
+                    document.getElementById('completionPercent').textContent = completionPercent + '%';
+                    document.getElementById('schoolProgress').style.width = completionPercent + '%';
+                    document.getElementById('completedModules').textContent = completedLessons;
+                    document.getElementById('totalModules').textContent = totalLessons;
+                    
+                    // Update CRLA status
+                    const crlaStatusEl = document.getElementById('crlaStatus');
+                    if (completedLessons === 36 && enrollment.exam_passed) {
+                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ Certified</span>';
+                    } else if (completionPercent > 0) {
+                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+                    } else {
+                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                    }
+                } else {
+                    // Default view for new ambassadors
+                    document.getElementById('currentWeek').textContent = '1';
+                    document.getElementById('completionPercent').textContent = '0%';
+                    document.getElementById('schoolProgress').style.width = '0%';
+                    document.getElementById('completedModules').textContent = '0';
+                    document.getElementById('totalModules').textContent = '36';
+                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                }
+            } catch (error) {
+                console.error('Error updating Foundation School:', error);
+            }
+        }
+        
+        // Update Monthly Target Tracker
+        function updateMonthlyTarget(stats) {
+            try {
+                const now = new Date();
+                const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const monthlyEarnings = stats.monthly_earnings?.[monthKey]?.total || 0;
+                const target = 1800000;
+                const remaining = Math.max(0, target - monthlyEarnings);
+                const progress = Math.min(100, (monthlyEarnings / target) * 100);
+                
+                // Days left in month
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const daysLeft = lastDay - now.getDate();
+                
+                document.getElementById('monthlyEarnings').textContent = monthlyEarnings.toLocaleString() + ' FCFA';
+                document.getElementById('monthlyRemaining').textContent = remaining.toLocaleString();
+                document.getElementById('monthlyProgress').textContent = progress.toFixed(1) + '%';
+                document.getElementById('daysLeftInMonth').textContent = daysLeft;
+                document.getElementById('monthlyProgressFill').style.width = progress + '%';
+                document.getElementById('monthlyProgressFill').textContent = progress.toFixed(0) + '%';
+            } catch (error) {
+                console.error('Error updating monthly target:', error);
+            }
+        }
+        
+        // Update Portfolio Table
+        function updatePortfolioTable(stats) {
+            try {
+                const categories = {
+                    books: { icon: '📚', name: 'Books', units: 0, revenue: 0, earnings: 0 },
+                    schools: { icon: '🎓', name: 'Schools', units: 0, revenue: 0, earnings: 0 },
+                    courses: { icon: '📖', name: 'Courses', units: 0, revenue: 0, earnings: 0 },
+                    premium: { icon: '💼', name: 'Premium', units: 0, revenue: 0, earnings: 0 },
+                    corporate: { icon: '🏢', name: 'Corporate', units: 0, revenue: 0, earnings: 0 },
+                    community: { icon: '🤝', name: 'Community', units: 0, revenue: 0, earnings: 0 }
+                };
+                
+                // Fill in actual data
+                for (const [key, cat] of Object.entries(categories)) {
+                    cat.units = stats.deployment_by_category?.[key] || 0;
+                    cat.earnings = stats.revenue_by_category?.[key] || 0;
+                    cat.revenue = cat.earnings * 10; // Approximate
+                }
+                
+                // Build table rows
+                const tbody = document.getElementById('portfolioTableBody');
+                tbody.innerHTML = '';
+                
+                let totalUnits = 0;
+                let totalRevenue = 0;
+                let totalEarnings = 0;
+                
+                for (const cat of Object.values(categories)) {
+                    totalUnits += cat.units;
+                    totalRevenue += cat.revenue;
+                    totalEarnings += cat.earnings;
+                    
+                    const percentage = totalEarnings > 0 ? ((cat.earnings / totalEarnings) * 100).toFixed(1) : '0';
+                    
+                    const row = `
+                        <tr style="transition: background 0.2s;">
+                            <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">${cat.icon}</span><span style="font-weight: 600;">${cat.name}</span></td>
+                            <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">${cat.units}</td>
+                            <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">${cat.revenue.toLocaleString()} FCFA</td>
+                            <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">${cat.earnings.toLocaleString()} FCFA</td>
+                            <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">${percentage}%</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                }
+                
+                // Update totals
+                document.getElementById('portfolioTotalUnits').textContent = totalUnits;
+                document.getElementById('portfolioTotalRevenue').textContent = totalRevenue.toLocaleString() + ' FCFA';
+                document.getElementById('portfolioTotalEarnings').textContent = totalEarnings.toLocaleString() + ' FCFA';
+            } catch (error) {
+                console.error('Error updating portfolio table:', error);
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('ambassadorCode');
+            localStorage.removeItem('ambassadorEmail');
+            localStorage.removeItem('ambassadorData');
+            window.location.href = '../ambassador-login.html';
+        }
+        
+        // Make functions globally accessible
+        window.checkSeniorEligibility = checkSeniorEligibility;
         
         // Initialize with real data
         loadAmbassadorData().then(() => {
