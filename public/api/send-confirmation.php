@@ -62,7 +62,8 @@ if (!$email || !$fullName || !$code || !$bookUrl) {
 
 // ===== EMAIL CONTENT =====
 $expiryDate = date('F j, Y', strtotime('+7 days'));
-$subject = "Welcome Ambassador $code - Your Credentials Inside";
+$currentYear = date('Y');
+$subject = "Your Ambassador Account is Active - Code: $code";
 
 // HTML version
 $htmlMessage = "
@@ -71,50 +72,61 @@ $htmlMessage = "
 <head>
     <meta charset='UTF-8'>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f8f9fa; padding: 30px; }
-        .credentials { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #00b894; }
-        .button { display: inline-block; background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
-        .footer { background: #2d3436; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: white; }
+        .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .credentials { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #00b894; }
+        .button { display: inline-block; background: #00b894; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+        a { color: #00b894; }
     </style>
 </head>
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>🎉 Welcome, Ambassador $fullName!</h1>
-            <p>Your registration has been approved</p>
+            <h1>Welcome to Marriage Education</h1>
+            <p>Ambassador Registration Approved</p>
         </div>
         
         <div class='content'>
-            <h2>Your Ambassador Credentials</h2>
+            <p>Hello $fullName,</p>
+            
+            <p>Congratulations! Your ambassador application has been approved and your account is now active.</p>
             
             <div class='credentials'>
                 <p><strong>Ambassador Code:</strong> $code</p>
-                <p><strong>Email:</strong> $email</p>
-                <p><strong>Dashboard:</strong> <a href='https://marriageducation.com/ambassador-login.html'>marriageducation.com/ambassador-login.html</a></p>
+                <p><strong>Login Email:</strong> $email</p>
+                <p><strong>Dashboard Login:</strong> <a href='https://marriageducation.com/ambassador-login.html'>marriageducation.com/ambassador-login.html</a></p>
             </div>
             
-            <h3>📚 Your Book Download</h3>
-            <p>Download your book package now. This link expires on <strong>$expiryDate</strong>.</p>
+            <h3>Your Book Package</h3>
+            <p>As part of your ambassador benefits, you can download your book package. This download link will remain active until $expiryDate.</p>
             
-            <a href='$bookUrl' class='button'>📥 Download Book Package</a>
+            <center>
+                <a href='$bookUrl' class='button'>Download Book Package</a>
+            </center>
             
-            <h3>Next Steps:</h3>
+            <h3>Getting Started</h3>
             <ol>
-                <li>Download and read your book package</li>
+                <li>Download your book package using the link above</li>
                 <li>Log in to your ambassador dashboard</li>
-                <li>Get your unique referral link</li>
-                <li>Start sharing and earning commissions!</li>
+                <li>Copy your unique referral link</li>
+                <li>Share with your network and earn commissions</li>
             </ol>
             
-            <p><strong>Questions?</strong> Reply to this email or contact support@marriageducation.com</p>
+            <p>If you have questions, please reply to this email or contact us at support@marriageducation.com</p>
+            
+            <p>Best regards,<br>
+            Marriage Education Team</p>
         </div>
         
         <div class='footer'>
-            <p>Marriage Education | marriageducation.com</p>
+            <p><strong>Marriage Education</strong></p>
             <p>Empowering marriages, one family at a time</p>
+            <p>&copy; $currentYear Marriage Education. All rights reserved.</p>
+            <p style='margin-top:10px;'><a href='https://marriageducation.com'>marriageducation.com</a> | <a href='mailto:support@marriageducation.com'>support@marriageducation.com</a></p>
+            <p style='margin-top:10px; font-size:11px;'>You received this email because you registered as an ambassador at marriageducation.com</p>
         </div>
     </div>
 </body>
@@ -123,46 +135,63 @@ $htmlMessage = "
 
 // Plain text version
 $textMessage = "
-Welcome, Ambassador $fullName!
+Welcome to Marriage Education
+Ambassador Registration Approved
 
-Congratulations! Your ambassador registration has been approved.
+Hello $fullName,
+
+Congratulations! Your ambassador application has been approved and your account is now active.
 
 YOUR AMBASSADOR CREDENTIALS
 ============================
 Ambassador Code: $code
-Email: $email
-Dashboard: https://marriageducation.com/ambassador-login.html
+Login Email: $email
+Dashboard Login: https://marriageducation.com/ambassador-login.html
 
-YOUR BOOK DOWNLOAD
+YOUR BOOK PACKAGE
 ==================
-Download your book package now. This link expires on $expiryDate.
+As part of your ambassador benefits, you can download your book package. 
+This download link will remain active until $expiryDate.
 
-Book Download Link:
+Download Book Package:
 $bookUrl
 
-NEXT STEPS
-==========
-1. Download and read your book package
-2. Log in to your ambassador dashboard at marriageducation.com/ambassador-login.html
-3. Get your unique referral link
-4. Start sharing and earning commissions!
+GETTING STARTED
+===============
+1. Download your book package using the link above
+2. Log in to your ambassador dashboard
+3. Copy your unique referral link
+4. Share with your network and earn commissions
 
-Questions? Reply to this email or contact support@marriageducation.com
+If you have questions, please reply to this email or contact us at support@marriageducation.com
+
+Best regards,
+Marriage Education Team
 
 ---
-Marriage Education | marriageducation.com
+Marriage Education
 Empowering marriages, one family at a time
+(c) $currentYear Marriage Education. All rights reserved.
+
+marriageducation.com | support@marriageducation.com
+
+You received this email because you registered as an ambassador at marriageducation.com
 ";
 
 // ===== EMAIL HEADERS (multipart for HTML + plain text) =====
 $boundary = md5(time());
+$messageId = "<" . md5(uniqid(time())) . "@marriageducation.com>";
 
 $headers = "From: $FROM_NAME <$FROM_EMAIL>\r\n";
 $headers .= "Reply-To: $FROM_EMAIL\r\n";
 $headers .= "Return-Path: $FROM_EMAIL\r\n";
+$headers .= "Message-ID: $messageId\r\n";
 $headers .= "X-Priority: 3\r\n";
-$headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+$headers .= "X-Mailer: Marriage Education v1.0\r\n";
 $headers .= "Organization: Marriage Education\r\n";
+$headers .= "List-Unsubscribe: <mailto:unsubscribe@marriageducation.com>\r\n";
+$headers .= "Precedence: bulk\r\n";
+$headers .= "X-Auto-Response-Suppress: OOF, DR, RN, NRN, AutoReply\r\n";
 $headers .= "MIME-Version: 1.0\r\n";
 $headers .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n";
 
