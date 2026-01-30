@@ -150,7 +150,7 @@ async function generateDownloadURL(productId) {
     }
     
     // Construct the public download URL with token
-    const bucketName = bucket.name;
+    const bucketName = 'marriage-education.firebasestorage.app';
     const encodedFilename = encodeURIComponent(`ebooks/${filename}`);
     const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFilename}?alt=media&token=${token}`;
     
@@ -1776,24 +1776,18 @@ async function activateAmbassador(payment) {
   const bookUrl = await generateDownloadURL('book');
   console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
   
-  // Send ambassador credentials + book link email via iPage PHP
+  // Send ambassador credentials + book link email via SMTP
   let emailSent = false;
   let emailError = null;
   try {
-    const emailResponse = await axios.post('https://marriageducation.com/send-ambassador-credentials.php', {
+    await sendAmbassadorCredentialsEmailSMTP({
       email: payment.email,
       fullName: ambassadorData.fullName,
       code: ambassadorCode,
       bookUrl: bookUrl
     });
-    
-    if (emailResponse.data && emailResponse.data.success) {
-      emailSent = true;
-      console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via iPage`);
-    } else {
-      emailError = emailResponse.data?.error || 'Unknown error';
-      console.error(`[EMAIL ERROR] Failed to send via iPage:`, emailError);
-    }
+    emailSent = true;
+    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via SMTP`);
   } catch (error) {
     emailError = error.message;
     console.error(`[EMAIL ERROR] Failed to send credentials to ${payment.email}:`, error);
