@@ -1776,18 +1776,24 @@ async function activateAmbassador(payment) {
   const bookUrl = await generateDownloadURL('book');
   console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
   
-  // Send ambassador credentials + book link email
+  // Send ambassador credentials + book link email via iPage PHP
   let emailSent = false;
   let emailError = null;
   try {
-    await sendAmbassadorCredentialsEmailSMTP({
+    const emailResponse = await axios.post('https://marriageducation.com/send-ambassador-credentials.php', {
       email: payment.email,
       fullName: ambassadorData.fullName,
       code: ambassadorCode,
       bookUrl: bookUrl
     });
-    emailSent = true;
-    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email}`);
+    
+    if (emailResponse.data && emailResponse.data.success) {
+      emailSent = true;
+      console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via iPage`);
+    } else {
+      emailError = emailResponse.data?.error || 'Unknown error';
+      console.error(`[EMAIL ERROR] Failed to send via iPage:`, emailError);
+    }
   } catch (error) {
     emailError = error.message;
     console.error(`[EMAIL ERROR] Failed to send credentials to ${payment.email}:`, error);
@@ -1806,7 +1812,7 @@ async function activateAmbassador(payment) {
       `${payment.regional_director ? `👑 Recruited By: ${payment.regional_director}\n` : ''}` +
       `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
       `📧 Email Status: ${emailStatus}\n` +
-      `🔐 Dashboard: https://marriage-education.web.app/ambassador-login.html\n\n` +
+      `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
       `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
     
     await sendTelegram(msg, false);
@@ -1832,7 +1838,7 @@ async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
             <h3>📋 Your Ambassador Credentials</h3>
             <p><strong>Ambassador Code:</strong> <span style="font-family: monospace; font-size: 20px; color: #00b894;">${ambassador.code}</span></p>
             <p><strong>Email:</strong> ${ambassador.email}</p>
-            <p><strong>Dashboard:</strong> <a href="https://marriage-education.web.app/ambassador-login.html" style="color: #00b894;">Login Here</a></p>
+            <p><strong>Dashboard:</strong> <a href="https://marriageducation.com/ambassador-login.html" style="color: #00b894;">Login Here</a></p>
           </div>
           
           <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894;">
