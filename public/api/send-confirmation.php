@@ -63,7 +63,7 @@ if (!$email || !$fullName || !$code || !$bookUrl) {
 // ===== EMAIL CONTENT =====
 $expiryDate = date('F j, Y', strtotime('+7 days'));
 $currentYear = date('Y');
-$subject = "Your Ambassador Account is Active - Code: $code";
+$subject = "Account Activated: $code";
 
 // HTML version
 $htmlMessage = "
@@ -71,111 +71,87 @@ $htmlMessage = "
 <html>
 <head>
     <meta charset='UTF-8'>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 20px auto; background: white; }
-        .header { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; }
-        .content { padding: 30px; }
-        .credentials { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #00b894; }
-        .button { display: inline-block; background: #00b894; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
-        a { color: #00b894; }
-    </style>
 </head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Welcome to Marriage Education</h1>
-            <p>Ambassador Registration Approved</p>
-        </div>
-        
-        <div class='content'>
-            <p>Hello $fullName,</p>
-            
-            <p>Congratulations! Your ambassador application has been approved and your account is now active.</p>
-            
-            <div class='credentials'>
-                <p><strong>Ambassador Code:</strong> $code</p>
-                <p><strong>Login Email:</strong> $email</p>
-                <p><strong>Dashboard Login:</strong> <a href='https://marriageducation.com/ambassador-login.html'>marriageducation.com/ambassador-login.html</a></p>
-            </div>
-            
-            <h3>Your Book Package</h3>
-            <p>As part of your ambassador benefits, you can download your book package. This download link will remain active until $expiryDate.</p>
-            
-            <center>
-                <a href='$bookUrl' class='button'>Download Book Package</a>
-            </center>
-            
-            <h3>Getting Started</h3>
-            <ol>
-                <li>Download your book package using the link above</li>
-                <li>Log in to your ambassador dashboard</li>
-                <li>Copy your unique referral link</li>
-                <li>Share with your network and earn commissions</li>
-            </ol>
-            
-            <p>If you have questions, please reply to this email or contact us at support@marriageducation.com</p>
-            
-            <p>Best regards,<br>
-            Marriage Education Team</p>
-        </div>
-        
-        <div class='footer'>
-            <p><strong>Marriage Education</strong></p>
-            <p>Empowering marriages, one family at a time</p>
-            <p>&copy; $currentYear Marriage Education. All rights reserved.</p>
-            <p style='margin-top:10px;'><a href='https://marriageducation.com'>marriageducation.com</a> | <a href='mailto:support@marriageducation.com'>support@marriageducation.com</a></p>
-            <p style='margin-top:10px; font-size:11px;'>You received this email because you registered as an ambassador at marriageducation.com</p>
-        </div>
-    </div>
+<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0;'>
+    <table width='100%' cellpadding='0' cellspacing='0' style='background: #f4f4f4; padding: 20px;'>
+        <tr>
+            <td align='center'>
+                <table width='600' cellpadding='0' cellspacing='0' style='background: white; border: 1px solid #ddd;'>
+                    <tr>
+                        <td style='padding: 30px; background: #00b894; color: white; text-align: center;'>
+                            <h1 style='margin: 0; font-size: 24px;'>Account Activated</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 30px;'>
+                            <p>Hello $fullName,</p>
+                            
+                            <p>Your account has been activated. You can now log in using the credentials below.</p>
+                            
+                            <table width='100%' cellpadding='15' cellspacing='0' style='background: #f8f9fa; border-left: 4px solid #00b894; margin: 20px 0;'>
+                                <tr>
+                                    <td>
+                                        <p style='margin: 5px 0;'><strong>Account Code:</strong> $code</p>
+                                        <p style='margin: 5px 0;'><strong>Email:</strong> $email</p>
+                                        <p style='margin: 5px 0;'><strong>Login URL:</strong> marriageducation.com/ambassador-login.html</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p><strong>Account Resources</strong></p>
+                            <p>Your account includes access to digital resources. Download link valid until $expiryDate:</p>
+                            <p><a href='$bookUrl' style='color: #00b894;'>$bookUrl</a></p>
+                            
+                            <p style='margin-top: 30px;'>If you have questions, reply to this email.</p>
+                            
+                            <p>Marriage Education Team</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 20px; background: #f8f9fa; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd;'>
+                            <p style='margin: 5px 0;'>Marriage Education</p>
+                            <p style='margin: 5px 0;'>marriageducation.com</p>
+                            <p style='margin: 10px 0; font-size: 11px;'>This is an automated account notification. You received this because you registered an account with us.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 ";
 
 // Plain text version
 $textMessage = "
-Welcome to Marriage Education
-Ambassador Registration Approved
+Account Activated
 
 Hello $fullName,
 
-Congratulations! Your ambassador application has been approved and your account is now active.
+Your account has been activated. You can now log in using the credentials below.
 
-YOUR AMBASSADOR CREDENTIALS
-============================
-Ambassador Code: $code
-Login Email: $email
-Dashboard Login: https://marriageducation.com/ambassador-login.html
+ACCOUNT CREDENTIALS
+===================
+Account Code: $code
+Email: $email
+Login URL: https://marriageducation.com/ambassador-login.html
 
-YOUR BOOK PACKAGE
-==================
-As part of your ambassador benefits, you can download your book package. 
-This download link will remain active until $expiryDate.
+ACCOUNT RESOURCES
+=================
+Your account includes access to digital resources.
+Download link valid until $expiryDate:
 
-Download Book Package:
 $bookUrl
 
-GETTING STARTED
-===============
-1. Download your book package using the link above
-2. Log in to your ambassador dashboard
-3. Copy your unique referral link
-4. Share with your network and earn commissions
+If you have questions, reply to this email.
 
-If you have questions, please reply to this email or contact us at support@marriageducation.com
-
-Best regards,
 Marriage Education Team
 
 ---
 Marriage Education
-Empowering marriages, one family at a time
-(c) $currentYear Marriage Education. All rights reserved.
+marriageducation.com
 
-marriageducation.com | support@marriageducation.com
-
-You received this email because you registered as an ambassador at marriageducation.com
+This is an automated account notification. You received this because you registered an account with us.
 ";
 
 // ===== EMAIL HEADERS (multipart for HTML + plain text) =====
@@ -186,12 +162,14 @@ $headers = "From: $FROM_NAME <$FROM_EMAIL>\r\n";
 $headers .= "Reply-To: $FROM_EMAIL\r\n";
 $headers .= "Return-Path: $FROM_EMAIL\r\n";
 $headers .= "Message-ID: $messageId\r\n";
+$headers .= "Date: " . date('r') . "\r\n";
 $headers .= "X-Priority: 3\r\n";
-$headers .= "X-Mailer: Marriage Education v1.0\r\n";
-$headers .= "Organization: Marriage Education\r\n";
+$headers .= "X-Mailer: Marriage Education Account System\r\n";
+$headers .= "X-MSMail-Priority: Normal\r\n";
+$headers .= "Importance: Normal\r\n";
+$headers .= "Auto-Submitted: auto-generated\r\n";
+$headers .= "X-Auto-Response-Suppress: All\r\n";
 $headers .= "List-Unsubscribe: <mailto:unsubscribe@marriageducation.com>\r\n";
-$headers .= "Precedence: bulk\r\n";
-$headers .= "X-Auto-Response-Suppress: OOF, DR, RN, NRN, AutoReply\r\n";
 $headers .= "MIME-Version: 1.0\r\n";
 $headers .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n";
 
