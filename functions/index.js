@@ -1776,21 +1776,37 @@ async function activateAmbassador(payment) {
   const bookUrl = await generateDownloadURL('book');
   console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
   
-  // Send ambassador credentials + book link email via SMTP
+  // Send ambassador credentials + book link email via iPage PHP endpoint
+  // Architecture: Firebase → iPage PHP → mail() (bypasses Spamhaus blacklist)
   let emailSent = false;
   let emailError = null;
   try {
-    await sendAmbassadorCredentialsEmailSMTP({
+    const IPAGE_ENDPOINT = "https://marriageducation.com/api/send-confirmation.php";
+    const SECRET = "MEG2026_SECURE_TOKEN_CHANGE_THIS";
+    
+    const response = await axios.post(IPAGE_ENDPOINT, {
       email: payment.email,
       fullName: ambassadorData.fullName,
       code: ambassadorCode,
       bookUrl: bookUrl
+    }, {
+      headers: {
+        'Authorization': `Bearer ${SECRET}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
     });
-    emailSent = true;
-    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via SMTP`);
+    
+    if (response.data && response.data.status === 'sent') {
+      emailSent = true;
+      console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via iPage PHP`);
+    } else {
+      emailError = response.data?.error || 'Unknown error from PHP endpoint';
+      console.error(`[EMAIL ERROR] PHP endpoint response:`, response.data);
+    }
   } catch (error) {
     emailError = error.message;
-    console.error(`[EMAIL ERROR] Failed to send credentials to ${payment.email}:`, error);
+    console.error(`[EMAIL ERROR] Failed to call PHP endpoint:`, error.response?.data || error.message);
   }
 
   // Send Telegram notification with ALL details including book link
