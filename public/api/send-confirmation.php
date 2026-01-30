@@ -8,12 +8,9 @@
  */
 
 // ===== LOAD PHPMAILER =====
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+require_once 'PHPMailer/src/Exception.php';
+require_once 'PHPMailer/src/PHPMailer.php';
+require_once 'PHPMailer/src/SMTP.php';
 
 // ===== CONFIG =====
 $SECRET = "MEG2026_SECURE_TOKEN_CHANGE_THIS";
@@ -167,7 +164,7 @@ This is an automated account notification. You received this because you registe
 ";
 
 // ===== SEND EMAIL WITH PHPMAILER =====
-$mail = new PHPMailer(true);
+$mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
 try {
     // SMTP Configuration
@@ -176,7 +173,7 @@ try {
     $mail->SMTPAuth = true;
     $mail->Username = $SMTP_USER;
     $mail->Password = $SMTP_PASS;
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->SMTPSecure = 'tls';
     $mail->Port = $SMTP_PORT;
     $mail->CharSet = 'UTF-8';
     
