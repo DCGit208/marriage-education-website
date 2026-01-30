@@ -1,16 +1,28 @@
 <?php
 /**
- * Payment Confirmation Email Endpoint
- * Receives POST from Firebase and sends email using iPage mail()
+ * Ambassador Credentials Email Endpoint
+ * Receives POST from Firebase and sends email using PHPMailer SMTP
  * 
- * Architecture: Firebase Cloud Function → iPage PHP → mail()
- * This bypasses Firebase IP blacklisting by Spamhaus
+ * Architecture: Firebase Cloud Function → iPage PHP → PHPMailer SMTP → Inbox
+ * PHPMailer connects to iPage SMTP from iPage server (adds DKIM signatures)
  */
+
+// ===== LOAD PHPMAILER =====
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 // ===== CONFIG =====
 $SECRET = "MEG2026_SECURE_TOKEN_CHANGE_THIS";
 $FROM_EMAIL = "orders@marriageducation.com";
 $FROM_NAME = "Marriage Education";
+$SMTP_HOST = "smtp.ipage.com";
+$SMTP_PORT = 587;
+$SMTP_USER = "orders@marriageducation.com";
+$SMTP_PASS = "Fi5%%%orderBTH123";
 
 // ===== CORS HEADERS (for preflight) =====
 header('Access-Control-Allow-Origin: *');
@@ -154,38 +166,44 @@ marriageducation.com
 This is an automated account notification. You received this because you registered an account with us.
 ";
 
-// ===== EMAIL HEADERS (multipart for HTML + plain text) =====
-$boundary = md5(time());
-$messageId = "<" . md5(uniqid(time())) . "@marriageducation.com>";
+// ===== SEND EMAIL WITH PHPMAILER =====
+$mail = new PHPMailer(true);
 
-$headers = "From: $FROM_NAME <$FROM_EMAIL>\r\n";
-$headers .= "Reply-To: $FROM_EMAIL\r\n";
-$headers .= "Return-Path: $FROM_EMAIL\r\n";
-$headers .= "Message-ID: $messageId\r\n";
-$headers .= "Date: " . date('r') . "\r\n";
-$headers .= "X-Priority: 3\r\n";
-$headers .= "X-Mailer: Marriage Education Account System\r\n";
-$headers .= "X-MSMail-Priority: Normal\r\n";
-$headers .= "Importance: Normal\r\n";
-$headers .= "Auto-Submitted: auto-generated\r\n";
-$headers .= "X-Auto-Response-Suppress: All\r\n";
-$headers .= "List-Unsubscribe: <mailto:unsubscribe@marriageducation.com>\r\n";
-$headers .= "MIME-Version: 1.0\r\n";
-$headers .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n";
-
-// Build multipart message body
-$body = "--$boundary\r\n";
-$body .= "Content-Type: text/plain; charset=UTF-8\r\n";
-$body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-$body .= $textMessage . "\r\n\r\n";
-$body .= "--$boundary\r\n";
-$body .= "Content-Type: text/html; charset=UTF-8\r\n";
-$body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-$body .= $htmlMessage . "\r\n\r\n";
-$body .= "--$boundary--";
-
-// ===== SEND EMAIL =====
-$mailSent = mail($email, $subject, $body, $headers);
+try {
+    // SMTP Configuration
+    $mail->isSMTP();
+    $mail->Host = $SMTP_HOST;
+    $mail->SMTPAuth = true;
+    $mail->Username = $SMTP_USER;
+    $mail->Password = $SMTP_PASS;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = $SMTP_PORT;
+    $mail->CharSet = 'UTF-8';
+    
+    // Sender and recipient
+    $mail->setFrom($FROM_EMAIL, $FROM_NAME);
+    $mail->addAddress($email, $fullName);
+    $mail->addReplyTo($FROM_EMAIL, $FROM_NAME);
+    
+    // Email content
+    $mail->isHTML(true);
+    $mail->Subject = $subject;
+    $mail->Body = $htmlMessage;
+    $mail->AltBody = $textMessage;
+    
+    // Additional headers
+    $mail->addCustomHeader('Auto-Submitted', 'auto-generated');
+    $mail->addCustomHeader('X-Auto-Response-Suppress', 'All');
+    $mail->addCustomHeader('List-Unsubscribe', '<mailto:unsubscribe@marriageducation.com>');
+    
+    // Send email
+    $mail->send();
+    $mailSent = true;
+    
+} catch (Exception $e) {
+    $mailSent = false;
+    $errorMsg = $mail->ErrorInfo;
+}
 
 // ===== LOG =====
 $logDir = __DIR__ . '/../../logs';
@@ -194,7 +212,7 @@ if (!is_dir($logDir)) {
 }
 
 $logFile = $logDir . '/email-confirmation-' . date('Y-m-d') . '.log';
-$logEntry = date('[Y-m-d H:i:s]') . " Email to $email ($code) - " . ($mailSent ? "SUCCESS" : "FAILED") . "\n";
+$logEntry = date('[Y-m-d H:i:s]') . " Email to $email ($code) - " . ($mailSent ? "SUCCESS" : "FAILED: " . ($errorMsg ?? 'Unknown error')) . "\n";
 file_put_contents($logFile, $logEntry, FILE_APPEND);
 
 // ===== RESPONSE =====
@@ -210,7 +228,7 @@ if ($mailSent) {
     http_response_code(500);
     echo json_encode([
         "status" => "failed",
-        "error" => "mail() function returned false",
+        "error" => $errorMsg ?? "PHPMailer failed",
         "email" => $email
     ]);
 }
