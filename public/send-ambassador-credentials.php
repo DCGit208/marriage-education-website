@@ -43,7 +43,8 @@ $expiryDate = date('F j, Y', strtotime('+7 days'));
 $to = $email;
 $from = 'orders@marriageducation.com';
 $fromName = 'Marriage Education';
-$subject = "🎉 Welcome Ambassador - $code";
+$replyTo = 'orders@marriageducation.com';
+$subject = "Welcome Ambassador $code - Your Credentials Inside";
 
 // HTML email body
 $html = <<<HTML
@@ -104,15 +105,64 @@ $html = <<<HTML
 </html>
 HTML;
 
-// Email headers
+// Plain text version for better deliverability
+$plainText = <<<TEXT
+Welcome, Ambassador $fullName!
+
+Congratulations! Your ambassador registration has been approved.
+
+YOUR AMBASSADOR CREDENTIALS
+============================
+Ambassador Code: $code
+Email: $email
+Dashboard: https://marriageducation.com/ambassador-login.html
+
+YOUR BOOK DOWNLOAD
+==================
+Download your book package now. This link expires in 7 days ($expiryDate).
+
+Book Download Link:
+$bookUrl
+
+NEXT STEPS
+==========
+1. Download and read your book package
+2. Log in to your ambassador dashboard at marriageducation.com/ambassador-login.html
+3. Get your unique referral link
+4. Start sharing and earning commissions!
+
+Questions? Reply to this email or contact support@marriageducation.com
+
+---
+Marriage Education | marriageducation.com
+TEXT;
+
+// Create multipart message boundary
+$boundary = md5(time());
+
+// Enhanced email headers to avoid spam
 $headers = "From: $fromName <$from>\r\n";
-$headers .= "Reply-To: $from\r\n";
+$headers .= "Reply-To: $replyTo\r\n";
+$headers .= "Return-Path: $from\r\n";
+$headers .= "X-Priority: 3\r\n";
+$headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+$headers .= "Organization: Marriage Education\r\n";
 $headers .= "MIME-Version: 1.0\r\n";
-$headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-$headers .= "X-Mailer: PHP/" . phpversion();
+$headers .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n";
+
+// Build multipart message body
+$body = "--$boundary\r\n";
+$body .= "Content-Type: text/plain; charset=UTF-8\r\n";
+$body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+$body .= $plainText . "\r\n\r\n";
+$body .= "--$boundary\r\n";
+$body .= "Content-Type: text/html; charset=UTF-8\r\n";
+$body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+$body .= $html . "\r\n\r\n";
+$body .= "--$boundary--";
 
 // Send email
-$mailSent = mail($to, $subject, $html, $headers);
+$mailSent = mail($to, $subject, $body, $headers);
 
 // Log the attempt
 $logDir = __DIR__ . '/logs';
