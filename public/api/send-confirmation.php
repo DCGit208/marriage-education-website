@@ -97,7 +97,7 @@ $htmlMessage = "
                                 <tr>
                                     <td style='text-align: center;'>
                                         <p style='margin: 0; color: #856404; font-size: 14px; font-weight: bold;'>⚠️ IMPORTANT: Check Your Spam/Junk Folder</p>
-                                        <p style='margin: 10px 0 0 0; color: #856404; font-size: 12px;'>If this email arrived in Spam/Junk, please mark it as "Not Junk" or "Not Spam" to ensure you receive future emails in your inbox.</p>
+                                        <p style='margin: 10px 0 0 0; color: #856404; font-size: 12px;'>If this email arrived in Spam/Junk, please mark it as &quot;Not Junk&quot; or &quot;Not Spam&quot; to ensure you receive future emails in your inbox.</p>
                                     </td>
                                 </tr>
                             </table>
