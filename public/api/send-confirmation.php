@@ -93,6 +93,15 @@ $htmlMessage = "
                     </tr>
                     <tr>
                         <td style='padding: 30px;'>
+                            <table width='100%' cellpadding='15' cellspacing='0' style='background: #fff3cd; border: 2px solid #ffc107; margin-bottom: 20px; border-radius: 5px;'>
+                                <tr>
+                                    <td style='text-align: center;'>
+                                        <p style='margin: 0; color: #856404; font-size: 14px; font-weight: bold;'>⚠️ IMPORTANT: Check Your Spam/Junk Folder</p>
+                                        <p style='margin: 10px 0 0 0; color: #856404; font-size: 12px;'>If this email arrived in Spam/Junk, please mark it as "Not Junk" or "Not Spam" to ensure you receive future emails in your inbox.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
                             <p>Hello $fullName,</p>
                             
                             <p>Your account has been activated. You can now log in using the credentials below.</p>
@@ -134,6 +143,10 @@ $htmlMessage = "
 // Plain text version
 $textMessage = "
 Account Activated
+
+⚠️ IMPORTANT: CHECK YOUR SPAM/JUNK FOLDER
+If this email arrived in Spam/Junk, please mark it as \"Not Junk\" or \"Not Spam\" 
+to ensure you receive future emails in your inbox.
 
 Hello $fullName,
 
