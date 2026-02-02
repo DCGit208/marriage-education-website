@@ -1798,37 +1798,91 @@ async function activateAmbassador(payment) {
   const bookUrl = await generateDownloadURL('book');
   console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
   
-  // Send ambassador credentials + book link email via iPage PHP endpoint
-  // Architecture: Firebase → iPage PHP → mail() (bypasses Spamhaus blacklist)
+  // Send ambassador credentials + book link email via SendGrid
+  // Architecture: Firebase → SendGrid API → Inbox (95%+ delivery rate)
   let emailSent = false;
   let emailError = null;
   try {
-    const IPAGE_ENDPOINT = "https://marriageducation.com/api/send-confirmation.php";
-    const SECRET = "MEG2026_SECURE_TOKEN_CHANGE_THIS";
-    
-    const response = await axios.post(IPAGE_ENDPOINT, {
-      email: payment.email,
-      fullName: ambassadorData.fullName,
-      code: ambassadorCode,
-      bookUrl: bookUrl
-    }, {
-      headers: {
-        'Authorization': `Bearer ${SECRET}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-    
-    if (response.data && response.data.status === 'sent') {
-      emailSent = true;
-      console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via iPage PHP`);
-    } else {
-      emailError = response.data?.error || 'Unknown error from PHP endpoint';
-      console.error(`[EMAIL ERROR] PHP endpoint response:`, response.data);
+    if (!SENDGRID_API_KEY) {
+      throw new Error('SendGrid API key not configured');
     }
+
+    const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+    
+    const emailContent = {
+      to: payment.email,
+      from: {
+        email: 'orders@marriageducation.com',
+        name: 'Marriage Education'
+      },
+      subject: `Account Activated: ${ambassadorCode}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px;">🎉 Welcome, Ambassador!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Your account is now active</p>
+          </div>
+          
+          <div style="padding: 30px; background: #f9f9f9;">
+            <p style="font-size: 16px; color: #333;">Dear ${ambassadorData.fullName},</p>
+            
+            <p style="color: #555;">Congratulations! Your ambassador account has been approved and activated.</p>
+            
+            <div style="background: #fff; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #667eea;">Your Credentials</h3>
+              <p style="margin: 5px 0;"><strong>Ambassador Code:</strong> ${ambassadorCode}</p>
+              <p style="margin: 5px 0;"><strong>Name:</strong> ${ambassadorData.fullName}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${payment.email}</p>
+            </div>
+            
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 5px; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; color: #856404;">⚠️ IMPORTANT: Check Your Spam/Junk Folder</p>
+              <p style="margin: 0; font-size: 14px; color: #856404;">If this email arrived in Spam/Junk, please mark it as &quot;Not Junk&quot; or &quot;Not Spam&quot; and move it to your Inbox. This ensures you receive all future important emails from us.</p>
+            </div>
+            
+            <div style="background: #fff; border: 2px solid #00b894; border-radius: 5px; padding: 15px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #00b894;">📚 Your Welcome Book</h3>
+              <p style="margin: 5px 0;">Download your exclusive book package (expires ${expiryDate}):</p>
+              <div style="text-align: center; margin: 15px 0;">
+                <a href="${bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Download Book</a>
+              </div>
+            </div>
+            
+            <div style="background: #fff; padding: 15px; margin: 20px 0; border-radius: 5px;">
+              <h3 style="margin-top: 0; color: #667eea;">🚀 Next Steps</h3>
+              <ol style="color: #555; line-height: 1.8;">
+                <li>Download and read your book package</li>
+                <li>Log in to your <a href="https://marriageducation.com/ambassador-login.html" style="color: #667eea;">Ambassador Dashboard</a></li>
+                <li>Get your unique referral link</li>
+                <li>Start sharing and earning commissions!</li>
+              </ol>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://marriageducation.com/ambassador-login.html" style="display: inline-block; background: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Login to Dashboard →</a>
+            </div>
+            
+            <p style="color: #777; font-size: 14px; margin-top: 30px;">Questions? Reply to this email or contact <a href="mailto:orders@marriageducation.com" style="color: #667eea;">orders@marriageducation.com</a></p>
+          </div>
+          
+          <div style="background: #333; color: #fff; padding: 20px; text-align: center; font-size: 12px;">
+            <p style="margin: 5px 0;">Marriage Education | Sex By Design Academy</p>
+            <p style="margin: 5px 0;">Transforming persons, families, and nations</p>
+            <p style="margin: 5px 0;"><a href="https://marriageducation.com" style="color: #667eea;">marriageducation.com</a></p>
+          </div>
+        </div>
+      `
+    };
+
+    await sgMail.send(emailContent);
+    emailSent = true;
+    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via SendGrid`);
   } catch (error) {
     emailError = error.message;
-    console.error(`[EMAIL ERROR] Failed to call PHP endpoint:`, error.response?.data || error.message);
+    console.error(`[EMAIL ERROR] Failed to send via SendGrid:`, error.message);
+    if (error.response) {
+      console.error(`[EMAIL ERROR] SendGrid response:`, error.response.body);
+    }
   }
 
   // Send Telegram notification with ALL details including book link
