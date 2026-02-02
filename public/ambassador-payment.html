@@ -541,12 +541,27 @@
       const email = document.getElementById('email').value;
 
       try {
-        // Get ambassador data from sessionStorage
+        // Get ambassador data from sessionStorage OR Firestore
         let ambassadorData = null;
         const storedData = sessionStorage.getItem('ambassadorData');
         if (storedData) {
           ambassadorData = JSON.parse(storedData);
-          console.log('📝 Retrieved ambassador data:', ambassadorData);
+          console.log('✅ Retrieved ambassador data from sessionStorage:', ambassadorData);
+        } else {
+          // Fallback: Load from Firestore if sessionStorage is empty
+          console.log('⚠️ sessionStorage empty, loading from Firestore...');
+          try {
+            const doc = await firebase.firestore().collection('ambassador_registrations').doc(code).get();
+            if (doc.exists) {
+              ambassadorData = doc.data();
+              console.log('✅ Retrieved ambassador data from Firestore:', ambassadorData);
+            } else {
+              throw new Error('Ambassador registration not found. Please register again.');
+            }
+          } catch (firestoreError) {
+            console.error('❌ Failed to load from Firestore:', firestoreError);
+            throw new Error('Registration data not found. Please start registration again.');
+          }
         }
 
         // Prepare payment data

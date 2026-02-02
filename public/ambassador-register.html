@@ -3394,7 +3394,7 @@
         });
 
         // Form Submission
-        document.getElementById('ambassadorForm').addEventListener('submit', function(e) {
+        document.getElementById('ambassadorForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
@@ -3409,16 +3409,28 @@
             // Generate ambassador code
             const ambCode = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
             
-            // Store data for payment page
-            sessionStorage.setItem('ambassadorData', JSON.stringify({
+            const ambassadorData = {
                 ...data,
                 code: ambCode,
                 fullName: data.firstName + ' ' + data.lastName,
                 role: 'Marriage Literacy Ambassador',
                 track: 'Women\'s Track'
-            }));
+            };
             
-            console.log('✅ Ambassador registration prepared:', ambCode);
+            // Store in BOTH sessionStorage AND Firestore for reliability
+            sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+            
+            try {
+                // Store in Firestore so data persists even if sessionStorage is lost
+                await firebase.firestore().collection('ambassador_registrations').doc(ambCode).set({
+                    ...ambassadorData,
+                    status: 'pending_payment',
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('✅ Ambassador registration saved to Firestore:', ambCode);
+            } catch (error) {
+                console.error('⚠️ Failed to save to Firestore (continuing with sessionStorage):', error);
+            }
             
             // Redirect to payment
             window.location.href = `ambassador-payment.html?code=${ambCode}&amount=15000`;
