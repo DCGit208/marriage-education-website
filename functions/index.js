@@ -814,7 +814,29 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     }
 
     // Handle Ambassador registration activation
-    if (payment.product_id === 'ambassador-registration' && payment.ambassador_data) {
+    if (payment.product_id === 'ambassador-registration') {
+      if (!payment.ambassador_data) {
+        // CRITICAL: Missing data - send urgent alert to admin
+        console.error('[CRITICAL] Ambassador payment missing ambassador_data:', reference);
+        
+        if (TELEGRAM_BOT_TOKEN) {
+          const alertMsg = `🚨 CRITICAL ERROR - Ambassador Activation Failed\n\n` +
+            `Reference: ${reference}\n` +
+            `Email: ${payment.email}\n` +
+            `Phone: ${payment.phone}\n\n` +
+            `❌ ERROR: Missing ambassador_data\n` +
+            `This happens when registration form data is lost.\n\n` +
+            `⚠️ Payment is approved but ambassador NOT created.\n` +
+            `Please manually activate this ambassador:\n` +
+            `node fix-ambassador-payment.js ${reference}`;
+          
+          await sendTelegram(alertMsg, false);
+        }
+        
+        throw new functions.https.HttpsError('failed-precondition', 
+          `Ambassador data missing for ${reference}. Registration form may have timed out. Please contact support.`);
+      }
+      
       await activateAmbassador(payment);
 
       return {
