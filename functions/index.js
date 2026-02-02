@@ -25,6 +25,16 @@ if (SENDGRID_API_KEY) {
   sgMail.setApiKey(SENDGRID_API_KEY);
 }
 
+// Initialize Twilio WhatsApp if available
+const TWILIO_ACCOUNT_SID = functions.config().twilio?.account_sid;
+const TWILIO_AUTH_TOKEN = functions.config().twilio?.auth_token;
+const TWILIO_WHATSAPP_FROM = functions.config().twilio?.whatsapp_from; // Format: whatsapp:+14155238886
+let twilioClient;
+if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
+  const twilio = require('twilio');
+  twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+}
+
 // Telegram Configuration
 const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
 const TELEGRAM_CHAT_ID = functions.config().telegram?.chat_id;
@@ -1885,9 +1895,57 @@ async function activateAmbassador(payment) {
     }
   }
 
+  // Send WhatsApp notification with credentials
+  let whatsappSent = false;
+  let whatsappError = null;
+  if (twilioClient && TWILIO_WHATSAPP_FROM && ambassadorData.whatsappNumber) {
+    try {
+      // Format phone number to international format with + prefix
+      let toNumber = ambassadorData.whatsappNumber.trim();
+      if (!toNumber.startsWith('+')) {
+        // If no country code, assume Cameroon (+237)
+        toNumber = '+237' + toNumber.replace(/^0+/, '');
+      }
+      
+      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      
+      const whatsappMessage = 
+        `🎉 *Welcome, Ambassador!*\n\n` +
+        `Your account has been activated successfully.\n\n` +
+        `*Your Credentials:*\n` +
+        `• Ambassador Code: *${ambassadorCode}*\n` +
+        `• Name: ${ambassadorData.fullName}\n` +
+        `• Email: ${payment.email}\n\n` +
+        `*📚 Your Book Package:*\n` +
+        `Download before ${expiryDate}:\n${bookUrl}\n\n` +
+        `*🚀 Next Steps:*\n` +
+        `1. Download your book package\n` +
+        `2. Login: https://marriageducation.com/ambassador-login.html\n` +
+        `3. Get your referral link\n` +
+        `4. Start sharing & earning!\n\n` +
+        `Questions? Reply to this message or email orders@marriageducation.com\n\n` +
+        `_Marriage Education | Transforming persons, families, and nations_`;
+
+      await twilioClient.messages.create({
+        from: TWILIO_WHATSAPP_FROM,
+        to: `whatsapp:${toNumber}`,
+        body: whatsappMessage
+      });
+      
+      whatsappSent = true;
+      console.log(`[WHATSAPP] Activation sent to ${toNumber}`);
+    } catch (error) {
+      whatsappError = error.message;
+      console.error(`[WHATSAPP ERROR] Failed to send:`, error.message);
+    }
+  } else {
+    console.log(`[WHATSAPP] Skipped - ${!twilioClient ? 'Twilio not configured' : !TWILIO_WHATSAPP_FROM ? 'WhatsApp sender not configured' : 'No WhatsApp number provided'}`);
+  }
+
   // Send Telegram notification with ALL details including book link
   if (TELEGRAM_BOT_TOKEN) {
     const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
+    const whatsappStatus = whatsappSent ? '✅ Sent' : (ambassadorData.whatsappNumber ? '❌ Failed' : '⏭️ Skipped');
     const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
     
     const msg = `✅ AMBASSADOR REGISTRATION APPROVED\n\n` +
@@ -1895,9 +1953,11 @@ async function activateAmbassador(payment) {
       `👤 Name: ${ambassadorData.fullName}\n` +
       `📧 Email: ${payment.email}\n` +
       `📱 Phone: ${payment.phone}\n` +
+      `${ambassadorData.whatsappNumber ? `💬 WhatsApp: ${ambassadorData.whatsappNumber}\n` : ''}` +
       `${payment.regional_director ? `👑 Recruited By: ${payment.regional_director}\n` : ''}` +
       `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
-      `📧 Email Status: ${emailStatus}\n` +
+      `📧 Email: ${emailStatus}${emailError ? ` (${emailError})` : ''}\n` +
+      `💬 WhatsApp: ${whatsappStatus}${whatsappError ? ` (${whatsappError})` : ''}\n` +
       `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
       `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
     
