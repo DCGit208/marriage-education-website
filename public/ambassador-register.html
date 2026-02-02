@@ -1321,6 +1321,35 @@
         }
 
         @media (max-width: 768px) {
+            /* Layout */
+            .container {
+                padding: 0 1rem;
+            }
+
+            /* Hero Section */
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 20px 0;
+            }
+
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .hero-mission {
+                font-size: 1.1rem;
+            }
+
+            .hero-price {
+                font-size: 1.8rem;
+            }
+
+            /* Grid Layouts */
             .principle-grid {
                 grid-template-columns: 1fr;
                 gap: 16px;
@@ -1337,6 +1366,83 @@
 
             .breakdown-arrow {
                 transform: rotate(90deg);
+            }
+
+            /* Cards & Boxes */
+            .highlight-box,
+            .role-earnings-card,
+            .earnings-principle {
+                padding: 24px;
+            }
+
+            .accordion-body {
+                padding: 20px;
+            }
+
+            /* Form */
+            .form-group label {
+                font-size: 0.95rem;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 12px;
+                font-size: 16px; /* Prevents iOS zoom */
+                min-height: 44px;
+            }
+
+            .form-group textarea {
+                min-height: 120px;
+            }
+
+            /* Buttons */
+            button,
+            .cta-button,
+            .btn {
+                padding: 14px 24px;
+                font-size: 1rem;
+                min-height: 48px;
+                width: 100%;
+            }
+
+            /* Stats Grid */
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            /* Nav Tabs */
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tabs button {
+                width: 100%;
+                padding: 14px;
+            }
+
+            /* Typography */
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            h3 {
+                font-size: 1.3rem;
+            }
+
+            /* Role Header */
+            .role-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .role-icon {
+                margin: 0 auto;
             }
         }
 
