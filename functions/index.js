@@ -111,6 +111,12 @@ async function generateDownloadURL(productId) {
   const productMap = {
     'sbd-book': 'sbd-for-dummies.pdf',
     'sbd-for-dummies': 'sbd-for-dummies.pdf',
+    'sbd-founding': 'sbd-for-dummies.pdf',
+    'sbd-1': 'sbd-for-dummies.pdf',
+    'sbd-3': 'sbd-for-dummies.pdf',
+    'sbd-5': 'sbd-for-dummies.pdf',
+    'sbd-10': 'sbd-for-dummies.pdf',
+    'sbd-100': 'sbd-for-dummies.pdf',
     'sbd-standard': 'sbd-standard.pdf',
     'sbd-canonical': 'sbd-canonical.pdf',
     'complete-sbd-library': 'complete-sbd-library.pdf',
@@ -165,12 +171,17 @@ async function generateDownloadURL(productId) {
 /**
  * Send download email to customer
  */
-async function sendDownloadEmail(email, productName, downloadUrl) {
+async function sendDownloadEmail(email, productName, downloadUrl, paymentRef = null) {
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric'
   });
+  
+  // Create simple redirect URL if payment reference is available
+  const simpleDownloadUrl = paymentRef 
+    ? `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}`
+    : downloadUrl;
   
   const html = `
 <!DOCTYPE html>
@@ -197,19 +208,27 @@ async function sendDownloadEmail(email, productName, downloadUrl) {
       <p><strong>Product:</strong> ${productName}</p>
       
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${downloadUrl}" class="button">📥 Download Now</a>
+        <a href="${simpleDownloadUrl}" class="button" style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📥 Download Now</a>
       </div>
       
       <p><strong>Download expires:</strong> ${expiryDate}</p>
       
-      <p>If the button doesn't work, copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; background: #edf2f7; padding: 10px; border-radius: 5px;">${downloadUrl}</p>
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #92400e; font-size: 16px;">📱 If the button above doesn't work:</h3>
+        
+        <p style="margin: 10px 0;"><strong>Option 1 - Copy this link:</strong></p>
+        <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">${simpleDownloadUrl}</p>
+        
+        <p style="margin: 10px 0;"><strong>Option 2 - Direct download link:</strong></p>
+        <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 11px;">${downloadUrl}</p>
+        <p style="color: #92400e; font-size: 13px; margin: 5px 0;">⚠️ Copy the ENTIRE link including everything after "?token="</p>
+      </div>
       
       <p>Thank you for supporting Marriage Education!</p>
     </div>
     <div class="footer">
       <p>Marriage Education | marriageducation.com</p>
-      <p>Questions? Reply to this email</p>
+      <p>Questions? Reply to this email or WhatsApp +237 620 031 944</p>
     </div>
   </div>
 </body>
@@ -237,6 +256,72 @@ async function sendDownloadEmail(email, productName, downloadUrl) {
 }
 
 // ========== END HELPER FUNCTIONS ==========
+
+/**
+ * Simple Download Redirect Handler
+ * Provides email-client-friendly download URLs that won't get mangled
+ * Usage: https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=PAYMENT-REF
+ */
+exports.downloadBook = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  
+  try {
+    const { ref, token } = req.query;
+    
+    // Method 1: Using payment reference
+    if (ref) {
+      console.log(`[DOWNLOAD] Request for payment ref: ${ref}`);
+      
+      // Look up the payment to get product_id
+      const paymentDoc = await db.collection('pending_payments').doc(ref).get();
+      
+      if (!paymentDoc.exists) {
+        console.error(`[DOWNLOAD] Payment not found: ${ref}`);
+        return res.status(404).send('Payment record not found. Please contact support with your reference number.');
+      }
+      
+      const payment = paymentDoc.data();
+      
+      // Check if payment is approved
+      if (payment.status !== 'approved') {
+        console.log(`[DOWNLOAD] Payment not approved: ${ref} (status: ${payment.status})`);
+        return res.status(403).send('Payment not yet approved. Please wait for admin approval or contact support.');
+      }
+      
+      // Generate download URL
+      const downloadUrl = await generateDownloadURL(payment.product_id);
+      console.log(`[DOWNLOAD] Redirecting ${ref} to storage URL`);
+      
+      // Redirect to the actual file
+      return res.redirect(downloadUrl);
+    }
+    
+    // Method 2: Using direct download token (for future use)
+    if (token) {
+      const tokenDoc = await db.collection('download_tokens').doc(token).get();
+      
+      if (!tokenDoc.exists) {
+        return res.status(404).send('Invalid or expired download token.');
+      }
+      
+      const tokenData = tokenDoc.data();
+      
+      // Check expiry
+      if (tokenData.expires_at && tokenData.expires_at.toDate() < new Date()) {
+        return res.status(403).send('Download link has expired. Please contact support.');
+      }
+      
+      const downloadUrl = await generateDownloadURL(tokenData.product_id);
+      return res.redirect(downloadUrl);
+    }
+    
+    return res.status(400).send('Missing required parameter: ref or token');
+    
+  } catch (error) {
+    console.error('[DOWNLOAD] Error:', error);
+    return res.status(500).send(`Download error: ${error.message}. Please contact support.`);
+  }
+});
 
 /**
  * Stripe Webhook Handler
@@ -867,12 +952,14 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     const emailSent = await sendDownloadEmail(
       payment.email,
       payment.product_name,
-      downloadUrl
+      downloadUrl,
+      reference  // Pass payment reference for simple redirect URL
     );
 
     // Send comprehensive Telegram notification to admin (plain text)
     if (TELEGRAM_BOT_TOKEN) {
       const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      const simpleUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${reference}`;
       const adminMsg = `✅ PAYMENT APPROVED & SENT\n\n` +
         `📋 Reference: ${payment.reference}\n` +
         `👤 Customer: ${payment.email}\n` +
@@ -883,7 +970,8 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
         `${payment.ambassador_ref ? `🎯 Ambassador: ${payment.ambassador_ref}\n` : ''}` +
         `${payment.referral_code ? `🔗 Referral: ${payment.referral_code}\n` : ''}` +
         `${payment.rd_code ? `👑 RD: ${payment.rd_code}\n` : ''}\n` +
-        `📥 Download (expires ${expiryDate}):\n${downloadUrl}`;
+        `📥 Simple Download Link:\n${simpleUrl}\n\n` +
+        `📥 Direct Download (expires ${expiryDate}):\n${downloadUrl}`;
       
       await sendTelegram(adminMsg, false);
       console.log('[Telegram] Admin notification sent');
@@ -1794,9 +1882,10 @@ async function activateAmbassador(payment) {
     }
   }
 
-  // Generate book download URL
-  const bookUrl = await generateDownloadURL('book');
-  console.log(`[BOOK] Generated download URL for ${ambassadorCode}`);
+  // Generate book download URL - use simple redirect to avoid SendGrid click tracking issues
+  const paymentRef = payment.reference;
+  const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}`;
+  console.log(`[BOOK] Generated simple download URL for ${ambassadorCode}: ${bookUrl}`);
   
   // Send ambassador credentials + book link email via SendGrid
   // Architecture: Firebase → SendGrid API → Inbox (95%+ delivery rate)
@@ -1845,6 +1934,10 @@ async function activateAmbassador(payment) {
               <p style="margin: 5px 0;">Download your exclusive book package (expires ${expiryDate}):</p>
               <div style="text-align: center; margin: 15px 0;">
                 <a href="${bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Download Book</a>
+              </div>
+              <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                <p style="margin: 5px 0; font-size: 13px; color: #666;"><strong>If button doesn't work, copy this link:</strong></p>
+                <p style="margin: 5px 0; font-size: 11px; word-break: break-all; font-family: monospace; color: #333;">${bookUrl}</p>
               </div>
             </div>
             
