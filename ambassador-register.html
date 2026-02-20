@@ -3373,6 +3373,13 @@
                 sessionStorage.setItem('referral_code', referralCode);
                 sessionStorage.setItem('referral_type', referralType);
                 
+                console.log('🔗 Referral URL Parameter Captured:', {
+                    code: referralCode,
+                    type: referralType,
+                    title: referralTitle,
+                    fromURL: rdCode || seniorCode
+                });
+                
                 // Show notification
                 const banner = document.createElement('div');
                 banner.style.cssText = 'position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(102,126,234,0.3); z-index: 9999; font-size: 14px; max-width: 300px;';
@@ -3391,8 +3398,8 @@
             }
         })();
 
-        // Auto-fill recruited by field when form loads
-        window.addEventListener('DOMContentLoaded', function() {
+        // Auto-fill recruited by field - use both DOMContentLoaded and immediate check
+        function autoFillRecruitedBy() {
             const referralCode = sessionStorage.getItem('referral_code');
             const referralType = sessionStorage.getItem('referral_type');
             
@@ -3404,13 +3411,29 @@
                     recruitedByField.style.borderColor = '#00b894';
                     
                     // Add label showing referral type
-                    const label = document.createElement('div');
-                    label.style.cssText = 'margin-top: 0.5rem; color: #00b894; font-size: 0.85rem; font-weight: 600;';
-                    label.innerHTML = `<i class="fas fa-check-circle"></i> You'll be part of ${referralType === 'regional_director' ? 'RD' : 'Senior Ambassador'} ${referralCode}'s team`;
-                    recruitedByField.parentElement.appendChild(label);
+                    const existingLabel = recruitedByField.parentElement.querySelector('.referral-label');
+                    if (!existingLabel) {
+                        const label = document.createElement('div');
+                        label.className = 'referral-label';
+                        label.style.cssText = 'margin-top: 0.5rem; color: #00b894; font-size: 0.85rem; font-weight: 600;';
+                        label.innerHTML = `<i class="fas fa-check-circle"></i> You'll be part of ${referralType === 'regional_director' ? 'RD' : 'Senior Ambassador'} ${referralCode}'s team`;
+                        recruitedByField.parentElement.appendChild(label);
+                    }
+                    
+                    console.log('✅ Auto-filled recruitedBy field with:', referralCode);
                 }
             }
-        });
+        }
+        
+        // Try immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', autoFillRecruitedBy);
+        } else {
+            autoFillRecruitedBy();
+        }
+        
+        // Also try after a small delay as backup
+        setTimeout(autoFillRecruitedBy, 500);
 
         // Tab Navigation
         // Tab Navigation
@@ -3513,6 +3536,12 @@
             console.log('✅ Ambassador registration prepared:', ambCode);
             console.log('👥 Recruited by:', referralCode || 'Direct registration');
             console.log('📊 Hierarchy:', { senior: seniorAmbassador, rd: regionalDirector });
+            console.log('🔍 Data being sent to payment page:', {
+                recruitedBy: referralCode,
+                recruited_by_type: referralType,
+                senior_code: seniorAmbassador,
+                regional_director_code: regionalDirector
+            });
             
             // Redirect to payment
             let paymentUrl = `ambassador-payment.html?code=${ambCode}&amount=15000`;
