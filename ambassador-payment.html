@@ -560,9 +560,18 @@
           email: email,
           type: 'ambassador',
           ambassador_code: code,
-          regional_director: ambassadorData?.recruitedBy || '',
+          regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
           ambassador_data: ambassadorData
         };
+        
+        console.log('💳 Payment data being submitted:', {
+          reference,
+          ambassador_code: code,
+          regional_director: paymentData.regional_director,
+          recruitedBy: ambassadorData?.recruitedBy,
+          regional_director_code: ambassadorData?.regional_director_code,
+          ambassador_data: ambassadorData
+        });
 
         // Call Firebase Cloud Function
         const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
