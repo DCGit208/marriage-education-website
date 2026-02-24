@@ -581,8 +581,10 @@
                   product.classList.contains('comprehensive-bundle') ||
                   product.classList.contains('publication-bundle') ||
                   product.classList.contains('seasonal-bundle') ||
+                  product.classList.contains('course-bundle') ||
                   product.querySelector('h4').textContent.includes('Bundle') ||
-                  product.querySelector('h4').textContent.includes('Collection')) {
+                  product.querySelector('h4').textContent.includes('Collection') ||
+                  product.querySelector('h4').textContent.includes('Package')) {
                 product.style.display = 'block';
               } else {
                 product.style.display = 'none';
