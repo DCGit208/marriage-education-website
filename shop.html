@@ -78,6 +78,24 @@
           <a href="payment.html?product=sbd-for-dummies&name=SBD+for+Dummies&price=27" class="buy-button" onclick="purchaseProduct('sbd-for-dummies', 27, 'SBD for Dummies')">Buy Now</a>
         </div>
 
+        <div class="product book-bundle" id="sbd-dummies-digital-print">
+          <img src="images/sbd-dummies.jpg" alt="SBD For Dummies - Digital + Print" />
+          <h4>SBD For Dummies - Digital + Print Bundle</h4>
+          <p>Get the best of both worlds! Instant digital access plus the premium physical book delivered to your door. Perfect for those who want flexibility in how they learn.</p>
+          <div class="course-features">
+            <strong>📦 What's Included:</strong>
+            <ul>
+              <li>✅ Digital eBook (PDF) - Instant download</li>
+              <li>✅ Premium Print Book - Shipped to you</li>
+              <li>🎁 BONUS: Mobile-friendly format</li>
+              <li>🎁 BONUS: Lifetime digital updates</li>
+            </ul>
+          </div>
+          <p><span class="original-price">$47</span> <span class="price">$40</span></p>
+          <p class="savings">💰 Save $7 - Get both formats!</p>
+          <a href="payment.html?product=sbd-dummies-digital-print&price=40" class="buy-button" onclick="purchaseProduct('sbd-dummies-digital-print', 40, 'SBD For Dummies Digital + Print Bundle')">Get Both Formats</a>
+        </div>
+
         <div class="product" id="sbd-canonical">
           <img src="images/sbd-canonical.jpg" alt="SBD Canonical" />
           <h4>SBD Canonical</h4>
@@ -582,6 +600,7 @@
                   product.classList.contains('publication-bundle') ||
                   product.classList.contains('seasonal-bundle') ||
                   product.classList.contains('course-bundle') ||
+                  product.classList.contains('book-bundle') ||
                   product.querySelector('h4').textContent.includes('Bundle') ||
                   product.querySelector('h4').textContent.includes('Collection') ||
                   product.querySelector('h4').textContent.includes('Package')) {
