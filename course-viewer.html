@@ -20,6 +20,43 @@
       background: #f1f5f9;
       min-height: 100vh;
     }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+    .loading-content h3 {
+      font-size: 1.5rem;
+      margin: 20px 0 10px;
+      font-weight: 600;
+    }
+    .loading-content p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #334155;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
     .lms-wrapper {
       display: flex;
       height: 100vh;
@@ -963,22 +1000,31 @@
     // Show loading overlay
     const loadingOverlay = document.getElementById('loadingOverlay');
     
+    console.log('[Course Viewer] Starting to load course:', courseId);
+    console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
+    
     fetch('courses-catalogue.json?t=' + new Date().getTime())
       .then(response => {
+        console.log('[Course Viewer] Fetch response received:', response.ok);
         if (!response.ok) {
-          throw new Error('Failed to load course data');
+          throw new Error('Failed to load course data: HTTP ' + response.status);
         }
         return response.json();
       })
       .then(data => {
+        console.log('[Course Viewer] JSON parsed, courses count:', Array.isArray(data) ? data.length : 0);
         const courses = Array.isArray(data) ? data : [];
         const course = courses.find(c => c.courseId === courseId);
         
+        console.log('[Course Viewer] Course found:', !!course);
+        
         if (!course) {
           if (loadingOverlay) loadingOverlay.style.display = 'none';
-          document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Course not found</h2></div>';
+          document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Course not found</h2><p>Looking for courseId: ' + courseId + '</p></div>';
           return;
         }
+        
+        console.log('[Course Viewer] Course loaded:', course.title);
 
         document.getElementById('sidebarTitle').textContent = course.title;
         document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
@@ -986,8 +1032,11 @@
         document.title = course.title;
         
         // Hide loading overlay
+        console.log('[Course Viewer] Hiding loading overlay');
         if (loadingOverlay) {
           loadingOverlay.style.display = 'none';
+        } else {
+          console.warn('[Course Viewer] Loading overlay element not found!');
         }
 
         const modulesNav = document.getElementById('modulesNav');
@@ -1110,8 +1159,22 @@
         }, 500);
       })
       .catch(err => {
-        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Error: ' + err.message + '</h2></div>';
+        console.error('[Course Viewer] Error loading course:', err);
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Error Loading Course</h2><p style="color:#64748b;margin:10px 0;">' + err.message + '</p><p style="color:#94a3b8;font-size:0.9rem;">Check console for details</p><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Reload Page</button></div>';
       });
+    
+    // Fallback: Force hide loading overlay after 10 seconds
+    setTimeout(() => {
+      if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+        console.warn('[Course Viewer] Loading timeout - forcing overlay hide');
+        loadingOverlay.style.display = 'none';
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent && mainContent.innerHTML.trim() === '') {
+          mainContent.innerHTML = '<div style="padding:40px;text-align:center;"><h2>Loading Timeout</h2><p style="color:#64748b;margin:10px 0;">The course is taking longer than expected to load.</p><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Reload Page</button></div>';
+        }
+      }
+    }, 10000);
 
     function switchModule(index) {
       currentModuleIndex = index;
