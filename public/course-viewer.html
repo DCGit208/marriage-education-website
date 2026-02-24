@@ -877,6 +877,11 @@
         font-size: 2.5rem !important;
       }
     }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -1028,76 +1033,26 @@
           const content = document.createElement('div');
           content.className = 'tab-content' + (idx === 0 ? ' active' : '');
           content.id = `module-${idx}`;
+          content.setAttribute('data-module-index', idx);
+          content.setAttribute('data-content-loaded', 'false');
           
           if (isAvailable) {
-            const parsed = marked.parse(module.content || '');
-            content.innerHTML = `<div class="content-section">${parsed}</div>`;
-
-            // Color-code ALIGNED/MISALIGNED table cells
-            setTimeout(() => {
-              const tables = content.querySelectorAll('table');
-              tables.forEach(table => {
-                const cells = table.querySelectorAll('td, th');
-                cells.forEach(cell => {
-                  const text = cell.textContent.trim().toUpperCase();
-                  if (text === 'ALIGNED' || text.includes('ALIGNED PLEASURE') || text.startsWith('✅ ALIGNED')) {
-                    cell.style.color = '#059669';
-                    cell.style.fontWeight = '600';
-                    cell.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
-                  } else if (text === 'MISALIGNED' || text.includes('MISALIGNED PLEASURE') || text.startsWith('❌ MISALIGNED')) {
-                    cell.style.color = '#dc2626';
-                    cell.style.fontWeight = '600';
-                    cell.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
-                  }
-                });
-              });
-            }, 100);
-
-            // ENHANCE CONTENT with new design elements
-            setTimeout(() => {
-              enhanceModuleContent(content, module);
-            }, 150);
-
-            // Display downloadable resources (PDFs only - HTML assessments shown in CTA)
-            const resources = module.downloadable_resources || module.downloads || [];
-            const pdfResources = resources.filter(r => r.type !== 'html');
-            if (pdfResources.length > 0) {
-              const downloadsHtml = `
-                <h3 style="margin-top: 48px; margin-bottom: 24px; color: #0f172a; font-size: 1.5rem; font-weight: 600;">Resources & Materials</h3>
-                <div class="downloads">
-                  ${pdfResources.map(d => {
-                    const icon = '📄';
-                    const metaText = 'PDF Document';
-                    const cleanDescription = d.description || 'Download this resource for offline study and reference';
-                    return `
-                      <a href="${d.file || d.url}" class="resource-card" download 
-                         role="button" tabindex="0" aria-label="${d.title} - ${metaText}">
-                        <div class="resource-card-icon">${icon}</div>
-                        <div class="resource-card-content">
-                          <div class="resource-card-title">${d.title}</div>
-                          <div class="resource-card-description">${cleanDescription}</div>
-                          <div class="resource-card-meta">
-                            ${metaText}
-                          </div>
-                        </div>
-                      </a>
-                    `;
-                  }).join('')}
-                </div>
-              `;
-              content.innerHTML += downloadsHtml;
+            // Store raw content for lazy loading
+            content.setAttribute('data-raw-content', JSON.stringify(module.content || ''));
+            
+            // Only parse content for the first module to show initially
+            if (idx === 0) {
+              const parsed = marked.parse(module.content || '');
+              content.innerHTML = `<div class="content-section">${parsed}</div>`;
+              content.setAttribute('data-content-loaded', 'true');
               
-              // Add keyboard navigation for resource cards
+              // Process visual enhancements only for first module
               setTimeout(() => {
-                document.querySelectorAll('.resource-card').forEach(card => {
-                  card.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      card.click();
-                    }
-                  });
-                });
+                processModuleEnhancements(content, module);
               }, 100);
+            } else {
+              // Show placeholder for other modules
+              content.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#94a3b8;"><div class="spinner" style="margin:20px auto;width:40px;height:40px;border:4px solid #e2e8f0;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;"></div><p>Loading content...</p></div>';
             }
           } else {
             content.innerHTML = `
@@ -1209,10 +1164,111 @@
         contentArea.scrollTop = 0;
       }
       
+      // LAZY LOAD CONTENT: Check if module content needs to be loaded
+      const targetContent = document.getElementById(`module-${index}`);
+      if (targetContent && targetContent.getAttribute('data-content-loaded') === 'false') {
+        console.log('Lazy loading content for module:', index);
+        lazyLoadModuleContent(index, module, targetContent);
+      }
+      
       // Update section navigator after a brief delay to ensure DOM is ready
       setTimeout(() => {
         updateSectionNavigator();
       }, 300);
+    }
+    
+    // ========================================
+    // LAZY LOADING FUNCTION
+    // ========================================
+    
+    function lazyLoadModuleContent(index, module, contentElement) {
+      try {
+        const rawContent = contentElement.getAttribute('data-raw-content');
+        if (!rawContent) {
+          console.error('No raw content found for module:', index);
+          return;
+        }
+        
+        const moduleContent = JSON.parse(rawContent);
+        const parsed = marked.parse(moduleContent || '');
+        contentElement.innerHTML = `<div class="content-section">${parsed}</div>`;
+        contentElement.setAttribute('data-content-loaded', 'true');
+        
+        // Process enhancements after content is loaded
+        setTimeout(() => {
+          processModuleEnhancements(contentElement, module);
+        }, 100);
+        
+        console.log('Module content lazy loaded successfully:', index);
+      } catch (error) {
+        console.error('Error lazy loading module content:', error);
+        contentElement.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#ef4444;"><p>Error loading content. Please refresh the page.</p></div>';
+      }
+    }
+    
+    function processModuleEnhancements(contentElement, module) {
+      // Color-code ALIGNED/MISALIGNED table cells
+      const tables = contentElement.querySelectorAll('table');
+      tables.forEach(table => {
+        const cells = table.querySelectorAll('td, th');
+        cells.forEach(cell => {
+          const text = cell.textContent.trim().toUpperCase();
+          if (text === 'ALIGNED' || text.includes('ALIGNED PLEASURE') || text.startsWith('✅ ALIGNED')) {
+            cell.style.color = '#059669';
+            cell.style.fontWeight = '600';
+            cell.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+          } else if (text === 'MISALIGNED' || text.includes('MISALIGNED PLEASURE') || text.startsWith('❌ MISALIGNED')) {
+            cell.style.color = '#dc2626';
+            cell.style.fontWeight = '600';
+            cell.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+          }
+        });
+      });
+      
+      // ENHANCE CONTENT with new design elements
+      enhanceModuleContent(contentElement, module);
+      
+      // Display downloadable resources (PDFs only - HTML assessments shown in CTA)
+      const resources = module.downloadable_resources || module.downloads || [];
+      const pdfResources = resources.filter(r => r.type !== 'html');
+      if (pdfResources.length > 0) {
+        const downloadsHtml = `
+          <h3 style="margin-top: 48px; margin-bottom: 24px; color: #0f172a; font-size: 1.5rem; font-weight: 600;">Resources & Materials</h3>
+          <div class="downloads">
+            ${pdfResources.map(d => {
+              const icon = '📄';
+              const metaText = 'PDF Document';
+              const cleanDescription = d.description || 'Download this resource for offline study and reference';
+              return `
+                <a href="${d.file || d.url}" class="resource-card" download 
+                   role="button" tabindex="0" aria-label="${d.title} - ${metaText}">
+                  <div class="resource-card-icon">${icon}</div>
+                  <div class="resource-card-content">
+                    <div class="resource-card-title">${d.title}</div>
+                    <div class="resource-card-description">${cleanDescription}</div>
+                    <div class="resource-card-meta">
+                      ${metaText}
+                    </div>
+                  </div>
+                </a>
+              `;
+            }).join('')}
+          </div>
+        `;
+        contentElement.querySelector('.content-section').innerHTML += downloadsHtml;
+        
+        // Add keyboard navigation for resource cards
+        setTimeout(() => {
+          contentElement.querySelectorAll('.resource-card').forEach(card => {
+            card.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+              }
+            });
+          });
+        }, 100);
+      }
     }
     
     // ========================================
