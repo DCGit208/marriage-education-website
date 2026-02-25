@@ -1123,11 +1123,12 @@
         // Add Final Exam to sidebar navigation
         const examNavItem = document.createElement('div');
         examNavItem.className = 'module-item exam-module';
+        examNavItem.id = 'exam-nav-item';
         examNavItem.innerHTML = `
           <div class="icon">🎓</div>
           <div class="text">
             <div class="title">Final Exam</div>
-            <div class="duration">30 Questions • 80% Pass</div>
+            <div class="duration">Loading...</div>
           </div>
         `;
         examNavItem.onclick = () => switchToExam();
@@ -2221,13 +2222,19 @@
         // Store all course exams
         courseExams = course.exams;
         
-        // MEGA-EXAM: Combine ALL questions from all 5 days
+        // MEGA-EXAM: Combine ALL questions from all exams
         let allQuestions = [];
         let questionId = 0;
+        let examTitle = 'Final Exam';
+        let examDescription = '';
+        let passingScore = 80;
         
         // Collect questions from all exams
         Object.keys(course.exams).sort().forEach(examKey => {
           const exam = course.exams[examKey];
+          if (exam.title) examTitle = exam.title;
+          if (exam.description) examDescription = exam.description;
+          
           exam.questions.forEach(q => {
             allQuestions.push({
               id: questionId++,
@@ -2235,21 +2242,51 @@
               options: q.options,
               correctAnswer: q.correct,
               explanation: q.explanation,
-              source: exam.title // Track which day this question came from
+              source: exam.title // Track which exam this question came from
             });
           });
         });
         
+        // Determine instructions based on course
+        let instructions = examDescription || `This comprehensive exam covers all material from ${course.title}. You must score ${passingScore}% or higher to pass and receive your certificate.`;
+        
+        // Foundation School specific instructions
+        if (courseId === 'foundation-school') {
+          passingScore = 70;
+          instructions = `
+            <h3 style="color: #1e293b; margin-bottom: 20px;">🎓 CRLA Certification Exam</h3>
+            <p style="color: #475569; line-height: 1.8; margin-bottom: 15px;">
+              This final exam assesses your comprehensive understanding of:
+            </p>
+            <ul style="color: #475569; line-height: 1.8; margin-bottom: 15px; list-style-position: inside;">
+              <li><strong>Teleios Maturity:</strong> Understanding of covenant capacity, the 5 Faculties, biblical anthropology, and marriage readiness</li>
+              <li><strong>Advocacy Skills:</strong> Deployment psychology, conversation frameworks, and facilitating access to marriage literacy</li>
+            </ul>
+            <p style="color: #475569; line-height: 1.8;">
+              Pass this exam with 70% or higher (35 out of 50 correct) to earn your <strong>CRLA (Certified Relationship Literacy Advocate)</strong> certification and unlock senior ambassador opportunities.
+            </p>
+          `;
+        }
+        
         quizData = {
-          quizTitle: `${course.title} — Ultimate Comprehensive Exam`,
-          instructions: `This is the MEGA comprehensive exam covering all 5 days of ${course.title}. You must score 80% or higher (44 out of 55 questions) to pass and receive your certificate. This exam covers everything: Why porn "works", nakedness as divine asset, Pics & Pearls, sexuality as lifestyle, and building covenant superiority. Take your time and demonstrate mastery of the entire course.`,
+          quizTitle: examTitle,
+          instructions: instructions,
           questions: allQuestions,
-          timeLimit: 120, // 120 minutes (2 hours) for 55 questions
-          passingScore: 80,
-          maxAttempts: 3
+          timeLimit: 120, // 120 minutes (2 hours)
+          passingScore: passingScore,
+          maxAttempts: 99 // Unlimited attempts
         };
         
         console.log(`Loaded ${allQuestions.length} questions from ${Object.keys(course.exams).length} exams`);
+        
+        // Update sidebar exam metadata
+        const examNavItem = document.getElementById('exam-nav-item');
+        if (examNavItem) {
+          const durationDiv = examNavItem.querySelector('.duration');
+          if (durationDiv) {
+            durationDiv.textContent = `${allQuestions.length} Questions • ${passingScore}% Pass`;
+          }
+        }
         
         // Check if user has already passed
         // TODO: Check Firestore for quiz attempts
@@ -2270,8 +2307,7 @@
           </div>
           
           <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
-            <h3 style="color: #1e293b; margin-bottom: 20px;">📋 Instructions</h3>
-            <p style="color: #475569; line-height: 1.8; margin-bottom: 20px;">${quizData.instructions}</p>
+            <div style="margin-bottom: 20px;">${quizData.instructions}</div>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
               <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
