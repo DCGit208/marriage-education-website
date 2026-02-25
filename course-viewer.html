@@ -2252,7 +2252,7 @@
         
         // Foundation School specific instructions
         if (courseId === 'foundation-school') {
-          passingScore = 70;
+          passingScore = 80;
           instructions = `
             <h3 style="color: #1e293b; margin-bottom: 20px;">🎓 CRLA Certification Exam</h3>
             <p style="color: #475569; line-height: 1.8; margin-bottom: 15px;">
@@ -2263,7 +2263,7 @@
               <li><strong>Advocacy Skills:</strong> Deployment psychology, conversation frameworks, and facilitating access to marriage literacy</li>
             </ul>
             <p style="color: #475569; line-height: 1.8;">
-              Pass this exam with 70% or higher (35 out of 50 correct) to earn your <strong>CRLA (Certified Relationship Literacy Advocate)</strong> certification and unlock senior ambassador opportunities.
+              Pass this exam with 80% or higher (40 out of 50 correct) to earn your <strong>CRLA (Certified Relationship Literacy Advocate)</strong> certification and unlock senior ambassador opportunities.
             </p>
           `;
         }
@@ -2410,12 +2410,27 @@
       const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
       const isFlagged = flaggedQuestions.has(q.id);
       
+      // Check if we need to show a section header
+      const prevQuestion = currentQuestionIndex > 0 ? quizData.questions[currentQuestionIndex - 1] : null;
+      const showSectionHeader = !prevQuestion || prevQuestion.section !== q.section || prevQuestion.subsection !== q.subsection;
+      
+      // Determine section colors and icon
+      let sectionColor = '#667eea';
+      let sectionIcon = '📘';
+      if (q.section === 'Advocacy Training') {
+        sectionColor = '#10b981';
+        sectionIcon = '📗';
+      } else if (q.section === 'Integration & Application') {
+        sectionColor = '#f59e0b';
+        sectionIcon = '📙';
+      }
+      
       container.innerHTML = `
         <div style="position: sticky; top: 0; background: white; padding: 20px; border-bottom: 2px solid #e2e8f0; z-index: 10; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
           <div style="max-width: 900px; margin: 0 auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
               <div>
-                <h2 style="margin: 0; color: #1e293b;">Ultimate Comprehensive Exam</h2>
+                <h2 style="margin: 0; color: #1e293b;">${quizData.quizTitle || 'CRLA Certification Exam'}</h2>
                 <p style="margin: 5px 0 0 0; color: #64748b;">Question ${currentQuestionIndex + 1} of ${totalQuestions}</p>
               </div>
               <div style="text-align: right;">
@@ -2430,6 +2445,13 @@
         </div>
         
         <div style="max-width: 900px; margin: 0 auto; padding: 0 20px 40px 20px;">
+          ${showSectionHeader && q.section ? `
+            <div style="background: linear-gradient(135deg, ${sectionColor}15 0%, ${sectionColor}05 100%); border-left: 6px solid ${sectionColor}; padding: 25px 30px; margin-bottom: 25px; border-radius: 12px; box-shadow: 0 2px 12px ${sectionColor}20;">
+              <div style="font-size: 1rem; color: ${sectionColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">${sectionIcon} ${q.section}</div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; font-weight: 600;">${q.subsection}</h3>
+            </div>
+          ` : ''}
+          
           <div style="background: #f8f9fa; border-radius: 16px; padding: 40px; margin-bottom: 30px; border: 3px solid ${isFlagged ? '#f59e0b' : '#667eea'}; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);">
             ${isFlagged ? '<div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🚩</span><span style="color: #92400e; font-weight: 600;">Flagged for Review</span></div>' : ''}
             
