@@ -1,0 +1,667 @@
+{
+  "module_number": 1,
+  "chapter_title": "Modern Societal Eudaemonia",
+  "module_title": "Marriage as the Path to Human Flourishing",
+  "chapter_reference": "Chapter 1",
+  "pages": "1-18",
+  "duration_hours": 8,
+  "doctrinal_focus": "Marriage is the primary infrastructure for human flourishing (eudaemonia). Civilization depends on covenant marriages built on teleios maturity.",
+  
+  "prerequisites": {
+    "required_modules": [],
+    "required_completion": 0,
+    "required_mastery_score": 0,
+    "bypass_allowed": false,
+    "enrollment_requirements": {
+      "marital_status_collected": true,
+      "book_ownership_verified": true,
+      "covenant_commitment_signed": true
+    }
+  },
+
+  "learning_objectives": [
+    "Define eudaemonia as teleios living (wholeness, fruitfulness, steady goodness)",
+    "Explain marriage as civilization infrastructure (UDHR 16:3)",
+    "Reject romanticized marriage models in favor of covenant theology",
+    "Identify the four movements of Genesis 2:24 (leave, cleave, one flesh, nakedness)",
+    "Assess personal maturity using Hebrews 5:14 framework (full age)",
+    "Practice FROM perfection (justified identity, not performance anxiety)",
+    "Begin 6-week starter plan implementation"
+  ],
+
+  "core_teachings": [
+    "Flourishing (eudaemonia) is design-based, not emotional",
+    "Marriage produces wholeness when properly formed",
+    "Society collapses when marriage collapses (UDHR 16:3)",
+    "Maturity precedes vows (Hebrews 5:14 - full age)",
+    "Practice FROM perfection (Romans 3:24 - justified freely)",
+    "One-flesh union requires two whole persons (not 0.5 + 0.5)",
+    "Teleios = complete, mature, covenant-fit"
+  ],
+
+  "design_frameworks": [
+    {
+      "framework_id": "eudaemonia_map_001",
+      "title": "Eudaemonia Progression Map",
+      "type": "interactive_diagram",
+      "file": "diagrams/module_01/eudaemonia_progression.svg",
+      "description": "Visual map showing how wholeness → marriage → family → civilization",
+      "annotations_required": true,
+      "study_guide": "diagrams/module_01/eudaemonia_study_guide.pdf",
+      "interaction_type": "annotate_and_submit"
+    },
+    {
+      "framework_id": "genesis_224_breakdown_001",
+      "title": "Genesis 2:24 Four Movements",
+      "type": "static_infographic",
+      "file": "diagrams/module_01/genesis_224_movements.png",
+      "description": "Leave → Cleave → One Flesh → Not Ashamed pathway",
+      "annotations_required": false,
+      "study_guide": null,
+      "interaction_type": "view_and_memorize"
+    },
+    {
+      "framework_id": "teleios_infrastructure_001",
+      "title": "Marriage as Infrastructure Diagram",
+      "type": "interactive_diagram",
+      "file": "diagrams/module_01/marriage_infrastructure.svg",
+      "description": "How marriage functions as societal foundation (UDHR 16)",
+      "annotations_required": true,
+      "study_guide": "diagrams/module_01/infrastructure_study_guide.pdf",
+      "interaction_type": "annotate_and_submit"
+    }
+  ],
+
+  "lessons": [
+    {
+      "lesson_number": 1,
+      "title": "What is Eudaemonia? The Crisis of Clarity",
+      "reading_assignment": "Chapter 1, pages 1-4",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_01_eudaemonia.mp4",
+        "duration_minutes": 22,
+        "transcript": "transcripts/module_01/lesson_01_transcript.pdf"
+      },
+      "duration_minutes": 35,
+      "objectives": [
+        "Define eudaemonia (human flourishing)",
+        "Understand why clarity about marriage has declined",
+        "Recognize marriage as civilization's foundation"
+      ],
+      "key_concepts": [
+        "Eudaemonia = wholeness + abundance + steadiness + goodness",
+        "Confusion has multiplied while clarity has grown scarce",
+        "Marriage → Family → Society → Civilization chain"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "reflection_submitted": true
+      }
+    },
+    {
+      "lesson_number": 2,
+      "title": "Dianoetic Modus Ponens: Come, Let Us Reason",
+      "reading_assignment": "Chapter 1, pages 4-7",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_02_reasoning.mp4",
+        "duration_minutes": 18,
+        "transcript": "transcripts/module_01/lesson_02_transcript.pdf"
+      },
+      "drill": {
+        "drill_id": "reasoning_exercise_001",
+        "type": "scripture_meditation",
+        "title": "Isaiah 1:18 - Reasoned Faith",
+        "format": "guided_meditation",
+        "time_minutes": 15,
+        "required": true,
+        "submission_type": "text_response",
+        "instructions": "Read Isaiah 1:18 five times slowly. Journal: How does God invite us to reason? Why does SBD use logic alongside Scripture?"
+      },
+      "duration_minutes": 40,
+      "objectives": [
+        "Understand first-principles thinking in marriage",
+        "Distinguish between cultural trends and biblical design",
+        "Practice reasoning from Scripture + Nature + Logic"
+      ],
+      "key_concepts": [
+        "Scripture (revealed Word) + Nature (created order) + Logic (sound reasoning)",
+        "Rejecting cultural trends in favor of design principles",
+        "Faith and reason are allies, not enemies"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "drill_completed": true
+      }
+    },
+    {
+      "lesson_number": 3,
+      "title": "Design vs. Default: Male and Female by Creation",
+      "reading_assignment": "Chapter 1, pages 7-10",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_03_design.mp4",
+        "duration_minutes": 25,
+        "transcript": "transcripts/module_01/lesson_03_transcript.pdf"
+      },
+      "drill": {
+        "drill_id": "design_audit_001",
+        "type": "interactive_worksheet",
+        "title": "Personal Design Inventory",
+        "format": "guided_questions",
+        "time_minutes": 30,
+        "required": true,
+        "submission_type": "pdf_upload",
+        "scoring": "self_assessment",
+        "completion_criteria": "all_fields_completed",
+        "instructions": "Answer: How do I currently view male/female differences? Where have I absorbed cultural lies? What does Genesis 1:27 require of my thinking?"
+      },
+      "duration_minutes": 60,
+      "objectives": [
+        "Affirm male and female design (Genesis 1:27)",
+        "Reject gender ideology in favor of created order",
+        "Understand complementarity (not interchangeability)"
+      ],
+      "key_concepts": [
+        "Two sexes by creation, not spectrum by construction",
+        "Complementary design for one-flesh union",
+        "Image of God expressed in male AND female"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "drill_completed": true,
+        "framework_annotated": "genesis_224_breakdown_001"
+      }
+    },
+    {
+      "lesson_number": 4,
+      "title": "The One-Flesh Mystery: Genesis 2:24-25",
+      "reading_assignment": "Chapter 1, pages 10-13",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_04_one_flesh.mp4",
+        "duration_minutes": 28,
+        "transcript": "transcripts/module_01/lesson_04_transcript.pdf"
+      },
+      "drill": {
+        "drill_id": "one_flesh_mapping_001",
+        "type": "covenant_action",
+        "title": "Genesis 2:24-25 Journaling",
+        "format": "scripture_copywork_and_reflection",
+        "time_minutes": 25,
+        "required": true,
+        "submission_type": "photo_upload",
+        "instructions": "Handwrite Genesis 2:24-25. Underline 'one flesh' and 'not ashamed'. Journal: What do these require of me personally? What preparation is needed before I can experience this?"
+      },
+      "duration_minutes": 55,
+      "objectives": [
+        "Memorize Genesis 2:24-25",
+        "Identify four movements: Leave, Cleave, One Flesh, Nakedness",
+        "Understand covenant (not contract) as marriage foundation"
+      ],
+      "key_concepts": [
+        "Leave = maturity to depart parents",
+        "Cleave = covenant commitment (not trial)",
+        "One Flesh = sexual union in covenant",
+        "Not Ashamed = innocence stewarded, not lost"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "drill_completed": true,
+        "scripture_memorized": "Genesis 2:24-25"
+      }
+    },
+    {
+      "lesson_number": 5,
+      "title": "Maturity Required: Full Age Before Vows",
+      "reading_assignment": "Chapter 1, pages 13-16",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_05_maturity.mp4",
+        "duration_minutes": 30,
+        "transcript": "transcripts/module_01/lesson_05_transcript.pdf"
+      },
+      "drill": {
+        "drill_id": "maturity_self_assessment_001",
+        "type": "interactive_worksheet",
+        "title": "Hebrews 5:14 Maturity Audit",
+        "format": "scored_questionnaire",
+        "time_minutes": 35,
+        "required": true,
+        "submission_type": "form_response",
+        "scoring": "auto_calculated",
+        "completion_criteria": "all_questions_answered",
+        "instructions": "Rate yourself 1-10 in: Self-command, Steadiness, Empathy, Discernment. Identify your weakest area. Write one specific action plan to strengthen it."
+      },
+      "duration_minutes": 70,
+      "objectives": [
+        "Define 'full age' (Hebrews 5:14)",
+        "Assess personal maturity honestly",
+        "Understand why maturity precedes marriage vows"
+      ],
+      "key_concepts": [
+        "Full age = self-command + steadiness + empathy + discernment",
+        "Maturity is trained, not automatic with age",
+        "Marriage reveals maturity deficits; formation must precede vows"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "drill_completed": true,
+        "score_above_threshold": 60
+      }
+    },
+    {
+      "lesson_number": 6,
+      "title": "Practice FROM Perfection: Identity and Action",
+      "reading_assignment": "Chapter 1, pages 16-18",
+      "video_lecture": {
+        "file": "videos/module_01/lesson_06_practice_from_perfection.mp4",
+        "duration_minutes": 24,
+        "transcript": "transcripts/module_01/lesson_06_transcript.pdf"
+      },
+      "drill": {
+        "drill_id": "identity_declaration_001",
+        "type": "covenant_action",
+        "title": "Romans 3:24 Identity Statement",
+        "format": "written_declaration",
+        "time_minutes": 20,
+        "required": true,
+        "submission_type": "text_response",
+        "instructions": "Write your identity statement based on Romans 3:24. Complete this sentence: 'I am justified freely by grace. Therefore, I practice _______ FROM that perfection, not TO earn it.' Share with spouse or accountability partner."
+      },
+      "duration_minutes": 50,
+      "objectives": [
+        "Distinguish performance-based from identity-based practice",
+        "Understand justification (Romans 3:24)",
+        "Begin practicing FROM perfection instead of TO perfection"
+      ],
+      "key_concepts": [
+        "Justified freely = already made righteous in Christ",
+        "Practice flows FROM secure identity, not performance anxiety",
+        "Teleios = returning to your created wholeness, not earning it"
+      ],
+      "completion_criteria": {
+        "video_watched": true,
+        "reading_completed": true,
+        "drill_completed": true,
+        "identity_statement_shared": true
+      }
+    }
+  ],
+
+  "formation_drills": [
+    {
+      "drill_id": "flourishing_audit_001",
+      "type": "interactive_worksheet",
+      "title": "Personal Flourishing Audit",
+      "user_context": "all",
+      "format": "guided_questions",
+      "time_minutes": 30,
+      "required": true,
+      "submission_type": "pdf_upload",
+      "scoring": "self_assessment",
+      "completion_criteria": "all_fields_completed",
+      "instructions": "Answer these questions honestly: (1) In what areas of life am I flourishing (whole, abundant, steady, good)? (2) Where am I fragmenting or chaotic? (3) How does my marriage (current or future) reflect my level of personal wholeness? (4) What ONE area needs urgent formation?",
+      "downloadable_worksheet": "worksheets/module_01/flourishing_audit.pdf"
+    },
+    {
+      "drill_id": "marriage_worldview_reset_001",
+      "type": "discussion_prompt",
+      "title": "Marriage Worldview Reset",
+      "user_context": "all",
+      "format": "written_reflection",
+      "time_minutes": 25,
+      "required": true,
+      "submission_type": "text_response",
+      "instructions": "Write 300-500 words: How has culture lied to me about marriage? What romantic myths have I believed? What does eudaemonia-centered marriage require that I've avoided?",
+      "community_discussion": true,
+      "peer_response_required": false
+    }
+  ],
+
+  "marriage_execution": [
+    {
+      "exercise_id": "mission_statement_001",
+      "user_context": "married",
+      "title": "Write Your Marriage Mission Statement",
+      "instructions": "With your spouse, write a 1-paragraph mission statement answering: Why did God give us this marriage? What is our covenant purpose? How will we build civilization through our home?",
+      "submission": "joint_written_statement",
+      "duration_minutes": 60,
+      "required": true,
+      "validation": "Both spouses must sign statement"
+    },
+    {
+      "exercise_id": "mission_statement_002",
+      "user_context": "engaged",
+      "title": "Draft Pre-Marriage Mission Statement",
+      "instructions": "With your fiancé(e), draft a mission statement answering: Why are we getting married? What covenant objectives will guide our home? How will our marriage serve God's purposes?",
+      "submission": "draft_statement",
+      "duration_minutes": 45,
+      "required": true,
+      "validation": "Both partners must review together"
+    },
+    {
+      "exercise_id": "mission_statement_003",
+      "user_context": "single",
+      "title": "Personal Covenant Vision",
+      "instructions": "Write your personal vision for future marriage: What kind of spouse do I aspire to be? What covenant values will I bring? How am I preparing NOW for covenant responsibility?",
+      "submission": "written_reflection",
+      "duration_minutes": 30,
+      "required": true,
+      "validation": "Share with mentor or accountability partner"
+    },
+    {
+      "exercise_id": "covenant_objectives_001",
+      "user_context": "married",
+      "title": "Define Your Covenant Objectives (Next 90 Days)",
+      "instructions": "Together, identify 3 covenant objectives for next 90 days. Examples: Weekly check-ins, monthly date nights, daily blessings, sexual intimacy frequency, financial stewardship goals.",
+      "submission": "objectives_list_with_accountability",
+      "duration_minutes": 45,
+      "required": true,
+      "validation": "Must include measurable actions"
+    }
+  ],
+
+  "pics_and_pearls_practice": [
+    {
+      "week": 1,
+      "focus": "awareness_foundation",
+      "prompt": "This week, simply notice: What images dominated your imagination? Sexual? Romantic? Fantasy? No judgment yet—just awareness. List 5-7 images/scenarios that captured your mind's attention.",
+      "format": "private_journal",
+      "required_entries": 5,
+      "user_context": "all",
+      "submission": "encrypted_journal_entry",
+      "instructor_review": false,
+      "instructions": "Pics & Pearls begins with awareness, not condemnation. Notice what fills your imagination without shame. This is data collection for future governance."
+    }
+  ],
+
+  "reflection_prompts": [
+    {
+      "prompt_id": "culture_lies_001",
+      "question": "How has culture lied to you about marriage? List 3 specific lies you've believed.",
+      "format": "written_response",
+      "min_words": 100,
+      "max_words": 300,
+      "required": true,
+      "user_context": "all"
+    },
+    {
+      "prompt_id": "flourishing_definition_001",
+      "question": "In your own words, what does flourishing (eudaemonia) look like in your home? Be concrete—not vague feelings, but specific patterns.",
+      "format": "written_response",
+      "min_words": 150,
+      "max_words": 400,
+      "required": true,
+      "user_context": "all"
+    },
+    {
+      "prompt_id": "maturity_gaps_001",
+      "question": "After completing the Hebrews 5:14 maturity audit, what is your weakest area? What specific evidence from your life proves this? What ONE action will you take this week to strengthen it?",
+      "format": "written_response",
+      "min_words": 200,
+      "max_words": 500,
+      "required": true,
+      "user_context": "all"
+    },
+    {
+      "prompt_id": "spouse_better_whole_001",
+      "question": "React to this statement: 'Your spouse is not your better half; they are your better whole.' Agree? Disagree? Why? What does this require of you?",
+      "format": "written_response",
+      "min_words": 150,
+      "max_words": 400,
+      "required": true,
+      "user_context": "all"
+    },
+    {
+      "prompt_id": "accountability_commitment_001",
+      "question": "Who will you share your maturity assessment with for honest feedback? When will you ask them? Write their name and set a date.",
+      "format": "written_response",
+      "min_words": 50,
+      "max_words": 200,
+      "required": true,
+      "user_context": "all"
+    }
+  ],
+
+  "mastery_check": {
+    "assessment_id": "module_01_mastery",
+    "type": "mixed_assessment",
+    "passing_score": 85,
+    "retake_allowed": true,
+    "max_attempts": 3,
+    "time_limit_minutes": 60,
+    "components": [
+      {
+        "question_id": "mc_001",
+        "question_type": "multiple_choice",
+        "question": "Eudaemonia means:",
+        "options": ["happiness", "human flourishing", "romantic love", "emotional satisfaction"],
+        "correct": "human flourishing",
+        "points": 5,
+        "explanation": "Eudaemonia (Greek) = human flourishing—wholeness, abundance, steadiness, goodness. Not mere happiness or feelings."
+      },
+      {
+        "question_id": "mc_002",
+        "question_type": "multiple_choice",
+        "question": "According to UDHR Article 16:3, the family is:",
+        "options": [
+          "one lifestyle choice among many",
+          "the fundamental group unit of society",
+          "primarily for emotional fulfillment",
+          "optional for human civilization"
+        ],
+        "correct": "the fundamental group unit of society",
+        "points": 5,
+        "explanation": "UDHR 16:3 declares family as the fundamental group unit of society, entitled to protection. Marriage → Family → Society → Civilization."
+      },
+      {
+        "question_id": "mc_003",
+        "question_type": "multiple_choice",
+        "question": "The four movements of Genesis 2:24 are:",
+        "options": [
+          "Meet, Date, Marry, Procreate",
+          "Leave, Cleave, One Flesh, Not Ashamed",
+          "Attraction, Courtship, Wedding, Honeymoon",
+          "Love, Trust, Commit, Unite"
+        ],
+        "correct": "Leave, Cleave, One Flesh, Not Ashamed",
+        "points": 5,
+        "explanation": "Genesis 2:24-25 shows four movements: Leave (maturity), Cleave (covenant), One Flesh (sexual union), Not Ashamed (innocence stewarded)."
+      },
+      {
+        "question_id": "mc_004",
+        "question_type": "multiple_choice",
+        "question": "'Full age' (Hebrews 5:14) refers to:",
+        "options": [
+          "chronological age 18 or 21",
+          "maturity with self-command, steadiness, empathy, discernment",
+          "completing high school or college",
+          "feeling ready for marriage"
+        ],
+        "correct": "maturity with self-command, steadiness, empathy, discernment",
+        "points": 5,
+        "explanation": "Full age = teleios maturity (Hebrews 5:14)—trained capacities, not chronological time or emotional feelings."
+      },
+      {
+        "question_id": "mc_005",
+        "question_type": "multiple_choice",
+        "question": "Practice FROM Perfection (Romans 3:24) means:",
+        "options": [
+          "I must perform perfectly to earn God's acceptance",
+          "I practice FROM my justified identity, not TO earn righteousness",
+          "Perfection is impossible, so don't try",
+          "Only perfect people should marry"
+        ],
+        "correct": "I practice FROM my justified identity, not TO earn righteousness",
+        "points": 5,
+        "explanation": "Romans 3:24 = justified freely by grace. Practice flows FROM that secure identity, not performance anxiety to earn worth."
+      },
+      {
+        "question_id": "sa_001",
+        "question_type": "short_answer",
+        "question": "Explain why marriage is infrastructure, not just emotion. Use the logic chain from Module 1. (100-200 words)",
+        "rubric": [
+          "Mentions design (male + female by creation)",
+          "References one-flesh covenant (Genesis 2:24)",
+          "Connects marriage → family → society → civilization",
+          "Rejects romanticism/emotionalism",
+          "Cites UDHR 16:3 or equivalent principle"
+        ],
+        "points": 20,
+        "min_words": 100,
+        "max_words": 200
+      },
+      {
+        "question_id": "sa_002",
+        "question_type": "short_answer",
+        "question": "What is the difference between 0.5 + 0.5 = 1 (cultural lie) and 1 + 1 = One Flesh (biblical design)? Why does this matter? (100-150 words)",
+        "rubric": [
+          "Defines cultural lie: two incomplete people hoping to be completed",
+          "Defines biblical design: two whole persons entering covenant",
+          "Explains crushing expectations vs. realistic covenant",
+          "Mentions maturity precedes union",
+          "Practical implication stated"
+        ],
+        "points": 15,
+        "min_words": 100,
+        "max_words": 150
+      },
+      {
+        "question_id": "sa_003",
+        "question_type": "short_answer",
+        "question": "Define teleios and explain how it applies to marriage preparation. (75-125 words)",
+        "rubric": [
+          "Defines teleios: mature, complete, whole",
+          "References Hebrews 5:14 or Matthew 5:48",
+          "Explains teleios as trained capacity (not sinlessness)",
+          "Connects to covenant readiness",
+          "Mentions formation over information"
+        ],
+        "points": 15,
+        "min_words": 75,
+        "max_words": 125
+      },
+      {
+        "question_id": "practical_001",
+        "question_type": "practical_demonstration",
+        "task": "Submit your Marriage Mission Statement (married/engaged) OR Personal Covenant Vision (single)",
+        "submission_format": "pdf",
+        "grading": "instructor_review",
+        "rubric": [
+          "Clarity: Purpose stated clearly",
+          "Biblical grounding: References Scripture or SBD principles",
+          "Specificity: Not vague, includes concrete commitments",
+          "Covenant orientation: Focuses on giving, not getting",
+          "Formation mindset: Growth-oriented, not static"
+        ],
+        "points": 20,
+        "min_words": 100,
+        "max_words": 300
+      },
+      {
+        "question_id": "practical_002",
+        "question_type": "practical_demonstration",
+        "task": "Submit your Pics & Pearls Week 1 journal entry (5+ imagery observations)",
+        "submission_format": "encrypted_text",
+        "grading": "completion_only",
+        "rubric": [
+          "Honesty: Genuine self-observation without performance",
+          "Specificity: Named actual images/scenarios, not vague",
+          "Awareness: Shows noticing without judgment yet",
+          "Completeness: Minimum 5 distinct observations"
+        ],
+        "points": 15,
+        "privacy": "instructor_only_no_sharing"
+      }
+    ],
+    "mastery_statement": "By completing this assessment, you demonstrate understanding of: eudaemonia as human flourishing, marriage as civilization infrastructure, Genesis 2:24 covenant design, teleios maturity requirements, and Practice FROM Perfection theology. You are ready for Module 2."
+  },
+
+  "downloadable_resources": [
+    {
+      "resource_id": "eudaemonia_study_guide",
+      "title": "Eudaemonia Study Guide",
+      "type": "pdf",
+      "file": "downloads/module_01/eudaemonia_study_guide.pdf",
+      "description": "Complete study guide covering human flourishing theology, UDHR 16 connection, and application exercises"
+    },
+    {
+      "resource_id": "maturity_assessment_worksheet",
+      "title": "Hebrews 5:14 Maturity Assessment Worksheet",
+      "type": "pdf",
+      "file": "downloads/module_01/maturity_assessment.pdf",
+      "description": "Self-assessment tool for evaluating full age readiness (self-command, steadiness, empathy, discernment)"
+    },
+    {
+      "resource_id": "mission_statement_template",
+      "title": "Marriage Mission Statement Template",
+      "type": "pdf",
+      "file": "downloads/module_01/mission_statement_template.pdf",
+      "description": "Guided template for writing covenant mission statement (married/engaged/single versions included)"
+    },
+    {
+      "resource_id": "pics_pearls_journal",
+      "title": "Pics & Pearls Private Journal (Week 1)",
+      "type": "pdf",
+      "file": "downloads/module_01/pics_pearls_week1.pdf",
+      "description": "Encrypted journaling template for erotic imagination awareness practice"
+    },
+    {
+      "resource_id": "genesis_224_poster",
+      "title": "Genesis 2:24-25 Poster (Print & Display)",
+      "type": "pdf",
+      "file": "downloads/module_01/genesis_224_poster.pdf",
+      "description": "Beautiful typographic poster of Genesis 2:24-25 for home display"
+    },
+    {
+      "resource_id": "scripture_memory_cards",
+      "title": "Module 1 Scripture Memory Cards",
+      "type": "pdf",
+      "file": "downloads/module_01/scripture_memory_cards.pdf",
+      "description": "Printable cards: Genesis 1:27, 2:24-25; Isaiah 1:18; Romans 3:24; Hebrews 5:14; UDHR 16:3"
+    }
+  ],
+
+  "completion_requirements": {
+    "all_lessons_completed": true,
+    "all_videos_watched": true,
+    "all_drills_submitted": true,
+    "all_reflections_submitted": true,
+    "mastery_check_passed": true,
+    "minimum_mastery_score": 85,
+    "pics_pearls_entry_submitted": true,
+    "marriage_execution_exercise_completed": true,
+    "frameworks_annotated": ["eudaemonia_map_001", "teleios_infrastructure_001"],
+    "total_time_minimum_hours": 8
+  },
+
+  "instructor_notes": {
+    "common_struggles": [
+      "Students confuse emotional readiness with covenant capacity",
+      "Resistance to teleios language (sounds too theological)",
+      "Difficulty accepting marriage as infrastructure (feels impersonal)",
+      "Pics & Pearls Week 1 requires privacy assurance (many fear judgment)"
+    ],
+    "teaching_emphasis": [
+      "Eudaemonia is NOT self-help—it's biblical anthropology",
+      "Practice FROM Perfection prevents performance anxiety",
+      "Genesis 2:24 is sequence: Leave → Cleave → One Flesh (order matters)",
+      "UDHR 16:3 connects personal marriage to public good"
+    ],
+    "grading_guidelines": {
+      "mission_statement": "Look for covenant orientation (giving, not getting), biblical grounding, specificity",
+      "maturity_assessment": "Honest self-evaluation matters more than high scores",
+      "pics_pearls": "Grade on completion only—privacy is essential for honesty",
+      "short_answers": "Require biblical citations or SBD terminology—no vague spirituality"
+    }
+  },
+
+  "next_module_preview": {
+    "module_number": 2,
+    "title": "What About Sex? Why Everyone Must Be Sexually Literate",
+    "focus": "Sexual literacy as non-negotiable for covenant marriage. Cost of ignorance. Biblical clarity restores order.",
+    "preparation": "Read Chapter 2. Reflect on: What have I been taught (or not taught) about sexuality? Where did that teaching come from?"
+  }
+}

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Maturity Self-Assessment | Week 3 Resource</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { border-bottom: 3px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c5282; font-size: 28px; margin-bottom: 10px; }
+        .header .subtitle { color: #666; font-size: 16px; }
+        .actions { margin-bottom: 30px; text-align: right; }
+        .btn { display: inline-block; padding: 10px 20px; margin-left: 10px; background: #2c5282; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; font-size: 14px; }
+        .btn:hover { background: #1a365d; }
+        .intro { background: #ebf8ff; border-left: 4px solid #4299e1; padding: 20px; margin-bottom: 30px; }
+        .attribute-section { background: #f7fafc; padding: 25px; margin: 30px 0; border-radius: 8px; border-left: 5px solid #4299e1; }
+        .attribute-section h2 { color: #2c5282; margin-bottom: 15px; }
+        .question { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .question label { display: block; margin: 8px 0; cursor: pointer; padding: 8px; border-radius: 3px; }
+        .question label:hover { background: #f7fafc; }
+        .question input[type="radio"] { margin-right: 10px; }
+        .scoring-box { background: #fefcbf; border: 2px solid #f6e05e; padding: 20px; margin: 30px 0; border-radius: 8px; }
+        .scoring-box h3 { color: #744210; margin-bottom: 15px; }
+        .score-range { margin: 15px 0; padding: 15px; background: white; border-radius: 5px; }
+        .score-range strong { color: #2c5282; }
+        .action-plan { background: #e6fffa; border-left: 4px solid #38b2ac; padding: 20px; margin: 30px 0; }
+        .action-plan h3 { color: #234e52; margin-bottom: 15px; }
+        .action-plan textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; font-family: inherit; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #718096; font-size: 14px; }
+        @media print { body { background: white; padding: 0; } .container { box-shadow: none; padding: 20px; } .actions { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧩 Personal Maturity Self-Assessment Workbook</h1>
+            <p class="subtitle">Four Attributes of Teleios Readiness for Covenant Marriage</p>
+            <p class="subtitle">Sex By Design For Dummies | Week 3 Resource</p>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" onclick="window.print()">📥 Download PDF</button>
+            <button class="btn" onclick="window.print()">🖨️ Print</button>
+        </div>
+
+        <div class="intro">
+            <h3>📌 Purpose: Assess Your Teleios Maturity</h3>
+            <p><strong>Week 3 Teaching Principle:</strong> "Full age" (UDHR 16:1) = legal age + teleios maturity. You cannot faithfully steward birthright sexuality without personal maturity.</p>
+            <p><strong>Four Attributes Framework:</strong> Behavioral, Temperamental, Emotional, Mental maturity (from The Teleios Blueprint course).</p>
+            <p><strong>How to Use:</strong> Answer honestly (5-point scale for each question), calculate scores per attribute, identify growth areas, create 30-day strengthening plan.</p>
+        </div>
+
+        <div class="attribute-section">
+            <h2>1️⃣ BEHAVIORAL MATURITY (Actions & Habits)</h2>
+            <p><em>Do your actions consistently align with covenant commitments?</em></p>
+            
+            <div class="question">
+                <p><strong>Q1:</strong> I follow through on commitments even when inconvenient.</p>
+                <label><input type="radio" name="b1" value="5"> 5 - Always (100%)</label>
+                <label><input type="radio" name="b1" value="4"> 4 - Usually (75%)</label>
+                <label><input type="radio" name="b1" value="3"> 3 - Sometimes (50%)</label>
+                <label><input type="radio" name="b1" value="2"> 2 - Rarely (25%)</label>
+                <label><input type="radio" name="b1" value="1"> 1 - Never (0%)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q2:</strong> I maintain healthy routines (sleep, diet, exercise, devotions).</p>
+                <label><input type="radio" name="b2" value="5"> 5 - Consistently (daily/weekly discipline)</label>
+                <label><input type="radio" name="b2" value="4"> 4 - Mostly (occasional lapses)</label>
+                <label><input type="radio" name="b2" value="3"> 3 - Inconsistently (start-stop cycles)</label>
+                <label><input type="radio" name="b2" value="2"> 2 - Rarely (no structure)</label>
+                <label><input type="radio" name="b2" value="1"> 1 - Never (chaotic habits)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q3:</strong> I manage finances responsibly (budget, save, avoid debt).</p>
+                <label><input type="radio" name="b3" value="5"> 5 - Excellent (written budget, emergency fund, debt-free)</label>
+                <label><input type="radio" name="b3" value="4"> 4 - Good (track spending, minimal debt)</label>
+                <label><input type="radio" name="b3" value="3"> 3 - Fair (some planning, manageable debt)</label>
+                <label><input type="radio" name="b3" value="2"> 2 - Poor (impulsive spending, debt accumulation)</label>
+                <label><input type="radio" name="b3" value="1"> 1 - Crisis (overwhelming debt, no control)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q4:</strong> I keep my word and can be trusted with sensitive information.</p>
+                <label><input type="radio" name="b4" value="5"> 5 - Completely trustworthy (never gossip or betray)</label>
+                <label><input type="radio" name="b4" value="4"> 4 - Very trustworthy (rare lapses)</label>
+                <label><input type="radio" name="b4" value="3"> 3 - Mostly trustworthy (occasional slips)</label>
+                <label><input type="radio" name="b4" value="2"> 2 - Questionable (frequent breaches)</label>
+                <label><input type="radio" name="b4" value="1"> 1 - Untrustworthy (cannot keep secrets)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q5:</strong> I complete tasks on time without procrastination.</p>
+                <label><input type="radio" name="b5" value="5"> 5 - Always early or on time</label>
+                <label><input type="radio" name="b5" value="4"> 4 - Usually on time (minor delays)</label>
+                <label><input type="radio" name="b5" value="3"> 3 - 50/50 (frequent last-minute rushes)</label>
+                <label><input type="radio" name="b5" value="2"> 2 - Often late (chronic procrastination)</label>
+                <label><input type="radio" name="b5" value="1"> 1 - Rarely complete tasks</label>
+            </div>
+            
+            <p style="margin-top: 20px;"><strong>BEHAVIORAL MATURITY SCORE:</strong> _____ / 25</p>
+        </div>
+
+        <div class="attribute-section">
+            <h2>2️⃣ TEMPERAMENTAL MATURITY (Emotional Regulation)</h2>
+            <p><em>Can you control emotional impulses and maintain composure?</em></p>
+            
+            <div class="question">
+                <p><strong>Q6:</strong> I remain calm under stress or criticism.</p>
+                <label><input type="radio" name="t1" value="5"> 5 - Always composed (no outbursts)</label>
+                <label><input type="radio" name="t1" value="4"> 4 - Usually calm (occasional frustration)</label>
+                <label><input type="radio" name="t1" value="3"> 3 - Sometimes reactive (50/50)</label>
+                <label><input type="radio" name="t1" value="2"> 2 - Often reactive (frequent anger/tears)</label>
+                <label><input type="radio" name="t1" value="1"> 1 - Explosive (cannot control emotions)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q7:</strong> I delay gratification when necessary (resist impulses).</p>
+                <label><input type="radio" name="t2" value="5"> 5 - Strong self-control (can wait months/years)</label>
+                <label><input type="radio" name="t2" value="4"> 4 - Good self-control (can wait weeks)</label>
+                <label><input type="radio" name="t2" value="3"> 3 - Moderate (can wait days)</label>
+                <label><input type="radio" name="t2" value="2"> 2 - Weak (must have it now)</label>
+                <label><input type="radio" name="t2" value="1"> 1 - No self-control (instant gratification)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q8:</strong> I respond to conflict with patience, not aggression.</p>
+                <label><input type="radio" name="t3" value="5"> 5 - Always patient (seek resolution)</label>
+                <label><input type="radio" name="t3" value="4"> 4 - Usually patient (minor impatience)</label>
+                <label><input type="radio" name="t3" value="3"> 3 - 50/50 (depends on mood)</label>
+                <label><input type="radio" name="t3" value="2"> 2 - Often impatient (quick to argue)</label>
+                <label><input type="radio" name="t3" value="1"> 1 - Aggressive (yelling, intimidation)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q9:</strong> I can manage anxiety without panic or paralysis.</p>
+                <label><input type="radio" name="t4" value="5"> 5 - Anxiety rarely impacts function</label>
+                <label><input type="radio" name="t4" value="4"> 4 - Mild anxiety, manage well</label>
+                <label><input type="radio" name="t4" value="3"> 3 - Moderate anxiety, some disruption</label>
+                <label><input type="radio" name="t4" value="2"> 2 - Frequent anxiety, significant disruption</label>
+                <label><input type="radio" name="t4" value="1"> 1 - Chronic anxiety/panic attacks</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q10:</strong> I forgive offenses quickly without holding grudges.</p>
+                <label><input type="radio" name="t5" value="5"> 5 - Immediate forgiveness (no bitterness)</label>
+                <label><input type="radio" name="t5" value="4"> 4 - Quick forgiveness (minor residual)</label>
+                <label><input type="radio" name="t5" value="3"> 3 - Slow forgiveness (days/weeks)</label>
+                <label><input type="radio" name="t5" value="2"> 2 - Grudges (months/years)</label>
+                <label><input type="radio" name="t5" value="1"> 1 - Never forgive (permanent bitterness)</label>
+            </div>
+            
+            <p style="margin-top: 20px;"><strong>TEMPERAMENTAL MATURITY SCORE:</strong> _____ / 25</p>
+        </div>
+
+        <div class="attribute-section">
+            <h2>3️⃣ EMOTIONAL MATURITY (Relational Intelligence)</h2>
+            <p><em>Can you connect deeply, show empathy, and handle vulnerability?</em></p>
+            
+            <div class="question">
+                <p><strong>Q11:</strong> I can identify and articulate my own emotions.</p>
+                <label><input type="radio" name="e1" value="5"> 5 - Fully aware (name feelings accurately)</label>
+                <label><input type="radio" name="e1" value="4"> 4 - Mostly aware (occasional confusion)</label>
+                <label><input type="radio" name="e1" value="3"> 3 - Somewhat aware (limited vocabulary)</label>
+                <label><input type="radio" name="e1" value="2"> 2 - Rarely aware (numb/disconnected)</label>
+                <label><input type="radio" name="e1" value="1"> 1 - Unaware (cannot name feelings)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q12:</strong> I can empathize with others' feelings (put myself in their shoes).</p>
+                <label><input type="radio" name="e2" value="5"> 5 - Deep empathy (feel with others)</label>
+                <label><input type="radio" name="e2" value="4"> 4 - Good empathy (understand feelings)</label>
+                <label><input type="radio" name="e2" value="3"> 3 - Moderate (sometimes grasp it)</label>
+                <label><input type="radio" name="e2" value="2"> 2 - Low empathy (self-focused)</label>
+                <label><input type="radio" name="e2" value="1"> 1 - No empathy (cannot relate)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q13:</strong> I can be vulnerable (share struggles, admit mistakes).</p>
+                <label><input type="radio" name="e3" value="5"> 5 - Fully vulnerable (no mask)</label>
+                <label><input type="radio" name="e3" value="4"> 4 - Mostly vulnerable (minor guardedness)</label>
+                <label><input type="radio" name="e3" value="3"> 3 - Selective vulnerability (only safe people)</label>
+                <label><input type="radio" name="e3" value="2"> 2 - Guarded (fear exposure)</label>
+                <label><input type="radio" name="e3" value="1"> 1 - Completely closed off (no vulnerability)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q14:</strong> I resolve conflicts constructively (no stonewalling or escalation).</p>
+                <label><input type="radio" name="e4" value="5"> 5 - Always resolve (listen, compromise)</label>
+                <label><input type="radio" name="e4" value="4"> 4 - Usually resolve (minor lingering)</label>
+                <label><input type="radio" name="e4" value="3"> 3 - 50/50 (sometimes avoid or escalate)</label>
+                <label><input type="radio" name="e4" value="2"> 2 - Poor resolution (yelling/silent treatment)</label>
+                <label><input type="radio" name="e4" value="1"> 1 - No resolution (permanent rifts)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q15:</strong> I maintain healthy boundaries (not codependent or controlling).</p>
+                <label><input type="radio" name="e5" value="5"> 5 - Excellent boundaries (clear and respectful)</label>
+                <label><input type="radio" name="e5" value="4"> 4 - Good boundaries (occasional blurring)</label>
+                <label><input type="radio" name="e5" value="3"> 3 - Fair boundaries (inconsistent)</label>
+                <label><input type="radio" name="e5" value="2"> 2 - Poor boundaries (enmeshed/controlling)</label>
+                <label><input type="radio" name="e5" value="1"> 1 - No boundaries (toxic dynamics)</label>
+            </div>
+            
+            <p style="margin-top: 20px;"><strong>EMOTIONAL MATURITY SCORE:</strong> _____ / 25</p>
+        </div>
+
+        <div class="attribute-section">
+            <h2>4️⃣ MENTAL MATURITY (Wisdom & Planning)</h2>
+            <p><em>Can you think critically, plan long-term, and make wise decisions?</em></p>
+            
+            <div class="question">
+                <p><strong>Q16:</strong> I think critically (question assumptions, evaluate evidence).</p>
+                <label><input type="radio" name="m1" value="5"> 5 - Strong critical thinker (analyze deeply)</label>
+                <label><input type="radio" name="m1" value="4"> 4 - Good critical thinker (question most things)</label>
+                <label><input type="radio" name="m1" value="3"> 3 - Moderate (sometimes question)</label>
+                <label><input type="radio" name="m1" value="2"> 2 - Weak (accept most claims uncritically)</label>
+                <label><input type="radio" name="m1" value="1"> 1 - No critical thinking (believe everything)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q17:</strong> I plan for the long-term (5-10 year vision).</p>
+                <label><input type="radio" name="m2" value="5"> 5 - Clear long-term plan (written goals)</label>
+                <label><input type="radio" name="m2" value="4"> 4 - Good long-term thinking (general direction)</label>
+                <label><input type="radio" name="m2" value="3"> 3 - Moderate (1-2 year plans)</label>
+                <label><input type="radio" name="m2" value="2"> 2 - Short-term only (weeks/months)</label>
+                <label><input type="radio" name="m2" value="1"> 1 - No planning (live day-to-day)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q18:</strong> I seek wisdom from mentors, books, and experience.</p>
+                <label><input type="radio" name="m3" value="5"> 5 - Actively seek wisdom (read, mentors)</label>
+                <label><input type="radio" name="m3" value="4"> 4 - Regularly seek wisdom</label>
+                <label><input type="radio" name="m3" value="3"> 3 - Occasionally seek wisdom</label>
+                <label><input type="radio" name="m3" value="2"> 2 - Rarely seek wisdom</label>
+                <label><input type="radio" name="m3" value="1"> 1 - Never seek wisdom (know-it-all)</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q19:</strong> I make decisions based on principles, not impulses.</p>
+                <label><input type="radio" name="m4" value="5"> 5 - Always principle-driven</label>
+                <label><input type="radio" name="m4" value="4"> 4 - Usually principle-driven</label>
+                <label><input type="radio" name="m4" value="3"> 3 - 50/50 (depends on situation)</label>
+                <label><input type="radio" name="m4" value="2"> 2 - Mostly impulsive</label>
+                <label><input type="radio" name="m4" value="1"> 1 - Completely impulsive</label>
+            </div>
+            
+            <div class="question">
+                <p><strong>Q20:</strong> I learn from mistakes and adjust behavior accordingly.</p>
+                <label><input type="radio" name="m5" value="5"> 5 - Always learn (no repeated mistakes)</label>
+                <label><input type="radio" name="m5" value="4"> 4 - Usually learn (rare repeats)</label>
+                <label><input type="radio" name="m5" value="3"> 3 - Sometimes learn (some patterns)</label>
+                <label><input type="radio" name="m5" value="2"> 2 - Rarely learn (repeat often)</label>
+                <label><input type="radio" name="m5" value="1"> 1 - Never learn (same mistakes constantly)</label>
+            </div>
+            
+            <p style="margin-top: 20px;"><strong>MENTAL MATURITY SCORE:</strong> _____ / 25</p>
+        </div>
+
+        <div class="scoring-box">
+            <h3>📊 SCORING RUBRIC: Interpret Your Results</h3>
+            
+            <div class="score-range">
+                <strong>90-100 (TELEIOS READY):</strong> Covenant-ready maturity. You demonstrate consistent excellence across all four attributes. Continue maintaining this level.
+            </div>
+            
+            <div class="score-range">
+                <strong>70-89 (APPROACHING TELEIOS):</strong> Significant maturity with some growth areas. Identify weakest attribute and create targeted plan. 6-12 months intensive development recommended.
+            </div>
+            
+            <div class="score-range">
+                <strong>50-69 (DEVELOPING MATURITY):</strong> Moderate maturity with identified gaps. NOT covenant-ready yet. Focus on lowest-scoring attribute first. 12-24 months intentional growth needed. Consider The Teleios Blueprint course.
+            </div>
+            
+            <div class="score-range">
+                <strong>30-49 (IMMATURE):</strong> Significant immaturity across multiple attributes. Marriage would be premature and likely harmful. Seek mentorship immediately. 2-3 years intensive development required before covenant consideration.
+            </div>
+            
+            <div class="score-range">
+                <strong>0-29 (CRISIS IMMATURITY):</strong> Urgent need for intervention. You are NOT ready for covenant marriage and should not pursue relationships. Seek professional counseling and spiritual mentorship. Focus entirely on personal healing and growth.
+            </div>
+            
+            <p style="margin-top: 20px; padding: 15px; background: #fff5f5; border-left: 4px solid #e53e3e;">
+                <strong>⚠️ Important:</strong> Legal age (18+) is NECESSARY but NOT SUFFICIENT. "Full age" = legal + teleios (score 70+). Do not pursue marriage if scoring below 70.
+            </p>
+        </div>
+
+        <div class="action-plan">
+            <h3>📝 30-Day Maturity Strengthening Plan</h3>
+            <p><strong>Instructions:</strong> Identify your WEAKEST attribute from the assessment. Write concrete actions to strengthen it over 30 days.</p>
+            
+            <h4 style="margin-top: 20px;">My Weakest Attribute: _______________________</h4>
+            <h4>Current Score: _____ / 25</h4>
+            <h4>Target Score (30 days): _____ / 25</h4>
+            
+            <h4 style="margin-top: 20px;">WEEK 1 Action Steps:</h4>
+            <textarea placeholder="Example (Behavioral): Create daily routine checklist, set 3 specific commitments, track completion rate..."></textarea>
+            
+            <h4 style="margin-top: 20px;">WEEK 2 Action Steps:</h4>
+            <textarea placeholder="Example (Temperamental): Practice 5-minute daily meditation, identify anger triggers, implement 10-second pause before reacting..."></textarea>
+            
+            <h4 style="margin-top: 20px;">WEEK 3 Action Steps:</h4>
+            <textarea placeholder="Example (Emotional): Share one struggle with trusted friend, practice empathy listening, read book on vulnerability..."></textarea>
+            
+            <h4 style="margin-top: 20px;">WEEK 4 Action Steps:</h4>
+            <textarea placeholder="Example (Mental): Read one book on wisdom, journal decisions and outcomes, seek mentor feedback weekly..."></textarea>
+            
+            <h4 style="margin-top: 20px;">Accountability Partner:</h4>
+            <textarea placeholder="Name, contact info, how they will check in with you weekly..."></textarea>
+            
+            <p style="margin-top: 20px; padding: 15px; background: white; border-radius: 5px;">
+                <strong>📚 Recommended Resource:</strong> The Teleios Blueprint course ($247) or Teleios Development Bundle ($299) provides comprehensive training in all four attributes with structured exercises, assessments, and mentorship.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Sex By Design For Dummies</strong> | Week 3: Personal Maturity Self-Assessment</p>
+            <p>© Marriage Education Platform | All Rights Reserved</p>
+            <p><em>"When I became a man, I put away childish things" (1 Corinthians 13:11)</em></p>
+        </div>
+    </div>
+</body>
+</html>

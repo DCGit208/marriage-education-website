@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 4: Axiomatic Dimensions Assessment - 40 Questions</title>
+    <link rel="stylesheet" href="../../css/design-system.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 1.1rem;
+        }
+        
+        .timer-progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .progress-info {
+            color: white;
+            font-size: 0.95rem;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .intro-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .intro-box h2 {
+            margin-bottom: 15px;
+        }
+        
+        .intro-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .intro-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .intro-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            display: none;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            margin-bottom: 5px;
+        }
+        
+        .section-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .question-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .question-card.active {
+            display: block;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .question-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .explanation strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .nav-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-button.previous {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .nav-button.previous:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav-button.next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .nav-button.next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .question-grid-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .question-grid-item:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+        
+        .question-grid-item.answered {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .question-grid-item.current {
+            background: #764ba2;
+            color: white;
+            border-color: #764ba2;
+        }
+        
+        .results {
+            display: none;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+        
+        .results h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .submit-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Week 4: Axiomatic Dimensions Assessment</h1>
+            <p>The Four Lenses Through Which Teleios Persons Read Reality</p>
+        </div>
+        
+        <div class="timer-progress-bar">
+            <div class="timer">
+                <span>⏱</span>
+                <span id="timer">90:00</span>
+            </div>
+            <div class="progress-info">
+                Question <span id="current-question">1</span> of 40
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="intro-box">
+                <h2>Assessment Overview</h2>
+                <ul>
+                    <li><strong>40 Questions Total</strong> – Four parts testing Week 4 content</li>
+                    <li><strong>90 Minutes</strong> – Timer starts automatically</li>
+                    <li><strong>100 Points Maximum</strong> – Part 1 (20pts), Part 2 (45pts), Part 3 (20pts), Part 4 (15pts)</li>
+                    <li><strong>Auto-Graded</strong> – Parts 1-2 scored instantly; Parts 3-4 require manual review</li>
+                    <li><strong>Epistemology, Axiology, Ontology, Etymology</strong> – The four dimensions of teleios discernment</li>
+                </ul>
+            </div>
+            
+            <!-- Question Navigation Grid -->
+            <div class="question-grid" id="questionGrid"></div>
+            
+            <div id="questionsContainer">
+                <!-- PART 1: TRUE/FALSE (10 questions, 2 points each = 20 points) -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Part 1: True/False</h2>
+                        <p>10 questions | 2 points each | 20 points total</p>
+                    </div>
+                    
+                    <div class="question-card" data-question="1" data-answer="true" data-points="2">
+                        <span class="question-number">Question 1</span>
+                        <div class="question-text">Epistemology is the discipline of knowing—asking "How do I know what I know?"</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q1" value="true" id="q1-t">
+                                <label for="q1-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q1" value="false" id="q1-f">
+                                <label for="q1-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            Epistemology is the branch of philosophy studying knowledge, belief, justification, and truth. For teleios persons, it's the discipline of verifying claims before accepting them—distinguishing Scripture from culture, principle from preference.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="2" data-answer="false" data-points="2">
+                        <span class="question-number">Question 2</span>
+                        <div class="question-text">Axiological maturity means prioritizing personal happiness above all other values because authentic living requires self-fulfillment.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q2" value="true" id="q2-t">
+                                <label for="q2-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q2" value="false" id="q2-f">
+                                <label for="q2-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: False</strong><br>
+                            Axiology is ordering goods by TRUTH, not trend. Matthew 22:37-39 establishes hierarchy: God first, neighbor second, self rightly loved. Covenant over comfort. Faithfulness over feelings. Self as highest value is axiological immaturity.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="3" data-answer="true" data-points="2">
+                        <span class="question-number">Question 3</span>
+                        <div class="question-text">Ontology is the discipline of being—understanding reality as designed, not as desired.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q3" value="true" id="q3-t">
+                                <label for="q3-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q3" value="false" id="q3-f">
+                                <label for="q3-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            Ontology studies the nature of being and existence. For covenant, this means recognizing marriage as ONTOLOGICAL REALITY (Genesis 1:27, Matthew 19:4-6)—divinely designed, not culturally constructed. One-flesh union is being-level, not optional.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="4" data-answer="true" data-points="2">
+                        <span class="question-number">Question 4</span>
+                        <div class="question-text">Etymology is the stewardship of language—honoring the weight and meaning of words, not redefining them for convenience.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q4" value="true" id="q4-t">
+                                <label for="q4-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q4" value="false" id="q4-f">
+                                <label for="q4-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            Etymology studies word origins and meaning. Proverbs 18:21: "Death and life are in the power of the tongue." Teleios persons honor language precision—keeping promises, resisting redefinition. Words name realities; ambiguity breeds deception.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="5" data-answer="false" data-points="2">
+                        <span class="question-number">Question 5</span>
+                        <div class="question-text">Hebrews 5:14 teaches that maturity comes automatically with age, not through disciplined training of the senses.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q5" value="true" id="q5-t">
+                                <label for="q5-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q5" value="false" id="q5-f">
+                                <label for="q5-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: False</strong><br>
+                            Hebrews 5:14: "Strong meat belongeth to them that are of full age (teleios), even those who BY REASON OF USE have their senses exercised to discern." Maturity requires TRAINING—disciplined practice, not passive aging.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="6" data-answer="true" data-points="2">
+                        <span class="question-number">Question 6</span>
+                        <div class="question-text">Epistemological immaturity shows up when someone believes "I feel unloved, therefore I am unloved"—conflating perception with reality.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q6" value="true" id="q6-t">
+                                <label for="q6-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q6" value="false" id="q6-f">
+                                <label for="q6-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            Epistemological immaturity = treating feelings as facts. The immature person says "I feel it, so it's true." The teleios person distinguishes impression from intent, tests perception against truth, and verifies before deciding.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="7" data-answer="false" data-points="2">
+                        <span class="question-number">Question 7</span>
+                        <div class="question-text">According to Scripture, values are subjective—"your truth is your truth; my truth is my truth."</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q7" value="true" id="q7-t">
+                                <label for="q7-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q7" value="false" id="q7-f">
+                                <label for="q7-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: False</strong><br>
+                            John 17:17: "Thy word is truth." Truth is OBJECTIVE—grounded in Scripture, not sentiment. Culture says values are subjective; Scripture establishes fixed order. Teleios persons resist relativism and order goods by God's hierarchy.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="8" data-answer="true" data-points="2">
+                        <span class="question-number">Question 8</span>
+                        <div class="question-text">Marriage is an ontological reality (being-level union) according to Matthew 19:6: "What God hath joined together, let not man put asunder."</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q8" value="true" id="q8-t">
+                                <label for="q8-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q8" value="false" id="q8-f">
+                                <label for="q8-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            Matthew 19:4-6 establishes marriage as ONTOLOGICAL UNION—one-flesh reality that cannot be undone by paperwork or preference. Not contract (terminable), but covenant (permanent). Ephesians 5:31-32 calls it "great mystery."
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="9" data-answer="true" data-points="2">
+                        <span class="question-number">Question 9</span>
+                        <div class="question-text">James 3:2 states that the teleios (perfect/mature) person is able to "bridle the whole body" through mastery of language.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q9" value="true" id="q9-t">
+                                <label for="q9-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q9" value="false" id="q9-f">
+                                <label for="q9-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: True</strong><br>
+                            James 3:2: "If any man offend not in word, the same is a perfect (teleios) man, and able also to bridle the whole body." Etymology mastery = covenant capacity. Words create or destroy. Precision honors truth.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="10" data-answer="false" data-points="2">
+                        <span class="question-number">Question 10</span>
+                        <div class="question-text">The Four Axiomatic Dimensions (Epistemology, Axiology, Ontology, Etymology) are abstract academic categories with no practical application to covenant relationships.</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q10" value="true" id="q10-t">
+                                <label for="q10-t">True</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q10" value="false" id="q10-f">
+                                <label for="q10-f">False</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: False</strong><br>
+                            The Four Dimensions are INTEGRATED LENSES for covenant navigation. Not theory—PRACTICE. Teleios persons use all four to discern before deciding, weigh before choosing, understand before acting. Covenant necessity, not academic luxury.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PART 2: MULTIPLE CHOICE (15 questions, 3 points each = 45 points) -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Part 2: Multiple Choice</h2>
+                        <p>15 questions | 3 points each | 45 points total</p>
+                    </div>
+                    
+                    <div class="question-card" data-question="11" data-answer="B" data-points="3">
+                        <span class="question-number">Question 11</span>
+                        <div class="question-text">What does 2 Timothy 2:15 mean by "rightly dividing the word of truth"?</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q11" value="A" id="q11-a">
+                                <label for="q11-a">A) Splitting Scripture into Old and New Testament categories</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q11" value="B" id="q11-b">
+                                <label for="q11-b">B) Epistemological competence—the ability to distinguish, categorize, and apply truth accurately</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q11" value="C" id="q11-c">
+                                <label for="q11-c">C) Memorizing Bible verses without understanding context</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q11" value="D" id="q11-d">
+                                <label for="q11-d">D) Choosing which Scriptures to follow based on personal preference</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: B</strong><br>
+                            2 Timothy 2:15: "Study to shew thyself approved unto God...rightly dividing the word of truth." This is EPISTEMOLOGICAL COMPETENCE—trained perception to distinguish truth from error, Scripture from culture, principle from preference. Section 1.2 foundation.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="12" data-answer="C" data-points="3">
+                        <span class="question-number">Question 12</span>
+                        <div class="question-text">Proverbs 14:15 contrasts the "simple" who believe every word with the "prudent" who:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q12" value="A" id="q12-a">
+                                <label for="q12-a">A) Reject all claims until proven scientifically</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q12" value="B" id="q12-b">
+                                <label for="q12-b">B) Trust their feelings above external evidence</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q12" value="C" id="q12-c">
+                                <label for="q12-c">C) Look well to their going—verify, weigh, and test before accepting</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q12" value="D" id="q12-d">
+                                <label for="q12-d">D) Consult popular opinion before forming convictions</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: C</strong><br>
+                            Proverbs 14:15: "The simple believeth every word: but the prudent man looketh well to his going." Prudent = epistemologically mature. Verifies before accepting. Tests claims against Scripture. Distinguishes source from noise. Section 1.2 principle.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="13" data-answer="A" data-points="3">
+                        <span class="question-number">Question 13</span>
+                        <div class="question-text">According to Philippians 1:9-10, love must "abound...in knowledge and in all judgment" so believers may:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q13" value="A" id="q13-a">
+                                <label for="q13-a">A) Approve things that are excellent—practice axiological discernment</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q13" value="B" id="q13-b">
+                                <label for="q13-b">B) Feel deeply without intellectual restraint</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q13" value="C" id="q13-c">
+                                <label for="q13-c">C) Judge others by their external appearance</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q13" value="D" id="q13-d">
+                                <label for="q13-d">D) Prioritize emotions over obligations</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: A</strong><br>
+                            Philippians 1:9-10: Love must be ordered by knowledge and judgment to "approve things that are excellent." This is AXIOLOGY—discerning what is good vs. better vs. best. Love alone is insufficient; love must be ORDERED by truth. Section 2.2 foundation.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="14" data-answer="D" data-points="3">
+                        <span class="question-number">Question 14</span>
+                        <div class="question-text">Luke 14:26 teaches that disciples must "hate" father, mother, wife, children—this means:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q14" value="A" id="q14-a">
+                                <label for="q14-a">A) Christianity demands actual emotional hatred toward family</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q14" value="B" id="q14-b">
+                                <label for="q14-b">B) Family relationships have no value in the Kingdom</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q14" value="C" id="q14-c">
+                                <label for="q14-c">C) Disciples should abandon all human relationships</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q14" value="D" id="q14-d">
+                                <label for="q14-d">D) Axiological hierarchy—God > all human loves; when loves compete, truth determines order</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: D</strong><br>
+                            Luke 14:26 is not literal hatred—it's AXIOLOGICAL HIERARCHY. God must be valued above all human loves. When loves compete, truth determines order. Matthew 22:37-39 establishes: God first, neighbor second, self rightly loved. Section 2.2 framework.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="15" data-answer="B" data-points="3">
+                        <span class="question-number">Question 15</span>
+                        <div class="question-text">A spouse says "I don't feel in love anymore, so I shouldn't stay." This demonstrates:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q15" value="A" id="q15-a">
+                                <label for="q15-a">A) Ontological maturity—honoring authentic feelings</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q15" value="B" id="q15-b">
+                                <label for="q15-b">B) Axiological immaturity—elevating feelings above faithfulness, preference above promise</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q15" value="C" id="q15-c">
+                                <label for="q15-c">C) Epistemological strength—trusting personal discernment</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q15" value="D" id="q15-d">
+                                <label for="q15-d">D) Etymological precision—using language accurately</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: B</strong><br>
+                            "I don't feel in love" = AXIOLOGICAL IMMATURITY. Elevating feelings above faithfulness, comfort over covenant. Immature spouse prioritizes emotional state; teleios spouse values covenant over comfort. Happiness is not highest good—holiness is. Section 2.5 example.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="16" data-answer="C" data-points="3">
+                        <span class="question-number">Question 16</span>
+                        <div class="question-text">Genesis 1:27 establishes that being "male and female" is:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q16" value="A" id="q16-a">
+                                <label for="q16-a">A) A social construct that evolves with culture</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q16" value="B" id="q16-b">
+                                <label for="q16-b">B) An emotional preference discovered through self-exploration</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q16" value="C" id="q16-c">
+                                <label for="q16-c">C) An ontological reality—designed by God, rooted in nature of being itself</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q16" value="D" id="q16-d">
+                                <label for="q16-d">D) A binary system that humans can redefine as needed</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: C</strong><br>
+                            Genesis 1:27: "Male and female created he them." This is ONTOLOGICAL REALITY—divinely designed, rooted in being itself. Not cultural construct, not personal preference. Gender is design fact, not subjective choice. Section 3.2 foundation.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="17" data-answer="D" data-points="3">
+                        <span class="question-number">Question 17</span>
+                        <div class="question-text">Matthew 19:4-6 declares that in marriage "they twain shall be one flesh." This means:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q17" value="A" id="q17-a">
+                                <label for="q17-a">A) Two people feel emotionally connected</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q17" value="B" id="q17-b">
+                                <label for="q17-b">B) A romantic metaphor for deep friendship</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q17" value="C" id="q17-c">
+                                <label for="q17-c">C) A legal contract binding two parties temporarily</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q17" value="D" id="q17-d">
+                                <label for="q17-d">D) Ontological union—being-level fusion that cannot be undone by paperwork or preference</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: D</strong><br>
+                            Matthew 19:6: "They are no more twain, but one flesh." ONE-FLESH = ONTOLOGICAL UNION. Being-level fusion, not emotional connection. Permanent reality, not pleasant feeling. "What God hath joined, let not man put asunder." Section 3.2 framework.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="18" data-answer="B" data-points="3">
+                        <span class="question-number">Question 18</span>
+                        <div class="question-text">Ephesians 5:31-32 calls marriage a "great mystery" because it:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q18" value="A" id="q18-a">
+                                <label for="q18-a">A) Is too complex for humans to understand</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q18" value="B" id="q18-b">
+                                <label for="q18-b">B) Mirrors the Christ-Church union—typological ontology, not just earthly relationship</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q18" value="C" id="q18-c">
+                                <label for="q18-c">C) Involves secret rituals known only to married couples</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q18" value="D" id="q18-d">
+                                <label for="q18-d">D) Cannot be explained through biblical language</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: B</strong><br>
+                            Ephesians 5:31-32: "This is a great mystery: but I speak concerning Christ and the church." Marriage is TYPOLOGICAL ONTOLOGY—mirrors gospel reality. To dishonor marriage is to distort Christ-Church union. Section 3.2 depth.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="19" data-answer="A" data-points="3">
+                        <span class="question-number">Question 19</span>
+                        <div class="question-text">John 1:1 states "In the beginning was the Word (Logos)." This establishes that:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q19" value="A" id="q19-a">
+                                <label for="q19-a">A) Language is foundational to reality itself—words are not arbitrary, they name realities</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q19" value="B" id="q19-b">
+                                <label for="q19-b">B) Communication existed before creation, so words have no fixed meaning</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q19" value="C" id="q19-c">
+                                <label for="q19-c">C) Scripture was written before God created the world</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q19" value="D" id="q19-d">
+                                <label for="q19-d">D) Humans can redefine language without ontological consequences</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: A</strong><br>
+                            John 1:1: "In the beginning was the Word (Logos), and the Word was with God, and the Word was God." Language is FOUNDATIONAL TO REALITY. Words name realities, not preferences. Etymology is sacred stewardship. Section 4.2 foundation.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="20" data-answer="C" data-points="3">
+                        <span class="question-number">Question 20</span>
+                        <div class="question-text">Proverbs 18:21 declares "Death and life are in the power of the tongue." This means:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q20" value="A" id="q20-a">
+                                <label for="q20-a">A) Speaking can literally kill or resurrect physically</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q20" value="B" id="q20-b">
+                                <label for="q20-b">B) Words are neutral tools with no moral weight</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q20" value="C" id="q20-c">
+                                <label for="q20-c">C) Words create or destroy, build or break—language is not neutral, it carries moral weight</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q20" value="D" id="q20-d">
+                                <label for="q20-d">D) Speaking loudly is more important than speaking truthfully</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: C</strong><br>
+                            Proverbs 18:21: Words CREATE or DESTROY. Language is not neutral—it builds or breaks, clarifies or confuses. Death and life dwell in the tongue. Etymology = stewardship of language with moral consequences. Section 4.2 principle.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="21" data-answer="D" data-points="3">
+                        <span class="question-number">Question 21</span>
+                        <div class="question-text">Matthew 5:37 commands "Let your communication be, Yea, yea; Nay, nay." This teaches:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q21" value="A" id="q21-a">
+                                <label for="q21-a">A) Brevity is the only virtue in communication</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q21" value="B" id="q21-b">
+                                <label for="q21-b">B) Eloquence and nuance are sinful</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q21" value="C" id="q21-c">
+                                <label for="q21-c">C) Christians should never explain their reasoning</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q21" value="D" id="q21-d">
+                                <label for="q21-d">D) Etymological precision—clarity over ambiguity, because "whatsoever is more than these cometh of evil"</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: D</strong><br>
+                            Matthew 5:37: "Let your yea be yea; and your nay, nay: for whatsoever is more than these cometh of evil." Teleios communication = PRECISION. Ambiguity is language of deception. Clear yes, clear no. Honor meaning. Section 4.2 standard.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="22" data-answer="B" data-points="3">
+                        <span class="question-number">Question 22</span>
+                        <div class="question-text">A spouse redefines "forever" mid-conflict, saying "When I said forever, I meant as long as I feel it." This demonstrates:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q22" value="A" id="q22-a">
+                                <label for="q22-a">A) Epistemological honesty about changing knowledge</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q22" value="B" id="q22-b">
+                                <label for="q22-b">B) Etymological immaturity—redefining words to escape accountability</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q22" value="C" id="q22-c">
+                                <label for="q22-c">C) Axiological strength—valuing authenticity over legalism</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q22" value="D" id="q22-d">
+                                <label for="q22-d">D) Ontological maturity—recognizing feelings as facts</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: B</strong><br>
+                            Redefining "forever" = ETYMOLOGICAL IMMATURITY. Shifting definitions to avoid commitment. Immature: "I didn't mean literally." Teleios: "I said forever—I meant it." Vows become suggestions when words lose weight. Section 4.5 example.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="23" data-answer="C" data-points="3">
+                        <span class="question-number">Question 23</span>
+                        <div class="question-text">The Four-Lens Decision-Making Framework applies all four dimensions before major decisions. The correct order is:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q23" value="A" id="q23-a">
+                                <label for="q23-a">A) Etymology → Ontology → Axiology → Epistemology</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q23" value="B" id="q23-b">
+                                <label for="q23-b">B) Axiology → Etymology → Epistemology → Ontology</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q23" value="C" id="q23-c">
+                                <label for="q23-c">C) Epistemology (How do I know?) → Axiology (What do I value?) → Ontology (What is real?) → Etymology (What do words mean?)</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q23" value="D" id="q23-d">
+                                <label for="q23-d">D) The order doesn't matter; use whichever lens feels most relevant</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: C</strong><br>
+                            Four-Lens Audit sequence: (1) EPISTEMOLOGY—How do I know this is true? (2) AXIOLOGY—What am I valuing most? (3) ONTOLOGY—What is the reality? (4) ETYMOLOGY—What do my words mean? Section 5.3 framework.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="24" data-answer="A" data-points="3">
+                        <span class="question-number">Question 24</span>
+                        <div class="question-text">When culture says "Follow your heart" and Scripture says "The heart is deceitful" (Jeremiah 17:9), the teleios response is:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q24" value="A" id="q24-a">
+                                <label for="q24-a">A) "Feelings are real but not always true. I test feelings against truth."</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q24" value="B" id="q24-b">
+                                <label for="q24-b">B) "Emotions are lies; I ignore all feelings completely."</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q24" value="C" id="q24-c">
+                                <label for="q24-c">C) "Scripture is outdated; modern psychology proves feelings are trustworthy."</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q24" value="D" id="q24-d">
+                                <label for="q24-d">D) "I balance Scripture with cultural wisdom to find middle ground."</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: A</strong><br>
+                            Error #1: "Thinking doesn't matter—feelings do." TELEIOS RESPONSE: Feelings are real but not always true. Test feelings against truth. Heart is deceitful (Jeremiah 17:9). Epistemology over emotion. Section 6.1 correction.
+                        </div>
+                    </div>
+                    
+                    <div class="question-card" data-question="25" data-answer="D" data-points="3">
+                        <span class="question-number">Question 25</span>
+                        <div class="question-text">The Covenant Readiness Diagnostic (Section 7) scores 40-60 as "strong axiomatical maturity." This requires mastery in:</div>
+                        <div class="options">
+                            <div class="option">
+                                <input type="radio" name="q25" value="A" id="q25-a">
+                                <label for="q25-a">A) Emotional intelligence and relational warmth only</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q25" value="B" id="q25-b">
+                                <label for="q25-b">B) Biblical memorization and theological knowledge only</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q25" value="C" id="q25-c">
+                                <label for="q25-c">C) Cultural engagement and trend awareness only</label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" name="q25" value="D" id="q25-d">
+                                <label for="q25-d">D) All four dimensions—verifying truth, ordering values, honoring design, stewarding language</label>
+                            </div>
+                        </div>
+                        <div class="explanation">
+                            <strong>✅ Correct Answer: D</strong><br>
+                            Covenant Readiness requires INTEGRATION of all four: (1) Epistemology—verify claims, (2) Axiology—order goods by truth, (3) Ontology—honor marriage as designed, (4) Etymology—keep promises, honor words. 12 questions, 5-point scale. Section 7 diagnostic.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PART 3: SHORT ANSWER (10 questions, 2 points each = 20 points) -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Part 3: Short Answer</h2>
+                        <p>10 questions | 2 points each | 20 points total | 2-3 sentences per question</p>
+                    </div>
+                    
+                    <div class="question-card" data-question="26" data-points="2">
+                        <span class="question-number">Question 26</span>
+                        <div class="question-text">Define epistemology in your own words and explain why it matters for covenant relationships.</div>
+                        <textarea name="q26" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="27" data-points="2">
+                        <span class="question-number">Question 27</span>
+                        <div class="question-text">Give one example from your life where you conflated feeling with fact. How would epistemological maturity have changed your response?</div>
+                        <textarea name="q27" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="28" data-points="2">
+                        <span class="question-number">Question 28</span>
+                        <div class="question-text">Explain the axiological hierarchy from Matthew 22:37-39 (God, neighbor, self). How does this challenge cultural priorities?</div>
+                        <textarea name="q28" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="29" data-points="2">
+                        <span class="question-number">Question 29</span>
+                        <div class="question-text">Describe one area where you've prioritized comfort over covenant. What axiological correction is needed?</div>
+                        <textarea name="q29" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="30" data-points="2">
+                        <span class="question-number">Question 30</span>
+                        <div class="question-text">What does it mean that marriage is an "ontological reality" rather than a cultural construct? Use Genesis 1:27 or Matthew 19:6 in your answer.</div>
+                        <textarea name="q30" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="31" data-points="2">
+                        <span class="question-number">Question 31</span>
+                        <div class="question-text">How does treating covenant as optional (ontological immaturity) damage relationships? Give one example.</div>
+                        <textarea name="q31" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="32" data-points="2">
+                        <span class="question-number">Question 32</span>
+                        <div class="question-text">Explain why Proverbs 18:21 says "death and life are in the power of the tongue." How does this establish etymology as covenant necessity?</div>
+                        <textarea name="q32" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="33" data-points="2">
+                        <span class="question-number">Question 33</span>
+                        <div class="question-text">Give one example of a word that culture has redefined (e.g., "love," "marriage," "truth"). What is the biblical definition?</div>
+                        <textarea name="q33" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="34" data-points="2">
+                        <span class="question-number">Question 34</span>
+                        <div class="question-text">Review the Four-Lens Decision Framework (Section 5.3). Which dimension is strongest for you? Which is weakest? Why?</div>
+                        <textarea name="q34" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="35" data-points="2">
+                        <span class="question-number">Question 35</span>
+                        <div class="question-text">Complete this statement: "The teleios person discerns before ___________, weighs before ___________, and understands before ___________."</div>
+                        <textarea name="q35" rows="4" placeholder="Your answer here (2-3 sentences)..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- PART 4: SCENARIO APPLICATION (5 questions, 3 points each = 15 points) -->
+                <div class="section">
+                    <div class="section-header">
+                        <h2>Part 4: Scenario Application</h2>
+                        <p>5 scenarios | 3 points each | 15 points total | Apply all four dimensions</p>
+                    </div>
+                    
+                    <div class="question-card" data-question="36" data-points="3">
+                        <span class="question-number">Question 36 - SCENARIO</span>
+                        <div class="question-text">
+                            <strong>Scenario:</strong> A married couple is considering "taking a break" because they feel disconnected. Apply the Four-Lens Framework:
+                            <br><br>
+                            • <strong>Epistemology:</strong> How do they know disconnection = leaving?<br>
+                            • <strong>Axiology:</strong> What are they valuing—comfort or covenant?<br>
+                            • <strong>Ontology:</strong> What is the reality of their marriage?<br>
+                            • <strong>Etymology:</strong> What does "taking a break" actually mean?<br>
+                            <br>
+                            Write your analysis (4-5 sentences).
+                        </div>
+                        <textarea name="q36" rows="6" placeholder="Apply all four lenses to this scenario..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="37" data-points="3">
+                        <span class="question-number">Question 37 - SCENARIO</span>
+                        <div class="question-text">
+                            <strong>Scenario:</strong> Someone says, "I believe marriage is whatever two people define it to be. Love is love." Identify the axiological and ontological errors. How would you respond using Scripture?
+                        </div>
+                        <textarea name="q37" rows="6" placeholder="Identify dimensional errors and provide biblical correction..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="38" data-points="3">
+                        <span class="question-number">Question 38 - SCENARIO</span>
+                        <div class="question-text">
+                            <strong>Scenario:</strong> A spouse says in conflict: "You ALWAYS ignore me" and "You NEVER listen." Identify the etymological problem. How would Matthew 5:37 ("Let your yea be yea") correct this?
+                        </div>
+                        <textarea name="q38" rows="6" placeholder="Identify the language issue and apply biblical correction..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="39" data-points="3">
+                        <span class="question-number">Question 39 - SCENARIO</span>
+                        <div class="question-text">
+                            <strong>Scenario:</strong> A Christian friend says, "I prayed about it and feel peace, so I know God is okay with my decision to divorce." Apply epistemology: How do they know? Is feeling = divine approval?
+                        </div>
+                        <textarea name="q39" rows="6" placeholder="Apply epistemological lens to test this claim..."></textarea>
+                    </div>
+                    
+                    <div class="question-card" data-question="40" data-points="3">
+                        <span class="question-number">Question 40 - SCENARIO</span>
+                        <div class="question-text">
+                            <strong>Scenario:</strong> Rate yourself honestly on the Covenant Readiness Diagnostic (Section 7). Based on your score, which dimension needs most formation? What is ONE practice you'll implement this week?
+                        </div>
+                        <textarea name="q40" rows="6" placeholder="Assess your readiness and commit to one actionable practice..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Buttons -->
+            <div class="navigation" style="display: flex !important;">
+                <button class="nav-button previous" onclick="previousQuestion()" id="prevBtn">Previous</button>
+                <button class="nav-button next" onclick="nextQuestion()" id="nextBtn">Next</button>
+                <button class="submit-button" onclick="submitAssessment()" id="submitBtn" style="display: none;">Submit Assessment</button>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentQuestion = 1;
+        let answers = {};
+        let startTime = Date.now();
+        let timerInterval;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createQuestionGrid();
+            showQuestion(1);
+            startTimer();
+        });
+        
+        function createQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            for (let i = 1; i <= 40; i++) {
+                const item = document.createElement('div');
+                item.className = 'question-grid-item';
+                item.textContent = i;
+                item.onclick = () => showQuestion(i);
+                grid.appendChild(item);
+            }
+        }
+        
+        function showQuestion(num) {
+            // Hide all questions
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Show current question
+            const questions = document.querySelectorAll('.question-card');
+            if (questions[num - 1]) {
+                questions[num - 1].classList.add('active');
+            }
+            
+            // Update current question number
+            currentQuestion = num;
+            document.getElementById('current-question').textContent = num;
+            
+            // Update grid
+            document.querySelectorAll('.question-grid-item').forEach((item, index) => {
+                item.classList.remove('current');
+                if (index + 1 === num) {
+                    item.classList.add('current');
+                }
+                if (answers[index + 1]) {
+                    item.classList.add('answered');
+                }
+            });
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = num === 1;
+            
+            if (num === 40) {
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'block';
+            } else {
+                document.getElementById('nextBtn').style.display = 'block';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
+            
+            // Save answer when navigating
+            saveCurrentAnswer();
+        }
+        
+        function saveCurrentAnswer() {
+            const questions = document.querySelectorAll('.question-card');
+            const current = questions[currentQuestion - 1];
+            
+            if (current) {
+                // Radio buttons (T/F and Multiple Choice)
+                const radio = current.querySelector('input[type="radio"]:checked');
+                if (radio) {
+                    answers[currentQuestion] = radio.value;
+                }
+                
+                // Textarea (Short Answer and Scenarios)
+                const textarea = current.querySelector('textarea');
+                if (textarea && textarea.value.trim()) {
+                    answers[currentQuestion] = textarea.value.trim();
+                }
+            }
+        }
+        
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < 40) {
+                showQuestion(currentQuestion + 1);
+            }
+        }
+        
+        function startTimer() {
+            let timeRemaining = 90 * 60; // 90 minutes in seconds
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                
+                document.getElementById('timer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Time is up! Submitting assessment...');
+                    submitAssessment();
+                }
+            }, 1000);
+        }
+        
+        function submitAssessment() {
+            saveCurrentAnswer();
+            clearInterval(timerInterval);
+            
+            // Calculate auto-graded score (Parts 1-2 only)
+            let autoScore = 0;
+            let autoTotal = 0;
+            
+            const questions = document.querySelectorAll('.question-card');
+            questions.forEach((card, index) => {
+                const qNum = index + 1;
+                const correctAnswer = card.getAttribute('data-answer');
+                const points = parseInt(card.getAttribute('data-points') || 0);
+                
+                if (correctAnswer && qNum <= 25) { // Only Parts 1-2 are auto-graded
+                    autoTotal += points;
+                    
+                    if (answers[qNum] === correctAnswer) {
+                        autoScore += points;
+                        card.style.borderColor = '#48bb78';
+                    } else {
+                        card.style.borderColor = '#f56565';
+                    }
+                    
+                    // Show explanation
+                    const explanation = card.querySelector('.explanation');
+                    if (explanation) {
+                        explanation.style.display = 'block';
+                    }
+                }
+            });
+            
+            // Calculate time taken
+            const timeTaken = Math.floor((Date.now() - startTime) / 1000 / 60);
+            
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <h2>Assessment Results</h2>
+                
+                <div class="score-display">
+                    ${autoScore} / ${autoTotal}
+                </div>
+                
+                <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-bottom: 15px;">Auto-Graded Sections (Parts 1-2)</h3>
+                    <p><strong>Your Score:</strong> ${autoScore} out of ${autoTotal} points (${Math.round(autoScore/autoTotal*100)}%)</p>
+                    <p><strong>Time Taken:</strong> ${timeTaken} minutes</p>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 15px;">Manual Review Required (Parts 3-4)</h3>
+                    <p><strong>Part 3:</strong> 10 Short Answer questions (20 points) - Requires instructor review</p>
+                    <p><strong>Part 4:</strong> 5 Scenario Applications (15 points) - Requires instructor review</p>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 15px;">Performance Analysis</h3>
+                    <p><strong>Auto-Graded Performance:</strong></p>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>✓ ${Math.round(autoScore/autoTotal*100) >= 90 ? 'Excellent' : 
+                             Math.round(autoScore/autoTotal*100) >= 80 ? 'Good' : 
+                             Math.round(autoScore/autoTotal*100) >= 70 ? 'Satisfactory' : 'Needs Review'} 
+                             understanding of Week 4 concepts</li>
+                        <li style="margin-top: 10px;">📊 Review questions marked in red below for explanations</li>
+                    </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-bottom: 10px;">✅ Next Steps</h3>
+                    <ol style="padding-left: 20px;">
+                        <li>Review all questions below (especially those marked in red)</li>
+                        <li>Read explanations for incorrect answers</li>
+                        <li>Submit Parts 3-4 to your instructor for manual grading</li>
+                        <li>Complete Week 4 Daily Practices (7 days)</li>
+                        <li>Ready for Week 5: The Civilizational Scaling of Teleios</li>
+                    </ol>
+                </div>
+            `;
+            
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            // Show all sections for review
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'block';
+            });
+            
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.style.display = 'block';
+            });
+            
+            // Hide navigation
+            document.querySelector('.navigation').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

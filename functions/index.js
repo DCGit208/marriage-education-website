@@ -1805,6 +1805,16 @@ async function activateAmbassador(payment) {
     booksSold: 0,
     commissionEarned: 0,
     level: 'Starter',
+    // NEW: Volume tracking (FCFA values)
+    personalVolume: 0,        // Direct sales by this ambassador
+    teamVolume: 0,            // Sales by direct recruits
+    networkVolume: 0,         // Sales by entire downline
+    // NEW: Count tracking for promotions
+    directAmbassadorCount: 0, // Regular ambassadors recruited
+    directSeniorCount: 0,     // Seniors recruited (for RD promotion)
+    directRDCount: 0,         // RDs recruited (for Executive promotion)
+    // NEW: Role level system (0=Customer, 1=Ambassador, 2=Senior, 3=RD, 4=Executive)
+    role_level: 1,            // Starts as Ambassador
     activated_at: admin.firestore.FieldValue.serverTimestamp(),
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     updated_at: admin.firestore.FieldValue.serverTimestamp()
@@ -3165,16 +3175,35 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
     console.log(`👤 Customer: ${customer.name} (${customer.id})`);
     console.log(`🎯 Attribution: AMB=${customer.source_ambassador}, SNR=${customer.source_senior}, RD=${customer.source_rd}`);
     
-    // 3. Calculate commissions (10% + 5% + 5% = 20%)
+    // 3. Calculate commissions (10% + 5% + 3% + 9% = 27%)
     const baseCommission = product.price * (product.commission_rate || 0.10);
+    
+    // Get Executive sponsor (if exists) by walking up from RD
+    let executiveId = null;
+    if (customer.source_rd) {
+      const rdDoc = await db.collection('regional_directors').doc(customer.source_rd).get();
+      if (rdDoc.exists) {
+        const rdData = rdDoc.data();
+        // Check if RD has a sponsor who is Executive (role_level 4)
+        if (rdData.sponsor_code) {
+          const executiveDoc = await db.collection('ambassadors').doc(rdData.sponsor_code).get();
+          if (executiveDoc.exists && executiveDoc.data().role_level === 4) {
+            executiveId = rdData.sponsor_code;
+          }
+        }
+      }
+    }
+    
     const commissions = {
-      total_commission: baseCommission * 2,
-      ambassador_amount: baseCommission,
+      total_commission: baseCommission * 2.7, // 27% total
+      ambassador_amount: baseCommission,       // 10%
       ambassador_id: customer.source_ambassador,
-      senior_amount: customer.source_senior ? baseCommission * 0.5 : 0,
+      senior_amount: customer.source_senior ? baseCommission * 0.5 : 0,  // 5%
       senior_id: customer.source_senior,
-      rd_amount: customer.source_rd ? baseCommission * 0.5 : 0,
+      rd_amount: customer.source_rd ? baseCommission * 0.3 : 0,  // 3% (CHANGED from 5%)
       rd_id: customer.source_rd,
+      executive_amount: executiveId ? baseCommission * 0.9 : 0,  // 9% (NEW)
+      executive_id: executiveId,
       product_category: product.category
     };
     
@@ -3199,7 +3228,8 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
         total: commissions.total_commission,
         ambassador: commissions.ambassador_amount,
         senior: commissions.senior_amount,
-        rd: commissions.rd_amount
+        rd: commissions.rd_amount,
+        executive: commissions.executive_amount
       },
       deployment_type: 'access_facilitation',
       earnings_type: 'advocacy_earnings',
@@ -3381,7 +3411,7 @@ async function creditCommissionsToUpline(customer, product, commissions, saleId)
     console.log(`✅ Credited senior: ${commissions.senior_amount.toLocaleString()} FCFA (override)`);
   }
   
-  // 3. Credit RD (5%)
+  // 3. Credit RD (3%)
   if (commissions.rd_id) {
     const rdRef = db.collection('regional_directors').doc(commissions.rd_id);
     
@@ -3395,11 +3425,80 @@ async function creditCommissionsToUpline(customer, product, commissions, saleId)
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
     
-    console.log(`✅ Credited RD: ${commissions.rd_amount.toLocaleString()} FCFA (override)`);
+    console.log(`✅ Credited RD: ${commissions.rd_amount.toLocaleString()} FCFA (3% override)`);
   }
+  
+  // 4. Credit Executive (9%)
+  if (commissions.executive_id) {
+    const executiveRef = db.collection('ambassadors').doc(commissions.executive_id);
+    
+    batch.update(executiveRef, {
+      commissionEarned: admin.firestore.FieldValue.increment(commissions.executive_amount),
+      executive_override_earned: admin.firestore.FieldValue.increment(commissions.executive_amount),
+      [`executive_revenue_by_category.${product.category}`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
+      [`monthly_earnings.${monthKey}.total`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
+      [`monthly_earnings.${monthKey}.executive_override`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    console.log(`✅ Credited Executive: ${commissions.executive_amount.toLocaleString()} FCFA (9% override)`);
+  }
+  
+  // 5. Update volume tracking
+  await updateVolumeTracking(customer, product.price);
   
   await batch.commit();
   console.log('✅ All commissions credited instantly');
+}
+
+/**
+ * Update volume tracking for personal, team, and network sales
+ */
+async function updateVolumeTracking(customer, saleAmount) {
+  try {
+    // 1. Update Personal Volume (direct seller)
+    if (customer.source_ambassador) {
+      await db.collection('ambassadors').doc(customer.source_ambassador).update({
+        personalVolume: admin.firestore.FieldValue.increment(saleAmount)
+      });
+      console.log(`📊 Updated personalVolume for ${customer.source_ambassador}: +${saleAmount} FCFA`);
+    }
+    
+    // 2. Update Team Volume (senior's direct recruits)
+    if (customer.source_senior) {
+      await db.collection('ambassadors').doc(customer.source_senior).update({
+        teamVolume: admin.firestore.FieldValue.increment(saleAmount)
+      });
+      console.log(`📊 Updated teamVolume for ${customer.source_senior}: +${saleAmount} FCFA`);
+    }
+    
+    // 3. Update Network Volume (RD's entire network)
+    if (customer.source_rd) {
+      await db.collection('regional_directors').doc(customer.source_rd).update({
+        networkVolume: admin.firestore.FieldValue.increment(saleAmount)
+      });
+      console.log(`📊 Updated networkVolume for ${customer.source_rd}: +${saleAmount} FCFA`);
+    }
+    
+    // 4. Update Executive's network volume (if exists)
+    if (customer.source_rd) {
+      const rdDoc = await db.collection('regional_directors').doc(customer.source_rd).get();
+      if (rdDoc.exists) {
+        const rdData = rdDoc.data();
+        if (rdData.sponsor_code) {
+          const executiveDoc = await db.collection('ambassadors').doc(rdData.sponsor_code).get();
+          if (executiveDoc.exists && executiveDoc.data().role_level === 4) {
+            await db.collection('ambassadors').doc(rdData.sponsor_code).update({
+              networkVolume: admin.firestore.FieldValue.increment(saleAmount)
+            });
+            console.log(`📊 Updated Executive networkVolume for ${rdData.sponsor_code}: +${saleAmount} FCFA`);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error updating volume tracking:', error);
+  }
 }
 
 /**
@@ -3558,6 +3657,7 @@ exports.onNewAmbassadorCreated = functions.firestore
     await seniorRef.update({
       recruits_count: admin.firestore.FieldValue.increment(1),
       team_count: admin.firestore.FieldValue.increment(1),
+      directAmbassadorCount: admin.firestore.FieldValue.increment(1),
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
     
@@ -3608,6 +3708,7 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     // 1. Update ambassador record
     batch.update(ambassadorRef, {
       ambassador_type: 'senior',
+      role_level: 2, // Level 2 = Senior Ambassador
       promotion_date: admin.firestore.FieldValue.serverTimestamp(),
       promotion_reason: reason,
       promoted_at: new Date().toISOString(),
@@ -3629,22 +3730,25 @@ async function promoteToSenior(ambassadorCode, reason, ambassadorData) {
     });
     
     // 3. Update recruiter's senior count if they have one
-    if (ambassadorData.recruited_by || ambassadorData.senior_code) {
-      const recruiterCode = ambassadorData.recruited_by || ambassadorData.senior_code;
+    if (fullAmbassadorData.recruited_by || fullAmbassadorData.senior_code) {
+      const recruiterCode = fullAmbassadorData.recruited_by || fullAmbassadorData.senior_code;
       const recruiterRef = db.collection('ambassadors').doc(recruiterCode);
       const recruiterSnap = await recruiterRef.get();
       
       if (recruiterSnap.exists) {
         const recruiterData = recruiterSnap.data();
+        
+        // Increment directSeniorCount for promotion tracking
+        batch.update(recruiterRef, {
+          seniors_recruited: admin.firestore.FieldValue.increment(1),
+          directSeniorCount: admin.firestore.FieldValue.increment(1)
+        });
+        
+        // Also update in senior_ambassadors collection if recruiter is senior
         if (recruiterData.ambassador_type === 'senior') {
-          // Increment seniors_recruited for RD promotion tracking
-          batch.update(recruiterRef, {
-            seniors_recruited: admin.firestore.FieldValue.increment(1)
-          });
-          
-          // Also update in senior_ambassadors collection
           batch.update(db.collection('senior_ambassadors').doc(recruiterCode), {
-            seniors_recruited: admin.firestore.FieldValue.increment(1)
+            seniors_recruited: admin.firestore.FieldValue.increment(1),
+            directSeniorCount: admin.firestore.FieldValue.increment(1)
           });
         }
       }
@@ -3855,6 +3959,7 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
     // 1. Update ambassador record
     batch.update(ambassadorRef, {
       ambassador_type: 'regional_director',
+      role_level: 3, // Level 3 = Regional Director
       rd_promotion_date: admin.firestore.FieldValue.serverTimestamp(),
       promoted_to_rd_at: new Date().toISOString(),
       updated_at: admin.firestore.FieldValue.serverTimestamp()
@@ -3883,7 +3988,7 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
     batch.set(notificationRef, {
       type: 'rd_promotion',
       title: '👑 Congratulations! You\'re now a Regional Director!',
-      message: `You've been promoted to Regional Director for recruiting 50 senior ambassadors! You can now earn 5% network override on 500+ ambassadors. Target: $450K-$750K/month.`,
+      message: `You've been promoted to Regional Director for recruiting 50 senior ambassadors! You can now earn 3% network override on 500+ ambassadors. Target: $450K-$750K/month.`,
       ambassador_code: ambassadorCode,
       read: false,
       created_at: admin.firestore.FieldValue.serverTimestamp()
@@ -3907,7 +4012,7 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
             <h3>What This Means:</h3>
             <ul>
               <li>✅ Manage a <strong>network of 50 seniors × ~10 ambassadors = 500 total</strong></li>
-              <li>✅ Earn <strong>5% network override</strong> on all network sales</li>
+              <li>✅ Earn <strong>3% network override</strong> on all network sales</li>
               <li>✅ Access the <strong>RD Dashboard</strong> with network management tools</li>
               <li>✅ Target: <strong>$450K-$750K/month</strong> with active network</li>
             </ul>
@@ -3961,6 +4066,238 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
     
   } catch (error) {
     console.error(`❌ Error promoting ${ambassadorCode} to RD:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Firestore Trigger: Track when RD is created and check sponsor for Executive promotion
+ */
+exports.onRDPromoted = functions.firestore
+  .document('regional_directors/{rdCode}')
+  .onCreate(async (snap, context) => {
+    const rdData = snap.data();
+    const sponsorCode = rdData.senior_code || rdData.recruited_by;
+    
+    if (!sponsorCode) {
+      console.log('No sponsor found for new RD');
+      return null;
+    }
+    
+    console.log(`👑 New RD promoted, checking sponsor ${sponsorCode} for Executive eligibility`);
+    
+    // Increment sponsor's directRDCount
+    const sponsorRef = db.collection('ambassadors').doc(sponsorCode);
+    const sponsorSnap = await sponsorRef.get();
+    
+    if (!sponsorSnap.exists) {
+      console.log(`Sponsor ${sponsorCode} not found`);
+      return null;
+    }
+    
+    await sponsorRef.update({
+      directRDCount: admin.firestore.FieldValue.increment(1),
+      rds_recruited: admin.firestore.FieldValue.increment(1),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    console.log(`✅ Updated directRDCount for ${sponsorCode}`);
+    
+    // Check if sponsor eligible for Executive promotion
+    const sponsorData = sponsorSnap.data();
+    const directRDCount = (sponsorData.directRDCount || 0) + 1;
+    
+    if (directRDCount >= 1 && sponsorData.ambassador_type === 'regional_director') {
+      console.log(`🏆 ${sponsorCode} is eligible for Executive promotion!`);
+      await promoteToExecutive(sponsorCode, sponsorData);
+    }
+    
+    return null;
+  });
+
+// ============================================
+// EXECUTIVE NETWORK DIRECTOR PROMOTION SYSTEM
+// ============================================
+
+/**
+ * Check if RD qualifies for Executive promotion
+ * Callable function
+ */
+exports.checkExecutivePromotion = functions.https.onCall(async (data, context) => {
+  try {
+    const { ambassador_code } = data;
+    
+    if (!ambassador_code) {
+      throw new functions.https.HttpsError('invalid-argument', 'Ambassador code required');
+    }
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassador_code);
+   const ambassadorSnap = await ambassadorRef.get();
+    
+    if (!ambassadorSnap.exists) {
+      throw new functions.https.HttpsError('not-found', 'Ambassador not found');
+    }
+    
+    const ambassador = ambassadorSnap.data();
+    
+    // Must be RD first
+    if (ambassador.ambassador_type !== 'regional_director') {
+      return { eligible: false, reason: 'not_rd' };
+    }
+    
+    // Check Executive criteria: 1+ RDs recruited
+    const rdsRecruited = ambassador.directRDCount || ambassador.rds_recruited || 0;
+    const meetsExecutiveThreshold = rdsRecruited >= 1;
+    
+    if (meetsExecutiveThreshold) {
+      // Promote to Executive
+      await promoteToExecutive(ambassador_code, ambassador);
+      
+      return {
+        success: true,
+        eligible: true,
+        reason: 'executive_threshold',
+        data: { rdsRecruited }
+      };
+    }
+    
+    return {
+      eligible: false,
+      reason: 'threshold_not_met',
+      data: { rdsRecruited, rdsNeeded: 1 - rdsRecruited }
+    };
+    
+  } catch (error) {
+    console.error('Error checking Executive promotion:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/**
+ * Promote Regional Director to Executive Network Director
+ */
+async function promoteToExecutive(ambassadorCode, ambassadorData) {
+  try {
+    console.log(`🏆 Promoting ${ambassadorCode} to Executive Network Director`);
+    
+    const ambassadorRef = db.collection('ambassadors').doc(ambassadorCode);
+    
+    // Fetch full current data if not provided
+    let fullAmbassadorData = ambassadorData;
+    if (!ambassadorData || !ambassadorData.email) {
+      const ambassadorSnap = await ambassadorRef.get();
+      if (ambassadorSnap.exists) {
+        fullAmbassadorData = ambassadorSnap.data();
+      }
+    }
+    
+    const batch = db.batch();
+    
+    // 1. Update ambassador record
+    batch.update(ambassadorRef, {
+      ambassador_type: 'executive',
+      role_level: 4, // Level 4 = Executive Network Director
+      executive_promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      promoted_to_executive_at: new Date().toISOString(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 2. Update regional_directors record
+    const rdCode = ambassadorCode.replace('AMB-', 'RD-');
+    const rdRef = db.collection('regional_directors').doc(rdCode);
+    batch.update(rdRef, {
+      ambassador_type: 'executive',
+      role_level: 4,
+      executive_promotion_date: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // 3. Create promotion notification
+    const notificationRef = db.collection('notifications').doc();
+    batch.set(notificationRef, {
+      type: 'executive_promotion',
+      title: '🏆 Congratulations! You\'re now an Executive Network Director!',
+      message: `You've been promoted to Executive Network Director for recruiting 1+ Regional Directors! You can now earn 9% executive override on your entire network. Target: $1M+/month.`,
+      ambassador_code: ambassadorCode,
+      read: false,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    await batch.commit();
+    
+    console.log(`✅ ${ambassadorCode} promoted to Executive Network Director successfully`);
+    
+    // Send email notification
+    if (fullAmbassadorData.email && transporter) {
+      try {
+        await transporter.sendMail({
+          from: SMTP_CONFIG.from,
+          to: fullAmbassadorData.email,
+          subject: '🏆 You\'ve Been Promoted to Executive Network Director!',
+          html: `
+            <h2>🏆 Congratulations, ${fullAmbassadorData.fullName || fullAmbassadorData.firstName}!</h2>
+            <p>You've been promoted to <strong>Executive Network Director</strong> - the HIGHEST tier in our organization!</p>
+            
+            <h3>What This Means:</h3>
+            <ul>
+              <li>✅ <strong>TOP TIER LEADERSHIP</strong> - Elite status in the organization</li>
+              <li>✅ Earn <strong>9% executive override (7% + 2% leadership bonus)</strong> on entire network</li>
+              <li>✅ Manage multiple Regional Directors and their networks</li>
+              <li>✅ Access the <strong>Executive Dashboard</strong> with advanced analytics</li>
+              <li>✅ Target: <strong>$1M-$1.5M+/month</strong> with active network</li>
+            </ul>
+            
+            <h3>Your Network:</h3>
+            <ul>
+              <li>Regional Directors Recruited: ${fullAmbassadorData.directRDCount || fullAmbassadorData.rds_recruited || 1}+</li>
+              <li>Total Network: 1,000+ ambassadors across multiple RD territories</li>
+              <li>Commission Structure: 10% + 5% + 3% + 9% = 27% total payout</li>
+            </ul>
+            
+            <h3>Next Steps:</h3>
+            <ol>
+              <li>Login to your dashboard: <a href="https://marriageducation.com/ambassador-login.html">Ambassador Login</a></li>
+              <li>Access your Executive Network Director Dashboard</li>
+              <li>Monitor network-wide performance and RD development</li>
+              <li>Your executive override earnings (9%) will show on your dashboard</li>
+            </ol>
+            
+            <p><strong>🏆 You are now part of an elite group of Executive Network Directors!</strong></p>
+            
+            <p>Questions? Reply to this email.</p>
+            
+            <p>Best regards,<br>Marriage Education Team</p>
+          `
+        });
+        console.log(`📧 Executive promotion email sent to ${fullAmbassadorData.email}`);
+      } catch (emailError) {
+        console.error('Failed to send Executive promotion email:', emailError);
+      }
+    }
+    
+    // Send Telegram notification
+    if (TELEGRAM_BOT_TOKEN) {
+      const msg = `🏆 EXECUTIVE NETWORK DIRECTOR PROMOTION!\n\n` +
+        `Ambassador: ${ambassadorCode}\n` +
+        `Name: ${fullAmbassadorData.fullName || 'Unknown'}\n` +
+        `RDs Recruited: ${fullAmbassadorData.directRDCount || fullAmbassadorData.rds_recruited || 1}+\n` +
+        `Network Size: 1,000+ ambassadors\n\n` +
+        `🎯 TOP TIER REACHED!\n` +
+        `Executive Override: 9% on entire network\n` +
+        `Target: $1M+/month!`;
+      
+      await sendTelegram(msg, false);
+    }
+    
+    return {
+      success: true,
+      ambassadorCode: ambassadorCode,
+      newStatus: 'executive',
+      role_level: 4
+    };
+    
+  } catch (error) {
+    console.error(`❌ Error promoting ${ambassadorCode} to Executive:`, error);
     throw error;
   }
 }
