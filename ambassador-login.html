@@ -333,7 +333,10 @@
                 let dashboardUrl = 'ambassador/dashboard.html';
                 let welcomeMsg = '✅ Login successful! Redirecting to dashboard...';
                 
-                if (ambassadorType === 'regional_director') {
+                if (ambassadorType === 'executive') {
+                    dashboardUrl = 'executive/dashboard.html';
+                    welcomeMsg = '🏆 Welcome, Executive Network Director! Redirecting...';
+                } else if (ambassadorType === 'regional_director') {
                     dashboardUrl = 'regional-director/rd-dashboard.html';
                     welcomeMsg = '👑 Welcome, Regional Director! Redirecting...';
                 } else if (ambassadorType === 'senior') {

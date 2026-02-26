@@ -3175,7 +3175,7 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
     console.log(`👤 Customer: ${customer.name} (${customer.id})`);
     console.log(`🎯 Attribution: AMB=${customer.source_ambassador}, SNR=${customer.source_senior}, RD=${customer.source_rd}`);
     
-    // 3. Calculate commissions (10% + 5% + 3% + 9% = 27%)
+    // 3. Calculate commissions (10% + 5% + 5% + 6.67% = 26.67%)
     const baseCommission = product.price * (product.commission_rate || 0.10);
     
     // Get Executive sponsor (if exists) by walking up from RD
@@ -3195,14 +3195,14 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
     }
     
     const commissions = {
-      total_commission: baseCommission * 2.7, // 27% total
+      total_commission: baseCommission * 2.667, // 26.67% total
       ambassador_amount: baseCommission,       // 10%
       ambassador_id: customer.source_ambassador,
       senior_amount: customer.source_senior ? baseCommission * 0.5 : 0,  // 5%
       senior_id: customer.source_senior,
-      rd_amount: customer.source_rd ? baseCommission * 0.3 : 0,  // 3% (CHANGED from 5%)
+      rd_amount: customer.source_rd ? baseCommission * 0.5 : 0,  // 5% (SUSTAINABLE MODEL)
       rd_id: customer.source_rd,
-      executive_amount: executiveId ? baseCommission * 0.9 : 0,  // 9% (NEW)
+      executive_amount: executiveId ? baseCommission * 0.667 : 0,  // 6.67% (SUSTAINABLE MODEL)
       executive_id: executiveId,
       product_category: product.category
     };
@@ -3425,10 +3425,10 @@ async function creditCommissionsToUpline(customer, product, commissions, saleId)
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
     
-    console.log(`✅ Credited RD: ${commissions.rd_amount.toLocaleString()} FCFA (3% override)`);
+    console.log(`✅ Credited RD: ${commissions.rd_amount.toLocaleString()} FCFA (5% override)`);
   }
   
-  // 4. Credit Executive (9%)
+  // 4. Credit Executive (6.67%)
   if (commissions.executive_id) {
     const executiveRef = db.collection('ambassadors').doc(commissions.executive_id);
     
@@ -3441,7 +3441,7 @@ async function creditCommissionsToUpline(customer, product, commissions, saleId)
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
     
-    console.log(`✅ Credited Executive: ${commissions.executive_amount.toLocaleString()} FCFA (9% override)`);
+    console.log(`✅ Credited Executive: ${commissions.executive_amount.toLocaleString()} FCFA (6.67% override)`);
   }
   
   // 5. Update volume tracking
