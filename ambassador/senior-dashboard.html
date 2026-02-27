@@ -957,6 +957,43 @@
             </div>
         </div>
 
+        <!-- Commission History -->
+        <div class="recent-sales">
+            <h2><i class="fas fa-history"></i> Commission History</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Track all your earnings - personal sales (10%) + team overrides (5%)</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 1rem; text-align: left; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Date</th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Customer / Ambassador</th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Product</th>
+                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Commission</th>
+                        <th style="padding: 1rem; text-align: center; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Type</th>
+                    </tr>
+                </thead>
+                <tbody id="commissionHistoryBody">
+                    <tr>
+                        <td colspan="5" style="padding: 3rem; text-align: center; color: #636e72;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <p>Loading commission history...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Downline / Team Members -->
+        <div class="referral-section">
+            <h2><i class="fas fa-users"></i> Your Recruited Ambassadors</h2>
+            <p style="color: #636e72; margin-bottom: 1.5rem;">Ambassadors you personally recruited - they contribute to your team override commissions</p>
+            <div id="downlineList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                <div style="text-align: center; padding: 2rem; color: #636e72; grid-column: 1 / -1;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Loading your team...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Team Portfolio Performance -->
         <div class="recent-sales">
             <h2><i class="fas fa-chart-pie"></i> Team Portfolio Performance by Category</h2>
@@ -1036,7 +1073,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -1066,13 +1103,12 @@
             localStorage.setItem('seniorCode', seniorCode);
         }
 
-        // Load senior ambassador data
+        // Load senior ambassador data with realtime updates
         async function loadSeniorData() {
-            try {
-                // Check if promoted to Regional Director
-                const ambassadorRef = doc(db, 'ambassadors', seniorCode);
-                const ambassadorSnap = await getDoc(ambassadorRef);
-                
+            // First, check if promoted to Regional Director (using onSnapshot for realtime promotion detection)
+            const ambassadorRef = doc(db, 'ambassadors', seniorCode);
+            
+            onSnapshot(ambassadorRef, async (ambassadorSnap) => {
                 if (ambassadorSnap.exists() && ambassadorSnap.data().ambassador_type === 'regional_director') {
                     console.log('👑 Regional Director detected - redirecting to RD dashboard...');
                     const notification = document.createElement('div');
@@ -1086,58 +1122,64 @@
                     return;
                 }
                 
-                // Try senior_ambassadors collection first
+                // Try senior_ambassadors collection first (with realtime updates)
                 const seniorRef = doc(db, 'senior_ambassadors', seniorCode);
-                const seniorSnap = await getDoc(seniorRef);
+                onSnapshot(seniorRef, async (seniorSnap) => {
+                    if (seniorSnap.exists()) {
+                        const data = seniorSnap.data();
+                        console.log('✅ Loaded from senior_ambassadors:', data);
+                        console.log('   Name field:', data.name);
+                        updateDashboard(data);
+                        await loadTeamData(data);
+                        await loadCommissionHistory(seniorCode);
+                        await loadDownline(seniorCode);
+                    } else if (ambassadorSnap.exists()) {
+                        // Fall back to ambassadors collection
+                        const ambassadorData = ambassadorSnap.data();
+                        console.log('✅ Loaded from ambassadors collection:', ambassadorData);
+                        console.log('   Fields available:', Object.keys(ambassadorData));
+                        console.log('   name:', ambassadorData.name);
+                        console.log('   fullName:', ambassadorData.fullName);
+                        console.log('   firstName:', ambassadorData.firstName);
+                        console.log('   lastName:', ambassadorData.lastName);
+                        
+                        // Check if this is actually a senior
+                        if (ambassadorData.ambassador_type !== 'senior') {
+                            console.warn('⚠️ User is not a senior ambassador');
+                            alert('Access denied: This dashboard is for Senior Ambassadors only.');
+                            window.location.href = 'dashboard.html';
+                            return;
+                        }
 
-                if (seniorSnap.exists()) {
-                    const data = seniorSnap.data();
-                    console.log('✅ Loaded from senior_ambassadors:', data);
-                    console.log('   Name field:', data.name);
-                    updateDashboard(data);
-                    await loadTeamData(data);
-                } else if (ambassadorSnap.exists()) {
-                    // Fall back to ambassadors collection
-                    const ambassadorData = ambassadorSnap.data();
-                    console.log('✅ Loaded from ambassadors collection:', ambassadorData);
-                    console.log('   Fields available:', Object.keys(ambassadorData));
-                    console.log('   name:', ambassadorData.name);
-                    console.log('   fullName:', ambassadorData.fullName);
-                    console.log('   firstName:', ambassadorData.firstName);
-                    console.log('   lastName:', ambassadorData.lastName);
-                    
-                    // Check if this is actually a senior
-                    if (ambassadorData.ambassador_type !== 'senior') {
-                        console.warn('⚠️ User is not a senior ambassador');
-                        alert('Access denied: This dashboard is for Senior Ambassadors only.');
-                        window.location.href = 'dashboard.html';
-                        return;
+                        // Convert ambassadors data format to senior dashboard format
+                        const seniorData = {
+                            senior_code: seniorCode,
+                            name: ambassadorData.name || ambassadorData.fullName || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim() || 'Senior Ambassador',
+                            email: ambassadorData.email,
+                            team_count: ambassadorData.recruits_count || 0,
+                            monthly_team_sales: ambassadorData.monthly_team_sales || 0,
+                            total_override_earnings: ambassadorData.total_override_earnings || 0,
+                            promotion_date: ambassadorData.promotion_date || ambassadorData.createdAt
+                        };
+                        updateDashboard(seniorData);
+                        await loadTeamData(seniorData);
+                        await loadCommissionHistory(seniorCode);
+                        await loadDownline(seniorCode);
+                    } else {
+                        console.error('❌ No data found for senior code:', seniorCode);
+                        console.error('   senior_ambassadors exists?', seniorSnap.exists());
+                        console.error('   ambassadors exists?', ambassadorSnap.exists());
+                        console.error('   This should not happen - data should exist!');
+                        alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease check the browser console (F12) for details.');
+                        loadDemoData();
                     }
-
-                    // Convert ambassadors data format to senior dashboard format
-                    const seniorData = {
-                        senior_code: seniorCode,
-                        name: ambassadorData.name || ambassadorData.fullName || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim() || 'Senior Ambassador',
-                        email: ambassadorData.email,
-                        team_count: ambassadorData.recruits_count || 0,
-                        monthly_team_sales: ambassadorData.monthly_team_sales || 0,
-                        total_override_earnings: ambassadorData.total_override_earnings || 0,
-                        promotion_date: ambassadorData.promotion_date || ambassadorData.createdAt
-                    };
-                    updateDashboard(seniorData);
-                    await loadTeamData(seniorData);
-                } else {
-                    console.error('❌ No data found for senior code:', seniorCode);
-                    console.error('   senior_ambassadors exists?', seniorSnap.exists());
-                    console.error('   ambassadors exists?', ambassadorSnap.exists());
-                    console.error('   This should not happen - data should exist!');
-                    alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease check the browser console (F12) for details.');
+                }, (error) => {
+                    console.error('Error loading senior data (realtime):', error);
                     loadDemoData();
-                }
-            } catch (error) {
-                console.error('Error loading senior data:', error);
-                loadDemoData();
-            }
+                });
+            }, (error) => {
+                console.error('Error checking promotion status (realtime):', error);
+            });
         }
 
         function updateDashboard(data) {
@@ -1632,6 +1674,201 @@
 
         window.toggleAmbassadorDetails = toggleAmbassadorDetails;
         window.viewAmbassadorSales = viewAmbassadorSales;
+
+        // Load commission history with realtime updates
+        async function loadCommissionHistory(seniorCode) {
+            const commissionHistoryBody = document.getElementById('commissionHistoryBody');
+            
+            if (!commissionHistoryBody) {
+                console.error('Commission history table not found');
+                return;
+            }
+
+            // Query sales where this senior earned commission (personal sales + overrides)
+            const salesQuery = query(
+                collection(db, 'sales'),
+                where('source_senior', '==', seniorCode),
+                orderBy('sale_date', 'desc'),
+                limit(20)
+            );
+
+            onSnapshot(salesQuery, (snapshot) => {
+                console.log(`📊 Commission History: Found ${snapshot.size} sales`);
+                
+                if (snapshot.empty) {
+                    commissionHistoryBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="padding: 3rem; text-align: center; color: #636e72;">
+                                <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                <p>No commission history yet.</p>
+                                <small>Your earnings will appear here once you make sales or your team generates overrides.</small>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const sale = doc.data();
+                    const saleDate = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date(sale.sale_date);
+                    const formattedDate = saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    // Determine commission type and details
+                    let commissionType = '';
+                    let sourceName = '';
+                    let commissionAmount = 0;
+                    
+                    if (sale.ambassador_code === seniorCode) {
+                        // Personal sale (10% commission)
+                        commissionType = '<span style="background: #00b894; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Personal 10%</span>';
+                        sourceName = sale.customer_name || 'Direct Customer';
+                        commissionAmount = sale.ambassador_commission || 0;
+                    } else {
+                        // Override from team member (5% override)
+                        commissionType = '<span style="background: #6c5ce7; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Override 5%</span>';
+                        sourceName = sale.ambassador_name || sale.ambassador_code || 'Team Member';
+                        commissionAmount = sale.senior_override || 0;
+                    }
+
+                    const productName = sale.product_name || sale.product_title || 'Product';
+                    
+                    html += `
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 1rem; color: #636e72; font-size: 0.9rem;">${formattedDate}</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 600; color: #2d3436;">${sourceName}</div>
+                                ${sale.ambassador_code !== seniorCode ? '<div style="font-size: 0.85rem; color: #636e72;">' + (sale.ambassador_code || '') + '</div>' : ''}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="color: #2d3436;">${productName}</div>
+                                <div style="font-size: 0.85rem; color: #636e72;">${(sale.product_price || 0).toLocaleString()} FCFA</div>
+                            </td>
+                            <td style="padding: 1rem; text-align: right;">
+                                <div style="font-weight: 700; color: #00b894; font-size: 1.1rem;">${commissionAmount.toLocaleString()} FCFA</div>
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">${commissionType}</td>
+                        </tr>
+                    `;
+                });
+
+                commissionHistoryBody.innerHTML = html;
+            }, (error) => {
+                console.error('Error loading commission history:', error);
+                commissionHistoryBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: #d63031;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <p>Error loading commission history</p>
+                            <small>${error.message}</small>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Load downline (recruited ambassadors) with realtime updates
+        async function loadDownline(seniorCode) {
+            const downlineList = document.getElementById('downlineList');
+            
+            if (!downlineList) {
+                console.error('Downline list container not found');
+                return;
+            }
+
+            // Query ambassadors who were recruited by this senior
+            const downlineQuery = query(
+                collection(db, 'ambassadors'),
+                where('senior_code', '==', seniorCode)
+            );
+
+            onSnapshot(downlineQuery, (snapshot) => {
+                console.log(`👥 Downline: Found ${snapshot.size} recruited ambassadors`);
+                
+                if (snapshot.empty) {
+                    downlineList.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; color: #636e72; grid-column: 1 / -1;">
+                            <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No recruited ambassadors yet</p>
+                            <small>Start recruiting ambassadors to earn 5% overrides on their sales!</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Convert to array and sort by join date (newest first)
+                const ambassadors = [];
+                snapshot.forEach((doc) => {
+                    ambassadors.push({ id: doc.id, ...doc.data() });
+                });
+                ambassadors.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    return dateB - dateA;
+                });
+
+                let html = '';
+                ambassadors.forEach((ambassador) => {
+                    const name = ambassador.name || ambassador.fullName || `${ambassador.firstName || ''} ${ambassador.lastName || ''}`.trim() || 'Ambassador';
+                    const ambassadorCode = ambassador.id || ambassador.ambassador_code || 'N/A';
+                    const joinDate = ambassador.createdAt?.toDate ? ambassador.createdAt.toDate() : new Date(ambassador.createdAt || Date.now());
+                    const formattedDate = joinDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    const salesCount = ambassador.total_sales || 0;
+                    const earnings = ambassador.total_earnings || 0;
+                    const status = ambassador.ambassador_type === 'senior' ? 'Senior Ambassador' : 'Ambassador';
+                    const statusBadge = ambassador.ambassador_type === 'senior' 
+                        ? '<span style="background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">⭐ Senior</span>'
+                        : '';
+
+                    html += `
+                        <div style="background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 2px solid #e9ecef; transition: transform 0.2s;">
+                            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; margin-right: 12px;">
+                                    ${name.charAt(0).toUpperCase()}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #2d3436; font-size: 1rem;">
+                                        ${name}
+                                        ${statusBadge}
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: #636e72; font-family: monospace;">${ambassadorCode}</div>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.9rem;">
+                                <div>
+                                    <div style="color: #636e72; font-size: 0.8rem; margin-bottom: 4px;">Status</div>
+                                    <div style="font-weight: 600; color: #2d3436;">${status}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #636e72; font-size: 0.8rem; margin-bottom: 4px;">Joined</div>
+                                    <div style="font-weight: 600; color: #2d3436;">${formattedDate}</div>
+                                </div>
+                                <div>
+                                    <div style="color: #636e72; font-size: 0.8rem; margin-bottom: 4px;">Total Sales</div>
+                                    <div style="font-weight: 700; color: #00b894;">${salesCount} units</div>
+                                </div>
+                                <div>
+                                    <div style="color: #636e72; font-size: 0.8rem; margin-bottom: 4px;">Earnings</div>
+                                    <div style="font-weight: 700; color: #6c5ce7;">${earnings.toLocaleString()} FCFA</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                downlineList.innerHTML = html;
+            }, (error) => {
+                console.error('Error loading downline:', error);
+                downlineList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #d63031; grid-column: 1 / -1;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Error loading downline</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            });
+        }
 
         // Initialize dashboard
         loadSeniorData();
