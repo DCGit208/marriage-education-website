@@ -580,6 +580,45 @@
                     </div>
                 </div>
 
+                <!-- Commission History -->
+                <div class="section-title" style="margin-top: 30px;">
+                    <span>📊</span>
+                    <span>Commission History</span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px; font-size: 16px;">Track all your earnings across all 4 commission tiers (10% + 5% + 5% + 6.67%)</p>
+
+                <table class="rd-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Source</th>
+                            <th>Product</th>
+                            <th>Commission</th>
+                            <th>Tier</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commissionHistoryBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px;">
+                                ⏳ Loading commission history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Downline / Regional Directors -->
+                <div class="section-title" style="margin-top: 30px;">
+                    <span>👥</span>
+                    <span>Your Regional Directors</span>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px; font-size: 16px;">Regional Directors in your executive network - they generate your 6.67% executive override</p>
+                
+                <div id="downlineList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5); grid-column: 1 / -1;">
+                        ⏳ Loading your Regional Directors...
+                    </div>
+                </div>
+
                 <!-- Regional Directors Table -->
                 <div class="section-title" style="margin-top: 30px;">
                     <span>📊</span>
@@ -701,10 +740,8 @@
         });
 
         async function loadExecutiveDashboard(userId) {
-            try {
-                // Get ambassador data
-                const ambassadorDoc = await db.collection('ambassadors').doc(userId).get();
-                
+            // Use onSnapshot for realtime updates
+            db.collection('ambassadors').doc(userId).onSnapshot(async (ambassadorDoc) => {
                 if (!ambassadorDoc.exists) {
                     showError('Executive account not found');
                     return;
@@ -728,16 +765,20 @@
                 await loadCommissionData(userId);
 
                 // Load Regional Directors
-                await loadRegionalDirectors(ambassadorData.referralCode);
+                await loadRegionalDirectors(ambassadorData.referralCode || userId);
+
+                // Load commission history and downline
+                await loadCommissionHistory(userId);
+                await loadDownline(userId);
 
                 // Show dashboard
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'block';
 
-            } catch (error) {
+            }, (error) => {
                 console.error('Error loading dashboard:', error);
                 showError('Failed to load dashboard: ' + error.message);
-            }
+            });
         }
 
         function displayExecutiveData() {
@@ -887,6 +928,203 @@
                     </tr>
                 `;
             }
+        }
+
+        // Load commission history with realtime updates
+        async function loadCommissionHistory(userId) {
+            const commissionHistoryBody = document.getElementById('commissionHistoryBody');
+            
+            if (!commissionHistoryBody) {
+                console.error('Commission history table not found');
+                return;
+            }
+
+            // Query sales where this executive earned commission (all 4 tiers)
+            db.collection('sales')
+                .where('source_executive', '==', userId)
+                .orderBy('sale_date', 'desc')
+                .limit(20)
+                .onSnapshot((snapshot) => {
+                    console.log(`📊 Executive Commission History: Found ${snapshot.size} sales`);
+                    
+                    if (snapshot.empty) {
+                        commissionHistoryBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                                    <div style="font-size: 2em; margin-bottom: 10px;">📊</div>
+                                    <div style="font-size: 1.1em; margin-bottom: 5px;">No commission history yet</div>
+                                    <div style="font-size: 0.9em; opacity: 0.7;">Your earnings across all 4 tiers will appear here.</div>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    let html = '';
+                    snapshot.forEach((doc) => {
+                        const sale = doc.data();
+                        const saleDate = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date(sale.sale_date);
+                        const formattedDate = saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        
+                        // Determine commission tier and details
+                        let commissionType = '';
+                        let sourceName = '';
+                        let commissionAmount = 0;
+                        
+                        if (sale.ambassador_code === userId) {
+                            // Personal sale (10% - Tier 1)
+                            commissionType = '<span style="background: #00b894; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.85em;">Tier 1 - 10%</span>';
+                            sourceName = sale.customer_name || 'Direct Customer';
+                            commissionAmount = sale.ambassador_commission || 0;
+                        } else if (sale.senior_code === userId) {
+                            // Senior override (5% - Tier 2)
+                            commissionType = '<span style="background: #6c5ce7; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.85em;">Tier 2 - 5%</span>';
+                            sourceName = sale.ambassador_name || sale.ambassador_code || 'Team Member';
+                            commissionAmount = sale.senior_override || 0;
+                        } else if (sale.rd_code === userId) {
+                            // RD override (5% - Tier 3)
+                            commissionType = '<span style="background: #667eea; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.85em;">Tier 3 - 5%</span>';
+                            sourceName = sale.senior_name || sale.ambassador_name || 'Network Member';
+                            commissionAmount = sale.rd_override || 0;
+                        } else {
+                            // Executive override (6.67% - Tier 4)
+                            commissionType = '<span style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; padding: 4px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 700;">👑 Tier 4 - 6.67%</span>';
+                            sourceName = sale.rd_name || sale.senior_name || 'Network';
+                            commissionAmount = sale.executive_override || 0;
+                        }
+
+                        const productName = sale.product_name || sale.product_title || 'Product';
+                        
+                        html += `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td style="padding: 15px;">${formattedDate}</td>
+                                <td style="padding: 15px;">
+                                    <div style="font-weight: 600;">${sourceName}</div>
+                                    ${sale.ambassador_code !== userId ? '<div style="font-size: 0.85em; opacity: 0.7;">' + (sale.ambassador_code || '') + '</div>' : ''}
+                                </td>
+                                <td style="padding: 15px;">
+                                    <div>${productName}</div>
+                                    <div style="font-size: 0.85em; opacity: 0.7;">$${(sale.product_price || 0).toLocaleString()}</div>
+                                </td>
+                                <td style="padding: 15px; text-align: right; font-weight: 700; color: #FFD700; font-size: 1.1em;">
+                                    $${commissionAmount.toLocaleString()}
+                                </td>
+                                <td style="padding: 15px; text-align: center;">${commissionType}</td>
+                            </tr>
+                        `;
+                    });
+
+                    commissionHistoryBody.innerHTML = html;
+                }, (error) => {
+                    console.error('Error loading commission history:', error);
+                    commissionHistoryBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #f00;">
+                                <div style="margin-bottom: 10px;">⚠️ Error loading commission history</div>
+                                <div style="font-size: 0.9em;">${error.message}</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+
+        // Load downline (recruited Regional Directors) with realtime updates
+        async function loadDownline(userId) {
+            const downlineList = document.getElementById('downlineList');
+            
+            if (!downlineList) {
+                console.error('Downline list container not found');
+                return;
+            }
+
+            // Query Regional Directors recruited by this executive
+            db.collection('ambassadors')
+                .where('executive_code', '==', userId)
+                .where('ambassador_type', '==', 'regional_director')
+                .onSnapshot((snapshot) => {
+                    console.log(`👥 Executive Downline: Found ${snapshot.size} Regional Directors`);
+                    
+                    if (snapshot.empty) {
+                        downlineList.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5); grid-column: 1 / -1;">
+                                <div style="font-size: 3em; margin-bottom: 15px;">👥</div>
+                                <div style="font-size: 1.2em; margin-bottom: 8px;">No Regional Directors yet</div>
+                                <div style="font-size: 0.95em; opacity: 0.7;">Build your executive network by recruiting and developing Regional Directors!</div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Convert to array and sort by join date
+                    const rds = [];
+                    snapshot.forEach((doc) => {
+                        rds.push({ id: doc.id, ...doc.data() });
+                    });
+                    rds.sort((a, b) => {
+                        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                        return dateB - dateA;
+                    });
+
+                    let html = '';
+                    rds.forEach((rd) => {
+                        const name = rd.fullName || rd.name || 'Regional Director';
+                        const rdCode = rd.id || rd.code || 'N/A';
+                        const joinDate = rd.createdAt?.toDate ? rd.createdAt.toDate() : new Date(rd.createdAt || Date.now());
+                        const formattedDate = joinDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        
+                        const territoryVolume = rd.territoryVolume || 0;
+                        const seniorCount = rd.directSeniorCount || 0;
+                        const ambassadorCount = rd.directAmbassadorCount || 0;
+                        const networkSize = seniorCount + ambassadorCount;
+
+                        html += `
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 25px; border: 2px solid rgba(255, 215, 0, 0.3); transition: all 0.3s;">
+                                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5em; margin-right: 15px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+                                        ${name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 1.2em; margin-bottom: 4px;">
+                                            ${name}
+                                            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.7em; margin-left: 10px;">👑 RD</span>
+                                        </div>
+                                        <div style="font-size: 0.9em; opacity: 0.8; font-family: monospace;">${rdCode}</div>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.95em;">
+                                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
+                                        <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 4px;">Territory Volume</div>
+                                        <div style="font-weight: 700; color: #FFD700; font-size: 1.3em;">$${territoryVolume.toLocaleString()}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
+                                        <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 4px;">Joined</div>
+                                        <div style="font-weight: 600; font-size: 1.1em;">${formattedDate}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
+                                        <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 4px;">Senior Count</div>
+                                        <div style="font-weight: 700; color: #6c5ce7; font-size: 1.2em;">${seniorCount}</div>
+                                    </div>
+                                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px;">
+                                        <div style="opacity: 0.7; font-size: 0.85em; margin-bottom: 4px;">Network Size</div>
+                                        <div style="font-weight: 700; color: #00b894; font-size: 1.2em;">${networkSize}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    downlineList.innerHTML = html;
+                }, (error) => {
+                    console.error('Error loading downline:', error);
+                    downlineList.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #f00; grid-column: 1 / -1;">
+                            <div style="font-size: 2em; margin-bottom: 10px;">⚠️</div>
+                            <div style="margin-bottom: 5px;">Error loading downline</div>
+                            <div style="font-size: 0.9em;">${error.message}</div>
+                        </div>
+                    `;
+                });
         }
 
         function viewSalesReport() {
