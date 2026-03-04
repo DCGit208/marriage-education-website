@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sex By Design for Dummies - 14-Day Launch Campaign | Marriage Education</title>
     <meta name="description" content="14 Days. 7 Access Tiers. 1 Mission: Deploy marriage literacy resources to 500 founding families and communities.">
+    <meta name="keywords" content="sex by design campaign, marriage literacy, SBD for dummies, founding families, marriage education movement, relationship training, book launch">
+    <meta name="author" content="Marriage Education">
+    <link rel="canonical" href="https://marriageducation.com/sbd-campaign.html">
     
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
@@ -15,6 +18,7 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Sex By Design for Dummies - Campaign to Rebuild the Nation">
+    <meta property="og:site_name" content="Marriage Education">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -22,6 +26,40 @@
     <meta name="twitter:title" content="Rebuild the Nation — One Marriage at a Time | Sex By Design Campaign">
     <meta name="twitter:description" content="Join 500 Founders in 14 days. Participate in the first national marriage literacy deployment window.">
     <meta name="twitter:image" content="https://marriageducation.com/images/sbd-dummies.jpg">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": "Sex By Design for Dummies 14-Day Launch Campaign",
+      "description": "14-day marriage literacy deployment campaign to reach 500 founding families with Sex By Design resources",
+      "startDate": "2026-03-01",
+      "endDate": "2026-03-14",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+      "location": {
+        "@type": "VirtualLocation",
+        "url": "https://marriageducation.com/sbd-campaign.html"
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": "Marriage Education",
+        "url": "https://marriageducation.com"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "availability": "https://schema.org/InStock",
+        "priceCurrency": "USD",
+        "lowPrice": "27",
+        "highPrice": "500",
+        "offerCount": "7"
+      }
+    }
+    </script>
+    
+    <!-- Additional SEO -->
+    <meta name="robots" content="index, follow">
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1199,6 +1237,284 @@
                 font-size: 1.6rem;
             }
         }
+        
+        /* SBD Modal Overlay Styles */
+        .sbd-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .sbd-modal-overlay.active {
+            display: flex;
+        }
+        
+        .sbd-modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 100px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        
+        .sbd-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f1f5f9;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        .sbd-modal-close:hover {
+            background: #e2e8f0;
+            transform: rotate(90deg);
+        }
+        
+        .sbd-modal-header {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            color: white;
+        }
+        
+        .sbd-modal-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .sbd-modal-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        
+        .sbd-modal-body {
+            padding: 2.5rem;
+        }
+        
+        .sbd-book-preview {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: start;
+        }
+        
+        .sbd-book-image {
+            flex-shrink: 0;
+        }
+        
+        .sbd-book-image img {
+            width: 180px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sbd-book-details h3 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        
+        .sbd-book-details p {
+            color: #64748b;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .sbd-features {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+        
+        .sbd-features h4 {
+            color: #1e293b;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sbd-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sbd-features li {
+            padding: 0.5rem 0;
+            color: #475569;
+            display: flex;
+            align-items: start;
+            gap: 0.5rem;
+        }
+        
+        .sbd-features li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .sbd-cta-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .sbd-cta-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .sbd-cta-card:hover {
+            border-color: #00b894;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 184, 148, 0.15);
+        }
+        
+        .sbd-cta-card.featured {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f9f4 100%);
+        }
+        
+        .sbd-cta-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sbd-cta-card h5 {
+            font-size: 1.3rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sbd-cta-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00b894;
+            margin: 1rem 0;
+        }
+        
+        .sbd-cta-price .original-price {
+            font-size: 1rem;
+            color: #94a3b8;
+            text-decoration: line-through;
+            font-weight: 400;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .sbd-cta-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .sbd-cta-button {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        
+        .sbd-cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4);
+        }
+        
+        .sbd-cta-button.secondary {
+            background: white;
+            color: #00b894;
+            border: 2px solid #00b894;
+            box-shadow: none;
+        }
+        
+        .sbd-cta-button.secondary:hover {
+            background: #00b894;
+            color: white;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sbd-cta-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .sbd-book-preview {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .sbd-modal-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .sbd-modal-body {
+                padding: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1249,44 +1565,25 @@
                         <span class="number" id="spots-remaining">487</span> of 500 Founding Spots Remaining
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div style="background: rgba(255,255,255,0.3); border-radius: 50px; height: 12px; margin: 15px 0; overflow: hidden; backdrop-filter: blur(10px);">
-                        <div id="founding-progress-bar" style="background: linear-gradient(90deg, #00b894 0%, #00d9a5 100%); height: 100%; width: 2.6%; transition: width 1s ease; box-shadow: 0 0 10px rgba(0,184,148,0.5);"></div>
-                    </div>
-                    <div style="text-align: center; font-size: 0.85rem; color: #636e72; margin-top: 5px;">
-                        <span id="founding-progress-text">13 Founders joined</span>
-                    </div>
-                    
                     <!-- Hero CTA Grid -->
                     <div class="hero-buttons">
-                        <a href="#book-overview" class="btn-primary">
-                            <span>📖 Discover What's Inside</span>
+                        <a href="#founding-500" class="btn-primary">
+                            <span>Join the Founding 500</span>
                             <i>→</i>
                         </a>
-                        <a href="#founding-500" class="btn-secondary">
-                            <span>Join Founding 500</span>
-                            <i>🔥</i>
+                        <a href="#founding-pillars" class="btn-secondary">
+                            <span>Become a Pillar</span>
+                            <i>💎</i>
                         </a>
                     </div>
                     
                     <div class="trust-indicators">
                         <p>✅ 14-Day Founding Window • ✅ 500 Founding Families • ✅ 7 Access Tiers • ✅ Digital Delivery</p>
-                        <div style="margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <a href="#book-overview" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
-                                <i class="fas fa-book-open"></i> Read What's Inside →
-                            </a>
-                            <span style="color: #d1d5db;">•</span>
-                            <button onclick="shareOnWhatsApp()" class="btn-secondary" style="font-size: 0.9rem; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;">
-                                <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i>
-                                <span>Share on WhatsApp</span>
-                            </button>
-                            <span style="font-size: 0.85rem; color: #6b7280;">Help spread marriage literacy</span>
-                        </div>
                     </div>
                 </div>
                 
                 <div class="hero-visual">
-                    <div class="hero-card">
+                    <div class="hero-card" onclick="openSBDModal()" style="cursor: pointer;">
                         <img src="images/sbd-dummies.jpg" alt="Sex By Design for Dummies" />
                         <div class="card-content">
                             <h4>Sex By Design for Dummies</h4>
@@ -1301,211 +1598,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Book Overview Section -->
-    <section id="book-overview" class="section" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 80px 20px; position: relative; overflow: hidden;">
-        <!-- Subtle accent gradient overlay -->
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at top left, rgba(0, 184, 148, 0.08) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(116, 185, 255, 0.08) 0%, transparent 50%); pointer-events: none;"></div>
-        
-        <div class="container" style="max-width: 1200px; margin: 0 auto; position: relative; z-index: 1;">
-            <div class="section-header" style="text-align: center; margin-bottom: 60px;">
-                <div style="display: inline-flex; align-items: center; background: rgba(0, 184, 148, 0.1); color: #00b894; padding: 10px 25px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 25px; border: 1px solid rgba(0, 184, 148, 0.2);">
-                    <i class="fas fa-book-open"></i>&nbsp;&nbsp;WHAT'S INSIDE
-                </div>
-                <h2 style="font-size: 2.5rem; margin-bottom: 15px; color: #2d3436; font-family: 'Playfair Display', serif; font-weight: 800;">What Is Sex By Design for Dummies?</h2>
-                <p class="subtitle" style="font-size: 1.3rem; color: #636e72; max-width: 800px; margin: 0 auto; line-height: 1.6; font-weight: 500;">
-                    The civilizational blueprint that decodes the architecture of marriage, sexuality, and human flourishing
-                </p>
-                <p style="margin-top: 20px; font-size: 1rem; color: #636e72;">
-                    This is not a relationship advice book. This is a <strong style="color: #00b894;">civilizational manual</strong> for rebuilding the nation one marriage at a time.
-                </p>
-            </div>
-
-            <!-- Who This Is For -->
-            <div style="background: white; border-radius: 15px; padding: 40px; margin-bottom: 40px; border: 1px solid #e9ecef; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-                <h3 style="font-size: 1.8rem; margin-bottom: 25px; text-align: center; color: #2d3436; font-family: 'Playfair Display', serif; font-weight: 800;">
-                    <i class="fas fa-users" style="color: #00b894;"></i> Who This Blueprint Is For
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Singles Preparing for Marriage</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Don't enter the covenant blind—understand marriage's design first</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Engaged Couples Building Foundations</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Start your marriage with civilizational clarity, not cultural confusion</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Married Couples Strengthening Bonds</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Repair what's broken using the design blueprint</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Parents Raising Children</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Pass on the blueprint before culture corrupts the design</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Pastors & Counselors</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Equip your congregation with truth, not therapeutic platitudes</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 12px;">
-                        <i class="fas fa-check-circle" style="color: #00b894; font-size: 1.5rem; flex-shrink: 0;"></i>
-                        <div>
-                            <strong style="color: #2d3436;">Youth Navigating Sexual Confusion</strong>
-                            <p style="margin-top: 5px; color: #636e72; font-size: 0.95rem;">Get design clarity before culture sells you chaos</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- What You'll Gain -->
-            <div style="background: white; border-radius: 15px; padding: 40px; margin-bottom: 40px; border: 1px solid #e9ecef; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-                <h3 style="font-size: 1.8rem; margin-bottom: 25px; text-align: center; color: #2d3436; font-family: 'Playfair Display', serif; font-weight: 800;">
-                    <i class="fas fa-lightbulb" style="color: #FFD700;"></i> What You'll Gain
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
-                    <div style="display: flex; align-items: start; gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #00b894, #059669); padding: 12px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);">
-                            <i class="fas fa-graduation-cap" style="font-size: 1.5rem; color: white;"></i>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: #2d3436;">Marriage Literacy</h4>
-                            <p style="color: #636e72; font-size: 0.95rem;">Understand marriage's civilizational role—not just its romantic dimension</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #00b894, #059669); padding: 12px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);">
-                            <i class="fas fa-heart" style="font-size: 1.5rem; color: white;"></i>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: #2d3436;">Sexual Wisdom</h4>
-                            <p style="color: #636e72; font-size: 0.95rem;">Navigate desire with design principles—not cultural chaos</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #00b894, #059669); padding: 12px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);">
-                            <i class="fas fa-hands-helping" style="font-size: 1.5rem; color: white;"></i>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: #2d3436;">Relationship Mastery</h4>
-                            <p style="color: #636e72; font-size: 0.95rem;">Build covenant bonds that last—not contracts that expire</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #00b894, #059669); padding: 12px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);">
-                            <i class="fas fa-user-check" style="font-size: 1.5rem; color: white;"></i>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: #2d3436;">Personal Wholeness</h4>
-                            <p style="color: #636e72; font-size: 0.95rem;">Integrate your 4 faculties (mind, heart, will, body) into τέλειος maturity</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: start; gap: 15px;">
-                        <div style="background: linear-gradient(135deg, #00b894, #059669); padding: 12px; border-radius: 10px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 184, 148, 0.2);">
-                            <i class="fas fa-users" style="font-size: 1.5rem; color: white;"></i>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom: 8px; font-size: 1.1rem; color: #2d3436;">Generational Impact</h4>
-                            <p style="color: #636e72; font-size: 0.95rem;">Pass on a civilization-worthy framework to your children</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- What's Inside -->
-            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; padding: 50px 40px; margin-bottom: 40px; border: 1px solid #e9ecef;">
-                <h3 style="font-size: 1.8rem; margin-bottom: 25px; text-align: center; color: #2d3436; font-family: 'Playfair Display', serif; font-weight: 800;">
-                    <i class="fas fa-book-open" style="color: #00b894;"></i> What's Inside the Blueprint
-                </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #00b894; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-compass" style="color: #00b894;"></i> The Τέλειος Framework
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            Discover the τέλειος (teleios) design paradigm for complete human maturity—the foundation of marriage readiness
-                        </p>
-                    </div>
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #059669; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-layer-group" style="color: #059669;"></i> The 4-Faculty Training
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            Learn to integrate mind, heart, will, and body—the personal wholeness required for covenant capacity
-                        </p>
-                    </div>
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #00b894; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-dna" style="color: #00b894;"></i> Sexual Anthropology
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            Understand the design paradigm for sexuality—not what culture says, but what design reveals
-                        </p>
-                    </div>
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #059669; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-ring" style="color: #059669;"></i> Covenant Anatomy
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            Decode what distinguishes marriage from every other relationship—its unique architecture and purpose
-                        </p>
-                    </div>
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #00b894; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-city" style="color: #00b894;"></i> Civilizational Blueprint
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            See marriage as civilization's engine—not a private romantic contract but a public generational covenant
-                        </p>
-                    </div>
-                    <div style="background: white; border-radius: 12px; padding: 25px; border-left: 4px solid #059669; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                        <h4 style="margin-bottom: 12px; font-size: 1.2rem; color: #2d3436;">
-                            <i class="fas fa-tools" style="color: #059669;"></i> Application Frameworks
-                        </h4>
-                        <p style="color: #636e72; font-size: 0.95rem; line-height: 1.6;">
-                            Get diagnostic tools, action steps, and real-world case studies for immediate transformation
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Why "For Dummies" -->
-            <div style="text-align: center; padding: 30px; background: white; border-radius: 15px; border: 2px dashed #FFD700; margin-bottom: 40px; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-                <h3 style="font-size: 1.5rem; margin-bottom: 15px; color: #2d3436; font-family: 'Playfair Display', serif;">
-                    <i class="fas fa-question-circle" style="color: #FFD700;"></i> Why "For Dummies"?
-                </h3>
-                <p style="font-size: 1.1rem; max-width: 700px; margin: 0 auto; color: #636e72; line-height: 1.7;">
-                    Because <strong style="color: #2d3436;">accessible doesn't mean shallow</strong>. This blueprint strips away academic jargon and cultural noise to deliver <strong style="color: #00b894;">actionable civilizational wisdom</strong> anyone can apply. The design is simple. The impact is profound.
-                </p>
-            </div>
-
-            <!-- CTA -->
-            <div style="text-align: center;">
-                <a href="#founding-500" class="btn-primary" style="background: linear-gradient(135deg, #00b894, #059669); color: white; font-size: 1.2rem; padding: 18px 40px; display: inline-flex; align-items: center; gap: 12px; border: none; box-shadow: 0 8px 24px rgba(0, 184, 148, 0.3); text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s;">
-                    <i class="fas fa-rocket"></i>
-                    <span>Join the Founding 500 Now</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <p style="margin-top: 15px; font-size: 0.9rem; color: #636e72;">
-                    Secure your founding access before the window closes
-                </p>
             </div>
         </div>
     </section>
@@ -1705,12 +1797,12 @@
                             <td>Household or close network</td>
                             <td><a href="payment.html?product=sbd-5&price=75000&currency=FCFA" class="btn-table">Buy Now</a></td>
                         </tr>
-                        <tr style="background: #f0fdf4; border: 2px solid #10b981;">
-                            <td class="pack-name"><strong>Community Pack</strong> <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px;">MOST POPULAR</span></td>
-                            <td><strong>10</strong></td>
-                            <td><strong>150,000 FCFA</strong></td>
+                        <tr>
+                            <td class="pack-name">Community Pack</td>
+                            <td>10</td>
+                            <td>150,000 FCFA</td>
                             <td>Small group / cell / youth group</td>
-                            <td><a href="payment.html?product=sbd-10&price=150000&currency=FCFA" class="btn-table" style="background: #10b981;">Buy Now</a></td>
+                            <td><a href="payment.html?product=sbd-10&price=150000&currency=FCFA" class="btn-table">Buy Now</a></td>
                         </tr>
                         <tr>
                             <td class="pack-name">Impact Pack</td>
@@ -1810,36 +1902,18 @@
             <!-- Referral Link Generator -->
             <div class="referral-generator">
                 <h3 style="text-align: center; color: #10b981; margin-bottom: 15px;">Generate Your Referral Link</h3>
-                <p style="text-align: center; color: #6b7280; margin-bottom: 20px;">Enter your details to create your unique cash-earning referral link + dashboard access</p>
+                <p style="text-align: center; color: #6b7280; margin-bottom: 20px;">Enter your email to create your unique cash-earning referral link</p>
                 
                 <div class="referral-input-group">
-                    <input type="text" class="referral-input" id="referral-name" placeholder="Your Full Name" required style="margin-bottom: 15px;">
                     <input type="email" class="referral-input" id="referral-email" placeholder="your@email.com" required>
                     <button class="btn-generate" onclick="generateReferralLink()">Generate Link</button>
-                </div>
-                
-                <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
-                    <a href="/book-sharer-dashboard" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; padding: 14px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; font-weight: 600; font-size: 1rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Login to Dashboard
-                    </a>
-                    <p style="margin-top: 0.75rem; font-size: 0.9rem; color: #6b7280;">
-                        Already have a referral link? <a href="/claim-dashboard" style="color: #10b981; text-decoration: underline; font-weight: 500;">Claim dashboard access</a>
-                    </p>
                 </div>
                 
                 <div class="referral-link-display" id="referral-link-display">
                     <p style="font-weight: 600; margin-bottom: 10px;">Your Cash-Earning Referral Link:</p>
                     <div class="referral-link" id="referral-link"></div>
                     <button class="btn-copy" id="copy-btn" onclick="copyReferralLink()">Copy Link</button>
-                    <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #3b82f6;">
-                        <p style="font-size: 14px; color: #1e40af; margin: 0; line-height: 1.6;">
-                            <i class="fas fa-envelope"></i> <strong>Check your email!</strong> We've sent your dashboard login credentials so you can track sales & commission in real-time.
-                        </p>
-                        <a href="/book-sharer-dashboard.html" style="display: inline-block; margin-top: 10px; color: #2563eb; text-decoration: underline; font-weight: 600;">
-                            <i class="fas fa-chart-line"></i> Go to Dashboard →
-                        </a>
-                    </div>
+                    <p style="font-size: 14px; color: #6b7280; margin-top: 15px;"><i class="fas fa-info-circle"></i> We'll email you progress updates at each sale and when you hit 10 sales!</p>
                 </div>
             </div>
         </div>
@@ -2466,6 +2540,68 @@
         </div>
     </section>
 
+    <!-- Ambassador Portal Access -->
+    <section style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 1rem; margin: 2rem 0;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="color: white; text-align: center; margin-bottom: 0.5rem; font-size: 2rem;">🎯 Ambassador Portal</h2>
+            <p style="color: rgba(255,255,255,0.9); text-align: center; margin-bottom: 2rem; font-size: 1.1rem;">Already registered? Access your dashboard and track earnings</p>
+            
+            <!-- Tier Access Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                
+                <!-- Regular Ambassador -->
+                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,255,255,0.2); text-align: center;">
+                    <i class="fas fa-user" style="font-size: 2.5rem; color: white; margin-bottom: 0.5rem; display: block;"></i>
+                    <h4 style="color: white; font-size: 1.2rem; margin-bottom: 0.25rem;">Ambassador</h4>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 1rem;">10% commission</p>
+                    <a href="ambassador/dashboard.html" style="display: block; background: white; color: #667eea; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 0.5rem; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+
+                <!-- Senior Ambassador -->
+                <div style="background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2)); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,215,0,0.4); text-align: center;">
+                    <i class="fas fa-star" style="font-size: 2.5rem; color: #FFD700; margin-bottom: 0.5rem; display: block;"></i>
+                    <h4 style="color: white; font-size: 1.2rem; margin-bottom: 0.25rem;">Senior Ambassador</h4>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 1rem;">10% + 5% override</p>
+                    <a href="ambassador/senior-dashboard.html" style="display: block; background: #FFD700; color: #1a1a2e; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 0.5rem; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+
+                <!-- Regional Director -->
+                <div style="background: linear-gradient(135deg, rgba(138,43,226,0.3), rgba(75,0,130,0.3)); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(138,43,226,0.5); text-align: center;">
+                    <i class="fas fa-crown" style="font-size: 2.5rem; color: #FFD700; margin-bottom: 0.5rem; display: block;"></i>
+                    <h4 style="color: white; font-size: 1.2rem; margin-bottom: 0.25rem;">Regional Director</h4>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 1rem;">10% + 5% + 5%</p>
+                    <a href="regional-director/rd-dashboard.html" style="display: block; background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 0.5rem; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-network-wired"></i> RD Dashboard
+                    </a>
+                    <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+
+                <!-- New Registration -->
+                <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; justify-content: center; text-align: center;">
+                    <i class="fas fa-user-plus" style="font-size: 2.5rem; color: white; margin-bottom: 0.5rem; display: block;"></i>
+                    <h4 style="color: white; font-size: 1.2rem; margin-bottom: 0.75rem;">Not registered?</h4>
+                    <a href="ambassador-register.html" style="display: inline-block; background: white; color: #667eea; padding: 1rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1rem; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <i class="fas fa-rocket"></i> Become an Ambassador
+                    </a>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 0.75rem;">Start earning today</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer style="background: #1f2937; color: white; padding: 40px 20px; text-align: center;">
         <div class="container">
@@ -2491,8 +2627,9 @@
 
     <!-- JavaScript -->
     <script>
-        // Countdown Timer - Campaign ends Feb 3, 2026
-        const launchDate = new Date('Feb 3, 2026 23:59:59');
+        // Countdown Timer (Set launch date: 14 days from now)
+        const launchDate = new Date();
+        launchDate.setDate(launchDate.getDate() + 14); // 14 days from today
         
         function updateCountdown() {
             const now = new Date().getTime();
@@ -2517,49 +2654,23 @@
         const countdownInterval = setInterval(updateCountdown, 1000);
         updateCountdown();
         
-        // Real-time Founding 500 Counter from Firebase
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-            const db = firebase.firestore();
-            
-            db.collection('sales')
-                .where('product_id', '==', 'sbd-founding')
-                .where('status', '==', 'completed')
-                .onSnapshot((snapshot) => {
-                    const foundingCount = snapshot.size;
-                    const remaining = Math.max(0, 500 - foundingCount);
-                    
-                    const counterElement = document.getElementById('spots-remaining');
-                    const stickyElement = document.getElementById('sticky-spots');
-                    
-                    if (counterElement) {
-                        counterElement.textContent = remaining;
-                        
-                        // Add urgency styling when under 100 spots
-                        if (remaining < 100) {
-                            counterElement.style.color = '#dc2626';
-                            counterElement.parentElement.style.borderColor = '#dc2626';
-                            counterElement.parentElement.style.background = 'rgba(220, 38, 38, 0.1)';
-                        }
-                    }
-                    
-                    if (stickyElement) {
-                        stickyElement.textContent = remaining;
-                    }
-                    
-                    // Update progress bar
-                    const progressBar = document.getElementById('founding-progress-bar');
-                    const progressText = document.getElementById('founding-progress-text');
-                    if (progressBar && progressText) {
-                        const percentage = (foundingCount / 500) * 100;
-                        progressBar.style.width = percentage + '%';
-                        progressText.textContent = `${foundingCount} Founders joined`;
-                    }
-                    
-                    console.log(`✅ Founding 500: ${foundingCount} joined, ${remaining} spots remaining`);
-                }, (error) => {
-                    console.log('Founding counter: Using default value', error.message);
-                });
+        // Founding Spots Counter (simulated - would connect to real database)
+        let spotsRemaining = 487;
+        
+        function updateSpotsCounter() {
+            // Simulate random purchases (in production, this would be real-time from database)
+            if (spotsRemaining > 0 && Math.random() > 0.97) {
+                spotsRemaining--;
+                document.getElementById('spots-remaining').textContent = spotsRemaining;
+                document.getElementById('sticky-spots').textContent = spotsRemaining;
+                
+                // Save to localStorage
+                localStorage.setItem('sbd-spots-remaining', spotsRemaining);
+            }
         }
+        
+        // Load spots from localStorage if available
+        const savedSpots = localStorage.getItem('sbd-spots-remaining');
         if (savedSpots) {
             spotsRemaining = parseInt(savedSpots);
             document.getElementById('spots-remaining').textContent = spotsRemaining;
@@ -2601,11 +2712,10 @@
         
         // Referral Link Generator
         async function generateReferralLink() {
-            const name = document.getElementById('referral-name').value.trim();
             const email = document.getElementById('referral-email').value.trim();
             
-            if (!name || !email) {
-                alert('Please enter both your name and email');
+            if (!email) {
+                alert('Please enter your email');
                 return;
             }
             
@@ -2624,7 +2734,7 @@
                 // Register referral code with Firebase Cloud Function
                 const functions = firebase.functions();
                 const registerReferralCode = functions.httpsCallable('registerReferralCode');
-                const result = await registerReferralCode({ name: name, email: email });
+                const result = await registerReferralCode({ email: email });
                 
                 const data = result.data;
                 
@@ -2638,11 +2748,10 @@
                     // Store in localStorage
                     localStorage.setItem('sbd-referral-code', data.code);
                     localStorage.setItem('sbd-referral-email', email);
-                    localStorage.setItem('sbd-referral-name', name);
                     
                     // Show success message if existing user
                     if (data.existing) {
-                        alert('Welcome back! You already have a referral code: ' + data.code + '\nCheck your email for dashboard login details.');
+                        alert('Welcome back! You already have a referral code: ' + data.code);
                     }
                 } else {
                     alert('Failed to generate referral link. Please try again.');
@@ -2657,52 +2766,6 @@
         }
         
         // Copy Referral Link
-        // WhatsApp Share Function
-        function shareOnWhatsApp() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refCode = urlParams.get('ref') || sessionStorage.getItem('ambassador_ref') || '';
-            
-            let shareUrl = 'https://marriageducation.com/sbd-campaign.html';
-            if (refCode) {
-                shareUrl += '?ref=' + refCode;
-            }
-            
-            const message = encodeURIComponent(
-                `🔥 Join the Founding 500 Movement!\n\n` +
-                `14-Day Campaign: Sex By Design for Dummies\n` +
-                `Rebuild the Nation — One Marriage at a Time\n\n` +
-                `✅ 7 Access Tiers\n` +
-                `✅ Digital Delivery\n` +
-                `✅ From 15,000 FCFA\n\n` +
-                `${shareUrl}`
-            );
-            
-            window.open(`https://wa.me/?text=${message}`, '_blank');
-        }
-        
-        // WhatsApp Share Function
-        function shareOnWhatsApp() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refCode = urlParams.get('ref') || sessionStorage.getItem('ambassador_ref') || '';
-            
-            let shareUrl = 'https://marriageducation.com/sbd-campaign.html';
-            if (refCode) {
-                shareUrl += '?ref=' + refCode;
-            }
-            
-            const message = encodeURIComponent(
-                `🔥 Join the Founding 500 Movement!\n\n` +
-                `14-Day Campaign: Sex By Design for Dummies\n` +
-                `Rebuild the Nation — One Marriage at a Time\n\n` +
-                `✅ 7 Access Tiers\n` +
-                `✅ Digital Delivery\n` +
-                `✅ From 15,000 FCFA\n\n` +
-                `${shareUrl}`
-            );
-            
-            window.open(`https://wa.me/?text=${message}`, '_blank');
-        }
-        
         function copyReferralLink() {
             const link = document.getElementById('referral-link').textContent;
             const copyBtn = document.getElementById('copy-btn');
@@ -2790,48 +2853,6 @@
             el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
             observer.observe(el);
         });
-        
-        // Exit Intent Popup
-        let exitIntentShown = false;
-        document.addEventListener('mouseout', (e) => {
-            if (exitIntentShown) return;
-            if (e.clientY <= 0) {
-                exitIntentShown = true;
-                showExitIntent();
-            }
-        });
-        
-        function showExitIntent() {
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.3s ease;';
-            
-            modal.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.4s ease;">
-                    <h2 style="font-size: 2rem; color: #1a1a2e; margin-bottom: 20px;">⏰ Wait! Don't Miss Out</h2>
-                    <p style="font-size: 1.1rem; color: #636e72; margin-bottom: 25px;">Only <strong style="color: #00b894;"><span id="exit-spots">487</span> spots</strong> remaining in the Founding 500</p>
-                    <p style="font-size: 0.95rem; color: #636e72; margin-bottom: 30px;">This 14-day window closes soon. Secure your founding spot now and be part of marriage literacy history.</p>
-                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <a href="#founding-500" onclick="document.body.removeChild(this.closest('div').parentElement)" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: 600;">Join Founding 500 →</a>
-                        <button onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)" style="background: #e9ecef; color: #636e72; padding: 15px 30px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer;">I'll Pass</button>
-                    </div>
-                </div>
-            `;
-            
-            // Update spots in exit intent
-            const spotsElement = document.getElementById('spots-remaining');
-            if (spotsElement) {
-                modal.querySelector('#exit-spots').textContent = spotsElement.textContent;
-            }
-            
-            document.body.appendChild(modal);
-            
-            // Close on background click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    document.body.removeChild(modal);
-                }
-            });
-        }
     </script>
     
     <!-- Referral Tracking System -->
@@ -2887,43 +2908,100 @@
         })();
     </script>
 
+    <!-- SBD Modal HTML -->
+    <div class="sbd-modal-overlay" id="sbdModalOverlay" onclick="closeSBDModal(event)">
+        <div class="sbd-modal" onclick="event.stopPropagation()">
+            <button class="sbd-modal-close" onclick="closeSBDModal()">&times;</button>
+            
+            <div class="sbd-modal-header">
+                <h2>📚 Sex By Design For Dummies</h2>
+                <p>The Civilizational Blueprint for Marriage Literacy</p>
+            </div>
+            
+            <div class="sbd-modal-body">
+                <div class="sbd-book-preview">
+                    <div class="sbd-book-image">
+                        <img src="images/sbd-dummies.jpg" alt="Sex by Design for Dummies Book">
+                    </div>
+                    <div class="sbd-book-details">
+                        <h3>Your Foundation for Covenant Marriage</h3>
+                        <p>This is the <strong>baseline book</strong> that establishes sexual literacy, covenant theology, and marital design from first principles. Written by Dr. Coach Achu Gustave, this 145-page handbook covers everything from eudaemonia to conjugal fidelity.</p>
+                        <p>Whether you're engaged, newlywed, or married for decades—this book restores clarity where confusion has multiplied.</p>
+                    </div>
+                </div>
+                
+                <div class="sbd-features">
+                    <h4>📖 What You'll Learn (13 Chapters):</h4>
+                    <ul>
+                        <li>Modern Societal Eudaemonia: Marriage as the path to human flourishing</li>
+                        <li>Sexual Literacy: Why everyone must be sexually literate</li>
+                        <li>The One-Flesh Mystery: Understanding covenant design (Genesis 2:24)</li>
+                        <li>Male & Female Anatomy: Epicure originativeness with dignity</li>
+                        <li>The Only Equation: Sex = Marriage (No exceptions)</li>
+                        <li>Muliebrity & Virility Barons: Secret powers of wives and husbands</li>
+                        <li>Pics & Pearls: Biblical nakedness vs. pornography's lies</li>
+                        <li>Relationship Relatednesses: Communication, conflict, intimacy</li>
+                        <li>Marriage Builds Nations: UDHR Article 16 and civilization</li>
+                        <li>Practice From Perfection: The 6-week starter plan</li>
+                        <li>Plus: Complete glossary, reading maps, and next steps</li>
+                    </ul>
+                </div>
+                
+                <div class="sbd-cta-section">
+                    <div class="sbd-cta-card">
+                        <div class="sbd-cta-badge">🔥 Campaign Pricing</div>
+                        <h5>Get the Book</h5>
+                        <div class="sbd-cta-price">
+                            15,000 FCFA
+                        </div>
+                        <p class="sbd-cta-description">Digital PDF delivered instantly. 145 pages of foundational marriage wisdom. Join 500 founding families.</p>
+                        <button class="sbd-cta-button secondary" onclick="window.location.href='payment.html?product=sbd-for-dummies&price=15000&currency=FCFA'">
+                            Buy Single Copy
+                        </button>
+                    </div>
+                    
+                    <div class="sbd-cta-card featured">
+                        <div class="sbd-cta-badge">⭐ Best Value</div>
+                        <h5>Impact Pack</h5>
+                        <div class="sbd-cta-price">
+                            300,000 FCFA
+                        </div>
+                        <p class="sbd-cta-description">Get 20 copies to deploy in your community, class, or church. Become a founding pillar of the marriage literacy movement.</p>
+                        <button class="sbd-cta-button" onclick="window.location.href='payment.html?product=sbd-20&price=300000&currency=FCFA'">
+                            Buy Impact Pack
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SBD Modal Scripts -->
+    <script>
+        function openSBDModal() {
+            document.getElementById('sbdModalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSBDModal(event) {
+            // Close if clicking overlay or close button
+            if (!event || event.target === document.getElementById('sbdModalOverlay')) {
+                document.getElementById('sbdModalOverlay').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSBDModal();
+            }
+        });
+    </script>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
-    
-    <!-- Real-time Founding 500 Counter -->
-    <script>
-        // Load real-time Founding 500 count from Firebase
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-            const db = firebase.firestore();
-            
-            // Count purchases with product 'sbd-founding'
-            db.collection('sales')
-                .where('product_id', '==', 'sbd-founding')
-                .where('status', '==', 'completed')
-                .onSnapshot((snapshot) => {
-                    const foundingCount = snapshot.size;
-                    const remaining = Math.max(0, 500 - foundingCount);
-                    
-                    const counterElement = document.getElementById('spots-remaining');
-                    if (counterElement) {
-                        counterElement.textContent = remaining;
-                        
-                        // Add urgency styling when under 100 spots
-                        if (remaining < 100) {
-                            counterElement.style.color = '#dc2626';
-                            counterElement.parentElement.style.borderColor = '#dc2626';
-                            counterElement.parentElement.style.background = 'rgba(220, 38, 38, 0.1)';
-                        }
-                    }
-                    
-                    console.log(`✅ Founding 500: ${foundingCount} joined, ${remaining} spots remaining`);
-                }, (error) => {
-                    console.log('Founding counter: Using default value', error.message);
-                });
-        }
-    </script>
 </body>
 </html>
