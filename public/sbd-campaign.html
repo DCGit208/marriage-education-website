@@ -2894,17 +2894,33 @@
             const ambassadorRef = refCode || sessionStorage.getItem('ambassador_ref');
             
             if (ambassadorRef) {
-                // Add ref parameter to all payment links
+                // Add ref parameter to ALL relevant links (payment, registration, etc.)
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Update payment links
                     const paymentLinks = document.querySelectorAll('a[href*="payment.html"]');
-                    
                     paymentLinks.forEach(link => {
                         const url = new URL(link.href, window.location.origin);
                         url.searchParams.set('ref', ambassadorRef);
                         link.href = url.toString();
                     });
                     
-                    console.log(`✅ Updated ${paymentLinks.length} payment links with ref=${ambassadorRef}`);
+                    // Update ambassador registration links
+                    const ambassadorLinks = document.querySelectorAll('a[href*="ambassador-register.html"]');
+                    ambassadorLinks.forEach(link => {
+                        const url = new URL(link.href, window.location.origin);
+                        url.searchParams.set('ref', ambassadorRef);
+                        link.href = url.toString();
+                    });
+                    
+                    // Update regional director registration links
+                    const rdLinks = document.querySelectorAll('a[href*="rd-register.html"]');
+                    rdLinks.forEach(link => {
+                        const url = new URL(link.href, window.location.origin);
+                        url.searchParams.set('rd', ambassadorRef);
+                        link.href = url.toString();
+                    });
+                    
+                    console.log(`✅ Referral tracking activated: Updated ${paymentLinks.length} payment links, ${ambassadorLinks.length} ambassador links, ${rdLinks.length} RD links with ref=${ambassadorRef}`);
                 });
             }
         })();
