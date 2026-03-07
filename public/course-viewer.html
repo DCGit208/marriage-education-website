@@ -1052,33 +1052,33 @@
       }
     }
     
+    // Check if a module is completed
+    function isModuleCompleted(moduleIndex) {
+      // For Foundation School, check Firestore data
+      if (courseId === 'foundation-school' && firestoreProgressData) {
+        const completedModules = firestoreProgressData.completed_modules || {};
+        const moduleData = completedModules[`module${moduleIndex}`];
+        return moduleData?.completed === true;
+      }
+      
+      // For other courses, check localStorage
+      const progressKey = `progress_${courseId}_module_${moduleIndex}`;
+      const progress = localStorage.getItem(progressKey);
+      if (progress) {
+        const data = JSON.parse(progress);
+        return data.contentRead || data.assessmentPassed;
+      }
+      
+      return false;
+    }
+    
     // Check if a module is unlocked (for sequential access)
     function isModuleUnlocked(moduleIndex) {
       // Week 1 is always unlocked
       if (moduleIndex === 0) return true;
       
-      // For Foundation School, check if previous week is completed
-      if (courseId === 'foundation-school' && firestoreProgressData) {
-        const completedModules = firestoreProgressData.completed_modules || {};
-        const previousModule = completedModules[`module${moduleIndex - 1}`];
-        const isUnlocked = previousModule?.completed === true;
-        console.log(`🔐 Module ${moduleIndex} unlock check:`, {
-          previousModule: moduleIndex - 1,
-          previousCompleted: previousModule?.completed,
-          isUnlocked
-        });
-        return isUnlocked;
-      }
-      
-      // For other courses or if no Firestore data, check localStorage
-      const previousProgressKey = `progress_${courseId}_module_${moduleIndex - 1}`;
-      const previousProgress = localStorage.getItem(previousProgressKey);
-      if (previousProgress) {
-        const data = JSON.parse(previousProgress);
-        return data.contentRead || data.assessmentPassed;
-      }
-      
-      return false; // Locked by default
+      // Must have previous module completed to unlock
+      return isModuleCompleted(moduleIndex - 1);
     }
     
     // Refresh module lock states in the UI
@@ -1086,12 +1086,35 @@
       const moduleItems = document.querySelectorAll('.module-item');
       moduleItems.forEach((item, idx) => {
         const moduleExists = idx < courseModules.length;
+        const moduleCompleted = isModuleCompleted(idx);
         const moduleUnlocked = isModuleUnlocked(idx);
         const isAvailable = moduleExists && moduleUnlocked;
         
         const durationEl = item.querySelector('.duration');
+        const titleEl = item.querySelector('.title');
+        const iconEl = item.querySelector('.icon');
         const module = courseModules[idx];
         
+        // Update icon to show completion or number
+        if (iconEl) {
+          if (moduleCompleted) {
+            iconEl.textContent = '✓';
+            iconEl.style.background = '#10b981';
+            iconEl.style.color = 'white';
+          } else {
+            iconEl.textContent = idx + 1;
+            iconEl.style.background = '';
+            iconEl.style.color = '';
+          }
+        }
+        
+        // Update title to show completion badge
+        if (titleEl) {
+          const completionBadge = moduleCompleted ? '<span style="color: #10b981; font-size: 0.7rem;">✓</span> ' : '';
+          titleEl.innerHTML = `${completionBadge}Week ${idx + 1}`;
+        }
+        
+        // Update duration/status text
         if (durationEl && module) {
           const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
           durationEl.textContent = `${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Complete Week ' + idx + ' to unlock'}`;
@@ -1110,7 +1133,7 @@
           item.onclick = null;
         }
         
-        console.log(`🔄 Refreshed module ${idx + 1}: available=${isAvailable}`);
+        console.log(`🔄 Refreshed module ${idx + 1}: completed=${moduleCompleted}, unlocked=${moduleUnlocked}, available=${isAvailable}`);
       });
     }
     
@@ -1185,11 +1208,13 @@
         for (let idx = 0; idx < totalWeeks; idx++) {
           const module = modules[idx];
           const moduleExists = idx < modules.length;
+          const moduleCompleted = isModuleCompleted(idx);
           const moduleUnlocked = isModuleUnlocked(idx);
           const isAvailable = moduleExists && moduleUnlocked;
           
           console.log(`📚 Module ${idx + 1}:`, {
             exists: moduleExists,
+            completed: moduleCompleted,
             unlocked: moduleUnlocked,
             available: isAvailable
           });
@@ -1200,12 +1225,19 @@
           navItem.setAttribute('role', 'button');
           navItem.setAttribute('tabindex', isAvailable ? '0' : '-1');
           navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? '🔒 Locked' : 'Coming Soon')}`);
+          navItem.setAttribute('data-module-index', idx);
+          
+          // Icon content: ✓ if completed, number otherwise
+          const iconContent = moduleCompleted ? '✓' : (idx + 1);
+          const iconStyle = moduleCompleted ? 'background: #10b981; color: white;' : '';
           
           const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
+          const completionBadge = moduleCompleted ? '<span style="color: #10b981; font-size: 0.7rem;">✓</span> ' : '';
+          
           navItem.innerHTML = `
-            <div class="icon">${idx + 1}</div>
+            <div class="icon" style="${iconStyle}">${iconContent}</div>
             <div class="text">
-              <div class="title">Week ${idx + 1}</div>
+              <div class="title">${completionBadge}Week ${idx + 1}</div>
               <div class="duration">${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? 'Complete Week ' + idx + ' to unlock' : 'Coming Soon')}</div>
             </div>
           `;
@@ -2187,15 +2219,10 @@
       const totalWeeks = 6;
       let completedCount = 0;
       
-      // Count completed modules from localStorage
+      // Count completed modules using same check as visual indicators
       for (let i = 0; i < totalWeeks; i++) {
-        const progressKey = `progress_${courseId}_module_${i}`;
-        const saved = localStorage.getItem(progressKey);
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.contentRead || data.assessmentPassed) {
-            completedCount++;
-          }
+        if (isModuleCompleted(i)) {
+          completedCount++;
         }
       }
       
