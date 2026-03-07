@@ -35,7 +35,8 @@ service cloud.firestore {
     match /ambassadors/{ambassadorId} {
       allow read: if true; // Allow public read for counting
       allow create: if true; // Allow public registration
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow update: if true; // Allow ambassadors to update their own progress (using ambassadorCode)
+      allow delete: if request.auth != null && request.auth.token.admin == true;
     }
     
     // School Progress - Ambassadors can read/write their own progress
