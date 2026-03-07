@@ -1737,25 +1737,85 @@
     
     function saveProgressToFirebase() {
       const user = firebase?.auth()?.currentUser;
-      if (!user) return;
-      
       const courseId = new URLSearchParams(window.location.search).get('courseId');
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
       
-      firebase.firestore().collection('userProgress').doc(`${user.uid}_${courseId}_${moduleId}`).set({
-        userId: user.uid,
-        courseId: courseId,
-        moduleId: moduleId,
-        moduleIndex: currentModuleIndex,
-        contentRead: progressData.contentRead,
-        assessmentCompleted: progressData.assessmentCompleted,
-        assessmentPassed: progressData.assessmentPassed,
-        readingProgress: progressData.readingProgress,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(err => {
-        console.error('Error saving progress:', err);
-      });
+      // Save regular user progress (if logged in)
+      if (user) {
+        firebase.firestore().collection('userProgress').doc(`${user.uid}_${courseId}_${moduleId}`).set({
+          userId: user.uid,
+          courseId: courseId,
+          moduleId: moduleId,
+          moduleIndex: currentModuleIndex,
+          contentRead: progressData.contentRead,
+          assessmentCompleted: progressData.assessmentCompleted,
+          assessmentPassed: progressData.assessmentPassed,
+          readingProgress: progressData.readingProgress,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => {
+          console.error('Error saving user progress:', err);
+        });
+      }
+      
+      // FOUNDATION SCHOOL TRACKING - Weekly Dual-Track Structure
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      
+      if (ambassadorCode && progressData.assessmentPassed) {
+        // Check if this course is part of Foundation School (format: teleios-week1, advocacy-week2, etc.)
+        const weekMatch = courseId?.match(/(teleios|advocacy)-week(\d+)/);
+        
+        if (weekMatch) {
+          const track = weekMatch[1]; // 'teleios' or 'advocacy'
+          const weekNumber = parseInt(weekMatch[2]); // 1-6
+          const weekKey = `week${weekNumber}`;
+          const trackKey = track; // 'teleios' or 'advocacy'
+          
+          console.log(`📚 Foundation School: Completing ${track} for Week ${weekNumber}`);
+          
+          // Mark this track as complete for this week
+          const updatePath = `school_enrollment.foundation_school.weekly_progress.${weekKey}.${trackKey}`;
+          const updateData = {
+            [updatePath]: true,
+            'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+          };
+          
+          firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
+            .then(async () => {
+              console.log(`✅ ${track.toUpperCase()} Week ${weekNumber} marked complete`);
+              
+              // Check if BOTH tracks are now complete for this week
+              const ambassadorDoc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
+              const enrollment = ambassadorDoc.data()?.school_enrollment?.foundation_school;
+              
+              if (enrollment && enrollment.weekly_progress) {
+                const weekProgress = enrollment.weekly_progress[weekKey];
+                
+                // If both Teleios AND Advocacy completed for this week
+                if (weekProgress.teleios && weekProgress.advocacy) {
+                  console.log(`🎉 Week ${weekNumber} FULLY COMPLETE (both tracks done)!`);
+                  
+                  // Increment completed_weeks and advance current_week
+                  const newCompletedWeeks = (enrollment.completed_weeks || 0) + 1;
+                  const newCurrentWeek = Math.min(weekNumber + 1, 6);
+                  
+                  await firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+                    'school_enrollment.foundation_school.completed_weeks': newCompletedWeeks,
+                    'school_enrollment.foundation_school.current_week': newCurrentWeek
+                  });
+                  
+                  console.log(`📅 Advanced to Week ${newCurrentWeek} (${newCompletedWeeks} weeks completed)`);
+                  
+                  // Show congratulations
+                  alert(`🎉 Congratulations! Week ${weekNumber} Complete!\\n\\nYou finished both Teleios Blueprint AND Advocacy Training for this week.\\n\\nProgress: ${newCompletedWeeks}/6 weeks`);
+                }
+              }
+            })
+            .catch(err => {
+              console.error('Error saving Foundation School progress:', err);
+            });
+        }
+      }
     }
     
     // Call this when assessment is completed

@@ -934,26 +934,26 @@
             <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 24px; border-radius: 12px; border: 2px solid #00b894; margin-bottom: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
-                        <h3 style="color: #00b894; margin-bottom: 8px;">Week <span id="currentWeek">3</span> of 6</h3>
-                        <p style="color: #636e72; margin: 0;">Teleios Blueprint + Advocacy Training</p>
+                        <h3 style="color: #00b894; margin-bottom: 8px;">Week <span id="currentWeek">0</span> of 6</h3>
+                        <p style="color: #636e72; margin: 0;">Dual Track: Teleios Blueprint + Advocacy Training</p>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 2rem; font-weight: 700; color: #00b894;" id="completionPercent">42%</div>
+                        <div style="font-size: 2rem; font-weight: 700; color: #00b894;" id="completionPercent">0%</div>
                         <small style="color: #636e72;">Complete</small>
                     </div>
                 </div>
                 <div class="progress-bar" style="height: 20px;">
-                    <div class="progress-fill" id="schoolProgress" style="width: 42%"></div>
+                    <div class="progress-fill" id="schoolProgress" style="width: 0%"></div>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
                     <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
-                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">Modules Completed</div>
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3436;"><span id="completedModules">15</span>/<span id="totalModules">36</span></div>
+                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">Weeks Completed</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3436;"><span id="completedWeeks">0</span>/<span id="totalWeeks">6</span></div>
                     </div>
                     <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
                         <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">CRLA Status</div>
                         <div style="font-size: 1.1rem; font-weight: 600;" id="crlaStatus">
-                            <span style="color: #ffc107;">⏳ In Progress</span>
+                            <span style="color: #636e72;">⭕ Not Started</span>
                         </div>
                     </div>
                 </div>
@@ -1864,7 +1864,7 @@
                 });
         }
         
-        // Update Foundation School Progress
+        // Update Foundation School Progress (Dual-Track Weekly Structure)
         function updateFoundationSchool(stats) {
             try {
                 const schoolSection = document.getElementById('schoolProgressSection');
@@ -1872,34 +1872,39 @@
                 
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
-                    const completedLessons = enrollment.completed_lessons?.length || 0;
+                    // Each week has BOTH Teleios + Advocacy tracks (dual-track weekly structure)
                     const currentWeek = enrollment.current_week || 1;
-                    const totalLessons = 36;
-                    const completionPercent = Math.round((completedLessons / totalLessons) * 100);
+                    const completedWeeks = enrollment.completed_weeks || 0;
+                    const totalWeeks = 6;
+                    const completionPercent = Math.round((completedWeeks / totalWeeks) * 100);
+                    
+                    // Check individual track progress for current week
+                    const weekKey = `week${currentWeek}`;
+                    const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
                     document.getElementById('completionPercent').textContent = completionPercent + '%';
                     document.getElementById('schoolProgress').style.width = completionPercent + '%';
-                    document.getElementById('completedModules').textContent = completedLessons;
-                    document.getElementById('totalModules').textContent = totalLessons;
+                    document.getElementById('completedWeeks').textContent = completedWeeks;
+                    document.getElementById('totalWeeks').textContent = totalWeeks;
                     
                     // Update CRLA status
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (completedLessons === 36 && enrollment.exam_passed) {
-                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ Certified</span>';
-                    } else if (completionPercent > 0) {
-                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+                    if (completedWeeks === 6 && enrollment.exam_passed) {
+                        crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
+                    } else if (completedWeeks > 0 || weekProgress.teleios || weekProgress.advocacy) {
+                        crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
                     } else {
-                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                        crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
                     }
                 } else {
                     // Default view for new ambassadors
-                    document.getElementById('currentWeek').textContent = '1';
+                    document.getElementById('currentWeek').textContent = '0';
                     document.getElementById('completionPercent').textContent = '0%';
                     document.getElementById('schoolProgress').style.width = '0%';
-                    document.getElementById('completedModules').textContent = '0';
-                    document.getElementById('totalModules').textContent = '36';
-                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                    document.getElementById('completedWeeks').textContent = '0';
+                    document.getElementById('totalWeeks').textContent = '6';
+                    document.getElementById('crlaStatus').innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
                 }
             } catch (error) {
                 console.error('Error updating Foundation School:', error);

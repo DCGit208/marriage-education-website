@@ -364,30 +364,266 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Load Teleios Blueprint course from LMS
-        async function loadSchoolData() {
+        let ambassadorCode = null;
+        let schoolEnrollment = null;
+
+        // 6-Week Dual-Track Curriculum Structure
+        const curriculum = [
+            {
+                week: 1,
+                title: "Week 1: Foundations",
+                teleios: {
+                    title: "What Is Teleios + Why It Matters",
+                    hours: 8,
+                    courseId: "teleios-week1"
+                },
+                advocacy: {
+                    title: "Ambassador Role & Identity",
+                    hours: 6,
+                    courseId: "advocacy-week1"
+                }
+            },
+            {
+                week: 2,
+                title: "Week 2: Design Paradigm",
+                teleios: {
+                    title: "Design Paradigm: Thinking from First Principles",
+                    hours: 8,
+                    courseId: "teleios-week2"
+                },
+                advocacy: {
+                    title: "Sales & Communication",
+                    hours: 7,
+                    courseId: "advocacy-week2"
+                }
+            },
+            {
+                week: 3,
+                title: "Week 3: Frameworks & Vocabulary",
+                teleios: {
+                    title: "Frameworks & Shared Vocabulary",
+                    hours: 7,
+                    courseId: "teleios-week3"
+                },
+                advocacy: {
+                    title: "Community Building",
+                    hours: 7,
+                    courseId: "advocacy-week3"
+                }
+            },
+            {
+                week: 4,
+                title: "Week 4: Axiomatic Dimensions",
+                teleios: {
+                    title: "Axiomatic Dimensions: Core Structures",
+                    hours: 7,
+                    courseId: "teleios-week4"
+                },
+                advocacy: {
+                    title: "Business Operations",
+                    hours: 7,
+                    courseId: "advocacy-week4"
+                }
+            },
+            {
+                week: 5,
+                title: "Week 5: Civilizational Scaling",
+                teleios: {
+                    title: "Marriage as Social Foundation",
+                    hours: 8,
+                    courseId: "teleios-week5"
+                },
+                advocacy: {
+                    title: "Leadership & Growth",
+                    hours: 7,
+                    courseId: "advocacy-week6"
+                }
+            },
+            {
+                week: 6,
+                title: "Week 6: Marriage Readiness",
+                teleios: {
+                    title: "Marriage Readiness Assessment",
+                    hours: 8,
+                    courseId: "teleios-week6"
+                },
+                advocacy: {
+                    title: "CRLA Certification",
+                    hours: 8,
+                    courseId: "advocacy-week6"
+                }
+            }
+        ];
+
+        // Initialize Foundation School enrollment
+        async function initializeEnrollment() {
             try {
-                const ambassadorCode = localStorage.getItem('ambassadorCode');
+                ambassadorCode = localStorage.getItem('ambassadorCode');
                 if (!ambassadorCode) {
                     alert('❌ Please log in first');
                     window.location.href = '/ambassador-login.html';
                     return;
                 }
 
-                // Redirect to LMS course viewer for Teleios Blueprint
-                window.location.href = '../course-viewer.html?course=teleios-blueprint';
+                // Fetch ambassador document
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
+                    alert('❌ Ambassador account not found');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+
+                const ambassadorData = ambassadorDoc.data();
+                schoolEnrollment = ambassadorData.school_enrollment?.foundation_school;
+
+                // Create enrollment if doesn't exist
+                if (!schoolEnrollment) {
+                    console.log('Initializing Foundation School enrollment...');
+                    schoolEnrollment = {
+                        start_date: firebase.firestore.FieldValue.serverTimestamp(),
+                        current_week: 1,
+                        completed_weeks: 0,
+                        weekly_progress: {
+                            week1: { teleios: false, advocacy: false },
+                            week2: { teleios: false, advocacy: false },
+                            week3: { teleios: false, advocacy: false },
+                            week4: { teleios: false, advocacy: false },
+                            week5: { teleios: false, advocacy: false },
+                            week6: { teleios: false, advocacy: false }
+                        },
+                        exam_passed: false,
+                        last_activity: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    await db.collection('ambassadors').doc(ambassadorCode).set({
+                        school_enrollment: {
+                            foundation_school: schoolEnrollment
+                        }
+                    }, { merge: true });
+
+                    console.log('✅ Foundation School enrollment initialized');
+                    
+                    // Reload to get actual data
+                    const updatedDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                    schoolEnrollment = updatedDoc.data().school_enrollment.foundation_school;
+                }
+
+                // Update UI with enrollment data
+                updateProgressDisplay();
+                renderCurriculum();
 
             } catch (error) {
-                console.error('Error loading school data:', error);
-                alert('❌ Error loading school data: ' + error.message);
+                console.error('Error initializing enrollment:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
 
-        // Load data on page load - redirect to LMS
-        window.addEventListener('DOMContentLoaded', () => {
-            // Show welcome banner, then user clicks to access course in LMS
-            console.log('Foundation School: Ambassadors access Teleios Blueprint course via LMS');
-        });
+        // Update progress display from enrollment data
+        function updateProgressDisplay() {
+            if (!schoolEnrollment) return;
+
+            const currentWeek = schoolEnrollment.current_week || 1;
+            const completedWeeks = schoolEnrollment.completed_weeks || 0;
+            const overallProgress = Math.round((completedWeeks / 6) * 100);
+            
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('completedWeeks').textContent = completedWeeks;
+            document.getElementById('overallProgress').textContent = overallProgress;
+
+            // Update CRLA status
+            if (completedWeeks === 6 && schoolEnrollment.exam_passed) {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #00b894;">✅ Certified</span>';
+            } else if (completedWeeks > 0) {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+            } else {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+            }
+        }
+
+        // Render weekly curriculum
+        function renderCurriculum() {
+            const weeksList = document.getElementById('weeksList');
+            weeksList.innerHTML = '';
+
+            curriculum.forEach((week) => {
+                const currentWeek = schoolEnrollment?.current_week || 1;
+                const isCurrentWeek = week.week === currentWeek;
+             const isCompleted = schoolEnrollment?.weekly_progress?.[`week${week.week}`]?.teleios && 
+                                   schoolEnrollment?.weekly_progress?.[`week${week.week}`]?.advocacy;
+                const isLocked = week.week > currentWeek;
+
+                let statusClass = isCompleted ? 'completed' : isCurrentWeek ? 'current' : isLocked ? 'locked' : '';
+                let statusIcon = isCompleted ? '✅' : isCurrentWeek ? '▶️' : '🔒';
+
+                const weekDiv = document.createElement('div');
+                weekDiv.className = `week-module ${statusClass}`;
+                weekDiv.style.cssText = 'background: #f8f9fa; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 4px solid ' +
+                    (isCompleted ? '#00b894' : isCurrentWeek ? '#ffc107' : '#e0e0e0');
+
+                const teleiosProgress = schoolEnrollment?.weekly_progress?.[`week${week.week}`]?.teleios;
+                const advocacyProgress = schoolEnrollment?.weekly_progress?.[`week${week.week}`]?.advocacy;
+
+                weekDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #2d3436; margin: 0;">${statusIcon} ${week.title}</h3>
+                        <div style="font-size: 0.9rem; color: #636e72;">
+                            ${week.teleios.hours + week.advocacy.hours} hours total
+                        </div>
+                    </div>
+                    
+                    <!-- TRACK 1: TELEIOS BLUEPRINT -->
+                    <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; color: #667eea; margin-bottom: 0.25rem;">
+                                    ${teleiosProgress ? '✅' : '⭕'} TRACK 1: TELEIOS BLUEPRINT
+                                </div>
+                                <div style="color: #636e72; font-size: 0.9rem;">${week.teleios.title} (${week.teleios.hours} hours)</div>
+                            </div>
+                            ${!isLocked && !teleiosProgress ? `
+                                <a href="../course-viewer.html?courseId=${week.teleios.courseId}" class="btn btn-primary" style="padding: 0.5rem 1rem; text-decoration: none;">
+                                    Start
+                                </a>
+                            ` : teleiosProgress ? `
+                                <span style="color: #00b894; font-weight: 600;">Complete</span>
+                            ` : `
+                                <span style="color: #636e72;">Locked</span>
+                            `}
+                        </div>
+                    </div>
+                    
+                    <!-- TRACK 2: ADVOCACY TRAINING -->
+                    <div style="background: white; padding: 1rem; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; color: #00b894; margin-bottom: 0.25rem;">
+                                    ${advocacyProgress ? '✅' : '⭕'} TRACK 2: ADVOCACY TRAINING
+                                </div>
+                                <div style="color: #636e72; font-size: 0.9rem;">${week.advocacy.title} (${week.advocacy.hours} hours)</div>
+                            </div>
+                            ${!isLocked && !advocacyProgress ? `
+                                <a href="../course-viewer.html?courseId=${week.advocacy.courseId}" class="btn btn-primary" style="padding: 0.5rem 1rem; text-decoration: none;">
+                                    Start
+                                </a>
+                            ` : advocacyProgress ? `
+                                <span style="color: #00b894; font-weight: 600;">Complete</span>
+                            ` : `
+                                <span style="color: #636e72;">Locked</span>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                weeksList.appendChild(weekDiv);
+            });
+        }
+
+        // Load on page ready
+        window.addEventListener('DOMContentLoaded', initializeEnrollment);
+    </script>
+</body>
+</html>
                 showEnrolledView();
 
                 // Render curriculum
