@@ -1200,7 +1200,7 @@
       console.log('switchModule called:', {index, moduleTitle: module ? module.title : 'N/A', moduleId: module ? module.moduleId : 'N/A'});
       
       // Reload progress data for the newly selected module
-      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      // Use global courseId
       const moduleId = module ? (module.moduleId || index) : index;
       const progressKey = `progress_${courseId}_module_${moduleId}`;
       
@@ -1573,7 +1573,7 @@
     }
     
     function downloadCertificate() {
-      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      // Use global courseId
       const moduleIndex = currentModuleIndex;
       
       // Check if certificate is actually available
@@ -1607,7 +1607,7 @@
     };
     
     function initializeProgressTracking(contentSection) {
-      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      // Use global courseId
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
       const progressKey = `progress_${courseId}_module_${moduleId}`;
@@ -1653,7 +1653,7 @@
               progressData.contentRead = true;
               
               // Get current module info
-              const courseId = new URLSearchParams(window.location.search).get('courseId');
+              // Use global courseId
               const module = courseModules[currentModuleIndex];
               const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
               const progressKey = `progress_${courseId}_module_${moduleId}`;
@@ -1766,7 +1766,7 @@
     
     function saveProgressToFirebase() {
       const user = firebase?.auth()?.currentUser;
-      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      // Use global courseId
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
       
@@ -1831,7 +1831,7 @@
       progressData.assessmentCompleted = true;
       progressData.assessmentPassed = passed;
       
-      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      // Use global courseId
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
       const progressKey = `progress_${courseId}_module_${moduleId}`;
@@ -1851,7 +1851,7 @@
         progressData.contentRead = true;
         progressData.readingProgress = 100;
         
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        // Use global courseId
         const progressKey = `progress_${courseId}_module_${moduleId}`;
         
         localStorage.setItem(progressKey, JSON.stringify(progressData));
@@ -1860,7 +1860,7 @@
         saveProgressToFirebase();
         
         // Show success notification
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        // Use global courseId
         if (courseId === 'foundation-school') {
           const weekNumber = currentModuleIndex + 1;
           alert(`✅ Week ${weekNumber} marked as complete! Your progress has been saved.`);
@@ -1871,7 +1871,7 @@
         console.log('Content already read, calling updateProgressIndicator to refresh UI');
         // Call update anyway to refresh UI in case it's out of sync
         updateProgressIndicator();
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        // Use global courseId
         if (courseId === 'foundation-school') {
           const weekNumber = currentModuleIndex + 1;
           alert(`ℹ️ You have already completed Week ${weekNumber}.`);
@@ -2875,7 +2875,7 @@
     async function saveQuizAttempt(score, passed, answers) {
       try {
         const ambassadorCode = localStorage.getItem('ambassadorCode');
-        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        // Use global courseId
         
         console.log('Saving quiz attempt:', { courseId, score, passed, ambassadorCode });
         
