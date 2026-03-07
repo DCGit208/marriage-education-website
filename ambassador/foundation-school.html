@@ -364,18 +364,95 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Load Teleios Blueprint course from LMS
+        let schoolEnrollment = null;
+        let ambassadorCode = null;
+
+        // Foundation School curriculum structure (18 Teleios + 18 Advocacy = 36 total)
+        const curriculum = [
+            { 
+                week: 1, 
+                title: 'Week 1: Foundations',
+                teleiosLessons: ['teleios-week1-lesson1', 'teleios-week1-lesson2', 'teleios-week1-lesson3'],
+                advocacyLessons: ['advocacy-week1-lesson1', 'advocacy-week1-lesson2', 'advocacy-week1-lesson3']
+            },
+            { 
+                week: 2, 
+                title: 'Week 2: Identity & Purpose',
+                teleiosLessons: ['teleios-week2-lesson1', 'teleios-week2-lesson2', 'teleios-week2-lesson3'],
+                advocacyLessons: ['advocacy-week2-lesson1', 'advocacy-week2-lesson2', 'advocacy-week2-lesson3']
+            },
+            { 
+                week: 3, 
+                title: 'Week 3: Relationships & Communication',
+                teleiosLessons: ['teleios-week3-lesson1', 'teleios-week3-lesson2', 'teleios-week3-lesson3'],
+                advocacyLessons: ['advocacy-week3-lesson1', 'advocacy-week3-lesson2', 'advocacy-week3-lesson3']
+            },
+            { 
+                week: 4, 
+                title: 'Week 4: Growth & Development',
+                teleiosLessons: ['teleios-week4-lesson1', 'teleios-week4-lesson2', 'teleios-week4-lesson3'],
+                advocacyLessons: ['advocacy-week4-lesson1', 'advocacy-week4-lesson2', 'advocacy-week4-lesson3']
+            },
+            { 
+                week: 5, 
+                title: 'Week 5: Leadership & Service',
+                teleiosLessons: ['teleios-week5-lesson1', 'teleios-week5-lesson2', 'teleios-week5-lesson3'],
+                advocacyLessons: ['advocacy-week5-lesson1', 'advocacy-week5-lesson2', 'advocacy-week5-lesson3']
+            },
+            { 
+                week: 6, 
+                title: 'Week 6: Certification Prep',
+                teleiosLessons: ['teleios-week6-lesson1', 'teleios-week6-lesson2', 'teleios-week6-lesson3'],
+                advocacyLessons: ['advocacy-week6-lesson1', 'advocacy-week6-lesson2', 'advocacy-week6-lesson3']
+            }
+        ];
+
+        // Load Foundation School enrollment data
         async function loadSchoolData() {
             try {
-                const ambassadorCode = localStorage.getItem('ambassadorCode');
+                ambassadorCode = localStorage.getItem('ambassadorCode');
                 if (!ambassadorCode) {
                     alert('❌ Please log in first');
                     window.location.href = '/ambassador-login.html';
                     return;
                 }
 
-                // Redirect to LMS course viewer for Teleios Blueprint
-                window.location.href = '../course-viewer.html?course=teleios-blueprint';
+                // Fetch ambassador document
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
+                    alert('❌ Ambassador account not found');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+
+                const ambassadorData = ambassadorDoc.data();
+                schoolEnrollment = ambassadorData.school_enrollment?.foundation_school;
+
+                // Initialize enrollment if it doesn't exist
+                if (!schoolEnrollment) {
+                    console.log('Initializing Foundation School enrollment...');
+                    schoolEnrollment = {
+                        start_date: firebase.firestore.FieldValue.serverTimestamp(),
+                        current_week: 1,
+                        completed_lessons: [],
+                        teleios_completed: [],
+                        advocacy_completed: [],
+                        last_activity: firebase.firestore.FieldValue.serverTimestamp(),
+                        exam_passed: false
+                    };
+
+                    await db.collection('ambassadors').doc(ambassadorCode).set({
+                        school_enrollment: {
+                            foundation_school: schoolEnrollment
+                        }
+                    }, { merge: true });
+
+                    console.log('✅ Foundation School enrollment initialized');
+                }
+
+                // Display progress
+                updateProgressDisplay();
 
             } catch (error) {
                 console.error('Error loading school data:', error);
@@ -383,150 +460,45 @@
             }
         }
 
-        // Load data on page load - redirect to LMS
-        window.addEventListener('DOMContentLoaded', () => {
-            // Show welcome banner, then user clicks to access course in LMS
-            console.log('Foundation School: Ambassadors access Teleios Blueprint course via LMS');
-        });
-                showEnrolledView();
-
-                // Render curriculum
-                renderCurriculum();
-
-            } catch (error) {
-                console.error('Error loading school data:', error);
-                alert('❌ Error loading school data: ' + error.message);
+        // Update progress display from enrollment data
+        function updateProgressDisplay() {
+            if (!schoolEnrollment) {
+                schoolEnrollment = {
+                    current_week: 1,
+                    completed_lessons: [],
+                    teleios_completed: [],
+                    advocacy_completed: [],
+                    exam_passed: false
+                };
             }
-        }
 
-        function showEnrolledView() {
-            document.getElementById('enrollmentCard').style.display = 'none';
-            document.getElementById('progressOverview').style.display = 'block';
-
-            // Update progress stats
-            const completedLessons = schoolEnrollment.completed_lessons ? schoolEnrollment.completed_lessons.length : 0;
+            const completedLessons = schoolEnrollment.completed_lessons?.length || 0;
+            const teleiosCompleted = schoolEnrollment.teleios_completed?.length || 0;
+            const advocacyCompleted = schoolEnrollment.advocacy_completed?.length || 0;
             const currentWeek = schoolEnrollment.current_week || 1;
             const overallProgress = Math.round((completedLessons / 36) * 100);
             
+            // Update overall stats
             document.getElementById('currentWeek').textContent = currentWeek;
             document.getElementById('completedLessons').textContent = completedLessons;
+            document.getElementById('teleiosLessons').textContent = teleiosCompleted;
+            document.getElementById('advocacyLessons').textContent = advocacyCompleted;
             document.getElementById('overallProgress').textContent = overallProgress;
 
+            // Update CRLA status
             if (completedLessons === 36 && schoolEnrollment.exam_passed) {
                 document.getElementById('crlaStatus').innerHTML = '<span style="color: #00b894;">✅ Certified</span>';
-            } else if (overallProgress > 0) {
+            } else if (completedLessons > 0) {
                 document.getElementById('crlaStatus').innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
-            }
-        }
-
-        function renderCurriculum() {
-            const weeksList = document.getElementById('weeksList');
-            weeksList.innerHTML = '';
-
-            curriculum.forEach((week) => {
-                const completedLessons = schoolEnrollment ? 
-                    schoolEnrollment.completed_lessons.filter(l => l.startsWith(`W${week.week}-`)).length : 0;
-                const totalLessons = week.lessons.length;
-                const isCompleted = completedLessons === totalLessons;
-                const isCurrent = schoolEnrollment ? week.week === schoolEnrollment.current_week : week.week === 1;
-                const isLocked = schoolEnrollment ? week.week > schoolEnrollment.current_week : week.week > 1;
-
-                let statusClass = 'locked';
-                let statusIcon = '🔒';
-                let statusText = 'Locked';
-
-                if (isCompleted) {
-                    statusClass = 'completed';
-                    statusIcon = '✅';
-                    statusText = 'Completed';
-                } else if (isCurrent) {
-                    statusClass = 'current';
-                    statusIcon = '▶️';
-                    statusText = 'Current';
-                }
-
-                const weekDiv = document.createElement('div');
-                weekDiv.className = `week-module ${statusClass}`;
-                weekDiv.innerHTML = `
-                    <div class="week-header">
-                        <div class="week-title">${week.title}</div>
-                        <div class="week-status ${statusClass}">
-                            <span>${statusIcon} ${statusText}</span>
-                            <span style="margin-left: 1rem; color: #636e72;">${completedLessons}/${totalLessons} lessons</span>
-                        </div>
-                    </div>
-                    <div class="week-description">${week.description}</div>
-                    <div class="lesson-list" id="week-${week.week}-lessons">
-                        ${week.lessons.map((lesson, index) => {
-                            const lessonId = `W${week.week}-L${index + 1}`;
-                            const lessonCompleted = schoolEnrollment && schoolEnrollment.completed_lessons.includes(lessonId);
-                            return `
-                                <div class="lesson-item ${lessonCompleted ? 'completed' : ''}">
-                                    <div>
-                                        <span style="margin-right: 0.5rem;">${lessonCompleted ? '✅' : '⭕'}</span>
-                                        ${lesson.title}
-                                    </div>
-                                    <div style="display: flex; gap: 1rem; align-items: center;">
-                                        <span style="color: #636e72; font-size: 0.85rem;">${lesson.duration}</span>
-                                        ${!isLocked && !lessonCompleted ? `
-                                            <a href="../course-viewer.html?course=foundation-school&week=${week.week}&lesson=${index + 1}" class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">
-                                                <i class="fas fa-play"></i> Start
-                                            </a>
-                                        ` : lessonCompleted ? `
-                                            <a href="../course-viewer.html?course=foundation-school&week=${week.week}&lesson=${index + 1}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">
-                                                <i class="fas fa-redo"></i> Review
-                                            </a>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-
-                // Toggle expansion on click
-                weekDiv.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('btn')) {
-                        const lessonList = weekDiv.querySelector('.lesson-list');
-                        lessonList.classList.toggle('expanded');
-                    }
-                });
-
-                weeksList.appendChild(weekDiv);
-            });
-        }
-
-        async function completeLesson(lessonId, weekNumber) {
-            try {
-                const ambassadorCode = localStorage.getItem('ambassadorCode');
-                
-                // Update completed lessons array
-                await db.collection('ambassadors').doc(ambassadorCode).update({
-                    'school_enrollment.foundation_school.completed_lessons': firebase.firestore.FieldValue.arrayUnion(lessonId),
-                    'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Check if week is complete, advance to next week
-                const weekLessons = curriculum.find(w => w.week === weekNumber).lessons.length;
-                const completedInWeek = schoolEnrollment.completed_lessons.filter(l => l.startsWith(`W${weekNumber}-`)).length + 1;
-
-                if (completedInWeek === weekLessons && weekNumber < 6) {
-                    await db.collection('ambassadors').doc(ambassadorCode).update({
-                        'school_enrollment.foundation_school.current_week': weekNumber + 1
-                    });
-                }
-
-                alert('✅ Lesson completed!');
-                window.location.reload();
-
-            } catch (error) {
-                console.error('Error completing lesson:', error);
-                alert('❌ Error: ' + error.message);
+            } else {
+                document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
             }
         }
 
         // Load data on page load
-        window.addEventListener('DOMContentLoaded', loadSchoolData);
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSchoolData();
+        });
     </script>
 </body>
 </html>
