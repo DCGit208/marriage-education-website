@@ -1737,25 +1737,79 @@
     
     function saveProgressToFirebase() {
       const user = firebase?.auth()?.currentUser;
-      if (!user) return;
-      
       const courseId = new URLSearchParams(window.location.search).get('courseId');
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
       
-      firebase.firestore().collection('userProgress').doc(`${user.uid}_${courseId}_${moduleId}`).set({
-        userId: user.uid,
-        courseId: courseId,
-        moduleId: moduleId,
-        moduleIndex: currentModuleIndex,
-        contentRead: progressData.contentRead,
-        assessmentCompleted: progressData.assessmentCompleted,
-        assessmentPassed: progressData.assessmentPassed,
-        readingProgress: progressData.readingProgress,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(err => {
-        console.error('Error saving progress:', err);
-      });
+      // Save regular user progress (if logged in)
+      if (user) {
+        firebase.firestore().collection('userProgress').doc(`${user.uid}_${courseId}_${moduleId}`).set({
+          userId: user.uid,
+          courseId: courseId,
+          moduleId: moduleId,
+          moduleIndex: currentModuleIndex,
+          contentRead: progressData.contentRead,
+          assessmentCompleted: progressData.assessmentCompleted,
+          assessmentPassed: progressData.assessmentPassed,
+          readingProgress: progressData.readingProgress,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => {
+          console.error('Error saving user progress:', err);
+        });
+      }
+      
+      // FOUNDATION SCHOOL TRACKING - Check if this is an ambassador accessing Foundation School
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      const isFoundationSchoolCourse = courseId === 'foundation-school' || 
+                                       courseId === 'teleios-blueprint' || 
+                                       courseId === 'advocacy-training';
+      
+      if (ambassadorCode && isFoundationSchoolCourse && progressData.assessmentPassed) {
+        // Only track as completed when BOTH content and assessment are passed
+        const lessonId = `${courseId}-module-${moduleId}`;
+        
+        // Determine which track this lesson belongs to
+        const isTeleios = courseId === 'teleios-blueprint' || courseId === 'foundation-school';
+        const isAdvocacy = courseId === 'advocacy-training';
+        
+        const updateData = {
+          'school_enrollment.foundation_school.completed_lessons': firebase.firestore.FieldValue.arrayUnion(lessonId),
+          'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // Also add to track-specific arrays
+        if (isTeleios) {
+          updateData['school_enrollment.foundation_school.teleios_completed'] = firebase.firestore.FieldValue.arrayUnion(lessonId);
+        }
+        if (isAdvocacy) {
+          updateData['school_enrollment.foundation_school.advocacy_completed'] = firebase.firestore.FieldValue.arrayUnion(lessonId);
+        }
+        
+        firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
+          .then(async () => {
+            console.log(`✅ Foundation School progress tracked: ${lessonId}`);
+            
+            // Fetch current enrollment to calculate new week
+            const ambassadorDoc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
+            const enrollment = ambassadorDoc.data()?.school_enrollment?.foundation_school;
+            
+            if (enrollment) {
+              const totalCompleted = enrollment.completed_lessons?.length || 0;
+              const newWeek = Math.min(Math.ceil(totalCompleted / 6), 6);
+              
+              // Update current week if needed
+              if (newWeek !== enrollment.current_week) {
+                await firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+                  'school_enrollment.foundation_school.current_week': newWeek
+                });
+                console.log(`📅 Advanced to Week ${newWeek}`);
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Error saving Foundation School progress:', err);
+          });
+      }
     }
     
     // Call this when assessment is completed
