@@ -1333,6 +1333,18 @@
           });
         }, 100);
       }
+      
+      // Add "Mark Complete" button at the end of content
+      const markCompleteHtml = `
+        <div style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
+          <h3 style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
+          <p style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
+          <button class="btn btn-primary" onclick="markContentComplete()" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+            ✅ Mark Week Complete
+          </button>
+        </div>
+      `;
+      contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
     }
     
     // ========================================
@@ -1758,63 +1770,42 @@
         });
       }
       
-      // FOUNDATION SCHOOL TRACKING - Weekly Dual-Track Structure
+      // FOUNDATION SCHOOL TRACKING - Module-Based Progress
       const ambassadorCode = localStorage.getItem('ambassadorCode');
       
-      if (ambassadorCode && progressData.assessmentPassed) {
-        // Check if this course is part of Foundation School (format: teleios-week1, advocacy-week2, etc.)
-        const weekMatch = courseId?.match(/(teleios|advocacy)-week(\d+)/);
+      if (ambassadorCode && courseId === 'foundation-school') {
+        const weekNumber = currentModuleIndex + 1; // Module index 0-5 = Week 1-6
+        const progressPercent = Math.round((weekNumber / 6) * 100);
         
-        if (weekMatch) {
-          const track = weekMatch[1]; // 'teleios' or 'advocacy'
-          const weekNumber = parseInt(weekMatch[2]); // 1-6
-          const weekKey = `week${weekNumber}`;
-          const trackKey = track; // 'teleios' or 'advocacy'
-          
-          console.log(`📚 Foundation School: Completing ${track} for Week ${weekNumber}`);
-          
-          // Mark this track as complete for this week
-          const updatePath = `school_enrollment.foundation_school.weekly_progress.${weekKey}.${trackKey}`;
-          const updateData = {
-            [updatePath]: true,
-            'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+        console.log(`📚 Foundation School: Week ${weekNumber} - Module completed`);
+        
+        // Track completed modules (individual lessons within weeks)
+        const moduleCompletionPath = `school_enrollment.foundation_school.completed_modules.module${currentModuleIndex}`;
+        
+        const updateData = {
+          'school_enrollment.foundation_school.current_week': weekNumber,
+          'school_enrollment.foundation_school.progress_percent': progressPercent,
+          'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // Mark this specific module as completed when content is read OR assessment passed
+        if (progressData.contentRead || progressData.assessmentPassed) {
+          updateData[moduleCompletionPath] = {
+            completed: true,
+            completed_at: firebase.firestore.FieldValue.serverTimestamp(),
+            assessment_passed: progressData.assessmentPassed || false,
+            content_read: progressData.contentRead || false
           };
-          
-          firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
-            .then(async () => {
-              console.log(`✅ ${track.toUpperCase()} Week ${weekNumber} marked complete`);
-              
-              // Check if BOTH tracks are now complete for this week
-              const ambassadorDoc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
-              const enrollment = ambassadorDoc.data()?.school_enrollment?.foundation_school;
-              
-              if (enrollment && enrollment.weekly_progress) {
-                const weekProgress = enrollment.weekly_progress[weekKey];
-                
-                // If both Teleios AND Advocacy completed for this week
-                if (weekProgress.teleios && weekProgress.advocacy) {
-                  console.log(`🎉 Week ${weekNumber} FULLY COMPLETE (both tracks done)!`);
-                  
-                  // Increment completed_weeks and advance current_week
-                  const newCompletedWeeks = (enrollment.completed_weeks || 0) + 1;
-                  const newCurrentWeek = Math.min(weekNumber + 1, 6);
-                  
-                  await firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
-                    'school_enrollment.foundation_school.completed_weeks': newCompletedWeeks,
-                    'school_enrollment.foundation_school.current_week': newCurrentWeek
-                  });
-                  
-                  console.log(`📅 Advanced to Week ${newCurrentWeek} (${newCompletedWeeks} weeks completed)`);
-                  
-                  // Show congratulations
-                  alert(`🎉 Congratulations! Week ${weekNumber} Complete!\\n\\nYou finished both Teleios Blueprint AND Advocacy Training for this week.\\n\\nProgress: ${newCompletedWeeks}/6 weeks`);
-                }
-              }
-            })
-            .catch(err => {
-              console.error('Error saving Foundation School progress:', err);
-            });
+          console.log(`✅ Week ${weekNumber} marked as complete`);
         }
+        
+        firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
+          .then(() => {
+            console.log(`✅ Foundation School progress updated: Week ${weekNumber} (${progressPercent}%)`);
+          })
+          .catch(err => {
+            console.error('Error saving Foundation School progress:', err);
+          });
       }
     }
     
@@ -1851,13 +1842,25 @@
         updateProgressIndicator();
         saveProgressToFirebase();
         
-        // Show notification
-        alert('✅ Content marked as complete! You can now take the assessment.');
+        // Show success notification
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        if (courseId === 'foundation-school') {
+          const weekNumber = currentModuleIndex + 1;
+          alert(`✅ Week ${weekNumber} marked as complete! Your progress has been saved.`);
+        } else {
+          alert('✅ Content marked as complete!');
+        }
       } else {
         console.log('Content already read, calling updateProgressIndicator to refresh UI');
         // Call update anyway to refresh UI in case it's out of sync
         updateProgressIndicator();
-        alert('ℹ️ You have already completed reading this content.');
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        if (courseId === 'foundation-school') {
+          const weekNumber = currentModuleIndex + 1;
+          alert(`ℹ️ You have already completed Week ${weekNumber}.`);
+        } else {
+          alert('ℹ️ You have already completed reading this content.');
+        }
       }
     }
     
@@ -2854,11 +2857,31 @@
     
     async function saveQuizAttempt(score, passed, answers) {
       try {
-        // TODO: Get current user and enrollment
-        console.log('Saving quiz attempt:', { score, passed });
+        const ambassadorCode = localStorage.getItem('ambassadorCode');
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
         
-        // This would save to Firestore enrollments collection
-        // For now, just log
+        console.log('Saving quiz attempt:', { courseId, score, passed, ambassadorCode });
+        
+        // Foundation School Final Exam = CRLA Certification
+        if (ambassadorCode && courseId === 'foundation-school' && passed) {
+          console.log('🎓 Foundation School Final Exam PASSED - Awarding CRLA Certification!');
+          
+          await firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+            'school_enrollment.foundation_school.exam_passed': true,
+            'school_enrollment.foundation_school.exam_score': score,
+            'school_enrollment.foundation_school.exam_date': firebase.firestore.FieldValue.serverTimestamp(),
+            'school_enrollment.foundation_school.progress_percent': 100,
+            'school_enrollment.foundation_school.crla_certified': true,
+            'school_enrollment.foundation_school.certification_date': firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          console.log('✅ CRLA Certification awarded!');
+          
+          // Show celebration
+          setTimeout(() => {
+            alert('🎉 Congratulations! CRLA Certified!\n\nYou have successfully completed the Marriage Foundation School and earned your CRLA (Certified Relationship Literacy Advocate) certification.\n\nYou can now access senior ambassador opportunities and advanced training programs.');
+          }, 500);
+        }
       } catch (error) {
         console.error('Error saving quiz attempt:', error);
       }
