@@ -1997,8 +1997,8 @@
         // Update bottom button
         if (bottomBtn && section) {
           section.style.background = 'linear-gradient(135deg, #00b894 0%, #00856f 100%)';
-          title.textContent = '✅ Week Completed!';
-          desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
+          if (title) title.textContent = '✅ Week Completed!';
+          if (desc) desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
           bottomBtn.textContent = '✓ Completed';
           bottomBtn.style.background = '#ffffff';
           bottomBtn.style.color = '#00b894';
@@ -2019,8 +2019,8 @@
         // Reset bottom button
         if (bottomBtn && section) {
           section.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          title.textContent = '📚 Finished Reading?';
-          desc.textContent = 'Mark this week as complete to track your progress toward CRLA certification.';
+          if (title) title.textContent = '📚 Finished Reading?';
+          if (desc) desc.textContent = 'Mark this week as complete to track your progress toward CRLA certification.';
           bottomBtn.textContent = '✅ Mark Week Complete';
           bottomBtn.style.background = '#ffffff';
           bottomBtn.style.color = '#667eea';
