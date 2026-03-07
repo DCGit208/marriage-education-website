@@ -1864,7 +1864,7 @@
                 });
         }
         
-        // Update Foundation School Progress (Dual-Track Weekly Structure)
+        // Update Foundation School Progress (Module-Based Tracking)
         function updateFoundationSchool(stats) {
             try {
                 const schoolSection = document.getElementById('schoolProgressSection');
@@ -1872,30 +1872,30 @@
                 
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
-                    // Each week has BOTH Teleios + Advocacy tracks (dual-track weekly structure)
                     const currentWeek = enrollment.current_week || 1;
-                    const completedWeeks = enrollment.completed_weeks || 0;
                     const totalWeeks = 6;
-                    const completionPercent = Math.round((completedWeeks / totalWeeks) * 100);
+                    const progressPercent = enrollment.progress_percent || Math.round((currentWeek / totalWeeks) * 100);
                     
-                    // Check individual track progress for current week
-                    const weekKey = `week${currentWeek}`;
-                    const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
+                    // Count completed modules (Weeks 1-6)
+                    const completedModules = enrollment.completed_modules || {};
+                    const modulesCompleted = Object.keys(completedModules).filter(key => 
+                        completedModules[key]?.completed === true
+                    ).length;
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
-                    document.getElementById('completionPercent').textContent = completionPercent + '%';
-                    document.getElementById('schoolProgress').style.width = completionPercent + '%';
-                    document.getElementById('completedWeeks').textContent = completedWeeks;
+                    document.getElementById('completionPercent').textContent = progressPercent + '%';
+                    document.getElementById('schoolProgress').style.width = progressPercent + '%';
+                    document.getElementById('completedWeeks').textContent = modulesCompleted;
                     document.getElementById('totalWeeks').textContent = totalWeeks;
                     
-                    // Update CRLA status
+                    // Update CRLA status based on final exam completion
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (completedWeeks === 6 && enrollment.exam_passed) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
-                    } else if (completedWeeks > 0 || weekProgress.teleios || weekProgress.advocacy) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
+                    if (enrollment.exam_passed === true) {
+                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ CRLA Certified</span>';
+                    } else if (modulesCompleted > 0 || currentWeek > 1) {
+                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
                     } else {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                     }
                 } else {
                     // Default view for new ambassadors
@@ -1904,7 +1904,7 @@
                     document.getElementById('schoolProgress').style.width = '0%';
                     document.getElementById('completedWeeks').textContent = '0';
                     document.getElementById('totalWeeks').textContent = '6';
-                    document.getElementById('crlaStatus').innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                 }
             } catch (error) {
                 console.error('Error updating Foundation School:', error);

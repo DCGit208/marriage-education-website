@@ -996,14 +996,30 @@
     let currentModuleIndex = 0;
     let scrollSpyListener = null;
     let courseModules = []; // Store modules globally for access by progress functions
+    let loadingOverlay = null;
     
-    // Show loading overlay
-    const loadingOverlay = document.getElementById('loadingOverlay');
+    // Immediately start loading when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      loadingOverlay = document.getElementById('loadingOverlay');
+      
+      console.log('[Course Viewer] DOM Ready - Starting to load course:', courseId);
+      console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
+      
+      if (!courseId) {
+        console.error('[Course Viewer] No courseId provided!');
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>No Course Selected</h2><p>Please select a course to view.</p></div>';
+        return;
+      }
+      
+      // Start loading course data
+      loadCourseData();
+    });
     
-    console.log('[Course Viewer] Starting to load course:', courseId);
-    console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
-    
-    fetch('courses-catalogue.json?t=' + new Date().getTime())
+    function loadCourseData() {
+      console.log('[Course Viewer] Fetching courses catalogue...');
+      
+      fetch('courses-catalogue.json?t=' + new Date().getTime())
       .then(response => {
         console.log('[Course Viewer] Fetch response received:', response.ok);
         if (!response.ok) {
@@ -1176,6 +1192,7 @@
         }
       }
     }, 10000);
+    }
 
     function switchModule(index) {
       currentModuleIndex = index;
