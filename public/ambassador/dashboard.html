@@ -1872,27 +1872,31 @@
                 
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
-                    // Each week has BOTH Teleios + Advocacy tracks (dual-track weekly structure)
                     const currentWeek = enrollment.current_week || 1;
-                    const completedWeeks = enrollment.completed_weeks || 0;
+                    const progressPercent = enrollment.progress_percent || 0; // Use saved progress_percent
                     const totalWeeks = 6;
-                    const completionPercent = Math.round((completedWeeks / totalWeeks) * 100);
+                    
+                    // Count completed modules
+                    const completedModules = enrollment.completed_modules || {};
+                    const completedCount = Object.keys(completedModules).filter(key => 
+                        completedModules[key]?.completed === true
+                    ).length;
                     
                     // Check individual track progress for current week
                     const weekKey = `week${currentWeek}`;
                     const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
-                    document.getElementById('completionPercent').textContent = completionPercent + '%';
-                    document.getElementById('schoolProgress').style.width = completionPercent + '%';
-                    document.getElementById('completedWeeks').textContent = completedWeeks;
+                    document.getElementById('completionPercent').textContent = progressPercent + '%';
+                    document.getElementById('schoolProgress').style.width = progressPercent + '%';
+                    document.getElementById('completedWeeks').textContent = completedCount; // Show completed modules count
                     document.getElementById('totalWeeks').textContent = totalWeeks;
                     
                     // Update CRLA status
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (completedWeeks === 6 && enrollment.exam_passed) {
+                    if (completedCount === 6 && enrollment.exam_passed) {
                         crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
-                    } else if (completedWeeks > 0 || weekProgress.teleios || weekProgress.advocacy) {
+                    } else if (completedCount > 0 || progressPercent > 0) {
                         crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
                     } else {
                         crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';

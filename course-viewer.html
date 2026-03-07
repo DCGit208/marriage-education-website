@@ -961,7 +961,7 @@
           </div>
           <div class="top-actions">
             <button class="btn btn-secondary">📥 Downloads</button>
-            <button class="btn btn-primary" onclick="markContentComplete()">Mark Complete</button>
+            <button id="topMarkCompleteBtn" class="btn btn-primary">Mark Complete</button>
           </div>
         </div>
         <div class="content-area">
@@ -1165,9 +1165,8 @@
           document.getElementById('moduleTitle').textContent = modules[0].title || 'Week 1';
         }
 
-        const progress = ((1 / totalWeeks) * 100);
-        document.getElementById('progressFill').style.width = progress + '%';
-        document.getElementById('progressPercent').textContent = Math.round(progress);
+        // Calculate ACTUAL progress based on completed modules
+        updateCourseProgressBar();
         
         // Initialize section navigator with longer delay to ensure content is rendered
         setTimeout(() => {
@@ -1224,6 +1223,8 @@
       // Update UI to reflect current module's progress
       setTimeout(() => {
         updateProgressIndicator();
+        updateCourseProgressBar(); // Update sidebar progress bar
+        updateMarkCompleteButton(progressData.contentRead); // Update button states
       }, 50);
       
       document.querySelectorAll('.module-item').forEach((item, i) => {
@@ -1353,15 +1354,37 @@
       
       // Add "Mark Complete" button at the end of content
       const markCompleteHtml = `
-        <div style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
-          <h3 style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
-          <p style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
-          <button class="btn btn-primary" onclick="markContentComplete()" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+        <div id="markCompleteSection" style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
+          <h3 id="markCompleteTitle" style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
+          <p id="markCompleteDesc" style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
+          <button id="markCompleteBtn" class="btn btn-primary" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
             ✅ Mark Week Complete
           </button>
         </div>
       `;
       contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
+      
+      // Attach click handlers to both buttons and check completion status
+      setTimeout(() => {
+        const bottomBtn = document.getElementById('markCompleteBtn');
+        const topBtn = document.getElementById('topMarkCompleteBtn');
+        
+        if (bottomBtn) {
+          bottomBtn.addEventListener('click', markContentComplete);
+          console.log('✅ Bottom button click handler attached');
+        }
+        
+        if (topBtn) {
+          topBtn.addEventListener('click', markContentComplete);
+          console.log('✅ Top button click handler attached');
+        }
+        
+        // Update button state if content already completed
+        if (progressData.contentRead) {
+          console.log('📖 Content already read, updating buttons to completed state');
+          updateMarkCompleteButton(true);
+        }
+      }, 100);
     }
     
     // ========================================
@@ -1790,39 +1813,81 @@
       // FOUNDATION SCHOOL TRACKING - Module-Based Progress
       const ambassadorCode = localStorage.getItem('ambassadorCode');
       
+      console.log('🔍 Foundation School tracking check:', {
+        ambassadorCode: ambassadorCode ? 'EXISTS' : 'MISSING',
+        courseId,
+        isFoundationSchool: courseId === 'foundation-school',
+        willTrack: ambassadorCode && courseId === 'foundation-school'
+      });
+      
       if (ambassadorCode && courseId === 'foundation-school') {
-        const weekNumber = currentModuleIndex + 1; // Module index 0-5 = Week 1-6
-        const progressPercent = Math.round((weekNumber / 6) * 100);
-        
-        console.log(`📚 Foundation School: Week ${weekNumber} - Module completed`);
-        
-        // Track completed modules (individual lessons within weeks)
-        const moduleCompletionPath = `school_enrollment.foundation_school.completed_modules.module${currentModuleIndex}`;
-        
-        const updateData = {
-          'school_enrollment.foundation_school.current_week': weekNumber,
-          'school_enrollment.foundation_school.progress_percent': progressPercent,
-          'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        // Mark this specific module as completed when content is read OR assessment passed
-        if (progressData.contentRead || progressData.assessmentPassed) {
-          updateData[moduleCompletionPath] = {
-            completed: true,
-            completed_at: firebase.firestore.FieldValue.serverTimestamp(),
-            assessment_passed: progressData.assessmentPassed || false,
-            content_read: progressData.contentRead || false
-          };
-          console.log(`✅ Week ${weekNumber} marked as complete`);
-        }
-        
-        firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
+        // First, get current enrollment data to count completed modules
+        firebase.firestore().collection('ambassadors').doc(ambassadorCode).get()
+          .then(doc => {
+            const data = doc.data();
+            const enrollment = data?.school_enrollment?.foundation_school || {};
+            const completedModules = enrollment.completed_modules || {};
+            
+            // Count how many modules are ACTUALLY completed
+            let completedCount = Object.keys(completedModules).filter(key => 
+              completedModules[key]?.completed === true
+            ).length;
+            
+            // Add current module if being marked complete
+            if (progressData.contentRead || progressData.assessmentPassed) {
+              // Check if this module isn't already counted
+              if (!completedModules[`module${currentModuleIndex}`]?.completed) {
+                completedCount++;
+              }
+            }
+            
+            const weekNumber = currentModuleIndex + 1;
+            // Calculate progress based on COMPLETED COUNT, not current position
+            const progressPercent = Math.round((completedCount / 6) * 100);
+            
+            console.log(`📚 Foundation School: Week ${weekNumber}`, {
+              completedBefore: completedCount - (progressData.contentRead ? 1 : 0),
+              completedAfter: completedCount,
+              progressPercent: progressPercent + '%'
+            });
+            
+            const moduleCompletionPath = `school_enrollment.foundation_school.completed_modules.module${currentModuleIndex}`;
+            
+            const updateData = {
+              'school_enrollment.foundation_school.current_week': weekNumber,
+              'school_enrollment.foundation_school.progress_percent': progressPercent,
+              'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Mark this specific module as completed when content is read OR assessment passed
+            if (progressData.contentRead || progressData.assessmentPassed) {
+              updateData[moduleCompletionPath] = {
+                completed: true,
+                completed_at: firebase.firestore.FieldValue.serverTimestamp(),
+                assessment_passed: progressData.assessmentPassed || false,
+                content_read: progressData.contentRead || false
+              };
+              console.log(`✅ Week ${weekNumber} marked as complete - updating Firestore`);
+              console.log('📤 Update data:', updateData);
+            }
+            
+            return firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData);
+          })
           .then(() => {
-            console.log(`✅ Foundation School progress updated: Week ${weekNumber} (${progressPercent}%)`);
+            const weekNumber = currentModuleIndex + 1;
+            console.log(`✅✅ Foundation School progress SAVED to Firestore: Week ${weekNumber}`);
           })
           .catch(err => {
-            console.error('Error saving Foundation School progress:', err);
+            console.error('❌ Error saving Foundation School progress:', err);
+            console.error('Ambassador code:', ambassadorCode);
           });
+      } else {
+        if (!ambassadorCode) {
+          console.warn('⚠️ Cannot track Foundation School progress: ambassadorCode not found in localStorage');
+        }
+        if (courseId !== 'foundation-school') {
+          console.log('ℹ️ Not Foundation School course, skipping school tracking');
+        }
       }
     }
     
@@ -1843,9 +1908,19 @@
     
     // Manual mark complete function
     function markContentComplete() {
+      console.log('🔵 markContentComplete CLICKED');
       const module = courseModules[currentModuleIndex];
       const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
-      console.log('markContentComplete called', {currentModuleIndex, moduleId, moduleTitle: module ? module.title : 'N/A', progressData});
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      
+      console.log('markContentComplete called', {
+        currentModuleIndex, 
+        moduleId, 
+        moduleTitle: module ? module.title : 'N/A', 
+        progressData,
+        courseId,
+        ambassadorCode: ambassadorCode ? 'EXISTS' : 'MISSING'
+      });
       
       if (!progressData.contentRead) {
         progressData.contentRead = true;
@@ -1855,9 +1930,18 @@
         const progressKey = `progress_${courseId}_module_${moduleId}`;
         
         localStorage.setItem(progressKey, JSON.stringify(progressData));
-        console.log('Saved progress and calling updateProgressIndicator');
+        console.log('✅ Saved to localStorage:', progressKey);
         updateProgressIndicator();
+        
+        console.log('🔄 Calling saveProgressToFirebase...');
         saveProgressToFirebase();
+        
+        // Update buttons and course progress bar
+        setTimeout(() => {
+          updateMarkCompleteButton(true);
+          updateCourseProgressBar();
+          console.log('✅ Buttons and progress bar updated to COMPLETED');
+        }, 200);
         
         // Show success notification
         // Use global courseId
@@ -1878,6 +1962,100 @@
         } else {
           alert('ℹ️ You have already completed reading this content.');
         }
+      }
+    }
+    
+    // Update Mark Complete button appearance based on completion status
+    // Update ALL mark complete buttons (top and bottom)
+    function updateMarkCompleteButton(isComplete) {
+      // Update bottom button (in content)
+      const bottomBtn = document.getElementById('markCompleteBtn');
+      const title = document.getElementById('markCompleteTitle');
+      const desc = document.getElementById('markCompleteDesc');
+      const section = document.getElementById('markCompleteSection');
+      
+      // Update top button (in header)
+      const topBtn = document.getElementById('topMarkCompleteBtn');
+      
+      console.log('🔄 updateMarkCompleteButton called', { 
+        isComplete, 
+        bottomBtnExists: !!bottomBtn, 
+        topBtnExists: !!topBtn,
+        sectionExists: !!section 
+      });
+      
+      if (isComplete) {
+        // Update bottom button
+        if (bottomBtn && section) {
+          section.style.background = 'linear-gradient(135deg, #00b894 0%, #00856f 100%)';
+          title.textContent = '✅ Week Completed!';
+          desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
+          bottomBtn.textContent = '✓ Completed';
+          bottomBtn.style.background = '#ffffff';
+          bottomBtn.style.color = '#00b894';
+          bottomBtn.style.cursor = 'default';
+          bottomBtn.disabled = true;
+        }
+        
+        // Update top button
+        if (topBtn) {
+          topBtn.textContent = '✓ Completed';
+          topBtn.style.opacity = '0.7';
+          topBtn.style.cursor = 'default';
+          topBtn.disabled = true;
+        }
+        
+        console.log('✅ Both buttons updated to COMPLETED state');
+      } else {
+        // Reset bottom button
+        if (bottomBtn && section) {
+          section.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          title.textContent = '📚 Finished Reading?';
+          desc.textContent = 'Mark this week as complete to track your progress toward CRLA certification.';
+          bottomBtn.textContent = '✅ Mark Week Complete';
+          bottomBtn.style.background = '#ffffff';
+          bottomBtn.style.color = '#667eea';
+          bottomBtn.style.cursor = 'pointer';
+          bottomBtn.disabled = false;
+        }
+        
+        // Reset top button
+        if (topBtn) {
+          topBtn.textContent = 'Mark Complete';
+          topBtn.style.opacity = '1';
+          topBtn.style.cursor = 'pointer';
+          topBtn.disabled = false;
+        }
+        
+        console.log('🔄 Both buttons reset to UNCOMPLETED state');
+      }
+    }
+    
+    // Calculate and update course progress bar based on completed modules
+    function updateCourseProgressBar() {
+      const totalWeeks = 6;
+      let completedCount = 0;
+      
+      // Count completed modules from localStorage
+      for (let i = 0; i < totalWeeks; i++) {
+        const progressKey = `progress_${courseId}_module_${i}`;
+        const saved = localStorage.getItem(progressKey);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.contentRead || data.assessmentPassed) {
+            completedCount++;
+          }
+        }
+      }
+      
+      const progressPercent = Math.round((completedCount / totalWeeks) * 100);
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressPercent');
+      
+      if (progressFill && progressText) {
+        progressFill.style.width = progressPercent + '%';
+        progressText.textContent = progressPercent;
+        console.log(`📊 Course progress updated: ${completedCount}/${totalWeeks} = ${progressPercent}%`);
       }
     }
     
