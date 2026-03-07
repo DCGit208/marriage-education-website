@@ -997,6 +997,122 @@
     let scrollSpyListener = null;
     let courseModules = []; // Store modules globally for access by progress functions
     let loadingOverlay = null;
+    let firestoreProgressData = null; // Store Firestore data for sequential locking
+    
+    // Load Foundation School progress from Firestore
+    async function loadFoundationSchoolProgress() {
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      
+      if (!ambassadorCode || courseId !== 'foundation-school') {
+        console.log('ℹ️ Skipping Firestore sync - not Foundation School or no ambassador code');
+        return null;
+      }
+      
+      try {
+        console.log('🔄 Loading Foundation School progress from Firestore...');
+        const doc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
+        
+        if (!doc.exists) {
+          console.warn('⚠️ Ambassador document not found');
+          return null;
+        }
+        
+        const data = doc.data();
+        const enrollment = data?.school_enrollment?.foundation_school;
+        
+        if (!enrollment) {
+          console.log('ℹ️ No Foundation School enrollment found');
+          return null;
+        }
+        
+        firestoreProgressData = enrollment;
+        console.log('✅ Loaded Firestore progress:', enrollment);
+        
+        // Sync Firestore data to localStorage for each module
+        const completedModules = enrollment.completed_modules || {};
+        for (let i = 0; i < 6; i++) {
+          const moduleData = completedModules[`module${i}`];
+          if (moduleData?.completed) {
+            const progressKey = `progress_${courseId}_module_${i}`;
+            const localData = {
+              contentRead: moduleData.content_read || false,
+              assessmentCompleted: moduleData.assessment_passed || false,
+              assessmentPassed: moduleData.assessment_passed || false,
+              readingProgress: 100
+            };
+            localStorage.setItem(progressKey, JSON.stringify(localData));
+            console.log(`📥 Synced module ${i} to localStorage:`, localData);
+          }
+        }
+        
+        return enrollment;
+      } catch (err) {
+        console.error('❌ Error loading Firestore progress:', err);
+        return null;
+      }
+    }
+    
+    // Check if a module is unlocked (for sequential access)
+    function isModuleUnlocked(moduleIndex) {
+      // Week 1 is always unlocked
+      if (moduleIndex === 0) return true;
+      
+      // For Foundation School, check if previous week is completed
+      if (courseId === 'foundation-school' && firestoreProgressData) {
+        const completedModules = firestoreProgressData.completed_modules || {};
+        const previousModule = completedModules[`module${moduleIndex - 1}`];
+        const isUnlocked = previousModule?.completed === true;
+        console.log(`🔐 Module ${moduleIndex} unlock check:`, {
+          previousModule: moduleIndex - 1,
+          previousCompleted: previousModule?.completed,
+          isUnlocked
+        });
+        return isUnlocked;
+      }
+      
+      // For other courses or if no Firestore data, check localStorage
+      const previousProgressKey = `progress_${courseId}_module_${moduleIndex - 1}`;
+      const previousProgress = localStorage.getItem(previousProgressKey);
+      if (previousProgress) {
+        const data = JSON.parse(previousProgress);
+        return data.contentRead || data.assessmentPassed;
+      }
+      
+      return false; // Locked by default
+    }
+    
+    // Refresh module lock states in the UI
+    function refreshModuleLockStates() {
+      const moduleItems = document.querySelectorAll('.module-item');
+      moduleItems.forEach((item, idx) => {
+        const moduleExists = idx < courseModules.length;
+        const moduleUnlocked = isModuleUnlocked(idx);
+        const isAvailable = moduleExists && moduleUnlocked;
+        
+        const durationEl = item.querySelector('.duration');
+        const module = courseModules[idx];
+        
+        if (durationEl && module) {
+          const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
+          durationEl.textContent = `${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Complete Week ' + idx + ' to unlock'}`;
+        }
+        
+        // Update clickability
+        if (isAvailable) {
+          item.style.opacity = '1';
+          item.style.cursor = 'pointer';
+          item.setAttribute('tabindex', '0');
+          item.onclick = () => switchModule(idx);
+        } else {
+          item.style.opacity = '0.5';
+          item.style.cursor = 'not-allowed';
+          item.setAttribute('tabindex', '-1');
+          item.onclick = null;
+        }
+        
+        console.log(`🔄 Refreshed module ${idx + 1}: available=${isAvailable}`);
+      });
+    }
     
     // Immediately start loading when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -1016,8 +1132,11 @@
       loadCourseData();
     });
     
-    function loadCourseData() {
+    async function loadCourseData() {
       console.log('[Course Viewer] Fetching courses catalogue...');
+      
+      // STEP 1: Load Firestore progress data FIRST (for Foundation School)
+      await loadFoundationSchoolProgress();
       
       fetch('courses-catalogue.json?t=' + new Date().getTime())
       .then(response => {
@@ -1065,19 +1184,29 @@
         
         for (let idx = 0; idx < totalWeeks; idx++) {
           const module = modules[idx];
-          const isAvailable = idx < modules.length;
+          const moduleExists = idx < modules.length;
+          const moduleUnlocked = isModuleUnlocked(idx);
+          const isAvailable = moduleExists && moduleUnlocked;
+          
+          console.log(`📚 Module ${idx + 1}:`, {
+            exists: moduleExists,
+            unlocked: moduleUnlocked,
+            available: isAvailable
+          });
           
           // Sidebar navigation
           const navItem = document.createElement('div');
           navItem.className = 'module-item' + (idx === 0 ? ' active' : '');
           navItem.setAttribute('role', 'button');
           navItem.setAttribute('tabindex', isAvailable ? '0' : '-1');
-          navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}`);
+          navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? '🔒 Locked' : 'Coming Soon')}`);
+          
+          const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
           navItem.innerHTML = `
             <div class="icon">${idx + 1}</div>
             <div class="text">
               <div class="title">Week ${idx + 1}</div>
-              <div class="duration">${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}</div>
+              <div class="duration">${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? 'Complete Week ' + idx + ' to unlock' : 'Coming Soon')}</div>
             </div>
           `;
           if (isAvailable) {
@@ -1213,6 +1342,13 @@
     }
 
     function switchModule(index) {
+      // Check if module is unlocked before switching
+      if (!isModuleUnlocked(index)) {
+        console.warn(`🔒 Module ${index} is locked - complete previous modules first`);
+        alert(`🔒 Week ${index + 1} is locked. Please complete Week ${index} first!`);
+        return;
+      }
+      
       currentModuleIndex = index;
       const module = courseModules[index];
       console.log('switchModule called:', {index, moduleTitle: module ? module.title : 'N/A', moduleId: module ? module.moduleId : 'N/A'});
@@ -1885,6 +2021,12 @@
           .then(() => {
             const weekNumber = currentModuleIndex + 1;
             console.log(`✅✅ Foundation School progress SAVED to Firestore: Week ${weekNumber}`);
+            
+            // Reload Firestore data to update unlock states
+            loadFoundationSchoolProgress().then(() => {
+              console.log('🔄 Firestore data reloaded, refreshing module lock states');
+              refreshModuleLockStates();
+            });
           })
           .catch(err => {
             console.error('❌ Error saving Foundation School progress:', err);
