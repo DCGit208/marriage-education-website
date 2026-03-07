@@ -999,6 +999,30 @@
     let loadingOverlay = null;
     let firestoreProgressData = null; // Store Firestore data for sequential locking
     
+    // Function to clear test data (call from console if needed)
+    window.clearFoundationSchoolProgress = function() {
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      if (!ambassadorCode) {
+        console.error('No ambassador code found');
+        return;
+      }
+      
+      // Clear localStorage
+      for (let i = 0; i < 6; i++) {
+        localStorage.removeItem(`progress_foundation-school_module_${i}`);
+      }
+      
+      // Clear Firestore
+      firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+        'school_enrollment.foundation_school.completed_modules': {},
+        'school_enrollment.foundation_school.progress_percent': 0,
+        'school_enrollment.foundation_school.current_week': 1
+      }).then(() => {
+        console.log('✅ Progress cleared! Reload the page.');
+        location.reload();
+      });
+    };
+    
     // Load Foundation School progress from Firestore
     async function loadFoundationSchoolProgress() {
       const ambassadorCode = localStorage.getItem('ambassadorCode');
@@ -1028,22 +1052,9 @@
         firestoreProgressData = enrollment;
         console.log('✅ Loaded Firestore progress:', enrollment);
         
-        // Sync Firestore data to localStorage for each module
-        const completedModules = enrollment.completed_modules || {};
-        for (let i = 0; i < 6; i++) {
-          const moduleData = completedModules[`module${i}`];
-          if (moduleData?.completed) {
-            const progressKey = `progress_${courseId}_module_${i}`;
-            const localData = {
-              contentRead: moduleData.content_read || false,
-              assessmentCompleted: moduleData.assessment_passed || false,
-              assessmentPassed: moduleData.assessment_passed || false,
-              readingProgress: 100
-            };
-            localStorage.setItem(progressKey, JSON.stringify(localData));
-            console.log(`📥 Synced module ${i} to localStorage:`, localData);
-          }
-        }
+        // DO NOT sync to localStorage - let user actually read content first!
+        // The sync was causing weeks to show as "complete by default"
+        console.log('ℹ️ Firestore data loaded but NOT synced to localStorage (user must read content)');
         
         return enrollment;
       } catch (err) {
@@ -1546,20 +1557,28 @@
       const markCompleteHtml = `
         <div id="markCompleteSection" style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
           <h3 id="markCompleteTitle" style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
-          <p id="markCompleteDesc" style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
-          <button id="markCompleteBtn" class="btn btn-primary" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-            ✅ Mark Week Complete
+          <p id="markCompleteDesc" style="color: #e0e7ff; margin-bottom: 16px; font-size: 1rem;">Scroll through at least 80% of the content to unlock the completion button.</p>
+          <div id="scrollProgressContainer" style="margin-bottom: 20px;">
+            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div id="scrollProgressBar" style="height: 100%; width: 0%; background: #4ade80; transition: width 0.3s ease;"></div>
+            </div>
+            <p id="scrollProgress" style="color: #e0e7ff; margin-top: 8px; font-size: 0.9rem;">0% read - Keep scrolling!</p>
+          </div>
+          <button id="markCompleteBtn" class="btn btn-primary" disabled style="background: #94a3b8; color: #cbd5e1; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: not-allowed; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            🔒 Read 80% to unlock
           </button>
         </div>
       `;
       contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
       
-      // Update button state if content already completed
-      // Event handlers are managed via event delegation on .content-area (see loadCourseData)
+      // Update button state based on saved progress
       setTimeout(() => {
         if (progressData.contentRead) {
           console.log('📖 Content already read, updating buttons to completed state');
           updateMarkCompleteButton(true);
+        } else {
+          // Update button based on reading progress
+          updateMarkCompleteButtonState(progressData.readingProgress || 0);
         }
       }, 150);
     }
@@ -1836,7 +1855,7 @@
         }, 100);
       }
       
-      // Track scroll progress
+      // Track scroll progress to enable "Mark Complete" button
       const contentArea = document.querySelector('.content-area');
       if (contentArea && !contentArea.hasAttribute('data-scroll-listener-added')) {
         contentArea.setAttribute('data-scroll-listener-added', 'true');
@@ -1846,24 +1865,25 @@
           clearTimeout(scrollTimeout);
           scrollTimeout = setTimeout(() => {
             const scrollPercentage = (contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight)) * 100;
-            progressData.readingProgress = Math.min(100, scrollPercentage);
+            progressData.readingProgress = Math.min(100, Math.round(scrollPercentage));
             
-            // Mark as read when 80% scrolled
-            if (scrollPercentage >= 80 && !progressData.contentRead) {
-              progressData.contentRead = true;
-              
-              // Get current module info
-              // Use global courseId
-              const module = courseModules[currentModuleIndex];
-              const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
-              const progressKey = `progress_${courseId}_module_${moduleId}`;
-              
-              localStorage.setItem(progressKey, JSON.stringify(progressData));
-              updateProgressIndicator();
-              
-              // Save to Firebase if user is logged in
-              saveProgressToFirebase();
+            console.log(`📖 Scroll progress: ${progressData.readingProgress}%`);
+            
+            // Update Mark Complete button state based on scroll
+            updateMarkCompleteButtonState(progressData.readingProgress);
+            
+            // Update scroll progress indicator if it exists
+            const scrollProgressEl = document.getElementById('scrollProgress');
+            if (scrollProgressEl) {
+              scrollProgressEl.textContent = `${progressData.readingProgress}% read`;
             }
+            
+            // Save progress to localStorage (but don't mark as complete or save to Firestore)
+            const module = courseModules[currentModuleIndex];
+            const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+            const progressKey = `progress_${courseId}_module_${moduleId}`;
+            localStorage.setItem(progressKey, JSON.stringify(progressData));
+            
           }, 300);
         });
       }
@@ -2107,6 +2127,14 @@
         ambassadorCode: ambassadorCode ? 'EXISTS' : 'MISSING'
       });
       
+      // VALIDATION: Must have scrolled 80% before marking complete
+      if (progressData.readingProgress < 80) {
+        const remaining = Math.ceil(80 - progressData.readingProgress);
+        alert(`⚠️ Please read at least 80% of the content before marking complete.\n\nYou've read: ${progressData.readingProgress}%\nRemaining: ${remaining}%`);
+        console.warn(`❌ Cannot mark complete - only ${progressData.readingProgress}% read`);
+        return;
+      }
+      
       if (!progressData.contentRead) {
         progressData.contentRead = true;
         progressData.readingProgress = 100;
@@ -2150,6 +2178,62 @@
       }
     }
     
+    // Update Mark Complete button state based on scroll progress
+    function updateMarkCompleteButtonState(scrollProgress) {
+      const bottomBtn = document.getElementById('markCompleteBtn');
+      const topBtn = document.getElementById('topMarkCompleteBtn');
+      const scrollProgressBar = document.getElementById('scrollProgressBar');
+      const scrollProgressText = document.getElementById('scrollProgress');
+      
+      // Update progress bar visual
+      if (scrollProgressBar) {
+        scrollProgressBar.style.width = scrollProgress + '%';
+      }
+      
+      // Update progress text
+      if (scrollProgressText) {
+        if (scrollProgress < 80) {
+          scrollProgressText.textContent = `${scrollProgress}% read - Keep scrolling to unlock!`;
+          scrollProgressText.style.color = '#fde68a';
+        } else {
+          scrollProgressText.textContent = `${scrollProgress}% read - You can now mark this week as complete! ✅`;
+          scrollProgressText.style.color = '#4ade80';
+        }
+      }
+      
+      // Enable/disable button based on 80% threshold
+      if (scrollProgress >= 80) {
+        // Enable button
+        if (bottomBtn) {
+          bottomBtn.disabled = false;
+          bottomBtn.textContent = '✅ Mark Week Complete';
+          bottomBtn.style.background = '#ffffff';
+          bottomBtn.style.color = '#667eea';
+          bottomBtn.style.cursor = 'pointer';
+        }
+        if (topBtn) {
+          topBtn.disabled = false;
+          topBtn.style.opacity = '1';
+          topBtn.style.cursor = 'pointer';
+        }
+        console.log('✅ Mark Complete button ENABLED (80% reached)');
+      } else {
+        // Keep disabled
+        if (bottomBtn && !bottomBtn.disabled) {
+          bottomBtn.disabled = true;
+          bottomBtn.textContent = `🔒 Read ${Math.ceil(80 - scrollProgress)}% more to unlock`;
+          bottomBtn.style.background = '#94a3b8';
+          bottomBtn.style.color = '#cbd5e1';
+          bottomBtn.style.cursor = 'not-allowed';
+        }
+        if (topBtn && !topBtn.disabled) {
+          topBtn.disabled = true;
+          topBtn.style.opacity = '0.5';
+          topBtn.style.cursor = 'not-allowed';
+        }
+      }
+    }
+    
     // Update Mark Complete button appearance based on completion status
     // Update ALL mark complete buttons (top and bottom)
     function updateMarkCompleteButton(isComplete) {
@@ -2175,6 +2259,11 @@
           section.style.background = 'linear-gradient(135deg, #00b894 0%, #00856f 100%)';
           if (title) title.textContent = '✅ Week Completed!';
           if (desc) desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
+          
+          // Hide scroll progress container when complete
+          const scrollContainer = document.getElementById('scrollProgressContainer');
+          if (scrollContainer) scrollContainer.style.display = 'none';
+          
           bottomBtn.textContent = '✓ Completed';
           bottomBtn.style.background = '#ffffff';
           bottomBtn.style.color = '#00b894';
