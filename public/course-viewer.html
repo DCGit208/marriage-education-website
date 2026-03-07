@@ -1998,8 +1998,8 @@
       });
       
       if (ambassadorCode && courseId === 'foundation-school') {
-        // First, get current enrollment data to count completed modules
-        firebase.firestore().collection('ambassadors').doc(ambassadorCode).get()
+        // Return the promise so caller can wait for completion
+        return firebase.firestore().collection('ambassadors').doc(ambassadorCode).get()
           .then(doc => {
             const data = doc.data();
             const enrollment = data?.school_enrollment?.foundation_school || {};
@@ -2054,11 +2054,11 @@
             const weekNumber = currentModuleIndex + 1;
             console.log(`✅✅ Foundation School progress SAVED to Firestore: Week ${weekNumber}`);
             
-            // Reload Firestore data to update unlock states
-            loadFoundationSchoolProgress().then(() => {
-              console.log('🔄 Firestore data reloaded, refreshing module lock states');
-              refreshModuleLockStates();
-            });
+            // Reload Firestore data to update unlock states and WAIT for it
+            return loadFoundationSchoolProgress();
+          })
+          .then(() => {
+            console.log('🔄 Firestore data reloaded successfully');
           })
           .catch(err => {
             console.error('❌ Error saving Foundation School progress:', err);
@@ -2071,6 +2071,8 @@
         if (courseId !== 'foundation-school') {
           console.log('ℹ️ Not Foundation School course, skipping school tracking');
         }
+        // Return resolved promise for non-Foundation School courses
+        return Promise.resolve();
       }
     }
     
@@ -2117,14 +2119,14 @@
         updateProgressIndicator();
         
         console.log('🔄 Calling saveProgressToFirebase...');
-        saveProgressToFirebase();
         
-        // Update buttons and course progress bar
-        setTimeout(() => {
+        // Save to Firestore and WAIT for it to complete before updating UI
+        saveProgressToFirebase().then(() => {
+          console.log('✅ Firestore save complete, now updating UI...');
           updateMarkCompleteButton(true);
           updateCourseProgressBar();
-          console.log('✅ Buttons and progress bar updated to COMPLETED');
-        }, 200);
+          refreshModuleLockStates(); // Refresh sidebar to show checkmarks and unlock next week
+        });
         
         // Show success notification
         // Use global courseId
