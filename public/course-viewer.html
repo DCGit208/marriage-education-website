@@ -1168,6 +1168,25 @@
         // Calculate ACTUAL progress based on completed modules
         updateCourseProgressBar();
         
+        // ========================================
+        // EVENT DELEGATION for Mark Complete buttons
+        // ========================================
+        // Use event delegation to avoid timing issues with dynamically created buttons
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+          contentArea.addEventListener('click', function(e) {
+            // Check if click was on either Mark Complete button
+            if (e.target.id === 'markCompleteBtn' || e.target.id === 'topMarkCompleteBtn') {
+              e.preventDefault();
+              console.log('🔵 Mark Complete button clicked via event delegation');
+              markContentComplete();
+            }
+          });
+          console.log('✅ Event delegation attached to .content-area for Mark Complete buttons');
+        } else {
+          console.error('❌ .content-area not found - event delegation failed');
+        }
+        
         // Initialize section navigator with longer delay to ensure content is rendered
         setTimeout(() => {
           setupNavigationClickHandler();
@@ -1220,13 +1239,7 @@
         console.log('No saved progress for module:', {moduleId});
       }
       
-      // Update UI to reflect current module's progress
-      setTimeout(() => {
-        updateProgressIndicator();
-        updateCourseProgressBar(); // Update sidebar progress bar
-        updateMarkCompleteButton(progressData.contentRead); // Update button states
-      }, 50);
-      
+      // Update active module styling
       document.querySelectorAll('.module-item').forEach((item, i) => {
         item.classList.toggle('active', i === index);
       });
@@ -1253,10 +1266,19 @@
         lazyLoadModuleContent(index, module, targetContent);
       }
       
+      // Update UI to reflect current module's progress
+      // Delay to ensure lazy loading completes and buttons are created
+      setTimeout(() => {
+        updateProgressIndicator();
+        updateCourseProgressBar(); // Update sidebar progress bar
+        updateMarkCompleteButton(progressData.contentRead); // Update button states
+        console.log('✅ UI updated for module switch, contentRead:', progressData.contentRead);
+      }, 350);
+      
       // Update section navigator after a brief delay to ensure DOM is ready
       setTimeout(() => {
         updateSectionNavigator();
-      }, 300);
+      }, 400);
     }
     
     // ========================================
@@ -1364,27 +1386,14 @@
       `;
       contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
       
-      // Attach click handlers to both buttons and check completion status
+      // Update button state if content already completed
+      // Event handlers are managed via event delegation on .content-area (see loadCourseData)
       setTimeout(() => {
-        const bottomBtn = document.getElementById('markCompleteBtn');
-        const topBtn = document.getElementById('topMarkCompleteBtn');
-        
-        if (bottomBtn) {
-          bottomBtn.addEventListener('click', markContentComplete);
-          console.log('✅ Bottom button click handler attached');
-        }
-        
-        if (topBtn) {
-          topBtn.addEventListener('click', markContentComplete);
-          console.log('✅ Top button click handler attached');
-        }
-        
-        // Update button state if content already completed
         if (progressData.contentRead) {
           console.log('📖 Content already read, updating buttons to completed state');
           updateMarkCompleteButton(true);
         }
-      }, 100);
+      }, 150);
     }
     
     // ========================================
