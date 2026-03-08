@@ -1137,6 +1137,16 @@
           item.style.cursor = 'pointer';
           item.setAttribute('tabindex', '0');
           item.onclick = () => switchModule(idx);
+          
+          // CRITICAL FIX: Add raw content for newly unlocked modules
+          const contentDiv = document.getElementById(`module-${idx}`);
+          if (contentDiv && !contentDiv.getAttribute('data-raw-content') && module) {
+            console.log(`🔓 Module ${idx + 1} newly unlocked - adding content for lazy load`);
+            contentDiv.setAttribute('data-raw-content', JSON.stringify(module.content || ''));
+            contentDiv.setAttribute('data-content-loaded', 'false');
+            // Replace "Coming Soon" with loading placeholder
+            contentDiv.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#94a3b8;"><p>Click to load content...</p></div>';
+          }
         } else {
           item.style.opacity = '0.5';
           item.style.cursor = 'not-allowed';
