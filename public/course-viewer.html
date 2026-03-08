@@ -1452,6 +1452,13 @@
         updateCourseProgressBar(); // Update sidebar progress bar
         updateMarkCompleteButton(progressData.contentRead); // Update button states
         console.log('✅ UI updated for module switch, contentRead:', progressData.contentRead);
+        
+        // CRITICAL: Initialize scroll tracking for ALL modules (not just those with assessments)
+        const contentSection = document.querySelector('.tab-content.active .content-section');
+        if (contentSection) {
+          console.log('🔧 Initializing scroll tracking for module:', index);
+          initializeProgressTracking(contentSection);
+        }
       }, 350);
       
       // Update section navigator after a brief delay to ensure DOM is ready
@@ -1480,6 +1487,13 @@
         // Process enhancements after content is loaded
         setTimeout(() => {
           processModuleEnhancements(contentElement, module);
+          
+          // Initialize scroll tracking after content is fully loaded
+          const contentSection = contentElement.querySelector('.content-section');
+          if (contentSection) {
+            console.log('🔧 Initializing scroll tracking after lazy load for module:', index);
+            initializeProgressTracking(contentSection);
+          }
         }, 100);
         
         console.log('Module content lazy loaded successfully:', index);
