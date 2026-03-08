@@ -1460,8 +1460,15 @@
       setTimeout(() => {
         updateProgressIndicator();
         updateCourseProgressBar(); // Update sidebar progress bar
-        updateMarkCompleteButton(progressData.contentRead); // Update button states
-        console.log('✅ UI updated for module switch, contentRead:', progressData.contentRead);
+        
+        // CRITICAL FIX: Only call updateMarkCompleteButton if content is ACTUALLY complete
+        // Otherwise, let scroll tracking manage the button state
+        if (progressData.contentRead) {
+          updateMarkCompleteButton(true); // Show completed state
+          console.log('✅ UI updated for module switch, contentRead: true - showing completed state');
+        } else {
+          console.log('✅ UI updated for module switch, contentRead: false - letting scroll tracking manage button');
+        }
         
         // CRITICAL: Only initialize scroll tracking if content is already loaded (not lazy loading)
         const targetContent = document.getElementById(`module-${index}`);
@@ -2236,9 +2243,18 @@
       const scrollProgressBar = document.getElementById('scrollProgressBar');
       const scrollProgressText = document.getElementById('scrollProgress');
       
+      console.log(`🔧 updateMarkCompleteButtonState(${scrollProgress}%) - Elements:`, {
+        bottomBtn: !!bottomBtn,
+        scrollProgressBar: !!scrollProgressBar,
+        scrollProgressText: !!scrollProgressText
+      });
+      
       // Update progress bar visual
       if (scrollProgressBar) {
         scrollProgressBar.style.width = scrollProgress + '%';
+        console.log(`✏️ Progress bar updated to ${scrollProgress}%`);
+      } else {
+        console.warn('⚠️ scrollProgressBar element not found!');
       }
       
       // Update progress text
@@ -2250,6 +2266,9 @@
           scrollProgressText.textContent = `${scrollProgress}% read - You can now mark this week as complete! ✅`;
           scrollProgressText.style.color = '#4ade80';
         }
+        console.log(`✏️ Progress text updated: "${scrollProgressText.textContent}"`);
+      } else {
+        console.warn('⚠️ scrollProgress text element not found!');
       }
       
       // Enable/disable button based on 80% threshold
@@ -2261,23 +2280,26 @@
           bottomBtn.style.background = '#ffffff';
           bottomBtn.style.color = '#667eea';
           bottomBtn.style.cursor = 'pointer';
+          console.log('✅ Mark Complete button ENABLED (80% reached)');
+        } else {
+          console.warn('⚠️ markCompleteBtn element not found!');
         }
         if (topBtn) {
           topBtn.disabled = false;
           topBtn.style.opacity = '1';
           topBtn.style.cursor = 'pointer';
         }
-        console.log('✅ Mark Complete button ENABLED (80% reached)');
       } else {
         // Keep disabled
-        if (bottomBtn && !bottomBtn.disabled) {
+        if (bottomBtn) {
           bottomBtn.disabled = true;
           bottomBtn.textContent = `🔒 Read ${Math.ceil(80 - scrollProgress)}% more to unlock`;
           bottomBtn.style.background = '#94a3b8';
           bottomBtn.style.color = '#cbd5e1';
           bottomBtn.style.cursor = 'not-allowed';
+          console.log(`🔒 Button disabled - ${Math.ceil(80 - scrollProgress)}% more needed`);
         }
-        if (topBtn && !topBtn.disabled) {
+        if (topBtn) {
           topBtn.disabled = true;
           topBtn.style.opacity = '0.5';
           topBtn.style.cursor = 'not-allowed';
