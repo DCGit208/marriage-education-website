@@ -2272,6 +2272,11 @@
         console.log('Content already read, calling updateProgressIndicator to refresh UI');
         // Call update anyway to refresh UI in case it's out of sync
         updateProgressIndicator();
+        updateCourseProgressBar();
+        
+        // CRITICAL: Also refresh lock states to unlock Final Exam if all weeks done
+        refreshModuleLockStates();
+        
         // Use global courseId
         if (courseId === 'foundation-school') {
           const weekNumber = currentModuleIndex + 1;
