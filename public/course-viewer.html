@@ -1096,6 +1096,11 @@
     function refreshModuleLockStates() {
       const moduleItems = document.querySelectorAll('.module-item');
       moduleItems.forEach((item, idx) => {
+        // CRITICAL: Skip exam nav item - it's handled separately below
+        if (item.classList.contains('exam-module')) {
+          return; // Skip this iteration
+        }
+        
         const moduleExists = idx < courseModules.length;
         const moduleCompleted = isModuleCompleted(idx);
         const moduleUnlocked = isModuleUnlocked(idx);
@@ -1966,6 +1971,12 @@
         contentArea.addEventListener('scroll', () => {
           clearTimeout(scrollTimeout);
           scrollTimeout = setTimeout(() => {
+            // CRITICAL: Skip scroll tracking for exam content
+            const activeTab = document.querySelector('.tab-content.active');
+            if (!activeTab || activeTab.id === 'module-exam') {
+              return; // Exam uses quiz interface, not scroll tracking
+            }
+            
             const scrollPercentage = (contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight)) * 100;
             progressData.readingProgress = Math.min(100, Math.round(scrollPercentage));
             
