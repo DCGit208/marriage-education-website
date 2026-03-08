@@ -1930,11 +1930,8 @@
             // Update Mark Complete button state based on scroll
             updateMarkCompleteButtonState(progressData.readingProgress);
             
-            // Update scroll progress indicator if it exists
-            const scrollProgressEl = document.getElementById('scrollProgress');
-            if (scrollProgressEl) {
-              scrollProgressEl.textContent = `${progressData.readingProgress}% read`;
-            }
+            // NOTE: updateMarkCompleteButtonState already handles finding the right elements in active tab
+            // No need to update scrollProgressEl separately - it's done in that function
             
             // Save progress to localStorage (but don't mark as complete or save to Firestore)
             const module = courseModules[currentModuleIndex];
@@ -2238,12 +2235,20 @@
     
     // Update Mark Complete button state based on scroll progress
     function updateMarkCompleteButtonState(scrollProgress) {
-      const bottomBtn = document.getElementById('markCompleteBtn');
-      const topBtn = document.getElementById('topMarkCompleteBtn');
-      const scrollProgressBar = document.getElementById('scrollProgressBar');
-      const scrollProgressText = document.getElementById('scrollProgress');
+      // CRITICAL: Find buttons in ACTIVE tab only (not all buttons on page)
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) {
+        console.warn('⚠️ No active tab found!');
+        return;
+      }
+      
+      const bottomBtn = activeTab.querySelector('#markCompleteBtn');
+      const topBtn = activeTab.querySelector('#topMarkCompleteBtn');
+      const scrollProgressBar = activeTab.querySelector('#scrollProgressBar');
+      const scrollProgressText = activeTab.querySelector('#scrollProgress');
       
       console.log(`🔧 updateMarkCompleteButtonState(${scrollProgress}%) - Elements:`, {
+        activeTab: !!activeTab,
         bottomBtn: !!bottomBtn,
         scrollProgressBar: !!scrollProgressBar,
         scrollProgressText: !!scrollProgressText
@@ -2310,13 +2315,20 @@
     // Update Mark Complete button appearance based on completion status
     // Update ALL mark complete buttons (top and bottom)
     function updateMarkCompleteButton(isComplete) {
-      // Update bottom button (in content)
-      const bottomBtn = document.getElementById('markCompleteBtn');
-      const title = document.getElementById('markCompleteTitle');
-      const desc = document.getElementById('markCompleteDesc');
-      const section = document.getElementById('markCompleteSection');
+      // CRITICAL: Find buttons in ACTIVE tab only
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) {
+        console.warn('⚠️ No active tab found in updateMarkCompleteButton');
+        return;
+      }
       
-      // Update top button (in header)
+      // Update bottom button (in content)
+      const bottomBtn = activeTab.querySelector('#markCompleteBtn');
+      const title = activeTab.querySelector('#markCompleteTitle');
+      const desc = activeTab.querySelector('#markCompleteDesc');
+      const section = activeTab.querySelector('#markCompleteSection');
+      
+      // Update top button (in header) - this is NOT in tab content, so use document
       const topBtn = document.getElementById('topMarkCompleteBtn');
       
       console.log('🔄 updateMarkCompleteButton called', { 
@@ -2334,7 +2346,7 @@
           if (desc) desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
           
           // Hide scroll progress container when complete
-          const scrollContainer = document.getElementById('scrollProgressContainer');
+          const scrollContainer = activeTab.querySelector('#scrollProgressContainer');
           if (scrollContainer) scrollContainer.style.display = 'none';
           
           bottomBtn.textContent = '✓ Completed';
