@@ -1156,6 +1156,39 @@
         
         console.log(`🔄 Refreshed module ${idx + 1}: completed=${moduleCompleted}, unlocked=${moduleUnlocked}, available=${isAvailable}`);
       });
+      
+      // ============================================
+      // UPDATE FINAL EXAM LOCK STATUS
+      // ============================================
+      const examNavItem = document.getElementById('exam-nav-item');
+      if (examNavItem) {
+        // Check if all 6 weeks are completed
+        const allWeeksCompleted = Array.from({length: 6}, (_, i) => i).every(idx => isModuleCompleted(idx));
+        
+        const durationEl = examNavItem.querySelector('.duration');
+        
+        if (allWeeksCompleted) {
+          // Unlock exam
+          examNavItem.style.opacity = '1';
+          examNavItem.style.cursor = 'pointer';
+          examNavItem.setAttribute('tabindex', '0');
+          examNavItem.onclick = () => switchToExam();
+          if (durationEl && !durationEl.textContent.includes('Questions')) {
+            durationEl.textContent = '50 Questions • 80% Pass';
+          }
+          console.log('🎓 Final Exam UNLOCKED (all 6 weeks completed)');
+        } else {
+          // Keep locked
+          examNavItem.style.opacity = '0.5';
+          examNavItem.style.cursor = 'not-allowed';
+          examNavItem.setAttribute('tabindex', '-1');
+          examNavItem.onclick = null;
+          if (durationEl) {
+            durationEl.textContent = '🔒 Complete all 6 weeks to unlock';
+          }
+          console.log('🔒 Final Exam locked - need to complete all 6 weeks');
+        }
+      }
     }
     
     // Immediately start loading when DOM is ready
@@ -1322,14 +1355,17 @@
         const examNavItem = document.createElement('div');
         examNavItem.className = 'module-item exam-module';
         examNavItem.id = 'exam-nav-item';
+        examNavItem.style.opacity = '0.5'; // Start locked
+        examNavItem.style.cursor = 'not-allowed';
+        examNavItem.setAttribute('tabindex', '-1');
         examNavItem.innerHTML = `
           <div class="icon">🎓</div>
           <div class="text">
             <div class="title">Final Exam</div>
-            <div class="duration">Loading...</div>
+            <div class="duration">🔒 Complete all 6 weeks to unlock</div>
           </div>
         `;
-        examNavItem.onclick = () => switchToExam();
+        // Don't set onclick - will be set by refreshModuleLockStates if unlocked
         modulesNav.appendChild(examNavItem);
         
         // Add Final Exam content area
