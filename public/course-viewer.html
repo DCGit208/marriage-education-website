@@ -1461,13 +1461,14 @@
         updateProgressIndicator();
         updateCourseProgressBar(); // Update sidebar progress bar
         
-        // CRITICAL FIX: Only call updateMarkCompleteButton if content is ACTUALLY complete
-        // Otherwise, let scroll tracking manage the button state
+        // CRITICAL FIX: Always update the top button to reflect current week's completion status
+        // The bottom button will be managed by scroll tracking
         if (progressData.contentRead) {
           updateMarkCompleteButton(true); // Show completed state
           console.log('✅ UI updated for module switch, contentRead: true - showing completed state');
         } else {
-          console.log('✅ UI updated for module switch, contentRead: false - letting scroll tracking manage button');
+          updateMarkCompleteButton(false); // Reset to NOT completed state
+          console.log('✅ UI updated for module switch, contentRead: false - showing uncompleted state');
         }
         
         // CRITICAL: Only initialize scroll tracking if content is already loaded (not lazy loading)
@@ -2371,17 +2372,8 @@
         
         console.log('✅ Both buttons updated to COMPLETED state');
       } else {
-        // Reset bottom button
-        if (bottomBtn && section) {
-          section.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          if (title) title.textContent = '📚 Finished Reading?';
-          if (desc) desc.textContent = 'Mark this week as complete to track your progress toward CRLA certification.';
-          bottomBtn.textContent = '✅ Mark Week Complete';
-          bottomBtn.style.background = '#ffffff';
-          bottomBtn.style.color = '#667eea';
-          bottomBtn.style.cursor = 'pointer';
-          bottomBtn.disabled = false;
-        }
+        // DON'T reset bottom button - let scroll tracking handle it
+        // We only need to reset the TOP button here
         
         // Reset top button
         if (topBtn) {
@@ -2391,7 +2383,7 @@
           topBtn.disabled = false;
         }
         
-        console.log('🔄 Both buttons reset to UNCOMPLETED state');
+        console.log('🔄 Top button reset to UNCOMPLETED state (bottom button managed by scroll tracking)');
       }
     }
     
