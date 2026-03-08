@@ -2205,7 +2205,12 @@
         
         // Save to Firestore and WAIT for it to complete before updating UI
         saveProgressToFirebase().then(() => {
-          console.log('✅ Firestore save complete, now updating UI...');
+          console.log('✅ Firestore save complete, now reloading Firestore data...');
+          
+          // CRITICAL: Reload Firestore data so isModuleCompleted() checks fresh data
+          return loadFoundationSchoolProgress();
+        }).then(() => {
+          console.log('✅ Firestore data reloaded, now updating UI...');
           updateMarkCompleteButton(true);
           updateCourseProgressBar();
           refreshModuleLockStates(); // Refresh sidebar to show checkmarks and unlock next week
