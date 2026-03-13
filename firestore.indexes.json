@@ -65,6 +65,22 @@
         { "fieldPath": "active", "order": "ASCENDING" },
         { "fieldPath": "booksSold", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "source_ambassador", "order": "ASCENDING" },
+        { "fieldPath": "sale_date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ambassador_code", "order": "ASCENDING" },
+        { "fieldPath": "sale_date", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
