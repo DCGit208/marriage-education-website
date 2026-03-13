@@ -1967,41 +1967,40 @@
                     .get();
                 
                 if (snapshot.empty) {
-                        if (snapshot.empty) {
-                            tbody.innerHTML = `
-                                <tr>
-                                    <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
-                                        No commissions yet. Share your referral link to start earning!
-                                    </td>
-                                </tr>
-                            `;
-                            return;
-                        }
-                        
-                        tbody.innerHTML = '';
-                        snapshot.forEach((doc) => {
-                            const sale = doc.data();
-                            const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
-                            const formattedDate = date.toLocaleDateString('en-US', { 
-                                month: 'short', day: 'numeric', year: 'numeric', 
-                                hour: '2-digit', minute: '2-digit' 
-                            });
-                            
-                            const commission = sale.commissions?.ambassador || 0;
-                            const productName = sale.product_name || 'Product Sale';
-                            const source = sale.customer_name || sale.customer_email || 'Customer';
-                            
-                            const row = `
-                                <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
-                                    <td style="padding: 1rem;">${formattedDate}</td>
-                                    <td style="padding: 1rem;">${source}</td>
-                                    <td style="padding: 1rem;">${productName}</td>
-                                    <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
-                                    <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
-                                </tr>
-                            `;
-                            tbody.innerHTML += row;
-                        });
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
+                                No commissions yet. Share your referral link to start earning!
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const sale = doc.data();
+                    const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        month: 'short', day: 'numeric', year: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                    });
+                    
+                    const commission = sale.commissions?.ambassador || 0;
+                    const productName = sale.product_name || 'Product Sale';
+                    const source = sale.customer_name || sale.customer_email || 'Customer';
+                    
+                    const row = `
+                        <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
+                            <td style="padding: 1rem;">${formattedDate}</td>
+                            <td style="padding: 1rem;">${source}</td>
+                            <td style="padding: 1rem;">${productName}</td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
+                            <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
             } catch (error) {
                 console.error('Error loading commission history:', error);
                 const tbody = document.getElementById('commissionHistoryBody');
