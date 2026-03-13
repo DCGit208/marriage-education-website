@@ -57,6 +57,14 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "sales_count", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "ambassadors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "booksSold", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
