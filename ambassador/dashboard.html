@@ -1966,8 +1966,7 @@
                     .limit(20)
                     .get();
                 
-                {
-                    if (snapshot.empty) {
+                if (snapshot.empty) {
                         if (snapshot.empty) {
                             tbody.innerHTML = `
                                 <tr>
@@ -2003,7 +2002,6 @@
                             `;
                             tbody.innerHTML += row;
                         });
-                }
             } catch (error) {
                 console.error('Error loading commission history:', error);
                 const tbody = document.getElementById('commissionHistoryBody');
@@ -2029,11 +2027,10 @@
                     .where('rdCode', '==', ambassadorCode)
                     .get();
                 
-                {
-                    const count = snapshot.size;
-                    countEl.textContent = count;
-                        
-                        if (snapshot.empty) {
+                const count = snapshot.size;
+                countEl.textContent = count;
+                    
+                if (snapshot.empty) {
                             downlineContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
@@ -2086,7 +2083,6 @@
                             `;
                             downlineContainer.innerHTML += card;
                         });
-                }
             } catch (error) {
                 console.error('Error loading downline:', error);
                 const downlineContainer = document.getElementById('downlineList');
@@ -2122,8 +2118,7 @@
                     .limit(5)
                     .get();
                 
-                {
-                        if (snapshot.empty) {
+                if (snapshot.empty) {
                             salesContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
@@ -2154,7 +2149,6 @@
                             `;
                             salesContainer.appendChild(saleItem);
                         });
-                }
             } catch (error) {
                 console.error('Error loading recent sales:', error);
                 const salesContainer = document.getElementById('recentSalesList');
