@@ -277,8 +277,24 @@
                     throw new Error('Database connection failed. Please refresh the page.');
                 }
                 
-                console.log('✅ Firebase OK, querying Firestore...');
-                console.log('✅ Firebase OK, querying Firestore...');
+                if (typeof auth === 'undefined') {
+                    console.error('❌ Firebase Auth is undefined!');
+                    throw new Error('Authentication service not available. Please refresh the page.');
+                }
+                
+                console.log('✅ Firebase OK, signing in anonymously...');
+                
+                // Sign in anonymously first to get authentication credentials
+                // This allows us to pass Firestore security rules
+                try {
+                    await auth.signInAnonymously();
+                    console.log('✅ Anonymous sign-in successful');
+                } catch (authError) {
+                    console.error('❌ Anonymous sign-in failed:', authError);
+                    throw new Error('Authentication failed. Please try again.');
+                }
+                
+                console.log('✅ Querying Firestore for ambassador...');
                 
                 // Query Firestore for ambassador by code
                 const ambassadorDoc = await db.collection('ambassadors').doc(code).get();
@@ -371,6 +387,11 @@
             if (!email) return;
             
             try {
+                // Sign in anonymously first to pass security rules
+                if (!auth.currentUser) {
+                    await auth.signInAnonymously();
+                }
+                
                 // Find ambassador by email
                 const snapshot = await db.collection('ambassadors')
                     .where('email', '==', email.toLowerCase())
