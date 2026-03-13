@@ -26,9 +26,11 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
     
-    // Sales records - Admin only (RESTORED)
+    // Sales records - Allow public read for dashboard, admin write
     match /sales/{saleId} {
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
+      allow read: if true; // Allow ambassadors to see sales data
+      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow create: if true; // Allow payment webhooks to create sales
     }
     
     // Ambassadors - Public can register and count, authenticated users read own data, admin full access
