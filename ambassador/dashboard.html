@@ -1997,12 +1997,15 @@
                 const db = firebase.firestore();
                 const tbody = document.getElementById('commissionHistoryBody');
                 
-                // Realtime listener for commissions
-                db.collection('sales')
+                // One-time fetch for commissions
+                const snapshot = await db.collection('sales')
                     .where('source_ambassador', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(20)
-                    .onSnapshot((snapshot) => {
+                    .get();
+                
+                {
+                    if (snapshot.empty) {
                         if (snapshot.empty) {
                             tbody.innerHTML = `
                                 <tr>
@@ -2038,35 +2041,39 @@
                             `;
                             tbody.innerHTML += row;
                         });
-                    }, (error) => {
-                        console.error('Error loading commission history:', error);
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
-                                    ⚠️ Error loading commissions. Please refresh the page.
-                                </td>
-                            </tr>
-                        `;
-                    });
+                }
+            } catch (error) {
+                console.error('Error loading commission history:', error);
+                const tbody = document.getElementById('commissionHistoryBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
+                            ⚠️ Error loading commissions. Please refresh the page.
+                        </td>
+                    </tr>
+                `;
+            }
                     
             } catch (error) {
                 console.error('Error setting up commission history:', error);
             }
         }
         
-        // ⚡ NEW: Load Downline/Recruits with realtime updates
+        // ⚡ NEW: Load Downline/Recruits
         async function loadDownline(ambassadorCode) {
             try {
                 const db = firebase.firestore();
                 const downlineContainer = document.getElementById('downlineList');
                 const countEl = document.getElementById('downlineCount');
                 
-                // Realtime listener for recruits
-                db.collection('ambassadors')
+                // One-time fetch for recruits
+                const snapshot = await db.collection('ambassadors')
                     .where('rdCode', '==', ambassadorCode)
-                    .onSnapshot((snapshot) => {
-                        const count = snapshot.size;
-                        countEl.textContent = count;
+                    .get();
+                
+                {
+                    const count = snapshot.size;
+                    countEl.textContent = count;
                         
                         if (snapshot.empty) {
                             downlineContainer.innerHTML = `
@@ -2121,17 +2128,15 @@
                             `;
                             downlineContainer.innerHTML += card;
                         });
-                    }, (error) => {
-                        console.error('Error loading downline:', error);
-                        downlineContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
-                                ⚠️ Error loading your team. Please refresh the page.
-                            </div>
-                        `;
-                    });
-                    
+                }
             } catch (error) {
-                console.error('Error setting up downline listener:', error);
+                console.error('Error loading downline:', error);
+                const downlineContainer = document.getElementById('downlineList');
+                downlineContainer.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
+                        ⚠️ Error loading your team. Please refresh the page.
+                    </div>
+                `;
             }
         }
         
@@ -2152,12 +2157,14 @@
                 
                 if (!salesContainer) return;
                 
-                // Query recent sales for this ambassador
-                db.collection('sales')
+                // One-time fetch for recent sales
+                const snapshot = await db.collection('sales')
                     .where('ambassador_code', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(5)
-                    .onSnapshot((snapshot) => {
+                    .get();
+                
+                {
                         if (snapshot.empty) {
                             salesContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
@@ -2189,17 +2196,18 @@
                             `;
                             salesContainer.appendChild(saleItem);
                         });
-                    }, (error) => {
-                        console.error('Error loading recent sales:', error);
-                        salesContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
-                                <p>⚠️ Unable to load recent sales</p>
-                                <small>${error.message}</small>
-                            </div>
-                        `;
-                    });
+                }
             } catch (error) {
-                console.error('Error in loadRecentSales:', error);
+                console.error('Error loading recent sales:', error);
+                const salesContainer = document.getElementById('recentSalesList');
+                if (salesContainer) {
+                    salesContainer.innerHTML = `
+                        <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
+                            <p>⚠️ Unable to load recent sales</p>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
             }
         }
         
