@@ -1864,7 +1864,7 @@
                 });
         }
         
-        // Update Foundation School Progress (Dual-Track Weekly Structure)
+        // Update Foundation School Progress (Module-Based Tracking)
         function updateFoundationSchool(stats) {
             try {
                 const schoolSection = document.getElementById('schoolProgressSection');
@@ -1873,33 +1873,29 @@
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
                     const currentWeek = enrollment.current_week || 1;
-                    const progressPercent = enrollment.progress_percent || 0; // Use saved progress_percent
                     const totalWeeks = 6;
+                    const progressPercent = enrollment.progress_percent || Math.round((currentWeek / totalWeeks) * 100);
                     
-                    // Count completed modules
+                    // Count completed modules (Weeks 1-6)
                     const completedModules = enrollment.completed_modules || {};
-                    const completedCount = Object.keys(completedModules).filter(key => 
+                    const modulesCompleted = Object.keys(completedModules).filter(key => 
                         completedModules[key]?.completed === true
                     ).length;
-                    
-                    // Check individual track progress for current week
-                    const weekKey = `week${currentWeek}`;
-                    const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
                     document.getElementById('completionPercent').textContent = progressPercent + '%';
                     document.getElementById('schoolProgress').style.width = progressPercent + '%';
-                    document.getElementById('completedWeeks').textContent = completedCount; // Show completed modules count
+                    document.getElementById('completedWeeks').textContent = modulesCompleted;
                     document.getElementById('totalWeeks').textContent = totalWeeks;
                     
-                    // Update CRLA status
+                    // Update CRLA status based on final exam completion
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (completedCount === 6 && enrollment.exam_passed) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
-                    } else if (completedCount > 0 || progressPercent > 0) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
+                    if (enrollment.exam_passed === true) {
+                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ CRLA Certified</span>';
+                    } else if (modulesCompleted > 0 || currentWeek > 1) {
+                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
                     } else {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                     }
                 } else {
                     // Default view for new ambassadors
@@ -1908,7 +1904,7 @@
                     document.getElementById('schoolProgress').style.width = '0%';
                     document.getElementById('completedWeeks').textContent = '0';
                     document.getElementById('totalWeeks').textContent = '6';
-                    document.getElementById('crlaStatus').innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                 }
             } catch (error) {
                 console.error('Error updating Foundation School:', error);
@@ -2001,12 +1997,15 @@
                 const db = firebase.firestore();
                 const tbody = document.getElementById('commissionHistoryBody');
                 
-                // Realtime listener for commissions
-                db.collection('sales')
+                // One-time fetch for commissions
+                const snapshot = await db.collection('sales')
                     .where('source_ambassador', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(20)
-                    .onSnapshot((snapshot) => {
+                    .get();
+                
+                {
+                    if (snapshot.empty) {
                         if (snapshot.empty) {
                             tbody.innerHTML = `
                                 <tr>
@@ -2042,35 +2041,39 @@
                             `;
                             tbody.innerHTML += row;
                         });
-                    }, (error) => {
-                        console.error('Error loading commission history:', error);
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
-                                    ⚠️ Error loading commissions. Please refresh the page.
-                                </td>
-                            </tr>
-                        `;
-                    });
+                }
+            } catch (error) {
+                console.error('Error loading commission history:', error);
+                const tbody = document.getElementById('commissionHistoryBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
+                            ⚠️ Error loading commissions. Please refresh the page.
+                        </td>
+                    </tr>
+                `;
+            }
                     
             } catch (error) {
                 console.error('Error setting up commission history:', error);
             }
         }
         
-        // ⚡ NEW: Load Downline/Recruits with realtime updates
+        // ⚡ NEW: Load Downline/Recruits
         async function loadDownline(ambassadorCode) {
             try {
                 const db = firebase.firestore();
                 const downlineContainer = document.getElementById('downlineList');
                 const countEl = document.getElementById('downlineCount');
                 
-                // Realtime listener for recruits
-                db.collection('ambassadors')
+                // One-time fetch for recruits
+                const snapshot = await db.collection('ambassadors')
                     .where('rdCode', '==', ambassadorCode)
-                    .onSnapshot((snapshot) => {
-                        const count = snapshot.size;
-                        countEl.textContent = count;
+                    .get();
+                
+                {
+                    const count = snapshot.size;
+                    countEl.textContent = count;
                         
                         if (snapshot.empty) {
                             downlineContainer.innerHTML = `
@@ -2125,17 +2128,15 @@
                             `;
                             downlineContainer.innerHTML += card;
                         });
-                    }, (error) => {
-                        console.error('Error loading downline:', error);
-                        downlineContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
-                                ⚠️ Error loading your team. Please refresh the page.
-                            </div>
-                        `;
-                    });
-                    
+                }
             } catch (error) {
-                console.error('Error setting up downline listener:', error);
+                console.error('Error loading downline:', error);
+                const downlineContainer = document.getElementById('downlineList');
+                downlineContainer.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
+                        ⚠️ Error loading your team. Please refresh the page.
+                    </div>
+                `;
             }
         }
         
@@ -2156,12 +2157,14 @@
                 
                 if (!salesContainer) return;
                 
-                // Query recent sales for this ambassador
-                db.collection('sales')
+                // One-time fetch for recent sales
+                const snapshot = await db.collection('sales')
                     .where('ambassador_code', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(5)
-                    .onSnapshot((snapshot) => {
+                    .get();
+                
+                {
                         if (snapshot.empty) {
                             salesContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
@@ -2193,17 +2196,18 @@
                             `;
                             salesContainer.appendChild(saleItem);
                         });
-                    }, (error) => {
-                        console.error('Error loading recent sales:', error);
-                        salesContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
-                                <p>⚠️ Unable to load recent sales</p>
-                                <small>${error.message}</small>
-                            </div>
-                        `;
-                    });
+                }
             } catch (error) {
-                console.error('Error in loadRecentSales:', error);
+                console.error('Error loading recent sales:', error);
+                const salesContainer = document.getElementById('recentSalesList');
+                if (salesContainer) {
+                    salesContainer.innerHTML = `
+                        <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
+                            <p>⚠️ Unable to load recent sales</p>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
             }
         }
         
