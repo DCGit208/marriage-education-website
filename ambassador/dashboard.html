@@ -1656,17 +1656,18 @@
                 
                 const db = firebase.firestore();
                 
-                // ⚡ REALTIME LISTENER: Convert .get() to .onSnapshot() for live updates
-                const unsubscribe = db.collection('ambassadors').doc(ambassadorCode).onSnapshot((ambassadorDoc) => {
-                    if (!ambassadorDoc.exists) {
-                        console.error('Ambassador not found in database');
-                        alert('❌ Ambassador account not found. Please contact support.');
-                        window.location.href = '/ambassador-login.html';
-                        return;
-                    }
-                    
-                    const stats = ambassadorDoc.data();
-                    console.log('⚡ Realtime update - Ambassador data:', stats);
+                // One-time fetch for ambassador data
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
+                    console.error('Ambassador not found in database');
+                    alert('❌ Ambassador account not found. Please contact support.');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+                
+                const stats = ambassadorDoc.data();
+                console.log('Ambassador data loaded:', stats);
                 
                 // Get name - try multiple sources
                 let ambassadorName = 'Ambassador';
@@ -1732,21 +1733,7 @@
                 // Check for new badge unlocks
                 checkBadgeUnlocks(ambassadorData.booksSold);
                 
-                }, (error) => {
-                    // onSnapshot error handler
-                    console.error('⚠️ Realtime listener error:', error);
-                    alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
-                    // Clear bad data
-                    localStorage.removeItem('ambassadorCode');
-                    localStorage.removeItem('ambassadorEmail');
-                    localStorage.removeItem('ambassadorData');
-                    // Redirect to login
-                    setTimeout(() => {
-                        window.location.href = '/ambassador-login.html';
-                    }, 2000);
-                });
-                
-                // Load commission history, downline, and recent sales (once, with realtime updates)
+                // Load commission history, downline, and recent sales
                 await loadCommissionHistory(ambassadorCode);
                 await loadDownline(ambassadorCode);
                 await loadRecentSales(ambassadorCode);
@@ -1835,33 +1822,8 @@
             const ambassadorId = localStorage.getItem('ambassadorId');
             if (!ambassadorId) return;
             
-            // Listen for new sales
-            db.collection('sales')
-                .where('referralCode', '==', ambassadorData.code)
-                .orderBy('timestamp', 'desc')
-                .limit(1)
-                .onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            // Reload stats when new sale detected
-                            loadAmbassadorData();
-                        }
-                    });
-                });
-            
-            // Listen for new notifications
-            db.collection('notifications')
-                .where('ambassadorId', '==', ambassadorId)
-                .where('read', '==', false)
-                .onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            const notif = change.doc.data();
-                            showNotification(notif.type, notif.title, notif.message);
-                            FirebaseHelper.markNotificationRead(change.doc.id);
-                        }
-                    });
-                });
+            // Note: Real-time listeners removed to eliminate CORS console warnings
+            // Dashboard will show current data on load. Users can refresh to see updates.
         }
         
         // Update Foundation School Progress (Module-Based Tracking)
@@ -2052,10 +2014,6 @@
                         </td>
                     </tr>
                 `;
-            }
-                    
-            } catch (error) {
-                console.error('Error setting up commission history:', error);
             }
         }
         
