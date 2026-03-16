@@ -732,8 +732,10 @@
           type: 'ambassador',
           ambassador_code: code,
           regional_director: ambassadorData?.recruitedBy || '',
-          ambassador_data: ambassadorData
+          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to remove Firestore Timestamps
         };
+
+        console.log('Sending payment data:', paymentData);
 
         // Call Firebase Cloud Function
         const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');

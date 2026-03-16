@@ -1002,11 +1002,15 @@
         <div class="login-container">
             <div class="login-logo">🔐</div>
             <h2>Administrative Dashboard Login</h2>
-            <div id="login-error" class="login-error">Invalid password. Please try again.</div>
+            <div id="login-error" class="login-error">Invalid credentials. Please try again.</div>
             <form id="login-form">
                 <div class="form-group">
+                    <label for="admin-email">Email</label>
+                    <input type="email" id="admin-email" placeholder="admin@marriageducation.com" required autofocus>
+                </div>
+                <div class="form-group">
                     <label for="admin-password">Password</label>
-                    <input type="password" id="admin-password" placeholder="Enter admin password" required autofocus>
+                    <input type="password" id="admin-password" placeholder="Enter password" required>
                 </div>
                 <button type="submit" class="login-btn">
                     <i class="fas fa-sign-in-alt"></i> Login
@@ -1524,11 +1528,48 @@
     </div>
 
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- ENGINEERING REVIEW: Inline Firebase Config for Local Testing -->
+    <script>
+        // Inline config to bypass file:// restrictions
+        const firebaseConfig = {
+          apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+          authDomain: "marriage-education.firebaseapp.com",
+          projectId: "marriage-education",
+          storageBucket: "marriage-education.firebasestorage.app",
+          messagingSenderId: "730854285800",
+          appId: "1:730854285800:web:2176d278397398fd41045d"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Initialize services (use var for global scope)
+        var db = null;
+        var auth = null;
+
+        if (typeof firebase.firestore === 'function') {
+            db = firebase.firestore();
+            try {
+                // Settings for local running
+                db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+                console.log('✅ Firestore running locally with long polling');
+            } catch (e) {
+                console.warn('⚠️ Could not set Firestore settings:', e);
+            }
+        }
+
+        if (typeof firebase.auth === 'function') {
+            auth = firebase.auth();
+        }
+    </script>
+    <script src="assets/js/auth-service.js"></script>
 
     <script>
         // Mobile Menu Toggle
@@ -1667,14 +1708,7 @@
             });
         });
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('adminAuthenticated');
-                window.location.href = 'admin-dashboard.html';
-            }
-        });
+        // Logout — handled by centralized auth-service.js logout button listener below
 
         // Load Dashboard Data
         async function loadDashboardData() {
@@ -2318,96 +2352,94 @@
             }
         }
 
-        // Initialize
+        // Initialize (CLEANUP: Removed duplicate initialization)
         document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication on page load
-            checkAuthentication();
-            
-            // Load initial data
-            loadDashboardData();
-            loadNotifications();
-            
-            // Set admin name
-            document.getElementById('adminName').textContent = 'Administrator';
-
-            // Refresh notifications every 30 seconds
-            setInterval(() => {
-                loadNotifications();
-            }, 30000);
+            // Initial data load handled by Auth State Change
         });
 
         // ==============================================
-        // AUTHENTICATION SYSTEM
+        // ==============================================
+        // CENTRALIZED AUTHENTICATION (Phase 2 Upgrade)
         // ==============================================
 
-        const ADMIN_PASSWORD = 'admin-secret-2024';
-
-        // Check if user is authenticated
-        function checkAuthentication() {
-            const isAuthenticated = sessionStorage.getItem('adminAuthenticated');
-            
-            if (isAuthenticated === 'true') {
-                // User is authenticated, show dashboard
+        // Initialize UI State based on Auth
+        function updateUIForAuth(user) {
+            if (user) {
+                // User is authenticated
                 document.getElementById('login-overlay').classList.add('hidden');
                 document.getElementById('main-dashboard').classList.remove('hidden');
+                document.getElementById('adminName').textContent = user.email || 'Administrator';
+                
+                // Initialize Data
+                loadDashboardData();
+                loadNotifications();
             } else {
-                // User is not authenticated, show login
+                // User is NOT authenticated
                 document.getElementById('login-overlay').classList.remove('hidden');
                 document.getElementById('main-dashboard').classList.add('hidden');
             }
         }
 
-        // Initialize authentication after DOM loads
+        // Initialize logic after DOM loads
         document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication on page load
-            checkAuthentication();
             
-            // Handle login form submission
-            document.getElementById('login-form').addEventListener('submit', (e) => {
+            // 1. Subscribe to Auth State Changes (Replaces simple check)
+            if (window.authService) {
+                authService.onAuthStateChanged((user) => {
+                    console.log("Auth State Changed:", user ? user.email : "Logged Out");
+                    updateUIForAuth(user);
+                });
+            } else {
+                console.error("AuthService not loaded!");
+            }
+
+            // 2. Handle Login Submission
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const email = document.getElementById('admin-email').value;
                 const password = document.getElementById('admin-password').value;
                 const errorDiv = document.getElementById('login-error');
+                const btn = document.querySelector('.login-btn');
                 
-                if (password === ADMIN_PASSWORD) {
-                    // Correct password
-                    sessionStorage.setItem('adminAuthenticated', 'true');
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    document.getElementById('main-dashboard').classList.remove('hidden');
+                try {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
                     
-                    // Load dashboard data
-                    loadDashboardData();
-                } else {
-                    // Incorrect password
+                    await authService.login(email, password);
+                    // UI update happens automatically via onAuthStateChanged
+                    
+                } catch (error) {
+                    console.error("Login failed:", error);
+                    errorDiv.textContent = error.message;
                     errorDiv.classList.add('show');
-                    document.getElementById('admin-password').value = '';
-                    document.getElementById('admin-password').focus();
                     
                     setTimeout(() => {
                         errorDiv.classList.remove('show');
-                    }, 3000);
+                    }, 5000);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                 }
             });
 
-            // Handle logout
-            document.getElementById('logout-btn').addEventListener('click', () => {
+            // 3. Handle Logout (both header button and sidebar link)
+            async function handleLogout(e) {
+                if (e) e.preventDefault();
                 if (confirm('Are you sure you want to logout?')) {
-                    sessionStorage.removeItem('adminAuthenticated');
-                    document.getElementById('login-overlay').classList.remove('hidden');
-                    document.getElementById('main-dashboard').classList.add('hidden');
-                    document.getElementById('admin-password').value = '';
+                    try {
+                        await authService.logout();
+                        // onAuthStateChanged fires with null → shows login overlay automatically
+                    } catch (error) {
+                        alert("Logout failed: " + error.message);
+                    }
                 }
-            });
-            
-            // Load initial data
-            loadDashboardData();
-            loadNotifications();
-            
-            // Set admin name
-            document.getElementById('adminName').textContent = 'Administrator';
+            }
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
-            // Refresh notifications every 30 seconds
+            // Auto-refresh notifications every 30 seconds (only if logged in)
             setInterval(() => {
-                loadNotifications();
+                if(authService && authService.currentUser) loadNotifications();
             }, 30000);
         });
 
@@ -2559,8 +2591,9 @@
             alert('🔄 Data refreshed!');
         });
 
-        // Auto-refresh dashboard every 30 seconds
+        // Auto-refresh dashboard every 30 seconds (only when logged in)
         setInterval(() => {
+            if (!authService || !authService.currentUser) return;
             if (document.querySelector('.section.active')?.id === 'dashboard') {
                 loadDashboardData();
             }

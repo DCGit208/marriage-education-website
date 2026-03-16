@@ -1,96 +1,118 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Courses - Public read, TESTING: allow public write for enrollment updates
+
+    // =================================================================
+    // HELPER: isAdmin() — true when a logged-in Firebase Auth user
+    // is present. Only admin@marriageducation.com (or any future admin
+    // accounts created in Firebase Console) will pass this check.
+    // The ambassador system does NOT use Firebase Auth — ambassadors
+    // authenticate via an ambassador code stored in localStorage, so
+    // ambassador-facing collections must allow unauthenticated reads.
+    // All writes to sensitive collections are done by Cloud Functions
+    // using the Admin SDK, which bypasses these rules entirely.
+    // =================================================================
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // =================================================================
+    // PUBLIC CONTENT — Anyone can browse
+    // =================================================================
+
     match /courses/{courseId} {
       allow read: if true;
-      allow write: if true; // TESTING ONLY
+      allow write: if isAdmin(); // Admin and Cloud Functions
     }
-    
-    // Enrollments - TESTING: Allow public write for testing enrollment creation
+
+    // =================================================================
+    // AMBASSADOR SYSTEM — Code-based auth, no Firebase Auth
+    // Reads are open so ambassadors can verify their code on login
+    // and load their dashboard data. All writes come from Cloud Functions
+    // (Admin SDK) after payment approval — no direct client writes needed.
+    // =================================================================
+
+    match /ambassadors/{ambassadorId} {
+      allow read: if true;
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /senior_ambassadors/{seniorId} {
+      allow read: if true;
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /sales/{saleId} {
+      allow read: if true; // Ambassadors filter by their own code client-side
+      allow write: if false; // Cloud Functions only
+    }
+
+    match /referral_codes/{referralCode} {
+      allow read: if true; // Needed for code validation at registration
+      allow write: if false; // Cloud Functions only
+    }
+
+    // Ambassador progress — code-based, client writes required
+    match /school_progress/{progressId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /advocacy_training/{trainingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /deployment_log/{deploymentId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // =================================================================
+    // COURSE VIEWER — Firebase Auth required (students sign in)
+    // =================================================================
+
     match /enrollments/{enrollmentId} {
-      allow read: if true; // TESTING ONLY
-      allow write: if true; // TESTING ONLY
+      allow read, write: if request.auth != null;
     }
-    
-    // Progress tracking - Students can read/write their own
+
     match /progress/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Reflections - Students can read/write their own
+
     match /reflections/{reflectionId} {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
-    
-    // Sales records - Allow public read for dashboard, admin write
-    match /sales/{saleId} {
-      allow read: if true; // Allow ambassadors to see sales data
-      allow write: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true; // Allow payment webhooks to create sales
+
+    match /download_tokens/{token} {
+      allow read: if true; // Anyone with the token URL can redeem it
+      allow write: if false; // Cloud Functions only
     }
-    
-    // Ambassadors - Public can register and count, authenticated users read own data, admin full access
-    match /ambassadors/{ambassadorId} {
-      allow read: if true; // Allow public read for counting
-      allow create: if true; // Allow public registration
-      allow update: if true; // Allow ambassadors to update their own progress (using ambassadorCode)
-      allow delete: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    // School Progress - Ambassadors can read/write their own progress
-    match /school_progress/{progressId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.ambassadorId;
-      allow write: if request.auth != null && request.auth.uid == request.resource.data.ambassadorId;
-      allow create: if true; // Allow initial creation
-    }
-    
-    // Advocacy Training - Ambassadors can read/write their own training data
-    match /advocacy_training/{trainingId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.ambassadorId;
-      allow write: if request.auth != null && request.auth.uid == request.resource.data.ambassadorId;
-      allow create: if true; // Allow initial creation
-    }
-    
-    // Deployment Log - Ambassadors can create and read their own deployments
-    match /deployment_log/{deploymentId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.ambassadorId;
-      allow create: if true; // Allow logging deployments
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    // ============================================
-    // NEW COLLECTIONS (RD & Payment System)
-    // ============================================
-    
-    // Regional Directors - RD can read own data, admin can read/write all
-    // TEMPORARY: Allow public read for testing dashboards
-    match /regional_directors/{rdCode} {
-      allow read: if true; // TEMPORARY: Allow public read for testing
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    // Pending Payments - Temporarily allow reads for testing (TODO: Add proper admin auth)
+
+    // =================================================================
+    // ADMIN-ONLY — Firebase Auth required (admin@marriageducation.com)
+    // =================================================================
+
     match /pending_payments/{paymentRef} {
-      allow read: if true; // TEMPORARY: Allow reads for testing
-      allow update, delete: if true; // TEMPORARY: Allow unauthenticated updates for admin dashboard
-      allow create: if true; // Allow unauthenticated payment submissions
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+      allow create: if true; // Cloud Functions bypass rules when using Admin SDK
     }
-    
-    // Referral Codes - Public can create and read for validation, admin can update
-    match /referral_codes/{referralCode} {
-      allow read: if true; // Public read for validation
-      allow create: if true; // Anyone can register a code
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+
+    match /regional_directors/{rdCode} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
-    
-    // Admin Notifications - Allow public read/write for admin dashboard (TEMPORARY: no auth yet)
+
     match /admin_notifications/{notificationId} {
-      allow read: if true; // TEMPORARY: Allow reads for admin dashboard
-      allow write: if true; // TEMPORARY: Allow writes for marking as paid
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read, write: if isAdmin() && request.auth.uid == userId;
     }
   }
 }

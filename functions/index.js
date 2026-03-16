@@ -814,25 +814,31 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       // Don't throw - payment submission should succeed even if email fails
     }
 
-    // Send Telegram notification for new pending payment (plain text)
-    if (TELEGRAM_BOT_TOKEN) {
-      const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' : 
-                       type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
-      const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
-        `📋 Reference: ${reference}\n` +
-        `📚 Type: ${typeLabel}\n` +
-        `📦 Product: ${product_name}\n` +
-        `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
-        `👤 Customer: ${email}\n` +
-        `📱 Phone: ${phone || 'N/A'}\n` +
-        `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
-        `${regional_director ? `👑 Recruited By: ${regional_director}\n` : ''}` +
-        `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
-        `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
-        `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
-        `👉 Review: https://marriageducation.com/admin-dashboard.html`;
-      
-      await sendTelegram(pendingMsg, false);
+    // Send Telegram notification for new pending payment (plain text, non-blocking)
+    try {
+      if (TELEGRAM_BOT_TOKEN) {
+        const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' : 
+                         type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
+        const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
+          `📋 Reference: ${reference}\n` +
+          `📚 Type: ${typeLabel}\n` +
+          `📦 Product: ${product_name}\n` +
+          `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
+          `👤 Customer: ${email}\n` +
+          `📱 Phone: ${phone || 'N/A'}\n` +
+          `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
+          `${regional_director ? `👑 Recruited By: ${regional_director}\n` : ''}` +
+          `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
+          `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
+          `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
+          `👉 Review: https://marriageducation.com/admin-dashboard.html`;
+        
+        await sendTelegram(pendingMsg, false);
+        console.log('[TELEGRAM] Notification sent');
+      }
+    } catch (telegramError) {
+      console.warn('[TELEGRAM] Notification failed (continuing anyway):', telegramError.message);
+      // Don't throw - payment submission should succeed even if Telegram fails
     }
 
     return {
