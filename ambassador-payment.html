@@ -561,7 +561,7 @@
           type: 'ambassador',
           ambassador_code: code,
           regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
-          ambassador_data: ambassadorData
+          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to clean up data
         };
         
         console.log('💳 Payment data being submitted:', {

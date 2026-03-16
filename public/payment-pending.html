@@ -303,19 +303,16 @@
       checkCount++;
 
       try {
-        // Check main server for payment approval status
-        const apiUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:4567'
-          : 'https://marriageducation.com';
+        // Check Firestore directly for payment approval status
+        const db = firebase.firestore();
+        const paymentDoc = await db.collection('pending_payments').doc(reference).get();
         
-        const response = await fetch(`${apiUrl}/check-payment-status?reference=${reference}`);
-        
-        if (response.ok) {
-          const data = await response.json();
+        if (paymentDoc.exists) {
+          const data = paymentDoc.data();
           
           if (data.status === 'approved' && data.download_url) {
-            // Payment approved! Redirect to success page with download link
-            window.location.href = `payment-success.html?ref=${reference}&token=${data.token}`;
+            // Payment approved! Redirect to success page
+            window.location.href = `payment-success.html?ref=${reference}`;
           } else if (data.status === 'rejected') {
             // Payment rejected
             window.location.href = `payment-failed.html?ref=${reference}&reason=${encodeURIComponent(data.reason || 'Payment verification failed')}`;
@@ -323,7 +320,7 @@
           // If still pending, continue polling
         }
       } catch (error) {
-        console.error('Error checking payment status:', error);
+        console.warn('Checking payment status:', error.message);
         // Continue polling even on error
       }
     }, 10000); // Check every 10 seconds
