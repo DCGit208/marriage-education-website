@@ -366,7 +366,10 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 
 **Investment:** $150/hour (bundles available)
 
-📧 [Apply for Private Coaching](mailto:orders@marriageducation.com?subject=Private%20Coaching%20Inquiry)
+**Contact Options:**
+📧 [Email: orders@marriageducation.com](mailto:orders@marriageducation.com?subject=Private%20Coaching%20Inquiry)
+💬 [WhatsApp: +237 677 604 100](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20SBD%20Private%20Coaching)
+📞 [Call: +237 677 604 100](tel:+237677604100)
 
 ---
 
@@ -381,11 +384,14 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 
 **Investment:** From $899/couple (venue dependent)
 
-📧 [Join Next Marriage Lab](mailto:orders@marriageducation.com?subject=SBD%20Marriage%20Lab%20Registration)
+**Contact Options:**
+📧 [Email: orders@marriageducation.com](mailto:orders@marriageducation.com?subject=SBD%20Marriage%20Lab%20Registration)
+💬 [WhatsApp: +237 677 604 100](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20the%20SBD%20Marriage%20Lab)
+📞 [Call: +237 677 604 100](tel:+237677604100)
 
 ---
 
-**Not sure which option?** Email orders@marriageducation.com with your situation.
+**Not sure which option?** Reach us via email, WhatsApp, or phone!
 
 [View All Coaching Options](courses.html#premium-support)`
             },
@@ -396,6 +402,8 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 
 **Main Support:**
 📧 support@marriageducation.com
+💬 WhatsApp: [+237 677 604 100](https://wa.me/237677604100)
+📞 Call: [+237 677 604 100](tel:+237677604100)
 ⏰ Response: 24-48 hours
 
 **Ambassador Support:**
