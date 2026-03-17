@@ -1,0 +1,2157 @@
+<!-- =====================================
+     MARRIAGE EDUCATION INTELLIGENT ASSISTANT
+     Comprehensive Chatbot - Add this before closing </body> tag
+     ===================================== -->
+
+<!-- Chat Toggle Button -->
+<button id="marriage-chat-toggle" style="position: fixed; bottom: 2rem; right: 2rem; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); cursor: pointer; z-index: 9998; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;" aria-label="Open marriage education assistant">
+    <svg width="28" height="28" fill="white" viewBox="0 0 20 20">
+        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+    </svg>
+</button>
+
+<!-- Chat Window -->
+<div id="marriage-chat-window" style="position: fixed; bottom: 2rem; right: 2rem; width: 440px; max-width: calc(100vw - 2rem); height: 650px; max-height: calc(100vh - 2rem); background: rgba(10, 14, 39, 0.98); backdrop-filter: blur(20px); border-radius: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); display: none; flex-direction: column; z-index: 9999; overflow: hidden;" aria-hidden="true">
+    
+    <!-- Chat Header -->
+    <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h3 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0;">Marriage Education Assistant</h3>
+            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.8rem; margin: 0.25rem 0 0;">Your guide to courses, books & programs</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button id="marriage-chat-reset" onclick="resetMarriageConversation()" style="background: none; border: none; color: white; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; transition: background 0.2s;" aria-label="Reset conversation" title="Clear conversation">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+            <button id="marriage-chat-close" style="background: none; border: none; color: white; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; transition: background 0.2s;" aria-label="Close chat">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Messages Container -->
+    <div id="marriage-chat-messages" style="flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- Welcome Message -->
+        <div style="background: rgba(102, 126, 234, 0.1); border-left: 3px solid #667eea; padding: 1.25rem; border-radius: 0.75rem;">
+            <p style="color: white; font-size: 0.95rem; line-height: 1.7; margin: 0 0 1rem 0;">
+                👋 <strong>Welcome to Marriage Education!</strong><br><br>
+                I'm your intelligent assistant. I can help you with:
+            </p>
+            <div style="display: grid; gap: 0.5rem; margin-top: 0.75rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: start;">
+                    <span style="color: #a78bfa;">🎓</span>
+                    <span style="color: rgba(255,255,255,0.8); font-size: 0.875rem;"><strong>Explore our 4 schools</strong> (44 courses total)</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: start;">
+                    <span style="color: #a78bfa;">📚</span>
+                    <span style="color: rgba(255,255,255,0.8); font-size: 0.875rem;"><strong>Browse books & resources</strong> (12+ titles)</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: start;">
+                    <span style="color: #a78bfa;">💼</span>
+                    <span style="color: rgba(255,255,255,0.8); font-size: 0.875rem;"><strong>Learn about ambassador opportunities</strong></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SCHOOLS Section -->
+        <div>
+            <h4 style="color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">Our 4 Schools</h4>
+            
+            <!-- School 1: Teleios -->
+            <div class="marriage-school-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; transition: all 0.3s;">
+                <button class="marriage-school-header" onclick="toggleMarriageSchool('school1')" style="width: 100%; background: none; border: none; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"/></svg>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="color: white; font-weight: 600; font-size: 0.95rem;">School 1: Teleios</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Personal Development • 13 courses</div>
+                        </div>
+                    </div>
+                    <svg class="chevron" width="20" height="20" fill="rgba(255,255,255,0.6)" viewBox="0 0 20 20" style="transition: transform 0.3s;"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div id="school1-courses" class="marriage-school-content" style="display: none; padding: 0 1rem 1rem 1rem; max-height: 0; opacity: 0; transition: all 0.3s;">
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('The Teleios Blueprint course')" style="background: rgba(102, 126, 234, 0.1); border-left: 2px solid #667eea; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">The Teleios Blueprint</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$247 • 6 weeks • Foundational</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('Identity Mastery course')" style="background: rgba(102, 126, 234, 0.1); border-left: 2px solid #667eea; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Identity Mastery</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$149 • 4 weeks • Understanding design</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('School 1 Teleios courses')" style="background: rgba(102, 126, 234, 0.1); border-left: 2px solid #667eea; padding: 0.875rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">View All 13 Courses →</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$99-$697 • Personal development journey</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- School 2: Sexual Literacy -->
+            <div class="marriage-school-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; transition: all 0.3s;">
+                <button class="marriage-school-header" onclick="toggleMarriageSchool('school2')" style="width: 100%; background: none; border: none; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="color: white; font-weight: 600; font-size: 0.95rem;">School 2: Sexual Literacy</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Sex By Design • 15 courses</div>
+                        </div>
+                    </div>
+                    <svg class="chevron" width="20" height="20" fill="rgba(255,255,255,0.6)" viewBox="0 0 20 20" style="transition: transform 0.3s;"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div id="school2-courses" class="marriage-school-content" style="display: none; padding: 0 1rem 1rem 1rem; max-height: 0; opacity: 0; transition: all 0.3s;">
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('Sexual Literacy 101')" style="background: rgba(245, 158, 11, 0.1); border-left: 2px solid #f59e0b; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Sexual Literacy 101 ⭐</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$25 • 90 min • Most popular entry</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('The Art of Sexuality course')" style="background: rgba(245, 158, 11, 0.1); border-left: 2px solid #f59e0b; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">The Art of Sexuality 🔥</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$397 • 8 weeks • Flagship program</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('School 2 Sexual Literacy courses')" style="background: rgba(245, 158, 11, 0.1); border-left: 2px solid #f59e0b; padding: 0.875rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">View All 15 Courses →</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$25-$897 • Biblical sexuality framework</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- School 3: Marriage Systems -->
+            <div class="marriage-school-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; margin-bottom: 0.75rem; overflow: hidden; transition: all 0.3s;">
+                <button class="marriage-school-header" onclick="toggleMarriageSchool('school3')" style="width: 100%; background: none; border: none; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="color: white; font-weight: 600; font-size: 0.95rem;">School 3: Marriage Systems</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Building Covenant • 8 courses</div>
+                        </div>
+                    </div>
+                    <svg class="chevron" width="20" height="20" fill="rgba(255,255,255,0.6)" viewBox="0 0 20 20" style="transition: transform 0.3s;"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div id="school3-courses" class="marriage-school-content" style="display: none; padding: 0 1rem 1rem 1rem; max-height: 0; opacity: 0; transition: all 0.3s;">
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('Communication for Covenant Couples')" style="background: rgba(16, 185, 129, 0.1); border-left: 2px solid #10b981; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Communication for Covenant Couples</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$199 • 5 weeks • Essential skills</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('Marriage System Design')" style="background: rgba(16, 185, 129, 0.1); border-left: 2px solid #10b981; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Marriage System Design</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$297 • 6 weeks • Building a home</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('School 3 Marriage Systems courses')" style="background: rgba(16, 185, 129, 0.1); border-left: 2px solid #10b981; padding: 0.875rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">View All 8 Courses →</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$149-$349 • Practical marriage building</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- School 4: Civilization -->
+            <div class="marriage-school-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.75rem; overflow: hidden; transition: all 0.3s;">
+                <button class="marriage-school-header" onclick="toggleMarriageSchool('school4')" style="width: 100%; background: none; border: none; padding: 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" fill="white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.92 1.39l12.76 7.36a1 1 0 010 1.74L3.92 18.85A1 1 0 012 18V2a1 1 0 011.92-.61z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="color: white; font-weight: 600; font-size: 0.95rem;">School 4: Civilization</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Nation Building • 8 courses</div>
+                        </div>
+                    </div>
+                    <svg class="chevron" width="20" height="20" fill="rgba(255,255,255,0.6)" viewBox="0 0 20 20" style="transition: transform 0.3s;"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div id="school4-courses" class="marriage-school-content" style="display: none; padding: 0 1rem 1rem 1rem; max-height: 0; opacity: 0; transition: all 0.3s;">
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('Marriage Builds Nations')" style="background: rgba(239, 68, 68, 0.1); border-left: 2px solid #ef4444; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Marriage Builds Nations 🏆</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$299 • 8 weeks • Flagship certificate</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('The Civilizational Intelligence Masterclass')" style="background: rgba(239, 68, 68, 0.1); border-left: 2px solid #ef4444; padding: 0.875rem; border-radius: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Civilizational Intelligence</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$697 • 10 weeks • Advanced mastery</div>
+                    </div>
+                    <div class="marriage-course-option" onclick="selectMarriageCourse('School 4 Civilization courses')" style="background: rgba(239, 68, 68, 0.1); border-left: 2px solid #ef4444; padding: 0.875rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                        <div style="color: white; font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">View All 8 Courses →</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.8rem;">$179-$697 • Leadership & legacy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QUICK ACTIONS Section -->
+        <div style="margin-top: 1.25rem;">
+            <h4 style="color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.75rem 0;">Quick Actions</h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                <button onclick="selectMarriageCourse('Browse all courses')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">📚 Courses</button>
+                <button onclick="selectMarriageCourse('Browse books and resources')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">📖 Books</button>
+                <button onclick="selectMarriageCourse('Foundation School program')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">🏆 Foundation</button>
+                <button onclick="selectMarriageCourse('Become an ambassador')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">💼 Ambassador</button>
+                <button onclick="selectMarriageCourse('Ambassador login help')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">🔑 Login</button>
+                <button onclick="selectMarriageCourse('Payment help and status')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 0.5rem; padding: 0.75rem 0.5rem; color: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;">💳 Payment</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Input Area -->
+    <div style="padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.6);">
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <input type="text" id="marriage-chat-input" placeholder="Ask about courses, books, or ambassadors..." style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 0.875rem 1rem; color: white; font-size: 0.95rem; outline: none; transition: all 0.3s;" />
+            <button id="marriage-chat-send" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 0.75rem; padding: 0.875rem 1.25rem; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap;" aria-label="Send message">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Marriage Chatbot Styles */
+    #marriage-chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #marriage-chat-messages::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+    
+    #marriage-chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(102, 126, 234, 0.5);
+        border-radius: 10px;
+    }
+    
+    #marriage-chat-messages::-webkit-scrollbar-thumb:hover {
+        background: rgba(102, 126, 234, 0.7);
+    }
+    
+    #marriage-chat-input:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: #667eea;
+    }
+    
+    #marriage-chat-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+    }
+    
+    #marriage-chat-send:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    #marriage-chat-close:hover, #marriage-chat-reset:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .marriage-school-header:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .marriage-course-option:hover {
+        transform: translateX(4px);
+        filter: brightness(1.1);
+    }
+    
+    .marriage-course-option:active {
+        transform: scale(0.98);
+    }
+    
+    /* Quick action buttons hover */
+    #marriage-chat-window button[onclick*="selectMarriageCourse"]:hover {
+        background: rgba(102, 126, 234, 0.15) !important;
+        border-color: rgba(102, 126, 234, 0.3) !important;
+        transform: translateY(-2px);
+    }
+    
+    #marriage-chat-window button[onclick*="selectMarriageCourse"]:active {
+        transform: translateY(0) scale(0.98);
+    }
+    
+    /* Chat link styling */
+    .marriage-chat-link {
+        color: #a78bfa;
+        text-decoration: underline;
+        transition: color 0.2s;
+    }
+    
+    .marriage-chat-link:hover {
+        color: #c4b5fd;
+    }
+    
+    /* Animations */
+    @keyframes marriageSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes marriageTypingDot {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.6;
+        }
+        30% {
+            transform: translateY(-10px);
+            opacity: 1;
+        }
+    }
+    
+    .marriage-message-animation {
+        animation: marriageSlideIn 0.3s ease;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 480px) {
+        #marriage-chat-window {
+            width: calc(100vw - 1rem);
+            height: calc(100vh - 1rem);
+            bottom: 0.5rem;
+            right: 0.5rem;
+            border-radius: 1rem;
+        }
+        
+        #marriage-chat-toggle {
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 56px;
+            height: 56px;
+        }
+        
+        #marriage-chat-window div[style*="grid-template-columns: repeat(3, 1fr)"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+</style>
+
+<script>
+// Marriage Education Chatbot JavaScript
+
+// Conversation context
+let marriageConversationContext = {
+    lastSchool: null,
+    messageCount: 0,
+    hasExpandedSchool: false,
+    awaitingClarification: false,
+    clarificationOptions: [],
+    ambiguousQuery: null
+};
+
+// DOM Elements
+const marriageChatToggle = document.getElementById('marriage-chat-toggle');
+const marriageChatWindow = document.getElementById('marriage-chat-window');
+const marriageChatClose = document.getElementById('marriage-chat-close');
+const marriageChatMessages = document.getElementById('marriage-chat-messages');
+const marriageChatInput = document.getElementById('marriage-chat-input');
+const marriageChatSend = document.getElementById('marriage-chat-send');
+
+// Open/Close Chat
+function openMarriageChat() {
+    marriageChatWindow.style.display = 'flex';
+    marriageChatToggle.style.display = 'none';
+    marriageChatWindow.setAttribute('aria-hidden', 'false');
+    marriageChatInput.focus();
+    
+    if (marriageConversationContext.messageCount === 0 && !marriageConversationContext.hasExpandedSchool) {
+        setTimeout(() => {
+            addMarriageDynamicHint();
+        }, 800);
+    }
+}
+
+function closeMarriageChat() {
+    marriageChatWindow.style.display = 'none';
+    marriageChatToggle.style.display = 'flex';
+    marriageChatWindow.setAttribute('aria-hidden', 'true');
+    closeAllMarriageSchools();
+}
+
+// Event Listeners
+marriageChatToggle.addEventListener('click', openMarriageChat);
+marriageChatClose.addEventListener('click', closeMarriageChat);
+marriageChatSend.addEventListener('click', handleMarriageSendMessage);
+marriageChatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleMarriageSendMessage();
+    }
+});
+
+// Toggle School Expansion
+function toggleMarriageSchool(schoolId) {
+    const content = document.getElementById(`${schoolId}-courses`);
+    const allContents = document.querySelectorAll('.marriage-school-content');
+    const allChevrons = document.querySelectorAll('.marriage-school-header .chevron');
+    const thisChevron = content.previousElementSibling.querySelector('.chevron');
+    
+    const isCurrentlyExpanded = content.classList.contains('expanded');
+    
+    // Close all other schools
+    allContents.forEach((div, index) => {
+        if (div.id !== `${schoolId}-courses`) {
+            div.classList.remove('expanded');
+            div.style.display = 'none';
+            div.style.maxHeight = '0';
+            div.style.opacity = '0';
+            allChevrons[index].style.transform = 'rotate(0deg)';
+        }
+    });
+    
+    // Toggle current school
+    if (isCurrentlyExpanded) {
+        content.classList.remove('expanded');
+        content.style.display = 'none';
+        content.style.maxHeight = '0';
+        content.style.opacity = '0';
+        thisChevron.style.transform = 'rotate(0deg)';
+        marriageConversationContext.hasExpandedSchool = false;
+    } else {
+        content.classList.add('expanded');
+        content.style.display = 'block';
+        content.style.maxHeight = '2000px';
+        content.style.opacity = '1';
+        thisChevron.style.transform = 'rotate(180deg)';
+        marriageConversationContext.lastSchool = schoolId;
+        marriageConversationContext.hasExpandedSchool = true;
+        
+        setTimeout(() => {
+            content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+}
+
+// Select Course Quick Action
+function selectMarriageCourse(courseName) {
+    const input = marriageChatInput;
+    
+    input.style.background = 'rgba(102, 126, 234, 0.15)';
+    input.style.borderColor = '#667eea';
+    input.value = courseName;
+    input.focus();
+    
+    setTimeout(() => {
+        input.style.background = 'rgba(255, 255, 255, 0.05)';
+        input.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+    }, 300);
+    
+    closeAllMarriageSchools();
+    
+    setTimeout(() => {
+        handleMarriageSendMessage();
+    }, 400);
+}
+
+// Closecontinued All Schools
+function closeAllMarriageSchools() {
+    const allContents = document.querySelectorAll('.marriage-school-content');
+    const allChevrons = document.querySelectorAll('.marriage-school-header .chevron');
+    
+    allContents.forEach((div, index) => {
+        div.classList.remove('expanded');
+        div.style.display = 'none';
+        div.style.maxHeight = '0';
+        div.style.opacity = '0';
+        if (allChevrons[index]) {
+            allChevrons[index].style.transform = 'rotate(0deg)';
+        }
+    });
+    
+    marriageConversationContext.hasExpandedSchool = false;
+}
+
+// Add Dynamic Hint
+function addMarriageDynamicHint() {
+    const hints = [
+        "💡 Tip: Click any school above to explore courses",
+        "✨ Try asking: 'Best course for beginners?'",
+        "🚀 Quick tip: Click a course card for instant info"
+    ];
+    
+    const hint = hints[Math.floor(Math.random() * hints.length)];
+    
+    const hintDiv = document.createElement('div');
+    hintDiv.className = 'marriage-message-animation';
+    hintDiv.style.cssText = `
+        background: rgba(102, 126, 234, 0.05);
+        border: 1px dashed rgba(102, 126, 234, 0.3);
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.85rem;
+        font-style: italic;
+    `;
+    hintDiv.textContent = hint;
+    
+    marriageChatMessages.appendChild(hintDiv);
+    marriageChatMessages.scrollTop = marriageChatMessages.scrollHeight;
+}
+
+// Handle Send Message
+function handleMarriageSendMessage() {
+    const userMessage = marriageChatInput.value.trim();
+    
+    if (!userMessage) return;
+    
+    addMarriageMessage(userMessage, 'user');
+    marriageChatInput.value = '';
+    
+    showMarriageTypingIndicator();
+    
+    setTimeout(() => {
+        hideMarriageTypingIndicator();
+        const response = getMarriageIntelligentResponse(userMessage);
+        addMarriageMessage(response, 'bot');
+        
+        marriageConversationContext.messageCount++;
+        
+        if (marriageConversationContext.messageCount <= 6) {
+            addMarriageQuickSuggestions(userMessage);
+        }
+    }, 800);
+}
+
+// Add Message
+function addMarriageMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'marriage-message-animation';
+    messageDiv.style.cssText = sender === 'user' 
+        ? `
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            align-self: flex-end;
+            margin-left: auto;
+        `
+        : `
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+        `;
+    
+    const textContent = document.createElement('div');
+    textContent.innerHTML = formatMarriageMessage(text);
+    textContent.style.cssText = `
+        color: white;
+        font-size: 0.95rem;
+        line-height: 1.7;
+    `;
+    
+    messageDiv.appendChild(textContent);
+    marriageChatMessages.appendChild(messageDiv);
+    marriageChatMessages.scrollTop = marriageChatMessages.scrollHeight;
+}
+
+// Format Message (convert markdown-like syntax)
+function formatMarriageMessage(text) {
+    return text
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="marriage-chat-link" target="_blank">$1</a>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
+
+// Typing Indicator
+function showMarriageTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'marriage-typing-indicator';
+    typingDiv.className = 'marriage-message-animation';
+    typingDiv.style.cssText = `
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 0.875rem 1rem;
+        border-radius: 0.75rem;
+        max-width: 150px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    `;
+    
+    typingDiv.innerHTML = `
+        <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Typing</span>
+        <div style="display: flex; gap: 0.25rem;">
+            <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite;"></span>
+            <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.2s;"></span>
+            <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.4s;"></span>
+        </div>
+    `;
+    
+    marriageChatMessages.appendChild(typingDiv);
+    marriageChatMessages.scrollTop = marriageChatMessages.scrollHeight;
+}
+
+function hideMarriageTypingIndicator() {
+    const typingDiv = document.getElementById('marriage-typing-indicator');
+    if (typingDiv) {
+        typingDiv.remove();
+    }
+}
+
+// Add Quick Suggestions
+function addMarriageQuickSuggestions(userMessage) {
+    const message = userMessage.toLowerCase();
+    let suggestions = [];
+    
+    if (message.includes('beginner') || message.includes('start') || message.includes('first')) {
+        suggestions = ['Best books for beginners', 'Popular courses', 'Foundation School'];
+    } else if (message.includes('course') || message.includes('school')) {
+        suggestions = ['View all schools', 'Bundle deals', 'Become ambassador'];
+    } else if (message.includes('ambassador') || message.includes('earn') || message.includes('income')) {
+        suggestions = ['How much can I earn?', 'Ambassador login help', 'Senior Ambassador'];
+    } else if (message.includes('payment') || message.includes('pay') || message.includes('momo')) {
+        suggestions = ['Check payment status', 'Payment methods', 'Download link issues'];
+    } else {
+        suggestions = ['View all courses', 'Browse books', 'Contact support'];
+    }
+    
+    const suggestionsDiv = document.createElement('div');
+    suggestionsDiv.className = 'marriage-message-animation';
+    suggestionsDiv.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    `;
+    
+    suggestions.forEach(suggestion => {
+        const btn = document.createElement('button');
+        btn.textContent = suggestion;
+        btn.onclick = () => {
+            marriageChatInput.value = suggestion;
+            handleMarriageSendMessage();
+        };
+        btn.style.cssText = `
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 1rem;
+            padding: 0.5rem 0.875rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        `;
+        btn.onmouseover = () => {
+            btn.style.background = 'rgba(102, 126, 234, 0.2)';
+            btn.style.borderColor = 'rgba(102, 126, 234, 0.4)';
+        };
+        btn.onmouseout = () => {
+            btn.style.background = 'rgba(102, 126, 234, 0.1)';
+            btn.style.borderColor = 'rgba(102, 126, 234, 0.2)';
+        };
+        
+        suggestionsDiv.appendChild(btn);
+    });
+    
+    marriageChatMessages.appendChild(suggestionsDiv);
+    marriageChatMessages.scrollTop = marriageChatMessages.scrollHeight;
+}
+
+// Reset Conversation
+function resetMarriageConversation() {
+    const welcomeMessage = marriageChatMessages.children[0];
+    const schoolsSection = marriageChatMessages.children[1];
+    const quickActionsSection = marriageChatMessages.children[2];
+    
+    marriageChatMessages.innerHTML = '';
+    marriageChatMessages.appendChild(welcomeMessage);
+    marriageChatMessages.appendChild(schoolsSection);
+    marriageChatMessages.appendChild(quickActionsSection);
+    
+     marriageConversationContext = {
+        lastSchool: null,
+        messageCount: 0,
+        hasExpandedSchool: false,
+        awaitingClarification: false,
+        clarificationOptions: [],
+        ambiguousQuery: null
+    };
+    
+    closeAllMarriageSchools();
+    
+    addMarriageMessage('✨ Conversation reset! How can I help you today?', 'bot');
+    
+    setTimeout(() => {
+        addMarriageDynamicHint();
+    }, 500);
+}
+
+// Continue in next part with comprehensive knowledge base...
+</script>
+
+<!-- PART 2 OF 2: COMPREHENSIVE KNOWLEDGE BASE -->
+<!-- Add this immediately after the above script tag -->
+<script>
+// ===============================================
+// COMPREHENSIVE MARRIAGE EDUCATION KNOWLEDGE BASE
+// ===============================================
+
+const marriageKnowledge = {
+    // === SCHOOL 1: TELEIOS PERSONAL DEVELOPMENT ===
+    school1Teleios: {
+        keywords: ['school 1', 'teleios', 'personal development', 'identity', 'teleios blueprint', 'wholeness', 'anthropology', 'identity mastery', 'perfect self'],
+        response: `🎓 **School 1: Teleios Personal Development**
+
+13 courses focused on identity, wholeness, and human design.
+
+**🌟 Top Courses:**
+
+💎 **The Teleios Blueprint** - $247
+• 6 weeks • Foundational Certificate
+• Full human maturity framework
+• FREE for ambassadors
+• Most comprehensive identity course
+
+📖 **Identity Mastery** - $149
+• 4 weeks • Understanding image & likeness
+• Your unique human design
+• Perfect for singles
+
+🎯 **The Personal Development MasterClass** - $697
+• 12 weeks • Complete transformation
+• All personal development principles
+• Most comprehensive program
+
+**All 13 Courses ($99-$697):**
+• Anthropology of Wholeness ($149)
+• Four Faculties Training ($199)
+• Science of Self-Command ($199)
+• Heart of Relationship Level 1-3 ($149-$349)
+• Emotional Literacy ($129)
+• Temperament Intelligence ($99)
+• Perfect Self Program ($149)
+• And more!
+
+**Best For:**
+✅ Singles preparing for marriage
+✅ Personal identity clarity
+✅ Leadership development
+✅ Relationship readiness
+
+📍 <a href="courses.html#school1" class="marriage-chat-link">Browse School 1 Courses →</a>
+📍 <a href="schools.html" class="marriage-chat-link">View All Schools →</a>`
+    },
+    
+    // === SCHOOL 2: SEXUAL LITERACY ===
+    school2SexualLiteracy: {
+        keywords: ['school 2', 'sexual literacy', 'sex education', 'sbd', 'sex by design', 'sexuality', 'intimacy', 'art of sexuality', 'art of seduction', 'conjugal', 'sexual literacy 101'],
+        response: `💑 **School 2: Sexual Literacy (SBD Framework)**
+
+15 courses on biblical sexuality and intimacy - the heart of our curriculum.
+
+**🔥 Bestsellers:**
+
+⭐ **Sexual Literacy 101** - $25
+• 90 minutes • MOST POPULAR ENTRY
+• Perfect beginner foundation
+• Highest satisfaction rating
+• Start here!
+
+🎨 **The Art of Sexuality** - $397
+• 8 weeks • FLAGSHIP PROGRAM
+• Complete sexuality mastery
+• Sacred intimacy principles
+• Top seller for couples
+
+💎 **The Conjugal Intelligence MasterClass** - $897
+• 12 weeks • MOST COMPREHENSIVE
+• Complete SBD framework
+• Advanced intimacy training
+• Professional certification available
+
+🔥 **The Art of Seduction** - $347
+• 6 weeks • High-demand course
+• Attraction & pursuit mastery
+• Playful intimacy
+
+**More Popular Courses:**
+• Sex = Marriage ($350) - Certification available
+• The Art of Fucking ($349) - Passionate connection
+• The Art of Nakedness ($199) - Body stewardship
+• Sexual Imagination ($249) - Creative intimacy
+• Arousal Mastery ($299) - Married couples only
+• Erotic Devotion ($299) - Song of Solomon
+• Bedroom Governance ($199) - Responsibility
+
+**Entry Options:**
+$25 (Sexual Literacy 101) → $49 (Anatomy of Desire) → $149+ (Deeper courses)
+
+**Best For:**
+✅ Engaged couples (premarital prep)
+✅ Married couples (enrichment)
+✅ Anyone seeking biblical sexuality framework
+
+📍 <a href="courses.html#school2" class="marriage-chat-link">Browse Sexual Literacy →</a>
+📍 <a href="shop.html#sbd-series" class="marriage-chat-link">SBD Books →</a>`
+    },
+    
+    // === SCHOOL 3: MARRIAGE SYSTEMS ===
+    school3MarriageSystems: {
+        keywords: ['school 3', 'marriage systems', 'communication', 'covenant couples', 'relationship', 'conflict', 'household', 'fidelity', 'one flesh'],
+        response: `💍 **School 3: Marriage Systems**
+
+8 practical courses for building thriving covenant marriages.
+
+**💪 Essential Courses:**
+
+📣 **Communication for Covenant Couples** - $199
+• 5 weeks • MOST REQUESTED
+• Essential communication skills
+• Conflict resolution fundamentals
+• Every couple needs this
+
+🏠 **Marriage System Design** - $297
+• 6 weeks • Building a home that works
+• Practical household systems
+• Foundation for new marriages
+
+⚔️ **The Fidelity Curriculum** - $349
+• 8 weeks • Sexual loyalty program
+• Affair-proofing your marriage
+• Trust & accountability
+
+**Complete Course List:**
+• Covenant Governance ($249) - Leadership in home
+• Conflict Mastery ($179) - Peacekeeping skills
+• Household Management ($199) - Practical systems
+• Daily Liturgies of Marriage ($149) - Rituals & habits
+• One-Flesh Intensive ($279) - Becoming one whole
+
+**Perfect For:**
+✅ Newlyweds (first 5 years)
+✅ Couples needing communication help
+✅ Building practical marriage systems
+
+**Bundle Recommendation:**  
+Communication + Marriage System Design + Covenant Governance  
+Regular: $745 → Bundle: $649 (save $96)
+
+📍 <a href="courses.html#school3" class="marriage-chat-link">Explore Marriage Systems →</a>`
+    },
+    
+    // === SCHOOL 4: CIVILIZATION & LEADERSHIP ===
+    school4Civilization: {
+        keywords: ['school 4', 'civilization', 'leadership', 'nation building', 'legacy', 'parenting', 'family culture', 'political theology', 'generational'],
+        response: `🌍 **School 4: Civilization & Leadership**
+
+8 advanced courses on building marriages that build nations.
+
+**🏆 Leadership Courses:**
+
+👑 **Marriage Builds Nations** - $299
+• 8 weeks • FLAGSHIP CERTIFICATE
+• How marriage impacts society
+• Leadership & cultural transformation
+• For influencers and leaders
+
+🎓 **The Civilizational Intelligence Masterclass** - $697
+• 10 weeks • MOST ADVANCED
+• Complete civilization framework
+• Legacy & generational impact
+• Professional certification
+
+👨‍👩‍👧‍👦 **Parenting Through Teleios Principles** - $299
+• 8 weeks • Raising whole children
+• Identity-based parenting
+• Next generation preparation
+
+**Full Curriculum:**
+• Political Theology of Home ($249) - Kingdom principles
+• Family Systems Architecture ($279) - Generational stability
+• Raising Sons & Daughters Through Sexual Literacy ($249)
+• Family Culture & Human Flourishing ($199)
+• Human Rights & Marriage ($179) - UDHR 16 Curriculum
+
+**Ideal For:**
+✅ Leaders & influencers
+✅ Parents & educators
+✅ Community builders
+✅ Policy makers
+✅ Those thinking generationally
+
+**Career Applications:**
+• Marriage counselors
+• Pastors & ministry leaders
+• Educators & coaches
+• Policy advisors
+
+📍 <a href="courses.html#school4" class="marriage-chat-link">Browse Leadership Courses →</a>`
+    },
+    
+    // === FOUNDATION SCHOOL ===
+    foundationSchool: {
+        keywords: ['foundation school', 'foundation', '6 week', '6-week', 'intensive', 'teleios advocacy', 'dual track', 'crla', 'free course', '$247', 'ambassador training'],
+        response: `🏆 **Foundation School (6-Week Intensive)**
+
+**FREE for Ambassadors** | $247 Standalone
+
+**🎯 What Is It?**
+A comprehensive 6-week program combining personal development with ambassador training. You'll earn your CRLA (Certified Relationship & Life Advocate) credential.
+
+**📚 Dual-Track Program:**
+
+**🔹 Weeks 1-3: Teleios Track**
+Based on "The Teleios Blueprint" course
+• Personal identity & wholeness
+• Understanding image & likeness
+• Purpose & design clarity
+• Relationship readiness foundations
+
+**🔹 Weeks 4-6: Advocacy Track**
+• Marriage education framework
+• SBD methodology overview
+• Ambassador skills & communication
+• Leadership development
+• Product knowledge (all 44 courses + 12 books)
+
+**🎓 You'll Graduate With:**
+✅ CRLA Certified credential
+✅ Complete understanding of all our programs
+✅ Ability to guide others through coursework
+✅ Foundation for earning as an ambassador
+✅ $247 course completion (lifetime access)
+
+**📆 Format:**
+• Online, self-paced with weekly milestones
+• Video lessons + workbooks
+• Community support (private group)
+• Weekly check-ins with mentors
+
+**💰 How To Access:**
+
+**Option 1: FREE (Recommended)**
+Become an Ambassador (15,000 FCFA = ~$25 USD)
+• Get Foundation School FREE ($247 value)
+• Start earning 10% commissions immediately
+• Build your business while learning
+
+**Option 2: Purchase Standalone**
+$247 one-time payment
+• Access without ambassador enrollment
+• Perfect if you only want the education
+• No earning opportunity
+
+**🎁 Bonus Benefits:**
+• Lifetime course access
+• Certificate of completion
+• Private alumni community
+• Monthly Q&A sessions (3 months)
+
+📍 <a href="foundation-school.html" class="marriage-chat-link">View Foundation School →</a>
+📍 <a href="ambassador-register.html" class="marriage-chat-link">Become Ambassador (Get FREE Access) →</a>
+
+**Questions?**  
+Type: "How do I become an ambassador?" or "Tell me about ambassador income"`
+    },
+    
+    // === BOOKS ===
+    books: {
+        keywords: ['book', 'books', 'sbd compendium', 'sex by design book', 'dummies', 'shop', 'purchase book', 'read', 'ebook', 'pdf', 'arts of marriage'],
+        response: `📚 **Marriage Education Books (12+ Titles)**
+
+**⭐ Bestsellers:**
+
+🥇 **The SBD Compendium** - $34.99
+• Most comprehensive anthology
+• Essential guide to entire SBD series
+• Navigator for all our frameworks
+• Perfect starting reference
+
+🥈 **Sex by Design for Dummies** - $27.00
+• **BEST SELLER** for beginners
+• Entry-level guide to SBD framework
+• Easy-to-understand principles
+• Start here if new to our methodology
+
+**SBD Series ($24.99-$34.99):**
+• SBD Standard ($24.99) - Foundational text
+• SBD Canonical ($29.99) - Legal & societal frameworks
+• SBD Real Couples ($24.99) - Testimonials & stories
+• SBD Heart of Relationship ($24.99) - Emotional intimacy
+• SBD Unequally Yoked ($24.99) - Mixed-faith guidance
+• SBD 2: Impregnable Assemblage ($29.99) - Advanced sequel
+• Naked & Not Ashamed ($24.99) - Overcoming shame
+• Marriage = Sexuality ($24.99) - Theological connections
+
+**Arts of Marriage Series ($24.99 each):**
+• The Arts of Marriage - Mastery overview
+• The Art of Sexuality - Sacred intimacy
+• The Art of Seduction - Attraction & pursuit
+• The Art of Fucking - Passionate connection
+
+**📦 BUNDLE DEALS (Save $60+):**
+
+💎 **Complete SBD Library** - $189.99
+• All 10 SBD books (reg. $254.91)
+• Save $64.92 (26% off)
+• Bonus implementation guide (PDF)
+• Early access to new books
+
+🎨 **Arts Collection** - $59.99
+• All 3 Arts books (reg. $74.97)
+• Save $14.98 (20% off)
+
+📚 **SBD Beginner Bundle** - $79.99
+• SBD for Dummies + Compendium + Standard
+• Save $16.98
+
+**🎁 Digital + Print Options:**
+SBD for Dummies Bundle - $40 (save $7)
+• Instant PDF download
+• Premium print book shipped
+• Mobile-friendly format
+
+**📰 SBD Magazine:**
+• Single Issue: $20
+• Annual Subscription: $50 (3 issues/year)
+• Digital Archive Access: $30 (all past issues)
+
+📍 <a href="shop.html" class="marriage-chat-link">Browse All Books →</a>
+📍 <a href="shop.html#bundles" class="marriage-chat-link">View Bundle Deals →</a>`
+    },
+    
+    // === AMBASSADOR SYSTEM ===
+    ambassadorRegistration: {
+        keywords: ['ambassador', 'become ambassador', 'ambassador registration', 'how to become ambassador', 'register ambassador', '15000', '15k fcfa', 'earn money', 'make money', 'income opportunity', 'join network'],
+        response: `💼 **Become a Marriage Education Ambassador**
+
+Turn your passion for marriage education into income!
+
+**💰 Investment:** 15,000 FCFA (~$25 USD)
+
+**🎁 What You Get:**
+
+✅ **FREE Foundation School** ($247 value)
+• 6-week intensive training
+• CRLA certification
+• Complete product knowledge
+
+✅ **10% Commission on ALL Sales**
+• Courses: $25-$897 each
+• Books: $24.99-$34.99 each
+• Bundles & packages
+• Recurring income potential
+
+✅ **Your Own Referral Links**
+• Track all your sales
+• Automated commission calculation
+• Monthly payouts
+
+✅ **Marketing Materials**
+• Professional graphics
+• Email templates
+• Social media content
+• Landing pages
+
+**💵 Realistic Income Examples:**
+
+**🔹 Modest Effort** ($200-300/month)
+• Sell 10 books ($270 sales) → $27
+• Sell 5 entry courses ($125-750 sales) → $50-75
+• Sell 2 mid-tier courses ($300-600 sales) → $30-60
+• Total: $107-162 commission
+
+**🔹 Moderate Effort** ($500-1,000/month)
+• Sell 15 books ($405) → $41
+• Sell 10 courses (mix of entry & advanced) → $200-400
+• Sell 1-2 premium courses ($697-897) → $70-180
+• Total: $311-621 commission
+
+**🔹 Serious Effort** ($2,000-$3,000+/month)
+• Build consistent referral pipeline
+• Target monthly: $20,000-30,000 in sales
+• 10% commission: $2,000-3,000
+• Path to Senior Ambassador (see below)
+
+**📈 Growth Path:**
+
+Regular Ambassador (15K FCFA)  
+→ Senior Ambassador (promoted when you recruit 10 ambassadors)  
+→ Regional Director (50K FCFA investment)
+
+**🚀 How To Register:**
+
+**Step 1:** Visit <a href="ambassador-register.html" class="marriage-chat-link">Ambassador Registration</a>
+
+**Step 2:** Fill registration form
+• Your information
+• Payment method
+• Preferred payout method
+
+**Step 3:** Pay 15,000 FCFA via MTN Mobile Money
+• Send to: [ADMIN NUMBER]
+• Include registration reference code
+• Submit payment confirmation
+
+**Step 4:** Receive Credentials (24-48 hours)
+• Unique ambassador code (e.g., AMB-JOHN-1234)
+• Dashboard access
+• Foundation School enrollment
+• Marketing resources
+
+**Step 5:** Complete Foundation School
+• 6 weeks of training
+• Learn all products
+• Earn CRLA credential
+
+**Step 6:** Start Promoting & Earning!
+• Share your referral links
+• Guide people to right courses
+• Earn 10% on every sale
+
+📍 <a href="ambassador-register.html" class="marriage-chat-link">Register Now →</a>
+
+**Questions?**
+• Type: "How do I login as ambassador?"
+• Type: "What is Senior Ambassador?"
+• Type: "How much can I really earn?"`
+    },
+    
+    ambassadorLogin: {
+        keywords: ['ambassador login', 'login ambassador', 'how to login', 'ambassador code', 'login help', 'account access', 'forgot code', 'cant login', 'access dashboard'],
+        response: `🔑 **Ambassador Login Guide**
+
+**🚪 How To Login:**
+
+**Step 1:** Visit <a href="ambassador-login.html" class="marriage-chat-link">Ambassador Login Page</a>
+
+**Step 2:** Enter Your Ambassador Code
+• Format: AMB-XXXX-####
+• Example: AMB-JOHN-1234
+• **No password needed** - code-based authentication
+
+**Step 3:** Access Your Dashboard
+• View your sales
+• Track commissions
+• Get referral links
+• Download marketing materials
+
+**❓ Common Login Issues:**
+
+**"Invalid ambassador code"**  
+✅ Check spelling carefully
+✅ Ensure format is correct (AMB-XXXX-####)
+✅ Code is case-sensitive
+✅ If just registered, wait 24-48 hours for approval
+
+**"Account not found"**  
+✅ Payment may still be pending admin approval ✅ Check your email for approval confirmation
+✅ Registration typically approved within 24-48 hours
+✅ Weekend submissions may take until Monday
+
+**"Access denied"**  
+✅ Your account may be inactive
+✅ Ensure payment was received
+✅ Contact support for reactivation
+
+**📧 Forgot Your Code?**
+Option 1: Check your registration confirmation email
+Option 2: Visit <a href="resend-credentials.html" class="marriage-chat-link">Resend Credentials</a>
+Option 3: Email: ambassadors@marriageducation.com
+
+**🆘 Still Can't Login?**
+📧 Email: ambassadors@marriageducation.com
+Include:
+• Your full name
+• Email used for registration
+• Phone number used for payment
+• Payment reference code
+
+⏰ Response time: 24 hours (business days)
+
+📍 <a href="ambassador-login.html" class="marriage-chat-link">Login Now →</a>
+📍 <a href="ambassador-dashboard.html" class="marriage-chat-link">Dashboard →</a>
+
+**Need More Help?**  
+Type: "How do I become an ambassador?" or "Payment pending help"`
+    },
+    
+    seniorAmbassador: {
+        keywords: ['senior ambassador', 'senior', 'promotion', 'upgrade ambassador', '15%', 'override', 'tier 2', 'recruit', 'team', 'downline'],
+        response: `🏅 **Senior Ambassador (Tier 2)**
+
+Automatic promotion when you build a team!
+
+**🎯 How To Become Senior:**
+Recruit 10 Regular Ambassadors under you
+
+**💰 Your Earnings:**
+
+**Personal Commission:** 10% (same as regular)
+• All your direct sales
+• No change to your sales commission
+
+**+ Override Bonus:** 5% on team sales
+• 5% of everything your 10 ambassadors sell
+• Passive income from your team's work
+• Compounds as your team grows
+
+**📊 Income Example:**
+
+**Your Personal Sales:** $10,000/month
+• Your commission: $1,000 (10%)
+
+**Your Team (10 Ambassadors):**  
+Each does $1,800/month average = $18,000 total
+• Your override: $900 (5% of $18,000)
+
+**Total Monthly Income:** $1,900
+
+**🚀 Maximum Potential:**
+If all 10 ambassadors hit $30K target:
+• Team sales: $300,000/month
+• Your override: $15,000 (5%)
+• Plus your personal: $3,000
+• **Total: $18,000/month possible**
+
+**🎁 Senior Benefits:**
+
+✅ 5% override on all downline sales
+✅ Leadership training & mentorship
+✅ Team management dashboard
+✅ Priority support
+✅ Advanced marketing materials
+✅ Monthly team performance bonuses
+✅ Quarterly leadership retreats
+✅ Path to Regional Director
+
+**📈 How To Build Your Team:**
+
+**1. Share Your Story**
+• How Marriage Education helped you
+• Your income results
+• Foundation School value
+
+**2. Target Your Network**
+• Friends interested in marriage ministry
+• Church members
+• Relationship coaches
+• Counselors & therapists
+• Bloggers & influencers
+
+**3. Provide Support**
+• Help your team through Foundation School
+• Share what's working for you
+• Answer their questions
+• Encourage consistent effort
+
+**4. Host Training Sessions**
+• Weekly team calls
+• Product education
+• Sales techniques
+• Motivation & accountability
+
+**⚡ Pro Tips:**
+
+✅ Don't recruit everyone - find quality people
+✅ Help your team succeed (you earn more when they do)
+✅ Lead by example (keep making personal sales)
+✅ Focus on duplication (teach them to recruit too)
+
+**Next Level:** Regional Director (50K FCFA investment)
+
+📍 <a href="ambassador-dashboard.html" class="marriage-chat-link">View Dashboard →</a>
+
+**Questions?**  
+Type: "What is Regional Director?" or "How do I recruit ambassadors?"`
+    },
+    
+    regionalDirector: {
+        keywords: ['regional director', 'rd', 'director', '50000', '50k fcfa', 'rd registration', 'tier 3', 'highest level', 'regional'],
+        response: `👑 **Regional Director (Tier 3) - Elite Level**
+
+The highest ambassador tier for serious leaders.
+
+**💎 Investment:** 50,000 FCFA (~$83 USD)
+
+**👥 Your Network:**
+• Manage 50 Senior Ambassadors
+• Each Senior has 10 Regular Ambassadors
+• **Total: 500+ ambassadors** under you
+
+**💰 Your Earnings:**
+
+**Level 1: Personal Sales** - 10% commission
+Same as all ambassadors
+
+**Level 2: Network Override** - 5% of ALL levels
+• 5% from your Senior Ambassadors' personal sales
+• 5% from all Regular Ambassadors under your Seniors
+• Passive income from 500+ people
+
+**📊 Realistic Income Examples:**
+
+**🔹 Growing Network (250 active ambassadors)**
+Average $500/person/month = $125,000 total network sales
+• Your 5% override: $6,250/month
+• Plus your personal sales: $2,000
+• **Total: $8,250/month**
+
+**🔹 Mature Network (500 active ambassadors)**
+Average $750/person/month = $375,000 total network sales
+• Your 5% override: $18,750/month
+• Plus your personal sales: $3,000
+• **Total: $21,750/month**
+
+**🔹 Top Performer (500 active, $1,500 avg)**
+Total network: $750,000/month
+• Your 5% override: $37,500/month
+• Plus your personal: $5,000
+• **Total: $42,500/month**
+
+**⚠️ Realistic Expectations:**
+• Most RDs earn $5,000-$15,000/month
+• Takes 12-24 months to build full network
+• Requires serious leadership commitment
+• Need recruitment & training skills
+
+**🎁 RD Benefits:**
+
+✅ 5% override on entire network (unlimited depth)
+✅ Regional territory exclusivity
+✅ Direct company support
+✅ Priority product launches
+✅ Quarterly performance bonuses
+✅ Annual leadership summit (all expenses paid)
+✅ Custom marketing campaign support
+✅ Dedicated account manager
+✅ Revenue share from bundle sales in your region
+
+**📈 How To Succeed as RD:**
+
+**1. Build Senior Leaders**
+• Recruit quality Seniors directly
+• Help them build their teams of 10
+• Focus on 5-10 key Seniors initially
+
+**2. Provide Ongoing Training**
+• Monthly regional webinars
+• Team challenges & contests
+• Sharing best practices
+• Recognition & motivation
+
+**3. Market Strategically**
+• Partner with churches & organizations
+• Host regional marriage conferences
+• Leverage social media advertising
+• Build regional brand presence
+
+**4. Think Long-Term**
+• This is a 2-3 year build
+• Compound growth (teams recruiting teams)
+• Focus on retention (keep people active)
+• Build culture & community
+
+**💡 Is RD Right For You?**
+
+✅ YES if you:
+• Are already a Senior Ambassador
+• Have leadership experience
+• Can invest 20+ hours/week initially
+• Think long-term (2-3 year vision)
+• Have recruitment skills
+• Want to build lasting income
+
+❌ NO if you:
+• Just want quick money
+• Don't enjoy leading teams
+• Can't commit significant time
+• Are new to network marketing
+
+**🚀 How To Become RD:**
+
+**Step 1:** Must be performing Senior Ambassador
+**Step 2:** Apply for RD position (limited spots)
+**Step 3:** Interview with leadership team
+**Step 4:** Pay 50K FCFA investment
+**Step 5:** Complete RD training (2 weeks)
+**Step 6:** Launch your region
+
+📍 <a href="regional-director-register.html" class="marriage-chat-link">Apply for RD →</a>
+📍 <a href="rd-login.html" class="marriage-chat-link">RD Login →</a>
+
+**Questions?**  
+Type: "Tell me about ambassador system" or "How much can ambassadors earn?"`
+    },
+     
+    // === PAYMENT HELP ===
+    mtnMomo: {
+        keywords: ['payment', 'mtn', 'mobile money', 'momo', 'how to pay', 'payment method', 'pay with momo', 'send money', 'payment process'],
+        response: `💳 **Payment via MTN Mobile Money (Primary Method)**
+
+Simple 5-step process:
+
+**📱 Step 1: Select Product/Course**
+• Browse courses or books
+• Click "Buy Now" or "Enroll"
+• Review your selection
+
+**💡 Step 2: Choose MTN Mobile Money**
+• Select MTN MOMO as payment method
+• **Note the EXACT amount** shown
+• **Copy the reference code** (e.g., PMT-ABC-1234)
+• Keep this page open!
+
+**📲 Step 3: Send Mobile Money**
+• Open your MTN Mobile Money app
+• Select "Send Money"
+• Send to: **[ADMIN NUMBER]**  
+  ⚠️ Double-check this number!
+• Amount: **EXACT as shown** (e.g., 15,000 FCFA)
+• In reference/note field: **Include code** (PMT-ABC-1234)
+• Confirm transaction
+
+**✅ Step 4: Submit Confirmation**
+• Return to our website
+• Fill payment confirmation form
+• Enter:
+  - Your phone number (used for payment)
+  - Your email address
+  - Payment reference code
+  - Transaction ID from MOMO
+• Submit form
+
+**⏱️ Step 5: Wait for Approval (24-48 hours)**
+• Admin verifies your payment
+• You receive approval email with:
+  - Download link (for books/courses)
+  - Access credentials (for ambassadors)
+  - Important instructions
+
+**💾 Download Link Details:**
+• Valid for **7 days** after approval
+• **5 downloads maximum**
+• PDF format (books) or course access link
+• Save to your device immediately
+
+**⚠️ Important Tips:**
+
+✅ **Send EXACT amount** - Not more, not less
+✅ **Include reference code** in MOMO message
+✅ **Save transaction ID** from MOMO confirmation
+✅ **Check spam folder** for approval email
+✅ **Submit confirmation within 1 hour** of payment
+
+**❓ What If...**
+
+"I sent wrong amount"  
+→ Contact support immediately with transaction details
+
+"I forgot reference code"  
+→ Include transaction ID in confirmation form
+
+"Can I pay in installments?"  
+→ Not currently available (coming soon)
+
+"Do you accept Orange Money?"  
+→ Not currently (MTN MOMO only for now)
+
+📍 <a href="payment-pending.html" class="marriage-chat-link">Check Payment Status →</a>
+📍 <a href="contact.html" class="marriage-chat-link">Payment Help →</a>
+
+**Need More Help?**  
+Type: "Payment still pending" or "Download link expired"`
+    },
+    
+    paymentPending: {
+        keywords: ['payment pending', 'payment status', 'waiting for approval', 'payment not approved', 'still pending', 'not received', 'how long', 'approval time'],
+        response: `⏳ **Payment Status: Pending - Here's What To Do**
+
+**🕐 Normal Approval Time:** 24-48 hours
+
+**✅ What To Check Right Now:**
+
+**1. Check Your Spam/Junk Folder**
+• Approval emails sometimes go to spam
+• Search for: "marriageducation" or "payment approved"
+• Add support@marriageducation.com to contacts
+
+**2. Verify Payment Details**
+Did you:
+✅ Send the **EXACT amount** shown?
+✅ Include the **reference code** in your MOMO message?
+✅ Send to the **correct admin number**?
+✅ Submit the **confirmation form** on our website?
+
+**3. Check Timeline**
+• Submitted Monday-Friday? → 24-48 hours
+• Submitted Friday evening? → May take until Monday
+• Submitted during weekend? → Processed Monday morning
+• Submitted during holidays? → May take 3-4 days
+
+**🗓️ Time Guidelines:**
+
+| Submitted | Expected Approval |
+|-----------|-------------------|
+| Monday-Thursday morning | Next business day |
+| Thursday evening | Friday or Monday |
+| Friday | Monday |
+| Weekend | Monday |
+| Public holiday | Next business day |
+
+**❗ Still Waiting After 3+ Days?**
+
+**Contact Support:**
+📧 **Email:** support@marriageducation.com  
+**Include:**
+• Your full name
+• Phone number used for payment
+• Email address for order
+• Payment reference code
+• Screenshot of MOMO confirmation
+• Date & time of payment
+
+⏰ **Response Time:** 6-12 hours (business days)
+
+**OR Check Status:**
+📍 <a href="payment-pending.html" class="marriage-chat-link">Check Payment Status →</a>  
+(Enter your ref code to see current status)
+
+**🔍 Common Delay Reasons:**
+
+1. **Missing reference code** - Harder to match payment
+2. **Wrong amount sent** - Requires manual verification
+3. **Confirmation form not submitted** - We don't know about your payment
+4. **Weekend submission** - Processed Mondaymorning
+5. **High volume periods** - Extra 24 hours during promotions
+
+**💡 Pro Tips:**
+
+✅ Always submit confirmation form immediately after payment
+✅ Save transaction ID and reference code
+✅ Take screenshot of MOMO confirmation
+✅ Add our email to safe senders list
+
+**🚨 Emergency Contact:**
+If urgent (after 4+ days): admin@marriageducation.com  
+Subject: "URGENT: Payment Pending - [Your Reference Code]"
+
+📍 <a href="resend-link.html" class="marriage-chat-link">Resend Download Link →</a>  
+📍 <a href="contact.html" class="marriage-chat-link">Contact Form →</a>
+
+**Other Payment Help?**  
+Type: "How to pay with MOMO" or "Download link issues"`
+    },
+    
+    downloadExpired: {
+        keywords: ['download expired', 'link expired', 'cant download', 'download not working', 'need new link', 'link not working', 'download limit', 'link invalid'],
+        response: `📥 **Download Link Issues - Quick Solutions**
+
+**🔍 Common Issues & Fixes:**
+
+**❌ "Link has expired"**
+• Links are valid for **7 days** after approval
+• After 7 days, need to request new link
+
+**❌ "Download limit reached"**
+• Maximum **5 downloads** per purchase
+• If you need more, explain why to support
+
+**❌ "Link not found / 404 error"**
+• Link may be typed incorrectly
+• Check spam folder for original email
+• Request new link
+
+**✅ Request New Download Link:**
+
+**Step 1:** Visit <a href="resend-link.html" class="marriage-chat-link">Resend Download Link</a>
+
+**Step 2:** Enter Details
+• Email address used for purchase
+• Payment reference code (PMT-ABC-1234)
+• Product name purchased
+
+**Step 3:** Submit Request
+• Automated system sends new link immediately
+• Check email (including spam)
+• New link valid for 7 more days
+
+**⏱️ Processing Time:** Immediate (automated)
+
+**💡 Pro Tips:**
+
+✅ **Download immediately** after approval
+✅ **Save files to computer** (don't rely on link)
+✅ **Backup to cloud** (Google Drive, Dropbox, etc.)
+✅ **Don't share links** (violates terms, only 5 downloads)
+
+**📱 Recommended Workflow:**
+
+1. Receive approval email
+2. Download immediately to computer
+3. Save to Google Drive/Dropbox
+4. Access from any device anytime
+5. No need to worry about expiry!
+
+**📚 What's Included in Downloads:**
+
+**Books:**
+• PDF format (high quality)
+• Mobile-friendly
+• Print-ready (if you want physical copy)
+• Lifetime access once downloaded
+
+**Courses:**
+• Access link (not download)
+• Login credentials
+• Lifetime access to course portal
+• No expiry on course access
+
+**🆘 Still Can't Download?**
+
+**Option 1: Automated Resend**
+📍 <a href="resend-link.html" class="marriage-chat-link">Resend Link (Instant) →</a>
+
+**Option 2: Email Support**
+📧 support@marriageducation.com  
+**Include:**
+• Your email
+• Payment reference code
+• Product purchased
+• Specific error message
+
+**Option 3: Technical Help**
+📧 tech@marriageducation.com  
+For technical download issues (slow, corrupted file, etc.)
+
+**⚠️ Lost Your Reference Code?**
+Check your:
+1. Email confirmation when you paid
+2. Payment pending email
+3. Bank/MOMO transaction history
+4. Contact support with your email & phone number
+
+📍 <a href="contact.html" class="marriage-chat-link">Contact Form →</a>
+
+**Other Issues?**  
+Type: "Payment still pending" or "Can't access course"`
+    },
+    
+    // === COURSE RECOMMENDATIONS ===
+    beginnerCourses: {
+        keywords: ['beginner', 'first course', 'where to start', 'entry level', 'newbie', 'best course for beginners', 'new to marriage education', 'never taken course', 'starting point'],
+        response: `🎯 **Best Courses & Books for Beginners**
+
+Start your journey here!
+
+**🥇 #1 RECOMMENDED: Sexual Literacy 101** - $25
+• ⏱️ 90 minutes (short & digestible)
+• ⭐ Most popular entry course (thousands of students)
+• 💡 Perfect introduction to biblical sexuality
+• ✅ No prerequisites needed
+• 🎓 Great foundation for deeper courses
+• 🔥 Highest satisfaction rating
+
+**Why start here?**  
+Everything else builds on sexual literacy. This gives you the framework to understand our entire methodology.
+
+**🥈 #2: SBD for Dummies (Book)** - $27
+• 📖 Easy-to-read book format
+• 🎯 Entry-level guide
+• ⚡ Quick overview of SBD framework
+• 💰 Most affordable starting point
+• 📱 PDF format (read on any device)
+
+**🥉 #3: The Teleios Blueprint** - $247
+• 🏆 Most comprehensive identity course
+• ⭐ **FREE for ambassadors** (normally $247)
+• 📚 6 weeks of thorough training
+• 🎓 Foundational certificate
+• 💡 Foundation School requirement
+
+**💰 Budget-Friendly Path:**
+
+**Under $50:**
+1. Sexual Literacy 101 ($25)
+2. SBD for Dummies book ($27)
+**Total: $52** - Perfect starter bundle
+
+**$100-$200 Budget:**
+1. Sexual Literacy 101 ($25)
+2. Identity Mastery ($149)
+3. SBD for Dummies ($27)
+**Total: $201** - Excellent foundation
+
+**$300+ Budget (Best Value):**
+1. Sexual Literacy 101 ($25)
+2. The Teleios Blueprint ($247)
+3. SBD Compendium book ($34.99)
+4. Another book of choice ($24.99-$29.99)
+**Total: ~$332** - Complete beginner package
+
+**🎁 OR Become an Ambassador:**
+• Pay only 15,000 FCFA (~$25)
+• Get Teleios Blueprint FREE ($247 value)
+• Get Foundation School FREE
+• Start earning 10% commissions
+• Best ROI option!
+
+**📚 Book-Only Path:**
+
+If you prefer reading first:
+1. **SBD for Dummies** ($27) - Start here
+2. **SBD Compendium** ($34.99) - Framework overview
+3. **SBD Standard** ($24.99) - Core principles
+4. **Then decide** on courses
+
+**Bundle: All 3 for $79.99** (save $16.98)
+
+**❓ Still Not Sure?**
+
+**I can help! Tell me:**
+• Your budget?
+• Your situation (single/engaged/married)?
+• Your goal (personal growth/better intimacy/leadership)?
+• Time commitment (quick course vs. intensive)?
+
+**Or try these:**
+• Type: "Best course for couples"
+• Type: "I'm engaged, what do I need?"
+• Type: "Best books for singles"
+
+📍 <a href="courses.html" class="marriage-chat-link">Browse All Courses →</a>
+📍 <a href="shop.html" class="marriage-chat-link">Browse Books →</a>
+📍 <a href="ambassador-register.html" class="marriage-chat-link">Become Ambassador (Best Value!) →</a>`
+    },
+    
+    courseContinued Selection: {
+        keywords: ['help me choose', 'which course', 'recommend course', 'what course should', 'course advice', 'need recommendation', 'cant decide', 'confused', 'what to buy'],
+        response: `🤔 **Let's Find Your Perfect Course!**
+
+I'll ask a few questions to give you the best recommendation.
+
+**1️⃣ Your Relationship Status?**
+A) Single (never married)
+B) Engaged or dating seriously
+C) Married (newlywed - under 5 years)
+D) Married (5+ years)
+E) Divorced or separated
+
+**2️⃣ Your Budget?**
+A) Under $50 (entry-level)
+B) $100-$300 (mid-range)
+C) $500-$1,000 (comprehensive)
+D) $1,000+ (full mastery/certification)
+
+**3️⃣ Your Primary Goal?**
+A) Personal identity & development
+B) Understanding biblical sexuality
+C) Improving communication in marriage
+D) Better sexual intimacy
+E) Leadership & teaching others
+F) Parenting & family
+
+**4️⃣ Learning Style Preference?**
+A) Quick intro (under 2 hours)
+B) Short course (2-4 weeks)
+C) Thorough training (6-12 weeks)
+D) Reading (books)
+E) Combination (books + courses)
+
+**💬 Or Just Chat With Me:**
+
+Tell me in your own words what you're looking for, like:
+• "I'm engaged and need premarital prep"
+• "We've been married 10 years, intimacy is stale"
+• "I want to become a marriage counselor"
+• "I'm single, working on myself first"
+• "I want the complete education, cost doesn't matter"
+
+**🚀 Quick Recommendations (Popular Choices):**
+
+<button onclick="selectMarriageCourse('Best course for engaged couples')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 0.5rem; color: white; cursor: pointer; margin: 0.25rem; font-size: 0.9rem;">💍 Engaged Couples</button>
+
+<button onclick="selectMarriageCourse('Best course for married couples')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 0.5rem; color: white; cursor: pointer; margin: 0.25rem; font-size: 0.9rem;">❤️ Married Couples</button>
+
+<button onclick="selectMarriageCourse('Best course for singles')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 0.5rem; color: white; cursor: pointer; margin: 0.25rem; font-size: 0.9rem;">🙋 Singles</button>
+
+<button onclick="selectMarriageCourse('Leadership and counselor courses')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 0.5rem; color: white; cursor: pointer; margin: 0.25rem; font-size: 0.9rem;">👨‍🏫 Leaders/Counselors</button>
+
+<button onclick="selectMarriageCourse('Budget-friendly options under $100')" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 0.5rem; color: white; cursor: pointer; margin: 0.25rem; font-size: 0.9rem;">💰 Budget Options</button>
+
+📍 <a href="courses.html" class="marriage-chat-link">Browse All Courses →</a>
+
+**I'm here to help - just tell me what you need!** 😊`
+    },
+
+    bundleDeals: {
+        keywords: ['bundle', 'bundles', 'package deal', 'save money', 'discount', 'combo', 'deals', 'special offer', 'bulk purchase'],
+        response: `💰 **Bundle Deals & Packages (Save Up To $96!)**
+
+Get more for less with our curated bundles.
+
+**📚 BOOK BUNDLES:**
+
+**💎 Complete SBD Library** - $189.99
+• **Regular:** $254.91 → **Save $64.92** (26% off)
+• **What's Included:**
+  ✅ All 10 SBD Series books
+  ✅ SBD Compendium (navigator)
+  ✅ SBD for Dummies (entry guide)
+  ✅ SBD Standard + Canonical
+  ✅ Real Couples, Heart of Relationship
+  ✅ Unequally Yoked
+  ✅ SBD 2: Impregnable Assemblage
+  ✅ Marriage = Sexuality
+  🎁 BONUS: Implementation guide (PDF)
+  🎁 BONUS: Early access to new books
+• **Best For:** Counselors, serious students, leaders
+
+**🎨 Arts of Marriage Collection** - $59.99
+• **Regular:** $74.97 → **Save $14.98** (20% off)
+• **What's Included:**
+  ✅ The Art of Sexuality
+  ✅ The Art of Seduction
+  ✅ The Art of Fucking
+  🎁 BONUS: Private Facebook group
+  🎁 BONUS: Monthly Q&A (3 months)
+• **Best For:** Married couples seeking intimacy mastery
+
+**📖 SBD Beginner Bundle** -$79.99
+• **Regular:** $87.97 → **Save $7.98** (9% off)
+• **What's Included:**
+  ✅ SBD for Dummies
+  ✅ SBD Compendium
+  ✅ SBD Standard
+• **Best For:** New students starting their SBD journey
+
+**🎓 BOOK + COURSE BUNDLES:**
+
+**📚 SBD Complete Package** - $417
+• **Regular:** $450+ → **Save $33+**
+• **What's Included:**
+  ✅ Full SBD Online Course (13 modules, $300 value)
+  ✅ SBD for Dummies eBook (PDF)
+  ✅ SBD for Dummies Print Book (shipped)
+  🎁 BONUS: Course completion certificate
+  🎁 BONUS: Lifetime course updates
+  🎁 BONUS: Private student community
+  🎁 BONUS: 3 months live Q&A sessions
+• **Best For:** Those wanting complete learning experience
+
+**🎯 COURSE BUNDLES (Coming Soon):**
+
+We're preparing special course bundles:
+• School 1 Complete (all 13 Teleios courses)
+• School 2 Complete (all 15 Sexual Literacy courses)
+• Marriage Essentials Bundle (Communication + System Design + Conflict)
+• Premarital Bundle (Identity + Sexual Literacy + Communication)
+
+**💡 Want to be notified?**
+📧 Email: info@marriageducation.com  
+Subject: "Notify me of course bundles"
+
+**💎 DIGITAL + PRINT OPTIONS:**
+
+**SBD for Dummies Bundle** - $40
+• **Regular:** $47 → **Save $7**
+• **What's Included:**
+  ✅ Digital eBook (instant PDF)
+  ✅ Premium print book (shipped)
+  🎁 BONUS: Mobile-friendly format
+  🎁 BONUS: Lifetime digital updates
+
+**🎊 HOW TO GET BUNDLES:**
+
+**Step 1:** Visit <a href="shop.html#bundles" class="marriage-chat-link">Bundle Section</a>
+
+**Step 2:** Choose your bundle
+
+**Step 3:** Complete purchase (MTN MOMO)
+
+**Step 4:** Receive all items together
+• Books: Download links sent after approval
+• Courses: Access credentials sent immediately
+• Print books: Shipped within 3-5 days
+
+**💡 Bundle Benefits:**
+
+✅ **Save money** (up to 26% off)
+✅ **Complete collections** (don't miss anything)
+✅ **Curated by experts** (perfect combinations)
+✅ **Better learning** (complementary materials)
+✅ **One payment** (easier transaction)
+
+**🎁 Custom Bundles Available:**
+
+Want a specific combination not listed? 
+📧 Email: bundle@marriageducation.com  
+We can create custom packages for:
+• Churches (bulk orders for members)
+• Counseling practices (complete practitioner package)
+• Study groups (group discounts)
+• Corporate/institutional orders
+
+📍 <a href="shop.html#bundles" class="marriage-chat-link">View All Bundles →</a>
+📍 <a href="contact.html" class="marriage-chat-link">Request Custom Bundle →</a>
+
+**Questions?**  
+Type: "What's the best bundle for beginners?" or "Do you offer group discounts?"`
+    },
+    
+    // === GENERAL FAQ ===
+    contact: {
+        keywords: ['contact', 'support', 'email', 'phone', 'help', 'reach you', 'get in touch', 'customer service', 'talk to someone'],
+        response: `📞 **Contact Marriage Education**
+
+**📧 MAIN SUPPORT:**
+**Email:** support@marriageducation.com  
+**For:** General questions, course help, payment issues  
+**Response Time:** 24-48 hours (business days)
+
+**💼 AMBASSADOR SUPPORT:**
+**Email:** ambassadors@marriageducation.com  
+**For:** Ambassador questions, commission inquiries, team support  
+**Response Time:** 12-24 hours
+
+**⚙️ TECHNICAL SUPPORT:**
+**Email:** tech@marriageducation.com  
+**For:** Website issues, download problems, login errors  
+**Response Time:** 24 hours
+
+**💳 PAYMENT/ADMIN:**
+**Email:** admin@marriageducation.com  
+**For:** Payment approvals, refunds, billing questions  
+**Response Time:** 24-48 hours
+
+**🎓 COURSE CONTENT QUESTIONS:**
+**Email:** courses@marriageducation.com  
+**For:** Course material questions, curriculum inquiries  
+**Response Time:** 48 hours
+
+**📱 SOCIAL MEDIA:**
+📘 **Facebook:** @MarriageEducation  
+📸 **Instagram:** @marriageeducation  
+🐦 **Twitter:** @MarriageEd  
+➡️ **Response Time:** 1-2 business days (DM only)
+
+**📝 CONTACT FORM:**
+📍 <a href="contact.html" class="marriage-chat-link">Fill Online Form →</a>  
+For detailed questions (we'll route to right department)
+
+**🚨 EMERGENCY CONTACT:**
+If genuinely urgent (system down, critical payment issue):
+**Email:** urgent@marriageducation.com  
+Subject: "URGENT: [Brief Description]"
+
+**⏰ BUSINESS HOURS:**
+Monday-Friday: 9:00 AM - 6:00 PM (GMT+1)  
+Closed: Weekends & Public Holidays
+
+**💡 BEFORE CONTACTING:**
+Check if your answer is here:
+• Type: "Payment pending"
+• Type: "Download link expired"
+• Type: "Ambassador login help"
+• Type: "How to become ambassador"
+
+**📍 OFFICE LOCATION:**
+Douala, Cameroon  
+(No walk-in support - email/online only)
+
+**🎯 WHAT TO INCLUDE IN YOUR EMAIL:**
+
+For faster support, always include:
+✅ Your full name
+✅ Email used for account/order
+✅ Reference code (if applicable)
+✅ Specific issue description
+✅ Screenshots (if relevant)
+✅ What you've already tried
+
+**🎁 FEEDBACK & SUGGESTIONS:**
+**Email:** feedback@marriageducation.com  
+We love hearing from you! Share:
+• Course feedback & reviews
+• Content suggestions
+• Website improvement ideas
+• Success stories
+
+📍 <a href="contact.html" class="marriage-chat-link">Contact Form →</a>
+
+**Need Immediate Help?**  
+Type your specific question and I'll do my best to help right now! 😊`
+    },
+    
+    about: {
+        keywords: ['about', 'who are you', 'mission', 'vision', 'what is marriage education', 'who runs this', 'dr coach', 'achu gustave', 'founder'],
+        response: `ℹ️ **About Marriage Education**
+
+**🎯 Our Mission:**
+Building marriages that build nations through biblical framework, practical education, and transformative training.
+
+**📚 What We Do:**
+We're Africa's leading marriage education platform offering:
+• **44 courses** across 4 comprehensive schools
+• **12+ books** on biblical sexuality & marriage
+• **Foundation School** (6-week CRLA certification)
+• **Ambassador network** (earn while you learn)
+• **Complete SBD methodology** (Sex by Design framework)
+
+**👨‍🏫 Founder: Dr. Coach Achu Gustave**
+Biblical marriage educator, relationship coach, and developer of the Sex by Design (SBD) framework - a revolutionary approach to understanding intimacy and covenant marriage from a biblical perspective.
+
+**🌟 Our Framework: Sex By Design (SBD)**
+A biblical, scientific, and practical model that transforms how couples understand:
+• Identity & purpose in marriage
+• Sexual intimacy as covenant expression
+• Communication & conflict resolution
+• Building generational legacy
+• Marriage as nation-building force
+
+**📊 Our Impact:**
+• Thousands of students worldwide
+• 500+ ambassadors earning income
+• 44 comprehensive courses
+• 12+ published books
+• CRLA certification program
+• 4 complete schools of learning
+
+**🏫 Our 4 Schools:**
+
+1️⃣ **Teleios Personal Development** (13 courses)
+• Identity, wholeness, human design
+• Foundation: The Teleios Blueprint
+
+2️⃣ **Sexual Literacy** (15 courses)
+• Biblical sexuality framework
+• Our most popular school
+• Entry: Sexual Literacy 101 ($25)
+
+3️⃣ **Marriage Systems** (8 courses)
+• Practical marriage building
+• Communication, systems, governance
+
+4️⃣ **Civilization & Leadership** (8 courses)
+• Nation-building through marriage
+• Parenting, legacy, cultural impact
+
+**💼 Our Ambassador Network:**
+We believe in compensating those who share our message:
+• Regular Ambassadors (10% commission)
+• Senior Ambassadors (+ 5% override)
+• Regional Directors (+ network override)
+• Earn $200-$40,000+/month potential
+
+**🌍 Our Reach:**
+• Based in: Cameroon, Africa
+• Serving: Global community
+• Languages: English (French coming soon)
+• Delivery: 100% online courses
+
+**❤️ Our Values:**
+✅ Biblical truth expressed practically
+✅ Excellence in education & content
+✅ Accessibility (entry courses at $25)
+✅ Community (not just information)
+✅ Results (transformation, not theory)
+✅ Generational thinking (beyond individual)
+
+**🎓 Credentials:**
+• CRLA (Certified Relationship & Life Advocate) program
+• Certification courses available
+• Professional development for counselors
+• Church partnership programs
+
+**📞 Contact Us:**
+📧 info@marriageducation.com  
+📱 Social: @MarriageEducation
+
+📍 <a href="about.html" class="marriage-chat-link">Read Full Story →</a>
+📍 <a href="courses.html" class="marriage-chat-link">Browse Courses →</a>
+📍 <a href="ambassador-register.html" class="marriage-chat-link">Join Our Mission →</a>
+
+**Want to know more?**  
+Type: "Tell me about SBD framework" or "How did this start?"`
+    },
+    
+    // === DEFAULT/CATCH-ALL ===
+    helpGeneral: {
+        keywords: ['help', 'guide', 'how', 'what', 'where', 'when', 'why', 'can you', 'do you', 'please'],
+        response: `😊 **I'm Here To Help!**
+
+I can assist you with:
+
+**🎓 COURSES & SCHOOLS:**
+• "Best course for beginners?"
+• "Tell me about School 2"
+• "Sexual Literacy 101 details"
+• "Most popular courses"
+• "Help me choose a course"
+
+**📚 BOOKS & RESOURCES:**
+• "Browse all books"
+• "SBD book series"
+• "Bundle deals"
+• "Bestselling books"
+
+**💼 AMBASSADOR PROGRAM:**
+• "How to become ambassador?"
+• "How much can I earn?"
+• "Ambassador login help"
+• "What is Senior Ambassador?"
+• "Regional Director info"
+
+**💳 PAYMENT & SUPPORT:**
+• "How to pay with MOMO?"
+• "Payment still pending"
+• "Download link expired"
+• "Check payment status"
+
+**🏫 SPECIFIC SCHOOLS:**
+• "School 1 Teleios courses"
+• "School 2 Sexual Literacy"
+• "School 3 Marriage Systems"
+• "School 4 Civilization"
+• "Foundation School program"
+
+**🎯 RECOMMENDATIONS:**
+• "Best for engaged couples"
+• "Best for singles"
+• "Budget-friendly options"
+• "Advanced courses"
+• "Leadership training"
+
+**📞 CONTACT:**
+• "Contact support"
+• "Email address"
+• "Talk to someone"
+
+**🔍 OR:**
+Click any school above to see courses, or use the quick action buttons!
+
+**Just type your question in plain English** - I'm designed to understand natural conversation! 😊
+
+📍 <a href="courses.html" class="marriage-chat-link">Browse Courses →</a>
+📍 <a href="shop.html" class="marriage-chat-link">Shop Books →</a>
+📍 <a href="contact.html" class="marriage-chat-link">Contact Us →</a>`
+    }
+};
+
+// Get Intelligent Response (Keyword Matching)
+function getMarriageIntelligentResponse(userMessage) {
+    const message = userMessage.toLowerCase().trim();
+    
+    // Check keywords in knowledge base
+    for (const [category, data] of Object.entries(marriageKnowledge)) {
+        for (const keyword of data.keywords) {
+            const regex = new RegExp(`\\b${keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+            if (regex.test(message)) {
+                return data.response;
+            }
+        }
+    }
+    
+    // Default helpful response
+    return marriageKnowledge.helpGeneral.response;
+}
+</script>
