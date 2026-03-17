@@ -15,7 +15,7 @@
         // Inject chatbot HTML into page
         const chatbotHTML = `
 <!-- Marriage Education Intelligent Assistant -->
-<button id="marriage-chat-toggle" style="position: fixed; bottom: 2rem; right: 2rem; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); cursor: pointer; z-index: 9998; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;" aria-label="Open marriage education assistant">
+<button id="marriage-chat-toggle" style="position: fixed; bottom: 2rem; right: 2rem; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); border: none; box-shadow: 0 8px 24px rgba(9, 132, 227, 0.4); cursor: pointer; z-index: 9998; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;" aria-label="Open marriage education assistant">
     <svg width="28" height="28" fill="white" viewBox="0 0 20 20">
         <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
         <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
@@ -23,7 +23,7 @@
 </button>
 
 <div id="marriage-chat-window" style="position: fixed; bottom: 2rem; right: 2rem; width: 440px; max-width: calc(100vw - 2rem); height: 650px; max-height: calc(100vh - 2rem); background: rgba(10, 14, 39, 0.98); backdrop-filter: blur(20px); border-radius: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); display: none; flex-direction: column; z-index: 9999; overflow: hidden;" aria-hidden="true">
-    <div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between;">
+    <div style="padding: 1.5rem; background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between;">
         <div>
             <h3 style="color: white; font-size: 1.125rem; font-weight: 700; margin: 0;">Marriage Education Assistant</h3>
             <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.8rem; margin: 0.25rem 0 0;">Your guide to courses, books & programs</p>
@@ -43,7 +43,7 @@
     </div>
     
     <div id="marriage-chat-messages" style="flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
-        <div style="background: rgba(102, 126, 234, 0.1); border-left: 3px solid #667eea; padding: 1.25rem; border-radius: 0.75rem;">
+        <div style="background: rgba(116, 185, 255, 0.1); border-left: 3px solid #74b9ff; padding: 1.25rem; border-radius: 0.75rem;">
             <p style="color: white; font-size: 0.95rem; line-height: 1.7; margin: 0 0 1rem 0;">
                 👋 <strong>Welcome to Marriage Education!</strong><br><br>
                 I can help you find the perfect course, book, or program. Try asking:
@@ -60,7 +60,7 @@
     <div style="padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.6);">
         <div style="display: flex; gap: 0.75rem; align-items: center;">
             <input type="text" id="marriage-chat-input" placeholder="Ask about courses, books, or ambassadors..." style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 0.875rem 1rem; color: white; font-size: 0.95rem; outline: none;" />
-            <button id="marriage-chat-send" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 0.75rem; padding: 0.875rem 1.25rem; color: white; font-weight: 600; cursor: pointer;" aria-label="Send message">
+            <button id="marriage-chat-send" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); border: none; border-radius: 0.75rem; padding: 0.875rem 1.25rem; color: white; font-weight: 600; cursor: pointer;" aria-label="Send message">
                 Send
             </button>
         </div>
@@ -70,10 +70,10 @@
 <style>
     #marriage-chat-messages::-webkit-scrollbar { width: 6px; }
     #marriage-chat-messages::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
-    #marriage-chat-messages::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.5); border-radius: 10px; }
-    #marriage-chat-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #667eea; }
-    #marriage-chat-toggle:hover { transform: scale(1.05); box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5); }
-    #marriage-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+    #marriage-chat-messages::-webkit-scrollbar-thumb { background: rgba(116, 185, 255, 0.5); border-radius: 10px; }
+    #marriage-chat-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #74b9ff; }
+    #marriage-chat-toggle:hover { transform: scale(1.05); box-shadow: 0 12px 32px rgba(9, 132, 227, 0.5); }
+    #marriage-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(116, 185, 255, 0.4); }
     #marriage-chat-close:hover, #marriage-chat-reset:hover { background: rgba(255, 255, 255, 0.1); }
     @keyframes marriageTypingDot {
         0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
@@ -162,7 +162,7 @@
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.style.cssText = sender === 'user' 
-                ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.875rem 1rem; border-radius: 0.75rem; max-width: 80%; align-self: flex-end; margin-left: auto;'
+                ? 'background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); padding: 0.875rem 1rem; border-radius: 0.75rem; max-width: 80%; align-self: flex-end; margin-left: auto;'
                 : 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.875rem 1rem; border-radius: 0.75rem; max-width: 90%;';
             
             const textContent = document.createElement('div');
@@ -177,7 +177,7 @@
         // Format message
         function formatMessage(text) {
             return text
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #a78bfa; text-decoration: underline;" target="_blank">$1</a>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #74b9ff; text-decoration: underline;" target="_blank">$1</a>')
                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
                 .replace(/\n\n/g, '<br><br>')
                 .replace(/\n/g, '<br>');
@@ -191,9 +191,9 @@
             typingDiv.innerHTML = `
                 <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Typing</span>
                 <div style="display: flex; gap: 0.25rem;">
-                    <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite;"></span>
-                    <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.2s;"></span>
-                    <span style="width: 6px; height: 6px; background: #667eea; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.4s;"></span>
+                    <span style="width: 6px; height: 6px; background: #74b9ff; border-radius: 50%; animation: marriageTypingDot 1.4s infinite;"></span>
+                    <span style="width: 6px; height: 6px; background: #74b9ff; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.2s;"></span>
+                    <span style="width: 6px; height: 6px; background: #74b9ff; border-radius: 50%; animation: marriageTypingDot 1.4s infinite 0.4s;"></span>
                 </div>
             `;
             marriageChatMessages.appendChild(typingDiv);
