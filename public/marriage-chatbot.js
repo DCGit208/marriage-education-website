@@ -49,10 +49,10 @@
                 I can help you find the perfect course, book, or program. Try asking:
             </p>
             <div style="display: grid; gap: 0.5rem;">
-                <div style="color: rgba(255,255,255,0.8); font-size: 0.875rem;">🎓 "Best course for beginners?"</div>
-                <div style="color: rgba(255,255,255,0.8); font-size: 0.875rem;">💼 "How do I become an ambassador?"</div>
-                <div style="color: rgba(255,255,255,0.8); font-size: 0.875rem;">📚 "Show me the books"</div>
-                <div style="color: rgba(255,255,255,0.8); font-size: 0.875rem;">💳 "Payment help"</div>
+                <button class="quick-action-btn" data-query="Best course for beginners?" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">🎓 "Best course for beginners?"</button>
+                <button class="quick-action-btn" data-query="How do I become an ambassador?" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">💼 "How do I become an ambassador?"</button>
+                <button class="quick-action-btn" data-query="Show me the books" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">📚 "Show me the books"</button>
+                <button class="quick-action-btn" data-query="Show me bundles to save money" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">💎 "Show me bundles to save money"</button>
             </div>
         </div>
     </div>
@@ -75,13 +75,18 @@
     #marriage-chat-toggle:hover { transform: scale(1.05); box-shadow: 0 12px 32px rgba(0, 184, 148, 0.5); }
     #marriage-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4); }
     #marriage-chat-close:hover, #marriage-chat-reset:hover { background: rgba(255, 255, 255, 0.1); }
+    .quick-action-btn:hover { background: rgba(0,184,148,0.2) !important; border-color: rgba(0,184,148,0.5) !important; transform: translateX(4px); }
+    .suggested-btn { display: inline-block; background: rgba(0,184,148,0.15); border: 1px solid rgba(0,184,148,0.4); padding: 0.45rem 0.9rem; margin: 0.25rem; border-radius: 1rem; color: rgba(255,255,255,0.9); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .suggested-btn:hover { background: rgba(0,184,148,0.25); border-color: rgba(0,184,148,0.6); transform: translateY(-1px); }
     @keyframes marriageTypingDot {
         0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
         30% { transform: translateY(-10px); opacity: 1; }
     }
     @media (max-width: 480px) {
-        #marriage-chat-window { width: calc(100vw - 1rem); height: calc(100vh - 1rem); }
+        #marriage-chat-window { width: calc(100vw - 1rem); height: calc(100vh - 1rem); border-radius: 1rem; }
         #marriage-chat-toggle { bottom: 1.5rem; right: 1.5rem; width: 56px; height: 56px; }
+        .quick-action-btn { font-size: 0.8rem !important; padding: 0.4rem 0.6rem !important; }
+        .suggested-btn { font-size: 0.75rem; padding: 0.35rem 0.7rem; }
     }
 </style>
 `;
@@ -115,18 +120,86 @@
         
         if (!marriageChatToggle) return; // Safety check
         
+        // Analytics tracking
+        const analytics = {
+            queries: [],
+            logQuery: function(query, category) {
+                this.queries.push({
+                    query: query,
+                    category: category,
+                    timestamp: new Date().toISOString()
+                });
+                // Keep only last 50 queries (prevent memory bloat)
+                if (this.queries.length > 50) this.queries.shift();
+                // Save to localStorage
+                try {
+                    localStorage.setItem('marriage-chat-analytics', JSON.stringify(this.queries.slice(-20)));
+                } catch(e) {}
+            },
+            getPopularTopics: function() {
+                const topics = {};
+                this.queries.forEach(q => {
+                    topics[q.category] = (topics[q.category] || 0) + 1;
+                });
+                return topics;
+            }
+        };
+        
+        // Load previous analytics if available
+        try {
+            const saved = localStorage.getItem('marriage-chat-analytics');
+            if (saved) analytics.queries = JSON.parse(saved);
+        } catch(e) {}
+        
+        // Session persistence - restore conversation on page reload
+        function saveSession() {
+            try {
+                localStorage.setItem('marriage-chat-session', JSON.stringify({
+                    context: marriageConversationContext,
+                    timestamp: Date.now()
+                }));
+            } catch(e) {}
+        }
+        
+        function loadSession() {
+            try {
+                const saved = localStorage.getItem('marriage-chat-session');
+                if (saved) {
+                    const session = JSON.parse(saved);
+                    // Only restore if less than 2 hours old
+                    if (Date.now() - session.timestamp < 7200000) {
+                        marriageConversationContext = session.context;
+                        return true;
+                    }
+                }
+            } catch(e) {}
+            return false;
+        }
+        
+        // Load saved session on init
+        const sessionRestored = loadSession();
+        if (sessionRestored && marriageConversationContext.messageCount > 0) {
+            addMessage('👋 Welcome back! I remember our previous conversation. How can I help you today?', 'bot');
+        }
+        
         // Open/Close functions
         function openChat() {
             marriageChatWindow.style.display = 'flex';
             marriageChatToggle.style.display = 'none';
             marriageChatWindow.setAttribute('aria-hidden', 'false');
             marriageChatInput.focus();
+            
+            // Track chat open
+            analytics.logQuery('_CHAT_OPENED', 'system');
         }
         
         function closeChat() {
             marriageChatWindow.style.display = 'none';
             marriageChatToggle.style.display = 'flex';
             marriageChatWindow.setAttribute('aria-hidden', 'true');
+            
+            // Save session on close
+            saveSession();
         }
         
         // Event Listeners
@@ -135,6 +208,15 @@
         marriageChatSend.addEventListener('click', handleSendMessage);
         marriageChatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSendMessage();
+        });
+        
+        // Quick action buttons
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const query = this.getAttribute('data-query');
+                marriageChatInput.value = query;
+                handleSendMessage();
+            });
         });
         
         marriageChatReset.addEventListener('click', () => {
@@ -150,7 +232,12 @@
                 situation: null,
                 lastCategory: null
             };
+            // Clear session
+            try {
+                localStorage.removeItem('marriage-chat-session');
+            } catch(e) {}
             addMessage('✨ Conversation reset! How can I help you today?', 'bot');
+            analytics.logQuery('_CHAT_RESET', 'system');
         });
         
         // Handle sending messages
@@ -168,6 +255,9 @@
                 const response = getIntelligentResponse(userMessage);
                 addMessage(response, 'bot');
                 marriageConversationContext.messageCount++;
+                
+                // Save session after each interaction
+                saveSession();
             }, 800);
         }
         
@@ -840,40 +930,61 @@ I'll give you the PERFECT recommendation! 🎯`
                 for (const keyword of data.keywords) {
                     if (message.includes(keyword.toLowerCase())) {
                         marriageConversationContext.lastCategory = categoryName;
+                        
+                        // Track analytics
+                        analytics.logQuery(userMessage, categoryName);
+                        
                         return addFollowUp(data.response, categoryName);
                     }
                 }
             }
             
             // Default response
+            analytics.logQuery(userMessage, 'general');
             return addFollowUp(marriageKnowledge.general.response, 'general');
         }
         
-        // Add contextual follow-up suggestions
+        // Add contextual follow-up suggestions with clickable buttons
         function addFollowUp(response, category) {
             // Don't add follow-ups to certain categories
             if (['followup', 'wizard', 'general'].includes(category)) {
                 return response;
             }
             
-            const followUps = {
-                'courses': '\n\n💡 **Next:** Want to save money? Ask "Show me bundles" or need help choosing? Say "Help me decide"',
-                'books': '\n\n💡 **Next:** Want courses too? Ask "What courses?" or see bundles: "Show me bundle deals"',
-                'bundles': '\n\n💡 **Next:** Ready to buy? Ask "How do I pay?" or compare: "What\'s the difference?"',
-                'coaching': '\n\n💡 **Next:** Want to start with courses first? Ask "What courses?" or see pricing: "Show me prices"',
-                'magazine': '\n\n💡 **Next:** Also want courses? Ask "Show courses" or books: "What books do you have?"',
-                'ambassador': '\n\n💡 **Next:** Compare options: "Ambassador vs student?" or see what you get: "Show Foundation School"',
-                'situations': '\n\n💡 **Next:** See all options: "Show me bundles" or get help: "I need help choosing"',
-                'pricing': '\n\n💡 **Next:** See best deals: "Show bundles" or compare: "Course vs book?"',
-                'faqs': '\n\n💡 **Next:** Ready to choose? "Help me decide" or see pricing: "How much does it cost?"',
-                'payment': '\n\n💡 **Next:** Need help choosing? "Recommend a course" or see bundles: "Show me deals"',
-                'corporate': '\n\n💡 **Next:** Want details? Contact us via 💬 WhatsApp or 📞 Call above',
-                'comparison': '\n\n💡 **Next:** Made your choice? "How do I pay?" or need more help? "Help me choose"'
+            const followUpButtons = {
+                'courses': ['Show me bundles', 'Help me decide', 'How do I pay?'],
+                'books': ['What courses?', 'Show bundle deals', 'Best for beginners?'],
+                'bundles': ['How do I pay?', 'Compare courses', 'Lifetime pass vs bundle'],
+                'coaching': ['What courses?', 'Show me prices', 'How do I pay?'],
+                'magazine': ['Show courses', 'What books?', 'Show bundles'],
+                'ambassador': ['Ambassador vs student?', 'Show Foundation School', 'How do I apply?'],
+                'situations': ['Show me bundles', 'Help me choose', 'I need coaching'],
+                'pricing': ['Show bundles', 'Course vs book?', 'Payment plans?'],
+                'faqs': ['Help me decide', 'How much?', 'Show bundles'],
+                'payment': ['Recommend a course', 'Show deals', 'Ambassador program?'],
+                'corporate': ['Contact coaching', 'Show courses', 'Bulk pricing?'],
+                'comparison': ['How do I pay?', 'Help me choose', 'Show bundles']
             };
             
-            const followUp = followUps[category] || '\n\n💡 **Next:** Ask me anything else! Try "Show bundles", "Help me choose", or "What\'s the difference?"';
+            const buttons = followUpButtons[category] || ['Show bundles', 'Help me choose', 'What courses?'];
             
-            return response + followUp;
+            // Create clickable button HTML
+            const buttonHTML = buttons.map(btn => 
+                `<button class="suggested-btn" data-query="${btn}">${btn}</button>`
+            ).join(' ');
+            
+            return response + `\n\n💡 **Quick Actions:**\n<div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${buttonHTML}</div>`;
         }
+        
+        // Handle clicks on suggested buttons (delegated event handling)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('suggested-btn')) {
+                const query = e.target.getAttribute('data-query');
+                if (query) {
+                    marriageChatInput.value = query;
+                    handleSendMessage();
+                }
+            }
+        });
     }
 })();
