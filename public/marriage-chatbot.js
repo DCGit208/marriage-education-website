@@ -93,10 +93,15 @@
     }
     
     function initChatbotFunctions() {
-        // Conversation context
+        // Conversation context with enhanced memory
         let marriageConversationContext = {
             lastSchool: null,
-            messageCount: 0
+            messageCount: 0,
+            topicsDiscussed: [],
+            interests: [],
+            budget: null,
+            situation: null,
+            lastCategory: null
         };
         
         // DOM Elements
@@ -136,7 +141,15 @@
             const welcomeMsg = marriageChatMessages.children[0];
             marriageChatMessages.innerHTML = '';
             marriageChatMessages.appendChild(welcomeMsg);
-            marriageConversationContext = { lastSchool: null, messageCount: 0 };
+            marriageConversationContext = { 
+                lastSchool: null, 
+                messageCount: 0,
+                topicsDiscussed: [],
+                interests: [],
+                budget: null,
+                situation: null,
+                lastCategory: null
+            };
             addMessage('✨ Conversation reset! How can I help you today?', 'bot');
         });
         
@@ -665,15 +678,159 @@ Become an **Ambassador** for $25 → Earn 10% on all sales!
 
 [View All Pricing](courses.html)
 [See Bundle Deals](courses.html#bundles)`
+            },
+            
+            comparison: {
+                keywords: ['difference between', 'vs', 'versus', 'compare', 'which is better', 'or', 'should i get', 'what\'s better', 'course vs book', 'book or course'],
+                response: `⚖️ **Comparison Guide**
+
+**📚 SBD Book vs 🎓 SBD Course:**
+• **Book** ($27): Read at your pace, no exercises, immediate access
+• **Course** ($300): 13 weeks, video lessons, exercises, exams, certificate, book included
+• **Best**: Course if you want transformation + certificate
+
+**💼 Ambassador vs 🎓 Student:**
+• **Ambassador** ($25): Get Foundation School FREE + earn 10% commissions
+• **Student** ($247): Pay for Foundation School, no commissions
+• **Best**: Ambassador route saves $222 AND you earn!
+
+**📖 Magazine vs 📚 Books:**
+• **Magazine** (subscription): Ongoing content, 3x/year, community stories
+• **Books**: One-time purchase, deep-dive specific topics, reference material
+• **Best**: Both! Magazine for fresh content, books for depth
+
+**🎯 Single Course vs 💎 Bundle:**
+• **Single course**: $99-$697 each
+• **Bundle**: $299-$399 for 4+ courses (save 60-67%!)
+• **Best**: Bundle if you want complete training in one area
+
+**🔥 Coaching vs 🎓 Courses:**
+• **Coaching** ($150/hr): 1-on-1 personalized help, immediate crisis support
+• **Courses**: Self-paced learning, lifetime access, no pressure
+• **Best**: Coaching for crisis/urgency, courses for self-study
+
+**🌟 Lifetime Pass vs 💎 Bundles:**
+• **Lifetime** ($1,997): ALL 44+ courses forever + future releases
+• **Bundles** ($299-$399): Specific topic focus (4 courses each)
+• **Best**: Lifetime if you want EVERYTHING, bundles for targeted learning
+
+**School 1 vs School 2 vs School 3 vs School 4:**
+• **School 1 (Teleios)**: Personal identity & development
+• **School 2 (Sexual Literacy)**: Biblical sexuality & intimacy
+• **School 3 (Marriage Systems)**: Communication & governance
+• **School 4 (Civilization)**: Leadership & nation-building
+• **Best**: Start School 2 if married, School 1 if single
+
+Need specific comparison? Ask me! "What's the difference between [X] and [Y]?"`
+            },
+            
+            wizard: {
+                keywords: ['recommend', 'recommendation', 'help me choose', 'what should i', 'not sure', 'guide me', 'confused', 'dont know', 'undecided'],
+                response: `🧙‍♂️ **Let Me Guide You - Answer These Questions:**
+
+**1️⃣ What's your current situation?**
+• Single/Dating
+• Engaged (getting married soon)
+• Newlywed (married <2 years)
+• Married 2-10 years
+• Married 10+ years
+• Struggling/Crisis
+
+**2️⃣ What's your main goal?**
+• Better intimacy/sexuality
+• Improve communication
+• Rebuild trust
+• Personal growth/identity
+• Leadership/impact
+• Save my marriage (urgent)
+
+**3️⃣ What's your budget?**
+• Under $50 (budget-conscious)
+• $50-$300 (moderate investment)
+• $300-$900 (serious commitment)
+• $1,000+ (want everything)
+
+**4️⃣ Learning style preference?**
+• Books (read at my pace)
+• Video courses (structured learning)
+• 1-on-1 coaching (personal help)
+• Weekend intensive (fast breakthrough)
+• Magazine (ongoing content)
+
+**Just tell me your answers!** Example:
+"I'm married 5 years, want better communication, budget $200, prefer video courses"
+
+I'll give you the PERFECT recommendation! 🎯`
+            },
+            
+            followup: {
+                keywords: ['what else', 'anything else', 'what next', 'more', 'tell me more', 'continue', 'and'],
+                response: `💡 **Great question! Here are your next steps:**
+
+**Based on what we discussed, you might also want to know about:**
+
+📚 **Related Resources:**
+• Check our bundles to save money (up to 67% off!)
+• See if becoming an ambassador makes sense ($25 = FREE Foundation School + earn commissions)
+• Preview our magazine subscription (200K+ readers)
+
+🎯 **Smart Next Actions:**
+• Ready to purchase? [View payment options](payment.html)
+• Want personalized help? [Contact us via WhatsApp](https://wa.me/237677604100)
+• Need more time? [Browse all courses](courses.html)
+
+❓ **Common Follow-Up Questions:**
+• "How do I pay?"
+• "What's the difference between X and Y?"
+• "Show me bundle deals"
+• "I need help choosing"
+• "Can I talk to someone?"
+
+**What would you like to explore next?** 🌟`
             }
         };
         
-        // Get intelligent response with priority matching
+        // Get intelligent response with priority matching and memory
         function getIntelligentResponse(userMessage) {
             const message = userMessage.toLowerCase().trim();
             
-            // Priority order: check situations first (most specific), then other categories
-            const priorityOrder = ['situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
+            // Track topics discussed for context
+            const topicDetection = {
+                'course': 'courses',
+                'book': 'books',
+                'bundle': 'bundles',
+                'ambassador': 'ambassador',
+                'magazine': 'magazine',
+                'coach': 'coaching',
+                'price': 'pricing',
+                'engaged': 'engaged',
+                'budget': 'budget'
+            };
+            
+            // Detect and track interests
+            for (const [keyword, topic] of Object.entries(topicDetection)) {
+                if (message.includes(keyword) && !marriageConversationContext.topicsDiscussed.includes(topic)) {
+                    marriageConversationContext.topicsDiscussed.push(topic);
+                }
+            }
+            
+            // Detect budget mentions
+            if (message.match(/\$?\d+/)) {
+                const matches = message.match(/\$?(\d+)/);
+                if (matches) marriageConversationContext.budget = parseInt(matches[1]);
+            }
+            
+            // Detect situation
+            if (message.includes('engaged') || message.includes('getting married')) {
+                marriageConversationContext.situation = 'engaged';
+            } else if (message.includes('struggling') || message.includes('crisis')) {
+                marriageConversationContext.situation = 'crisis';
+            } else if (message.includes('single') || message.includes('dating')) {
+                marriageConversationContext.situation = 'single';
+            }
+            
+            // Priority order: check specific features first
+            const priorityOrder = ['wizard', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
             
             // Check categories in priority order
             for (const categoryName of priorityOrder) {
@@ -682,13 +839,41 @@ Become an **Ambassador** for $25 → Earn 10% on all sales!
                 
                 for (const keyword of data.keywords) {
                     if (message.includes(keyword.toLowerCase())) {
-                        return data.response;
+                        marriageConversationContext.lastCategory = categoryName;
+                        return addFollowUp(data.response, categoryName);
                     }
                 }
             }
             
             // Default response
-            return marriageKnowledge.general.response;
+            return addFollowUp(marriageKnowledge.general.response, 'general');
+        }
+        
+        // Add contextual follow-up suggestions
+        function addFollowUp(response, category) {
+            // Don't add follow-ups to certain categories
+            if (['followup', 'wizard', 'general'].includes(category)) {
+                return response;
+            }
+            
+            const followUps = {
+                'courses': '\n\n💡 **Next:** Want to save money? Ask "Show me bundles" or need help choosing? Say "Help me decide"',
+                'books': '\n\n💡 **Next:** Want courses too? Ask "What courses?" or see bundles: "Show me bundle deals"',
+                'bundles': '\n\n💡 **Next:** Ready to buy? Ask "How do I pay?" or compare: "What\'s the difference?"',
+                'coaching': '\n\n💡 **Next:** Want to start with courses first? Ask "What courses?" or see pricing: "Show me prices"',
+                'magazine': '\n\n💡 **Next:** Also want courses? Ask "Show courses" or books: "What books do you have?"',
+                'ambassador': '\n\n💡 **Next:** Compare options: "Ambassador vs student?" or see what you get: "Show Foundation School"',
+                'situations': '\n\n💡 **Next:** See all options: "Show me bundles" or get help: "I need help choosing"',
+                'pricing': '\n\n💡 **Next:** See best deals: "Show bundles" or compare: "Course vs book?"',
+                'faqs': '\n\n💡 **Next:** Ready to choose? "Help me decide" or see pricing: "How much does it cost?"',
+                'payment': '\n\n💡 **Next:** Need help choosing? "Recommend a course" or see bundles: "Show me deals"',
+                'corporate': '\n\n💡 **Next:** Want details? Contact us via 💬 WhatsApp or 📞 Call above',
+                'comparison': '\n\n💡 **Next:** Made your choice? "How do I pay?" or need more help? "Help me choose"'
+            };
+            
+            const followUp = followUps[category] || '\n\n💡 **Next:** Ask me anything else! Try "Show bundles", "Help me choose", or "What\'s the difference?"';
+            
+            return response + followUp;
         }
     }
 })();
