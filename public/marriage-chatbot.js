@@ -366,10 +366,8 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 
 **Investment:** $150/hour (bundles available)
 
-**Contact Options:**
-📧 [Email: orders@marriageducation.com](mailto:orders@marriageducation.com?subject=Private%20Coaching%20Inquiry)
-💬 [WhatsApp: +237 677 604 100](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20SBD%20Private%20Coaching)
-📞 [Call: +237 677 604 100](tel:+237677604100)
+**Contact Us:**
+[📧 Email](mailto:orders@marriageducation.com?subject=Private%20Coaching%20Inquiry) | [💬 WhatsApp](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20SBD%20Private%20Coaching) | [📞 Call](tel:+237677604100)
 
 ---
 
@@ -384,14 +382,12 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 
 **Investment:** From $899/couple (venue dependent)
 
-**Contact Options:**
-📧 [Email: orders@marriageducation.com](mailto:orders@marriageducation.com?subject=SBD%20Marriage%20Lab%20Registration)
-💬 [WhatsApp: +237 677 604 100](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20the%20SBD%20Marriage%20Lab)
-📞 [Call: +237 677 604 100](tel:+237677604100)
+**Contact Us:**
+[📧 Email](mailto:orders@marriageducation.com?subject=SBD%20Marriage%20Lab%20Registration) | [💬 WhatsApp](https://wa.me/237677604100?text=Hi%2C%20I%27m%20interested%20in%20the%20SBD%20Marriage%20Lab) | [📞 Call](tel:+237677604100)
 
 ---
 
-**Not sure which option?** Reach us via email, WhatsApp, or phone!
+**Need guidance?** Click any icon above to reach us!
 
 [View All Coaching Options](courses.html#premium-support)`
             },
@@ -401,20 +397,18 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
                 response: `📞 **Contact Us**
 
 **Main Support:**
-📧 support@marriageducation.com
-💬 WhatsApp: [+237 677 604 100](https://wa.me/237677604100)
-📞 Call: [+237 677 604 100](tel:+237677604100)
+[📧 Email](mailto:support@marriageducation.com) | [💬 WhatsApp](https://wa.me/237677604100) | [📞 Call](tel:+237677604100)
 ⏰ Response: 24-48 hours
 
 **Ambassador Support:**
-📧 ambassadors@marriageducation.com
+[📧 Email](mailto:ambassadors@marriageducation.com)
 ⏰ Response: 12-24 hours
 
 **Payment/Admin:**
-📧 admin@marriageducation.com
+[📧 Email](mailto:admin@marriageducation.com)
 
 **Technical Issues:**
-📧 tech@marriageducation.com
+[📧 Email](mailto:tech@marriageducation.com)
 
 **Business Hours:**
 Monday-Friday: 9 AM - 6 PM (GMT+1)
