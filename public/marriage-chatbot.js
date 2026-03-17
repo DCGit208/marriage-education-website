@@ -392,6 +392,151 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 [View All Coaching Options](courses.html#premium-support)`
             },
             
+            bundles: {
+                keywords: ['bundle', 'bundles', 'package', 'deal', 'deals', 'save money', 'discount', 'best value', 'save', 'savings', 'combo', 'everything', 'all courses', 'lifetime', 'lifetime access'],
+                response: `💎 **Course Bundles - MASSIVE Savings!**
+
+**🔥 Sexual Mastery Bundle** - $399
+Save $793 (67% off!) | Value: $1,192
+
+**Includes:**
+• The Art of Sexuality ($397)
+• The Art of Seduction ($347)
+• The Art of Nakedness ($199)
+• Sexual Imagination Course ($249)
+[Get Bundle](payment.html?product=bundle-sexual-mastery&price=399)
+
+---
+
+**🎯 Teleios Development Bundle** - $299
+Save $445 (60% off!) | Value: $744
+
+**Includes:**
+• The Teleios Blueprint ($247)
+• Identity Mastery ($149)
+• The Heart of Relationship ($149)
+• Four Faculties Training ($199)
+[Get Bundle](payment.html?product=bundle-teleios&price=299)
+
+---
+
+**💼 Marriage Governance Bundle** - $349
+Save $545 (61% off!) | Value: $894
+
+**Includes:**
+• Marriage System Design ($297)
+• Covenant Governance ($249)
+• Daily Liturgies of Marriage ($149)
+• Communication Mastery ($199)
+[Get Bundle](payment.html?product=bundle-marriage-governance&price=349)
+
+---
+
+**🌟 ULTIMATE: Lifetime Access Pass** - $1,997
+ALL courses (current + future) + books + lifetime membership!
+
+[View All Bundles](courses.html#bundles)`
+            },
+            
+            magazine: {
+                keywords: ['magazine', 'subscription', 'subscribe', 'publication', 'articles', 'reading', 'content', 'sbd magazine', 'quarterly', 'monthly'],
+                response: `📖 **SBD Magazine - World's #1 Biblical Marriage Publication**
+
+**Join 200,000+ Couples Worldwide!**
+
+**What You Get:**
+✓ 200+ pages per issue
+✓ 3 issues per year
+✓ Expert articles & real transformation stories
+✓ Practical guides & exercises
+✓ Digital + Print options available
+✓ Ships to 50+ countries
+
+**Why Subscribe?**
+• Cutting-edge insights on biblical sexuality
+• Real couple testimonials
+• Expert guidance from Dr. Coach
+• Comprehensive marriage education
+
+**Special Offer:**
+🎁 Get FREE sample issue to preview!
+
+[View Magazine Details](magazine.html)
+[Get Free Sample](magazine.html#free-sample)
+[Subscribe Now](magazine.html#subscription)`
+            },
+            
+            corporate: {
+                keywords: ['corporate', 'business', 'company', 'enterprise', 'bulk', 'bulk order', 'team', 'workplace', 'hr', 'employee', 'organization', 'church', 'group'],
+                response: `🏢 **Corporate Training Programs**
+
+**Transform Your Workplace with Professional Marriage Education**
+
+**Perfect For:**
+• HR departments & wellness programs
+• Churches & ministry groups
+• Corporate team building
+• Employee benefits packages
+• Bulk orders for organizations
+
+**Benefits:**
+✅ Reduce workplace conflict
+✅ Boost employee retention & satisfaction
+✅ Enhance team dynamics
+✅ Custom training packages
+✅ Volume discounts available
+✅ Dedicated account manager
+
+**Program Options:**
+• **Bronze**: Basic course access (10+ licenses)
+• **Silver**: Training + support (25+ licenses)
+• **Gold**: Full suite + coaching (50+ licenses)
+
+**Industries We Serve:**
+Tech companies, healthcare, education, ministry, government
+
+**Contact Us:**
+[📧 Email](mailto:orders@marriageducation.com?subject=Corporate%20Training%20Inquiry) | [💬 WhatsApp](https://wa.me/237677604100?text=Hi%2C%20interested%20in%20corporate%20training) | [📞 Call](tel:+237677604100)
+
+[View Corporate Programs](corporate.html)`
+            },
+            
+            situations: {
+                keywords: ['engaged', 'engaged couple', 'getting married', 'about to marry', 'wedding', 'premarital', 'pre-marriage', 'struggling', 'problems', 'fighting', 'argue', 'divorce', 'considering divorce', 'crisis', 'budget', 'cheap', 'affordable', 'cant afford', 'expensive', 'single', 'not married', 'dating', 'newlywed', 'just married', 'married years', 'intimacy issues', 'sex problems', 'communication problems', 'trust issues', 'infidelity', 'affair'],
+                response: `🎯 **Let me recommend the perfect solution for your situation:**
+
+**💍 Engaged/Getting Married?**
+Start with: **Sexual Literacy 101** ($25) or **SBD for Dummies Course** ($300)
+[View Pre-Marriage Options](courses.html)
+
+**🆘 Struggling/Crisis?**
+Get help now: **Private Coaching** ($150/hr) or **Marriage Lab** ($899)
+[📧 Email](mailto:orders@marriageducation.com?subject=Urgent%20Help%20Needed) | [💬 WhatsApp](https://wa.me/237677604100?text=Need%20urgent%20marriage%20help) | [📞 Call](tel:+237677604100)
+
+**💰 On a Budget?**
+Best value: **Sexual Literacy 101** ($25) or **SBD Dummies Book** ($27)
+Want everything later? Become **Ambassador** ($25) → Get Foundation School FREE!
+[Budget Options](shop.html)
+
+**👤 Single/Dating?**
+Build foundation: **Teleios Blueprint** ($247) or **Identity Mastery** ($149)
+[Personal Development Courses](courses.html)
+
+**💑 Newlywed?**
+Perfect start: **Sexual Literacy 101** ($25) + **Communication Course** ($199)
+[Newlywed Packages](courses.html)
+
+**🔥 Intimacy/Bedroom Issues?**
+Get: **Sexual Mastery Bundle** ($399, saves $793!) includes all sexuality courses
+[View Sexual Mastery Bundle](courses.html#bundles)
+
+**💬 Communication Problems?**
+Try: **Communication for Covenant Couples** ($199)
+[View Communication Courses](courses.html)
+
+Tell me more about your situation for a personalized recommendation!`
+            },
+            
             contact: {
                 keywords: ['contact', 'support', 'email', 'phone', 'reach', 'customer service', 'assistance'],
                 response: `📞 **Contact Us**
@@ -424,28 +569,117 @@ I can assist with:
 
 🎓 **Courses** - Find the right program
 📚 **Books** - Browse our library
+� **Bundles** - Save BIG on packages (up to 67% off!)
+📖 **Magazine** - Subscribe to SBD Magazine
 💝 **Coaching/Counseling** - Get personal help
-💼 **Ambassadors** - Start earning
+💼 **Ambassadors** - Start earning commissions
+🏢 **Corporate** - Training for businesses/churches
 💳 **Payments** - Status & help
 🎓 **Foundation School** - 6-week program
 🔑 **Login** - Access your account
 
+**Smart Recommendations:**
+• "I'm engaged"
+• "We're struggling"
+• "On a budget"
+• "Want everything"
+• "Intimacy issues"
+
 **Quick Questions:**
 • "Best course for beginners?"
+• "Show me bundles to save money"
 • "I need counseling help"
-• "How much can ambassadors earn?"
-• "Show me the books"
+• "How do I subscribe to the magazine?"
 
-Just type your question!`
+Just type your question - I'll help you find exactly what you need!`
+            },
+            
+            faqs: {
+                keywords: ['refund', 'guarantee', 'return', 'cancel', 'expire', 'lifetime', 'access', 'download', 'format', 'biblical', 'christian', 'for singles', 'for couples', 'certificate', 'certified', 'accredited'],
+                response: `❓ **Frequently Asked Questions**
+
+**Do courses expire?**
+✅ No! All courses include **LIFETIME ACCESS** - study at your own pace forever.
+
+**Can I get a refund?**
+✅ Yes! **30-day money-back guarantee** on all digital products.
+
+**Is this biblical/Christian?**
+✅ Absolutely! All content is **covenant-anchored** and biblically sound.
+
+**For singles or couples?**
+✅ **Both!** Singles: Teleios courses. Couples: Sexual Literacy & Marriage courses.
+
+**Do I get a certificate?**
+✅ Yes! Certificates provided upon course completion.
+
+**What format are books/courses?**
+✅ Books: Digital (PDF) + Print options. Courses: Video lessons + workbooks.
+
+**Can I cancel my magazine subscription?**
+✅ Yes, cancel anytime. No questions asked.
+
+**Is my payment secure?**
+✅ Yes! We use MTN Mobile Money (local) or Stripe (international) - both secure.
+
+**Do you ship internationally?**
+✅ Yes! We ship books/magazines to **50+ countries**.
+
+**Can I share course access?**
+✅ Courses are for personal use. Want to share? Check our [Corporate Programs](corporate.html)!
+
+More questions? Ask away!`
+            },
+            
+            pricing: {
+                keywords: ['price', 'cost', 'how much', 'pricing', 'under', 'less than', 'cheap', 'cheapest', 'most expensive', 'compare prices', 'what costs'],
+                response: `💰 **Price Guide**
+
+**BUDGET-FRIENDLY (Under $50):**
+• Sexual Literacy 101 - **$25** ⭐ Best beginner value
+• Ambassador Registration - **$25** (includes FREE Foundation School!)
+• SBD for Dummies book - **$27**
+• SBD Standard book - **$24.99**
+
+**MID-RANGE ($50-$300):**
+• Single courses - **$99-$299**
+• Most books - **$27-$35**
+• Book bundles - **$60-$190**
+• SBD for Dummies Course - **$300** (book included)
+
+**PREMIUM ($300-$900):**
+• Course bundles - **$299-$399** (save 60-67%!)
+• Advanced courses - **$397-$697**
+• Marriage Lab weekend - **$899/couple**
+
+**ULTIMATE:**
+• **Lifetime Access Pass** - **$1,997** (ALL courses forever!)
+
+**MAXIMUM SAVINGS:**
+💎 **Sexual Mastery Bundle** - $399 (saves $793!)
+💎 **Teleios Bundle** - $299 (saves $445!)
+💎 **Marriage Governance Bundle** - $349 (saves $545!)
+
+**Want to earn instead?**
+Become an **Ambassador** for $25 → Earn 10% on all sales!
+
+[View All Pricing](courses.html)
+[See Bundle Deals](courses.html#bundles)`
             }
         };
         
-        // Get intelligent response
+        // Get intelligent response with priority matching
         function getIntelligentResponse(userMessage) {
             const message = userMessage.toLowerCase().trim();
             
-            // Check keywords in knowledge base
-            for (const [category, data] of Object.entries(marriageKnowledge)) {
+            // Priority order: check situations first (most specific), then other categories
+            const priorityOrder = ['situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
+            
+            // Check categories in priority order
+            for (const categoryName of priorityOrder) {
+                const data = marriageKnowledge[categoryName];
+                if (!data) continue;
+                
                 for (const keyword of data.keywords) {
                     if (message.includes(keyword.toLowerCase())) {
                         return data.response;
