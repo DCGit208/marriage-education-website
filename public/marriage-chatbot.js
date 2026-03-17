@@ -351,8 +351,47 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 [Ambassador Dashboard](ambassador-dashboard.html)`
             },
             
+            coaching: {
+                keywords: ['coaching', 'counseling', 'help', 'crisis', 'struggling', 'marriage problems', 'therapy', 'counselor', '1:1', 'one on one', 'private help', 'personal help', 'couples help', 'marriage help', 'need help', 'intensive', 'breakthrough'],
+                response: `💝 **Need Personal Help? We're Here.**
+
+**🎯 SBD Private Coaching — 1:1 with Dr. Coach**
+**Best for:** Individuals or couples needing *precision* help, not generic advice
+
+**What You Get:**
+✅ Deep diagnostic using SBD & Teleios framework
+✅ Custom practice plan (6-12 weeks)
+✅ Between-session support (email/WhatsApp)
+✅ 60-minute sessions (video/phone)
+
+**Investment:** $150/hour (bundles available)
+
+📧 [Apply for Private Coaching](mailto:orders@marriageducation.com?subject=Private%20Coaching%20Inquiry)
+
+---
+
+**🔥 SBD Marriage Labs — Weekend Intensives**
+**Best for:** Couples needing breakthrough in 48 hours
+
+**What You Experience:**
+✅ 2 days of teaching + labs + guided conversations
+✅ Sexual literacy labs (covenant-anchored)
+✅ Personal development integration
+✅ Follow-up group calls after retreat
+
+**Investment:** From $899/couple (venue dependent)
+
+📧 [Join Next Marriage Lab](mailto:orders@marriageducation.com?subject=SBD%20Marriage%20Lab%20Registration)
+
+---
+
+**Not sure which option?** Email orders@marriageducation.com with your situation.
+
+[View All Coaching Options](courses.html#premium-support)`
+            },
+            
             contact: {
-                keywords: ['contact', 'support', 'help', 'email', 'phone', 'reach', 'customer service', 'assistance'],
+                keywords: ['contact', 'support', 'email', 'phone', 'reach', 'customer service', 'assistance'],
                 response: `📞 **Contact Us**
 
 **Main Support:**
@@ -376,13 +415,14 @@ Monday-Friday: 9 AM - 6 PM (GMT+1)
             },
             
             general: {
-                keywords: ['hello', 'hi', 'hey', 'help', 'what', 'how', 'where', 'when', 'about', 'info'],
+                keywords: ['hello', 'hi', 'hey', 'what', 'how', 'where', 'when', 'about', 'info'],
                 response: `👋 **How Can I Help?**
 
 I can assist with:
 
 🎓 **Courses** - Find the right program
 📚 **Books** - Browse our library
+💝 **Coaching/Counseling** - Get personal help
 💼 **Ambassadors** - Start earning
 💳 **Payments** - Status & help
 🎓 **Foundation School** - 6-week program
@@ -390,9 +430,9 @@ I can assist with:
 
 **Quick Questions:**
 • "Best course for beginners?"
+• "I need counseling help"
 • "How much can ambassadors earn?"
 • "Show me the books"
-• "Payment help"
 
 Just type your question!`
             }
