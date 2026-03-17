@@ -209,17 +209,28 @@
         const marriageKnowledge = {
             courses: {
                 keywords: ['course', 'courses', 'class', 'learn', 'study', 'beginner', 'start', 'first course', 'entry level', 'school 1', 'school 2', 'school 3', 'school 4'],
-                response: `🎓 **Our Courses**
+                response: `🎓 **Best Course for Beginners**
 
-We have **44 courses** across 4 schools:
+⭐ **Sex By Design For Dummies** - $300
+The Complete Marriage Handbook for Human Flourishing
+
+**Why Start Here:**
+✅ 13-week comprehensive program
+✅ Most complete marriage framework
+✅ Book included (PDF)
+✅ Video lessons + exercises
+✅ Lifetime access
+✅ Certificate upon completion
+
+**Our Full Course Library (44 courses):**
 
 **School 1: Teleios** (13 courses, $99-$697)
 • Personal development & identity
-• Start: The Teleios Blueprint ($247)
+• The Teleios Blueprint ($247)
 
 **School 2: Sexual Literacy** (15 courses, $25-$897)
-• ⭐ Most popular: Sexual Literacy 101 ($25)
 • Biblical sexuality framework
+• Budget option: Sexual Literacy 101 ($25)
 
 **School 3: Marriage Systems** (8 courses, $149-$349)
 • Communication & practical marriage
@@ -228,8 +239,6 @@ We have **44 courses** across 4 schools:
 **School 4: Civilization** (8 courses, $179-$697)
 • Leadership & nation-building
 • Marriage Builds Nations ($299)
-
-**Best for beginners:** Sexual Literacy 101 ($25, 90 min)
 
 [View All Courses](courses.html)`
             },
