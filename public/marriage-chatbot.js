@@ -550,6 +550,57 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
 [Ambassador Login](ambassador-login.html)`
             },
             
+            professional: {
+                keywords: ['become a counselor', 'marriage counselor', 'marriage educator', 'professional training', 'certification', 'teach marriage', 'career in marriage', 'work in marriage education', 'get trained', 'become certified', 'professional', 'train to teach', 'become a coach', 'marriage profession', 'career counseling'],
+                response: `🎓 **Become a Marriage Education Professional**
+
+**Path 1: Marriage Education Ambassador** 💼
+• Complete Foundation School (6 weeks)
+• Get CRLA certified to share courses
+• Earn 10% commissions + help couples
+• Investment: $25 (Foundation FREE)
+• **Start earning while learning**
+
+[Apply as Ambassador](ambassador-register.html)
+
+---
+
+**Path 2: Professional Counselor/Coach** 🏆
+• Complete all 4 Schools (44+ courses)
+• Get Lifetime Pass for comprehensive training
+• Deep mastery of SBD & Teleios frameworks
+• Contact us for advanced certification options
+• Investment: $1,997 (Lifetime Access)
+
+**Specialized Training:**
+✅ Sexual Literacy framework
+✅ Covenant-anchored counseling
+✅ Personal development integration
+✅ Communication systems
+
+📞 **Call for Professional Track:** +1-469-503-9898
+
+---
+
+**Path 3: Corporate/Group Facilitator** 🏢
+• Bulk licensing for organizations
+• Train teams, churches, communities
+• Custom curriculum support
+• Ongoing facilitator resources
+
+💬 **WhatsApp for Corporate:** [Contact Us](https://wa.me/+14695039898?text=Hi%2C%20I%27m%20interested%20in%20professional%20marriage%20education%20training)
+
+---
+
+**Recommended Start:**
+1️⃣ Foundation School → Learn framework
+2️⃣ Ambassador Program → Practice & earn
+3️⃣ Advanced Courses → Deepen expertise
+4️⃣ Professional Certification → Contact us
+
+[View All Courses](courses.html) | [Become Ambassador](ambassador-register.html)`
+            },
+            
             payment: {
                 keywords: ['payment', 'pay', 'momo', 'mtn', 'mobile money', 'pending', 'approved', 'how to pay', 'payment method'],
                 response: `💳 **Payment Help**
@@ -1079,7 +1130,7 @@ I'll give you the PERFECT recommendation! 🎯`
             }
             
             // Priority order: check specific features first
-            const priorityOrder = ['wizard', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
+            const priorityOrder = ['wizard', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'professional', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
             
             // Check categories in priority order
             for (const categoryName of priorityOrder) {
@@ -1115,6 +1166,7 @@ I'll give you the PERFECT recommendation! 🎯`
                 'books': ['What courses?', 'Show bundle deals', 'Best for beginners?'],
                 'bundles': ['How do I pay?', 'Compare courses', 'Lifetime pass vs bundle'],
                 'coaching': ['What courses?', 'Show me prices', 'How do I pay?'],
+                'professional': ['Become ambassador', 'Show all courses', 'Get lifetime pass'],
                 'magazine': ['Show courses', 'What books?', 'Show bundles'],
                 'ambassador': ['Ambassador vs student?', 'Show Foundation School', 'How do I apply?'],
                 'situations': ['Show me bundles', 'Help me choose', 'I need coaching'],
