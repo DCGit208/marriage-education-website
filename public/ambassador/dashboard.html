@@ -385,6 +385,202 @@
             text-align: right;
             font-weight: 600;
             color: #00b894;
+            font-size: 0.85rem;
+            max-width: 180px;
+        }
+
+        /* Portfolio Combo Table — Multi-Product Milestone Tracker */
+        .milestone-item {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .milestone-top-row {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .milestone-status-text {
+            margin-top: 0.65rem;
+            font-size: 0.93rem;
+            color: #2d3436;
+            padding: 0.4rem 0.25rem;
+        }
+
+        .milestone-progress-wrap {
+            margin: 0.65rem 0 0;
+            background: #e0e0e0;
+            border-radius: 9999px;
+            height: 9px;
+            overflow: hidden;
+        }
+
+        .milestone-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffc107, #00b894);
+            border-radius: 9999px;
+            transition: width 0.6s ease;
+        }
+
+        .milestone-progress-label {
+            font-size: 0.78rem;
+            color: #636e72;
+            margin-top: 0.25rem;
+        }
+
+        .portfolio-combo-table {
+            margin-top: 0.85rem;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            padding-top: 0.6rem;
+        }
+
+        .combo-table-header {
+            display: grid;
+            grid-template-columns: 2fr 3fr 2fr;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #b2bec3;
+            padding: 0.3rem 0.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 0.2rem;
+        }
+
+        .portfolio-combo-row {
+            display: grid;
+            grid-template-columns: 2fr 3fr 2fr;
+            gap: 0.5rem;
+            padding: 0.45rem 0.5rem;
+            border-radius: 6px;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .portfolio-combo-row:hover {
+            background: rgba(0,0,0,0.03);
+        }
+
+        .portfolio-combo-row.best-combo {
+            background: rgba(0,184,148,0.08);
+            border: 1px solid rgba(0,184,148,0.2);
+        }
+
+        .combo-label {
+            font-weight: 700;
+            color: #2d3436;
+            font-size: 0.85rem;
+        }
+
+        .combo-desc {
+            color: #636e72;
+            font-size: 0.8rem;
+        }
+
+        .combo-commission {
+            text-align: right;
+            font-weight: 700;
+            color: #00b894;
+            font-size: 0.9rem;
+        }
+
+        .portfolio-combo-row.best-combo .combo-commission {
+            color: #00b894;
+        }
+
+        /* Senior Leadership Leverage Section */
+        .leverage-section {
+            margin-top: 1rem;
+            border-top: 2px dashed rgba(108,92,231,0.25);
+            padding-top: 1rem;
+        }
+
+        .leverage-section-header {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6c5ce7;
+            margin-bottom: 0.85rem;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .leverage-scenario {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0.85rem;
+            border-radius: 8px;
+            background: #f8f7ff;
+            border: 1px solid rgba(108,92,231,0.12);
+            margin-bottom: 0.6rem;
+        }
+
+        .leverage-scenario-icon {
+            font-size: 1.5rem;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .leverage-scenario-body {
+            flex: 1;
+        }
+
+        .leverage-scenario-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #2d3436;
+        }
+
+        .leverage-scenario-detail {
+            font-size: 0.78rem;
+            color: #636e72;
+            margin-top: 0.15rem;
+        }
+
+        .leverage-scenario-cut {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #6c5ce7;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .leverage-scenario-cut small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.7rem;
+            color: #b2bec3;
+        }
+
+        .leverage-callout {
+            margin-top: 0.85rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+
+        .leverage-callout .callout-amount {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .leverage-callout .callout-label {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 0.2rem;
+        }
+
+        .leverage-callout .callout-note {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            font-style: italic;
         }
 
         /* Commission Breakdown */
@@ -1413,99 +1609,198 @@
             }
         }
         
-        // Update Milestone Tracker - REAL DATA from Total Units Portfolio
+        // Update Milestone Tracker — Multi-Product Portfolio Deployment Guide
         function updateMilestoneTracker() {
             try {
                 const stats = ambassadorData.firestoreStats || {};
-                
-                // Calculate TOTAL units across all categories
                 const categoryUnits = stats.deployment_by_category || {};
                 const totalUnits = Object.values(categoryUnits).reduce((sum, val) => sum + (val || 0), 0);
-                
-                // Calculate TOTAL earnings
                 const categoryEarnings = stats.revenue_by_category || {};
                 const totalEarnings = Object.values(categoryEarnings).reduce((sum, val) => sum + (val || 0), 0);
-                
+
+                // ─── Commission constants (10% of FCFA price, rate: $1 = 656 FCFA) ───
+                // MFA (Marriage Foundation Access):         15,000 FCFA → 1,500 FCFA
+                // SBD Book (avg $27):                       17,712 FCFA → 1,771 FCFA
+                // School Entry/Standard (avg $75):          49,200 FCFA → 4,920 FCFA
+                // School Flagship / SBD Course ($228):     150,000 FCFA → 15,000 FCFA
+                // School MasterClass (avg $850):           557,600 FCFA → 55,760 FCFA
+                // Diploma Program (avg $2,250):          1,476,000 FCFA → 147,600 FCFA
+                const MFA_COMM        = 1500;
+                const BOOK_COMM       = 1771;
+                const ENTRY_COMM      = 4920;
+                const FLAGSHIP_COMM   = 15000;
+                const MASTERCLASS_COMM= 55760;
+                const DIPLOMA_COMM    = 147600;
+
                 const milestones = [
-                    { 
-                        level: 'Bronze', 
-                        threshold: 50, 
-                        icon: '🥉', 
-                        reward: 'Base Ambassador Status',
-                        emoji: '✅',
-                        description: 'Congratulations! You\'ve reached Bronze status'
+                    {
+                        level: 'Bronze', threshold: 50, icon: '🥉',
+                        description: 'Your first 50 deployments — official Ambassador status unlocked across all 4 SBD Academy schools.',
+                        reward: 'Official Ambassador Badge',
+                        combos: [
+                            { label: '🏛️ MFA Deploy',   desc: '50 × Marriage Foundation Access (community path)',                           commission: 50 * MFA_COMM,                           best: false },
+                            { label: '📚 Book Entry',   desc: '50 × SBD Book (retail path)',                                               commission: 50 * BOOK_COMM,                          best: false },
+                            { label: '⭐ Upsell Entry', desc: '40 × MFA + 10 × School Flagship Course (upsell book buyers into a school)', commission: (40 * MFA_COMM) + (10 * FLAGSHIP_COMM),  best: true  }
+                        ]
                     },
-                    { 
-                        level: 'Silver', 
-                        threshold: 150, 
-                        icon: '🥈', 
+                    {
+                        level: 'Silver', threshold: 150, icon: '🥈',
+                        description: 'Building momentum across 4 schools — exclusive rewards & recognition.',
                         reward: 'Branded T-shirt + Featured Story',
-                        emoji: '⏳',
-                        description: 'Unlock Silver status with exclusive rewards'
+                        combos: [
+                            { label: '🏛️ Community MFA',   desc: '150 × MFA (church / community deployments)',                                       commission: 150 * MFA_COMM,                                 best: false },
+                            { label: '📚 Book Pipeline',   desc: '150 × SBD Book (retail + digital)',                                                 commission: 150 * BOOK_COMM,                                best: false },
+                            { label: '⭐ Upsell Pipeline', desc: '100 × MFA + 50 × School Flagship Course (across Teleios, Sexual Literacy, Marriage Systems, Civilization)', commission: (100 * MFA_COMM) + (50 * FLAGSHIP_COMM), best: true  }
+                        ]
                     },
-                    { 
-                        level: 'Gold', 
-                        threshold: 300, 
-                        icon: '🥇', 
+                    {
+                        level: 'Gold', threshold: 300, icon: '🥇',
+                        description: 'Elite territory — deploying across all 4 SBD Academy schools, VIP access & premium recognition.',
                         reward: 'VIP Launch Event + Featured Content',
-                        emoji: '🔒',
-                        description: 'Elite status with premium benefits'
+                        combos: [
+                            { label: '🔄 Mixed Portfolio', desc: '200 × MFA + 100 × School Flagship (across all 4 schools)',                       commission: (200 * MFA_COMM) + (100 * FLAGSHIP_COMM),                  best: false },
+                            { label: '🎓 4-School Empire', desc: '100 × MFA + 200 × School Flagship (Teleios + Sexual Literacy + Marriage Systems + Civilization)', commission: (100 * MFA_COMM) + (200 * FLAGSHIP_COMM), best: false },
+                            { label: '⭐ Max Revenue',     desc: '50 × MFA + 250 × School Flagship (course-heavy across all schools)',              commission: (50 * MFA_COMM) + (250 * FLAGSHIP_COMM),                   best: true  }
+                        ]
                     },
-                    { 
-                        level: 'Senior Ambassador', 
-                        threshold: 500, 
-                        icon: '💎', 
-                        reward: '10,000 FCFA Bonus + Founding Badge',
-                        emoji: '🔒',
-                        description: 'Ultimate achievement - leadership position'
+                    {
+                        level: 'Senior Ambassador', threshold: 500, icon: '💎', senior: true,
+                        description: '500 personal deployments + recruit & lead 10 ambassadors → your income model changes entirely.',
+                        reward: '10,000 FCFA Bonus + Founding Badge + Leadership Team',
+                        combos: [
+                            { label: '🌍 Volume Builder',  desc: '300 × MFA/Books + 200 × School Flagship (across 4 schools)',                     commission: (300 * MFA_COMM) + (200 * FLAGSHIP_COMM),                  best: false },
+                            { label: '🎓 4-School Empire', desc: '150 × MFA + 350 × School Flagship (course-heavy, multi-school)',                  commission: (150 * MFA_COMM) + (350 * FLAGSHIP_COMM),                  best: false },
+                            { label: '⭐ Max Direct Rev',  desc: '50 × MFA + 450 × School Flagship Courses (maximum course revenue)',               commission: (50 * MFA_COMM) + (450 * FLAGSHIP_COMM),                   best: true  }
+                        ],
+                        // PART 2 — leadership override scenarios (5% on team total sales)
+                        leverageScenarios: [
+                            {
+                                icon: '🌱', label: 'Growing Team',
+                                detail: '10 ambassadors × 1,800,000 FCFA/mo sales each = 18,000,000 FCFA team total',
+                                cut: 900000, cutLabel: 'your 5% override / month'
+                            },
+                            {
+                                icon: '💪', label: 'Strong Team',
+                                detail: '10 ambassadors × 4,000,000 FCFA/mo sales each = 40,000,000 FCFA team total',
+                                cut: 2000000, cutLabel: 'your 5% override / month'
+                            },
+                            {
+                                icon: '🚀', label: 'Elite Team (Target)',
+                                detail: '10 ambassadors × $30,000 USD/mo = 196,800,000 FCFA team total',
+                                cut: 9840000, cutLabel: 'your 5% override / month'
+                            }
+                        ]
                     }
                 ];
-                
+
                 const container = document.getElementById('milestoneTrackerContainer');
                 if (!container) return;
-                
+
                 let html = '';
-                
+
                 milestones.forEach((milestone, index) => {
-                    const achieved = totalUnits >= milestone.threshold;
+                    const achieved  = totalUnits >= milestone.threshold;
                     const isCurrent = !achieved && (index === 0 || totalUnits >= milestones[index - 1].threshold);
-                    const locked = totalUnits < milestone.threshold && !isCurrent;
-                    
                     const statusClass = achieved ? 'achieved' : isCurrent ? 'current' : 'locked';
-                    const statusIcon = achieved ? 'fa-check-circle' : isCurrent ? 'fa-spinner fa-pulse' : 'fa-lock';
-                    
-                    // Calculate earnings for achieved milestones
-                    const milestoneEarnings = achieved ? 
-                        Math.floor((totalEarnings / totalUnits) * milestone.threshold) : 
-                        Math.floor((totalEarnings / totalUnits) * milestone.threshold) || (milestone.threshold * 1500);
-                    
-                    const remaining = milestone.threshold - totalUnits;
-                    
-                    let rewardText = '';
+                    const statusIcon  = achieved ? 'fa-check-circle' : isCurrent ? 'fa-spinner fa-pulse' : 'fa-lock';
+
+                    const prevThreshold = index > 0 ? milestones[index - 1].threshold : 0;
+                    const progressPct   = isCurrent
+                        ? Math.min(100, Math.floor(((totalUnits - prevThreshold) / (milestone.threshold - prevThreshold)) * 100))
+                        : (achieved ? 100 : 0);
+
+                    const remaining  = Math.max(0, milestone.threshold - totalUnits);
+                    const bestCombo  = milestone.combos.find(c => c.best) || milestone.combos[milestone.combos.length - 1];
+
+                    // Status text line
+                    let statusText = '';
                     if (achieved) {
-                        rewardText = `✅ Achieved<br><small>${milestoneEarnings.toLocaleString()} FCFA earned</small>`;
+                        statusText = `✅ <strong>Achieved!</strong> You've reached this level — actual earnings reflect your real portfolio mix: <strong>${totalEarnings.toLocaleString()} FCFA</strong> total earned.`;
                     } else if (isCurrent) {
-                        rewardText = `${remaining} units away<br><small>Next: ${milestoneEarnings.toLocaleString()} FCFA potential</small>`;
+                        statusText = `<strong>${remaining} unit${remaining !== 1 ? 's' : ''} to go.</strong> Best strategy: ${bestCombo.label} → up to <strong>${bestCombo.commission.toLocaleString()} FCFA</strong> commission potential.`;
                     } else {
-                        rewardText = `🔒 Locked<br><small>${milestoneEarnings.toLocaleString()} FCFA potential</small>`;
+                        statusText = `🔒 <strong>Locked.</strong> Best path unlocks up to <strong>${bestCombo.commission.toLocaleString()} FCFA</strong> with the ${bestCombo.label} strategy.`;
                     }
-                    
+
+                    // Progress bar — only on current milestone
+                    const progressBar = isCurrent ? `
+                        <div class="milestone-progress-wrap">
+                            <div class="milestone-progress-fill" style="width: ${progressPct}%"></div>
+                        </div>
+                        <div class="milestone-progress-label">${progressPct}% toward ${milestone.level} &nbsp;·&nbsp; ${totalUnits} / ${milestone.threshold} units deployed</div>
+                    ` : '';
+
+                    // Part 1 combo table (same for all milestones)
+                    const part1Header = milestone.senior
+                        ? `<div class="leverage-section-header" style="color:#636e72; border-color:rgba(0,0,0,0.1);">PART 1 — YOUR PATH TO 500 UNITS &nbsp;(Personal Commission while you build)</div>`
+                        : '';
+
+                    const comboRows = milestone.combos.map(c => `
+                        <div class="portfolio-combo-row${c.best ? ' best-combo' : ''}">
+                            <span class="combo-label">${c.label}${c.best ? ' ⭐' : ''}</span>
+                            <span class="combo-desc">${c.desc}</span>
+                            <span class="combo-commission">${c.commission.toLocaleString()} FCFA</span>
+                        </div>
+                    `).join('');
+
+                    // Part 2 — Senior leverage scenarios only
+                    let leverageHtml = '';
+                    if (milestone.senior && milestone.leverageScenarios) {
+                        const scenarioRows = milestone.leverageScenarios.map(s => `
+                            <div class="leverage-scenario">
+                                <div class="leverage-scenario-icon">${s.icon}</div>
+                                <div class="leverage-scenario-body">
+                                    <div class="leverage-scenario-title">${s.label}</div>
+                                    <div class="leverage-scenario-detail">${s.detail}</div>
+                                </div>
+                                <div class="leverage-scenario-cut">
+                                    ${s.cut.toLocaleString()} FCFA
+                                    <small>${s.cutLabel}</small>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        leverageHtml = `
+                            <div class="leverage-section">
+                                <div class="leverage-section-header">PART 2 — LEADERSHIP OVERRIDE &nbsp;(5% on your team's total sales — this is leverage, not labor)</div>
+                                ${scenarioRows}
+                                <div class="leverage-callout">
+                                    <div class="callout-amount">9,840,000 FCFA / month</div>
+                                    <div class="callout-label">🏆 Senior Ambassador Target Income</div>
+                                    <div class="callout-note">Your 10 ambassadors keep their full 10% commission — you earn 5% on top of their total sales volume. Two income streams, one role.</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
                     html += `
                         <div class="milestone-item ${statusClass}">
-                            <div class="milestone-icon ${statusClass}">
-                                <i class="fas ${statusIcon}"></i>
+                            <div class="milestone-top-row">
+                                <div class="milestone-icon ${statusClass}">
+                                    <i class="fas ${statusIcon}"></i>
+                                </div>
+                                <div class="milestone-details">
+                                    <h3>${milestone.icon} ${milestone.level} — ${milestone.threshold} units</h3>
+                                    <p>${milestone.description}</p>
+                                </div>
+                                <div class="milestone-reward">🎁 ${milestone.reward}</div>
                             </div>
-                            <div class="milestone-details">
-                                <h3>${milestone.icon} ${milestone.level} (${milestone.threshold} units)</h3>
-                                <p>${milestone.description}</p>
+                            ${progressBar}
+                            <div class="milestone-status-text">${statusText}</div>
+                            <div class="portfolio-combo-table">
+                                ${part1Header}
+                                <div class="combo-table-header">
+                                    <span>Strategy</span>
+                                    <span>Product Mix (${milestone.threshold} units total)</span>
+                                    <span>Commission</span>
+                                </div>
+                                ${comboRows}
                             </div>
-                            <div class="milestone-reward">
-                                ${rewardText}
-                            </div>
+                            ${leverageHtml}
                         </div>
                     `;
                 });
-                
+
                 container.innerHTML = html;
                 console.log('✅ Milestone Tracker updated: Total units =', totalUnits, ', Total earnings =', totalEarnings.toLocaleString(), 'FCFA');
             } catch (error) {
