@@ -332,7 +332,7 @@ The Complete Marriage Handbook for Human Flourishing
 • The Teleios Blueprint ($247)
 
 **School 2: Sexual Literacy** (15 courses, $25-$897)
-• Biblical sexuality framework
+• Sexuality education framework
 • Budget option: Sexual Literacy 101 ($25)
 
 **School 3: Marriage Systems** (8 courses, $149-$349)
@@ -543,7 +543,7 @@ ALL courses (current + future) + books + lifetime membership!
             
             magazine: {
                 keywords: ['magazine', 'subscription', 'subscribe', 'publication', 'articles', 'reading', 'content', 'sbd magazine', 'quarterly', 'monthly'],
-                response: `📖 **SBD Magazine - World's #1 Biblical Marriage Publication**
+                response: `📖 **SBD Magazine - World's #1 Marriage Education Publication**
 
 **Join 200,000+ Couples Worldwide!**
 
@@ -556,7 +556,7 @@ ALL courses (current + future) + books + lifetime membership!
 ✓ Ships to 50+ countries
 
 **Why Subscribe?**
-• Cutting-edge insights on biblical sexuality
+• Cutting-edge insights on sexuality
 • Real couple testimonials
 • Expert guidance from Dr. Coach
 • Comprehensive marriage education
@@ -806,7 +806,7 @@ Become an **Ambassador** for $25 → Earn 10% on all sales!
 
 **School 1 vs School 2 vs School 3 vs School 4:**
 • **School 1 (Teleios)**: Personal identity & development
-• **School 2 (Sexual Literacy)**: Biblical sexuality & intimacy
+• **School 2 (Sexual Literacy)**: Sexuality & intimacy
 • **School 3 (Marriage Systems)**: Communication & governance
 • **School 4 (Civilization)**: Leadership & nation-building
 • **Best**: Start School 2 if married, School 1 if single
