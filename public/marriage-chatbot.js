@@ -403,9 +403,17 @@
             
             showTypingIndicator();
             
+            // Adaptive timing: faster for simple queries, normal for complex ones
+            const responseTime = userMessage.length < 20 ? 400 : 500;
+            
             setTimeout(() => {
                 hideTypingIndicator();
+                const startTime = performance.now();
                 const response = getIntelligentResponse(userMessage);
+                const processingTime = performance.now() - startTime;
+                
+                console.log(`⏱️ Query processed in ${processingTime.toFixed(1)}ms`);
+                
                 addMessage(response, 'bot');
                 marriageConversationContext.messageCount++;
                 
@@ -417,7 +425,7 @@
                 
                 // Save session after each interaction
                 saveSession();
-            }, 800);
+            }, responseTime);
         }
         
         // Add message to chat
@@ -1090,6 +1098,185 @@ I'll give you the PERFECT recommendation! 🎯`
             }
         };
         
+        // ========================================
+        // PHASE 4B: TF-IDF VECTOR ENGINE
+        // Semantic matching for better query understanding
+        // ========================================
+        
+        const semanticEngine = {
+            // Cache for category vectors (computed once)
+            vectorCache: null,
+            
+            // Synonym expansion for better matching
+            synonyms: {
+                'course': ['class', 'training', 'program', 'curriculum', 'lessons', 'study', 'learn', 'education'],
+                'book': ['ebook', 'pdf', 'publication', 'reading', 'literature', 'manual', 'guide'],
+                'bundle': ['package', 'deal', 'collection', 'set', 'combo', 'group'],
+                'ambassador': ['representative', 'agent', 'seller', 'distributor', 'partner', 'affiliate'],
+                'price': ['cost', 'fee', 'payment', 'charge', 'rate', 'amount'],
+                'help': ['assist', 'support', 'aid', 'guidance', 'advice'],
+                'buy': ['purchase', 'get', 'acquire', 'order', 'obtain'],
+                'learn': ['study', 'discover', 'understand', 'educate', 'training'],
+                'coach': ['counselor', 'therapist', 'mentor', 'advisor', 'consultant'],
+                'career': ['job', 'profession', 'work', 'employment', 'occupation'],
+                'teach': ['instruct', 'educate', 'train', 'facilitate', 'guide'],
+                'marriage': ['relationship', 'partnership', 'union', 'couples'],
+                'pay': ['payment', 'transaction', 'checkout', 'billing']
+            },
+            
+            // Expand query with synonyms
+            expandQuery: function(text) {
+                let expanded = text.toLowerCase();
+                const words = expanded.split(/\s+/);
+                const expandedWords = new Set(words);
+                
+                for (const word of words) {
+                    for (const [key, syns] of Object.entries(this.synonyms)) {
+                        if (syns.includes(word) || word.includes(key) || key.includes(word)) {
+                            expandedWords.add(key);
+                            syns.forEach(s => expandedWords.add(s));
+                        }
+                    }
+                }
+                
+                return Array.from(expandedWords);
+            },
+            
+            // Calculate term frequency
+            calculateTF: function(words) {
+                const tf = {};
+                const total = words.length;
+                
+                for (const word of words) {
+                    if (word.length < 3) continue; // Skip short words
+                    tf[word] = (tf[word] || 0) + 1;
+                }
+                
+                // Normalize
+                for (const word in tf) {
+                    tf[word] = tf[word] / total;
+                }
+                
+                return tf;
+            },
+            
+            // Build category vectors (TF-IDF)
+            buildCategoryVectors: function() {
+                const vectors = {};
+                const allTerms = new Set();
+                
+                // Collect all terms from all categories
+                for (const [catName, catData] of Object.entries(marriageKnowledge)) {
+                    if (!catData.keywords) continue;
+                    
+                    const words = [];
+                    for (const keyword of catData.keywords) {
+                        const expanded = this.expandQuery(keyword);
+                        words.push(...expanded);
+                    }
+                    
+                    vectors[catName] = {
+                        words: words,
+                        tf: this.calculateTF(words)
+                    };
+                    
+                    words.forEach(w => allTerms.add(w));
+                }
+                
+                // Calculate IDF
+                const idf = {};
+                const docCount = Object.keys(vectors).length;
+                
+                for (const term of allTerms) {
+                    let docWithTerm = 0;
+                    for (const vec of Object.values(vectors)) {
+                        if (vec.words.includes(term)) docWithTerm++;
+                    }
+                    idf[term] = Math.log(docCount / (docWithTerm + 1));
+                }
+                
+                // Calculate TF-IDF vectors
+                for (const catName in vectors) {
+                    const tfidf = {};
+                    for (const term in vectors[catName].tf) {
+                        tfidf[term] = vectors[catName].tf[term] * (idf[term] || 1);
+                    }
+                    vectors[catName].tfidf = tfidf;
+                }
+                
+                return { vectors, idf };
+            },
+            
+            // Cosine similarity between two vectors
+            cosineSimilarity: function(vec1, vec2) {
+                let dotProduct = 0;
+                let mag1 = 0;
+                let mag2 = 0;
+                
+                const allTerms = new Set([...Object.keys(vec1), ...Object.keys(vec2)]);
+                
+                for (const term of allTerms) {
+                    const v1 = vec1[term] || 0;
+                    const v2 = vec2[term] || 0;
+                    
+                    dotProduct += v1 * v2;
+                    mag1 += v1 * v1;
+                    mag2 += v2 * v2;
+                }
+                
+                if (mag1 === 0 || mag2 === 0) return 0;
+                
+                return dotProduct / (Math.sqrt(mag1) * Math.sqrt(mag2));
+            },
+            
+            // Find best matching category
+            findBestMatch: function(userQuery) {
+                // Use cached vectors if available
+                if (!this.vectorCache) {
+                    this.vectorCache = this.buildCategoryVectors();
+                    console.log('📦 Category vectors cached for fast matching');
+                }
+                
+                const { vectors, idf } = this.vectorCache;
+                
+                // Expand and vectorize user query
+                const expandedWords = this.expandQuery(userQuery);
+                const queryTF = this.calculateTF(expandedWords);
+                
+                // Calculate query TF-IDF
+                const queryVector = {};
+                for (const term in queryTF) {
+                    queryVector[term] = queryTF[term] * (idf[term] || 1);
+                }
+                
+                // Find best match
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                for (const [catName, catData] of Object.entries(vectors)) {
+                    const similarity = this.cosineSimilarity(queryVector, catData.tfidf);
+                    
+                    if (similarity > bestScore) {
+                        bestScore = similarity;
+                        bestMatch = catName;
+                    }
+                }
+                
+                // Threshold: 0.3 minimum confidence
+                if (bestScore >= 0.3) {
+                    return { category: bestMatch, confidence: bestScore };
+                }
+                
+                return null;
+            }
+        };
+        
+        // Preload vector cache for instant TF-IDF matching (runs once on load)
+        setTimeout(() => {
+            semanticEngine.vectorCache = semanticEngine.buildCategoryVectors();
+            console.log('✅ Semantic engine initialized - ready for intelligent matching');
+        }, 1000); // Delay to not block initial page load
+        
         // Get intelligent response with priority matching and memory
         function getIntelligentResponse(userMessage) {
             const message = userMessage.toLowerCase().trim();
@@ -1132,7 +1319,7 @@ I'll give you the PERFECT recommendation! 🎯`
             // Priority order: check specific features first
             const priorityOrder = ['wizard', 'professional', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
             
-            // Check categories in priority order
+            // PHASE 1: Exact keyword matching (highest precision)
             for (const categoryName of priorityOrder) {
                 const data = marriageKnowledge[categoryName];
                 if (!data) continue;
@@ -1149,7 +1336,27 @@ I'll give you the PERFECT recommendation! 🎯`
                 }
             }
             
-            // Default response
+            // PHASE 2: TF-IDF semantic matching (fallback - better understanding)
+            console.log('🔍 No keyword match, trying TF-IDF semantic search...');
+            const semanticMatch = semanticEngine.findBestMatch(message);
+            
+            if (semanticMatch && semanticMatch.confidence >= 0.3) {
+                const matchedCategory = semanticMatch.category;
+                const data = marriageKnowledge[matchedCategory];
+                
+                if (data) {
+                    console.log(`✅ TF-IDF match: ${matchedCategory} (${(semanticMatch.confidence * 100).toFixed(1)}% confidence)`);
+                    marriageConversationContext.lastCategory = matchedCategory;
+                    
+                    // Track analytics with confidence score
+                    analytics.logQuery(userMessage + ` [TF-IDF: ${(semanticMatch.confidence * 100).toFixed(1)}%]`, matchedCategory);
+                    
+                    return addFollowUp(data.response, matchedCategory);
+                }
+            }
+            
+            // PHASE 3: No match found - general response
+            console.log('⚠️ No semantic match found, using general response');
             analytics.logQuery(userMessage, 'general');
             return addFollowUp(marriageKnowledge.general.response, 'general');
         }
