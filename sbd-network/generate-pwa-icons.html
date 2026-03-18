@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBD Network - PWA Icon Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .preview-section {
+            margin: 2rem 0;
+            padding: 2rem;
+            background: #f5f5f5;
+            border-radius: 0.5rem;
+        }
+        
+        #iconPreview {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .icon-item {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .icon-item canvas {
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .icon-size {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        button {
+            background: #00bcd4;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #00acc1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,188,212,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .instructions {
+            background: #fff3e0;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .instructions h3 {
+            color: #e65100;
+            margin-bottom: 0.5rem;
+        }
+        
+        .instructions ol {
+            margin-left: 1.5rem;
+            color: #666;
+        }
+        
+        .instructions li {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 SBD Network PWA Icons</h1>
+        <p class="subtitle">Generate all 8 required PWA icon sizes instantly</p>
+        
+        <div class="preview-section">
+            <h3>Icon Preview (512x512)</h3>
+            <div id="iconPreview"></div>
+        </div>
+        
+        <div class="btn-group">
+            <button onclick="generateAllIcons()">✨ Generate All Icons</button>
+            <button onclick="downloadAllIcons()" style="background: #4caf50;">⬇️ Download All (ZIP)</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="icon-grid" id="iconGrid"></div>
+        
+        <div class="instructions">
+            <h3>📋 Quick Instructions:</h3>
+            <ol>
+                <li>Click "Generate All Icons" to create all 8 PWA icon sizes</li>
+                <li>Click "Download All (ZIP)" to download icons as individual files</li>
+                <li>Extract the ZIP file to <code>sbd-network/assets/icons/</code></li>
+                <li>Refresh your PWA and test installation on mobile</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const canvases = {};
+        
+        // Generate the main icon design
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background gradient (dark modern look)
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#1a1a1a');
+            gradient.addColorStop(1, '#000000');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Cyan accent circle
+            ctx.fillStyle = '#00bcd4';
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Inner circle (darker)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // SBD text
+            ctx.fillStyle = '#00bcd4';
+            ctx.font = `bold ${size * 0.2}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('SBD', size / 2, size / 2);
+            
+            // Subtitle
+            ctx.font = `${size * 0.06}px Arial, sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('NETWORK', size / 2, size * 0.72);
+        }
+        
+        // Generate all icon sizes
+        function generateAllIcons() {
+            const iconGrid = document.getElementById('iconGrid');
+            const iconPreview = document.getElementById('iconPreview');
+            iconGrid.innerHTML = '';
+            iconPreview.innerHTML = '';
+            
+            iconSizes.forEach(size => {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                drawIcon(canvas, size);
+                canvases[size] = canvas;
+                
+                // Add to preview (show largest)
+                if (size === 512) {
+                    const previewCanvas = canvas.cloneNode();
+                    previewCanvas.style.maxWidth = '300px';
+                    previewCanvas.style.border = '2px solid #ddd';
+                    previewCanvas.style.borderRadius = '1rem';
+                    drawIcon(previewCanvas, size);
+                    iconPreview.appendChild(previewCanvas);
+                }
+                
+                // Add to grid
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                
+                const displayCanvas = document.createElement('canvas');
+                const displaySize = 100;
+                displayCanvas.width = displaySize;
+                displayCanvas.height = displaySize;
+                const displayCtx = displayCanvas.getContext('2d');
+                displayCtx.drawImage(canvas, 0, 0, size, size, 0, 0, displaySize, displaySize);
+                
+                const sizeLabel = document.createElement('div');
+                sizeLabel.className = 'icon-size';
+                sizeLabel.textContent = `${size}x${size}`;
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = '⬇️ Download';
+                downloadBtn.style.padding = '0.5rem 1rem';
+                downloadBtn.style.fontSize = '0.875rem';
+                downloadBtn.style.marginTop = '0.5rem';
+                downloadBtn.onclick = () => downloadIcon(size);
+                
+                iconItem.appendChild(displayCanvas);
+                iconItem.appendChild(sizeLabel);
+                iconItem.appendChild(downloadBtn);
+                iconGrid.appendChild(iconItem);
+            });
+            
+            showStatus('✅ All icons generated successfully! Click "Download All" or download individually.');
+        }
+        
+        // Download single icon
+        function downloadIcon(size) {
+            const canvas = canvases[size];
+            if (!canvas) {
+                alert('Please generate icons first!');
+                return;
+            }
+            
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Download all icons as individual files
+        function downloadAllIcons() {
+            if (Object.keys(canvases).length === 0) {
+                alert('Please generate icons first!');
+                return;
+            }
+            
+            showStatus('⏳ Preparing downloads...');
+            
+            // Download each icon with a small delay
+            iconSizes.forEach((size, index) => {
+                setTimeout(() => {
+                    downloadIcon(size);
+                    if (index === iconSizes.length - 1) {
+                        showStatus('✅ All icons downloaded! Extract to assets/icons/ folder.');
+                    }
+                }, index * 200);
+            });
+        }
+        
+        // Show status message
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('show');
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Auto-generate on load
+        window.onload = () => {
+            generateAllIcons();
+        };
+    </script>
+</body>
+</html>
