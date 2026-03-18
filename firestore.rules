@@ -111,8 +111,59 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // =================================================================
+    // SBD NETWORK COLLECTIONS — Firebase Auth required
+    // Users collection for SBD Network social platform
+    // =================================================================
+    
     match /users/{userId} {
-      allow read, write: if isAdmin() && request.auth.uid == userId;
+      // Anyone authenticated can read all user profiles (for @ mentions, user lists)
+      allow read: if request.auth != null;
+      
+      // Users can create and update their own document
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Admins can update any user (for managing groups, roles, etc.)
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only admins can delete users
+      allow delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Groups collection (Telegram-style groups)
+    match /groups/{groupId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Boards collection (Reddit-style boards within groups)
+    match /boards/{boardId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      // Authors can update/delete their own posts, OR admins can delete any post
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.authorId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      // Authors can delete their own comments, OR admins can delete any comment
+      allow delete: if request.auth != null && 
+        (request.auth.uid == resource.data.authorId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     // =================================================================
