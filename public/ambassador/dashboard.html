@@ -960,60 +960,10 @@
         <!-- Target Progress -->
         <div class="milestone-section">
             <h2><i class="fas fa-bullseye"></i> Milestone Tracker</h2>
-            
-            <div class="milestone-item achieved">
-                <div class="milestone-icon achieved">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="milestone-details">
-                    <h3>🥉 Bronze Level (50 units)</h3>
-                    <p>Congratulations! You've reached Bronze status</p>
-                </div>
-                <div class="milestone-reward">
-                    ✅ Achieved<br>
-                    <small>22,500 FCFA earned</small>
-                </div>
-            </div>
-
-            <div class="milestone-item current">
-                <div class="milestone-icon current">
-                    <i class="fas fa-spinner fa-pulse"></i>
-                </div>
-                <div class="milestone-details">
-                    <h3>🥈 Silver Level (150 units)</h3>
-                    <p>Only 7 more books to unlock Silver status + Branded T-shirt</p>
-                </div>
-                <div class="milestone-reward">
-                    7 books away<br>
-                    <small>Next: 36,000 FCFA</small>
-                </div>
-            </div>
-
-            <div class="milestone-item locked">
-                <div class="milestone-icon locked">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="milestone-details">
-                    <h3>🥇 Gold Level (300 units)</h3>
-                    <p>VIP Launch Event Invitation + Featured Content</p>
-                </div>
-                <div class="milestone-reward">
-                    🔒 Locked<br>
-                    <small>40,000 FCFA potential</small>
-                </div>
-            </div>
-
-            <div class="milestone-item locked">
-                <div class="milestone-icon locked">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="milestone-details">
-                    <h3>💎 Senior Ambassador (500+ units)</h3>
-                    <p>10,000 FCFA Bonus + Founding Ambassador Badge</p>
-                </div>
-                <div class="milestone-reward">
-                    🔒 Locked<br>
-                    <small>+10,000 FCFA bonus</small>
+            <div id="milestoneTrackerContainer">
+                <div style="text-align: center; padding: 2rem; color: #636e72;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Loading your milestones...</p>
                 </div>
             </div>
         </div>
@@ -1021,55 +971,11 @@
         <!-- Commission Breakdown -->
         <div class="commission-section">
             <h2><i class="fas fa-layer-group"></i> Your Revenue Stacks</h2>
-            
-            <div class="commission-tier completed">
-                <div class="tier-info">
-                    <div class="tier-badge">🥉</div>
-                    <div>
-                        <strong>Books 1-20 (Bronze)</strong><br>
-                        <small>1,500 FCFA per book</small>
-                    </div>
+            <div id="revenueStacksContainer">
+                <div style="text-align: center; padding: 2rem; color: #636e72;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Loading your revenue breakdown...</p>
                 </div>
-                <div class="tier-amount">30,000 FCFA ✅</div>
-            </div>
-
-            <div class="commission-tier active">
-                <div class="tier-info">
-                    <div class="tier-badge">🥈</div>
-                    <div>
-                        <strong>Books 21-40 (Silver)</strong><br>
-                        <small>1,800 FCFA per book • 3/20 completed</small>
-                    </div>
-                </div>
-                <div class="tier-amount">5,400 FCFA ⏳</div>
-            </div>
-
-            <div class="commission-tier">
-                <div class="tier-info">
-                    <div class="tier-badge">🥇</div>
-                    <div>
-                        <strong>Books 41-60 (Gold)</strong><br>
-                        <small>2,000 FCFA per book</small>
-                    </div>
-                </div>
-                <div class="tier-amount">40,000 FCFA 🔒</div>
-            </div>
-
-            <div class="commission-tier">
-                <div class="tier-info">
-                    <div class="tier-badge">🎁</div>
-                    <div>
-                        <strong>Completion Bonus</strong><br>
-                        <small>When you hit 60 books</small>
-                    </div>
-                </div>
-                <div class="tier-amount">+10,000 FCFA 🔒</div>
-            </div>
-
-            <div class="total-commission">
-                <h3>Your Total Potential</h3>
-                <div class="amount">106,000 FCFA</div>
-                <p style="margin-top: 1rem; opacity: 0.9;">When you complete all 60 books</p>
             </div>
         </div>
 
@@ -1324,6 +1230,11 @@
                 displayRevenueStacks();
             }
             
+            // Initialize milestone tracker
+            if (typeof updateMilestoneTracker === 'function') {
+                updateMilestoneTracker();
+            }
+            
             // Initialize school progress if enrolled
             if (ambassadorData.schoolProgress && ambassadorData.schoolProgress.enrolled && typeof displaySchoolProgress === 'function') {
                 displaySchoolProgress();
@@ -1422,12 +1333,188 @@
             }
         }
 
-        // Display Revenue Stacks
+        // Display Revenue Stacks - REAL DATA from Multi-Product Portfolio
         function displayRevenueStacks() {
-            // This function can be used to dynamically update revenue stacks display
-            // For now, the static HTML shows the breakdown
-            const total = Object.values(ambassadorData.revenueStacks).reduce((a, b) => a + b, 0);
-            console.log('Total Revenue Across All Stacks:', total.toLocaleString(), 'FCFA');
+            try {
+                const stats = ambassadorData.firestoreStats || {};
+                
+                // Get category earnings from Firestore
+                const categoryEarnings = stats.revenue_by_category || {};
+                const totalEarnings = Object.values(categoryEarnings).reduce((sum, val) => sum + (val || 0), 0);
+                
+                // Get category units
+                const categoryUnits = stats.deployment_by_category || {};
+                const totalUnits = Object.values(categoryUnits).reduce((sum, val) => sum + (val || 0), 0);
+                
+                const container = document.getElementById('revenueStacksContainer');
+                if (!container) return;
+                
+                // Build revenue breakdown by category
+                let html = '';
+                
+                const categories = [
+                    { key: 'books', icon: '📚', name: 'Books', color: '#00b894' },
+                    { key: 'schools', icon: '🎓', name: 'Schools', color: '#0984e3' },
+                    { key: 'courses', icon: '📖', name: 'Courses', color: '#6c5ce7' },
+                    { key: 'premium', icon: '💼', name: 'Premium', color: '#fdcb6e' },
+                    { key: 'corporate', icon: '🏢', name: 'Corporate', color: '#e17055' },
+                    { key: 'community', icon: '🤝', name: 'Community', color: '#00cec9' }
+                ];
+                
+                categories.forEach(cat => {
+                    const units = categoryUnits[cat.key] || 0;
+                    const earnings = categoryEarnings[cat.key] || 0;
+                    const percentage = totalEarnings > 0 ? ((earnings / totalEarnings) * 100).toFixed(1) : '0';
+                    
+                    if (earnings > 0) {
+                        html += `
+                            <div class="commission-tier ${earnings > 0 ? 'completed' : ''}">
+                                <div class="tier-info">
+                                    <div class="tier-badge" style="background: ${cat.color};">${cat.icon}</div>
+                                    <div>
+                                        <strong>${cat.name}</strong><br>
+                                        <small>${units} units deployed • ${percentage}% of total income</small>
+                                    </div>
+                                </div>
+                                <div class="tier-amount">${earnings.toLocaleString()} FCFA ✅</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Show empty state if no earnings
+                if (totalEarnings === 0) {
+                    html = `
+                        <div style="text-align: center; padding: 3rem; color: #636e72;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+                            <h3 style="margin-bottom: 0.5rem;">No Revenue Yet</h3>
+                            <p>Start deploying access units to build your revenue stacks!</p>
+                        </div>
+                    `;
+                }
+                
+                // Add total section
+                html += `
+                    <div class="total-commission">
+                        <h3>Total Portfolio Earnings</h3>
+                        <div class="amount">${totalEarnings.toLocaleString()} FCFA</div>
+                        <p style="margin-top: 1rem; opacity: 0.9;">From ${totalUnits} units across ${Object.keys(categoryEarnings).filter(k => categoryEarnings[k] > 0).length} categories</p>
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                console.log('✅ Revenue Stacks updated:', totalEarnings.toLocaleString(), 'FCFA from', totalUnits, 'units');
+            } catch (error) {
+                console.error('Error displaying revenue stacks:', error);
+                const container = document.getElementById('revenueStacksContainer');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Unable to load revenue data</div>';
+                }
+            }
+        }
+        
+        // Update Milestone Tracker - REAL DATA from Total Units Portfolio
+        function updateMilestoneTracker() {
+            try {
+                const stats = ambassadorData.firestoreStats || {};
+                
+                // Calculate TOTAL units across all categories
+                const categoryUnits = stats.deployment_by_category || {};
+                const totalUnits = Object.values(categoryUnits).reduce((sum, val) => sum + (val || 0), 0);
+                
+                // Calculate TOTAL earnings
+                const categoryEarnings = stats.revenue_by_category || {};
+                const totalEarnings = Object.values(categoryEarnings).reduce((sum, val) => sum + (val || 0), 0);
+                
+                const milestones = [
+                    { 
+                        level: 'Bronze', 
+                        threshold: 50, 
+                        icon: '🥉', 
+                        reward: 'Base Ambassador Status',
+                        emoji: '✅',
+                        description: 'Congratulations! You\'ve reached Bronze status'
+                    },
+                    { 
+                        level: 'Silver', 
+                        threshold: 150, 
+                        icon: '🥈', 
+                        reward: 'Branded T-shirt + Featured Story',
+                        emoji: '⏳',
+                        description: 'Unlock Silver status with exclusive rewards'
+                    },
+                    { 
+                        level: 'Gold', 
+                        threshold: 300, 
+                        icon: '🥇', 
+                        reward: 'VIP Launch Event + Featured Content',
+                        emoji: '🔒',
+                        description: 'Elite status with premium benefits'
+                    },
+                    { 
+                        level: 'Senior Ambassador', 
+                        threshold: 500, 
+                        icon: '💎', 
+                        reward: '10,000 FCFA Bonus + Founding Badge',
+                        emoji: '🔒',
+                        description: 'Ultimate achievement - leadership position'
+                    }
+                ];
+                
+                const container = document.getElementById('milestoneTrackerContainer');
+                if (!container) return;
+                
+                let html = '';
+                
+                milestones.forEach((milestone, index) => {
+                    const achieved = totalUnits >= milestone.threshold;
+                    const isCurrent = !achieved && (index === 0 || totalUnits >= milestones[index - 1].threshold);
+                    const locked = totalUnits < milestone.threshold && !isCurrent;
+                    
+                    const statusClass = achieved ? 'achieved' : isCurrent ? 'current' : 'locked';
+                    const statusIcon = achieved ? 'fa-check-circle' : isCurrent ? 'fa-spinner fa-pulse' : 'fa-lock';
+                    
+                    // Calculate earnings for achieved milestones
+                    const milestoneEarnings = achieved ? 
+                        Math.floor((totalEarnings / totalUnits) * milestone.threshold) : 
+                        Math.floor((totalEarnings / totalUnits) * milestone.threshold) || (milestone.threshold * 1500);
+                    
+                    const remaining = milestone.threshold - totalUnits;
+                    
+                    let rewardText = '';
+                    if (achieved) {
+                        rewardText = `✅ Achieved<br><small>${milestoneEarnings.toLocaleString()} FCFA earned</small>`;
+                    } else if (isCurrent) {
+                        rewardText = `${remaining} units away<br><small>Next: ${milestoneEarnings.toLocaleString()} FCFA potential</small>`;
+                    } else {
+                        rewardText = `🔒 Locked<br><small>${milestoneEarnings.toLocaleString()} FCFA potential</small>`;
+                    }
+                    
+                    html += `
+                        <div class="milestone-item ${statusClass}">
+                            <div class="milestone-icon ${statusClass}">
+                                <i class="fas ${statusIcon}"></i>
+                            </div>
+                            <div class="milestone-details">
+                                <h3>${milestone.icon} ${milestone.level} (${milestone.threshold} units)</h3>
+                                <p>${milestone.description}</p>
+                            </div>
+                            <div class="milestone-reward">
+                                ${rewardText}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                console.log('✅ Milestone Tracker updated: Total units =', totalUnits, ', Total earnings =', totalEarnings.toLocaleString(), 'FCFA');
+            } catch (error) {
+                console.error('Error updating milestone tracker:', error);
+                const container = document.getElementById('milestoneTrackerContainer');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Unable to load milestones</div>';
+                }
+            }
         }
 
         
@@ -1713,6 +1800,15 @@
                 
                 // Update portfolio table
                 updatePortfolioTable(stats);
+                
+                // Store raw stats for milestone tracker and revenue stacks
+                ambassadorData.firestoreStats = stats;
+                
+                // Update Milestone Tracker from total portfolio
+                updateMilestoneTracker();
+                
+                // Update Revenue Stacks from total portfolio
+                displayRevenueStacks();
                 
                 // Load leaderboard rank
                 loadLeaderboardRank(ambassadorCode);  // No await needed - runs async
