@@ -114,5 +114,23 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isAdmin() && request.auth.uid == userId;
     }
+
+    // =================================================================
+    // CHATBOT ANALYTICS — Anonymous access for tracking
+    // Public writes so chatbot can log queries without auth
+    // Reads open for aggregated insights (no PII stored)
+    // =================================================================
+
+    match /chatbot_analytics/{docId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true; // For feedback updates
+      allow delete: if isAdmin(); // Only admin can delete
+    }
+
+    match /chatbot_learning/{docId} {
+      allow read: if true;
+      allow write: if isAdmin(); // Only admin updates learning params
+    }
   }
 }
