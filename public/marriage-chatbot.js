@@ -1130,7 +1130,7 @@ I'll give you the PERFECT recommendation! 🎯`
             }
             
             // Priority order: check specific features first
-            const priorityOrder = ['wizard', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'professional', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
+            const priorityOrder = ['wizard', 'professional', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
             
             // Check categories in priority order
             for (const categoryName of priorityOrder) {
