@@ -797,7 +797,7 @@
             </div>
             <div class="header-nav">
                 <a href="../index.html"><i class="fas fa-home"></i> Home</a>
-                <a href="../foundation-school.html"><i class="fas fa-graduation-cap"></i> Foundation School</a>
+                <a href="../course-viewer.html?courseId=foundation-school"><i class="fas fa-graduation-cap"></i> Foundation School</a>
                 <a href="resources.html"><i class="fas fa-folder"></i> Resources</a>
                 <a href="leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
                 <button onclick="logout()" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -1656,18 +1656,17 @@
                 
                 const db = firebase.firestore();
                 
-                // One-time fetch for ambassador data
-                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
-                
-                if (!ambassadorDoc.exists) {
-                    console.error('Ambassador not found in database');
-                    alert('❌ Ambassador account not found. Please contact support.');
-                    window.location.href = '/ambassador-login.html';
-                    return;
-                }
-                
-                const stats = ambassadorDoc.data();
-                console.log('Ambassador data loaded:', stats);
+                // ⚡ REALTIME LISTENER: Convert .get() to .onSnapshot() for live updates
+                const unsubscribe = db.collection('ambassadors').doc(ambassadorCode).onSnapshot((ambassadorDoc) => {
+                    if (!ambassadorDoc.exists) {
+                        console.error('Ambassador not found in database');
+                        alert('❌ Ambassador account not found. Please contact support.');
+                        window.location.href = '/ambassador-login.html';
+                        return;
+                    }
+                    
+                    const stats = ambassadorDoc.data();
+                    console.log('⚡ Realtime update - Ambassador data:', stats);
                 
                 // Get name - try multiple sources
                 let ambassadorName = 'Ambassador';
@@ -1733,7 +1732,21 @@
                 // Check for new badge unlocks
                 checkBadgeUnlocks(ambassadorData.booksSold);
                 
-                // Load commission history, downline, and recent sales
+                }, (error) => {
+                    // onSnapshot error handler
+                    console.error('⚠️ Realtime listener error:', error);
+                    alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
+                    // Clear bad data
+                    localStorage.removeItem('ambassadorCode');
+                    localStorage.removeItem('ambassadorEmail');
+                    localStorage.removeItem('ambassadorData');
+                    // Redirect to login
+                    setTimeout(() => {
+                        window.location.href = '/ambassador-login.html';
+                    }, 2000);
+                });
+                
+                // Load commission history, downline, and recent sales (once, with realtime updates)
                 await loadCommissionHistory(ambassadorCode);
                 await loadDownline(ambassadorCode);
                 await loadRecentSales(ambassadorCode);
@@ -1822,11 +1835,36 @@
             const ambassadorId = localStorage.getItem('ambassadorId');
             if (!ambassadorId) return;
             
-            // Note: Real-time listeners removed to eliminate CORS console warnings
-            // Dashboard will show current data on load. Users can refresh to see updates.
+            // Listen for new sales
+            db.collection('sales')
+                .where('referralCode', '==', ambassadorData.code)
+                .orderBy('timestamp', 'desc')
+                .limit(1)
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            // Reload stats when new sale detected
+                            loadAmbassadorData();
+                        }
+                    });
+                });
+            
+            // Listen for new notifications
+            db.collection('notifications')
+                .where('ambassadorId', '==', ambassadorId)
+                .where('read', '==', false)
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            const notif = change.doc.data();
+                            showNotification(notif.type, notif.title, notif.message);
+                            FirebaseHelper.markNotificationRead(change.doc.id);
+                        }
+                    });
+                });
         }
         
-        // Update Foundation School Progress (Module-Based Tracking)
+        // Update Foundation School Progress (Dual-Track Weekly Structure)
         function updateFoundationSchool(stats) {
             try {
                 const schoolSection = document.getElementById('schoolProgressSection');
@@ -1835,29 +1873,33 @@
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
                     const currentWeek = enrollment.current_week || 1;
+                    const progressPercent = enrollment.progress_percent || 0; // Use saved progress_percent
                     const totalWeeks = 6;
-                    const progressPercent = enrollment.progress_percent || Math.round((currentWeek / totalWeeks) * 100);
                     
-                    // Count completed modules (Weeks 1-6)
+                    // Count completed modules
                     const completedModules = enrollment.completed_modules || {};
-                    const modulesCompleted = Object.keys(completedModules).filter(key => 
+                    const completedCount = Object.keys(completedModules).filter(key => 
                         completedModules[key]?.completed === true
                     ).length;
+                    
+                    // Check individual track progress for current week
+                    const weekKey = `week${currentWeek}`;
+                    const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
                     document.getElementById('completionPercent').textContent = progressPercent + '%';
                     document.getElementById('schoolProgress').style.width = progressPercent + '%';
-                    document.getElementById('completedWeeks').textContent = modulesCompleted;
+                    document.getElementById('completedWeeks').textContent = completedCount; // Show completed modules count
                     document.getElementById('totalWeeks').textContent = totalWeeks;
                     
-                    // Update CRLA status based on final exam completion
+                    // Update CRLA status
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (enrollment.exam_passed === true) {
-                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ CRLA Certified</span>';
-                    } else if (modulesCompleted > 0 || currentWeek > 1) {
-                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
+                    if (completedCount === 6 && enrollment.exam_passed) {
+                        crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
+                    } else if (completedCount > 0 || progressPercent > 0) {
+                        crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
                     } else {
-                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                        crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
                     }
                 } else {
                     // Default view for new ambassadors
@@ -1866,7 +1908,7 @@
                     document.getElementById('schoolProgress').style.width = '0%';
                     document.getElementById('completedWeeks').textContent = '0';
                     document.getElementById('totalWeeks').textContent = '6';
-                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
+                    document.getElementById('crlaStatus').innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
                 }
             } catch (error) {
                 console.error('Error updating Foundation School:', error);
@@ -1959,77 +2001,78 @@
                 const db = firebase.firestore();
                 const tbody = document.getElementById('commissionHistoryBody');
                 
-                // One-time fetch for commissions
-                const snapshot = await db.collection('sales')
+                // Realtime listener for commissions
+                db.collection('sales')
                     .where('source_ambassador', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(20)
-                    .get();
-                
-                if (snapshot.empty) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
-                                No commissions yet. Share your referral link to start earning!
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const sale = doc.data();
-                    const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
-                    const formattedDate = date.toLocaleDateString('en-US', { 
-                        month: 'short', day: 'numeric', year: 'numeric', 
-                        hour: '2-digit', minute: '2-digit' 
+                    .onSnapshot((snapshot) => {
+                        if (snapshot.empty) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
+                                        No commissions yet. Share your referral link to start earning!
+                                    </td>
+                                </tr>
+                            `;
+                            return;
+                        }
+                        
+                        tbody.innerHTML = '';
+                        snapshot.forEach((doc) => {
+                            const sale = doc.data();
+                            const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
+                            const formattedDate = date.toLocaleDateString('en-US', { 
+                                month: 'short', day: 'numeric', year: 'numeric', 
+                                hour: '2-digit', minute: '2-digit' 
+                            });
+                            
+                            const commission = sale.commissions?.ambassador || 0;
+                            const productName = sale.product_name || 'Product Sale';
+                            const source = sale.customer_name || sale.customer_email || 'Customer';
+                            
+                            const row = `
+                                <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
+                                    <td style="padding: 1rem;">${formattedDate}</td>
+                                    <td style="padding: 1rem;">${source}</td>
+                                    <td style="padding: 1rem;">${productName}</td>
+                                    <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
+                                    <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    }, (error) => {
+                        console.error('Error loading commission history:', error);
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
+                                    ⚠️ Error loading commissions. Please refresh the page.
+                                </td>
+                            </tr>
+                        `;
                     });
                     
-                    const commission = sale.commissions?.ambassador || 0;
-                    const productName = sale.product_name || 'Product Sale';
-                    const source = sale.customer_name || sale.customer_email || 'Customer';
-                    
-                    const row = `
-                        <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
-                            <td style="padding: 1rem;">${formattedDate}</td>
-                            <td style="padding: 1rem;">${source}</td>
-                            <td style="padding: 1rem;">${productName}</td>
-                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
-                            <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
             } catch (error) {
-                console.error('Error loading commission history:', error);
-                const tbody = document.getElementById('commissionHistoryBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
-                            ⚠️ Error loading commissions. Please refresh the page.
-                        </td>
-                    </tr>
-                `;
+                console.error('Error setting up commission history:', error);
             }
         }
         
-        // ⚡ NEW: Load Downline/Recruits
+        // ⚡ NEW: Load Downline/Recruits with realtime updates
         async function loadDownline(ambassadorCode) {
             try {
                 const db = firebase.firestore();
                 const downlineContainer = document.getElementById('downlineList');
                 const countEl = document.getElementById('downlineCount');
                 
-                // One-time fetch for recruits
-                const snapshot = await db.collection('ambassadors')
+                // Realtime listener for recruits
+                db.collection('ambassadors')
                     .where('rdCode', '==', ambassadorCode)
-                    .get();
-                
-                const count = snapshot.size;
-                countEl.textContent = count;
-                    
-                if (snapshot.empty) {
+                    .onSnapshot((snapshot) => {
+                        const count = snapshot.size;
+                        countEl.textContent = count;
+                        
+                        if (snapshot.empty) {
                             downlineContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
@@ -2082,14 +2125,17 @@
                             `;
                             downlineContainer.innerHTML += card;
                         });
+                    }, (error) => {
+                        console.error('Error loading downline:', error);
+                        downlineContainer.innerHTML = `
+                            <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
+                                ⚠️ Error loading your team. Please refresh the page.
+                            </div>
+                        `;
+                    });
+                    
             } catch (error) {
-                console.error('Error loading downline:', error);
-                const downlineContainer = document.getElementById('downlineList');
-                downlineContainer.innerHTML = `
-                    <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
-                        ⚠️ Error loading your team. Please refresh the page.
-                    </div>
-                `;
+                console.error('Error setting up downline listener:', error);
             }
         }
         
@@ -2110,14 +2156,13 @@
                 
                 if (!salesContainer) return;
                 
-                // One-time fetch for recent sales
-                const snapshot = await db.collection('sales')
+                // Query recent sales for this ambassador
+                db.collection('sales')
                     .where('ambassador_code', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(5)
-                    .get();
-                
-                if (snapshot.empty) {
+                    .onSnapshot((snapshot) => {
+                        if (snapshot.empty) {
                             salesContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
@@ -2148,17 +2193,17 @@
                             `;
                             salesContainer.appendChild(saleItem);
                         });
+                    }, (error) => {
+                        console.error('Error loading recent sales:', error);
+                        salesContainer.innerHTML = `
+                            <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
+                                <p>⚠️ Unable to load recent sales</p>
+                                <small>${error.message}</small>
+                            </div>
+                        `;
+                    });
             } catch (error) {
-                console.error('Error loading recent sales:', error);
-                const salesContainer = document.getElementById('recentSalesList');
-                if (salesContainer) {
-                    salesContainer.innerHTML = `
-                        <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
-                            <p>⚠️ Unable to load recent sales</p>
-                            <small>${error.message}</small>
-                        </div>
-                    `;
-                }
+                console.error('Error in loadRecentSales:', error);
             }
         }
         
