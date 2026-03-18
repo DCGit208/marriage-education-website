@@ -823,21 +823,10 @@
                     <div class="countdown-timer" id="contestCountdown">2d 14h 32m</div>
                 </div>
             </div>
-            <div class="contest-leaderboard-mini">
-                <div class="contest-leader">
-                    <span class="position">🥇 1st</span>
-                    <span class="name">Grace M.</span>
-                    <span class="books">12 books</span>
-                </div>
-                <div class="contest-leader">
-                    <span class="position">🥈 2nd</span>
-                    <span class="name">Paul K.</span>
-                    <span class="books">10 books</span>
-                </div>
-                <div class="contest-leader highlight">
-                    <span class="position">🔥 5th</span>
-                    <span class="name">You</span>
-                    <span class="books">7 books</span>
+            <div class="contest-leaderboard-mini" id="contestLeaderboardMini">
+                <div style="text-align: center; padding: 1rem; color: #636e72;">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
+                    Loading weekly leaders...
                 </div>
             </div>
         </div>
@@ -875,32 +864,32 @@
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-users"></i></div>
                 <div class="label">Access Units Deployed</div>
-                <div class="value"><span id="accessUnitsDeployed">23</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
-                <div class="subvalue">38% Complete</div>
+                <div class="value"><span id="accessUnitsDeployed">0</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
+                <div class="subvalue" id="booksPercentComplete">0% Complete</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" id="booksProgress" style="width: 38%"></div>
+                    <div class="progress-fill" id="booksProgress" style="width: 0%"></div>
                 </div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
                 <div class="label">Advocacy Earnings</div>
-                <div class="value" id="advocacyEarnings">34,500</div>
-                <div class="subvalue">FCFA • Paid: 20,000 FCFA</div>
+                <div class="value" id="advocacyEarnings">0</div>
+                <div class="subvalue">FCFA • <span id="advocacyPaid">Calculating...</span></div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-chart-line"></i></div>
                 <div class="label">Your Rank</div>
-                <div class="value">#<span id="currentRank">47</span></div>
-                <div class="subvalue">Out of 500 ambassadors</div>
+                <div class="value">#<span id="currentRank">--</span></div>
+                <div class="subvalue" id="rankSubvalue">Calculating rank...</div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-star"></i></div>
                 <div class="label">Current Level</div>
-                <div class="value" id="currentLevel">Bronze</div>
-                <div class="subvalue" id="nextMilestone">27 units to Silver (150)</div>
+                <div class="value" id="currentLevel">Loading...</div>
+                <div class="subvalue" id="nextMilestone">Calculating next milestone...</div>
             </div>
         </div>
 
@@ -1309,8 +1298,11 @@
             
             const progressBar = document.getElementById('booksProgress');
             if (progressBar) {
-                progressBar.style.width = progress + '%';
+                progressBar.style.width = Math.min(progress, 100) + '%';
             }
+            
+            // Update % complete text
+            safeUpdate('booksPercentComplete', Math.min(progress, 100).toFixed(0) + '% Complete');
             
             // Calculate next milestone
             const milestones = [
@@ -1507,8 +1499,7 @@
         // Update countdown every minute
         setInterval(updateContestCountdown, 60000);
         
-        // Show demo notifications after 3 seconds
-        setTimeout(simulateNotifications, 3000);
+        // NOTE: simulateNotifications() removed for production - real notifications come from Firebase
     </script>
 
     <!-- Badge Achievement Modal -->
@@ -1751,6 +1742,9 @@
                 await loadDownline(ambassadorCode);
                 await loadRecentSales(ambassadorCode);
                 
+                // Load weekly contest leaderboard
+                await loadWeeklyContest(ambassadorCode);
+                
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
                 alert('Failed to initialize dashboard: ' + error.message);
@@ -1800,6 +1794,7 @@
             const rankElement = document.getElementById('leaderboardRank');
             const labelElement = document.getElementById('leaderboardLabel');
             const rankDisplayElement = document.getElementById('currentRank');
+            const rankSubvalueElement = document.getElementById('rankSubvalue');
             
             if (rankElement) {
                 rankElement.textContent = rank === 'N/A' ? '#-' : `#${rank}`;
@@ -1808,7 +1803,110 @@
                 labelElement.textContent = rank === 'N/A' ? total : `Current Ranking (Out of ${total})`;
             }
             if (rankDisplayElement) {
-                rankDisplayElement.textContent = rank === 'N/A' ? 'N/A' : rank;
+                rankDisplayElement.textContent = rank === 'N/A' ? '--' : rank;
+            }
+            if (rankSubvalueElement) {
+                rankSubvalueElement.textContent = rank === 'N/A' ? total : `Out of ${total} ambassadors`;
+            }
+        }
+        
+        // Load weekly contest leaderboard (top 3 + current user)
+        async function loadWeeklyContest(ambassadorCode) {
+            try {
+                const db = firebase.firestore();
+                
+                // Get start of current week (Sunday)
+                const now = new Date();
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+                startOfWeek.setHours(0, 0, 0, 0);
+                
+                // Query top ambassadors by sales this week
+                const snapshot = await db.collection('sales')
+                    .where('timestamp', '>=', startOfWeek)
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                
+                // Count books per ambassador this week
+                const weeklyCount = {};
+                snapshot.forEach(doc => {
+                    const sale = doc.data();
+                    const code = sale.referralCode || sale.ambassador_code;
+                    if (code) {
+                        weeklyCount[code] = (weeklyCount[code] || 0) + (sale.quantity || 1);
+                    }
+                });
+                
+                // Convert to array and sort
+                const leaders = Object.entries(weeklyCount)
+                    .map(([code, count]) => ({ code, count }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 10); // Top 10
+                
+                // Get ambassador names
+                const leaderPromises = leaders.slice(0, 3).map(async leader => {
+                    const doc = await db.collection('ambassadors').doc(leader.code).get();
+                    const data = doc.data();
+                    return {
+                        ...leader,
+                        name: data?.name || data?.firstName || 'Ambassador'
+                    };
+                });
+                
+                const topLeaders = await Promise.all(leaderPromises);
+                
+                // Find current user's position
+                const userIndex = leaders.findIndex(l => l.code === ambassadorCode);
+                const userPosition = userIndex >= 0 ? userIndex + 1 : null;
+                const userCount = weeklyCount[ambassadorCode] || 0;
+                
+                // Render leaderboard
+                const container = document.getElementById('contestLeaderboardMini');
+                if (!container) return;
+                
+                let html = '';
+                
+                // Top 3
+                const medals = ['🥇', '🥈', '🥉'];
+                topLeaders.forEach((leader, index) => {
+                    html += `
+                        <div class="contest-leader">
+                            <span class="position">${medals[index]} ${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'}</span>
+                            <span class="name">${leader.name}</span>
+                            <span class="books">${leader.count} books</span>
+                        </div>
+                    `;
+                });
+                
+                // Current user (if not in top 3)
+                if (userPosition && userPosition > 3) {
+                    html += `
+                        <div class="contest-leader highlight">
+                            <span class="position">🔥 ${userPosition}${userPosition === 4 ? 'th' : userPosition === 5 ? 'th' : 'th'}</span>
+                            <span class="name">You</span>
+                            <span class="books">${userCount} books</span>
+                        </div>
+                    `;
+                } else if (userPosition && userPosition <= 3) {
+                    // User is in top 3 - highlight their position
+                    html = html.replace(
+                        `<div class="contest-leader"`,
+                        userPosition === 1 ? `<div class="contest-leader highlight"` : `<div class="contest-leader"`
+                    );
+                }
+                
+                // Show message if no data
+                if (topLeaders.length === 0) {
+                    html = '<div style="text-align: center; padding: 1rem; color: #636e72;">No sales this week yet. Be the first!</div>';
+                }
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading weekly contest:', error);
+                const container = document.getElementById('contestLeaderboardMini');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; padding: 1rem; color: #e74c3c;">Unable to load contest data</div>';
+                }
             }
         }
         
