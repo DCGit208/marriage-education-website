@@ -59,6 +59,11 @@
     
     <div style="padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.6);">
         <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button id="marriage-chat-voice" style="background: rgba(0,184,148,0.15); border: 1px solid rgba(0,184,148,0.3); border-radius: 0.75rem; padding: 0.875rem; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" aria-label="Voice input" title="Click to speak">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/>
+                </svg>
+            </button>
             <input type="text" id="marriage-chat-input" placeholder="Ask about courses, books, or ambassadors..." style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 0.875rem 1rem; color: white; font-size: 0.95rem; outline: none;" />
             <button id="marriage-chat-send" style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); border: none; border-radius: 0.75rem; padding: 0.875rem 1.25rem; color: white; font-weight: 600; cursor: pointer;" aria-label="Send message">
                 Send
@@ -75,9 +80,14 @@
     #marriage-chat-toggle:hover { transform: scale(1.05); box-shadow: 0 12px 32px rgba(0, 184, 148, 0.5); }
     #marriage-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4); }
     #marriage-chat-close:hover, #marriage-chat-reset:hover { background: rgba(255, 255, 255, 0.1); }
+    #marriage-chat-voice:hover { background: rgba(0,184,148,0.25) !important; border-color: rgba(0,184,148,0.5) !important; transform: scale(1.05); }
+    #marriage-chat-voice.listening { background: rgba(220,38,38,0.2) !important; border-color: rgba(220,38,38,0.5) !important; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     .quick-action-btn:hover { background: rgba(0,184,148,0.2) !important; border-color: rgba(0,184,148,0.5) !important; transform: translateX(4px); }
     .suggested-btn { display: inline-block; background: rgba(0,184,148,0.15); border: 1px solid rgba(0,184,148,0.4); padding: 0.45rem 0.9rem; margin: 0.25rem; border-radius: 1rem; color: rgba(255,255,255,0.9); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
     .suggested-btn:hover { background: rgba(0,184,148,0.25); border-color: rgba(0,184,148,0.6); transform: translateY(-1px); }
+    .feedback-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1) !important; transform: scale(1.05); }
+    .feedback-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     @keyframes marriageTypingDot {
         0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
         30% { transform: translateY(-10px); opacity: 1; }
@@ -106,7 +116,10 @@
             interests: [],
             budget: null,
             situation: null,
-            lastCategory: null
+            lastCategory: null,
+            confusionCount: 0,
+            lastQueries: [],
+            userId: 'anon_' + Math.random().toString(36).substr(2, 9)
         };
         
         // DOM Elements
@@ -117,24 +130,47 @@
         const marriageChatMessages = document.getElementById('marriage-chat-messages');
         const marriageChatInput = document.getElementById('marriage-chat-input');
         const marriageChatSend = document.getElementById('marriage-chat-send');
+        const marriageChatVoice = document.getElementById('marriage-chat-voice');
+        
+        // Firestore reference (check if Firebase is loaded)
+        const firestoreDB = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
         
         if (!marriageChatToggle) return; // Safety check
         
-        // Analytics tracking
+        // Enhanced Analytics with Firestore + localStorage backup
         const analytics = {
             queries: [],
-            logQuery: function(query, category) {
-                this.queries.push({
+            logQuery: async function(query, category, feedback = null) {
+                const logData = {
+                    userId: marriageConversationContext.userId,
                     query: query,
                     category: category,
-                    timestamp: new Date().toISOString()
-                });
-                // Keep only last 50 queries (prevent memory bloat)
+                    timestamp: new Date().toISOString(),
+                    feedback: feedback,
+                    context: {
+                        situation: marriageConversationContext.situation,
+                        budget: marriageConversationContext.budget,
+                        topicsDiscussed: marriageConversationContext.topicsDiscussed.slice(-3)
+                    }
+                };
+                
+                this.queries.push(logData);
                 if (this.queries.length > 50) this.queries.shift();
-                // Save to localStorage
+                
+                // Save to localStorage as backup
                 try {
                     localStorage.setItem('marriage-chat-analytics', JSON.stringify(this.queries.slice(-20)));
                 } catch(e) {}
+                
+                // Save to Firestore if available
+                if (firestoreDB) {
+                    try {
+                        await firestoreDB.collection('chatbot_analytics').add(logData);
+                        console.log('✅ Analytics logged to Firestore');
+                    } catch(error) {
+                        console.warn('⚠️ Firestore write failed, using localStorage only:', error.message);
+                    }
+                }
             },
             getPopularTopics: function() {
                 const topics = {};
@@ -230,7 +266,10 @@
                 interests: [],
                 budget: null,
                 situation: null,
-                lastCategory: null
+                lastCategory: null,
+                confusionCount: 0,
+                lastQueries: [],
+                userId: 'anon_' + Math.random().toString(36).substr(2, 9)
             };
             // Clear session
             try {
@@ -239,6 +278,120 @@
             addMessage('✨ Conversation reset! How can I help you today?', 'bot');
             analytics.logQuery('_CHAT_RESET', 'system');
         });
+        
+        // Voice Input - Web Speech API
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                marriageChatVoice.classList.add('listening');
+                marriageChatVoice.title = 'Listening... (click to stop)';
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                marriageChatInput.value = transcript;
+                marriageChatVoice.classList.remove('listening');
+                marriageChatVoice.title = 'Click to speak';
+                // Auto-send after voice input
+                setTimeout(() => handleSendMessage(), 300);
+            };
+            
+            recognition.onerror = function(event) {
+                console.warn('Speech recognition error:', event.error);
+                marriageChatVoice.classList.remove('listening');
+                marriageChatVoice.title = 'Click to speak';
+                if (event.error === 'no-speech') {
+                    addMessage('🎤 No speech detected. Please try again.', 'bot');
+                } else if (event.error === 'not-allowed') {
+                    addMessage('🎤 Microphone access denied. Please enable microphone permissions.', 'bot');
+                }
+            };
+            
+            recognition.onend = function() {
+                marriageChatVoice.classList.remove('listening');
+                marriageChatVoice.title = 'Click to speak';
+            };
+            
+            marriageChatVoice.addEventListener('click', () => {
+                if (marriageChatVoice.classList.contains('listening')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        } else {
+            // Voice not supported - hide button
+            marriageChatVoice.style.display = 'none';
+        }
+        
+        // Smart Escalation Detection
+        function checkEscalationTriggers(userMessage, responseCategory) {
+            // Track repeated queries
+            marriageConversationContext.lastQueries.push(userMessage.toLowerCase().trim());
+            if (marriageConversationContext.lastQueries.length > 3) {
+                marriageConversationContext.lastQueries.shift();
+            }
+            
+            // Detect confusion signals
+            const confusionKeywords = ['confused', 'don\'t understand', 'unclear', 'what do you mean', 'huh', 'help me', 'frustrated', 'not working', 'doesn\'t make sense'];
+            const isConfused = confusionKeywords.some(kw => userMessage.toLowerCase().includes(kw));
+            
+            // Detect repeated similar queries (user asking same thing multiple times)
+            const uniqueQueries = [...new Set(marriageConversationContext.lastQueries)];
+            const isRepeating = marriageConversationContext.lastQueries.length >= 3 && uniqueQueries.length === 1;
+            
+            // Detect if response was "general" (meaning we didn't understand)
+            const didntUnderstand = responseCategory === 'general';
+            
+            if (isConfused || isRepeating || (didntUnderstand && marriageConversationContext.confusionCount > 1)) {
+                marriageConversationContext.confusionCount++;
+                
+                if (marriageConversationContext.confusionCount >= 2) {
+                    return true; // Trigger escalation
+                }
+            } else if (responseCategory !== 'general') {
+                // Reset confusion count on successful match
+                marriageConversationContext.confusionCount = 0;
+            }
+            
+            return false;
+        }
+        
+        function showEscalation() {
+            const escalationHTML = `
+                <div style="background: rgba(220,38,38,0.1); border-left: 3px solid #dc2626; padding: 1rem; border-radius: 0.75rem; margin-top: 1rem;">
+                    <p style="color: white; font-size: 0.9rem; margin: 0 0 0.75rem 0;">
+                        <strong>🆘 Need personalized help?</strong><br>
+                        Let me connect you with a real person:
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="https://wa.me/+14695039898?text=Hi%2C%20I%20need%20help%20with%20Marriage%20Education%20courses" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,184,148,0.2); border: 1px solid rgba(0,184,148,0.4); padding: 0.5rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">
+                            💬 WhatsApp Chat
+                        </a>
+                        <a href="tel:+14695039898" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,184,148,0.2); border: 1px solid rgba(0,184,148,0.4); padding: 0.5rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">
+                            📞 Call Now
+                        </a>
+                        <a href="mailto:support@marriageeducation.com?subject=Help%20with%20Marriage%20Education" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,184,148,0.2); border: 1px solid rgba(0,184,148,0.4); padding: 0.5rem 1rem; border-radius: 0.5rem; color: white; text-decoration: none; font-size: 0.85rem; transition: all 0.2s;">
+                            ✉️ Email Us
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            const lastMessage = marriageChatMessages.lastElementChild;
+            if (lastMessage) {
+                lastMessage.insertAdjacentHTML('beforeend', escalationHTML);
+            }
+            
+            // Log escalation
+            analytics.logQuery('_ESCALATION_TRIGGERED', 'escalation');
+        }
         
         // Handle sending messages
         function handleSendMessage() {
@@ -255,6 +408,12 @@
                 const response = getIntelligentResponse(userMessage);
                 addMessage(response, 'bot');
                 marriageConversationContext.messageCount++;
+                
+                // Check if escalation is needed
+                const shouldEscalate = checkEscalationTriggers(userMessage, marriageConversationContext.lastCategory);
+                if (shouldEscalate) {
+                    setTimeout(() => showEscalation(), 500);
+                }
                 
                 // Save session after each interaction
                 saveSession();
@@ -944,7 +1103,7 @@ I'll give you the PERFECT recommendation! 🎯`
             return addFollowUp(marriageKnowledge.general.response, 'general');
         }
         
-        // Add contextual follow-up suggestions with clickable buttons
+        // Add contextual follow-up suggestions with clickable buttons and feedback
         function addFollowUp(response, category) {
             // Don't add follow-ups to certain categories
             if (['followup', 'wizard', 'general'].includes(category)) {
@@ -973,17 +1132,142 @@ I'll give you the PERFECT recommendation! 🎯`
                 `<button class="suggested-btn" data-query="${btn}">${btn}</button>`
             ).join(' ');
             
-            return response + `\n\n💡 **Quick Actions:**\n<div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${buttonHTML}</div>`;
+            // Add feedback buttons
+            const feedbackHTML = `
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Was this helpful?</span>
+                    <button class="feedback-btn" data-feedback="positive" data-category="${category}" style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.7rem; border-radius: 0.5rem; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
+                        👍 Yes
+                    </button>
+                    <button class="feedback-btn" data-feedback="negative" data-category="${category}" style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.7rem; border-radius: 0.5rem; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
+                        👎 No
+                    </button>
+                </div>
+            `;
+            
+            return response + `\n\n💡 **Quick Actions:**\n<div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">${buttonHTML}</div>${feedbackHTML}`;
         }
         
-        // Handle clicks on suggested buttons (delegated event handling)
+        // Auto-Learning System with Safety Thresholds
+        const learningSystem = {
+            data: {},
+            thresholds: {
+                minSamples: 10,
+                confidenceLevel: 0.70
+            },
+            
+            async recordFeedback(category, isPositive) {
+                if (!this.data[category]) {
+                    this.data[category] = { positive: 0, negative: 0, total: 0 };
+                }
+                
+                this.data[category].total++;
+                if (isPositive) {
+                    this.data[category].positive++;
+                } else {
+                    this.data[category].negative++;
+                }
+                
+                // Save to localStorage
+                try {
+                    localStorage.setItem('marriage-chat-learning', JSON.stringify(this.data));
+                } catch(e) {}
+                
+                // Save to Firestore
+                if (firestoreDB) {
+                    try {
+                        await firestoreDB.collection('chatbot_learning').doc('feedback_data').set({
+                            categories: this.data,
+                            lastUpdated: new Date().toISOString()
+                        }, { merge: true });
+                    } catch(error) {
+                        console.warn('⚠️ Learning data save failed:', error.message);
+                    }
+                }
+                
+                // Check if adjustment needed
+                this.evaluateAdjustments();
+            },
+            
+            evaluateAdjustments() {
+                for (const [category, stats] of Object.entries(this.data)) {
+                    // Only adjust if we have enough samples
+                    if (stats.total < this.thresholds.minSamples) continue;
+                    
+                    const successRate = stats.positive / stats.total;
+                    
+                    // Low success rate - may need attention
+                    if (successRate < this.thresholds.confidenceLevel) {
+                        console.log(`⚠️ Category "${category}" has low success rate: ${(successRate * 100).toFixed(1)}% (${stats.total} samples)`);
+                        // Don't auto-adjust responses, just log for review
+                    } else {
+                        console.log(`✅ Category "${category}" performing well: ${(successRate * 100).toFixed(1)}% (${stats.total} samples)`);
+                    }
+                }
+            },
+            
+            loadData() {
+                try {
+                    const saved = localStorage.getItem('marriage-chat-learning');
+                    if (saved) {
+                        this.data = JSON.parse(saved);
+                        console.log('📊 Learning data loaded:', this.data);
+                    }
+                } catch(e) {}
+            },
+            
+            getInsights() {
+                const insights = [];
+                for (const [category, stats] of Object.entries(this.data)) {
+                    if (stats.total >= this.thresholds.minSamples) {
+                        const successRate = (stats.positive / stats.total * 100).toFixed(1);
+                        insights.push(`${category}: ${successRate}% (${stats.total} samples)`);
+                    }
+                }
+                return insights;
+            }
+        };
+        
+        // Load learning data on init
+        learningSystem.loadData();
+        
+        // Handle clicks on suggested buttons and feedback buttons (delegated event handling)
         document.addEventListener('click', function(e) {
+            // Suggested action buttons
             if (e.target.classList.contains('suggested-btn')) {
                 const query = e.target.getAttribute('data-query');
                 if (query) {
                     marriageChatInput.value = query;
                     handleSendMessage();
                 }
+            }
+            
+            // Feedback buttons
+            if (e.target.classList.contains('feedback-btn')) {
+                const feedback = e.target.getAttribute('data-feedback');
+                const category = e.target.getAttribute('data-category');
+                const isPositive = feedback === 'positive';
+                
+                // Record feedback
+                learningSystem.recordFeedback(category, isPositive);
+                
+                // Log to analytics
+                analytics.logQuery(`_FEEDBACK_${feedback.toUpperCase()}`, category, feedback);
+                
+                // Update UI
+                e.target.style.background = isPositive ? 'rgba(0,184,148,0.3)' : 'rgba(220,38,38,0.3)';
+                e.target.style.borderColor = isPositive ? 'rgba(0,184,148,0.6)' : 'rgba(220,38,38,0.6)';
+                e.target.disabled = true;
+                
+                // Disable the other button too
+                const siblingBtn = e.target.parentElement.querySelector('.feedback-btn:not([disabled])');
+                if (siblingBtn) siblingBtn.disabled = true;
+                
+                // Show thank you
+                const thankYou = document.createElement('span');
+                thankYou.style.cssText = 'color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-left: 0.5rem;';
+                thankYou.textContent = isPositive ? '✨ Thanks!' : '📝 Noted, we\'ll improve!';
+                e.target.parentElement.appendChild(thankYou);
             }
         });
     }
