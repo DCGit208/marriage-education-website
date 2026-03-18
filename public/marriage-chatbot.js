@@ -859,7 +859,7 @@ Tell me more about your situation for a personalized recommendation!`
             },
             
             contact: {
-                keywords: ['contact', 'support', 'email', 'phone', 'reach', 'customer service', 'assistance'],
+                keywords: ['contact', 'support', 'email', 'phone', 'reach', 'customer service', 'assistance', 'speak', 'talk', 'human', 'real person', 'live', 'representative', 'agent', 'someone', 'speak to', 'talk to', 'speak with', 'talk with'],
                 response: `📞 **Contact Us**
 
 **Main Support:**
@@ -1317,7 +1317,7 @@ I'll give you the PERFECT recommendation! 🎯`
             }
             
             // Priority order: check specific features first
-            const priorityOrder = ['wizard', 'professional', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'contact', 'general'];
+            const priorityOrder = ['wizard', 'contact', 'professional', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'general'];
             
             // PHASE 1: Exact keyword matching (highest precision)
             for (const categoryName of priorityOrder) {
