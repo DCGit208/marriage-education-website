@@ -478,7 +478,7 @@
         // Comprehensive Knowledge Base
         const marriageKnowledge = {
             courses: {
-                keywords: ['course', 'courses', 'class', 'learn', 'study', 'beginner', 'start', 'first course', 'entry level', 'school 1', 'school 2', 'school 3', 'school 4'],
+                keywords: ['course', 'courses', 'class', 'learn', 'study', 'beginner', 'start', 'first course', 'entry level', 'school 1', 'school 2', 'school 3', 'school 4', 'marriage education', 'marriage training', 'marriage program', 'marriage programs', 'learn about marriage', 'marriage learning', 'marriage classes'],
                 response: `🎓 **Best Course for Beginners**
 
 ⭐ **Sex By Design For Dummies** - $300
@@ -823,7 +823,7 @@ Tech companies, healthcare, education, ministry, government
             },
             
             situations: {
-                keywords: ['engaged', 'engaged couple', 'getting married', 'about to marry', 'wedding', 'premarital', 'pre-marriage', 'struggling', 'problems', 'fighting', 'argue', 'divorce', 'considering divorce', 'crisis', 'budget', 'cheap', 'affordable', 'cant afford', 'expensive', 'single', 'not married', 'dating', 'newlywed', 'just married', 'married years', 'intimacy issues', 'sex problems', 'communication problems', 'trust issues', 'infidelity', 'affair', 'separation', 'separated', 'separating', 'leaving', 'left', 'want out', 'breaking up', 'save my marriage', 'save our marriage', 'fix my marriage', 'fix our marriage', 'rescue marriage', 'marriage falling apart', 'relationship problems', 'relationship help', 'relationship issues', 'marital problems', 'marital issues', 'marriage crisis'],
+                keywords: ['engaged', 'engaged couple', 'getting married', 'about to marry', 'wedding', 'premarital', 'pre-marriage', 'struggling', 'problems', 'fighting', 'argue', 'divorce', 'considering divorce', 'crisis', 'budget', 'cheap', 'affordable', 'cant afford', 'expensive', 'single', 'not married', 'dating', 'newlywed', 'just married', 'married years', 'intimacy issues', 'sex problems', 'communication problems', 'trust issues', 'infidelity', 'affair', 'separation', 'separated', 'separating', 'leaving', 'left', 'want out', 'breaking up', 'save my marriage', 'save our marriage', 'fix my marriage', 'fix our marriage', 'rescue marriage', 'marriage falling apart', 'relationship problems', 'relationship help', 'relationship issues', 'marital problems', 'marital issues', 'marriage crisis', 'unhappy', 'unhappy marriage', 'disconnected', 'distant', 'lonely', 'feel like roommates', 'roommates', 'improve my marriage', 'improve our marriage', 'strengthen marriage', 'better marriage', 'healthy marriage', 'stronger marriage', 'finances', 'money problems', 'financial problems', 'debt', 'financial stress', 'money issues', 'parenting', 'children', 'kids', 'parenting issues', 'in-laws', 'in laws', 'sex', 'sexual', 'bedroom', 'bedroom problems', 'no intimacy', 'lack of intimacy', 'no sex', 'sexual dysfunction'],
                 response: `🎯 **Let me recommend the perfect solution for your situation:**
 
 **💍 Engaged/Getting Married?**
@@ -1033,7 +1033,7 @@ Need specific comparison? Ask me! "What's the difference between [X] and [Y]?"`
             },
             
             wizard: {
-                keywords: ['recommend', 'recommendation', 'help me choose', 'what should i', 'not sure', 'guide me', 'confused', 'dont know', 'undecided'],
+                keywords: ['recommend', 'recommendation', 'help me choose', 'what should i', 'not sure', 'guide me', 'confused', 'dont know', 'undecided', 'where do i start', 'where to start', 'where to begin', 'how do i start', 'get started', 'getting started', 'first step', 'marriage advice', 'marriage guidance', 'marriage tips', 'marriage resources', 'marriage help'],
                 response: `🧙‍♂️ **Let Me Guide You - Answer These Questions:**
 
 **1️⃣ What's your current situation?**
