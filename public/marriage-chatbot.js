@@ -673,7 +673,7 @@ Regular (10%) → Senior (+ 5% override) → Regional Director (+ network overri
             },
             
             coaching: {
-                keywords: ['coaching', 'counseling', 'help', 'crisis', 'struggling', 'marriage problems', 'therapy', 'counselor', '1:1', 'one on one', 'private help', 'personal help', 'couples help', 'marriage help', 'need help', 'intensive', 'breakthrough'],
+                keywords: ['coaching', 'counseling', 'help', 'crisis', 'struggling', 'marriage problems', 'therapy', 'counselor', '1:1', 'one on one', 'private help', 'personal help', 'couples help', 'marriage help', 'need help', 'intensive', 'breakthrough', 'therapist', 'marriage therapist', 'relationship counseling', 'relationship counselor', 'marital counseling', 'marital therapist', 'couples therapy', 'couples therapist', 'marriage intensive'],
                 response: `💝 **Need Personal Help? We're Here.**
 
 **🎯 SBD Private Coaching — 1:1 with Dr. Coach**
@@ -823,7 +823,7 @@ Tech companies, healthcare, education, ministry, government
             },
             
             situations: {
-                keywords: ['engaged', 'engaged couple', 'getting married', 'about to marry', 'wedding', 'premarital', 'pre-marriage', 'struggling', 'problems', 'fighting', 'argue', 'divorce', 'considering divorce', 'crisis', 'budget', 'cheap', 'affordable', 'cant afford', 'expensive', 'single', 'not married', 'dating', 'newlywed', 'just married', 'married years', 'intimacy issues', 'sex problems', 'communication problems', 'trust issues', 'infidelity', 'affair'],
+                keywords: ['engaged', 'engaged couple', 'getting married', 'about to marry', 'wedding', 'premarital', 'pre-marriage', 'struggling', 'problems', 'fighting', 'argue', 'divorce', 'considering divorce', 'crisis', 'budget', 'cheap', 'affordable', 'cant afford', 'expensive', 'single', 'not married', 'dating', 'newlywed', 'just married', 'married years', 'intimacy issues', 'sex problems', 'communication problems', 'trust issues', 'infidelity', 'affair', 'separation', 'separated', 'separating', 'leaving', 'left', 'want out', 'breaking up', 'save my marriage', 'save our marriage', 'fix my marriage', 'fix our marriage', 'rescue marriage', 'marriage falling apart', 'relationship problems', 'relationship help', 'relationship issues', 'marital problems', 'marital issues', 'marriage crisis'],
                 response: `🎯 **Let me recommend the perfect solution for your situation:**
 
 **💍 Engaged/Getting Married?**
