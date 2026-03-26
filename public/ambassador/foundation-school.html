@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Foundation School - Marriage Literacy Certification</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00b894">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ME Ambassador">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,6 +26,12 @@
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            padding-top: env(safe-area-inset-top);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
         }
 
         .container {
@@ -764,5 +779,16 @@
         // Load data on page load
         window.addEventListener('DOMContentLoaded', loadSchoolData);
     </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/ambassador-sw-v2.js', { scope: '/ambassador/' })
+          .then(reg => console.log('[PWA] SW registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>

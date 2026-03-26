@@ -2,11 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Senior Ambassador Dashboard | Marriage Education Group</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00b894">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ME Ambassador">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -20,6 +29,12 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 2rem 1rem;
+            padding-top: calc(2rem + env(safe-area-inset-top));
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
         }
 
         .container {
@@ -1785,5 +1800,53 @@
         // Initialize dashboard
         loadSeniorData();
     </script>
+
+  <!-- PWA: Service Worker + Install Prompt -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/ambassador-sw-v2.js', { scope: '/ambassador/' })
+          .then(reg => console.log('[PWA] SW registered:', reg.scope))
+          .catch(err => console.warn('[PWA] SW failed:', err));
+      });
+    }
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'flex';
+    });
+    function installPWA() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(() => {
+        deferredInstallPrompt = null;
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.style.display = 'none';
+      });
+    }
+    function dismissInstallBanner() {
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+    }
+    window.addEventListener('appinstalled', () => {
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.style.display = 'none';
+    });
+  </script>
+  <div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#00b894; color:#fff; padding:14px 20px; align-items:center; justify-content:space-between; gap:12px; z-index:9999; box-shadow:0 -2px 16px rgba(0,0,0,0.18); font-family:Inter,sans-serif;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <img src="/assets/icons/icon-72.png" alt="" style="width:40px;height:40px;border-radius:10px;">
+      <div>
+        <div style="font-weight:700; font-size:0.95rem;">Install Ambassador App</div>
+        <div style="font-size:0.8rem; opacity:0.88;">Quick access to your dashboard &amp; courses</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; flex-shrink:0;">
+      <button onclick="installPWA()" style="background:#fff; color:#00b894; border:none; border-radius:8px; padding:8px 18px; font-weight:700; font-size:0.9rem; cursor:pointer;">Install</button>
+      <button onclick="dismissInstallBanner()" style="background:transparent; color:#fff; border:2px solid rgba(255,255,255,0.5); border-radius:8px; padding:8px 14px; font-size:0.85rem; cursor:pointer;">Not now</button>
+    </div>
+  </div>
 </body>
 </html>
