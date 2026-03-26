@@ -26,6 +26,55 @@
   <meta property="twitter:description" content="Certified marriage counseling programs and corporate wellness solutions." />
   <meta property="twitter:image" content="https://marriageducation.com/images/og-image.jpg" />
   
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Marriage Education",
+    "url": "https://marriageducation.com",
+    "logo": "https://marriageducation.com/images/logo.png",
+    "description": "Professional marriage counseling certification, relationship coaching, sexuality education programs, and corporate training solutions. We provide comprehensive marriage literacy education and certifications worldwide.",
+    "sameAs": [
+      "https://x.com/marriagedu"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "email": "info@marriageducation.com",
+      "availableLanguage": ["English"]
+    },
+    "areaServed": "Worldwide",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Marriage Education Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Course",
+            "name": "Marriage Counseling Certification Programs"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Corporate Training & Wellness Programs"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Book",
+            "name": "Sex By Design Educational Resources"
+          }
+        }
+      ]
+    }
+  }
+  </script>
+  
   <!-- Additional SEO -->
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="language" content="English" />
@@ -315,138 +364,6 @@
       }
     }
     
-    /* Marriage=Porn Modal Styles */
-    .reveal-modal {
-      display: none;
-      position: fixed;
-      z-index: 10000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
-      animation: fadeIn 0.3s ease;
-    }
-    .reveal-modal.active {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .reveal-modal-content {
-      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
-      padding: 0;
-      border-radius: 16px;
-      max-width: 700px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: slideUp 0.4s ease;
-      position: relative;
-    }
-    .modal-header {
-      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 16px 16px 0 0;
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: white;
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.2);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-    }
-    .modal-close:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(90deg);
-    }
-    .modal-body {
-      padding: 2rem;
-    }
-    .book-reveal {
-      display: flex;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      align-items: flex-start;
-    }
-    .book-reveal img {
-      width: 250px;
-      min-width: 250px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      object-fit: cover;
-      display: block;
-    }
-    .book-details {
-      flex: 1;
-    }
-    .book-details h3 {
-      color: #dc2626;
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-    .modal-features {
-      background: #f3f4f6;
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-    }
-    .modal-features ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .modal-features li {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #e5e7eb;
-      color: #374151;
-    }
-    .modal-features li:last-child {
-      border-bottom: none;
-    }
-    .modal-cta {
-      text-align: center;
-      padding-top: 1.5rem;
-      border-top: 2px solid #e5e7eb;
-    }
-    .modal-buy-button {
-      display: inline-block;
-      padding: 1rem 3rem;
-      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      transition: all 0.3s;
-      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-    }
-    .modal-buy-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
-    }
-    @media (max-width: 768px) {
-      .book-reveal {
-        flex-direction: column;
-        align-items: center;
-      }
-      .book-reveal img {
-        width: 150px;
-      }
-    }
-    
     /* Campaign Banner Styles */
     /* Campaign Banner Styles */
     .campaign-banner {
@@ -623,6 +540,7 @@
         <a href="shop.html">Shop</a>
         <a href="courses.html">Courses</a>
         <a href="corporate.html">Corporate Training</a>
+        <a href="resources.html">Resources</a>
         <a href="blog.html">Blog</a>
         <a href="contact.html">Contact</a>
         <a href="ambassador-register.html">Become an Ambassador</a>
@@ -776,7 +694,7 @@
         <div class="product-card featured">
           <div class="product-badge">Most Popular</div>
           <div class="product-image">
-            <img src="images/sexbydesigncompendium.jpg" alt="SBD Compendium" />
+            <img src="images/sexbydesigncompendium.jpg" alt="Sex By Design Compendium - Complete guide to SBD book series" loading="lazy" />
           </div>
           <div class="product-content">
             <h3>SBD Compendium</h3>
@@ -795,7 +713,7 @@
 
         <div class="product-card">
           <div class="product-image">
-            <img src="images/sbd-dummies.jpg" alt="SBD for Dummies" />
+            <img src="images/sbd-dummies.jpg" alt="Sex By Design for Dummies - Entry-level marriage education guide" loading="lazy" />
           </div>
           <div class="product-content">
             <h3>SBD for Dummies</h3>
@@ -814,7 +732,7 @@
 
         <div class="product-card">
           <div class="product-image">
-            <img src="images/Sex-by-design-magazine.jpg" alt="SBD Magazine" />
+            <img src="images/Sex-by-design-magazine.jpg" alt="Sex By Design Magazine - Quarterly marriage education publication" loading="lazy" />
           </div>
           <div class="product-content">
             <h3>SBD Magazine</h3>
@@ -830,52 +748,29 @@
             </div>
           </div>
         </div>
+
+        <div class="product-card">
+          <div class="product-badge">New Release</div>
+          <div class="product-image">
+            <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage Equals Porn and Beyond - Modern intimacy challenges guide" loading="lazy" />
+          </div>
+          <div class="product-content">
+            <h3>Marriage=Porn & Beyond</h3>
+            <p>Navigate modern intimacy challenges with biblical wisdom in the digital age.</p>
+            <div class="product-features">
+              <span>✓ Modern challenges</span>
+              <span>✓ Biblical solutions</span>
+              <span>✓ Practical strategies</span>
+            </div>
+            <div class="product-footer">
+              <div class="price">$29.99</div>
+              <a href="payment.html?product=marriage-porn-beyond&price=29.99" class="btn-product">Get Now</a>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="products-cta">
         <a href="shop.html" class="btn-outline">View All Products →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Featured: Marriage=Porn & Beyond -->
-  <section class="featured-insight" style="background: #ffffff; padding: 3rem 0; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;">
-    <div class="container">
-      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 3.5rem; align-items: center; max-width: 1100px; margin: 0 auto;">
-        <!-- Book Image -->
-        <div style="position: relative; transform: translateY(0); transition: transform 0.4s ease;">
-          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" style="width: 100%; height: auto; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transition: all 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'; this.style.boxShadow='0 30px 60px -12px rgba(0, 0, 0, 0.35)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 25px 50px -12px rgba(0, 0, 0, 0.25)'" />
-          <div style="position: absolute; top: -12px; right: -12px; background: #dc2626; color: white; padding: 10px 24px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; letter-spacing: 1.5px; box-shadow: 0 8px 16px rgba(220, 38, 38, 0.35); text-transform: uppercase;">Controversial</div>
-        </div>
-        
-        <!-- Content -->
-        <div>
-          <div style="display: inline-block; background: #fef2f2; color: #991b1b; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 1rem; text-transform: uppercase;">Featured Insight</div>
-          
-          <h2 style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 2.25rem; line-height: 1.2; margin: 0 0 1rem 0; color: #0f172a; font-weight: 700; letter-spacing: -0.02em;">
-            The Truth About Why Porn "Works"<br>
-            <span style="color: #dc2626; font-weight: 600;">And Why Marriage Must Do Better</span>
-          </h2>
-          
-          <p style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 1.1rem; line-height: 1.65; color: #1e293b; margin: 0 0 0.75rem 0; font-weight: 400;">
-            Porn doesn't win because it's <em style="font-style: normal; color: #dc2626; font-weight: 600;">right</em>.
-          </p>
-          
-          <p style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 1.05rem; line-height: 1.7; color: #334155; margin: 0 0 1.5rem 0; font-weight: 400;">
-            It wins because it takes <span style="color: #dc2626; font-weight: 600;">nakedness, imagery, desire, and seduction</span> seriously — while many marriages abandon these divine assets entirely.
-          </p>
-          
-          <div style="background: #fffbeb; border-left: 5px solid #f59e0b; padding: 1.25rem 1.5rem 1rem 1.5rem; margin: 0 0 1.5rem 0; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);">
-            <p style="margin: 0 0 0.5rem 0; color: #451a03; font-size: 0.95rem; line-height: 1.7; font-weight: 500; font-style: italic;">
-              "This is not a 'don't watch porn' sermon. This is the philosophical infrastructure for building a marriage that makes porn <span style="font-weight: 700; font-style: normal;">irrelevant</span>."
-            </p>
-            <p style="margin: 0; color: #78350f; font-size: 0.85rem; font-weight: 600; text-align: right; letter-spacing: 0.3px;">— The SBD Directive</p>
-          </div>
-          
-          <button onclick="openRevealModal()" style="display: inline-flex; align-items: center; gap: 12px; padding: 14px 32px; background: #dc2626; color: white; text-decoration: none; border-radius: 8px; font-size: 1rem; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 8px 20px -5px rgba(220, 38, 38, 0.4); transition: all 0.3s ease; border: none; cursor: pointer; text-transform: uppercase;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 25px -5px rgba(220, 38, 38, 0.5)'; this.style.background='#b91c1c'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px -5px rgba(220, 38, 38, 0.4)'; this.style.background='#dc2626'">
-            Explore the Insight
-            <i class="fas fa-arrow-right" style="transition: transform 0.3s ease;"></i>
-          </button>
-        </div>
       </div>
     </div>
   </section>
@@ -1087,6 +982,15 @@
           </ul>
         </div>
         <div class="footer-section">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="what-is-marriage-education.html">What is Marriage Education?</a></li>
+            <li><a href="why-marriages-fail.html">Why Marriages Fail</a></li>
+            <li><a href="how-to-build-a-successful-marriage.html">Building Strong Marriages</a></li>
+            <li><a href="resources.html">All Resources →</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
           <h4>Join Our Team</h4>
           <ul>
             <li><a href="ambassador-register.html">📣 Become an Ambassador</a></li>
@@ -1150,73 +1054,6 @@
     setInterval(updateCampaignTimer, 1000);
   </script>
   
-  <!-- Marriage=Porn Reveal Modal -->
-  <div id="revealModal" class="reveal-modal">
-    <div class="reveal-modal-content">
-      <div class="modal-header">
-        <span class="modal-close" onclick="closeRevealModal()">&times;</span>
-        <h2 style="margin: 0; font-size: 2rem;">The Truth About Why Porn Works</h2>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">And why your marriage must do it better</p>
-      </div>
-      <div class="modal-body">
-        <div class="book-reveal">
-          <img src="images/Marriage=Porn&Beyond.jpg" alt="Marriage=Porn & Beyond" />
-          <div class="book-details">
-            <h3>Marriage=Porn & Beyond</h3>
-            <p style="color: #6b7280; font-size: 1rem; line-height: 1.7; margin-bottom: 1rem;">
-              This is not another "don't watch porn" sermon. It's an honest reckoning with <strong>why pornography has power</strong> — and how covenant marriage can outperform it completely.
-            </p>
-            <p style="color: #6b7280; font-size: 1rem; line-height: 1.7;">
-              This book teaches what most marriage resources refuse to address: porn succeeds because it takes nakedness, imagery, desire, and seduction seriously... <strong>while many marriages abandon these divine assets entirely.</strong>
-            </p>
-            <p style="color: #dc2626; font-size: 1rem; font-weight: 600; margin-top: 1rem; font-style: italic;">
-              The solution isn't shame. It's sexual fidelity as marital stewardship.
-            </p>
-          </div>
-        </div>
-        <div class="modal-features">
-          <h4 style="color: #111827; margin-bottom: 1rem; font-size: 1.3rem;">What You'll Master:</h4>
-          <ul>
-            <li><strong>Why Porn "Works"</strong> — Understanding unashamed imagery, curated nakedness, and directed desire (and why these belong in marriage, not screens)</li>
-            <li><strong>Covenant Imagery: Pics & Pearls</strong> — How to build your own exclusive erotic imagination, memory, and visual catalog within covenant (not outside it)</li>
-            <li><strong>Nakedness as Divine Asset</strong> — Genesis 2:25 teaches nakedness is covenant property, not private shame. Learn to steward it like porn never could</li>
-            <li><strong>Marriage = Sexuality = Sex</strong> — Sexuality is a lifestyle, not just sex acts. How you dress, smell, present, seduce — that IS marital fidelity</li>
-            <li><strong>Directing Imagination & Arousal</strong> — Every affair and porn habit starts in imagination. Learn to govern it toward your spouse only</li>
-            <li><strong>Building a Marriage Porn Can't Compete With</strong> — Make counterfeits irrelevant by out-practicing them in allure, devotion, and erotic covenant joy</li>
-          </ul>
-        </div>
-        <div style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
-          <p style="margin: 0; color: #78350f; font-weight: 600; font-size: 1rem; line-height: 1.6;">
-            <i class="fas fa-quote-left"></i> "You do not defeat porn by shame. You defeat porn by a marriage that is more naked, more devoted, more alluring, more erotic, more faithful, and more complete than any counterfeit." <i class="fas fa-quote-right"></i>
-          </p>
-          <p style="margin: 0.5rem 0 0 0; color: #92400e; font-size: 0.9rem; text-align: right;">— The SBD Directive</p>
-        </div>
-        <div class="modal-cta">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-            <div style="background: white; padding: 1.5rem; border-radius: 8px; border: 2px solid #e5e7eb; text-align: center;">
-              <h4 style="color: #374151; margin: 0 0 0.5rem 0; font-size: 1.1rem;">📖 Book Only</h4>
-              <div style="font-size: 2.5rem; color: #059669; font-weight: 700; margin: 0.5rem 0;">$50</div>
-              <p style="color: #6b7280; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Complete written guide</p>
-              <a href="payment.html?product=marriage-porn-beyond-book&price=50" class="modal-buy-button" style="padding: 0.75rem 1.5rem; font-size: 1rem; width: 100%; box-sizing: border-box;">Get the Book</a>
-            </div>
-            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 8px; border: 3px solid #f59e0b; text-align: center; position: relative;">
-              <div style="position: absolute; top: -12px; right: 10px; background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">BEST VALUE</div>
-              <h4 style="color: #78350f; margin: 0 0 0.5rem 0; font-size: 1.1rem;">📚 Book + 5-Day Course</h4>
-              <div style="font-size: 2.5rem; color: #dc2626; font-weight: 700; margin: 0.5rem 0;">$250</div>
-              <p style="color: #92400e; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">Book + Live implementation</p>
-              <a href="payment.html?product=marriage-porn-beyond-course&price=250" class="modal-buy-button" style="padding: 0.75rem 1.5rem; font-size: 1rem; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">Get Book + Course</a>
-            </div>
-          </div>
-          <p style="margin-top: 1rem; color: #6b7280; font-size: 0.9rem; text-align: center;">Instant download • Secure payment • 30-day guarantee</p>
-          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 0.5rem 0;"><strong>Companion Resources:</strong></p>
-            <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">The Art of Sexuality • The Art of Nakedness • Muliebrity & Virility Baron • Pics & Pearls Journal</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- SBD Modal HTML -->
   <div class="sbd-modal-overlay" id="sbdModalOverlay" onclick="closeSBDModal(event)">
     <div class="sbd-modal" onclick="event.stopPropagation()">
@@ -1293,35 +1130,6 @@
       document.body.style.overflow = 'hidden';
     }
     
-    // Marriage=Porn Modal Functions
-    function openRevealModal() {
-      document.getElementById('revealModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-    
-    function closeRevealModal(event) {
-      // Close if clicking overlay, close button, or no event (called directly)
-      if (!event || event.target === document.getElementById('revealModal') || event.target.classList.contains('modal-close')) {
-        document.getElementById('revealModal').classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    }
-    
-    // Close reveal modal when clicking outside or on close button
-    document.getElementById('revealModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeRevealModal(e);
-      }
-    });
-    
-    // Close both modals on ESC key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeRevealModal();
-        closeSBDModal();
-      }
-    });
-    
     function closeSBDModal(event) {
       // Close if clicking overlay or close button
       if (!event || event.target === document.getElementById('sbdModalOverlay')) {
@@ -1329,14 +1137,84 @@
         document.body.style.overflow = '';
       }
     }
+    
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeSBDModal();
+      }
+    });
   </script>
   
-  <!-- SEO Enhancements -->
-  <script src="/js/seo-enhancements.js"></script>
-  <script src="/js/analytics-tracking.js"></script>
-  <script src="/js/performance-optimizations.js"></script>
-  
-  <!-- Marriage Education Intelligent Assistant -->
-  <script src="marriage-chatbot.js"></script>
+  <!-- Ambassador Access Footer -->
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 0; margin-top: 4rem;">
+    <div class="container">
+      <h3 style="color: white; margin-bottom: 0.5rem; font-size: 1.8rem; text-align: center;">🎯 Ambassador Portal</h3>
+      <p style="color: rgba(255,255,255,0.9); margin-bottom: 2rem; text-align: center; font-size: 1rem;">Access your dashboard, track earnings, and manage your team</p>
+      
+      <!-- Tier Access Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto;">
+        
+        <!-- Regular Ambassador Card -->
+        <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,255,255,0.2);">
+          <div style="text-align: center; margin-bottom: 1rem;">
+            <i class="fas fa-user" style="font-size: 2.5rem; color: white; margin-bottom: 0.5rem;"></i>
+            <h4 style="color: white; font-size: 1.2rem; margin: 0;">Ambassador</h4>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.25rem;">10% commission</p>
+          </div>
+          <a href="ambassador/dashboard.html" style="display: block; background: white; color: #667eea; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: transform 0.3s; margin-bottom: 0.5rem;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+          <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        </div>
+
+        <!-- Senior Ambassador Card -->
+        <div style="background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2)); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,215,0,0.4);">
+          <div style="text-align: center; margin-bottom: 1rem;">
+            <i class="fas fa-star" style="font-size: 2.5rem; color: #FFD700; margin-bottom: 0.5rem;"></i>
+            <h4 style="color: white; font-size: 1.2rem; margin: 0;">Senior Ambassador</h4>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.25rem;">10% + 5% override</p>
+          </div>
+          <a href="ambassador/senior-dashboard.html" style="display: block; background: #FFD700; color: #1a1a2e; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: transform 0.3s; margin-bottom: 0.5rem;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+          <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        </div>
+
+        <!-- Regional Director Card -->
+        <div style="background: linear-gradient(135deg, rgba(138,43,226,0.3), rgba(75,0,130,0.3)); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(138,43,226,0.5);">
+          <div style="text-align: center; margin-bottom: 1rem;">
+            <i class="fas fa-crown" style="font-size: 2.5rem; color: #FFD700; margin-bottom: 0.5rem;"></i>
+            <h4 style="color: white; font-size: 1.2rem; margin: 0;">Regional Director</h4>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 0.25rem;">10% + 5% + 5% network</p>
+          </div>
+          <a href="regional-director/rd-dashboard.html" style="display: block; background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: transform 0.3s; margin-bottom: 0.5rem;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-network-wired"></i> RD Dashboard
+          </a>
+          <a href="ambassador-login.html" style="display: block; background: rgba(255,255,255,0.2); color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        </div>
+
+        <!-- Registration Card -->
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; border: 2px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; justify-content: center;">
+          <div style="text-align: center;">
+            <i class="fas fa-user-plus" style="font-size: 2.5rem; color: white; margin-bottom: 0.5rem;"></i>
+            <h4 style="color: white; font-size: 1.2rem; margin-bottom: 0.75rem;">Not registered yet?</h4>
+            <a href="ambassador-register.html" style="display: inline-block; background: white; color: #667eea; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1.1rem; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              <i class="fas fa-rocket"></i> Become an Ambassador
+            </a>
+            <p style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 0.75rem;">Start earning 10% commission today</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -52,6 +52,7 @@
         .header-nav {
             display: flex;
             gap: 1rem;
+            align-items: center;
         }
 
         .header-nav a {
@@ -66,6 +67,84 @@
         .header-nav a:hover {
             background: rgba(255,255,255,0.2);
         }
+
+        /* Notification Bell */
+        .notif-bell-wrap {
+            position: relative;
+            cursor: pointer;
+        }
+        .notif-bell-wrap button {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .notif-bell-wrap button:hover { background: rgba(255,255,255,0.25); }
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .notif-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 320px;
+            background: white;
+            color: #2d3436;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            z-index: 500;
+            overflow: hidden;
+        }
+        .notif-panel.open { display: block; }
+        .notif-panel-header {
+            background: #00b894;
+            color: white;
+            padding: 0.8rem 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notif-panel-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.8;
+        }
+        .notif-list { max-height: 360px; overflow-y: auto; }
+        .notif-item {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .notif-item:hover { background: #f9f9f9; }
+        .notif-item.unread { border-left: 3px solid #00b894; background: #f0fdf9; }
+        .notif-item .notif-time { color: #999; font-size: 0.75rem; margin-top: 0.25rem; }
+        .notif-empty { padding: 2rem; text-align: center; color: #aaa; font-size: 0.9rem; }
 
         /* Senior Promotion Banner */
         .senior-promotion-banner {
@@ -385,202 +464,6 @@
             text-align: right;
             font-weight: 600;
             color: #00b894;
-            font-size: 0.85rem;
-            max-width: 180px;
-        }
-
-        /* Portfolio Combo Table — Multi-Product Milestone Tracker */
-        .milestone-item {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .milestone-top-row {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .milestone-status-text {
-            margin-top: 0.65rem;
-            font-size: 0.93rem;
-            color: #2d3436;
-            padding: 0.4rem 0.25rem;
-        }
-
-        .milestone-progress-wrap {
-            margin: 0.65rem 0 0;
-            background: #e0e0e0;
-            border-radius: 9999px;
-            height: 9px;
-            overflow: hidden;
-        }
-
-        .milestone-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ffc107, #00b894);
-            border-radius: 9999px;
-            transition: width 0.6s ease;
-        }
-
-        .milestone-progress-label {
-            font-size: 0.78rem;
-            color: #636e72;
-            margin-top: 0.25rem;
-        }
-
-        .portfolio-combo-table {
-            margin-top: 0.85rem;
-            border-top: 1px solid rgba(0,0,0,0.08);
-            padding-top: 0.6rem;
-        }
-
-        .combo-table-header {
-            display: grid;
-            grid-template-columns: 2fr 3fr 2fr;
-            gap: 0.5rem;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #b2bec3;
-            padding: 0.3rem 0.5rem;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            margin-bottom: 0.2rem;
-        }
-
-        .portfolio-combo-row {
-            display: grid;
-            grid-template-columns: 2fr 3fr 2fr;
-            gap: 0.5rem;
-            padding: 0.45rem 0.5rem;
-            border-radius: 6px;
-            align-items: center;
-            transition: background 0.2s;
-        }
-
-        .portfolio-combo-row:hover {
-            background: rgba(0,0,0,0.03);
-        }
-
-        .portfolio-combo-row.best-combo {
-            background: rgba(0,184,148,0.08);
-            border: 1px solid rgba(0,184,148,0.2);
-        }
-
-        .combo-label {
-            font-weight: 700;
-            color: #2d3436;
-            font-size: 0.85rem;
-        }
-
-        .combo-desc {
-            color: #636e72;
-            font-size: 0.8rem;
-        }
-
-        .combo-commission {
-            text-align: right;
-            font-weight: 700;
-            color: #00b894;
-            font-size: 0.9rem;
-        }
-
-        .portfolio-combo-row.best-combo .combo-commission {
-            color: #00b894;
-        }
-
-        /* Senior Leadership Leverage Section */
-        .leverage-section {
-            margin-top: 1rem;
-            border-top: 2px dashed rgba(108,92,231,0.25);
-            padding-top: 1rem;
-        }
-
-        .leverage-section-header {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #6c5ce7;
-            margin-bottom: 0.85rem;
-            padding: 0.3rem 0.5rem;
-        }
-
-        .leverage-scenario {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 0.85rem;
-            border-radius: 8px;
-            background: #f8f7ff;
-            border: 1px solid rgba(108,92,231,0.12);
-            margin-bottom: 0.6rem;
-        }
-
-        .leverage-scenario-icon {
-            font-size: 1.5rem;
-            min-width: 36px;
-            text-align: center;
-        }
-
-        .leverage-scenario-body {
-            flex: 1;
-        }
-
-        .leverage-scenario-title {
-            font-weight: 700;
-            font-size: 0.88rem;
-            color: #2d3436;
-        }
-
-        .leverage-scenario-detail {
-            font-size: 0.78rem;
-            color: #636e72;
-            margin-top: 0.15rem;
-        }
-
-        .leverage-scenario-cut {
-            font-weight: 800;
-            font-size: 1rem;
-            color: #6c5ce7;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .leverage-scenario-cut small {
-            display: block;
-            font-weight: 400;
-            font-size: 0.7rem;
-            color: #b2bec3;
-        }
-
-        .leverage-callout {
-            margin-top: 0.85rem;
-            padding: 1rem 1.25rem;
-            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-        }
-
-        .leverage-callout .callout-amount {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-
-        .leverage-callout .callout-label {
-            font-size: 0.8rem;
-            opacity: 0.85;
-            margin-top: 0.2rem;
-        }
-
-        .leverage-callout .callout-note {
-            font-size: 0.75rem;
-            opacity: 0.7;
-            margin-top: 0.5rem;
-            font-style: italic;
         }
 
         /* Commission Breakdown */
@@ -993,9 +876,25 @@
             </div>
             <div class="header-nav">
                 <a href="../index.html"><i class="fas fa-home"></i> Home</a>
-                <a href="../course-viewer.html?courseId=foundation-school"><i class="fas fa-graduation-cap"></i> Foundation School</a>
+                <a href="../foundation-school.html"><i class="fas fa-graduation-cap"></i> Foundation School</a>
                 <a href="resources.html"><i class="fas fa-folder"></i> Resources</a>
                 <a href="leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+                <!-- Notification Bell -->
+                <div class="notif-bell-wrap" id="notifBellWrap">
+                    <button id="notifBellBtn" title="Announcements">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge" id="notifBadge"></span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-panel-header">
+                            <span>📢 Announcements</span>
+                            <button onclick="markAllRead()">Mark all read</button>
+                        </div>
+                        <div class="notif-list" id="notifList">
+                            <div class="notif-empty">No announcements yet</div>
+                        </div>
+                    </div>
+                </div>
                 <button onclick="logout()" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -1019,10 +918,21 @@
                     <div class="countdown-timer" id="contestCountdown">2d 14h 32m</div>
                 </div>
             </div>
-            <div class="contest-leaderboard-mini" id="contestLeaderboardMini">
-                <div style="text-align: center; padding: 1rem; color: #636e72;">
-                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>
-                    Loading weekly leaders...
+            <div class="contest-leaderboard-mini">
+                <div class="contest-leader">
+                    <span class="position">🥇 1st</span>
+                    <span class="name">Grace M.</span>
+                    <span class="books">12 books</span>
+                </div>
+                <div class="contest-leader">
+                    <span class="position">🥈 2nd</span>
+                    <span class="name">Paul K.</span>
+                    <span class="books">10 books</span>
+                </div>
+                <div class="contest-leader highlight">
+                    <span class="position">🔥 5th</span>
+                    <span class="name">You</span>
+                    <span class="books">7 books</span>
                 </div>
             </div>
         </div>
@@ -1060,32 +970,32 @@
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-users"></i></div>
                 <div class="label">Access Units Deployed</div>
-                <div class="value"><span id="accessUnitsDeployed">0</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
-                <div class="subvalue" id="booksPercentComplete">0% Complete</div>
+                <div class="value"><span id="accessUnitsDeployed">23</span><span style="font-size: 1.5rem; color: #636e72;">/500+</span></div>
+                <div class="subvalue">38% Complete</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" id="booksProgress" style="width: 0%"></div>
+                    <div class="progress-fill" id="booksProgress" style="width: 38%"></div>
                 </div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
                 <div class="label">Advocacy Earnings</div>
-                <div class="value" id="advocacyEarnings">0</div>
-                <div class="subvalue">FCFA • <span id="advocacyPaid">Calculating...</span></div>
+                <div class="value" id="advocacyEarnings">34,500</div>
+                <div class="subvalue">FCFA • Paid: 20,000 FCFA</div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-chart-line"></i></div>
                 <div class="label">Your Rank</div>
-                <div class="value">#<span id="currentRank">--</span></div>
-                <div class="subvalue" id="rankSubvalue">Calculating rank...</div>
+                <div class="value">#<span id="currentRank">47</span></div>
+                <div class="subvalue">Out of 500 ambassadors</div>
             </div>
 
             <div class="perf-card">
                 <div class="icon"><i class="fas fa-star"></i></div>
                 <div class="label">Current Level</div>
-                <div class="value" id="currentLevel">Loading...</div>
-                <div class="subvalue" id="nextMilestone">Calculating next milestone...</div>
+                <div class="value" id="currentLevel">Bronze</div>
+                <div class="subvalue" id="nextMilestone">27 units to Silver (150)</div>
             </div>
         </div>
 
@@ -1156,10 +1066,60 @@
         <!-- Target Progress -->
         <div class="milestone-section">
             <h2><i class="fas fa-bullseye"></i> Milestone Tracker</h2>
-            <div id="milestoneTrackerContainer">
-                <div style="text-align: center; padding: 2rem; color: #636e72;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>Loading your milestones...</p>
+            
+            <div class="milestone-item achieved">
+                <div class="milestone-icon achieved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥉 Bronze Level (50 units)</h3>
+                    <p>Congratulations! You've reached Bronze status</p>
+                </div>
+                <div class="milestone-reward">
+                    ✅ Achieved<br>
+                    <small>22,500 FCFA earned</small>
+                </div>
+            </div>
+
+            <div class="milestone-item current">
+                <div class="milestone-icon current">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥈 Silver Level (150 units)</h3>
+                    <p>Only 7 more books to unlock Silver status + Branded T-shirt</p>
+                </div>
+                <div class="milestone-reward">
+                    7 books away<br>
+                    <small>Next: 36,000 FCFA</small>
+                </div>
+            </div>
+
+            <div class="milestone-item locked">
+                <div class="milestone-icon locked">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>🥇 Gold Level (300 units)</h3>
+                    <p>VIP Launch Event Invitation + Featured Content</p>
+                </div>
+                <div class="milestone-reward">
+                    🔒 Locked<br>
+                    <small>40,000 FCFA potential</small>
+                </div>
+            </div>
+
+            <div class="milestone-item locked">
+                <div class="milestone-icon locked">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="milestone-details">
+                    <h3>💎 Senior Ambassador (500+ units)</h3>
+                    <p>10,000 FCFA Bonus + Founding Ambassador Badge</p>
+                </div>
+                <div class="milestone-reward">
+                    🔒 Locked<br>
+                    <small>+10,000 FCFA bonus</small>
                 </div>
             </div>
         </div>
@@ -1167,11 +1127,55 @@
         <!-- Commission Breakdown -->
         <div class="commission-section">
             <h2><i class="fas fa-layer-group"></i> Your Revenue Stacks</h2>
-            <div id="revenueStacksContainer">
-                <div style="text-align: center; padding: 2rem; color: #636e72;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>Loading your revenue breakdown...</p>
+            
+            <div class="commission-tier completed">
+                <div class="tier-info">
+                    <div class="tier-badge">🥉</div>
+                    <div>
+                        <strong>Books 1-20 (Bronze)</strong><br>
+                        <small>1,500 FCFA per book</small>
+                    </div>
                 </div>
+                <div class="tier-amount">30,000 FCFA ✅</div>
+            </div>
+
+            <div class="commission-tier active">
+                <div class="tier-info">
+                    <div class="tier-badge">🥈</div>
+                    <div>
+                        <strong>Books 21-40 (Silver)</strong><br>
+                        <small>1,800 FCFA per book • 3/20 completed</small>
+                    </div>
+                </div>
+                <div class="tier-amount">5,400 FCFA ⏳</div>
+            </div>
+
+            <div class="commission-tier">
+                <div class="tier-info">
+                    <div class="tier-badge">🥇</div>
+                    <div>
+                        <strong>Books 41-60 (Gold)</strong><br>
+                        <small>2,000 FCFA per book</small>
+                    </div>
+                </div>
+                <div class="tier-amount">40,000 FCFA 🔒</div>
+            </div>
+
+            <div class="commission-tier">
+                <div class="tier-info">
+                    <div class="tier-badge">🎁</div>
+                    <div>
+                        <strong>Completion Bonus</strong><br>
+                        <small>When you hit 60 books</small>
+                    </div>
+                </div>
+                <div class="tier-amount">+10,000 FCFA 🔒</div>
+            </div>
+
+            <div class="total-commission">
+                <h3>Your Total Potential</h3>
+                <div class="amount">106,000 FCFA</div>
+                <p style="margin-top: 1rem; opacity: 0.9;">When you complete all 60 books</p>
             </div>
         </div>
 
@@ -1400,11 +1404,8 @@
             
             const progressBar = document.getElementById('booksProgress');
             if (progressBar) {
-                progressBar.style.width = Math.min(progress, 100) + '%';
+                progressBar.style.width = progress + '%';
             }
-            
-            // Update % complete text
-            safeUpdate('booksPercentComplete', Math.min(progress, 100).toFixed(0) + '% Complete');
             
             // Calculate next milestone
             const milestones = [
@@ -1424,11 +1425,6 @@
             // Initialize revenue stacks display
             if (typeof displayRevenueStacks === 'function') {
                 displayRevenueStacks();
-            }
-            
-            // Initialize milestone tracker
-            if (typeof updateMilestoneTracker === 'function') {
-                updateMilestoneTracker();
             }
             
             // Initialize school progress if enrolled
@@ -1529,287 +1525,12 @@
             }
         }
 
-        // Display Revenue Stacks - REAL DATA from Multi-Product Portfolio
+        // Display Revenue Stacks
         function displayRevenueStacks() {
-            try {
-                const stats = ambassadorData.firestoreStats || {};
-                
-                // Get category earnings from Firestore
-                const categoryEarnings = stats.revenue_by_category || {};
-                const totalEarnings = Object.values(categoryEarnings).reduce((sum, val) => sum + (val || 0), 0);
-                
-                // Get category units
-                const categoryUnits = stats.deployment_by_category || {};
-                const totalUnits = Object.values(categoryUnits).reduce((sum, val) => sum + (val || 0), 0);
-                
-                const container = document.getElementById('revenueStacksContainer');
-                if (!container) return;
-                
-                // Build revenue breakdown by category
-                let html = '';
-                
-                const categories = [
-                    { key: 'books', icon: '📚', name: 'Books', color: '#00b894' },
-                    { key: 'schools', icon: '🎓', name: 'Schools', color: '#0984e3' },
-                    { key: 'courses', icon: '📖', name: 'Courses', color: '#6c5ce7' },
-                    { key: 'premium', icon: '💼', name: 'Premium', color: '#fdcb6e' },
-                    { key: 'corporate', icon: '🏢', name: 'Corporate', color: '#e17055' },
-                    { key: 'community', icon: '🤝', name: 'Community', color: '#00cec9' }
-                ];
-                
-                categories.forEach(cat => {
-                    const units = categoryUnits[cat.key] || 0;
-                    const earnings = categoryEarnings[cat.key] || 0;
-                    const percentage = totalEarnings > 0 ? ((earnings / totalEarnings) * 100).toFixed(1) : '0';
-                    
-                    if (earnings > 0) {
-                        html += `
-                            <div class="commission-tier ${earnings > 0 ? 'completed' : ''}">
-                                <div class="tier-info">
-                                    <div class="tier-badge" style="background: ${cat.color};">${cat.icon}</div>
-                                    <div>
-                                        <strong>${cat.name}</strong><br>
-                                        <small>${units} units deployed • ${percentage}% of total income</small>
-                                    </div>
-                                </div>
-                                <div class="tier-amount">${earnings.toLocaleString()} FCFA ✅</div>
-                            </div>
-                        `;
-                    }
-                });
-                
-                // Show empty state if no earnings
-                if (totalEarnings === 0) {
-                    html = `
-                        <div style="text-align: center; padding: 3rem; color: #636e72;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
-                            <h3 style="margin-bottom: 0.5rem;">No Revenue Yet</h3>
-                            <p>Start deploying access units to build your revenue stacks!</p>
-                        </div>
-                    `;
-                }
-                
-                // Add total section
-                html += `
-                    <div class="total-commission">
-                        <h3>Total Portfolio Earnings</h3>
-                        <div class="amount">${totalEarnings.toLocaleString()} FCFA</div>
-                        <p style="margin-top: 1rem; opacity: 0.9;">From ${totalUnits} units across ${Object.keys(categoryEarnings).filter(k => categoryEarnings[k] > 0).length} categories</p>
-                    </div>
-                `;
-                
-                container.innerHTML = html;
-                console.log('✅ Revenue Stacks updated:', totalEarnings.toLocaleString(), 'FCFA from', totalUnits, 'units');
-            } catch (error) {
-                console.error('Error displaying revenue stacks:', error);
-                const container = document.getElementById('revenueStacksContainer');
-                if (container) {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Unable to load revenue data</div>';
-                }
-            }
-        }
-        
-        // Update Milestone Tracker — Multi-Product Portfolio Deployment Guide
-        function updateMilestoneTracker() {
-            try {
-                const stats = ambassadorData.firestoreStats || {};
-                const categoryUnits = stats.deployment_by_category || {};
-                const totalUnits = Object.values(categoryUnits).reduce((sum, val) => sum + (val || 0), 0);
-                const categoryEarnings = stats.revenue_by_category || {};
-                const totalEarnings = Object.values(categoryEarnings).reduce((sum, val) => sum + (val || 0), 0);
-
-                // ─── Commission constants (10% of FCFA price, rate: $1 = 656 FCFA) ───
-                // MFA (Marriage Foundation Access):         15,000 FCFA → 1,500 FCFA
-                // SBD Book (avg $27):                       17,712 FCFA → 1,771 FCFA
-                // School Entry/Standard (avg $75):          49,200 FCFA → 4,920 FCFA
-                // School Flagship / SBD Course ($228):     150,000 FCFA → 15,000 FCFA
-                // School MasterClass (avg $850):           557,600 FCFA → 55,760 FCFA
-                // Diploma Program (avg $2,250):          1,476,000 FCFA → 147,600 FCFA
-                const MFA_COMM        = 1500;
-                const BOOK_COMM       = 1771;
-                const ENTRY_COMM      = 4920;
-                const FLAGSHIP_COMM   = 15000;
-                const MASTERCLASS_COMM= 55760;
-                const DIPLOMA_COMM    = 147600;
-
-                const milestones = [
-                    {
-                        level: 'Bronze', threshold: 50, icon: '🥉',
-                        description: 'Your first 50 deployments — official Ambassador status unlocked across all 4 SBD Academy schools.',
-                        reward: 'Official Ambassador Badge',
-                        combos: [
-                            { label: '🏛️ MFA Deploy',   desc: '50 × Marriage Foundation Access (community path)',                           commission: 50 * MFA_COMM,                           best: false },
-                            { label: '📚 Book Entry',   desc: '50 × SBD Book (retail path)',                                               commission: 50 * BOOK_COMM,                          best: false },
-                            { label: '⭐ Upsell Entry', desc: '40 × MFA + 10 × School Flagship Course (upsell book buyers into a school)', commission: (40 * MFA_COMM) + (10 * FLAGSHIP_COMM),  best: true  }
-                        ]
-                    },
-                    {
-                        level: 'Silver', threshold: 150, icon: '🥈',
-                        description: 'Building momentum across 4 schools — exclusive rewards & recognition.',
-                        reward: 'Branded T-shirt + Featured Story',
-                        combos: [
-                            { label: '🏛️ Community MFA',   desc: '150 × MFA (church / community deployments)',                                       commission: 150 * MFA_COMM,                                 best: false },
-                            { label: '📚 Book Pipeline',   desc: '150 × SBD Book (retail + digital)',                                                 commission: 150 * BOOK_COMM,                                best: false },
-                            { label: '⭐ Upsell Pipeline', desc: '100 × MFA + 50 × School Flagship Course (across Teleios, Sexual Literacy, Marriage Systems, Civilization)', commission: (100 * MFA_COMM) + (50 * FLAGSHIP_COMM), best: true  }
-                        ]
-                    },
-                    {
-                        level: 'Gold', threshold: 300, icon: '🥇',
-                        description: 'Elite territory — deploying across all 4 SBD Academy schools, VIP access & premium recognition.',
-                        reward: 'VIP Launch Event + Featured Content',
-                        combos: [
-                            { label: '🔄 Mixed Portfolio', desc: '200 × MFA + 100 × School Flagship (across all 4 schools)',                       commission: (200 * MFA_COMM) + (100 * FLAGSHIP_COMM),                  best: false },
-                            { label: '🎓 4-School Empire', desc: '100 × MFA + 200 × School Flagship (Teleios + Sexual Literacy + Marriage Systems + Civilization)', commission: (100 * MFA_COMM) + (200 * FLAGSHIP_COMM), best: false },
-                            { label: '⭐ Max Revenue',     desc: '50 × MFA + 250 × School Flagship (course-heavy across all schools)',              commission: (50 * MFA_COMM) + (250 * FLAGSHIP_COMM),                   best: true  }
-                        ]
-                    },
-                    {
-                        level: 'Senior Ambassador', threshold: 500, icon: '💎', senior: true,
-                        description: '500 personal deployments + recruit & lead 10 ambassadors → your income model changes entirely.',
-                        reward: '10,000 FCFA Bonus + Founding Badge + Leadership Team',
-                        combos: [
-                            { label: '🌍 Volume Builder',  desc: '300 × MFA/Books + 200 × School Flagship (across 4 schools)',                     commission: (300 * MFA_COMM) + (200 * FLAGSHIP_COMM),                  best: false },
-                            { label: '🎓 4-School Empire', desc: '150 × MFA + 350 × School Flagship (course-heavy, multi-school)',                  commission: (150 * MFA_COMM) + (350 * FLAGSHIP_COMM),                  best: false },
-                            { label: '⭐ Max Direct Rev',  desc: '50 × MFA + 450 × School Flagship Courses (maximum course revenue)',               commission: (50 * MFA_COMM) + (450 * FLAGSHIP_COMM),                   best: true  }
-                        ],
-                        // PART 2 — leadership override scenarios (5% on team total sales)
-                        leverageScenarios: [
-                            {
-                                icon: '🌱', label: 'Growing Team',
-                                detail: '10 ambassadors × 1,800,000 FCFA/mo sales each = 18,000,000 FCFA team total',
-                                cut: 900000, cutLabel: 'your 5% override / month'
-                            },
-                            {
-                                icon: '💪', label: 'Strong Team',
-                                detail: '10 ambassadors × 4,000,000 FCFA/mo sales each = 40,000,000 FCFA team total',
-                                cut: 2000000, cutLabel: 'your 5% override / month'
-                            },
-                            {
-                                icon: '🚀', label: 'Elite Team (Target)',
-                                detail: '10 ambassadors × $30,000 USD/mo = 196,800,000 FCFA team total',
-                                cut: 9840000, cutLabel: 'your 5% override / month'
-                            }
-                        ]
-                    }
-                ];
-
-                const container = document.getElementById('milestoneTrackerContainer');
-                if (!container) return;
-
-                let html = '';
-
-                milestones.forEach((milestone, index) => {
-                    const achieved  = totalUnits >= milestone.threshold;
-                    const isCurrent = !achieved && (index === 0 || totalUnits >= milestones[index - 1].threshold);
-                    const statusClass = achieved ? 'achieved' : isCurrent ? 'current' : 'locked';
-                    const statusIcon  = achieved ? 'fa-check-circle' : isCurrent ? 'fa-spinner fa-pulse' : 'fa-lock';
-
-                    const prevThreshold = index > 0 ? milestones[index - 1].threshold : 0;
-                    const progressPct   = isCurrent
-                        ? Math.min(100, Math.floor(((totalUnits - prevThreshold) / (milestone.threshold - prevThreshold)) * 100))
-                        : (achieved ? 100 : 0);
-
-                    const remaining  = Math.max(0, milestone.threshold - totalUnits);
-                    const bestCombo  = milestone.combos.find(c => c.best) || milestone.combos[milestone.combos.length - 1];
-
-                    // Status text line
-                    let statusText = '';
-                    if (achieved) {
-                        statusText = `✅ <strong>Achieved!</strong> You've reached this level — actual earnings reflect your real portfolio mix: <strong>${totalEarnings.toLocaleString()} FCFA</strong> total earned.`;
-                    } else if (isCurrent) {
-                        statusText = `<strong>${remaining} unit${remaining !== 1 ? 's' : ''} to go.</strong> Best strategy: ${bestCombo.label} → up to <strong>${bestCombo.commission.toLocaleString()} FCFA</strong> commission potential.`;
-                    } else {
-                        statusText = `🔒 <strong>Locked.</strong> Best path unlocks up to <strong>${bestCombo.commission.toLocaleString()} FCFA</strong> with the ${bestCombo.label} strategy.`;
-                    }
-
-                    // Progress bar — only on current milestone
-                    const progressBar = isCurrent ? `
-                        <div class="milestone-progress-wrap">
-                            <div class="milestone-progress-fill" style="width: ${progressPct}%"></div>
-                        </div>
-                        <div class="milestone-progress-label">${progressPct}% toward ${milestone.level} &nbsp;·&nbsp; ${totalUnits} / ${milestone.threshold} units deployed</div>
-                    ` : '';
-
-                    // Part 1 combo table (same for all milestones)
-                    const part1Header = milestone.senior
-                        ? `<div class="leverage-section-header" style="color:#636e72; border-color:rgba(0,0,0,0.1);">PART 1 — YOUR PATH TO 500 UNITS &nbsp;(Personal Commission while you build)</div>`
-                        : '';
-
-                    const comboRows = milestone.combos.map(c => `
-                        <div class="portfolio-combo-row${c.best ? ' best-combo' : ''}">
-                            <span class="combo-label">${c.label}${c.best ? ' ⭐' : ''}</span>
-                            <span class="combo-desc">${c.desc}</span>
-                            <span class="combo-commission">${c.commission.toLocaleString()} FCFA</span>
-                        </div>
-                    `).join('');
-
-                    // Part 2 — Senior leverage scenarios only
-                    let leverageHtml = '';
-                    if (milestone.senior && milestone.leverageScenarios) {
-                        const scenarioRows = milestone.leverageScenarios.map(s => `
-                            <div class="leverage-scenario">
-                                <div class="leverage-scenario-icon">${s.icon}</div>
-                                <div class="leverage-scenario-body">
-                                    <div class="leverage-scenario-title">${s.label}</div>
-                                    <div class="leverage-scenario-detail">${s.detail}</div>
-                                </div>
-                                <div class="leverage-scenario-cut">
-                                    ${s.cut.toLocaleString()} FCFA
-                                    <small>${s.cutLabel}</small>
-                                </div>
-                            </div>
-                        `).join('');
-
-                        leverageHtml = `
-                            <div class="leverage-section">
-                                <div class="leverage-section-header">PART 2 — LEADERSHIP OVERRIDE &nbsp;(5% on your team's total sales — this is leverage, not labor)</div>
-                                ${scenarioRows}
-                                <div class="leverage-callout">
-                                    <div class="callout-amount">9,840,000 FCFA / month</div>
-                                    <div class="callout-label">🏆 Senior Ambassador Target Income</div>
-                                    <div class="callout-note">Your 10 ambassadors keep their full 10% commission — you earn 5% on top of their total sales volume. Two income streams, one role.</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    html += `
-                        <div class="milestone-item ${statusClass}">
-                            <div class="milestone-top-row">
-                                <div class="milestone-icon ${statusClass}">
-                                    <i class="fas ${statusIcon}"></i>
-                                </div>
-                                <div class="milestone-details">
-                                    <h3>${milestone.icon} ${milestone.level} — ${milestone.threshold} units</h3>
-                                    <p>${milestone.description}</p>
-                                </div>
-                                <div class="milestone-reward">🎁 ${milestone.reward}</div>
-                            </div>
-                            ${progressBar}
-                            <div class="milestone-status-text">${statusText}</div>
-                            <div class="portfolio-combo-table">
-                                ${part1Header}
-                                <div class="combo-table-header">
-                                    <span>Strategy</span>
-                                    <span>Product Mix (${milestone.threshold} units total)</span>
-                                    <span>Commission</span>
-                                </div>
-                                ${comboRows}
-                            </div>
-                            ${leverageHtml}
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-                console.log('✅ Milestone Tracker updated: Total units =', totalUnits, ', Total earnings =', totalEarnings.toLocaleString(), 'FCFA');
-            } catch (error) {
-                console.error('Error updating milestone tracker:', error);
-                const container = document.getElementById('milestoneTrackerContainer');
-                if (container) {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Unable to load milestones</div>';
-                }
-            }
+            // This function can be used to dynamically update revenue stacks display
+            // For now, the static HTML shows the breakdown
+            const total = Object.values(ambassadorData.revenueStacks).reduce((a, b) => a + b, 0);
+            console.log('Total Revenue Across All Stacks:', total.toLocaleString(), 'FCFA');
         }
 
         
@@ -1881,7 +1602,8 @@
         // Update countdown every minute
         setInterval(updateContestCountdown, 60000);
         
-        // NOTE: simulateNotifications() removed for production - real notifications come from Firebase
+        // Show demo notifications after 3 seconds
+        setTimeout(simulateNotifications, 3000);
     </script>
 
     <!-- Badge Achievement Modal -->
@@ -2029,17 +1751,18 @@
                 
                 const db = firebase.firestore();
                 
-                // ⚡ REALTIME LISTENER: Convert .get() to .onSnapshot() for live updates
-                const unsubscribe = db.collection('ambassadors').doc(ambassadorCode).onSnapshot((ambassadorDoc) => {
-                    if (!ambassadorDoc.exists) {
-                        console.error('Ambassador not found in database');
-                        alert('❌ Ambassador account not found. Please contact support.');
-                        window.location.href = '/ambassador-login.html';
-                        return;
-                    }
-                    
-                    const stats = ambassadorDoc.data();
-                    console.log('⚡ Realtime update - Ambassador data:', stats);
+                // One-time fetch for ambassador data
+                const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+                
+                if (!ambassadorDoc.exists) {
+                    console.error('Ambassador not found in database');
+                    alert('❌ Ambassador account not found. Please contact support.');
+                    window.location.href = '/ambassador-login.html';
+                    return;
+                }
+                
+                const stats = ambassadorDoc.data();
+                console.log('Ambassador data loaded:', stats);
                 
                 // Get name - try multiple sources
                 let ambassadorName = 'Ambassador';
@@ -2096,15 +1819,6 @@
                 // Update portfolio table
                 updatePortfolioTable(stats);
                 
-                // Store raw stats for milestone tracker and revenue stacks
-                ambassadorData.firestoreStats = stats;
-                
-                // Update Milestone Tracker from total portfolio
-                updateMilestoneTracker();
-                
-                // Update Revenue Stacks from total portfolio
-                displayRevenueStacks();
-                
                 // Load leaderboard rank
                 loadLeaderboardRank(ambassadorCode);  // No await needed - runs async
                 
@@ -2114,27 +1828,10 @@
                 // Check for new badge unlocks
                 checkBadgeUnlocks(ambassadorData.booksSold);
                 
-                }, (error) => {
-                    // onSnapshot error handler
-                    console.error('⚠️ Realtime listener error:', error);
-                    alert('Failed to load dashboard data: ' + error.message + '\n\nPlease try logging in again.');
-                    // Clear bad data
-                    localStorage.removeItem('ambassadorCode');
-                    localStorage.removeItem('ambassadorEmail');
-                    localStorage.removeItem('ambassadorData');
-                    // Redirect to login
-                    setTimeout(() => {
-                        window.location.href = '/ambassador-login.html';
-                    }, 2000);
-                });
-                
-                // Load commission history, downline, and recent sales (once, with realtime updates)
+                // Load commission history, downline, and recent sales
                 await loadCommissionHistory(ambassadorCode);
                 await loadDownline(ambassadorCode);
                 await loadRecentSales(ambassadorCode);
-                
-                // Load weekly contest leaderboard
-                await loadWeeklyContest(ambassadorCode);
                 
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
@@ -2185,7 +1882,6 @@
             const rankElement = document.getElementById('leaderboardRank');
             const labelElement = document.getElementById('leaderboardLabel');
             const rankDisplayElement = document.getElementById('currentRank');
-            const rankSubvalueElement = document.getElementById('rankSubvalue');
             
             if (rankElement) {
                 rankElement.textContent = rank === 'N/A' ? '#-' : `#${rank}`;
@@ -2194,110 +1890,7 @@
                 labelElement.textContent = rank === 'N/A' ? total : `Current Ranking (Out of ${total})`;
             }
             if (rankDisplayElement) {
-                rankDisplayElement.textContent = rank === 'N/A' ? '--' : rank;
-            }
-            if (rankSubvalueElement) {
-                rankSubvalueElement.textContent = rank === 'N/A' ? total : `Out of ${total} ambassadors`;
-            }
-        }
-        
-        // Load weekly contest leaderboard (top 3 + current user)
-        async function loadWeeklyContest(ambassadorCode) {
-            try {
-                const db = firebase.firestore();
-                
-                // Get start of current week (Sunday)
-                const now = new Date();
-                const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay());
-                startOfWeek.setHours(0, 0, 0, 0);
-                
-                // Query top ambassadors by sales this week
-                const snapshot = await db.collection('sales')
-                    .where('timestamp', '>=', startOfWeek)
-                    .orderBy('timestamp', 'desc')
-                    .get();
-                
-                // Count books per ambassador this week
-                const weeklyCount = {};
-                snapshot.forEach(doc => {
-                    const sale = doc.data();
-                    const code = sale.referralCode || sale.ambassador_code;
-                    if (code) {
-                        weeklyCount[code] = (weeklyCount[code] || 0) + (sale.quantity || 1);
-                    }
-                });
-                
-                // Convert to array and sort
-                const leaders = Object.entries(weeklyCount)
-                    .map(([code, count]) => ({ code, count }))
-                    .sort((a, b) => b.count - a.count)
-                    .slice(0, 10); // Top 10
-                
-                // Get ambassador names
-                const leaderPromises = leaders.slice(0, 3).map(async leader => {
-                    const doc = await db.collection('ambassadors').doc(leader.code).get();
-                    const data = doc.data();
-                    return {
-                        ...leader,
-                        name: data?.name || data?.firstName || 'Ambassador'
-                    };
-                });
-                
-                const topLeaders = await Promise.all(leaderPromises);
-                
-                // Find current user's position
-                const userIndex = leaders.findIndex(l => l.code === ambassadorCode);
-                const userPosition = userIndex >= 0 ? userIndex + 1 : null;
-                const userCount = weeklyCount[ambassadorCode] || 0;
-                
-                // Render leaderboard
-                const container = document.getElementById('contestLeaderboardMini');
-                if (!container) return;
-                
-                let html = '';
-                
-                // Top 3
-                const medals = ['🥇', '🥈', '🥉'];
-                topLeaders.forEach((leader, index) => {
-                    html += `
-                        <div class="contest-leader">
-                            <span class="position">${medals[index]} ${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'}</span>
-                            <span class="name">${leader.name}</span>
-                            <span class="books">${leader.count} books</span>
-                        </div>
-                    `;
-                });
-                
-                // Current user (if not in top 3)
-                if (userPosition && userPosition > 3) {
-                    html += `
-                        <div class="contest-leader highlight">
-                            <span class="position">🔥 ${userPosition}${userPosition === 4 ? 'th' : userPosition === 5 ? 'th' : 'th'}</span>
-                            <span class="name">You</span>
-                            <span class="books">${userCount} books</span>
-                        </div>
-                    `;
-                } else if (userPosition && userPosition <= 3) {
-                    // User is in top 3 - highlight their position
-                    html = html.replace(
-                        `<div class="contest-leader"`,
-                        userPosition === 1 ? `<div class="contest-leader highlight"` : `<div class="contest-leader"`
-                    );
-                }
-                
-                // Show message if no data
-                if (topLeaders.length === 0) {
-                    html = '<div style="text-align: center; padding: 1rem; color: #636e72;">No sales this week yet. Be the first!</div>';
-                }
-                
-                container.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading weekly contest:', error);
-                const container = document.getElementById('contestLeaderboardMini');
-                if (container) {
-                    container.innerHTML = '<div style="text-align: center; padding: 1rem; color: #e74c3c;">Unable to load contest data</div>';
-                }
+                rankDisplayElement.textContent = rank === 'N/A' ? 'N/A' : rank;
             }
         }
         
@@ -2324,36 +1917,11 @@
             const ambassadorId = localStorage.getItem('ambassadorId');
             if (!ambassadorId) return;
             
-            // Listen for new sales
-            db.collection('sales')
-                .where('referralCode', '==', ambassadorData.code)
-                .orderBy('timestamp', 'desc')
-                .limit(1)
-                .onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            // Reload stats when new sale detected
-                            loadAmbassadorData();
-                        }
-                    });
-                });
-            
-            // Listen for new notifications
-            db.collection('notifications')
-                .where('ambassadorId', '==', ambassadorId)
-                .where('read', '==', false)
-                .onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            const notif = change.doc.data();
-                            showNotification(notif.type, notif.title, notif.message);
-                            FirebaseHelper.markNotificationRead(change.doc.id);
-                        }
-                    });
-                });
+            // Note: Real-time listeners removed to eliminate CORS console warnings
+            // Dashboard will show current data on load. Users can refresh to see updates.
         }
         
-        // Update Foundation School Progress (Dual-Track Weekly Structure)
+        // Update Foundation School Progress (Module-Based Tracking)
         function updateFoundationSchool(stats) {
             try {
                 const schoolSection = document.getElementById('schoolProgressSection');
@@ -2362,33 +1930,29 @@
                 if (enrollment) {
                     // Ambassador is enrolled - show progress
                     const currentWeek = enrollment.current_week || 1;
-                    const progressPercent = enrollment.progress_percent || 0; // Use saved progress_percent
                     const totalWeeks = 6;
+                    const progressPercent = enrollment.progress_percent || Math.round((currentWeek / totalWeeks) * 100);
                     
-                    // Count completed modules
+                    // Count completed modules (Weeks 1-6)
                     const completedModules = enrollment.completed_modules || {};
-                    const completedCount = Object.keys(completedModules).filter(key => 
+                    const modulesCompleted = Object.keys(completedModules).filter(key => 
                         completedModules[key]?.completed === true
                     ).length;
-                    
-                    // Check individual track progress for current week
-                    const weekKey = `week${currentWeek}`;
-                    const weekProgress = enrollment.weekly_progress?.[weekKey] || { teleios: false, advocacy: false };
                     
                     document.getElementById('currentWeek').textContent = currentWeek;
                     document.getElementById('completionPercent').textContent = progressPercent + '%';
                     document.getElementById('schoolProgress').style.width = progressPercent + '%';
-                    document.getElementById('completedWeeks').textContent = completedCount; // Show completed modules count
+                    document.getElementById('completedWeeks').textContent = modulesCompleted;
                     document.getElementById('totalWeeks').textContent = totalWeeks;
                     
-                    // Update CRLA status
+                    // Update CRLA status based on final exam completion
                     const crlaStatusEl = document.getElementById('crlaStatus');
-                    if (completedCount === 6 && enrollment.exam_passed) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #00b894;\">✅ Certified</span>';
-                    } else if (completedCount > 0 || progressPercent > 0) {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #ffc107;\">⏳ In Progress</span>';
+                    if (enrollment.exam_passed === true) {
+                        crlaStatusEl.innerHTML = '<span style="color: #00b894;">✅ CRLA Certified</span>';
+                    } else if (modulesCompleted > 0 || currentWeek > 1) {
+                        crlaStatusEl.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
                     } else {
-                        crlaStatusEl.innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                        crlaStatusEl.innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                     }
                 } else {
                     // Default view for new ambassadors
@@ -2397,7 +1961,7 @@
                     document.getElementById('schoolProgress').style.width = '0%';
                     document.getElementById('completedWeeks').textContent = '0';
                     document.getElementById('totalWeeks').textContent = '6';
-                    document.getElementById('crlaStatus').innerHTML = '<span style=\"color: #636e72;\">⭕ Not Started</span>';
+                    document.getElementById('crlaStatus').innerHTML = '<span style="color: #636e72;">⭕ Not Started</span>';
                 }
             } catch (error) {
                 console.error('Error updating Foundation School:', error);
@@ -2490,78 +2054,77 @@
                 const db = firebase.firestore();
                 const tbody = document.getElementById('commissionHistoryBody');
                 
-                // Realtime listener for commissions
-                db.collection('sales')
+                // One-time fetch for commissions
+                const snapshot = await db.collection('sales')
                     .where('source_ambassador', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(20)
-                    .onSnapshot((snapshot) => {
-                        if (snapshot.empty) {
-                            tbody.innerHTML = `
-                                <tr>
-                                    <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
-                                        No commissions yet. Share your referral link to start earning!
-                                    </td>
-                                </tr>
-                            `;
-                            return;
-                        }
-                        
-                        tbody.innerHTML = '';
-                        snapshot.forEach((doc) => {
-                            const sale = doc.data();
-                            const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
-                            const formattedDate = date.toLocaleDateString('en-US', { 
-                                month: 'short', day: 'numeric', year: 'numeric', 
-                                hour: '2-digit', minute: '2-digit' 
-                            });
-                            
-                            const commission = sale.commissions?.ambassador || 0;
-                            const productName = sale.product_name || 'Product Sale';
-                            const source = sale.customer_name || sale.customer_email || 'Customer';
-                            
-                            const row = `
-                                <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
-                                    <td style="padding: 1rem;">${formattedDate}</td>
-                                    <td style="padding: 1rem;">${source}</td>
-                                    <td style="padding: 1rem;">${productName}</td>
-                                    <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
-                                    <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
-                                </tr>
-                            `;
-                            tbody.innerHTML += row;
-                        });
-                    }, (error) => {
-                        console.error('Error loading commission history:', error);
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
-                                    ⚠️ Error loading commissions. Please refresh the page.
-                                </td>
-                            </tr>
-                        `;
+                    .get();
+                
+                if (snapshot.empty) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
+                                No commissions yet. Share your referral link to start earning!
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const sale = doc.data();
+                    const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        month: 'short', day: 'numeric', year: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
                     });
                     
+                    const commission = sale.commissions?.ambassador || 0;
+                    const productName = sale.product_name || 'Product Sale';
+                    const source = sale.customer_name || sale.customer_email || 'Customer';
+                    
+                    const row = `
+                        <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
+                            <td style="padding: 1rem;">${formattedDate}</td>
+                            <td style="padding: 1rem;">${source}</td>
+                            <td style="padding: 1rem;">${productName}</td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
+                            <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
             } catch (error) {
-                console.error('Error setting up commission history:', error);
+                console.error('Error loading commission history:', error);
+                const tbody = document.getElementById('commissionHistoryBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="padding: 2rem; text-align: center; color: #e74c3c;">
+                            ⚠️ Error loading commissions. Please refresh the page.
+                        </td>
+                    </tr>
+                `;
             }
         }
         
-        // ⚡ NEW: Load Downline/Recruits with realtime updates
+        // ⚡ NEW: Load Downline/Recruits
         async function loadDownline(ambassadorCode) {
             try {
                 const db = firebase.firestore();
                 const downlineContainer = document.getElementById('downlineList');
                 const countEl = document.getElementById('downlineCount');
                 
-                // Realtime listener for recruits
-                db.collection('ambassadors')
+                // One-time fetch for recruits
+                const snapshot = await db.collection('ambassadors')
                     .where('rdCode', '==', ambassadorCode)
-                    .onSnapshot((snapshot) => {
-                        const count = snapshot.size;
-                        countEl.textContent = count;
-                        
-                        if (snapshot.empty) {
+                    .get();
+                
+                const count = snapshot.size;
+                countEl.textContent = count;
+                    
+                if (snapshot.empty) {
                             downlineContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
@@ -2614,17 +2177,14 @@
                             `;
                             downlineContainer.innerHTML += card;
                         });
-                    }, (error) => {
-                        console.error('Error loading downline:', error);
-                        downlineContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
-                                ⚠️ Error loading your team. Please refresh the page.
-                            </div>
-                        `;
-                    });
-                    
             } catch (error) {
-                console.error('Error setting up downline listener:', error);
+                console.error('Error loading downline:', error);
+                const downlineContainer = document.getElementById('downlineList');
+                downlineContainer.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #e74c3c; background: #fee; border-radius: 8px;">
+                        ⚠️ Error loading your team. Please refresh the page.
+                    </div>
+                `;
             }
         }
         
@@ -2645,13 +2205,14 @@
                 
                 if (!salesContainer) return;
                 
-                // Query recent sales for this ambassador
-                db.collection('sales')
+                // One-time fetch for recent sales
+                const snapshot = await db.collection('sales')
                     .where('ambassador_code', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(5)
-                    .onSnapshot((snapshot) => {
-                        if (snapshot.empty) {
+                    .get();
+                
+                if (snapshot.empty) {
                             salesContainer.innerHTML = `
                                 <div style="padding: 2rem; text-align: center; color: #636e72; background: #f8f9fa; border-radius: 8px;">
                                     <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
@@ -2682,17 +2243,17 @@
                             `;
                             salesContainer.appendChild(saleItem);
                         });
-                    }, (error) => {
-                        console.error('Error loading recent sales:', error);
-                        salesContainer.innerHTML = `
-                            <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
-                                <p>⚠️ Unable to load recent sales</p>
-                                <small>${error.message}</small>
-                            </div>
-                        `;
-                    });
             } catch (error) {
-                console.error('Error in loadRecentSales:', error);
+                console.error('Error loading recent sales:', error);
+                const salesContainer = document.getElementById('recentSalesList');
+                if (salesContainer) {
+                    salesContainer.innerHTML = `
+                        <div style="padding: 2rem; text-align: center; color: #dc3545; background: #fff5f5; border-radius: 8px;">
+                            <p>⚠️ Unable to load recent sales</p>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
             }
         }
         

@@ -188,10 +188,10 @@ function scheduleNonCriticalTasks(callback) {
 function preloadNextPage() {
   // Preload likely next pages
   const links = {
-    'index.html': ['shop.html', 'courses.html', 'ambassador-program.html'],
+    'index.html': ['shop.html', 'courses.html', 'ambassador-login.html'],
     'shop.html': ['index.html', 'courses.html'],
-    'courses.html': ['shop.html', 'ambassador-program.html'],
-    'ambassador-program.html': ['ambassador-login.html']
+    'courses.html': ['shop.html', 'ambassador-login.html'],
+    'ambassador-login.html': ['ambassador/dashboard.html']
   };
 
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
