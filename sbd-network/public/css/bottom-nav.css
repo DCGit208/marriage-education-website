@@ -1,0 +1,250 @@
+/* ================================================================
+   BOTTOM NAVIGATION BAR + SKELETON LOADING + OFFLINE BANNER
+   ================================================================ */
+
+/* ── Bottom Nav ─────────────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: stretch;
+  z-index: 900;
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.45);
+  /* Smooth slide when hidden in chat view */
+  transition: transform 0.25s ease;
+}
+
+.bn-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 6px 0 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+  position: relative;
+}
+
+.bn-tab.active { color: var(--accent-primary); }
+
+.bn-icon {
+  position: relative;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.bn-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Badges inside bottom nav */
+.bn-icon .dm-badge,
+.bn-icon .notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  background: #ff4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── Page clearance for bottom nav ──────────────────────────────── */
+.bottom-nav-page .dashboard-main,
+.bottom-nav-page .group-main,
+.bottom-nav-page .board-main,
+.bottom-nav-page .profile-main {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+/* DM page inbox: dm-main sits above the bottom nav */
+.bottom-nav-page .dm-main {
+  bottom: calc(60px + env(safe-area-inset-bottom));
+}
+/* Chat view: dm-main extends to full height (nav is hidden via JS display:none).
+   input bar handles its own safe-area bottom padding. */
+.dm-page.in-chat .dm-main {
+  bottom: 0;
+}
+
+/* FAB: sit above bottom nav */
+.bottom-nav-page .fab {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+/* Toasts: sit above bottom nav */
+.bottom-nav-page #appToast,
+.bottom-nav-page .app-toast {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+/* ── Slim loading-progress bar (replaces full-screen spinner) ───── */
+.bottom-nav-page .loading-overlay {
+  top: 60px;       /* sit just below the header */
+  height: 3px;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  z-index: 980;
+}
+
+.bottom-nav-page .loading-overlay .spinner { display: none; }
+
+.bottom-nav-page .loading-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-primary) 50%,
+    transparent 100%
+  );
+  animation: bn-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes bn-loading {
+  from { left: -100%; }
+  to   { left: 100%;  }
+}
+
+/* ── Skeleton loading cards ─────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skel-card,
+.skel-post {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skel-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+
+.skel-line {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.skel-line.tall {
+  height: 120px;
+  border-radius: 8px;
+}
+
+.skel-icon,
+.skel-line {
+  background: linear-gradient(
+    90deg,
+    var(--bg-hover)    25%,
+    var(--border-color) 50%,
+    var(--bg-hover)    75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skel-line.w90 { width: 90%; }
+.skel-line.w80 { width: 80%; }
+.skel-line.w60 { width: 60%; }
+.skel-line.w40 { width: 40%; }
+
+/* ── Offline / Online banner ────────────────────────────────────── */
+#offline-banner {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: rgba(28, 22, 0, 0.97);
+  border-bottom: 1px solid rgba(255, 200, 0, 0.3);
+  color: rgba(255, 215, 50, 0.95);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 16px;
+  z-index: 960;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: offline-slide 0.25s ease;
+}
+
+#offline-banner.show    { display: flex; }
+#offline-banner.online  {
+  background: rgba(4, 18, 8, 0.97);
+  border-bottom-color: rgba(76, 175, 80, 0.4);
+  color: rgba(100, 220, 110, 0.95);
+}
+
+@keyframes offline-slide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.offline-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  flex-shrink: 0;
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.2; }
+}
+
+/* ── Page Transition Animations ─────────────────────────────────── */
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pageSlideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-18px); }
+}
+
+.page-enter     { animation: pageSlideIn  0.28s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.page-exit      { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.page-exit-back { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }

@@ -1,0 +1,859 @@
+/* ================================================================
+   DM (DIRECT MESSAGES) PAGE STYLES
+   ================================================================ */
+
+.dm-page { background: var(--bg-primary); }
+
+.dm-main {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  /* No flex needed — both child views use position:absolute */
+}
+
+/* Both views absolutely fill dm-main.
+   This is the most robust approach — no flex height chain that can break. */
+.dm-view {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* ── Inbox / conversation list ───────────────────────────────────── */
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.convo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.convo-item:hover, .convo-item:active { background: var(--bg-card); }
+.convo-item.unread .convo-name { color: #fff; font-weight: 700; }
+.convo-item.unread .convo-preview { color: rgba(255,255,255,0.6); }
+
+.convo-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.convo-name {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.convo-preview {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.convo-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.convo-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.convo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  display: block;
+}
+
+.convo-unread-badge {
+  background: var(--accent-primary);
+  color: #000;
+  font-size: 0.62rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Avatar helpers ──────────────────────────────────────────────── */
+.convo-avatar,
+.peer-avatar,
+.bubble-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.avatar-initials-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.avatar-img-sm {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.bubble-avatar {
+  width: 28px;
+  height: 28px;
+  margin-top: 4px;
+}
+
+/* ── Chat view ───────────────────────────────────────────────────── */
+/* #chatView is absolutely positioned (via .dm-view) inside dm-main.
+   We switch it from the default overflow-y:auto to a flex column so
+   the messages area scrolls and the input bar stays pinned at the bottom. */
+#chatView {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;  /* children control their own scroll */
+}
+
+.chat-messages {
+  flex: 1;
+  min-height: 0;   /* CRITICAL: lets a flex child shrink so siblings stay visible */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 12px 14px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.chat-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  /* 75% of chat-messages content width — leaves comfortable margin on both
+     sides on any phone size and accounts for avatar + gap space */
+  max-width: 75%;
+  min-width: 0;
+  position: relative;            /* anchor for .swipe-reply-icon */
+  /* Prevent iOS native long-press callout / text-select popup */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+/* ── Swipe-to-reply icon (revealed as bubble slides right) ───────── */
+.swipe-reply-icon {
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.05rem;
+  color: var(--accent-primary);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.08s;
+}
+
+.chat-bubble.mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat-bubble.theirs { align-self: flex-start; }
+
+.bubble-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  /* Do NOT use overflow:hidden here — it clips text instead of wrapping it */
+}
+
+.bubble-name {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  padding: 0 6px;
+}
+
+.bubble-text {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  /* break-word: only break a word if it genuinely won't fit on one line.
+     overflow-wrap:anywhere handles URLs and very long strings.
+     break-all was breaking normal words mid-character ("respon ding"). */
+  word-break: normal;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* URLs inside bubbles must always break to fit — use break-all only on <a> */
+.bubble-text a {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  display: inline;
+}
+
+.chat-bubble.mine .bubble-text {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #000;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.chat-bubble.theirs .bubble-text {
+  border-radius: 16px 16px 16px 4px;
+}
+
+.bubble-time {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  padding: 0 6px;
+  align-self: flex-end;
+}
+
+.chat-input-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  /* Safe-area padding so input never sits under the home-indicator notch.
+     NOTE: dm-main is already positioned above the safe-area when in-chat
+     (bottom: env(safe-area-inset-bottom)), so this is redundant in that
+     mode but harmless — it just adds visual breathing room. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  align-items: flex-end;
+  width: 100%;
+  box-sizing: border-box;
+  /* Do NOT set overflow:hidden here — it clips the Send button */
+}
+
+.attach-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  line-height: 1;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+.attach-btn:hover { opacity: 1; }
+
+.chat-input {
+  flex: 1;
+  min-width: 0;    /* CRITICAL: lets textarea shrink below its intrinsic width */
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 8px 14px;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+  max-height: 120px;
+  transition: border-color 0.18s;
+}
+
+.chat-input:focus { border-color: var(--accent-primary); }
+.chat-input::placeholder { color: var(--text-muted); }
+
+.chat-send-btn {
+  background: var(--accent-primary);
+  border: none;
+  border-radius: 20px;
+  color: #000;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.15s;
+  flex-shrink: 0;  /* prevent Send button from being squashed off-screen */
+  align-self: flex-end;
+}
+
+.chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-send-btn:hover:not(:disabled) { background: var(--accent-hover); }
+
+.chat-loading {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 24px;
+}
+
+/* ── New DM modal ────────────────────────────────────────────────── */
+.dm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 500;
+}
+
+.dm-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  border-radius: 16px 16px 0 0;
+  z-index: 501;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.dm-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.dm-search-input {
+  background: rgba(255,255,255,0.07);
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 10px 16px;
+  outline: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+.dm-search-input::placeholder { color: var(--text-muted); }
+
+.dm-user-list {
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dm-peer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dm-peer-row:hover, .dm-peer-row:active { background: var(--bg-hover); }
+
+.peer-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* ── Empty states ────────────────────────────────────────────────── */
+.dm-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.dm-empty-sub {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dm-empty-peers {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.dm-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── Toast ───────────────────────────────────────────────────────── */
+.app-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #222;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+  white-space: nowrap;
+}
+
+.app-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Date separator ──────────────────────────────────────────────── */
+.chat-date-sep {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 3px 10px;
+  margin: 4px auto;
+  align-self: center;
+  user-select: none;
+}
+
+/* ── Read receipt ticks ──────────────────────────────────────────── */
+.bubble-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  align-self: flex-end;
+}
+
+.bubble-edited {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-right: 2px;
+}
+
+.bubble-tick {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.bubble-tick.read {
+  color: var(--accent-primary);
+}
+
+/* ── Deleted message ──────────────────────────────────────────────── */
+.bubble-deleted {
+  font-style: italic;
+  opacity: 0.5;
+  background: transparent !important;
+  border-style: dashed !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Image attachment in bubble ──────────────────────────────────── */
+.bubble-img {
+  max-width: 220px;
+  max-height: 260px;
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  cursor: pointer;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ── Video attachment in bubble ──────────────────────────────────── */
+.bubble-video {
+  max-width: 260px;
+  max-height: 300px;
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin-bottom: 2px;
+  background: #000;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ── Convo avatar wrap (for presence dot positioning) ────────────── */
+.convo-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+.convo-avatar-wrap .convo-avatar,
+.convo-avatar-wrap .avatar-initials-sm,
+.convo-avatar-wrap .avatar-img-sm {
+  width: 44px;
+  height: 44px;
+}
+
+/* ── Online presence dot ─────────────────────────────────────────── */
+.presence-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  background: #4caf50;
+  border: 2px solid var(--bg-primary);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ── Typing indicator bubble ──────────────────────────────────────── */
+.typing-bubble {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 14px;
+  width: 52px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0);   opacity: 0.45; }
+  30%            { transform: translateY(-5px); opacity: 1;    }
+}
+
+/* ── DM Image Lightbox ───────────────────────────────────────────── */
+.dm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.dm-lightbox.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.dm-lightbox-img {
+  max-width: 96vw;
+  max-height: 88vh;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.8);
+  transform: scale(0.92);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dm-lightbox.active .dm-lightbox-img { transform: scale(1); }
+
+.dm-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.dm-lightbox-close:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Quote-reply preview inside bubble ───────────────────────────── */
+.bubble-reply-preview {
+  background: rgba(255,255,255,0.08);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 260px;
+}
+
+.bubble-reply-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.bubble-reply-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Reply banner (above input bar) ─────────────────────────────── */
+.reply-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-primary);
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
+
+/* ── Edit banner (above input bar) ──────────────────────────────── */
+.edit-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  border-left: 3px solid #ffd740;
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
+
+.edit-banner-label {
+  flex: 1;
+  font-size: 0.78rem;
+  color: #ffd740;
+  font-weight: 600;
+}
+
+.reply-banner-text {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-cancel-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Emoji reactions on bubbles ──────────────────────────────────── */
+.msg-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+  padding: 0 2px;
+}
+
+.msg-reactions.mine {
+  justify-content: flex-end;
+}
+
+.msg-reaction-chip {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.msg-reaction-chip.mine {
+  background: rgba(0,188,212,0.18);
+  border-color: var(--accent-primary);
+}
+
+.msg-reaction-chip:active { transform: scale(0.93); }
+
+/* ── Bubble context menu ──────────────────────────────────────────── */
+.bubble-ctx-menu {
+  position: fixed;
+  z-index: 3000;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  min-width: 200px;
+  max-width: min(240px, calc(100vw - 16px));
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+
+.bubble-ctx-menu.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.bubble-ctx-emojis {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ctx-emoji-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.12s, transform 0.1s;
+  line-height: 1;
+}
+
+.ctx-emoji-btn:hover, .ctx-emoji-btn:active {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.2);
+}
+
+.bubble-ctx-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  text-align: left;
+  padding: 11px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+
+.bubble-ctx-btn:last-child { border-bottom: none; }
+.bubble-ctx-btn:hover, .bubble-ctx-btn:active { background: var(--bg-hover); }
+.bubble-ctx-btn.danger { color: #ff5252; }
+
+/* ── Mobile touch target + keyboard fixes ─────────────────────────── */
+@media (max-width: 768px) {
+  .attach-btn {
+    /* 36px is comfortably tappable and won't force the bar wider than the screen.
+       44px min-width was making two buttons take too much space. */
+    min-width: 36px;
+    min-height: 44px;
+    width: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 0;
+    font-size: 1.3rem;
+  }
+
+  .chat-input-bar {
+    /* Tighter horizontal padding on small phones so all 4 elements fit */
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 6px;
+  }
+
+  .chat-send-btn {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 22px;
+    flex-shrink: 0;
+  }
+
+  .reply-cancel-btn {
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ctx-emoji-btn {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 1.5rem;
+  }
+}
+

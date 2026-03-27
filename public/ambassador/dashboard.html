@@ -2265,5 +2265,121 @@
             setupRealtimeListeners();
         });
     </script>
+
+    <!-- Announcements + Notification Bell Logic -->
+    <script>
+    (function() {
+        const bellBtn = document.getElementById('notifBellBtn');
+        const panel = document.getElementById('notifPanel');
+        const badge = document.getElementById('notifBadge');
+        const list = document.getElementById('notifList');
+        let unreadCount = 0;
+        let readIds = JSON.parse(localStorage.getItem('me_read_notifs') || '[]');
+
+        // Toggle panel
+        bellBtn && bellBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            panel.classList.toggle('open');
+        });
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('notifBellWrap').contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        function updateBadge() {
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function timeAgo(ts) {
+            if (!ts) return '';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+            return Math.floor(diff/86400) + 'd ago';
+        }
+
+        window.markAllRead = function() {
+            const items = list.querySelectorAll('.notif-item');
+            items.forEach(item => {
+                const id = item.dataset.id;
+                if (id && !readIds.includes(id)) readIds.push(id);
+                item.classList.remove('unread');
+            });
+            localStorage.setItem('me_read_notifs', JSON.stringify(readIds));
+            unreadCount = 0;
+            updateBadge();
+        };
+
+        // Load announcements from Firestore 'announcements' collection
+        function loadAnnouncements() {
+            if (typeof firebase === 'undefined' || !firebase.apps.length) return;
+            const db = firebase.firestore();
+            db.collection('announcements')
+                .orderBy('createdAt', 'desc')
+                .limit(20)
+                .onSnapshot(function(snap) {
+                    if (snap.empty) return;
+                    unreadCount = 0;
+                    list.innerHTML = '';
+                    snap.forEach(function(doc) {
+                        const d = doc.data();
+                        const isUnread = !readIds.includes(doc.id);
+                        if (isUnread) unreadCount++;
+                        const item = document.createElement('div');
+                        item.className = 'notif-item' + (isUnread ? ' unread' : '');
+                        item.dataset.id = doc.id;
+                        item.innerHTML = '<strong>' + (d.title || 'Announcement') + '</strong><br>' +
+                            (d.body || d.message || '') +
+                            '<div class="notif-time">' + timeAgo(d.createdAt) + '</div>';
+                        item.addEventListener('click', function() {
+                            if (!readIds.includes(doc.id)) {
+                                readIds.push(doc.id);
+                                localStorage.setItem('me_read_notifs', JSON.stringify(readIds));
+                                if (unreadCount > 0) unreadCount--;
+                                updateBadge();
+                            }
+                            item.classList.remove('unread');
+                        });
+                        list.appendChild(item);
+                    });
+                    updateBadge();
+                }, function() {}); // silently fail if collection doesn't exist yet
+        }
+
+        // Request browser notification permission (for future push support)
+        // Only ask once, only if in standalone PWA mode
+        function requestNotifPermission() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted' || Notification.permission === 'denied') return;
+            const inPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            if (!inPWA) return; // Only prompt when installed as app
+            setTimeout(function() {
+                Notification.requestPermission();
+            }, 3000);
+        }
+
+        loadAnnouncements();
+        requestNotifPermission();
+    })();
+    </script>
+
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/ambassador-sw-v2.js', { scope: '/ambassador/' })
+                    .then(reg => console.log('[PWA] SW registered:', reg.scope))
+                    .catch(err => console.warn('[PWA] SW failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>

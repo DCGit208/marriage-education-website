@@ -22,6 +22,15 @@ var auth = null;
 
 if (typeof firebase.firestore === 'function') {
     db = firebase.firestore();
+    try {
+        db.settings({
+            experimentalForceLongPolling: true,
+            useFetchStreams: false
+        });
+        console.log('✅ Firestore configured with experimentalForceLongPolling: true, useFetchStreams: false');
+    } catch (e) {
+        console.warn('⚠️ Could not set Firestore settings:', e);
+    }
 }
 
 if (typeof firebase.auth === 'function') {

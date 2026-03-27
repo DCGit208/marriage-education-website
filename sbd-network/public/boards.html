@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="My Boards - SBD Network">
+    <meta name="theme-color" content="#000000">
+    <title>Boards - SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/board-media.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=53">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="dashboard-page bottom-nav-page">
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1 class="app-logo">My Boards</h1>
+        </div>
+        <div class="header-right">
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications" title="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <div id="allBoardsContainer">
+            <!-- Skeleton while loading -->
+            <div class="boards-group-section">
+                <div class="boards-group-title skel-line w60" style="height:18px;margin-bottom:14px;"></div>
+                <div class="boards-grid">
+                    <div class="skel-card"><div class="skel-icon"></div><div class="skel-line w60"></div><div class="skel-line w80"></div></div>
+                    <div class="skel-card"><div class="skel-icon"></div><div class="skel-line w80"></div><div class="skel-line w60"></div></div>
+                </div>
+            </div>
+        </div>
+        <div id="noBoardsMessage" class="empty-state" style="display:none;">
+            <p>No boards available yet.</p>
+            <p>Contact an admin to get added to groups.</p>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+    <div id="notifPanel" class="notif-panel">
+        <div class="notif-panel-header">
+            <h3>Notifications</h3>
+            <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+        </div>
+        <ul id="notifList" class="notif-list"></ul>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=53"></script>
+    <script defer src="/js/notifications.js?v=53"></script>
+    <script defer src="/js/dm-badge.js?v=53"></script>
+    <script defer src="/js/ptr.js?v=53"></script>
+    <script defer src="/js/boards.js?v=53"></script>
+    <script defer src="/js/transitions.js?v=53"></script>
+    <script defer src="/js/swipe-back.js?v=53"></script>
+    <script defer src="/js/install-prompt.js?v=53"></script>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/explore.html" class="bn-tab" aria-label="Explore">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">Explore</span>
+    </a>
+    <a href="/dm.html" class="bn-tab" aria-label="Messages">
+      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
+      <span class="bn-label">Messages</span>
+    </a>
+    <a href="/boards.html" class="bn-tab active" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/profile.html" class="bn-tab" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=53"></script>
+</body>
+</html>

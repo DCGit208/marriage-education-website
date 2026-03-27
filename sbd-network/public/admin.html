@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Admin Panel - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="admin-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button id="backBtn" class="btn btn-icon">←</button>
+            <h1 class="page-title">Admin Panel</h1>
+        </div>
+        <div class="header-right">
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="admin-main">
+        
+        <!-- Tab Navigation -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="groups">Groups</button>
+            <button class="tab-btn" data-tab="boards">Boards</button>
+            <button class="tab-btn" data-tab="users">Users</button>
+            <button class="tab-btn" data-tab="content">Content</button>
+            <button class="tab-btn" data-tab="analytics">Analytics</button>
+        </div>
+        
+        <!-- Groups Tab -->
+        <section id="groupsTab" class="admin-tab active">
+            <div class="admin-section-header">
+                <h3>Manage Groups</h3>
+                <button id="createGroupBtn" class="btn btn-primary">+ Create Group</button>
+            </div>
+            <div id="groupsList" class="admin-list"></div>
+        </section>
+        
+        <!-- Boards Tab -->
+        <section id="boardsTab" class="admin-tab">
+            <div class="admin-section-header">
+                <h3>Manage Boards</h3>
+                <button id="createBoardBtn" class="btn btn-primary">+ Create Board</button>
+            </div>
+            <div id="boardsList" class="admin-list"></div>
+        </section>
+        
+        <!-- Users Tab -->
+        <section id="usersTab" class="admin-tab">
+            <div class="admin-section-header">
+                <h3>Manage Users</h3>
+            </div>
+            <div id="usersList" class="admin-list"></div>
+        </section>
+
+        <!-- Content Tab -->
+        <section id="contentTab" class="admin-tab">
+            <div class="admin-section-header">
+                <h3>Content Moderation</h3>
+                <button id="broadcastBtn" class="btn btn-primary">📢 Broadcast</button>
+            </div>
+            <div class="admin-section-header" style="margin-top:8px">
+                <label for="contentBoardFilter" style="font-size:13px;color:var(--text-secondary)">Filter by Board:</label>
+                <select id="contentBoardFilter" class="admin-select" style="flex:1;margin-left:8px">
+                    <option value="">All Boards</option>
+                </select>
+            </div>
+            <div id="contentList" class="admin-list"></div>
+        </section>
+
+        <!-- Analytics Tab -->
+        <section id="analyticsTab" class="admin-tab">
+            <div class="admin-section-header">
+                <h3>Member Activity</h3>
+                <button id="refreshAnalyticsBtn" class="btn btn-secondary btn-sm">↺ Refresh</button>
+            </div>
+            <div id="analyticsList" class="admin-list"></div>
+        </section>
+        
+    </main>
+    
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Group</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <form id="createGroupForm">
+                <div class="form-group">
+                    <label for="groupTitle">Group Title</label>
+                    <input type="text" id="groupTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="groupDescription">Description</label>
+                    <textarea id="groupDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div id="editGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Group</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <form id="editGroupForm">
+                <input type="hidden" id="editGroupId">
+                <div class="form-group">
+                    <label for="editGroupTitle">Group Title</label>
+                    <input type="text" id="editGroupTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editGroupDescription">Description</label>
+                    <textarea id="editGroupDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Board Modal -->
+    <div id="createBoardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Board</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <form id="createBoardForm">
+                <div class="form-group">
+                    <label for="boardGroupId">Select Group</label>
+                    <select id="boardGroupId" required>
+                        <option value="">Choose a group...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="boardTitle">Board Title</label>
+                    <input type="text" id="boardTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="boardDescription">Description</label>
+                    <textarea id="boardDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="boardCoverFile">Cover Image <span style="font-weight:400;color:var(--text-muted);">(optional, JPG/PNG/WebP)</span></label>
+                    <input type="file" id="boardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <div id="boardCoverPreview" style="margin-top:8px;display:none;">
+                        <img id="boardCoverPreviewImg" src="" alt="Cover preview" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Board Modal -->
+    <div id="editBoardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Board</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <form id="editBoardForm">
+                <input type="hidden" id="editBoardId">
+                <div class="form-group">
+                    <label for="editBoardGroup">Move to Group</label>
+                    <select id="editBoardGroup" required>
+                        <option value="">Choose a group...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editBoardTitle">Board Title</label>
+                    <input type="text" id="editBoardTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBoardDescription">Description</label>
+                    <textarea id="editBoardDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editBoardCoverFile">Cover Image <span style="font-weight:400;color:var(--text-muted);">(optional — replaces existing)</span></label>
+                    <input type="file" id="editBoardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <div id="editBoardCoverPreview" style="margin-top:8px;">
+                        <img id="editBoardCoverPreviewImg" src="" alt="Cover preview" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;display:none;">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Manage User Modal (expanded) -->
+    <div id="manageUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="manageUserTitle">Manage User</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <div id="manageUserContent">
+                <p id="manageUserName" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px"></p>
+
+                <!-- Role -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Role</h4>
+                    <div class="admin-manage-row">
+                        <span id="manageUserRole" style="font-size:14px"></span>
+                        <button id="toggleRoleBtn" class="btn btn-sm btn-primary" style="margin-left:auto"></button>
+                    </div>
+                </div>
+
+                <!-- Danger zone -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label" style="color:#ff4444">Danger Zone</h4>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button id="resetPasswordBtn" class="btn btn-sm btn-secondary">✉ Reset Password</button>
+                        <button id="removeUserBtn" class="btn btn-sm btn-danger">🚫 Suspend</button>
+                        <button id="hardDeleteUserBtn" class="btn btn-sm btn-danger" style="background:#7f0000;font-weight:700;">🗑 Delete</button>
+                    </div>
+                </div>
+
+                <!-- Groups -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Group Membership</h4>
+                    <div id="userGroupsChecklist" class="groups-checklist"></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Close</button>
+                    <button id="saveUserGroupsBtn" class="btn btn-primary">Save Groups</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Post Modal -->
+    <div id="movePostModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Move Post to Board</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <div class="form-group">
+                <label for="movePostTarget">Target Board</label>
+                <select id="movePostTarget">
+                    <option value="">Choose a board...</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                <button id="confirmMovePostBtn" class="btn btn-primary">Move</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="broadcastModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📢 Broadcast Announcement</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <div class="form-group">
+                <label for="broadcastTarget">Send to</label>
+                <select id="broadcastTarget">
+                    <option value="all">All Members</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="broadcastMessage">Message</label>
+                <textarea id="broadcastMessage" rows="5" placeholder="Write your announcement..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                <button id="sendBroadcastBtn" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=49"></script>
+    <script defer src="/js/upload.js?v=49"></script>
+    <script defer src="/js/admin.js?v=49"></script>
+</body>
+</html>

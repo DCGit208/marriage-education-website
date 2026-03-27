@@ -1073,7 +1073,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, initializeFirestore, terminate, doc, getDoc, collection, query, where, getDocs, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -1086,7 +1086,15 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+        
+        // Track active listeners for cleanup
+        let activeListeners = [];
+
+        // Helper to add listener and track it
+        function addListener(unsubscribe) {
+            activeListeners.push(unsubscribe);
+        }
 
         // Get senior code from URL or localStorage
         const urlParams = new URLSearchParams(window.location.search);
@@ -1108,7 +1116,7 @@
             // First, check if promoted to Regional Director (using onSnapshot for realtime promotion detection)
             const ambassadorRef = doc(db, 'ambassadors', seniorCode);
             
-            onSnapshot(ambassadorRef, async (ambassadorSnap) => {
+            const unsubAmbassador = onSnapshot(ambassadorRef, async (ambassadorSnap) => {
                 if (ambassadorSnap.exists() && ambassadorSnap.data().ambassador_type === 'regional_director') {
                     console.log('👑 Regional Director detected - redirecting to RD dashboard...');
                     const notification = document.createElement('div');
@@ -1117,14 +1125,14 @@
                     document.body.appendChild(notification);
                     
                     setTimeout(() => {
-                        window.location.href = '/regional-director/rd-dashboard.html';
+                        window.location.href = '../regional-director/rd-dashboard.html';
                     }, 2000);
                     return;
                 }
                 
                 // Try senior_ambassadors collection first (with realtime updates)
                 const seniorRef = doc(db, 'senior_ambassadors', seniorCode);
-                onSnapshot(seniorRef, async (seniorSnap) => {
+                const unsubSenior = onSnapshot(seniorRef, async (seniorSnap) => {
                     if (seniorSnap.exists()) {
                         const data = seniorSnap.data();
                         console.log('✅ Loaded from senior_ambassadors:', data);
@@ -1177,9 +1185,12 @@
                     console.error('Error loading senior data (realtime):', error);
                     loadDemoData();
                 });
+                addListener(unsubSenior);
+
             }, (error) => {
                 console.error('Error checking promotion status (realtime):', error);
             });
+            addListener(unsubAmbassador);
         }
 
         function updateDashboard(data) {
@@ -1666,10 +1677,35 @@
             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
         };
 
-        window.logout = function() {
+        window.logout = async function() {
+            try {
+                // First, unsubscribe from all active listeners to stop network activity
+                console.log(`Cleaning up ${activeListeners.length} active listeners...`);
+                activeListeners.forEach((unsubscribe, index) => {
+                    if (typeof unsubscribe === 'function') {
+                        try {
+                            unsubscribe();
+                            console.log(`Unsubscribed listener ${index + 1}`);
+                        } catch (err) {
+                            console.warn(`Error unsubscribing listener ${index + 1}:`, err);
+                        }
+                    }
+                });
+                
+                // Then terminate the Firestore connection
+                if (db) {
+                    await terminate(db);
+                    console.log('Firestore terminated successfully');
+                }
+            } catch (e) {
+                console.warn('Logout cleanup warning:', e);
+            }
+            
             localStorage.removeItem('seniorCode');
             localStorage.removeItem('ambassadorCode');
-            window.location.href = '../index.html';
+            
+            // Use replace to prevent back navigation
+            window.location.replace('../index.html');
         };
 
         window.toggleAmbassadorDetails = toggleAmbassadorDetails;
@@ -1692,7 +1728,7 @@
                 limit(20)
             );
 
-            onSnapshot(salesQuery, (snapshot) => {
+            const unsubSales = onSnapshot(salesQuery, (snapshot) => {
                 console.log(`📊 Commission History: Found ${snapshot.size} sales`);
                 
                 if (snapshot.empty) {
@@ -1765,6 +1801,7 @@
                     </tr>
                 `;
             });
+            addListener(unsubSales);
         }
 
         // Load downline (recruited ambassadors) with realtime updates
@@ -1782,7 +1819,7 @@
                 where('senior_code', '==', seniorCode)
             );
 
-            onSnapshot(downlineQuery, (snapshot) => {
+            const unsubDownline = onSnapshot(downlineQuery, (snapshot) => {
                 console.log(`👥 Downline: Found ${snapshot.size} recruited ambassadors`);
                 
                 if (snapshot.empty) {
@@ -1868,6 +1905,7 @@
                     </div>
                 `;
             });
+            addListener(unsubDownline);
         }
 
         // Initialize dashboard

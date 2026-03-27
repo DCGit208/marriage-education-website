@@ -1,0 +1,84 @@
+{
+  "current": "58",
+  "versions": [
+    {
+      "version": "58",
+      "date": "2026-03-27",
+      "title": "Live notifications & toasts",
+      "emoji": "🚀",
+      "changes": [
+        "🔔 Notifications are now fully real-time — new alerts appear instantly without restarting the app",
+        "📬 In-app toast banner slides in at the top when a new notification arrives while you're using the app",
+        "✅ Notification panel list also updates live while it's open"
+      ]
+    },
+    {
+      "version": "57",
+      "date": "2026-03-27",
+      "title": "Tappable announcements",
+      "emoji": "🚀",
+      "changes": [
+        "📢 Tap any announcement notification to read the full What's New details"
+      ]
+    },
+    {
+      "version": "56",
+      "date": "2026-03-27",
+      "title": "Dynamic updates",
+      "emoji": "🚀",
+      "changes": [
+        "🔄 What's New now fires automatically on every update — no manual steps needed",
+        "📋 Boards tab — one tap to any board across all your groups",
+        "✨ Smoother PWA feel, tap feedback, swipe-back handle"
+      ]
+    },
+    {
+      "version": "55",
+      "date": "2026-03-27",
+      "title": "Boards Tab & Smarter Updates",
+      "emoji": "📋",
+      "changes": [
+        "📋 New Boards tab — jump straight to any board across all your groups in one tap",
+        "🔔 Alerts moved to top header — bottom nav is now cleaner with Home, Explore, Messages, Boards, Profile",
+        "⚡ Instant updates — app now reloads automatically when a new version is available, no more stale screens",
+        "🖼 Board covers — board cards now show cover images with correct layout and styling"
+      ]
+    },
+    {
+      "version": "53",
+      "date": "2026-03-27",
+      "title": "Smoother Feel & PWA Polish",
+      "emoji": "✨",
+      "changes": [
+        "✨ Instant loading — pages appear from cache immediately with shimmer skeleton screens while content loads",
+        "👆 Tap feedback — every button subtly presses in when you tap it, with light haptic vibration on key actions",
+        "👈 Swipe-back handle — swipe right from the left edge to go back; a glowing handle tracks your finger in real time",
+        "🔖 App shortcuts — long-press the home screen icon to jump straight to Dashboard, Messages, Explore or your Profile",
+        "🗺 Better install quality — fixed app icon purpose metadata so your installed icon looks crisp on every launcher"
+      ]
+    },
+    {
+      "version": "52",
+      "date": "2026-03-26",
+      "title": "Explore, Member Profiles & Collections",
+      "emoji": "🚀",
+      "changes": [
+        "🔍 Explore tab — discover hot posts from your groups and search members & content",
+        "👤 Clickable member profiles — tap any author name to view their posts and collections",
+        "🗂 Save to Collection — bookmark your favourite posts into personal collections via long-press",
+        "🔗 Link preview cards — URLs in post captions automatically show rich previews with title and thumbnail"
+      ]
+    },
+    {
+      "version": "51",
+      "date": "2026-03-20",
+      "title": "Performance & Reliability",
+      "emoji": "⚡",
+      "changes": [
+        "⚡ Faster load times — deferred scripts and service worker caching improvements",
+        "🖼 Board cover image upload in the admin panel",
+        "🔁 Smarter group loading — in-page error with Retry instead of alert redirects"
+      ]
+    }
+  ]
+}
