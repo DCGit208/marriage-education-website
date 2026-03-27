@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Board - SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/board-media.css?v=40">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="board-page bottom-nav-page">
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button id="backBtn" class="btn btn-icon">←</button>
+            <h1 id="boardTitle" class="page-title">Board</h1>
+        </div>
+        <div class="header-right">
+            <span id="postCountBadge" class="post-count-badge"></span>
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications" title="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="board-main">
+
+        <!-- Board Search Bar -->
+    <div class="board-search-bar">
+      <input id="boardSearchInput" type="search" placeholder="Search posts…" autocomplete="off" aria-label="Search posts in this board">
+    </div>
+
+    <!-- Stories Strip -->
+    <div id="storiesStrip" class="stories-strip" style="display:none;">
+      <div id="storiesScroll" class="stories-scroll">
+        <!-- Add Story circle -->
+        <div id="addStoryBtn" class="story-circle story-add-circle" role="button" tabindex="0" aria-label="Add to Your Story">
+          <div class="story-ring story-add-ring">
+            <div class="story-add-icon">+</div>
+          </div>
+          <span class="story-label">Your Story</span>
+        </div>
+        <!-- Story circles injected by JS -->
+      </div>
+    </div>
+
+    <!-- Board Info -->
+        <section class="board-info-bar">
+            <p id="boardDescription" class="board-desc-text"></p>
+        </section>
+
+        <!-- Pinned Post Banner -->
+        <div id="pinnedBanner" class="pinned-banner" style="display:none;" role="button" tabindex="0" aria-label="Pinned messages">
+            <div class="pinned-banner-bar"></div>
+            <div class="pinned-banner-body">
+                <span class="pinned-banner-icon">📌</span>
+                <div class="pinned-banner-text">
+                    <span class="pinned-banner-label">Pinned Message</span>
+                    <span id="pinnedBannerPreview" class="pinned-banner-preview"></span>
+                </div>
+                <span id="pinnedBannerCount" class="pinned-banner-count" style="display:none;"></span>
+            </div>
+            <button id="pinnedBannerClose" class="pinned-banner-close" aria-label="Dismiss pinned banner" type="button">✕</button>
+        </div>
+
+        <!-- Posts Feed -->
+        <div id="postsContainer" class="media-feed">
+            <div class="skel-post"><div class="skel-line w40"></div><div class="skel-line w90"></div><div class="skel-line tall"></div><div class="skel-line w60"></div></div>
+            <div class="skel-post"><div class="skel-line w40"></div><div class="skel-line w90"></div><div class="skel-line tall"></div><div class="skel-line w60"></div></div>
+        </div>
+
+        <!-- Load More -->
+        <div id="loadMoreArea" class="load-more-area" style="display:none;">
+            <button id="loadMoreBtn" class="btn btn-secondary">Load more</button>
+        </div>
+
+        <div id="noPostsMessage" class="empty-state" style="display:none;">
+            <p>No posts in this board yet.</p>
+        </div>
+
+    </main>
+
+    <!-- FAB -->
+    <button id="createPostBtn" class="fab" title="Add Post">+</button>
+
+    <!-- ── Photo Lightbox ─────────────────────────────── -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" style="display:none;">
+        <button id="lightboxClose" class="lightbox-close" aria-label="Close">✕</button>
+        <button id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Previous">‹</button>
+        <button id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Next">›</button>
+        <div class="lightbox-inner">
+            <img id="lightboxImg" src="" alt="" loading="lazy">
+        </div>
+        <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+
+    <!-- ── Video Overlay Player ───────────────────────── -->
+    <div id="videoOverlay" class="video-overlay" role="dialog" aria-modal="true" style="display:none;">
+        <button id="videoOverlayClose" class="lightbox-close" aria-label="Close">✕</button>
+        <span id="videoOverlayCounter" class="video-overlay-counter" aria-live="polite"></span>
+        <button id="videoOverlayPrev" class="lightbox-nav lightbox-prev" aria-label="Previous video" style="visibility:hidden;">‹</button>
+        <button id="videoOverlayNext" class="lightbox-nav lightbox-next" aria-label="Next video" style="visibility:hidden;">›</button>
+        <div class="video-overlay-inner">
+            <video id="overlayVideo"
+                   controls
+                   playsinline
+                   preload="metadata"
+                   style="width:100%;max-height:85vh;border-radius:8px;">
+            </video>
+            <p id="videoCaption" class="lightbox-caption"></p>
+        </div>
+    </div>
+
+    <!-- ── Create Post Modal ──────────────────────────── -->
+    <div id="createPostModal" class="modal">
+        <div class="modal-content post-modal-content">
+            <div class="modal-header">
+                <h3>New Post</h3>
+                <button id="closeModalBtn" class="btn btn-icon" aria-label="Close">✕</button>
+            </div>
+            <form id="createPostForm" class="post-form">
+                <!-- Caption first — like Telegram/WhatsApp -->
+                <textarea id="postContent" class="post-caption-input"
+                          placeholder="Write a caption…" maxlength="5000" rows="3"></textarea>
+
+                <!-- Hidden combined file input — accepts BOTH photos and videos -->
+                <input type="file" id="postMedia"
+                       accept="image/*,video/mp4,video/webm,video/quicktime"
+                       multiple style="display:none;">
+
+                <!-- Live thumbnail grid — shown after files are picked -->
+                <div id="mediaPreviewGrid" class="media-preview-grid" style="display:none;"></div>
+
+                <!-- Tap to open photo library / camera -->
+                <button type="button" id="addMediaBtn" class="add-media-btn">
+                    <span class="add-media-icon">📷</span>
+                    <span>Add Photos or Videos</span>
+                </button>
+
+                <!-- Link preview bar -->
+                <div id="linkPreviewBar" style="display:none;margin-top:8px;border:1px solid var(--border-color);border-radius:8px;overflow:hidden;background:var(--bg-card);position:relative;">
+                  <button id="dismissLinkPreview" type="button" style="position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;z-index:1;" aria-label="Remove link preview">✕</button>
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px;padding-right:32px;">
+                    <img id="linkPreviewThumb" style="width:60px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0;display:none;" alt="">
+                    <div style="min-width:0;">
+                      <div id="linkPreviewDomain" style="font-size:0.68rem;color:var(--accent-primary);text-transform:uppercase;"></div>
+                      <div id="linkPreviewTitle" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;"></div>
+                    </div>
+                  </div>
+                </div>
+
+    <div class="modal-actions">
+                    <button type="button" id="cancelPostBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post</button>
+                </div>
+
+                <!-- Poll Builder (hidden by default) -->
+                <div id="pollBuilder" style="display:none;margin-top:12px;border:1px solid var(--border-color);border-radius:10px;padding:12px;background:var(--bg-secondary);">
+                  <input type="text" id="pollQuestion" placeholder="Ask a question…" maxlength="120"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text-primary);font-size:0.9rem;padding:8px 12px;outline:none;font-family:inherit;">
+                  <div id="pollOptionsList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+                    <div class="poll-option-row"><input type="text" class="poll-option-input" placeholder="Option 1" maxlength="80"></div>
+                    <div class="poll-option-row"><input type="text" class="poll-option-input" placeholder="Option 2" maxlength="80"></div>
+                  </div>
+                  <button type="button" id="addPollOptionBtn" style="margin-top:8px;background:none;border:none;color:var(--accent-primary);font-size:0.85rem;cursor:pointer;padding:0;">+ Add option (max 4)</button>
+                </div>
+
+                <!-- Schedule Section (hidden by default) -->
+                <div id="scheduleSection" style="display:none;margin-top:12px;align-items:center;gap:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;">
+                  <span style="font-size:1.1rem;">🕐</span>
+                  <div style="flex:1;">
+                    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:4px;">Schedule for</div>
+                    <input id="scheduleDateInput" type="datetime-local" style="background:none;border:none;color:var(--text-primary);font-size:0.9rem;font-family:inherit;outline:none;width:100%;">
+                  </div>
+                </div>
+
+            </form>
+
+            <!-- Extra post-type buttons row -->
+            <div class="post-extra-btns">
+              <button type="button" id="pollToggleBtn" class="post-extra-btn" title="Create a Poll">
+                <span>&#128257;</span><span>Poll</span>
+              </button>
+              <button type="button" id="scheduleToggleBtn" class="post-extra-btn" title="Schedule Post">
+                <span>&#128336;</span><span>Schedule</span>
+              </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Story Viewer ──────────────────────────────── -->
+    <div id="storyViewer" class="story-viewer" style="display:none;" aria-modal="true" role="dialog" aria-label="Story viewer" tabindex="0">
+      <!-- Progress bars -->
+      <div id="storyProgressBars" class="story-progress-bars"></div>
+      <!-- Header -->
+      <div class="story-viewer-header">
+        <div class="story-viewer-author">
+          <div class="story-author-avatar" id="storyAuthorAvatar"></div>
+          <div>
+            <div id="storyAuthorName" class="story-author-name"></div>
+            <div id="storyAuthorTime" class="story-author-time"></div>
+          </div>
+        </div>
+        <button id="storyCloseBtn" class="lightbox-close" aria-label="Close story" style="position:relative;top:0;right:0;">✕</button>
+      </div>
+      <!-- Media -->
+      <img id="storyImg" class="story-media" src="" alt="" style="display:none;" loading="lazy">
+      <video id="storyVideo" class="story-media" src="" playsinline muted style="display:none;"></video>
+      <!-- Caption -->
+      <div id="storyCaption" class="story-caption"></div>
+      <!-- Nav zones -->
+      <button id="storyNavPrev" class="story-nav-btn story-nav-prev" aria-label="Previous story" style="visibility:hidden;">‹</button>
+      <button id="storyNavNext" class="story-nav-btn story-nav-next" aria-label="Next story">›</button>
+    </div>
+
+    <!-- ── Add Story Modal ────────────────────────────── -->
+    <div id="addStoryModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add to Your Story</h3>
+          <button id="addStoryModalClose" class="btn btn-icon" aria-label="Close">✕</button>
+        </div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+          <div id="storyMediaPreview" style="display:none;text-align:center;">
+            <img id="storyPreviewImg" src="" alt="" style="max-height:200px;max-width:100%;display:none;border-radius:8px;">
+            <video id="storyPreviewVideo" src="" controls playsinline style="max-height:200px;max-width:100%;display:none;border-radius:8px;"></video>
+          </div>
+          <button type="button" id="storyPickMediaBtn" class="add-media-btn">
+            <span class="add-media-icon">📷</span><span>Pick Photo or Video</span>
+          </button>
+          <input type="file" id="storyMediaInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;">
+          <input type="text" id="storyCaptionInput" placeholder="Add a caption (optional)" maxlength="150"
+            style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text-primary);font-size:0.9rem;padding:10px 12px;font-family:inherit;outline:none;">
+          <button type="button" id="addStorySubmit" class="btn btn-primary" disabled>Share Story</button>
+          <button type="button" id="addStoryCancel" class="btn btn-secondary">Cancel</button>
+          <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;">Stories disappear after 24 hours.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loadingStatus" style="color:#fff;margin-top:14px;font-size:0.9em;text-align:center;opacity:0.85;"></p>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Edit Post</h2>
+          <button id="cancelEditPostBtn" class="btn btn-icon" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <textarea id="editPostContent" class="edit-post-textarea" rows="5" maxlength="5000" placeholder="Edit your post…"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="saveEditPostBtn" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post Context Menu (Telegram-style bottom sheet) -->
+    <div id="postCtxOverlay" class="post-ctx-overlay" style="display:none;"></div>
+    <div id="postCtxMenu" class="post-ctx-menu" style="display:none;">
+      <div class="ctx-reaction-bar">
+        <button class="ctx-emoji-btn" data-emoji="❤️" aria-label="Love">❤️</button>
+        <button class="ctx-emoji-btn" data-emoji="🔥" aria-label="Fire">🔥</button>
+        <button class="ctx-emoji-btn" data-emoji="👍" aria-label="Like">👍</button>
+        <button class="ctx-emoji-btn" data-emoji="👎" aria-label="Dislike">👎</button>
+        <button class="ctx-emoji-btn" data-emoji="🥰" aria-label="Heart Eyes">🥰</button>
+        <button class="ctx-emoji-btn" data-emoji="👏" aria-label="Clap">👏</button>
+        <button class="ctx-emoji-btn" data-emoji="😁" aria-label="Grin">😁</button>
+      </div>
+      <div class="ctx-items">
+        <button class="ctx-item" id="ctxReply"><span class="ctx-icon">↩</span><span>Reply</span></button>
+        <button class="ctx-item" id="ctxEdit"><span class="ctx-icon">✏️</span><span>Edit</span></button>
+        <button class="ctx-item" id="ctxPin"><span class="ctx-icon">📌</span><span id="ctxPinLabel">Pin</span></button>
+        <button class="ctx-item" id="ctxCopyLink"><span class="ctx-icon">🔗</span><span>Copy Link</span></button>
+        <button class="ctx-item" id="ctxShareDm"><span class="ctx-icon">💬</span><span>Share via DM</span></button>
+        <button class="ctx-item" id="ctxSaveCollection"><span class="ctx-icon">🗂</span><span>Save to Collection</span></button>
+        <button class="ctx-item" id="ctxForward"><span class="ctx-icon">↗</span><span>Forward to Board</span></button>
+        <hr class="ctx-divider">
+        <button class="ctx-item ctx-delete" id="ctxDelete"><span class="ctx-icon">🗑</span><span>Delete</span></button>
+      </div>
+    </div>
+
+    <!-- Forward Board Picker -->
+    <div id="forwardModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Forward to Board</h3>
+          <button id="forwardModalClose" class="btn btn-icon">×</button>
+        </div>
+        <div id="forwardMediaPicker" style="display:none;padding:12px 16px 0;"></div>
+        <div style="padding:12px 16px 0;">
+          <textarea id="forwardMessage" placeholder="Add a message (optional)…" maxlength="500" rows="3"
+            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-primary);font-size:0.92rem;font-family:inherit;padding:10px 12px;resize:none;outline:none;"></textarea>
+        </div>
+        <div id="forwardBoardList" class="forward-board-list"></div>
+      </div>
+    </div>
+
+    <!-- Share via DM Picker -->
+    <div id="shareDmModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Share via DM</h3>
+          <button id="shareDmClose" class="btn btn-icon">&#xd7;</button>
+        </div>
+        <input id="shareDmSearch" type="search" placeholder="Search members&hellip;"
+               style="width:100%;box-sizing:border-box;padding:10px 16px;background:rgba(255,255,255,0.07);border:none;border-bottom:1px solid var(--border-color);color:var(--text-primary);font-size:0.9rem;outline:none;">
+        <div id="shareDmUserList" style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="appToast" class="app-toast" aria-live="polite"></div>
+
+    <!-- Pinned Messages List (bottom sheet) -->
+    <div id="pinnedListOverlay" class="post-ctx-overlay" style="display:none;"></div>
+    <div id="pinnedListModal" class="pinned-list-modal" style="display:none;">
+      <div class="pinned-list-header">
+        <span>📌 Pinned Messages</span>
+        <button id="pinnedListClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+      </div>
+      <div id="pinnedListItems" class="pinned-list-items"></div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+    <div id="notifPanel" class="notif-panel">
+        <div class="notif-panel-header">
+            <h3>Notifications</h3>
+            <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+        </div>
+        <ul id="notifList" class="notif-list"></ul>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=40"></script>
+    <script defer src="/js/upload.js?v=40"></script>
+    <script defer src="/js/posts.js?v=40"></script>
+    <script defer src="/js/notifications.js?v=40"></script>
+    <script defer src="/js/dm-badge.js?v=40"></script>
+    <script defer src="/js/ptr.js?v=52"></script>
+    <script defer src="/js/board.js?v=52"></script>
+    <script defer src="/js/transitions.js?v=40"></script>
+    <script defer src="/js/swipe-back.js?v=40"></script>
+
+  <!-- Save to Collection Modal -->
+  <div id="saveColModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);align-items:flex-end;">
+    <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-height:70vh;display:flex;flex-direction:column;">
+      <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="margin:0;font-size:1rem;">Save to Collection</h3>
+        <button id="saveColClose" class="btn btn-icon" type="button">✕</button>
+      </div>
+      <div id="saveColList" style="flex:1;overflow-y:auto;padding:8px 0;"></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border-color);">
+        <button id="newColBtn" class="btn btn-secondary" type="button" style="width:100%;">+ New Collection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab active" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/explore.html" class="bn-tab" aria-label="Explore">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">Explore</span>
+    </a>
+    <a href="/dm.html" class="bn-tab" aria-label="Messages">
+      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
+      <span class="bn-label">Messages</span>
+    </a>
+    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/profile.html" class="bn-tab" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>

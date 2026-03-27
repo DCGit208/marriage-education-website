@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Messages - SBD Network</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/dm.css?v=45">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=45">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="dm-page bottom-nav-page">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="backBtn" class="btn btn-icon" aria-label="Back">←</button>
+      <span class="page-title" id="dmPageTitle">Messages</span>
+    </div>
+    <div class="header-right">
+      <button id="newDmBtn" class="btn btn-icon" aria-label="New message" title="New message" style="font-size:1.3rem;">✏️</button>
+      <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+        🔔<span class="notif-badge" style="display:none;"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="dm-main">
+
+    <!-- INBOX VIEW -->
+    <div id="inboxView" class="dm-view">
+      <div id="conversationList" class="conversation-list"></div>
+      <div id="noConvsMessage" class="dm-empty" style="display:none;">
+        <p>No messages yet.</p>
+        <p class="dm-empty-sub">Tap ✏️ to start a conversation with someone in your group.</p>
+      </div>
+      <div id="noGroupDmMessage" class="dm-empty" style="display:none;">
+        <p>You're not in any group yet.</p>
+        <p class="dm-empty-sub">You'll be able to message members once an admin adds you to a group.</p>
+      </div>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div id="chatView" class="dm-view" style="display:none;">
+      <div id="chatMessages" class="chat-messages"></div>
+
+      <!-- Quote-reply banner -->
+      <div id="replyBanner" class="reply-banner" style="display:none;">
+        <span id="replyBannerText" class="reply-banner-text"></span>
+        <button id="replyCancelBtn" class="reply-cancel-btn" aria-label="Cancel reply">✕</button>
+      </div>
+
+      <!-- Edit banner -->
+      <div id="editBanner" class="edit-banner" style="display:none;">
+        <span class="edit-banner-label">✏️ Editing message</span>
+        <button id="editCancelBtn" class="reply-cancel-btn" aria-label="Cancel edit">✕</button>
+      </div>
+
+      <div class="chat-input-bar">
+        <button id="attachBtn" class="attach-btn" type="button" aria-label="Attach image or video">📎</button>
+        <input id="attachInput" type="file" accept="image/*,video/*" style="display:none;">
+        <button id="micBtn" class="attach-btn" type="button" aria-label="Record voice message">🎤</button>
+        <textarea id="chatInput" class="chat-input" placeholder="Message…" maxlength="2000" rows="1"></textarea>
+        <button id="chatSendBtn" class="chat-send-btn" type="button">Send</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- New DM modal — pick a user -->
+  <div id="newDmOverlay" class="dm-modal-overlay" style="display:none;"></div>
+  <div id="newDmModal" class="dm-modal" style="display:none;">
+    <div class="dm-modal-header">
+      <span>New Message</span>
+      <button id="newDmClose" class="btn btn-icon" aria-label="Close">✕</button>
+    </div>
+    <input id="newDmSearch" type="text" class="dm-search-input" placeholder="Search members…" autocomplete="off">
+    <div id="newDmUserList" class="dm-user-list"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="appToast" class="app-toast"></div>
+
+  <!-- Loading -->
+  <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div></div>
+
+  <!-- Notification Panel -->
+  <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+  <div id="notifPanel" class="notif-panel">
+    <div class="notif-panel-header">
+      <h3>Notifications</h3>
+      <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+    </div>
+    <ul id="notifList" class="notif-list"></ul>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script defer src="/js/firebase.js?v=45"></script>
+  <script defer src="/js/upload.js?v=45"></script>
+  <script defer src="/js/notifications.js?v=45"></script>
+  <script defer src="/js/dm.js?v=45"></script>
+  <script defer src="/js/transitions.js?v=45"></script>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/explore.html" class="bn-tab" aria-label="Explore">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">Explore</span>
+    </a>
+    <a href="/dm.html" class="bn-tab active" aria-label="Messages">
+      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
+      <span class="bn-label">Messages</span>
+    </a>
+    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/profile.html" class="bn-tab" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>

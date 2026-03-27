@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>My Profile - SBD Network</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/profile.css?v=40">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="profile-page bottom-nav-page">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="backBtn" class="btn btn-icon" aria-label="Back">←</button>
+      <span class="page-title">My Profile</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+        🔔<span class="notif-badge" style="display:none;"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="profile-main">
+
+    <!-- Avatar section -->
+    <section class="profile-avatar-section">
+      <div class="avatar-wrapper" id="avatarWrapper">
+        <div class="avatar-circle" id="avatarCircle">
+          <span class="avatar-initials" id="avatarInitials"></span>
+          <img class="avatar-img" id="avatarImg" src="" alt="Profile photo" style="display:none;">
+        </div>
+        <label class="avatar-edit-btn" for="avatarInput" aria-label="Change photo">📷</label>
+        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+      </div>
+      <div id="avatarUploadProgress" class="upload-progress" style="display:none;">
+        <div class="upload-bar"><div class="upload-fill" id="avatarFill"></div></div>
+        <span class="upload-label">Uploading…</span>
+      </div>
+    </section>
+
+    <!-- Name edit section -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Display Name</h3>
+      <div class="profile-field-row">
+        <input type="text" id="nameInput" class="profile-input" placeholder="Your name" maxlength="60" autocomplete="off">
+        <button id="saveNameBtn" class="btn btn-primary profile-save-btn">Save</button>
+      </div>
+      <p class="profile-hint">This name appears on all your posts and comments.</p>
+    </section>
+
+    <!-- Email (read-only) -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Email</h3>
+      <p id="profileEmail" class="profile-static-value"></p>
+    </section>
+
+    <!-- Groups (read-only) -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">My Groups</h3>
+      <div id="profileGroupsList" class="profile-groups-list">
+        <span class="profile-hint">Loading…</span>
+      </div>
+    </section>
+
+    <!-- Account actions -->
+    <section class="profile-section">
+      <button id="logoutBtn" class="btn btn-secondary profile-logout-btn">Log out</button>
+    </section>
+
+    <!-- My Collections -->
+    <section class="profile-card profile-section" id="myCollectionsSection">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h3 class="profile-section-title" style="margin-bottom:0;">My Collections</h3>
+        <button id="createCollectionBtn" class="btn btn-primary" type="button" style="font-size:0.78rem;padding:6px 12px;">+ New</button>
+      </div>
+      <div id="myCollectionsList" class="profile-groups-list"><span class="profile-hint">No collections yet.</span></div>
+    </section>
+
+    <!-- Collection Viewer bottom sheet -->
+    <div id="colViewModal" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.75);align-items:flex-end;">
+      <div style="background:var(--bg-secondary,#1a1a2e);width:100%;max-width:640px;margin:0 auto;border-radius:20px 20px 0 0;max-height:92vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px;">
+          <h3 id="colViewTitle" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;"></h3>
+          <button id="colViewClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;">✕</button>
+        </div>
+        <div id="colViewGrid" style="overflow-y:auto;padding:8px 12px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <section class="profile-section profile-card" style="border-color:#7f0000;">
+      <h3 class="profile-section-title" style="color:#ff4444">Danger Zone</h3>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Permanently deletes your account, all your posts, and all uploaded media. This cannot be undone.</p>
+      <button id="deleteAccountBtn" class="btn btn-danger" style="width:100%;background:#7f0000;font-weight:700">🗑 Delete My Account</button>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="appToast" class="app-toast"></div>
+
+  <!-- Loading -->
+  <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div></div>
+
+  <!-- Notification Panel -->
+  <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+  <div id="notifPanel" class="notif-panel">
+    <div class="notif-panel-header">
+      <h3>Notifications</h3>
+      <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+    </div>
+    <ul id="notifList" class="notif-list"></ul>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script defer src="/js/firebase.js?v=40"></script>
+  <script defer src="/js/upload.js?v=40"></script>
+  <script defer src="/js/notifications.js?v=40"></script>
+  <script defer src="/js/dm-badge.js?v=40"></script>
+  <script defer src="/js/profile.js?v=40"></script>
+  <script defer src="/js/transitions.js?v=40"></script>
+  <script defer src="/js/swipe-back.js?v=40"></script>
+  <script defer src="/js/install-prompt.js?v=40"></script>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/explore.html" class="bn-tab" aria-label="Explore">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">Explore</span>
+    </a>
+    <a href="/dm.html" class="bn-tab" aria-label="Messages">
+      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
+      <span class="bn-label">Messages</span>
+    </a>
+    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/profile.html" class="bn-tab active" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>

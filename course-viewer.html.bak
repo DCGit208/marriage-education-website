@@ -1,0 +1,3100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Viewer</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+    .loading-content h3 {
+      font-size: 1.5rem;
+      margin: 20px 0 10px;
+      font-weight: 600;
+    }
+    .loading-content p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #334155;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    .lms-wrapper {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      background: #1e293b;
+      color: white;
+      padding: 0;
+      width: 300px;
+      min-width: 300px;
+      height: 100%;
+      overflow-y: auto;
+    }
+      top: 0;
+    }
+    .sidebar-header {
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h2 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .sidebar-header .course-meta {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .progress-section {
+      padding: 20px;
+      background: #0f172a;
+    }
+    .progress-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      background: #334155;
+      height: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .modules-nav {
+      padding: 20px 0;
+    }
+    .modules-nav h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      padding: 0 20px 15px;
+      font-weight: 600;
+    }
+    .module-item {
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      color: #cbd5e1;
+    }
+    .module-item:hover {
+      background: rgba(102, 126, 234, 0.1);
+      color: white;
+    }
+    .module-item.active {
+      background: rgba(241, 245, 249, 0.1);
+      border-left-color: #4ade80;
+      color: white;
+    }
+    .module-item .icon {
+      width: 24px;
+      height: 24px;
+      background: #334155;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .module-item.active .icon {
+      background: #4ade80;
+      color: #0f172a;
+    }
+    .module-item .text {
+      flex: 1;
+    }
+    .module-item .title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .module-item .duration {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .main-content {
+      flex: 1;
+      background: white;
+      min-width: 0;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .main-content-wrapper {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .breadcrumbs {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .breadcrumbs a {
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .breadcrumbs a:hover {
+      color: #0f172a;
+    }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: #0f172a;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1e293b;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .content-area {
+      flex: 1;
+      padding: 40px;
+      max-width: none;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: 100%;
+    }
+    .content-header {
+      margin-bottom: 40px;
+    }
+    .content-header h1 {
+      font-size: 2.5rem;
+      color: #1e293b;
+      margin-bottom: 15px;
+      line-height: 1.2;
+    }
+    .content-meta {
+      display: flex;
+      gap: 20px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .content-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .content-section {
+      line-height: 1.8;
+      max-width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    /* Enhanced Content Typography */
+    .content-section h2 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-top: 48px;
+      margin-bottom: 24px;
+      font-weight: 700;
+      line-height: 1.3;
+      position: relative;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .content-section h2::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 80px;
+      height: 3px;
+      background: #0f172a;
+    }
+    
+    .content-section h3 {
+      font-size: 1.5rem;
+      color: #1e293b;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    
+    .content-section h4 {
+      font-size: 1.25rem;
+      color: #334155;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .content-section p {
+      margin-bottom: 16px;
+      color: #334155;
+      font-size: 1.0625rem;
+      line-height: 1.75;
+    }
+    
+    .content-section ul, .content-section ol {
+      margin: 16px 0;
+      padding-left: 32px;
+    }
+    
+    .content-section li {
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 1.0625rem;
+      line-height: 1.75;
+    }
+    
+    .content-section strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+    
+    .content-section em {
+      color: #475569;
+      font-style: italic;
+      font-weight: 500;
+    }
+    
+    .content-section code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.9em;
+      color: #dc2626;
+    }
+    
+    .content-section blockquote {
+      border-left: 4px solid #cbd5e1;
+      padding-left: 20px;
+      margin: 24px 0;
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 4px;
+      color: #475569;
+      font-style: italic;
+    }
+    .content-section h3 {
+      font-size: 1.5rem;
+      color: #334155;
+      margin: 30px 0 15px;
+    }
+    .content-section h4 {
+      font-size: 1.2rem;
+      color: #475569;
+      margin: 25px 0 12px;
+    }
+    .content-section p {
+      color: #475569;
+      margin: 15px 0;
+      line-height: 1.8;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: none;
+    }
+    .content-section blockquote {
+      background: #f8fafc;
+      border-left: 4px solid #cbd5e1;
+      padding: 20px;
+      margin: 25px 0;
+      font-style: italic;
+      color: #475569;
+      border-radius: 4px;
+    }
+    .content-section ul, .content-section ol {
+      margin: 15px 0 15px 30px;
+      color: #475569;
+    }
+    .content-section li {
+      margin: 8px 0;
+    }
+    .content-section strong {
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .content-section code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #e11d48;
+    }
+    .content-section pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    .content-section hr {
+      border: none;
+      border-top: 2px solid #e2e8f0;
+      margin: 40px 0;
+    }
+    .content-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 30px 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    .content-section table thead {
+      background: #f8fafc;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .content-section table th {
+      padding: 16px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .content-section table td {
+      padding: 16px 20px;
+      color: #475569;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+    .content-section table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .content-section table tbody tr:hover {
+      background: #f8fafc;
+    }
+    .content-section table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .content-section table td:first-child {
+      font-weight: 500;
+      color: #1e293b;
+      max-width: 350px;
+    }
+    .content-section table td:nth-child(2) {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      min-width: 140px;
+    }
+    .content-section table td:nth-child(2):contains("ALIGNED") {
+      color: #22c55e;
+    }
+    .content-section table td:nth-child(2):contains("MISALIGNED") {
+      color: #ef4444;
+    }
+    .downloads {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 30px 0;
+    }
+    
+    .resource-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      text-decoration: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .resource-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #e2e8f0;
+      transition: all 0.3s;
+    }
+    
+    .resource-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+      transform: translateX(4px);
+    }
+    
+    .resource-card:hover::before {
+      background: #0f172a;
+      width: 4px;
+    }
+    
+    .resource-card-icon {
+      font-size: 2.5rem;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 12px;
+      flex-shrink: 0;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .resource-card-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .resource-card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    
+    .resource-card-description {
+      font-size: 0.9375rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    
+    .resource-card-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      color: #475569;
+      font-weight: 500;
+    }
+    /* Right Section Navigator */
+    .section-navigator {
+      width: 280px;
+      min-width: 280px;
+      background: white;
+      border-left: 1px solid #e2e8f0;
+      padding: 30px 20px;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .section-navigator h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    
+    .section-nav-list {
+      list-style: none;
+    }
+    .section-nav-item {
+      margin-bottom: 12px;
+    }
+    .section-nav-item a {
+      display: block;
+      padding: 8px 12px;
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .section-nav-item a:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-left-color: #cbd5e1;
+    }
+    .section-nav-item a.active {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+      border-left-color: #0f172a;
+    }
+    .section-nav-item.level-3 {
+      margin-left: 15px;
+    }
+    .section-nav-item.level-4 {
+      margin-left: 30px;
+    }
+    @media (max-width: 1200px) {
+      .section-navigator {
+        display: none;
+      }
+    }
+    @media (max-width: 768px) {
+      .lms-wrapper {
+        flex-direction: column;
+      }
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+      .main-content {
+        flex-direction: column;
+      }
+    }
+    
+    /* PROGRESS INDICATOR - FORCE STYLES */
+    .content-section .progress-indicator {
+      margin: 48px 0 !important;
+      position: relative !important;
+      display: block !important;
+    }
+    
+    .content-section .progress-track {
+      position: absolute !important;
+      top: 80px !important;
+      left: 16.66% !important;
+      right: 16.66% !important;
+      height: 4px !important;
+      z-index: 0 !important;
+    }
+    
+    .content-section .progress-line {
+      width: 100% !important;
+      height: 4px !important;
+      background: #e5e7eb !important;
+      border-radius: 2px !important;
+      overflow: hidden !important;
+    }
+    
+    .content-section .progress-line-fill {
+      height: 100% !important;
+      background: linear-gradient(90deg, #3b82f6 0%, #3b82f6 100%) !important;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      border-radius: 2px !important;
+      position: relative !important;
+    }
+    
+    .content-section .progress-steps {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 24px !important;
+      position: relative !important;
+      z-index: 1 !important;
+    }
+    
+    .content-section .progress-card {
+      background: white !important;
+      border-radius: 16px !important;
+      padding: 32px 24px !important;
+      text-align: center !important;
+      position: relative !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      border: 2px solid #e5e7eb !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+      min-height: 220px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    .content-section .progress-card-number {
+      position: absolute !important;
+      top: 16px !important;
+      left: 16px !important;
+      font-size: 0.875rem !important;
+      font-weight: 700 !important;
+      color: #9ca3af !important;
+      opacity: 0.5 !important;
+    }
+    
+    .content-section .progress-card-icon {
+      font-size: 3.5rem !important;
+      margin: 16px 0 !important;
+      filter: grayscale(100%) opacity(0.4) !important;
+      transition: all 0.3s !important;
+      line-height: 1 !important;
+    }
+    
+    .content-section .progress-card-title {
+      font-size: 1.25rem !important;
+      font-weight: 600 !important;
+      color: #6b7280 !important;
+      margin: 12px 0 16px 0 !important;
+      transition: color 0.3s !important;
+      line-height: 1.3 !important;
+    }
+    
+    .content-section .progress-card-status {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 8px 16px !important;
+      border-radius: 20px !important;
+      font-size: 0.875rem !important;
+      font-weight: 500 !important;
+      background: #f3f4f6 !important;
+      color: #6b7280 !important;
+      transition: all 0.3s !important;
+    }
+    
+    /* Completed State */
+    .content-section .progress-card.completed {
+      border-color: #10b981 !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+    }
+    
+    .content-section .progress-card.completed .progress-card-number {
+      color: #10b981 !important;
+      opacity: 1 !important;
+    }
+    
+    .content-section .progress-card.completed .progress-card-icon {
+      filter: none !important;
+      transform: scale(1.05) !important;
+    }
+    
+    .content-section .progress-card.completed .progress-card-title {
+      color: #065f46 !important;
+    }
+    
+    .content-section .progress-card.completed .progress-card-status {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+      color: #065f46 !important;
+      font-weight: 600 !important;
+    }
+    
+    /* Active State */
+    .content-section .progress-card.active {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2) !important;
+      transform: scale(1.02) !important;
+    }
+    
+    .content-section .progress-card.active .progress-card-number {
+      color: #3b82f6 !important;
+      opacity: 1 !important;
+    }
+    
+    .content-section .progress-card.active .progress-card-icon {
+      filter: none !important;
+      animation: bounce-icon 2s ease-in-out infinite !important;
+    }
+    
+    @keyframes bounce-icon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    .content-section .progress-card.active .progress-card-title {
+      color: #1e40af !important;
+      font-weight: 700 !important;
+    }
+    
+    .content-section .progress-card.active .progress-card-status {
+      background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+      font-weight: 600 !important;
+    }
+    
+    .content-section .pulse-dot {
+      width: 8px !important;
+      height: 8px !important;
+      border-radius: 50% !important;
+      background: white !important;
+      animation: pulse-dot-anim 1.5s ease-in-out infinite !important;
+    }
+    
+    @keyframes pulse-dot-anim {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.3);
+      }
+    }
+    
+    /* Clickable cards */
+    .content-section .progress-card.active,
+    .content-section .progress-card.completed {
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    .content-section .progress-card.active:hover {
+      transform: scale(1.05) !important;
+      box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3) !important;
+    }
+    
+    .content-section .progress-card.completed:hover {
+      transform: scale(1.03) !important;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25) !important;
+    }
+    
+    /* Pending State */
+    .content-section .progress-card.pending:nth-child(2) {
+      border-color: #8b5cf6 !important;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15) !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(2) .progress-card-number {
+      color: #8b5cf6 !important;
+      opacity: 1 !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(2) .progress-card-icon {
+      filter: none !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(2) .progress-card-title {
+      color: #5b21b6 !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(2) .progress-card-status {
+      background: linear-gradient(135deg, #ede9fe, #ddd6fe) !important;
+      color: #5b21b6 !important;
+      font-weight: 600 !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(3) {
+      border-color: #f59e0b !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(3) .progress-card-number {
+      color: #f59e0b !important;
+      opacity: 1 !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(3) .progress-card-icon {
+      filter: none !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(3) .progress-card-title {
+      color: #92400e !important;
+    }
+    
+    .content-section .progress-card.pending:nth-child(3) .progress-card-status {
+      background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+      color: #92400e !important;
+      font-weight: 600 !important;
+    }
+    
+    @media (max-width: 768px) {
+      .content-section .progress-track {
+        display: none !important;
+      }
+      
+      .content-section .progress-steps {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+      }
+      
+      .content-section .progress-card {
+        padding: 24px !important;
+        min-height: auto !important;
+      }
+      
+      .content-section .progress-card.active {
+        transform: scale(1) !important;
+      }
+      
+      .content-section .progress-card-icon {
+        font-size: 2.5rem !important;
+      }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h3>Loading Course Content</h3>
+      <p>Please wait while we prepare your learning experience...</p>
+    </div>
+  </div>
+  
+  <div class="lms-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 id="sidebarTitle">Loading...</h2>
+        <div class="course-meta">
+          <span id="courseDuration">6 weeks</span>
+          <span id="coursePrice">$247</span>
+        </div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-label">Course Progress</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text"><span id="progressPercent">0</span>% Complete</div>
+      </div>
+      <nav class="modules-nav">
+        <h3>Course Curriculum</h3>
+        <div id="modulesNav"></div>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="main-content-wrapper">
+        <div class="top-bar">
+          <div class="breadcrumbs">
+            <a href="courses.html">← All Courses</a>
+          </div>
+          <div class="top-actions">
+            <button class="btn btn-secondary">📥 Downloads</button>
+            <button class="btn btn-primary" onclick="markContentComplete()">Mark Complete</button>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="content-header">
+            <h1 id="moduleTitle">Loading...</h1>
+            <div class="content-meta">
+              <div class="content-meta-item">⏱️ <span id="moduleEstimate">45-60 min</span></div>
+              <div class="content-meta-item">📚 <span id="moduleLevel">Foundation Level</span></div>
+            </div>
+          </div>
+          <div id="tabsContent"></div>
+        </div>
+      </div>
+      
+      <!-- Right Section Navigator -->
+      <aside class="section-navigator" id="sectionNavigator">
+        <h3>On This Page</h3>
+        <ul class="section-nav-list" id="sectionNavList">
+          <li class="section-nav-item"><a href="#">Loading...</a></li>
+        </ul>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const courseId = getQueryParam('courseId') || getQueryParam('id') || getQueryParam('course');
+    let currentModuleIndex = 0;
+    let scrollSpyListener = null;
+    let courseModules = []; // Store modules globally for access by progress functions
+    let loadingOverlay = null;
+    
+    // Immediately start loading when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      loadingOverlay = document.getElementById('loadingOverlay');
+      
+      console.log('[Course Viewer] DOM Ready - Starting to load course:', courseId);
+      console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
+      
+      if (!courseId) {
+        console.error('[Course Viewer] No courseId provided!');
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>No Course Selected</h2><p>Please select a course to view.</p></div>';
+        return;
+      }
+      
+      // Start loading course data
+      loadCourseData();
+    });
+    
+    function loadCourseData() {
+      console.log('[Course Viewer] Fetching courses catalogue...');
+      
+      fetch('courses-catalogue.json?t=' + new Date().getTime())
+      .then(response => {
+        console.log('[Course Viewer] Fetch response received:', response.ok);
+        if (!response.ok) {
+          throw new Error('Failed to load course data: HTTP ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('[Course Viewer] JSON parsed, courses count:', Array.isArray(data) ? data.length : 0);
+        const courses = Array.isArray(data) ? data : [];
+        const course = courses.find(c => c.courseId === courseId);
+        
+        console.log('[Course Viewer] Course found:', !!course);
+        
+        if (!course) {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Course not found</h2><p>Looking for courseId: ' + courseId + '</p></div>';
+          return;
+        }
+        
+        console.log('[Course Viewer] Course loaded:', course.title);
+
+        document.getElementById('sidebarTitle').textContent = course.title;
+        document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
+        document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
+        document.title = course.title;
+        
+        // Hide loading overlay
+        console.log('[Course Viewer] Hiding loading overlay');
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        } else {
+          console.warn('[Course Viewer] Loading overlay element not found!');
+        }
+
+        const modulesNav = document.getElementById('modulesNav');
+        const tabsContent = document.getElementById('tabsContent');
+
+        // Create placeholder weeks if modules don't exist
+        const totalWeeks = course.duration_weeks || 6;
+        const modules = course.modules || [];
+        courseModules = modules; // Store globally for progress tracking
+        
+        for (let idx = 0; idx < totalWeeks; idx++) {
+          const module = modules[idx];
+          const isAvailable = idx < modules.length;
+          
+          // Sidebar navigation
+          const navItem = document.createElement('div');
+          navItem.className = 'module-item' + (idx === 0 ? ' active' : '');
+          navItem.setAttribute('role', 'button');
+          navItem.setAttribute('tabindex', isAvailable ? '0' : '-1');
+          navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}`);
+          navItem.innerHTML = `
+            <div class="icon">${idx + 1}</div>
+            <div class="text">
+              <div class="title">Week ${idx + 1}</div>
+              <div class="duration">${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}</div>
+            </div>
+          `;
+          if (isAvailable) {
+            navItem.onclick = () => switchModule(idx);
+            navItem.onkeydown = (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                switchModule(idx);
+              }
+            };
+          } else {
+            navItem.style.opacity = '0.5';
+            navItem.style.cursor = 'not-allowed';
+          }
+          modulesNav.appendChild(navItem);
+
+          // Content area
+          const content = document.createElement('div');
+          content.className = 'tab-content' + (idx === 0 ? ' active' : '');
+          content.id = `module-${idx}`;
+          content.setAttribute('data-module-index', idx);
+          content.setAttribute('data-content-loaded', 'false');
+          
+          if (isAvailable) {
+            // Store raw content for lazy loading
+            content.setAttribute('data-raw-content', JSON.stringify(module.content || ''));
+            
+            // Only parse content for the first module to show initially
+            if (idx === 0) {
+              const parsed = marked.parse(module.content || '');
+              content.innerHTML = `<div class="content-section">${parsed}</div>`;
+              content.setAttribute('data-content-loaded', 'true');
+              
+              // Process visual enhancements only for first module
+              setTimeout(() => {
+                processModuleEnhancements(content, module);
+              }, 100);
+            } else {
+              // Show placeholder for other modules
+              content.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#94a3b8;"><div class="spinner" style="margin:20px auto;width:40px;height:40px;border:4px solid #e2e8f0;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;"></div><p>Loading content...</p></div>';
+            }
+          } else {
+            content.innerHTML = `
+              <div style="text-align:center; padding:60px 20px; color:#64748b;">
+                <h2 style="color:#94a3b8; font-size:3rem; margin-bottom:20px;">🔒</h2>
+                <h3 style="color:#475569; margin-bottom:10px;">Week ${idx + 1} Coming Soon</h3>
+                <p>This module will be available once you complete the previous weeks.</p>
+              </div>
+            `;
+          }
+
+          tabsContent.appendChild(content);
+        }
+        
+        // ============================================
+        // ADD FINAL EXAM/QUIZ MODULE
+        // ============================================
+        
+        // Add Final Exam to sidebar navigation
+        const examNavItem = document.createElement('div');
+        examNavItem.className = 'module-item exam-module';
+        examNavItem.id = 'exam-nav-item';
+        examNavItem.innerHTML = `
+          <div class="icon">🎓</div>
+          <div class="text">
+            <div class="title">Final Exam</div>
+            <div class="duration">Loading...</div>
+          </div>
+        `;
+        examNavItem.onclick = () => switchToExam();
+        modulesNav.appendChild(examNavItem);
+        
+        // Add Final Exam content area
+        const examContent = document.createElement('div');
+        examContent.className = 'tab-content';
+        examContent.id = 'module-exam';
+        examContent.innerHTML = '<div id="exam-container"></div>';
+        tabsContent.appendChild(examContent);
+        
+        // Load quiz data
+        loadQuizInterface(courseId);
+
+        // Update module title
+        if (modules.length > 0) {
+          document.getElementById('moduleTitle').textContent = modules[0].title || 'Week 1';
+        }
+
+        const progress = ((1 / totalWeeks) * 100);
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressPercent').textContent = Math.round(progress);
+        
+        // Initialize section navigator with longer delay to ensure content is rendered
+        setTimeout(() => {
+          setupNavigationClickHandler();
+          updateSectionNavigator();
+        }, 500);
+      })
+      .catch(err => {
+        console.error('[Course Viewer] Error loading course:', err);
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        document.querySelector('.main-content').innerHTML = '<div style="padding:40px;text-align:center;"><h2>Error Loading Course</h2><p style="color:#64748b;margin:10px 0;">' + err.message + '</p><p style="color:#94a3b8;font-size:0.9rem;">Check console for details</p><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Reload Page</button></div>';
+      });
+    
+    // Fallback: Force hide loading overlay after 10 seconds
+    setTimeout(() => {
+      if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+        console.warn('[Course Viewer] Loading timeout - forcing overlay hide');
+        loadingOverlay.style.display = 'none';
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent && mainContent.innerHTML.trim() === '') {
+          mainContent.innerHTML = '<div style="padding:40px;text-align:center;"><h2>Loading Timeout</h2><p style="color:#64748b;margin:10px 0;">The course is taking longer than expected to load.</p><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Reload Page</button></div>';
+        }
+      }
+    }, 10000);
+    }
+
+    function switchModule(index) {
+      currentModuleIndex = index;
+      const module = courseModules[index];
+      console.log('switchModule called:', {index, moduleTitle: module ? module.title : 'N/A', moduleId: module ? module.moduleId : 'N/A'});
+      
+      // Reload progress data for the newly selected module
+      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      const moduleId = module ? (module.moduleId || index) : index;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      
+      // Reset to default state
+      progressData = {
+        contentRead: false,
+        assessmentCompleted: false,
+        assessmentPassed: false,
+        readingProgress: 0
+      };
+      
+      // Load saved progress for THIS module
+      const savedProgress = localStorage.getItem(progressKey);
+      if (savedProgress) {
+        progressData = JSON.parse(savedProgress);
+        console.log('Loaded saved progress for module:', {moduleId, progressData});
+      } else {
+        console.log('No saved progress for module:', {moduleId});
+      }
+      
+      // Update UI to reflect current module's progress
+      setTimeout(() => {
+        updateProgressIndicator();
+      }, 50);
+      
+      document.querySelectorAll('.module-item').forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+
+      // Update header title
+      const moduleTitle = document.querySelectorAll('.module-item .title')[index];
+      if (moduleTitle) {
+        document.getElementById('moduleTitle').textContent = moduleTitle.textContent;
+      }
+
+      // Scroll to top first
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea) {
+        contentArea.scrollTop = 0;
+      }
+      
+      // LAZY LOAD CONTENT: Check if module content needs to be loaded
+      const targetContent = document.getElementById(`module-${index}`);
+      if (targetContent && targetContent.getAttribute('data-content-loaded') === 'false') {
+        console.log('Lazy loading content for module:', index);
+        lazyLoadModuleContent(index, module, targetContent);
+      }
+      
+      // Update section navigator after a brief delay to ensure DOM is ready
+      setTimeout(() => {
+        updateSectionNavigator();
+      }, 300);
+    }
+    
+    // ========================================
+    // LAZY LOADING FUNCTION
+    // ========================================
+    
+    function lazyLoadModuleContent(index, module, contentElement) {
+      try {
+        const rawContent = contentElement.getAttribute('data-raw-content');
+        if (!rawContent) {
+          console.error('No raw content found for module:', index);
+          return;
+        }
+        
+        const moduleContent = JSON.parse(rawContent);
+        const parsed = marked.parse(moduleContent || '');
+        contentElement.innerHTML = `<div class="content-section">${parsed}</div>`;
+        contentElement.setAttribute('data-content-loaded', 'true');
+        
+        // Process enhancements after content is loaded
+        setTimeout(() => {
+          processModuleEnhancements(contentElement, module);
+        }, 100);
+        
+        console.log('Module content lazy loaded successfully:', index);
+      } catch (error) {
+        console.error('Error lazy loading module content:', error);
+        contentElement.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#ef4444;"><p>Error loading content. Please refresh the page.</p></div>';
+      }
+    }
+    
+    function processModuleEnhancements(contentElement, module) {
+      // Color-code ALIGNED/MISALIGNED table cells
+      const tables = contentElement.querySelectorAll('table');
+      tables.forEach(table => {
+        const cells = table.querySelectorAll('td, th');
+        cells.forEach(cell => {
+          const text = cell.textContent.trim().toUpperCase();
+          if (text === 'ALIGNED' || text.includes('ALIGNED PLEASURE') || text.startsWith('✅ ALIGNED')) {
+            cell.style.color = '#059669';
+            cell.style.fontWeight = '600';
+            cell.style.background = 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
+          } else if (text === 'MISALIGNED' || text.includes('MISALIGNED PLEASURE') || text.startsWith('❌ MISALIGNED')) {
+            cell.style.color = '#dc2626';
+            cell.style.fontWeight = '600';
+            cell.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+          }
+        });
+      });
+      
+      // ENHANCE CONTENT with new design elements
+      enhanceModuleContent(contentElement, module);
+      
+      // Display downloadable resources (PDFs only - HTML assessments shown in CTA)
+      const resources = module.downloadable_resources || module.downloads || [];
+      const pdfResources = resources.filter(r => r.type !== 'html');
+      if (pdfResources.length > 0) {
+        const downloadsHtml = `
+          <h3 style="margin-top: 48px; margin-bottom: 24px; color: #0f172a; font-size: 1.5rem; font-weight: 600;">Resources & Materials</h3>
+          <div class="downloads">
+            ${pdfResources.map(d => {
+              const icon = '📄';
+              const metaText = 'PDF Document';
+              const cleanDescription = d.description || 'Download this resource for offline study and reference';
+              return `
+                <a href="${d.file || d.url}" class="resource-card" download 
+                   role="button" tabindex="0" aria-label="${d.title} - ${metaText}">
+                  <div class="resource-card-icon">${icon}</div>
+                  <div class="resource-card-content">
+                    <div class="resource-card-title">${d.title}</div>
+                    <div class="resource-card-description">${cleanDescription}</div>
+                    <div class="resource-card-meta">
+                      ${metaText}
+                    </div>
+                  </div>
+                </a>
+              `;
+            }).join('')}
+          </div>
+        `;
+        contentElement.querySelector('.content-section').innerHTML += downloadsHtml;
+        
+        // Add keyboard navigation for resource cards
+        setTimeout(() => {
+          contentElement.querySelectorAll('.resource-card').forEach(card => {
+            card.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+              }
+            });
+          });
+        }, 100);
+      }
+      
+      // Add "Mark Complete" button at the end of content
+      const markCompleteHtml = `
+        <div style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
+          <h3 style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
+          <p style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
+          <button class="btn btn-primary" onclick="markContentComplete()" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+            ✅ Mark Week Complete
+          </button>
+        </div>
+      `;
+      contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
+    }
+    
+    // ========================================
+    // CONTENT ENHANCEMENT FUNCTIONS
+    // ========================================
+    
+    function enhanceModuleContent(contentElement, module) {
+      const contentSection = contentElement.querySelector('.content-section');
+      if (!contentSection) return;
+      
+      console.log('enhanceModuleContent called for module:', module.title);
+      
+      // Add progress indicator at top for modules with assessments
+      const resources = module.downloadable_resources || module.downloads || [];
+      console.log('Module resources:', resources);
+      const hasHtmlResource = resources.some(r => 
+        r.type === 'html' && (
+          r.resource_id?.includes('assessment') || 
+          r.title?.toLowerCase().includes('assessment') ||
+          r.file
+        )
+      );
+      console.log('Has HTML resource (assessment):', hasHtmlResource);
+      
+      if (hasHtmlResource) {
+        addProgressIndicator(contentSection, module);
+      } else {
+        console.log('No HTML assessment found, skipping progress indicator');
+      }
+      
+      // Enhance tables
+      enhanceTables(contentSection);
+      
+      // Add callout boxes
+      addCalloutBoxes(contentSection);
+      
+      // Make FAQ sections collapsible
+      makeQuestionsCollapsible(contentSection);
+      
+      // Add tooltips to key terms - DISABLED: Causing spacing issues
+      // addTooltips(contentSection);
+      
+      // Add section dividers
+      addSectionDividers(contentSection);
+      
+      // Enhance pull quotes
+      enhancePullQuotes(contentSection);
+      
+      // Add assessment CTA at bottom
+      const ctaResources = module.downloadable_resources || module.downloads || [];
+      if (ctaResources.some(r => 
+        r.type === 'html' && (
+          r.resource_id?.includes('assessment') || 
+          r.title?.toLowerCase().includes('assessment') ||
+          r.file
+        )
+      )) {
+        addAssessmentCTA(contentSection, module, 'bottom');
+      }
+    }
+    
+    function addProgressIndicator(contentSection, module) {
+      console.log('addProgressIndicator called for module:', module.title);
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'progress-indicator';
+      indicator.innerHTML = `
+        <div class="progress-track">
+          <div class="progress-line">
+            <div class="progress-line-fill" style="width: 33.33%;"></div>
+          </div>
+        </div>
+        <div class="progress-steps">
+          <div class="progress-card active">
+            <div class="progress-card-number">01</div>
+            <div class="progress-card-icon">📚</div>
+            <div class="progress-card-title">Read Content</div>
+            <div class="progress-card-status">
+              <div class="pulse-dot"></div>
+              <span>Reading Now</span>
+            </div>
+          </div>
+          
+          <div class="progress-card pending">
+            <div class="progress-card-number">02</div>
+            <div class="progress-card-icon">✍️</div>
+            <div class="progress-card-title">Take Assessment</div>
+            <div class="progress-card-status">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 4v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span>Up Next</span>
+            </div>
+          </div>
+          
+          <div class="progress-card pending">
+            <div class="progress-card-number">03</div>
+            <div class="progress-card-icon">🏆</div>
+            <div class="progress-card-title">Earn Certificate</div>
+            <div class="progress-card-status">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 4V2M8 14v-2M4 8H2M14 8h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span>Complete All 13 Weeks</span>
+            </div>
+          </div>
+        </div>
+      `;
+      contentSection.insertBefore(indicator, contentSection.firstChild);
+      
+      console.log('Progress indicator added to DOM');
+      
+      // Initialize progress tracking first
+      initializeProgressTracking(contentSection);
+      
+      // Add click handlers to cards after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        attachProgressCardHandlers();
+      }, 50);
+    }
+    
+    // Progress card click handlers
+    function attachProgressCardHandlers() {
+      const cards = document.querySelectorAll('.progress-card');
+      
+      // Card 1: Read Content - scroll to top
+      cards[0]?.addEventListener('click', () => {
+        if (cards[0].classList.contains('active') || cards[0].classList.contains('completed')) {
+          document.querySelector('.content-area')?.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+      
+      // Card 2: Take Assessment - navigate to exam
+      cards[1]?.addEventListener('click', () => {
+        if (cards[1].classList.contains('active')) {
+          navigateToAssessment();
+        } else if (cards[1].classList.contains('completed')) {
+          // Show quiz results or retake option
+          navigateToAssessment();
+        }
+      });
+      
+      // Card 3: Earn Certificate - download certificate (only shown on Week 13)
+      cards[2]?.addEventListener('click', () => {
+        if (cards[2].classList.contains('active')) {
+          downloadCertificate();
+        }
+      });
+    }
+    
+    function navigateToAssessment() {
+      // First, check if current module has its own assessment
+      const currentModule = courseModules[currentModuleIndex];
+      
+      if (currentModule) {
+        const resources = currentModule.downloadable_resources || currentModule.downloads || [];
+        // PRIORITY 1: Find resources with resource_id AND file property (actual 40-question assessments)
+        let moduleAssessment = resources.find(r => 
+          r.resource_id && r.file && r.type === 'html'
+        );
+        
+        // PRIORITY 2: If not found, try file property only
+        if (!moduleAssessment) {
+          moduleAssessment = resources.find(r => 
+            r.file && r.type === 'html'
+          );
+        }
+        
+        // PRIORITY 3: Last resort - title containing "assessment" but exclude "worksheet"
+        if (!moduleAssessment) {
+          moduleAssessment = resources.find(r => 
+            r.type === 'html' && 
+            r.title?.toLowerCase().includes('assessment') &&
+            !r.title?.toLowerCase().includes('worksheet')
+          );
+        }
+        
+        if (moduleAssessment) {
+          // Open module-specific assessment
+          const assessmentUrl = moduleAssessment.file || moduleAssessment.url;
+          if (assessmentUrl) {
+            window.location.href = assessmentUrl;
+            return;
+          }
+        }
+      }
+      
+      // Fallback: Navigate to Final Exam tab (MEGA comprehensive exam)
+      const examTab = document.querySelector('.module-item.exam-module');
+      if (examTab) {
+        examTab.click();
+        
+        // Scroll to exam container after a short delay
+        setTimeout(() => {
+          const examContainer = document.getElementById('exam-container');
+          if (examContainer) {
+            examContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      } else {
+        // Final fallback: scroll to assessment CTA if it exists
+        const assessmentCTA = document.querySelector('.assessment-cta');
+        if (assessmentCTA) {
+          assessmentCTA.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+    
+    function downloadCertificate() {
+      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      const moduleIndex = currentModuleIndex;
+      
+      // Check if certificate is actually available
+      if (!progressData.assessmentPassed) {
+        alert('⚠️ Please complete and pass the assessment first.');
+        return;
+      }
+      
+      // Get user data
+      const user = firebase?.auth()?.currentUser;
+      if (!user) {
+        alert('⚠️ Please sign in to download your certificate.');
+        return;
+      }
+      
+      // Trigger certificate generation
+      if (typeof generateCertificate === 'function') {
+        generateCertificate(courseId, moduleIndex);
+      } else {
+        // Fallback: notify user
+        alert('🎉 Congratulations! Your certificate is being generated. Check your email or dashboard for download.');
+      }
+    }
+    
+    // Progress tracking system
+    let progressData = {
+      contentRead: false,
+      assessmentCompleted: false,
+      assessmentPassed: false,
+      readingProgress: 0
+    };
+    
+    function initializeProgressTracking(contentSection) {
+      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      
+      console.log('Initializing progress tracking:', {courseId, currentModuleIndex, moduleId, progressKey, module: module ? module.title : 'N/A'});
+      
+      // Reset progressData to default state for this module
+      progressData = {
+        contentRead: false,
+        assessmentCompleted: false,
+        assessmentPassed: false,
+        readingProgress: 0
+      };
+      
+      // Load saved progress for THIS specific module
+      const savedProgress = localStorage.getItem(progressKey);
+      console.log('Saved progress from localStorage:', savedProgress);
+      
+      if (savedProgress) {
+        progressData = JSON.parse(savedProgress);
+        console.log('Parsed progress data:', progressData);
+        // Delay update to ensure DOM is fully rendered
+        setTimeout(() => {
+          console.log('Calling updateProgressIndicator after delay');
+          updateProgressIndicator();
+        }, 100);
+      }
+      
+      // Track scroll progress
+      const contentArea = document.querySelector('.content-area');
+      if (contentArea && !contentArea.hasAttribute('data-scroll-listener-added')) {
+        contentArea.setAttribute('data-scroll-listener-added', 'true');
+        let scrollTimeout;
+        
+        contentArea.addEventListener('scroll', () => {
+          clearTimeout(scrollTimeout);
+          scrollTimeout = setTimeout(() => {
+            const scrollPercentage = (contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight)) * 100;
+            progressData.readingProgress = Math.min(100, scrollPercentage);
+            
+            // Mark as read when 80% scrolled
+            if (scrollPercentage >= 80 && !progressData.contentRead) {
+              progressData.contentRead = true;
+              
+              // Get current module info
+              const courseId = new URLSearchParams(window.location.search).get('courseId');
+              const module = courseModules[currentModuleIndex];
+              const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+              const progressKey = `progress_${courseId}_module_${moduleId}`;
+              
+              localStorage.setItem(progressKey, JSON.stringify(progressData));
+              updateProgressIndicator();
+              
+              // Save to Firebase if user is logged in
+              saveProgressToFirebase();
+            }
+          }, 300);
+        });
+      }
+    }
+    
+    function updateProgressIndicator() {
+      // Find the progress indicator in the ACTIVE tab content, not the first one on the page
+      const activeTabContent = document.querySelector('.tab-content.active');
+      if (!activeTabContent) {
+        console.log('No active tab content found');
+        return;
+      }
+      
+      const indicator = activeTabContent.querySelector('.progress-indicator');
+      if (!indicator) {
+        console.log('Progress indicator not found in active tab');
+        return;
+      }
+      
+      const progressSteps = indicator.querySelector('.progress-steps');
+      if (!progressSteps) {
+        console.log('Progress steps not found');
+        return;
+      }
+      
+      const card1 = progressSteps.querySelector('.progress-card:nth-child(1)');
+      const card2 = progressSteps.querySelector('.progress-card:nth-child(2)');
+      const card3 = progressSteps.querySelector('.progress-card:nth-child(3)');
+      const progressFill = indicator.querySelector('.progress-line-fill');
+      
+      if (!card1 || !card2 || !card3 || !progressFill) {
+        console.error('Progress cards not found', {card1, card2, card3, progressFill});
+        return;
+      }
+      
+      console.log('Updating progress indicator with data:', progressData);
+      
+      // Update based on progress
+      if (progressData.assessmentPassed) {
+        // All completed - certificate available
+        card1.className = 'progress-card completed';
+        card1.querySelector('.progress-card-status').innerHTML = `
+          <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\">
+            <path d=\"M13.3333 4L6 11.3333L2.66666 8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>
+          </svg>
+          <span>Completed</span>
+        `;
+        
+        card2.className = 'progress-card completed';
+        card2.querySelector('.progress-card-status').innerHTML = `
+          <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\">
+            <path d=\"M13.3333 4L6 11.3333L2.66666 8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>
+          </svg>
+          <span>Passed</span>
+        `;
+        
+        card3.className = 'progress-card active';
+        card3.querySelector('.progress-card-status').innerHTML = `
+          <div class=\"pulse-dot\"></div>
+          <span>Available Now!</span>
+        `;
+        
+        progressFill.style.width = '100%';
+        progressFill.style.background = 'linear-gradient(90deg, #10b981 0%, #f59e0b 100%)';
+        
+      } else if (progressData.contentRead) {
+        // Content read - assessment available
+        card1.className = 'progress-card completed';
+        card1.querySelector('.progress-card-status').innerHTML = `
+          <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\">
+            <path d=\"M13.3333 4L6 11.3333L2.66666 8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>
+          </svg>
+          <span>Completed</span>
+        `;
+        
+        card2.className = 'progress-card active';
+        card2.querySelector('.progress-card-status').innerHTML = `
+          <div class=\"pulse-dot\"></div>
+          <span>Ready to Start</span>
+        `;
+        
+        card3.className = 'progress-card pending';
+        
+        progressFill.style.width = '66.66%';
+        progressFill.style.background = 'linear-gradient(90deg, #10b981 0%, #3b82f6 100%)';
+        
+      } else {
+        // Still reading
+        card1.className = 'progress-card active';
+        card2.className = 'progress-card pending';
+        card3.className = 'progress-card pending';
+        
+        progressFill.style.width = '33.33%';
+        progressFill.style.background = 'linear-gradient(90deg, #3b82f6 0%, #3b82f6 100%)';
+      }
+      
+      // Re-attach click handlers after DOM updates
+      setTimeout(attachProgressCardHandlers, 100);
+    }
+    
+    function saveProgressToFirebase() {
+      const user = firebase?.auth()?.currentUser;
+      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      
+      // Save regular user progress (if logged in)
+      if (user) {
+        firebase.firestore().collection('userProgress').doc(`${user.uid}_${courseId}_${moduleId}`).set({
+          userId: user.uid,
+          courseId: courseId,
+          moduleId: moduleId,
+          moduleIndex: currentModuleIndex,
+          contentRead: progressData.contentRead,
+          assessmentCompleted: progressData.assessmentCompleted,
+          assessmentPassed: progressData.assessmentPassed,
+          readingProgress: progressData.readingProgress,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => {
+          console.error('Error saving user progress:', err);
+        });
+      }
+      
+      // FOUNDATION SCHOOL TRACKING - Module-Based Progress
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      
+      if (ambassadorCode && courseId === 'foundation-school') {
+        const weekNumber = currentModuleIndex + 1; // Module index 0-5 = Week 1-6
+        const progressPercent = Math.round((weekNumber / 6) * 100);
+        
+        console.log(`📚 Foundation School: Week ${weekNumber} - Module completed`);
+        
+        // Track completed modules (individual lessons within weeks)
+        const moduleCompletionPath = `school_enrollment.foundation_school.completed_modules.module${currentModuleIndex}`;
+        
+        const updateData = {
+          'school_enrollment.foundation_school.current_week': weekNumber,
+          'school_enrollment.foundation_school.progress_percent': progressPercent,
+          'school_enrollment.foundation_school.last_activity': firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // Mark this specific module as completed when content is read OR assessment passed
+        if (progressData.contentRead || progressData.assessmentPassed) {
+          updateData[moduleCompletionPath] = {
+            completed: true,
+            completed_at: firebase.firestore.FieldValue.serverTimestamp(),
+            assessment_passed: progressData.assessmentPassed || false,
+            content_read: progressData.contentRead || false
+          };
+          console.log(`✅ Week ${weekNumber} marked as complete`);
+        }
+        
+        firebase.firestore().collection('ambassadors').doc(ambassadorCode).update(updateData)
+          .then(() => {
+            console.log(`✅ Foundation School progress updated: Week ${weekNumber} (${progressPercent}%)`);
+          })
+          .catch(err => {
+            console.error('Error saving Foundation School progress:', err);
+          });
+      }
+    }
+    
+    // Call this when assessment is completed
+    function markAssessmentCompleted(passed, score) {
+      progressData.assessmentCompleted = true;
+      progressData.assessmentPassed = passed;
+      
+      const courseId = new URLSearchParams(window.location.search).get('courseId');
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      
+      localStorage.setItem(progressKey, JSON.stringify(progressData));
+      updateProgressIndicator();
+      saveProgressToFirebase();
+    }
+    
+    // Manual mark complete function
+    function markContentComplete() {
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      console.log('markContentComplete called', {currentModuleIndex, moduleId, moduleTitle: module ? module.title : 'N/A', progressData});
+      
+      if (!progressData.contentRead) {
+        progressData.contentRead = true;
+        progressData.readingProgress = 100;
+        
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        const progressKey = `progress_${courseId}_module_${moduleId}`;
+        
+        localStorage.setItem(progressKey, JSON.stringify(progressData));
+        console.log('Saved progress and calling updateProgressIndicator');
+        updateProgressIndicator();
+        saveProgressToFirebase();
+        
+        // Show success notification
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        if (courseId === 'foundation-school') {
+          const weekNumber = currentModuleIndex + 1;
+          alert(`✅ Week ${weekNumber} marked as complete! Your progress has been saved.`);
+        } else {
+          alert('✅ Content marked as complete!');
+        }
+      } else {
+        console.log('Content already read, calling updateProgressIndicator to refresh UI');
+        // Call update anyway to refresh UI in case it's out of sync
+        updateProgressIndicator();
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        if (courseId === 'foundation-school') {
+          const weekNumber = currentModuleIndex + 1;
+          alert(`ℹ️ You have already completed Week ${weekNumber}.`);
+        } else {
+          alert('ℹ️ You have already completed reading this content.');
+        }
+      }
+    }
+    
+    function addAssessmentCTA(contentSection, module, position) {
+      const resources = module.downloadable_resources || module.downloads || [];
+      // PRIORITY 1: Find resources with resource_id AND file property (actual 40-question assessments)
+      let assessment = resources.find(r => 
+        r.resource_id && r.file && r.type === 'html'
+      );
+      
+      // PRIORITY 2: If not found, try file property only
+      if (!assessment) {
+        assessment = resources.find(r => 
+          r.file && r.type === 'html'
+        );
+      }
+      
+      // PRIORITY 3: Last resort - title containing "assessment" but exclude "worksheet"
+      if (!assessment) {
+        assessment = resources.find(r => 
+          r.type === 'html' && 
+          r.title?.toLowerCase().includes('assessment') &&
+          !r.title?.toLowerCase().includes('worksheet')
+        );
+      }
+      
+      if (!assessment) return;
+      
+      const cta = document.createElement('div');
+      cta.className = 'assessment-cta';
+      cta.innerHTML = `
+        <h3>📝 Ready to Test Your Knowledge?</h3>
+        <p>${assessment.description || 'Complete this assessment to demonstrate your understanding of this week\'s teachings.'}</p>
+        <div class="assessment-cta-meta">
+          <div class="assessment-cta-meta-item">
+            <span>⏱️</span> <span>60 minutes</span>
+          </div>
+          <div class="assessment-cta-meta-item">
+            <span>📋</span> <span>40 questions</span>
+          </div>
+          <div class="assessment-cta-meta-item">
+            <span>✅</span> <span>85% to pass</span>
+          </div>
+        </div>
+        <a href="${assessment.file || assessment.url}" class="btn">Start Assessment</a>
+      `;
+      
+      if (position === 'top') {
+        contentSection.insertBefore(cta, contentSection.firstChild.nextSibling);
+      } else {
+        contentSection.appendChild(cta);
+      }
+    }
+    
+    function enhanceTables(contentSection) {
+      const tables = contentSection.querySelectorAll('table');
+      tables.forEach(table => {
+        if (!table.classList.contains('enhanced-table')) {
+          table.classList.add('enhanced-table');
+          
+          // Add data labels for mobile
+          const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+          table.querySelectorAll('tbody tr').forEach(row => {
+            row.querySelectorAll('td').forEach((cell, index) => {
+              if (headers[index]) {
+                cell.setAttribute('data-label', headers[index]);
+              }
+            });
+          });
+        }
+      });
+    }
+    
+    function addCalloutBoxes(contentSection) {
+      // Find blockquotes that start with emoji indicators
+      const blockquotes = contentSection.querySelectorAll('blockquote');
+      blockquotes.forEach(bq => {
+        const text = bq.textContent.trim();
+        let type = 'info';
+        let icon = '💡';
+        
+        if (text.startsWith('⚠️') || text.toLowerCase().includes('warning')) {
+          type = 'warning';
+          icon = '⚠️';
+        } else if (text.startsWith('✅') || text.toLowerCase().includes('tip')) {
+          type = 'success';
+          icon = '✅';
+        } else if (text.startsWith('❌') || text.toLowerCase().includes('avoid')) {
+          type = 'error';
+          icon = '❌';
+        } else if (text.startsWith('💡') || text.startsWith('📖')) {
+          type = 'info';
+          icon = text.charAt(0);
+        }
+        
+        const callout = document.createElement('div');
+        callout.className = `callout callout-${type}`;
+        callout.innerHTML = `
+          <div class="callout-icon">${icon}</div>
+          <div class="callout-content">${bq.innerHTML}</div>
+        `;
+        bq.replaceWith(callout);
+      });
+    }
+    
+    function makeQuestionsCollapsible(contentSection) {
+      // Find FAQ sections
+      const headings = contentSection.querySelectorAll('h2, h3');
+      headings.forEach(heading => {
+        const text = heading.textContent;
+        if (text.includes('FAQ') || text.startsWith('Q') || text.includes('❓')) {
+          // Make this and subsequent Q/A pairs collapsible
+          let element = heading.nextElementSibling;
+          while (element && !element.matches('h2, h3')) {
+            if (element.matches('p') && element.innerHTML.startsWith('<strong>Q')) {
+              makeElementCollapsible(element);
+            }
+            element = element.nextElementSibling;
+          }
+        }
+      });
+    }
+    
+    function makeElementCollapsible(element) {
+      const question = element.querySelector('strong')?.textContent || element.textContent.split('\\n')[0];
+      let answerHTML = '';
+      let nextEl = element.nextElementSibling;
+      
+      // Collect answer paragraphs
+      const answerElements = [];
+      while (nextEl && !nextEl.innerHTML.startsWith('<strong>Q') && !nextEl.matches('h2, h3')) {
+        answerElements.push(nextEl);
+        nextEl = nextEl.nextElementSibling;
+      }
+      
+      answerHTML = answerElements.map(el => el.outerHTML).join('');
+      
+      const collapsible = document.createElement('div');
+      collapsible.className = 'collapsible';
+      collapsible.innerHTML = `
+        <div class="collapsible-header">
+          <h4>${question}</h4>
+          <span class="collapsible-icon">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-body">${answerHTML}</div>
+        </div>
+      `;
+      
+      element.replaceWith(collapsible);
+      answerElements.forEach(el => el.remove());
+      
+      // Add click handler
+      const header = collapsible.querySelector('.collapsible-header');
+      header.addEventListener('click', () => {
+        collapsible.classList.toggle('expanded');
+      });
+    }
+    
+    function addTooltips(contentSection) {
+      const terms = {
+        'anthropogenic': 'Originating in human nature itself, present from birth',
+        'teleios': 'Greek: Complete, mature, fully developed in all aspects',
+        'porneia': 'Greek: All forms of unlawful sexual relations (fornication)',
+        'moicheia': 'Greek: Adultery specifically',
+        'protology': 'The study of first things, origins, beginnings',
+        'one-flesh': 'The spiritual and physical union created by sexual intercourse',
+        'stewardship': 'Responsible management of what has been entrusted to you',
+        'birthright': 'Inheritance received at birth, not earned'
+      };
+      
+      Object.entries(terms).forEach(([term, definition]) => {
+        const regex = new RegExp(`\\b(${term})\\b`, 'gi');
+        const walker = document.createTreeWalker(contentSection, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        let node;
+        
+        while (node = walker.nextNode()) {
+          if (node.textContent.match(regex) && !node.parentElement.matches('h1, h2, h3, h4, .tooltip')) {
+            textNodes.push(node);
+          }
+        }
+        
+        textNodes.forEach(textNode => {
+          const parent = textNode.parentElement;
+          if (!parent.classList.contains('tooltip-trigger')) {
+            const html = textNode.textContent.replace(regex, (match) => {
+              return `<span class="tooltip-trigger">${match}<span class="tooltip">${definition}</span></span>`;
+            });
+            const template = document.createElement('template');
+            template.innerHTML = html;
+            const fragment = template.content;
+            textNode.replaceWith(fragment);
+          }
+        });
+      });
+    }
+    
+    function addSectionDividers(contentSection) {
+      const h2s = contentSection.querySelectorAll('h2');
+      h2s.forEach((h2, index) => {
+        if (index > 0 && h2.previousElementSibling && h2.previousElementSibling.tagName !== 'HR') {
+          const divider = document.createElement('div');
+          divider.className = 'section-divider';
+          h2.parentNode.insertBefore(divider, h2);
+        }
+      });
+    }
+    
+    function enhancePullQuotes(contentSection) {
+      // Find emphasized paragraphs that should be pull quotes
+      const paragraphs = contentSection.querySelectorAll('p');
+      paragraphs.forEach(p => {
+        const text = p.textContent;
+        // If paragraph starts with quote mark and is emphasized
+        if ((text.startsWith('"') || text.startsWith('"')) && p.querySelector('em, strong')) {
+          const pullQuote = document.createElement('div');
+          pullQuote.className = 'pull-quote';
+          pullQuote.innerHTML = `<p>${p.innerHTML}</p>`;
+          p.replaceWith(pullQuote);
+        }
+      });
+    }
+    
+    function updateSectionNavigator() {
+      const navList = document.getElementById('sectionNavList');
+      const activeContent = document.querySelector('.tab-content.active .content-section');
+      
+      if (!activeContent || !navList) return;
+      
+      // CRITICAL: Wait for markdown to be fully rendered
+      setTimeout(() => {
+        // Find ALL headings in the rendered markdown content
+        const headings = activeContent.querySelectorAll('h2, h3, h4');
+        
+        if (headings.length === 0) {
+          navList.innerHTML = '<li class="section-nav-item"><a href="#">No sections</a></li>';
+          return;
+        }
+        
+        // Clear old navigation
+        navList.innerHTML = '';
+        
+        // Build navigation by directly storing element references
+        headings.forEach((heading, index) => {
+          const level = heading.tagName.toLowerCase();
+          const text = heading.textContent.trim();
+          const uniqueId = `section-${Date.now()}-${index}`;
+          
+          // CRITICAL: Set ID directly on the actual DOM element
+          heading.id = uniqueId;
+          heading.setAttribute('data-section', 'true');
+          
+          // Create navigation item
+          const li = document.createElement('li');
+          li.className = 'section-nav-item';
+          if (level === 'h3') li.classList.add('level-3');
+          if (level === 'h4') li.classList.add('level-4');
+          
+          const a = document.createElement('a');
+          a.href = '#' + uniqueId;
+          a.textContent = text;
+          a.setAttribute('data-scroll-to', uniqueId);
+          
+          // Store direct reference to the heading element
+          a._targetElement = heading;
+          
+          li.appendChild(a);
+          navList.appendChild(li);
+        });
+        
+        // Setup scroll spy after navigation is built
+        setupScrollSpy();
+        
+      }, 100);
+    }
+    
+    // Setup navigation click handler ONCE
+    let navigationClickHandlerSetup = false;
+    function setupNavigationClickHandler() {
+      if (navigationClickHandlerSetup) return;
+      
+      const navList = document.getElementById('sectionNavList');
+      if (!navList) return;
+      
+      // Single delegated click handler
+      navList.addEventListener('click', (e) => {
+        const link = e.target.closest('a[data-scroll-to]');
+        if (!link) return;
+        
+        e.preventDefault();
+        
+        // Use the stored element reference for bulletproof scrolling
+        const targetElement = link._targetElement;
+        const contentArea = document.querySelector('.content-area');
+        
+        if (targetElement && contentArea) {
+          // Scroll using the element reference
+          const rect = targetElement.getBoundingClientRect();
+          const containerRect = contentArea.getBoundingClientRect();
+          const scrollOffset = rect.top - containerRect.top + contentArea.scrollTop - 20;
+          
+          contentArea.scrollTo({
+            top: scrollOffset,
+            behavior: 'smooth'
+          });
+          
+          // Update active state
+          setTimeout(() => {
+            navList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+            link.classList.add('active');
+          }, 50);
+        }
+      });
+      
+      navigationClickHandlerSetup = true;
+    }
+    
+    function setupScrollSpy() {
+      const contentArea = document.querySelector('.content-area');
+      if (!contentArea) return;
+      
+      // Remove old listener
+      if (scrollSpyListener) {
+        contentArea.removeEventListener('scroll', scrollSpyListener);
+      }
+      
+      // Create new listener
+      scrollSpyListener = () => {
+        const navList = document.getElementById('sectionNavList');
+        if (!navList) return;
+        
+        const links = navList.querySelectorAll('a[data-scroll-to]');
+        if (links.length === 0) return;
+        
+        const containerRect = contentArea.getBoundingClientRect();
+        const viewportCenter = 150;
+        
+        let activeLink = null;
+        let closestDistance = Infinity;
+        
+        // Find which heading is currently closest to top of viewport
+        links.forEach(link => {
+          const element = link._targetElement;
+          if (!element) return;
+          
+          const rect = element.getBoundingClientRect();
+          const distance = Math.abs(rect.top - containerRect.top - viewportCenter);
+          
+          if (rect.top - containerRect.top < viewportCenter && distance < closestDistance) {
+            closestDistance = distance;
+            activeLink = link;
+          }
+        });
+        
+        // Update active states
+        links.forEach(link => {
+          if (link === activeLink) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      };
+      
+      // Add listener
+      contentArea.addEventListener('scroll', scrollSpyListener, { passive: true });
+      
+      // Trigger immediately
+      setTimeout(scrollSpyListener, 200);
+    }
+    
+    function switchToExam() {
+      // Deactivate all module items
+      document.querySelectorAll('.module-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Activate exam
+      document.querySelector('.exam-module').classList.add('active');
+      document.getElementById('module-exam').classList.add('active');
+      document.getElementById('moduleTitle').textContent = 'Final Exam';
+      
+      // Clear section navigator
+      const navList = document.getElementById('sectionNavList');
+      if (navList) {
+        navList.innerHTML = '<li class="section-nav-item"><a href="#">No sections for exam</a></li>';
+      }
+      
+      // Scroll to top
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+    
+    // ============================================
+    // QUIZ/EXAM SYSTEM
+    // ============================================
+    
+    let quizData = null;
+    let userAnswers = {};
+    let flaggedQuestions = new Set();
+    let quizStartTime = null;
+    let quizTimer = null;
+    let courseExams = null;
+    
+    async function loadQuizInterface(courseId) {
+      const container = document.getElementById('exam-container');
+      
+      try {
+        // Load course data with exams
+        const response = await fetch('courses-catalogue.json?t=' + new Date().getTime());
+        const courses = await response.json();
+        const course = courses.find(c => c.courseId === courseId);
+        
+        if (!course || !course.exams) {
+          container.innerHTML = '<div style="padding:40px;text-align:center;"><p>Final exam not yet available for this course.</p></div>';
+          return;
+        }
+        
+        // Store all course exams
+        courseExams = course.exams;
+        
+        // MEGA-EXAM: Combine ALL questions from all exams
+        let allQuestions = [];
+        let questionId = 0;
+        let examTitle = 'Final Exam';
+        let examDescription = '';
+        let passingScore = 80;
+        
+        // Collect questions from all exams
+        Object.keys(course.exams).sort().forEach(examKey => {
+          const exam = course.exams[examKey];
+          if (exam.title) examTitle = exam.title;
+          if (exam.description) examDescription = exam.description;
+          
+          exam.questions.forEach(q => {
+            allQuestions.push({
+              id: questionId++,
+              question: q.question,
+              options: q.options,
+              correctAnswer: q.correct,
+              explanation: q.explanation,
+              source: exam.title // Track which exam this question came from
+            });
+          });
+        });
+        
+        // Determine instructions based on course
+        let instructions = examDescription || `This comprehensive exam covers all material from ${course.title}. You must score ${passingScore}% or higher to pass and receive your certificate.`;
+        
+        // Foundation School specific instructions
+        if (courseId === 'foundation-school') {
+          passingScore = 80;
+          instructions = `
+            <h3 style="color: #1e293b; margin-bottom: 20px;">🎓 CRLA Certification Exam</h3>
+            <p style="color: #475569; line-height: 1.8; margin-bottom: 15px;">
+              This final exam assesses your comprehensive understanding of:
+            </p>
+            <ul style="color: #475569; line-height: 1.8; margin-bottom: 15px; list-style-position: inside;">
+              <li><strong>Teleios Maturity:</strong> Understanding of covenant capacity, the 5 Faculties, biblical anthropology, and marriage readiness</li>
+              <li><strong>Advocacy Skills:</strong> Deployment psychology, conversation frameworks, and facilitating access to marriage literacy</li>
+            </ul>
+            <p style="color: #475569; line-height: 1.8;">
+              Pass this exam with 80% or higher (40 out of 50 correct) to earn your <strong>CRLA (Certified Relationship Literacy Advocate)</strong> certification and unlock senior ambassador opportunities.
+            </p>
+          `;
+        }
+        
+        quizData = {
+          quizTitle: examTitle,
+          instructions: instructions,
+          questions: allQuestions,
+          timeLimit: 120, // 120 minutes (2 hours)
+          passingScore: passingScore,
+          maxAttempts: 99 // Unlimited attempts
+        };
+        
+        console.log(`Loaded ${allQuestions.length} questions from ${Object.keys(course.exams).length} exams`);
+        
+        // Update sidebar exam metadata
+        const examNavItem = document.getElementById('exam-nav-item');
+        if (examNavItem) {
+          const durationDiv = examNavItem.querySelector('.duration');
+          if (durationDiv) {
+            durationDiv.textContent = `${allQuestions.length} Questions • ${passingScore}% Pass`;
+          }
+        }
+        
+        // Check if user has already passed
+        // TODO: Check Firestore for quiz attempts
+        
+        displayQuizIntro(container);
+      } catch (error) {
+        console.error('Error loading quiz:', error);
+        container.innerHTML = '<div style="padding:40px;text-align:center;"><p>Error loading exam. Please try again.</p></div>';
+      }
+    }
+    
+    function displayQuizIntro(container) {
+      container.innerHTML = `
+        <div style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 1rem;">📝 ${quizData.quizTitle}</h1>
+            <p style="font-size: 1.1rem; color: #64748b;">Complete this assessment to earn your course certificate</p>
+          </div>
+          
+          <div style="background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+            <div style="margin-bottom: 20px;">${quizData.instructions}</div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px;">
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">📝</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.questions.length}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Questions</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">⏱️</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.timeLimit}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Minutes</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.passingScore}%</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Pass Required</div>
+              </div>
+              
+              <div style="text-align: center; padding: 20px; background: white; border-radius: 8px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${quizData.maxAttempts}</div>
+                <div style="color: #64748b; font-size: 0.9rem;">Attempts</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+            <p style="margin: 0; color: #92400e;"><strong>⚠️ Important:</strong> Once you start the exam, the timer will begin. Make sure you're ready and have a stable internet connection. You cannot pause the exam once started.</p>
+          </div>
+          
+          <div style="text-align: center;">
+            <button onclick="startQuiz()" style="
+              background: #0f172a;
+              color: white;
+              padding: 18px 48px;
+              font-size: 1.2rem;
+              font-weight: 600;
+              border: none;
+              border-radius: 12px;
+              cursor: pointer;
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+              transition: all 0.3s;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 24px rgba(0, 0, 0, 0.2)';" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.15)';">
+              🎯 Start Exam Now
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function startQuiz() {
+      const container = document.getElementById('exam-container');
+      userAnswers = {};
+      quizStartTime = Date.now();
+      
+      // Start timer
+      startQuizTimer();
+      
+      // Display quiz questions
+      displayQuizQuestions(container);
+    }
+    
+    function startQuizTimer() {
+      const timerDisplay = document.getElementById('quiz-timer');
+      const timeLimit = quizData.timeLimit * 60; // Convert to seconds
+      let timeLeft = timeLimit;
+      
+      quizTimer = setInterval(() => {
+        timeLeft--;
+        
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Change color when less than 5 minutes
+        if (timeLeft < 300) {
+          timerDisplay.style.color = '#dc2626';
+        }
+        
+        // Auto-submit when time runs out
+        if (timeLeft <= 0) {
+          clearInterval(quizTimer);
+          submitQuiz(true); // true = auto-submitted
+        }
+      }, 1000);
+    }
+    
+    let currentQuestionIndex = 0;
+    
+    function displayQuizQuestions(container) {
+      currentQuestionIndex = 0;
+      renderCurrentQuestion(container);
+    }
+    
+    function renderCurrentQuestion(container) {
+      const q = quizData.questions[currentQuestionIndex];
+      const totalQuestions = quizData.questions.length;
+      const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+      const isFlagged = flaggedQuestions.has(q.id);
+      
+      // Check if we need to show a section header
+      const prevQuestion = currentQuestionIndex > 0 ? quizData.questions[currentQuestionIndex - 1] : null;
+      const showSectionHeader = !prevQuestion || prevQuestion.section !== q.section || prevQuestion.subsection !== q.subsection;
+      
+      // Determine section colors and icon
+      let sectionColor = '#667eea';
+      let sectionIcon = '📘';
+      if (q.section === 'Advocacy Training') {
+        sectionColor = '#10b981';
+        sectionIcon = '📗';
+      } else if (q.section === 'Integration & Application') {
+        sectionColor = '#f59e0b';
+        sectionIcon = '📙';
+      }
+      
+      container.innerHTML = `
+        <div style="position: sticky; top: 0; background: white; padding: 20px; border-bottom: 2px solid #e2e8f0; z-index: 10; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <div style="max-width: 900px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <div>
+                <h2 style="margin: 0; color: #1e293b;">${quizData.quizTitle || 'CRLA Certification Exam'}</h2>
+                <p style="margin: 5px 0 0 0; color: #64748b;">Question ${currentQuestionIndex + 1} of ${totalQuestions}</p>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 2rem; font-weight: 700; color: #667eea;" id="quiz-timer">120:00</div>
+                <div style="font-size: 0.85rem; color: #64748b;">Time Remaining</div>
+              </div>
+            </div>
+            <div style="background: #e2e8f0; height: 8px; border-radius: 10px; overflow: hidden;">
+              <div style="background: #0f172a; height: 100%; width: ${progress}%; transition: width 0.3s; border-radius: 4px;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="max-width: 900px; margin: 0 auto; padding: 0 20px 40px 20px;">
+          ${showSectionHeader && q.section ? `
+            <div style="background: linear-gradient(135deg, ${sectionColor}15 0%, ${sectionColor}05 100%); border-left: 6px solid ${sectionColor}; padding: 25px 30px; margin-bottom: 25px; border-radius: 12px; box-shadow: 0 2px 12px ${sectionColor}20;">
+              <div style="font-size: 1rem; color: ${sectionColor}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">${sectionIcon} ${q.section}</div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; font-weight: 600;">${q.subsection}</h3>
+            </div>
+          ` : ''}
+          
+          <div style="background: #f8f9fa; border-radius: 16px; padding: 40px; margin-bottom: 30px; border: 3px solid ${isFlagged ? '#f59e0b' : '#667eea'}; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);">
+            ${isFlagged ? '<div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.2rem;">🚩</span><span style="color: #92400e; font-weight: 600;">Flagged for Review</span></div>' : ''}
+            
+            <div style="display: flex; align-items: start; gap: 20px; margin-bottom: 30px;">
+              <div style="background: #0f172a; color: white; min-width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+                ${currentQuestionIndex + 1}
+              </div>
+              <h3 style="margin: 0; color: #1e293b; font-size: 1.3rem; line-height: 1.6; flex: 1;">${q.question}</h3>
+            </div>
+            
+            <div class="quiz-options" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;">
+              ${q.options.map((option, optIndex) => {
+                const isSelected = userAnswers[q.id] === optIndex;
+                return `
+                  <label class="quiz-option-${q.id}-${optIndex}" style="
+                    display: flex;
+                    align-items: center;
+                    padding: 20px;
+                    background: ${isSelected ? '#eef2ff' : 'white'};
+                    border: 3px solid ${isSelected ? '#667eea' : '#e2e8f0'};
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                  " onmouseover="if(!this.querySelector('input').checked) {this.style.borderColor='#667eea'; this.style.background='#f8f9fa';}" onmouseout="if(!this.querySelector('input').checked) {this.style.borderColor='#e2e8f0'; this.style.background='white';}">
+                    <input type="radio" name="question-${q.id}" value="${optIndex}" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${q.id}, ${optIndex}, this)" style="width: 24px; height: 24px; margin-right: 15px; cursor: pointer; accent-color: #667eea;">
+                    <span style="color: #1e293b; font-size: 1.05rem; line-height: 1.6;">${option}</span>
+                  </label>
+                `;
+              }).join('')}
+            </div>
+            
+            <div style="text-align: center;">
+              <button onclick="toggleFlag(${q.id})" style="
+                background: ${isFlagged ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : '#f1f5f9'};
+                color: ${isFlagged ? 'white' : '#475569'};
+                padding: 12px 24px;
+                font-size: 1rem;
+                font-weight: 600;
+                border: 2px solid ${isFlagged ? '#f59e0b' : '#e2e8f0'};
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+              ">
+                ${isFlagged ? '🚩 Unflag Question' : '🏴 Flag for Review'}
+              </button>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 20px; justify-content: space-between; align-items: center; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); flex-wrap: wrap;">
+            <button onclick="previousQuestion()" ${currentQuestionIndex === 0 ? 'disabled' : ''} style="
+              background: ${currentQuestionIndex === 0 ? '#e2e8f0' : '#f1f5f9'};
+              color: ${currentQuestionIndex === 0 ? '#94a3b8' : '#475569'};
+              padding: 14px 32px;
+              font-size: 1.1rem;
+              font-weight: 600;
+              border: 2px solid ${currentQuestionIndex === 0 ? '#cbd5e1' : '#e2e8f0'};
+              border-radius: 10px;
+              cursor: ${currentQuestionIndex === 0 ? 'not-allowed' : 'pointer'};
+            ">
+              ← Previous
+            </button>
+            
+            <div style="text-align: center; display: flex; gap: 20px;">
+              <div style="text-align: center;">
+                <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">Answered</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: #667eea;" id="answered-count">${Object.keys(userAnswers).length} / ${totalQuestions}</div>
+              </div>
+              ${flaggedQuestions.size > 0 ? `
+                <div style="text-align: center;">
+                  <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">Flagged</div>
+                  <div style="font-size: 1.3rem; font-weight: 700; color: #f59e0b;">${flaggedQuestions.size}</div>
+                </div>
+              ` : ''}
+            </div>
+            
+            ${currentQuestionIndex < totalQuestions - 1 ? `
+              <button onclick="nextQuestion()" style="
+                background: #0f172a;
+                color: white;
+                padding: 14px 32px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              ">
+                Next →
+              </button>
+            ` : `
+              <button onclick="showReviewSummary()" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 14px 32px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+              ">
+                📋 Review & Submit
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+    }
+    
+    function toggleFlag(questionId) {
+      if (flaggedQuestions.has(questionId)) {
+        flaggedQuestions.delete(questionId);
+      } else {
+        flaggedQuestions.add(questionId);
+      }
+      renderCurrentQuestion(document.getElementById('exam-container'));
+    }
+    
+    function showReviewSummary() {
+      const container = document.getElementById('exam-container');
+      const totalQuestions = quizData.questions.length;
+      const answeredCount = Object.keys(userAnswers).length;
+      const unansweredCount = totalQuestions - answeredCount;
+      const flaggedCount = flaggedQuestions.size;
+      
+      let summaryHtml = `
+        <div style="max-width: 900px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 1rem;">📋 Review Your Answers</h1>
+            <p style="font-size: 1.1rem; color: #64748b;">Check your progress before final submission</p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
+            <div style="text-align: center; padding: 30px; background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px;">
+              <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+              <div style="font-size: 2rem; font-weight: 700; color: #10b981;">${answeredCount}</div>
+              <div style="color: #065f46; font-size: 0.95rem;">Answered</div>
+            </div>
+            
+            ${unansweredCount > 0 ? `
+              <div style="text-align: center; padding: 30px; background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">❌</div>
+                <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">${unansweredCount}</div>
+                <div style="color: #991b1b; font-size: 0.95rem;">Unanswered</div>
+              </div>
+            ` : ''}
+            
+            ${flaggedCount > 0 ? `
+              <div style="text-align: center; padding: 30px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🚩</div>
+                <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">${flaggedCount}</div>
+                <div style="color: #92400e; font-size: 0.95rem;">Flagged</div>
+              </div>
+            ` : ''}
+          </div>`;
+      
+      // Add review section if there are items to review
+      if (unansweredCount > 0 || flaggedCount > 0) {
+        summaryHtml += `
+          <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+            <h3 style="color: #92400e; margin-bottom: 15px;">⚠️ Review Needed</h3>
+            ${unansweredCount > 0 ? `<p style="color: #92400e; margin-bottom: 10px;">• You have <strong>${unansweredCount} unanswered question(s)</strong></p>` : ''}
+            ${flaggedCount > 0 ? `<p style="color: #92400e;">• You have <strong>${flaggedCount} question(s) flagged for review</strong></p>` : ''}
+          </div>
+          
+          <div style="background: white; border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+            <h3 style="color: #1e293b; margin-bottom: 20px;">Questions to Review:</h3>
+            <div style="display: grid; gap: 10px;">`;
+        
+        // Show unanswered/flagged questions
+        quizData.questions.forEach((q, index) => {
+          const isAnswered = userAnswers[q.id] !== undefined;
+          const isFlagged = flaggedQuestions.has(q.id);
+          
+          if (!isAnswered || isFlagged) {
+            summaryHtml += `
+              <div onclick="jumpToQuestion(${index})" style="
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
+                background: ${!isAnswered ? '#fef2f2' : '#fef3c7'};
+                border: 2px solid ${!isAnswered ? '#ef4444' : '#f59e0b'};
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+              " onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform=''">
+                <div style="background: ${!isAnswered ? '#ef4444' : '#f59e0b'}; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                  ${index + 1}
+                </div>
+                <div style="flex: 1;">
+                  <div style="color: #1e293b; font-weight: 600; margin-bottom: 3px;">${q.question.substring(0, 80)}${q.question.length > 80 ? '...' : ''}</div>
+                  <div style="color: #64748b; font-size: 0.85rem;">
+                    ${!isAnswered ? '❌ Not answered' : ''} ${isFlagged ? '🚩 Flagged' : ''}
+                  </div>
+                </div>
+                <div style="color: #667eea; font-weight: 600;">Go →</div>
+              </div>`;
+          }
+        });
+        
+        summaryHtml += `
+            </div>
+          </div>`;
+      }
+      
+      summaryHtml += `
+          <div style="text-align: center; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="renderCurrentQuestion(document.getElementById('exam-container'))" style="
+              background: #f1f5f9;
+              color: #475569;
+              padding: 16px 40px;
+              font-size: 1.1rem;
+              font-weight: 600;
+              border: 2px solid #e2e8f0;
+              border-radius: 10px;
+              cursor: pointer;
+            ">
+              ← Back to Question ${currentQuestionIndex + 1}
+            </button>
+            
+            ${answeredCount === totalQuestions ? `
+              <button onclick="submitQuiz(false)" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+              ">
+                ✅ Submit Final Exam
+              </button>
+            ` : `
+              <button onclick="submitQuiz(false)" style="
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+              ">
+                ⚠️ Submit Anyway (${unansweredCount} Unanswered)
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = summaryHtml;
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+    
+    function jumpToQuestion(index) {
+      currentQuestionIndex = index;
+      renderCurrentQuestion(document.getElementById('exam-container'));
+      document.querySelector('.content-area').scrollTop = 0;
+    }
+    
+    function nextQuestion() {
+      if (currentQuestionIndex < quizData.questions.length - 1) {
+        currentQuestionIndex++;
+        renderCurrentQuestion(document.getElementById('exam-container'));
+        document.querySelector('.content-area').scrollTop = 0;
+      }
+    }
+    
+    function previousQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderCurrentQuestion(document.getElementById('exam-container'));
+        document.querySelector('.content-area').scrollTop = 0;
+      }
+    }
+    
+    function selectAnswer(questionId, optionIndex, inputElement) {
+      userAnswers[questionId] = optionIndex;
+      
+      // Update answered count
+      const answeredCount = Object.keys(userAnswers).length;
+      const countElement = document.getElementById('answered-count');
+      if (countElement) {
+        countElement.textContent = `${answeredCount} / ${quizData.questions.length}`;
+      }
+      
+      // Re-render current question to update selection styling
+      renderCurrentQuestion(document.getElementById('exam-container'));
+    }
+    
+    async function submitQuiz(autoSubmit = false) {
+      // Stop timer
+      if (quizTimer) {
+        clearInterval(quizTimer);
+      }
+      
+      // Check if all questions answered
+      const answeredCount = Object.keys(userAnswers).length;
+      if (answeredCount < quizData.questions.length && !autoSubmit) {
+        const unanswered = quizData.questions.length - answeredCount;
+        if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) {
+          return;
+        }
+      }
+      
+      // Calculate score
+      let correctCount = 0;
+      quizData.questions.forEach(q => {
+        if (userAnswers[q.id] === q.correctAnswer) {
+          correctCount++;
+        }
+      });
+      
+      const score = Math.round((correctCount / quizData.questions.length) * 100);
+      const passed = score >= quizData.passingScore;
+      
+      // Store score globally for certificate generation
+      window.lastQuizScore = score;
+      
+      // Update progress tracking
+      if (typeof markAssessmentCompleted === 'function') {
+        markAssessmentCompleted(passed, score);
+      }
+      
+      // Save quiz attempt to Firestore
+      await saveQuizAttempt(score, passed, userAnswers);
+      
+      // Display results
+      displayQuizResults(score, passed, correctCount, autoSubmit);
+      
+      // If passed, trigger certificate generation
+      if (passed) {
+        await generateCourseCertificate();
+      }
+    }
+    
+    async function saveQuizAttempt(score, passed, answers) {
+      try {
+        const ambassadorCode = localStorage.getItem('ambassadorCode');
+        const courseId = new URLSearchParams(window.location.search).get('courseId');
+        
+        console.log('Saving quiz attempt:', { courseId, score, passed, ambassadorCode });
+        
+        // Foundation School Final Exam = CRLA Certification
+        if (ambassadorCode && courseId === 'foundation-school' && passed) {
+          console.log('🎓 Foundation School Final Exam PASSED - Awarding CRLA Certification!');
+          
+          await firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+            'school_enrollment.foundation_school.exam_passed': true,
+            'school_enrollment.foundation_school.exam_score': score,
+            'school_enrollment.foundation_school.exam_date': firebase.firestore.FieldValue.serverTimestamp(),
+            'school_enrollment.foundation_school.progress_percent': 100,
+            'school_enrollment.foundation_school.crla_certified': true,
+            'school_enrollment.foundation_school.certification_date': firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          console.log('✅ CRLA Certification awarded!');
+          
+          // Show celebration
+          setTimeout(() => {
+            alert('🎉 Congratulations! CRLA Certified!\n\nYou have successfully completed the Marriage Foundation School and earned your CRLA (Certified Relationship Literacy Advocate) certification.\n\nYou can now access senior ambassador opportunities and advanced training programs.');
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+    
+    function displayQuizResults(score, passed, correctCount, autoSubmit) {
+      const container = document.getElementById('exam-container');
+      
+      const statusColor = passed ? '#10b981' : '#ef4444';
+      const statusBg = passed ? '#d1fae5' : '#fee2e2';
+      const statusIcon = passed ? '🎉' : '😔';
+      const statusText = passed ? 'Congratulations! You Passed!' : 'Not Quite There Yet';
+      
+      container.innerHTML = `
+        <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;">
+          <div style="text-align: center; padding: 60px 40px; background: ${statusBg}; border-radius: 16px; margin-bottom: 40px;">
+            <div style="font-size: 5rem; margin-bottom: 20px;">${statusIcon}</div>
+            <h1 style="font-size: 2.5rem; color: ${statusColor}; margin-bottom: 15px;">${statusText}</h1>
+            <div style="font-size: 4rem; font-weight: 700; color: ${statusColor}; margin: 30px 0;">${score}%</div>
+            <p style="font-size: 1.2rem; color: #475569;">
+              You answered <strong>${correctCount} out of ${quizData.questions.length}</strong> questions correctly
+            </p>
+            ${autoSubmit ? '<p style="color: #dc2626; margin-top: 20px;"><strong>⚠️ Time expired - exam was auto-submitted</strong></p>' : ''}
+          </div>
+          
+          ${passed ? `
+            <div style="background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 30px; margin-bottom: 30px; text-align: center;">
+              <h2 style="color: #065f46; margin-bottom: 15px;">🏆 Certificate Unlocked!</h2>
+              <p style="color: #047857; margin-bottom: 20px; line-height: 1.6;">
+                Your certificate is being generated and will be available in your dashboard shortly. You'll also receive it via email.
+              </p>
+              <button onclick="window.location.href='student-dashboard.html'" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 15px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+              ">
+                📜 View My Certificates
+              </button>
+            </div>
+          ` : `
+            <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+              <h3 style="color: #991b1b; margin-bottom: 15px;">What Now?</h3>
+              <p style="color: #7f1d1d; line-height: 1.6; margin-bottom: 15px;">
+                You need ${quizData.passingScore}% to pass. Review the course material and try again. 
+                You have <strong>${quizData.maxAttempts - 1} more attempt(s)</strong> remaining.
+              </p>
+              <ul style="color: #7f1d1d; line-height: 1.8; padding-left: 20px;">
+                <li>Review the weeks you struggled with</li>
+                <li>Study the explanations below</li>
+                <li>Take notes on key concepts</li>
+                <li>Try the exam again when ready</li>
+              </ul>
+            </div>
+          `}
+          
+          <div style="margin-bottom: 40px;">
+            <h2 style="color: #1e293b; margin-bottom: 20px;">📊 Detailed Results</h2>
+            ${quizData.questions.map((q, index) => {
+              const userAnswer = userAnswers[q.id];
+              const isCorrect = userAnswer === q.correctAnswer;
+              
+              return `
+                <div style="background: ${isCorrect ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${isCorrect ? '#10b981' : '#ef4444'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 15px;">
+                    <div style="background: ${isCorrect ? '#10b981' : '#ef4444'}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">
+                      ${index + 1}
+                    </div>
+                    <div style="flex: 1;">
+                      <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1rem;">${q.question}</h4>
+                      <div style="margin-bottom: 10px;">
+                        <strong style="color: ${isCorrect ? '#065f46' : '#991b1b'};">
+                          ${isCorrect ? '✅ Correct' : '❌ Incorrect'}
+                        </strong>
+                      </div>
+                      ${userAnswer !== undefined ? `
+                        <p style="margin: 5px 0; color: #475569;">
+                          <strong>Your answer:</strong> ${q.options[userAnswer]}
+                        </p>
+                      ` : '<p style="margin: 5px 0; color: #ef4444;"><strong>Not answered</strong></p>'}
+                      ${!isCorrect ? `
+                        <p style="margin: 5px 0; color: #065f46;">
+                          <strong>Correct answer:</strong> ${q.options[q.correctAnswer]}
+                        </p>
+                      ` : ''}
+                      <p style="margin: 10px 0 0 0; padding: 12px; background: white; border-radius: 6px; color: #475569; font-size: 0.95rem; line-height: 1.6;">
+                        <strong>💡 Explanation:</strong> ${q.explanation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          <div style="text-align: center;">
+            ${passed ? `
+              <button onclick="window.location.href='student-dashboard.html'" style="
+                background: #0f172a;
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+                margin-right: 15px;
+              ">
+                📊 Go to Dashboard
+              </button>
+            ` : `
+              <button onclick="loadQuizInterface('${courseId}')" style="
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: white;
+                padding: 16px 40px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+                margin-right: 15px;
+              ">
+                🔄 Retake Exam
+              </button>
+            `}
+            <button onclick="switchModule(0)" style="
+              background: #f1f5f9;
+              color: #475569;
+              padding: 16px 40px;
+              font-size: 1.1rem;
+              font-weight: 600;
+              border: 2px solid #e2e8f0;
+              border-radius: 10px;
+              cursor: pointer;
+            ">
+              📚 Review Course
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function generateCourseCertificate() {
+      try {
+        console.log('[Certificate] Requesting certificate generation...');
+        
+        // Get current user
+        const user = firebase.auth().currentUser;
+        if (!user) {
+          console.error('[Certificate] User not authenticated');
+          return;
+        }
+        
+        // Get courseId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+        
+        if (!courseId) {
+          console.error('[Certificate] No courseId found');
+          return;
+        }
+        
+        // Calculate the quiz score from the last quiz attempt
+        // This should already be calculated in submitQuiz()
+        // For now, we'll pass it from the quiz results
+        const lastScore = window.lastQuizScore || 80; // Fallback to 80 if not set
+        
+        console.log('[Certificate] Calling Firebase Function with:', { courseId, quizScore: lastScore });
+        
+        // Call Firebase Function
+        const generateCertificate = firebase.functions().httpsCallable('generateCourseCertificate');
+        const result = await generateCertificate({
+          courseId: courseId,
+          quizScore: lastScore
+        });
+        
+        console.log('[Certificate] Success:', result.data);
+        
+        // Show success notification
+        if (result.data.success) {
+          console.log('[Certificate] Certificate generated:', result.data.certificateNumber);
+          console.log('[Certificate] PDF URL:', result.data.pdfUrl);
+        }
+        
+      } catch (error) {
+        console.error('[Certificate] Error generating certificate:', error);
+        // Don't show error to user - certificate generation is a background process
+      }
+    }
+  </script>
+</body>
+</html>

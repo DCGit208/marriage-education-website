@@ -18,6 +18,43 @@
     .program-card { background: white; border: 2px solid #dfe6e9; border-radius: 12px; padding: 2rem; margin: 1.5rem 0; }
     .cta-inline { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2.5rem; border-radius: 12px; margin: 3rem 0; text-align: center; }
     .cta-inline .btn { background: white; color: #667eea; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; }
+    
+    /* SBD Modal Styles */
+    .sbd-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
+    .sbd-modal-overlay.active { display: flex; }
+    .sbd-modal { background: white; border-radius: 24px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 100px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease; position: relative; }
+    .sbd-modal-close { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; }
+    .sbd-modal-close:hover { background: #e2e8f0; transform: rotate(90deg); }
+    .sbd-modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 2rem 2rem; text-align: center; color: white; }
+    .sbd-modal-header h2 { font-size: 2rem; margin-bottom: 0.5rem; font-weight: 700; }
+    .sbd-modal-header p { font-size: 1.1rem; opacity: 0.95; }
+    .sbd-modal-body { padding: 2.5rem; }
+    .sbd-book-preview { display: flex; gap: 2rem; margin-bottom: 2rem; align-items: start; }
+    .sbd-book-image { flex-shrink: 0; }
+    .sbd-book-image img { width: 180px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); }
+    .sbd-book-details h3 { font-size: 1.5rem; color: #1e293b; margin-bottom: 1rem; }
+    .sbd-book-details p { color: #64748b; line-height: 1.7; margin-bottom: 1rem; }
+    .sbd-features { background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin: 2rem 0; }
+    .sbd-features h4 { color: #1e293b; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sbd-features ul { list-style: none; padding: 0; }
+    .sbd-features li { padding: 0.5rem 0; color: #475569; display: flex; align-items: start; gap: 0.5rem; }
+    .sbd-features li:before { content: "✓"; color: #10b981; font-weight: 700; font-size: 1.2rem; }
+    .sbd-cta-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+    .sbd-cta-card { border: 2px solid #e2e8f0; border-radius: 16px; padding: 2rem; text-align: center; transition: all 0.3s; position: relative; }
+    .sbd-cta-card:hover { border-color: #667eea; transform: translateY(-4px); box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15); }
+    .sbd-cta-card.featured { border-color: #667eea; background: linear-gradient(135deg, #f8f9ff 0%, #eef2ff 100%); }
+    .sbd-cta-badge { background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sbd-cta-card h5 { font-size: 1.3rem; color: #1e293b; margin-bottom: 0.5rem; }
+    .sbd-cta-price { font-size: 2.5rem; font-weight: 700; color: #667eea; margin: 1rem 0; }
+    .sbd-cta-price .original-price { font-size: 1rem; color: #94a3b8; text-decoration: line-through; font-weight: 400; display: block; margin-bottom: 0.25rem; }
+    .sbd-cta-description { color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6; }
+    .sbd-cta-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+    .sbd-cta-button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
+    .sbd-cta-button.secondary { background: white; color: #667eea; border: 2px solid #667eea; box-shadow: none; }
+    .sbd-cta-button.secondary:hover { background: #667eea; color: white; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 768px) { .sbd-cta-section { grid-template-columns: 1fr; } .sbd-book-preview { flex-direction: column; align-items: center; text-align: center; } }
   </style>
 </head>
 <body>
@@ -230,5 +267,45 @@
       </div>
     </div>
   </footer>
+
+  <!-- SBD Modal -->
+  <div class="sbd-modal-overlay" id="sbdModalOverlay" onclick="closeSBDModal(event)">
+    <div class="sbd-modal" onclick="event.stopPropagation()">
+      <button class="sbd-modal-close" onclick="closeSBDModal()">&times;</button>
+      <div class="sbd-modal-header"><h2>📚 Sex By Design For Dummies</h2><p>The Complete Marriage Handbook for Human Flourishing</p></div>
+      <div class="sbd-modal-body">
+        <div class="sbd-book-preview">
+          <div class="sbd-book-image"><img src="images/sbd-dummies.jpg" alt="Sex by Design for Dummies Book"></div>
+          <div class="sbd-book-details">
+            <h3>Your Foundation for Covenant Marriage</h3>
+            <p>This is the <strong>baseline book</strong> that establishes sexual literacy, covenant theology, and marital design from first principles. Written by Dr. Coach Achu Gustave, this 145-page handbook covers everything from eudaemonia to conjugal fidelity.</p>
+          </div>
+        </div>
+        <div class="sbd-features">
+          <h4>📖 What You'll Learn (13 Chapters):</h4>
+          <ul>
+            <li>Modern Societal Eudaemonia: Marriage as the path to human flourishing</li>
+            <li>Sexual Literacy: Why everyone must be sexually literate</li>
+            <li>The One-Flesh Mystery: Understanding covenant design (Genesis 2:24)</li>
+            <li>Muliebrity & Virility Barons: Secret powers of wives and husbands</li>
+            <li>Pics & Pearls: Biblical nakedness vs. pornography's lies</li>
+            <li>Relationship Relatednesses: Communication, conflict, intimacy</li>
+            <li>Marriage Builds Nations: UDHR Article 16 and civilization</li>
+            <li>Practice From Perfection: The 6-week starter plan</li>
+            <li>Plus: Complete glossary, reading maps, and next steps</li>
+          </ul>
+        </div>
+        <div class="sbd-cta-section">
+          <div class="sbd-cta-card"><div class="sbd-cta-badge">🔥 Promo Price</div><h5>Get the Book</h5><div class="sbd-cta-price"><span class="original-price">$47</span>$27</div><p class="sbd-cta-description">Digital PDF delivered instantly. 145 pages. Lifetime access.</p><button class="sbd-cta-button secondary" onclick="window.location.href='payment.html?product=sbd-for-dummies&price=27'">Buy Book Now</button></div>
+          <div class="sbd-cta-card featured"><div class="sbd-cta-badge">⭐ Best Value</div><h5>Enroll in Course</h5><div class="sbd-cta-price">$300</div><p class="sbd-cta-description">13-week comprehensive program. Includes the book!</p><button class="sbd-cta-button" onclick="window.location.href='payment.html?product=sex-by-design-for-dummies&price=300'">Enroll in Course</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function openSBDModal() { document.getElementById('sbdModalOverlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSBDModal(event) { if (!event || event.target === document.getElementById('sbdModalOverlay')) { document.getElementById('sbdModalOverlay').classList.remove('active'); document.body.style.overflow = ''; } }
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeSBDModal(); } });
+  </script>
 </body>
 </html>

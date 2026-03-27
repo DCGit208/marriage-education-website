@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Images uploaded by users
+    match /images/{userId}/{imageId} {
+      // Only authenticated users can read
+      allow read: if request.auth != null;
+      
+      // Users can only upload to their own folder
+      allow write: if request.auth != null && 
+        request.auth.uid == userId &&
+        // Image size limit: 5MB
+        request.resource.size < 5 * 1024 * 1024 &&
+        // Only allow image formats
+        request.resource.contentType.matches('image/(jpeg|png|webp|jpg)');
+    }
+    
+    // Video thumbnails
+    match /thumbnails/{userId}/{thumbId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        request.auth.uid == userId &&
+        request.resource.size < 2 * 1024 * 1024;
+    }
+
+    // DM image attachments
+    match /dm_attachments/{userId}/{fileId} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.uid == userId &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // DM video attachments
+    match /dm_videos/{userId}/{fileId} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.uid == userId &&
+        request.resource.size < 100 * 1024 * 1024 &&
+        request.resource.contentType.matches('video/.*');
+    }
+  }
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Member - SBD Network</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/profile.css?v=52">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=52">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="profile-page bottom-nav-page">
+
+  <header class="app-header">
+    <div class="header-left">
+      <button id="backBtn" class="btn btn-icon" aria-label="Back">←</button>
+      <span id="memberPageTitle" class="page-title">Profile</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+        🔔<span class="notif-badge" style="display:none;"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="profile-main">
+
+    <!-- Avatar + Name -->
+    <section class="profile-avatar-section">
+      <div class="avatar-wrapper">
+        <div class="avatar-circle">
+          <span class="avatar-initials" id="memberInitials"></span>
+          <img class="avatar-img" id="memberAvatarImg" src="" alt="" style="display:none;">
+        </div>
+      </div>
+      <h2 id="memberName" style="font-size:1.2rem;font-weight:700;margin-top:10px;"></h2>
+      <p id="memberPostCount" style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;"></p>
+    </section>
+
+    <!-- Actions -->
+    <section class="profile-section" style="display:flex;gap:10px;padding:0 16px;">
+      <button id="dmMemberBtn" class="btn btn-primary" style="flex:1;">💬 Send Message</button>
+    </section>
+
+    <!-- Groups in common -->
+    <section class="profile-card profile-section" id="sharedGroupsSection" style="display:none;">
+      <h3 class="profile-section-title">Groups in Common</h3>
+      <div id="sharedGroupsList" class="profile-groups-list"></div>
+    </section>
+
+    <!-- Collections (public) -->
+    <section class="profile-card profile-section" id="memberCollectionsSection" style="display:none;">
+      <h3 class="profile-section-title">Collections</h3>
+      <div id="memberCollectionsList" class="profile-groups-list"></div>
+    </section>
+
+    <!-- Posts grid -->
+    <section class="profile-section" style="padding:0 16px;">
+      <h3 class="profile-section-title" style="margin-bottom:12px;">Posts</h3>
+      <div id="memberPostsGrid" class="member-posts-grid">
+        <div class="member-post-skel"></div>
+        <div class="member-post-skel"></div>
+        <div class="member-post-skel"></div>
+      </div>
+      <p id="memberNoPosts" style="color:var(--text-muted);font-size:0.85rem;display:none;"></p>
+    </section>
+
+  </main>
+
+  <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div></div>
+
+  <!-- Notification Panel -->
+  <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+  <div id="notifPanel" class="notif-panel">
+    <div class="notif-panel-header">
+      <h3>Notifications</h3>
+      <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+    </div>
+    <ul id="notifList" class="notif-list"></ul>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script defer src="/js/firebase.js?v=52"></script>
+  <script defer src="/js/notifications.js?v=52"></script>
+  <script defer src="/js/dm-badge.js?v=52"></script>
+  <script defer src="/js/transitions.js?v=52"></script>
+  <script defer src="/js/swipe-back.js?v=52"></script>
+  <script defer src="/js/member.js?v=52"></script>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/explore.html" class="bn-tab" aria-label="Explore">
+      <span class="bn-icon">🔍</span>
+      <span class="bn-label">Explore</span>
+    </a>
+    <a href="/dm.html" class="bn-tab" aria-label="Messages">
+      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
+      <span class="bn-label">Messages</span>
+    </a>
+    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/profile.html" class="bn-tab" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>
