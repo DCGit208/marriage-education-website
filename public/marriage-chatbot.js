@@ -46,12 +46,12 @@
         <div style="background: rgba(0, 184, 148, 0.1); border-left: 3px solid #00b894; padding: 1.25rem; border-radius: 0.75rem;">
             <p style="color: white; font-size: 0.95rem; line-height: 1.7; margin: 0 0 1rem 0;">
                 👋 <strong>Welcome to Marriage Education!</strong><br><br>
-                I can help you find the perfect course, book, or program. Try asking:
+                I can help you find courses, books, free resources & programs. Try asking:
             </p>
             <div style="display: grid; gap: 0.5rem;">
+                <button class="quick-action-btn" data-query="Show me free resources" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">📄 "Show me free resources"</button>
                 <button class="quick-action-btn" data-query="Best course for beginners?" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">🎓 "Best course for beginners?"</button>
                 <button class="quick-action-btn" data-query="How do I become an ambassador?" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">💼 "How do I become an ambassador?"</button>
-                <button class="quick-action-btn" data-query="Show me the books" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">📚 "Show me the books"</button>
                 <button class="quick-action-btn" data-query="Show me bundles to save money" style="color: rgba(255,255,255,0.8); font-size: 0.875rem; background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.3); padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s;">💎 "Show me bundles to save money"</button>
             </div>
         </div>
@@ -890,9 +890,10 @@ I can assist with:
 
 🎓 **Courses** - Find the right program
 📚 **Books** - Browse our library
-� **Bundles** - Save BIG on packages (up to 67% off!)
+💎 **Bundles** - Save BIG on packages (up to 67% off!)
 📖 **Magazine** - Subscribe to SBD Magazine
 💝 **Coaching/Counseling** - Get personal help
+📄 **Free Resources** - Guides, articles & educational content
 💼 **Ambassadors** - Start earning commissions
 🏢 **Corporate** - Training for businesses/churches
 💳 **Payments** - Status & help
@@ -900,17 +901,17 @@ I can assist with:
 🔑 **Login** - Access your account
 
 **Smart Recommendations:**
+• "Show me free resources"
 • "I'm engaged"
 • "We're struggling"
 • "On a budget"
 • "Want everything"
-• "Intimacy issues"
 
 **Quick Questions:**
 • "Best course for beginners?"
 • "Show me bundles to save money"
+• "What free guides do you have?"
 • "I need counseling help"
-• "How do I subscribe to the magazine?"
 
 Just type your question - I'll help you find exactly what you need!`
             },
@@ -1053,12 +1054,14 @@ Need specific comparison? Ask me! "What's the difference between [X] and [Y]?"`
 • Save my marriage (urgent)
 
 **3️⃣ What's your budget?**
+• **$0** (want free resources first!)
 • Under $50 (budget-conscious)
 • $50-$300 (moderate investment)
 • $300-$900 (serious commitment)
 • $1,000+ (want everything)
 
 **4️⃣ Learning style preference?**
+• Free guides (just browsing)
 • Books (read at my pace)
 • Video courses (structured learning)
 • 1-on-1 coaching (personal help)
@@ -1069,6 +1072,72 @@ Need specific comparison? Ask me! "What's the difference between [X] and [Y]?"`
 "I'm married 5 years, want better communication, budget $200, prefer video courses"
 
 I'll give you the PERFECT recommendation! 🎯`
+            },
+            
+            resources: {
+                keywords: ['resources', 'resource page', 'free content', 'free guides', 'free stuff', 'free help', 'articles', 'blog', 'content', 'guides', 'guide', 'learn for free', 'free resources', 'free learning', 'what is marriage education', 'how to prepare', 'prepare for marriage', 'not ready for marriage', 'signs not ready', 'build successful marriage', 'why marriages fail', 'for women', 'for men', 'marriage education women', 'marriage education men', 'gender specific', 'cameroon', 'africa', 'local programs', 'educational content', 'marriage articles', 'marriage guides', 'reading material', 'study materials'],
+                response: `📚 **FREE Marriage Education Resources**
+
+We have TONS of free educational content to help you! Here's what's available:
+
+---
+
+**🎯 ESSENTIAL GUIDE (Start Here):**
+📘 [What is Marriage Education?](what-is-marriage-education.html)
+Complete explanation of our philosophy, Sex By Design framework, and Teleios formation. The foundational guide everyone should read!
+
+---
+
+**✅ PREPARE FOR MARRIAGE (For Engaged Couples):**
+📋 [How to Prepare for Marriage](how-to-prepare-for-marriage.html)
+Comprehensive guide: emotional, financial, spiritual & sexual preparation
+
+⚠️ [Signs You're Not Ready for Marriage](signs-you-are-not-ready-for-marriage.html)
+Warning signs and what readiness actually looks like before "I do"
+
+---
+
+**💪 BUILD STRONG MARRIAGES (For Married Couples):**
+🏆 [How to Build a Successful Marriage](how-to-build-a-successful-marriage.html)
+Evidence-based strategies, frameworks & daily disciplines for thriving marriages
+
+🚨 [Why Marriages Fail](why-marriages-fail.html)
+Common patterns & preventable mistakes—plus how to avoid them
+
+---
+
+**👥 GENDER-SPECIFIC GUIDES:**
+👩 [Marriage Education for Women](marriage-education-for-women.html)
+Specialized training in feminine design, muliebrity, becoming the woman your marriage needs
+
+👨 [Marriage Education for Men](marriage-education-for-men.html)
+Specialized training in masculine design, virility, becoming the man your marriage needs
+
+---
+
+**🌍 LOCAL/REGIONAL RESOURCES:**
+🇨🇲 [Marriage Education in Cameroon](marriage-education-cameroon.html)
+Local programs, workshops, corporate training, ambassador opportunities
+
+🌍 [Marriage Education Across Africa](marriage-education-africa.html)
+Regional partnerships, NGO programs, continent-wide initiatives
+
+---
+
+**📖 ALL RESOURCES PAGE:**
+[Browse Complete Resources Library](resources.html)
+Organized hub with all guides, articles & educational content
+
+---
+
+**🎓 AFTER FREE CONTENT:**
+When you're ready to go deeper:
+• [Foundation School](foundation-school.html) - 6-week intensive ($247, or FREE with ambassador registration)
+• [All Courses](courses.html) - 44+ structured video programs
+• [Books](shop.html) - Deep-dive reading ($25-$35)
+• [Magazine](magazine.html) - Ongoing content (200K+ readers)
+
+**Start exploring! All guides are 100% free.** 📚✨`
             },
             
             followup: {
@@ -1317,7 +1386,7 @@ I'll give you the PERFECT recommendation! 🎯`
             }
             
             // Priority order: check specific features first
-            const priorityOrder = ['wizard', 'contact', 'professional', 'comparison', 'followup', 'situations', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'general'];
+            const priorityOrder = ['wizard', 'contact', 'professional', 'comparison', 'followup', 'situations', 'resources', 'faqs', 'pricing', 'bundles', 'coaching', 'magazine', 'corporate', 'courses', 'books', 'ambassador', 'payment', 'foundation', 'login', 'general'];
             
             // PHASE 1: Exact keyword matching (highest precision)
             for (const categoryName of priorityOrder) {
@@ -1369,19 +1438,20 @@ I'll give you the PERFECT recommendation! 🎯`
             }
             
             const followUpButtons = {
-                'courses': ['Show me bundles', 'Help me decide', 'How do I pay?'],
-                'books': ['What courses?', 'Show bundle deals', 'Best for beginners?'],
-                'bundles': ['How do I pay?', 'Compare courses', 'Lifetime pass vs bundle'],
-                'coaching': ['What courses?', 'Show me prices', 'How do I pay?'],
-                'professional': ['Become ambassador', 'Show all courses', 'Get lifetime pass'],
-                'magazine': ['Show courses', 'What books?', 'Show bundles'],
+                'courses': ['Show me bundles', 'Free resources?', 'How do I pay?'],
+                'books': ['What courses?', 'Show bundle deals', 'Free guides?'],
+                'bundles': ['How do I pay?', 'Compare courses', 'Free content first?'],
+                'coaching': ['What courses?', 'Show bundles', 'Free resources?'],
+                'professional': ['Become ambassador', 'Free resources?', 'Show all courses'],
+                'magazine': ['Show courses', 'What books?', 'Free resources?'],
                 'ambassador': ['Ambassador vs student?', 'Show Foundation School', 'How do I apply?'],
-                'situations': ['Show me bundles', 'Help me choose', 'I need coaching'],
-                'pricing': ['Show bundles', 'Course vs book?', 'Payment plans?'],
-                'faqs': ['Help me decide', 'How much?', 'Show bundles'],
-                'payment': ['Recommend a course', 'Show deals', 'Ambassador program?'],
-                'corporate': ['Contact coaching', 'Show courses', 'Bulk pricing?'],
-                'comparison': ['How do I pay?', 'Help me choose', 'Show bundles']
+                'situations': ['Show me bundles', 'Free guides first?', 'I need coaching'],
+                'pricing': ['Show bundles', 'Free content?', 'Payment plans?'],
+                'faqs': ['Free resources?', 'How much?', 'Show bundles'],
+                'payment': ['Recommend a course', 'Show deals', 'Free guides?'],
+                'corporate': ['Contact for quote', 'Show courses', 'Free resources?'],
+                'comparison': ['How do I pay?', 'Help me choose', 'Show bundles'],
+                'resources': ['Show paid courses', 'Ambassador program?', 'Show bundles']
             };
             
             const buttons = followUpButtons[category] || ['Show bundles', 'Help me choose', 'What courses?'];
