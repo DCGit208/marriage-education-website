@@ -1826,6 +1826,16 @@
       const banner = document.getElementById('pwa-install-banner');
       if (banner) banner.style.display = 'none';
     });
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('ambassadorCode');
+      localStorage.removeItem('seniorCode');
+      localStorage.removeItem('ambassadorEmail');
+      localStorage.removeItem('ambassadorData');
+      sessionStorage.clear();
+      window.location.href = '../ambassador-login.html';
+    }
   </script>
   <div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#00b894; color:#fff; padding:14px 20px; align-items:center; justify-content:space-between; gap:12px; z-index:9999; box-shadow:0 -2px 16px rgba(0,0,0,0.18); font-family:Inter,sans-serif;">
     <div style="display:flex; align-items:center; gap:12px;">
