@@ -2172,8 +2172,10 @@
         // Logout function
         function logout() {
             localStorage.removeItem('ambassadorCode');
+            localStorage.removeItem('seniorCode');
             localStorage.removeItem('ambassadorEmail');
             localStorage.removeItem('ambassadorData');
+            sessionStorage.clear();
             window.location.href = '../ambassador-login.html';
         }
         
