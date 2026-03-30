@@ -1103,7 +1103,15 @@
 
         // Get senior code from URL or localStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const seniorCode = urlParams.get('code') || localStorage.getItem('ambassadorCode') || localStorage.getItem('seniorCode') || 'SEN-DEMO-001';
+        const seniorCode = urlParams.get('code') || localStorage.getItem('ambassadorCode') || localStorage.getItem('seniorCode');
+        
+        // Redirect to login if no code found
+        if (!seniorCode) {
+            console.error('❌ No senior code found - redirecting to login');
+            alert('⚠️ Please log in to access your senior dashboard.');
+            window.location.href = '../ambassador-login.html';
+            return;
+        }
         
         console.log('🔍 Senior Dashboard Loading:');
         console.log('  URL param code:', urlParams.get('code'));
@@ -1181,12 +1189,15 @@
                     console.error('   senior_ambassadors exists?', seniorSnap.exists());
                     console.error('   ambassadors exists?', ambassadorSnap.exists());
                     console.error('   This should not happen - data should exist!');
-                    alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease check the browser console (F12) for details.');
-                    loadDemoData();
+                    alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease contact support at support@marriageducation.com');
+                    window.location.href = '../ambassador-login.html';
+                    return;
                 }
             } catch (error) {
                 console.error('Error loading senior data:', error);
-                loadDemoData();
+                alert('⚠️ Error loading dashboard data: ' + error.message + '\n\nPlease try again or contact support.');
+                window.location.href = '../ambassador-login.html';
+                return;
             }
         }
 
@@ -1724,27 +1735,8 @@
             return date.toLocaleDateString();
         }
 
-        function loadDemoData() {
-            const demoData = {
-                name: 'Marie Senior',
-                code: seniorCode,
-                team_count: 5,
-                override_commission: 87250,
-                personal_units: 12,
-                team_units: 58,
-                personal_commission: 180000,
-                level: 'Gold',
-                credentialStatus: 'earned',
-                school_enrollment: {
-                    foundation_school: {
-                        enrolled: true,
-                        teleios_progress: 100,
-                        advocacy_progress: 100
-                    }
-                }
-            };
-            updateDashboard(demoData);
-        }
+        // Demo data function removed - all data should come from Firestore
+        // If you see this error, your ambassador record is missing from the database
 
         // Global functions for buttons
         window.copyRecruitLink = function() {
