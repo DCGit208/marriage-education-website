@@ -1579,21 +1579,8 @@
             });
         }
         
-        // Simulate real-time notifications (demo purposes)
-        function simulateNotifications() {
-            const notifications = [
-                { type: 'success', title: 'New Sale!', message: '+3 books from Sarah K. via WhatsApp' },
-                { type: 'rank', title: 'Rank Update', message: 'You moved up 2 positions to #47!' },
-                { type: 'milestone', title: 'Almost there!', message: 'Just 7 more books to reach Silver level!' }
-            ];
-            
-            let delay = 3000;
-            notifications.forEach((notif, index) => {
-                setTimeout(() => {
-                    showNotification(notif.type, notif.title, notif.message);
-                }, delay + (index * 6000));
-            });
-        }
+        // Notifications removed - all notifications should come from Firestore real-time
+        // See loadNotifications() function for real notification handling
         
         // Initialize on load
         initDashboard();
@@ -1601,9 +1588,6 @@
         
         // Update countdown every minute
         setInterval(updateContestCountdown, 60000);
-        
-        // Show demo notifications after 3 seconds
-        setTimeout(simulateNotifications, 3000);
     </script>
 
     <!-- Badge Achievement Modal -->
@@ -1716,10 +1700,7 @@
             }
         }
         
-        // Demo: Show badge modal after 10 seconds (remove in production)
-        // setTimeout(() => {
-        //     showBadgeModal('Silver', 30, 5000);
-        // }, 10000);
+        // Badge modal is triggered automatically by checkBadgeUnlocks() when milestones are reached
     </script>
 
     <!-- Firebase SDKs -->
