@@ -92,5 +92,30 @@ service cloud.firestore {
       allow read: if true; // TEMPORARY: Allow reads for admin dashboard
       allow write: if true; // TEMPORARY: Allow writes for marking as paid
     }
+    
+    // Notifications - Allow public read for ambassador dashboard
+    match /notifications/{notificationId} {
+      allow read: if true; // Allow ambassadors to read notifications
+      allow create: if true; // Allow system to create notifications
+      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Contests - Allow public read for leaderboards
+    match /contests/{contestId} {
+      allow read: if true; // Public read for leaderboard display
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Badges - Allow public read for achievement display
+    match /badges/{badgeId} {
+      allow read: if true; // Public read for badge display
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Settings - Allow public read for app configuration
+    match /settings/{settingId} {
+      allow read: if true; // Public read for app settings
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
   }
 }
