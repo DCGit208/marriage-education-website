@@ -1556,13 +1556,7 @@
 
         if (typeof firebase.firestore === 'function') {
             db = firebase.firestore();
-            try {
-                // Settings for local running
-                db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
-                console.log('✅ Firestore running locally with long polling');
-            } catch (e) {
-                console.warn('⚠️ Could not set Firestore settings:', e);
-            }
+            console.log('✅ Firestore initialized');
         }
 
         if (typeof firebase.auth === 'function') {
