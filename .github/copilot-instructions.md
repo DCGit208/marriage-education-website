@@ -53,6 +53,9 @@
 
 **Standard Deploy Commands:**
 ```bash
+# Validate all collections have rules (run first!)
+./validate-firestore-rules.sh
+
 # Deploy Firestore rules
 firebase deploy --only firestore:rules
 
@@ -62,6 +65,9 @@ firebase deploy --only storage
 # Deploy entire Firebase config
 firebase deploy
 ```
+
+**Prevention Script:**
+`validate-firestore-rules.sh` automatically scans your code for `.collection()` calls and verifies each collection has a corresponding rule in `firestore.rules`. Run before every Firestore rules deployment.
 
 ### 4. Browser Caching Strategy
 
@@ -137,24 +143,32 @@ firebase deploy --only firestore:rules
 
 ### Firebase Collections Schema
 ```javascript
-// Core collections used in ambassador system
-db.collection('ambassadors')      // Ambassador accounts
-db.collection('sales')            // Sales tracking
-db.collection('regional_directors') // RD management
-db.collection('pending_payments')  // Payment queue
-db.collection('referral_codes')   // Referral tracking
-db.collection('enrollments')      // Course enrollments
-db.collection('courses')          // Course catalog
-db.collection('notifications')    // Notifications for ambassadors
-db.collection('contests')         // Contest/leaderboard data
-db.collection('badges')           // Achievement badges
-db.collection('settings')         // App configuration
-db.collection('announcements')    // Dashboard announcements
+// Core collections used in ambassador system (18 total)
+db.collection('ambassadors')           // Ambassador accounts
+db.collection('ambassador_registrations') // Registration submissions
+db.collection('sales')                 // Sales tracking
+db.collection('regional_directors')    // RD management
+db.collection('pending_payments')      // Payment queue
+db.collection('referral_codes')        // Referral tracking
+db.collection('enrollments')           // Course enrollments
+db.collection('courses')               // Course catalog
+db.collection('notifications')         // Notifications for ambassadors
+db.collection('contests')              // Contest/leaderboard data
+db.collection('badges')                // Achievement badges
+db.collection('settings')              // App configuration
+db.collection('announcements')         // Dashboard announcements
+db.collection('admin_notifications')   // Admin notification system
+db.collection('chatbot_analytics')     // Chatbot usage analytics
+db.collection('chatbot_learning')      // AI learning data
+db.collection('corporate_inquiries')   // Corporate contact form
+db.collection('userProgress')          // User course progress
 ```
 
 **CRITICAL:** Every collection MUST have a rule in `firestore.rules`, even if it's just `allow read: if true;`
 
 **Missing rule symptom:** `FirebaseError: Missing or insufficient permissions`
+
+**Validation:** Run `./validate-firestore-rules.sh` to check all collections have rules
 
 ### Common Error Patterns (LEARN FROM THESE)
 
