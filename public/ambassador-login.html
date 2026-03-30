@@ -377,7 +377,8 @@
   <!-- Marriage Education Intelligent Assistant -->
   <script src="marriage-chatbot.js"></script>
 
-  <!-- iOS "Add to Home Screen" tip — show only on Safari iOS, once per session
+  <!-- iOS "Add to Home Screen" tip — show only on Safari iOS, once per session -->
+  <script>
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isInStandaloneMode = ('standalone' in navigator) && navigator.standalone;
     if (isIOS && !isInStandaloneMode && !sessionStorage.getItem('ios-tip-shown')) {
