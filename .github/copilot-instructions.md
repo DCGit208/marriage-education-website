@@ -149,6 +149,7 @@ db.collection('notifications')    // Notifications for ambassadors
 db.collection('contests')         // Contest/leaderboard data
 db.collection('badges')           // Achievement badges
 db.collection('settings')         // App configuration
+db.collection('announcements')    // Dashboard announcements
 ```
 
 **CRITICAL:** Every collection MUST have a rule in `firestore.rules`, even if it's just `allow read: if true;`
