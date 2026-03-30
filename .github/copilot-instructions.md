@@ -145,7 +145,15 @@ db.collection('pending_payments')  // Payment queue
 db.collection('referral_codes')   // Referral tracking
 db.collection('enrollments')      // Course enrollments
 db.collection('courses')          // Course catalog
+db.collection('notifications')    // Notifications for ambassadors
+db.collection('contests')         // Contest/leaderboard data
+db.collection('badges')           // Achievement badges
+db.collection('settings')         // App configuration
 ```
+
+**CRITICAL:** Every collection MUST have a rule in `firestore.rules`, even if it's just `allow read: if true;`
+
+**Missing rule symptom:** `FirebaseError: Missing or insufficient permissions`
 
 ### Common Error Patterns (LEARN FROM THESE)
 
@@ -160,8 +168,11 @@ db.collection('courses')          // Course catalog
 ```
 ❌ FirebaseError: Missing or insufficient permissions
 ```
-**Cause:** Firestore rules not deployed
-**Fix:** `firebase deploy --only firestore:rules`
+**Cause:** Firestore rules not deployed OR missing collection rule
+**Fix:** 
+1. Check if collection has a rule in `firestore.rules`
+2. If missing, add: `match /collection_name/{docId} { allow read: if true; }`
+3. Deploy: `firebase deploy --only firestore:rules`
 
 #### Error 3: Changes not appearing
 ```
@@ -169,6 +180,13 @@ db.collection('courses')          // Course catalog
 ```
 **Cause:** Browser caching old code
 **Fix:** Add cache-busting meta tags + hard refresh (Cmd+Shift+R)
+
+#### Error 4: CORS/XMLHttpRequest errors
+```
+❌ XMLHttpRequest cannot load https://firestore.googleapis.com/... due to access control checks
+```
+**Cause:** Usually accompanies permission errors - see Error 2
+**Fix:** Deploy missing Firestore rules
 
 ## Code Review Checklist (Run Before Every Commit)
 
