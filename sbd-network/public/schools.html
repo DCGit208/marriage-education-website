@@ -193,77 +193,11 @@
     
     <!-- Main Content -->
     <main class="schools-main">
-        
-        <!-- SECTION 1: Start Your Formation -->
-        <section class="journey-section">
-            <h2 class="journey-section-title">Start Your Formation</h2>
-            
-            <div class="school-card" data-school-id="teleios">
-                <span class="school-icon">🧠</span>
-                <h3 class="school-name">Teleios — Become Whole</h3>
-                <p class="school-description">
-                    Foundation of identity, wholeness, and maturity. Your journey begins here.
-                </p>
-                <button class="btn btn-primary" onclick="openSchool('teleios')">
-                    Start Here
-                </button>
-            </div>
-        </section>
-        
-        <!-- SECTION 2: Build Design Literacy -->
-        <section class="journey-section">
-            <h2 class="journey-section-title">Build Design Literacy</h2>
-            
-            <div class="school-card" data-school-id="sexual-literacy">
-                <span class="school-icon">📐</span>
-                <h3 class="school-name">Sexual Literacy — Master Design</h3>
-                <p class="school-description">
-                    Understand sexuality as covenant, not culture. Master the design of human formation.
-                </p>
-                <button class="btn btn-primary" onclick="openSchool('sexual-literacy')">
-                    Begin Course
-                </button>
-                <div class="unlock-requirement">
-                    🔒 Start Teleios to unlock
-                </div>
-            </div>
-        </section>
-        
-        <!-- SECTION 3: Step Into Expression -->
-        <section class="journey-section">
-            <h2 class="journey-section-title">Step Into Expression</h2>
-            
-            <div class="expression-grid">
-                <div class="school-card locked" data-school-id="muliebrity">
-                    <span class="school-icon">👗</span>
-                    <h3 class="school-name">Muliebrity</h3>
-                    <p class="school-description">
-                        Feminine excellence and expression mastery.
-                    </p>
-                    <button class="btn" onclick="openSchool('muliebrity')">
-                        Unlock School
-                    </button>
-                    <div class="unlock-requirement">
-                        🔒 Complete foundation to unlock
-                    </div>
-                </div>
-                
-                <div class="school-card locked" data-school-id="virility">
-                    <span class="school-icon">🎯</span>
-                    <h3 class="school-name">Virility</h3>
-                    <p class="school-description">
-                        Masculine authority and leadership.
-                    </p>
-                    <button class="btn" onclick="openSchool('virility')">
-                        Unlock School
-                    </button>
-                    <div class="unlock-requirement">
-                        🔒 Complete foundation to unlock
-                    </div>
-                </div>
-            </div>
-        </section>
-        
+        <!-- Loading state - JavaScript will populate from Firestore -->
+        <div class="loading-container" style="padding: 60px 20px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Loading your formation journey...</p>
+        </div>
     </main>
     
     <!-- Firebase SDKs -->
