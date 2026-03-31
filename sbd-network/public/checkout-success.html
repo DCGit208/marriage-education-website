@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Order Confirmed - SBD Network">
+    <meta name="theme-color" content="#000000">
+    <title>Order Confirmed - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <style>
+        .success-page {
+            min-height: 100vh;
+            background: var(--bg-primary, #000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .success-container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 24px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .success-message {
+            font-size: 1.1rem;
+            color: var(--text-secondary, #aaa);
+            line-height: 1.6;
+            margin: 0 0 32px 0;
+        }
+        
+        .success-product {
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        
+        .success-product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .success-product-detail {
+            font-size: 0.9rem;
+            color: var(--text-secondary, #aaa);
+            margin: 4px 0;
+        }
+        
+        .success-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .success-btn {
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .success-btn-primary {
+            background: var(--accent-primary, #00bcd4);
+            color: #fff;
+            border: none;
+        }
+        
+        .success-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 188, 212, 0.4);
+        }
+        
+        .success-btn-secondary {
+            background: transparent;
+            color: var(--text-primary, #fff);
+            border: 1px solid var(--border-color, #333);
+        }
+        
+        .success-btn-secondary:hover {
+            border-color: var(--accent-primary, #00bcd4);
+            color: var(--accent-primary, #00bcd4);
+        }
+        
+        .email-notice {
+            padding: 16px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+        
+        .email-notice-text {
+            font-size: 0.85rem;
+            color: #4caf50;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="success-page">
+    
+    <div class="success-container">
+        
+        <div class="success-icon">✅</div>
+        
+        <h1 class="success-title">Order Confirmed!</h1>
+        
+        <p class="success-message">
+            Thank you for your purchase. Your content has been unlocked and is ready to access.
+        </p>
+        
+        <div class="success-product" id="product-details">
+            <div class="success-product-name" id="product-name">Loading...</div>
+            <div class="success-product-detail">
+                <strong>Order ID:</strong> <span id="order-id">Processing...</span>
+            </div>
+            <div class="success-product-detail">
+                <strong>Amount:</strong> <span id="amount">$0.00</span>
+            </div>
+            <div class="success-product-detail">
+                <strong>Status:</strong> ✅ Completed
+            </div>
+        </div>
+        
+        <div class="email-notice">
+            <p class="email-notice-text">
+                📧 A confirmation email has been sent to your inbox with your order details.
+            </p>
+        </div>
+        
+        <div class="success-actions">
+            <a href="/courses.html" class="success-btn success-btn-primary">
+                🎓 Go to My Learning
+            </a>
+            <a href="/dashboard.html" class="success-btn success-btn-secondary">
+                🏠 Back to Dashboard
+            </a>
+            <a href="/orders.html" class="success-btn success-btn-secondary">
+                📋 View Order History
+            </a>
+        </div>
+        
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="/js/firebase.js"></script>
+    
+    <script>
+        // Load product info from URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('product');
+            
+            if (productId) {
+                // Display product name (simplified)
+                const productNames = {
+                    'sbd-dummies': { name: 'Sex By Design for Dummies', price: 27 },
+                    'teleios-blueprint': { name: 'Teleios Blueprint', price: 247 },
+                    'foundation-monthly': { name: 'Foundation Tier', price: 9 },
+                    'premium-monthly': { name: 'Premium Tier', price: 20 },
+                    'elite-monthly': { name: 'Elite Tier', price: 50 },
+                    'starter-bundle': { name: 'Starter Bundle', price: 37 },
+                    'teleios-bundle': { name: 'Teleios Bundle', price: 297 },
+                    'elite-bundle': { name: 'Elite Formation Bundle', price: 497 }
+                };
+                
+                const product = productNames[productId];
+                if (product) {
+                    document.getElementById('product-name').textContent = product.name;
+                    document.getElementById('amount').textContent = `$${product.price}.00`;
+                }
+            }
+            
+            // Generate mock order ID (in production, this comes from Firestore)
+            const orderId = 'ORD-' + Date.now().toString().slice(-8);
+            document.getElementById('order-id').textContent = orderId;
+        });
+    </script>
+    
+</body>
+</html>

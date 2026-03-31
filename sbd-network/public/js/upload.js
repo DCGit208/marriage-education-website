@@ -53,8 +53,8 @@ async function uploadToR2(file, folder) {
   return publicUrl;
 }
 
-// Upload image → R2
-async function uploadImage(file, _userId) {
+// Upload image → R2 (with optional editing)
+async function uploadImage(file, _userId, allowEdit = true) {
   if (!file) return null;
 
   const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic'];
@@ -65,6 +65,16 @@ async function uploadImage(file, _userId) {
   const maxSize = 10 * 1024 * 1024; // 10 MB
   if (file.size > maxSize) {
     throw new Error('File too large. Maximum size is 10 MB.');
+  }
+
+  // Prompt user to edit image if imageEditor is available
+  if (allowEdit && typeof editImageBeforeUpload === 'function') {
+    const editedBlob = await editImageBeforeUpload(file);
+    if (editedBlob) {
+      // User edited the image, use the edited version
+      file = new File([editedBlob], file.name, { type: 'image/jpeg' });
+    }
+    // If editedBlob is null, user cancelled, simply continue with original file
   }
 
   return uploadToR2(file, 'ugc-photos');

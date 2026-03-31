@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Submission | SBD Network</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/assignment.css">
+</head>
+<body class="page-assignment">
+
+    <!-- Assignment Container -->
+    <div class="assignment-container">
+        
+        <!-- Assignment Header (rendered by JS) -->
+        <div id="assignmentHeader"></div>
+        
+        <!-- Submission Form -->
+        <div id="submissionForm" class="submission-form">
+            <h2 class="submission-form-title">Your Submission</h2>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    Your Response
+                    <span class="form-required">*</span>
+                </label>
+                <textarea 
+                    id="submissionText" 
+                    class="form-textarea" 
+                    placeholder="Share your reflection, answer the questions, or complete the assignment..."
+                    oninput="updateCharCount()"
+                ></textarea>
+                <div id="charCount" class="char-count">0 / 100 words</div>
+            </div>
+            
+            <!-- File Upload (Optional) -->
+            <div class="file-upload-section">
+                <div class="file-upload-header">
+                    <span class="file-upload-icon">📎</span>
+                    <span class="file-upload-label">Attach Photos (Optional)</span>
+                </div>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    class="file-upload-input" 
+                    accept="image/*" 
+                    multiple
+                    onchange="handleFileSelect(event)"
+                    hidden
+                >
+                <button 
+                    type="button" 
+                    class="btn-file-upload" 
+                    onclick="document.getElementById('fileInput').click()"
+                >
+                    Choose Files
+                </button>
+                <div id="filePreviewGrid" class="file-preview-grid" style="display: none;"></div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="submission-form-actions">
+                <button 
+                    id="submitBtn" 
+                    class="btn btn-primary" 
+                    onclick="submitAssignment()"
+                >
+                    Submit Assignment
+                </button>
+            </div>
+        </div>
+        
+        <!-- Previous Submissions -->
+        <div id="previousSubmissions" class="previous-submissions" style="display: none;">
+            <h2 class="previous-submissions-title">Previous Submissions</h2>
+            <div id="previousSubmissionsList" class="previous-submissions-list"></div>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/journey.html" class="nav-item">
+            <div class="nav-icon">📚</div>
+            <div class="nav-label">My Journey</div>
+        </a>
+        <a href="/schools.html" class="nav-item">
+            <div class="nav-icon">🏫</div>
+            <div class="nav-label">Schools</div>
+        </a>
+        <a href="/shop.html" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <div class="nav-label">Shop</div>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profile</div>
+        </a>
+    </div>
+    
+    <!-- Firebase Config & Assignment Logic -->
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/auth-check.js"></script>
+    <script src="/js/assignment.js"></script>
+    
+    <script>
+        // Get assignment ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const assignmentId = urlParams.get('id');
+        
+        if (!assignmentId) {
+            document.querySelector('.assignment-container').innerHTML = `
+                <div class="quiz-results">
+                    <div class="results-icon">⚠️</div>
+                    <h2 class="results-title failed">No Assignment Specified</h2>
+                    <p class="results-message">Please access this page from a course module.</p>
+                    <div class="results-actions">
+                        <a href="/dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Wait for Firebase auth
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    loadAssignment(assignmentId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

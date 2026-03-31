@@ -328,3 +328,111 @@ function escHtml(str) {
   d.textContent = str;
   return d.innerHTML;
 }
+
+// ── Notification Settings ─────────────────────────────────────────
+const notifSettings = {
+  pushNotif: document.getElementById('pushNotifToggle'),
+  reactions: document.getElementById('reactionsNotifToggle'),
+  comments: document.getElementById('commentsNotifToggle'),
+  mentions: document.getElementById('mentionsNotifToggle'),
+  newPosts: document.getElementById('newPostsNotifToggle'),
+  dm: document.getElementById('dmNotifToggle'),
+};
+
+// Load notification settings
+async function loadNotificationSettings(uid) {
+  try {
+    const settingsDoc = await db.collection('users').doc(uid).collection('settings').doc('notifications').get();
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      if (notifSettings.pushNotif) notifSettings.pushNotif.checked = data.pushNotif !== false;
+      if (notifSettings.reactions) notifSettings.reactions.checked = data.reactions !== false;
+      if (notifSettings.comments) notifSettings.comments.checked = data.comments !== false;
+      if (notifSettings.mentions) notifSettings.mentions.checked = data.mentions !== false;
+      if (notifSettings.newPosts) notifSettings.newPosts.checked = data.newPosts === true;
+      if (notifSettings.dm) notifSettings.dm.checked = data.dm !== false;
+    }
+  } catch (err) {
+    console.warn('[Profile] Failed to load notification settings:', err);
+  }
+}
+
+// Save notification setting
+async function saveNotificationSetting(settingName, value) {
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    await db.collection('users').doc(user.uid).collection('settings').doc('notifications').set({
+      [settingName]: value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    
+    console.log(`[Profile] Notification setting saved: ${settingName} = ${value}`);
+  } catch (err) {
+    console.error('[Profile] Failed to save notification setting:', err);
+    showToast('Failed to save setting');
+  }
+}
+
+// Set up toggle listeners
+Object.entries(notifSettings).forEach(([key, toggle]) => {
+  if (!toggle) return;
+  
+  // Special handling for push notifications
+  if (key === 'pushNotif') {
+    toggle.addEventListener('change', async () => {
+      if (toggle.checked) {
+        // Request permission
+        try {
+          if ('Notification' in window && Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+              toggle.checked = false;
+              showToast('Push notifications denied');
+              return;
+            }
+          }
+          if (Notification.permission !== 'granted') {
+            toggle.checked = false;
+            showToast('Push notifications not allowed');
+            return;
+          }
+          saveNotificationSetting(key, true);
+          showToast('Push notifications enabled');
+        } catch (err) {
+          console.error('[Profile] Push notification error:', err);
+          toggle.checked = false;
+          showToast('Failed to enable notifications');
+        }
+      } else {
+        saveNotificationSetting(key, false);
+        showToast('Push notifications disabled');
+      }
+    });
+    
+    // Initialize push notification toggle based on permission
+    if ('Notification' in window) {
+      if (Notification.permission === 'denied') {
+        toggle.disabled = true;
+        toggle.checked = false;
+      } else if (Notification.permission === 'granted') {
+        // Leave as is from Firestore
+      } else {
+        toggle.checked = false;
+      }
+    }
+  } else {
+    // Regular toggle
+    toggle.addEventListener('change', () => {
+      saveNotificationSetting(key, toggle.checked);
+    });
+  }
+});
+
+// Initialize notification settings when user loads
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    loadNotificationSettings(user.uid);
+  }
+});

@@ -19,6 +19,17 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// ── Configure Firestore Settings ───────────────────────────────
+// Safari (including iOS Safari used by PWAs) often has issues with WebSocket connections.
+// Enable long polling for Safari to ensure reliable Firestore connectivity.
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+if (isSafari) {
+  console.log('Safari detected — enabling Firestore long polling');
+  db.settings({
+    experimentalForceLongPolling: true
+  });
+}
+
 // ── Session persistence (Remember Me) ───────────────────────────
 // Default to LOCAL so auth survives browser restarts.
 // auth.js overrides to SESSION when the user unchecks "Remember Me".
@@ -31,11 +42,9 @@ const db = firebase.firestore();
   auth.setPersistence(mode).catch(() => {});
 }());
 
-// Configure Firestore settings (must be called once, before any operations)
-// Removed experimentalForceLongPolling to avoid conflicts
 console.log('✅ sbd-network: Firestore initialized successfully');
 
-// Disable offline persistence for development (can cause CORS issues)
+// Disable offline persistence to avoid Safari IndexedDB issues in private browsing
 // db.enablePersistence()
 //   .catch((err) => {
 //     if (err.code === 'failed-precondition') {

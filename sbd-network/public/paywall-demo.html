@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paywall Modal - Demo</title>
+    
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/paywall.css">
+    
+    <style>
+        body {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: #00ff88;
+        }
+        
+        .demo-section code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #00ffcc;
+        }
+        
+        .demo-section pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        
+        .demo-section pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        .btn-demo {
+            margin-right: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .locked-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(255, 136, 136, 0.3);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            filter: blur(4px);
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .unlock-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            pointer-events: all;
+            filter: none;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>🔒 Paywall Modal System</h1>
+    <p>Interactive demo of the paywall modal component with tier comparison.</p>
+    
+    <!-- Demo Section 1: Basic Usage -->
+    <div class="demo-section">
+        <h2>1. Basic Usage</h2>
+        <p>Trigger the paywall modal with a simple function call:</p>
+        
+        <button class="btn btn-primary btn-demo" onclick="showPaywallDemo()">
+            Show Paywall Modal
+        </button>
+        
+        <pre><code>// JavaScript
+function showPaywallDemo() {
+  showPaywallModal({
+    title: 'Upgrade Required',
+    message: 'This content requires a premium subscription.',
+    requiredTier: 'premium'
+  });
+}</code></pre>
+    </div>
+    
+    <!-- Demo Section 2: Tier-Specific -->
+    <div class="demo-section">
+        <h2>2. Tier-Specific Paywalls</h2>
+        <p>Show different tier requirements based on content:</p>
+        
+        <button class="btn btn-secondary btn-demo" onclick="showFoundationPaywall()">
+            Foundation Required
+        </button>
+        
+        <button class="btn btn-primary btn-demo" onclick="showPremiumPaywall()">
+            Premium Required
+        </button>
+        
+        <button class="btn btn-primary btn-demo" onclick="showElitePaywall()">
+            Elite Required
+        </button>
+        
+        <pre><code>// Foundation Tier
+function showFoundationPaywall() {
+  showPaywallModal({
+    title: '🎯 Start Your Formation',
+    message: 'Begin with Foundation tier to unlock Teleios basics.',
+    requiredTier: 'foundation'
+  });
+}
+
+// Premium Tier
+function showPremiumPaywall() {
+  showPaywallModal({
+    title: '🔥 Unlock Full Courses',
+    message: 'Upgrade to Premium for complete Teleios & Sexual Literacy.',
+    requiredTier: 'premium'
+  });
+}
+
+// Elite Tier
+function showElitePaywall() {
+  showPaywallModal({
+    title: '⭐ Elite Content Access',
+    message: 'Join Elite tier for Muliebrity and Virility schools.',
+    requiredTier: 'elite'
+  });
+}</code></pre>
+    </div>
+    
+    <!-- Demo Section 3: Locked Content Example -->
+    <div class="demo-section">
+        <h2>3. Locked Content Pattern</h2>
+        <p>Visual example of locked content with unlock overlay:</p>
+        
+        <div style="position: relative;">
+            <div class="locked-content">
+                <h3>🔒 Week 5: Advanced Teleios Identity</h3>
+                <p>This lesson covers the deeper aspects of covenant identity formation, building on the foundations from Weeks 1-4.</p>
+                <p>You'll learn about virtue integration, consent pathways, and the architecture of self-donation in the marital covenant.</p>
+            </div>
+            
+            <div class="unlock-overlay">
+                <button class="btn btn-primary" onclick="showPremiumPaywall()">
+                    🔓 Unlock Premium Content
+                </button>
+            </div>
+        </div>
+        
+        <pre><code>&lt;!-- HTML Structure --&gt;
+&lt;div style="position: relative;"&gt;
+  &lt;div class="locked-content"&gt;
+    &lt;!-- Blurred content goes here --&gt;
+  &lt;/div&gt;
+  
+  &lt;div class="unlock-overlay"&gt;
+    &lt;button class="btn btn-primary" onclick="showPaywallModal({...})"&gt;
+      🔓 Unlock Content
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+    </div>
+    
+    <!-- Demo Section 4: Integration with Pages -->
+    <div class="demo-section">
+        <h2>4. Page Integration Guide</h2>
+        
+        <h3>Step 1: Include CSS & JS</h3>
+        <pre><code>&lt;!-- In your HTML &lt;head&gt; --&gt;
+&lt;link rel="stylesheet" href="/css/paywall.css"&gt;
+&lt;script src="/js/formation-access.js"&gt;&lt;/script&gt;</code></pre>
+        
+        <h3>Step 2: Check Access</h3>
+        <pre><code>// In your page's JavaScript
+async function checkContentAccess() {
+  const userId = auth.currentUser?.uid;
+  const canAccess = await canAccessModule(userId, 'module-id');
+  
+  if (!canAccess) {
+    showPaywallModal({
+      title: 'Premium Content',
+      message: 'This module requires Premium access.',
+      requiredTier: 'premium'
+    });
+    return false;
+  }
+  
+  return true;
+}</code></pre>
+        
+        <h3>Step 3: Handle Module Load</h3>
+        <pre><code>// module.js example
+document.addEventListener('DOMContentLoaded', async () => {
+  const hasAccess = await checkContentAccess();
+  
+  if (hasAccess) {
+    loadModuleContent();
+  } else {
+    // Content remains locked, paywall shown
+  }
+});</code></pre>
+    </div>
+    
+    <!-- Demo Section 5: Customization -->
+    <div class="demo-section">
+        <h2>5. Customization Options</h2>
+        
+        <h3>Available Parameters:</h3>
+        <ul>
+            <li><code>title</code> - Modal title (default: "Upgrade Required")</li>
+            <li><code>message</code> - Descriptive text (default: generic message)</li>
+            <li><code>requiredTier</code> - Minimum tier needed: 'foundation', 'premium', or 'elite'</li>
+            <li><code>currentTier</code> - User's current tier (optional, for comparison)</li>
+        </ul>
+        
+        <h3>Example with All Options:</h3>
+        <pre><code>showPaywallModal({
+  title: '🎓 Sexual Literacy Awaits',
+  message: 'Complete understanding requires Premium access. Join 500+ couples transforming their marriages.',
+  requiredTier: 'premium',
+  currentTier: 'foundation'
+});</code></pre>
+    </div>
+    
+    <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 40px 0;">
+    
+    <p style="text-align: center; color: rgba(255, 255, 255, 0.5);">
+        <strong>Note:</strong> When users click a tier button, they're redirected to <code>/checkout.html?product={productId}</code>
+    </p>
+    
+    <!-- Firebase & Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/formation-access.js"></script>
+    
+    <script>
+        // Demo functions
+        function showPaywallDemo() {
+            showPaywallModal({
+                title: 'Upgrade Required',
+                message: 'This content requires a subscription. Choose a plan to continue your formation journey.',
+                requiredTier: 'premium'
+            });
+        }
+        
+        function showFoundationPaywall() {
+            showPaywallModal({
+                title: '🎯 Start Your Formation',
+                message: 'Begin with Foundation tier to unlock Teleios basics and start building your covenant identity.',
+                requiredTier: 'foundation'
+            });
+        }
+        
+        function showPremiumPaywall() {
+            showPaywallModal({
+                title: '🔥 Unlock Full Courses',
+                message: 'Upgrade to Premium for complete Teleios Identity and Sexual Literacy courses with all core boards.',
+                requiredTier: 'premium'
+            });
+        }
+        
+        function showElitePaywall() {
+            showPaywallModal({
+                title: '⭐ Elite Content Access',
+                message: 'Join Elite tier for Muliebrity and Virility schools—advanced formation for men and women.',
+                requiredTier: 'elite'
+            });
+        }
+    </script>
+    
+</body>
+</html>

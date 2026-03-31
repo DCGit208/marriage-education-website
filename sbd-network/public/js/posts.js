@@ -12,6 +12,13 @@ async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, board
     const userDoc = await db.collection('users').doc(user.uid).get();
     const userData = userDoc.data() || {};
     
+    // Parse mentions and hashtags
+    const mentionUsernames = typeof parseMentions === 'function' ? parseMentions(content) : [];
+    const hashtags = typeof parseHashtags === 'function' ? parseHashtags(content) : [];
+    const mentionedUserIds = mentionUsernames.length > 0 && typeof resolveMentions === 'function' 
+      ? await resolveMentions(mentionUsernames) 
+      : [];
+    
     // Create post object
     const postData = {
       boardId: boardId,
@@ -29,6 +36,8 @@ async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, board
       commentCount: 0,
       isPinned: false,
       linkPreview: linkPreview || null,
+      ...(mentionedUserIds.length > 0 ? { mentions: mentionedUserIds } : {}),
+      ...(hashtags.length > 0 ? { hashtags } : {}),
       ...(poll ? { poll } : {}),
       ...(scheduledAt ? { isScheduled: true, scheduledAt } : {}),
     };
@@ -47,6 +56,12 @@ async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, board
     // Write in-app notifications for all other members (fire-and-forget)
     _writePostNotifications(postRef.id, boardId, boardName, postData.authorName, content)
       .catch(e => console.warn('[Notifications] Write error:', e));
+
+    // Notify mentioned users (fire-and-forget)
+    if (mentionedUserIds.length > 0) {
+      _writeMentionNotifications(postRef.id, boardId, boardName, postData.authorName, content, mentionedUserIds, 'post')
+        .catch(e => console.warn('[Notifications] Mention notification error:', e));
+    }
 
     // Trigger FCM push (fire-and-forget — only works once VAPID key is configured)
     if (typeof _triggerPushNewPost === 'function') {
@@ -133,6 +148,13 @@ async function addComment(postId, text, replyTo = null) {
     const userDoc = await db.collection('users').doc(user.uid).get();
     const userData = userDoc.data();
     
+    // Parse mentions and hashtags
+    const mentionUsernames = typeof parseMentions === 'function' ? parseMentions(text) : [];
+    const hashtags = typeof parseHashtags === 'function' ? parseHashtags(text) : [];
+    const mentionedUserIds = mentionUsernames.length > 0 && typeof resolveMentions === 'function' 
+      ? await resolveMentions(mentionUsernames) 
+      : [];
+    
     // Create comment object
     const commentData = {
       postId: postId,
@@ -140,6 +162,8 @@ async function addComment(postId, text, replyTo = null) {
       authorName: userData.name || user.displayName || 'Anonymous',
       text: text,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      ...(mentionedUserIds.length > 0 ? { mentions: mentionedUserIds } : {}),
+      ...(hashtags.length > 0 ? { hashtags } : {}),
       ...(replyTo ? { replyTo } : {}),
     };
     
@@ -167,6 +191,14 @@ async function addComment(postId, text, replyTo = null) {
 
       _writeCommentNotifications(commentRef.id, postId, boardId, postMeta.authorId, commentData.authorName, text)
         .catch(e => console.error('[Notifications] Comment notification FAILED:', e, { commentRef: commentRef.id, postId, boardId }));
+
+      // Notify mentioned users (fire-and-forget)
+      if (mentionedUserIds.length > 0 && boardId) {
+        const boardDoc = await db.collection('boards').doc(boardId).get();
+        const boardName = boardDoc.exists ? (boardDoc.data().title || boardId) : boardId;
+        _writeMentionNotifications(commentRef.id, boardId, boardName, commentData.authorName, text, mentionedUserIds, 'comment', postId)
+          .catch(e => console.warn('[Notifications] Mention notification error:', e));
+      }
 
       // FCM push to all group members
       if (typeof _triggerPushForComment === 'function' && boardId) {
@@ -334,6 +366,48 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
     console.log('[Notif:comment] batch committed OK for', notifiedUids.size, 'user(s)');
   } catch (e) {
     console.error('[Notif:comment] batch.commit FAILED:', e);
+    throw e;
+  }
+}
+
+// Write mention notifications for users tagged in posts/comments
+async function _writeMentionNotifications(contentId, boardId, boardName, authorName, content, mentionedUserIds, type = 'post', postId = null) {
+  const currentUid = getCurrentUser()?.uid;
+  if (!currentUid || !mentionedUserIds || mentionedUserIds.length === 0) return;
+
+  const batch = db.batch();
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  const body = `${authorName} mentioned you: ${content.substring(0, 80)}`;
+
+  mentionedUserIds.forEach(userId => {
+    if (userId === currentUid) return; // Don't notify yourself
+    
+    const ref = db.collection('notifications').doc();
+    const notifData = {
+      userId: userId,
+      type: type === 'comment' ? 'mention_comment' : 'mention_post',
+      title: `${authorName} mentioned you in ${boardName}`,
+      body,
+      boardId: boardId || null,
+      read: false,
+      timestamp: now,
+    };
+
+    if (type === 'comment') {
+      notifData.postId = postId;
+      notifData.commentId = contentId;
+    } else {
+      notifData.postId = contentId;
+    }
+
+    batch.set(ref, notifData);
+  });
+
+  try {
+    await batch.commit();
+    console.log('[Notif:mention] notified', mentionedUserIds.length, 'users');
+  } catch (e) {
+    console.error('[Notif:mention] batch.commit FAILED:', e);
     throw e;
   }
 }

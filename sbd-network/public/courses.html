@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="My Learning - SBD Network">
+    <meta name="theme-color" content="#000000">
+    <title>My Learning - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <style>
+        .courses-page {
+            padding-bottom: 80px;
+        }
+        
+        .courses-hero {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--bg-secondary, #1a1a1a) 0%, var(--bg-primary, #000) 100%);
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        
+        .courses-hero h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .courses-hero p {
+            color: var(--text-secondary, #aaa);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .learning-section {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        
+        .learning-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .section-link {
+            font-size: 0.9rem;
+            color: var(--accent-primary, #00bcd4);
+            text-decoration: none;
+        }
+        
+        .continue-card {
+            background: linear-gradient(135deg, var(--accent-primary, #00bcd4) 0%, #0097a7 100%);
+            border-radius: 16px;
+            padding: 24px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .continue-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .continue-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0 0 8px 0;
+        }
+        
+        .continue-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .continue-progress {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0 0 16px 0;
+        }
+        
+        .continue-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .continue-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .course-card {
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .course-card:hover:not(.locked) {
+            border-color: var(--accent-primary, #00bcd4);
+            transform: translateX(4px);
+        }
+        
+        .course-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .course-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+        
+        .course-info {
+            flex: 1;
+        }
+        
+        .course-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .course-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0;
+        }
+        
+        .course-progress {
+            flex-shrink: 0;
+            text-align: right;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-primary, #00bcd4) var(--progress, 0%),
+                var(--bg-tertiary, #2a2a2a) 0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bg-secondary, #1a1a1a);
+        }
+        
+        .progress-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+        }
+        
+        .lock-badge {
+            background: var(--bg-tertiary, #2a2a2a);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary, #aaa);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            font-size: 1rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="courses-page bottom-nav-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button class="back-btn btn btn-icon" aria-label="Back">←</button>
+            <h1 class="page-title">My Learning</h1>
+        </div>
+        <div class="header-right">
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="courses-hero">
+        <h1>My Learning</h1>
+        <p id="welcomeMessage">Continue your formation journey</p>
+    </section>
+    
+    <!-- Main Content -->
+    <main class="courses-main">
+        
+        <!-- Continue Learning Section -->
+        <section class="learning-section" id="continueSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Continue Learning</h2>
+            </div>
+            
+            <div id="continueCard" class="continue-card" onclick="continueModule()">
+                <p class="continue-label">Current Module</p>
+                <h3 class="continue-title" id="currentModuleTitle">Loading...</h3>
+                <p class="continue-progress" id="currentModuleProgress">Module 1 of 12</p>
+                <button class="continue-btn">Continue →</button>
+            </div>
+        </section>
+        
+        <!-- Active Courses Section -->
+        <section class="learning-section">
+            <div class="section-header">
+                <h2 class="section-title">Active Courses</h2>
+            </div>
+            
+            <div id="activeCoursesContainer"></div>
+        </section>
+        
+        <!-- Locked Courses Section -->
+        <section class="learning-section" id="lockedSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Locked Courses</h2>
+                <a href="/schools.html" class="section-link">View All →</a>
+            </div>
+            
+            <div id="lockedCoursesContainer"></div>
+        </section>
+        
+        <!-- Completed Courses Section -->
+        <section class="learning-section" id="completedSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Completed Courses</h2>
+            </div>
+            
+            <div id="completedCoursesContainer"></div>
+        </section>
+        
+    </main>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=70"></script>
+    <script defer src="/js/formation-access.js?v=104"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
+    <script defer src="/js/notifications.js?v=52"></script>
+    <script defer src="/js/transitions.js?v=52"></script>
+    <script defer src="/js/courses.js?v=104"></script>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/schools.html" class="bn-tab active" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+            <span class="bn-icon">👗</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+    
+    <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>

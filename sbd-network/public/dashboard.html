@@ -38,10 +38,93 @@
             <p class="welcome-subtitle">Continue your learning journey</p>
         </section>
         
+        <!-- SECTION 1: Continue Journey -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>🎯 Continue Journey</h3>
+            </div>
+            <div id="continueJourneyCard" class="journey-card">
+                <div class="skel-card">
+                    <div class="skel-line w80"></div>
+                    <div class="skel-line w60"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: Identity Status -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>📊 Identity Status</h3>
+            </div>
+            <div class="identity-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-label">Teleios Level</div>
+                    <div id="teleiosLevel" class="stat-value">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-label">Current Streak</div>
+                    <div id="streakValue" class="stat-value">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">Completion</div>
+                    <div id="completionPercent" class="stat-value">--</div>
+                    <svg width="60" height="60" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.2;">
+                        <circle id="completionRingCircle" cx="30" cy="30" r="25" fill="none" stroke="var(--accent-color)" stroke-width="3" stroke-dasharray="157" stroke-dashoffset="157" transform="rotate(-90 30 30)"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: This Week's Work -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>📅 This Week's Work</h3>
+            </div>
+            <div id="weekWorkContainer" class="week-work-container">
+                <div class="skel-card">
+                    <div class="skel-line w70"></div>
+                    <div class="skel-line w90"></div>
+                    <div class="skel-line w50"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: Active Discussions -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>💬 Active Discussions</h3>
+                <a href="/boards.html" class="btn btn-link">View All</a>
+            </div>
+            <div id="discussionsContainer" class="discussions-container">
+                <div class="skel-card">
+                    <div class="skel-line w80"></div>
+                    <div class="skel-line w60"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 5: Next Action -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>⚡ Next Action</h3>
+            </div>
+            <div class="next-action-card">
+                <button id="nextActionButton" class="btn btn-primary btn-large" style="width:100%;">
+                    <span id="nextActionText">Loading...</span>
+                </button>
+                <p id="noProgressMessage" class="empty-state-inline" style="display:none;">
+                    Start your first course to get personalized recommendations.
+                </p>
+            </div>
+        </section>
+        
         <!-- My Groups Section -->
         <section class="dashboard-section">
             <div class="section-header">
-                <h3>My Groups</h3>
+                <h3>👥 My Groups</h3>
                 <button id="adminPanelBtn" class="btn btn-link" style="display: none;">
                     Admin Panel
                 </button>
@@ -100,7 +183,9 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
     
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=52"></script>
+    <script defer src="/js/firebase.js?v=70"></script>
+    <script defer src="/js/auth-guard.js?v=1"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
     <script defer src="/js/notifications.js?v=52"></script>
     <script defer src="/js/dm-badge.js?v=52"></script>
     <script defer src="/js/ptr.js?v=52"></script>
@@ -115,23 +200,27 @@
       <span class="bn-icon">🏠</span>
       <span class="bn-label">Home</span>
     </a>
-    <a href="/explore.html" class="bn-tab" aria-label="Explore">
-      <span class="bn-icon">🔍</span>
-      <span class="bn-label">Explore</span>
-    </a>
-    <a href="/dm.html" class="bn-tab" aria-label="Messages">
-      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
-      <span class="bn-label">Messages</span>
+    <a href="/schools.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
     </a>
     <a href="/boards.html" class="bn-tab" aria-label="Boards">
       <span class="bn-icon">📋</span>
       <span class="bn-label">Boards</span>
+    </a>
+    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+      <span class="bn-icon">👗</span>
+      <span class="bn-label">MV House</span>
+    </a>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
     </a>
     <a href="/profile.html" class="bn-tab" aria-label="Profile">
       <span class="bn-icon">👤</span>
       <span class="bn-label">Profile</span>
     </a>
   </nav>
-  <script defer src="/js/offline.js?v=52"></script>
+  <script defer src="/js/offline.js?v=53"></script>
 </body>
 </html>

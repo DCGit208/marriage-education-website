@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SBD Network Quiz">
+    <meta name="theme-color" content="#000000">
+    <title>Quiz - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/quiz.css">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="quiz-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="/dashboard.html" class="app-logo">SBD Network</a>
+        </div>
+        <div class="header-right">
+            <span id="userNameDisplay" class="user-name"></span>
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+    
+    <!-- Main Quiz Container -->
+    <div class="quiz-container">
+        
+        <!-- Quiz Header (rendered by JS) -->
+        <div id="quizHeader"></div>
+        
+        <!-- Question Container (rendered by JS) -->
+        <div id="questionContainer"></div>
+        
+        <!-- Navigation (rendered by JS) -->
+        <div class="quiz-navigation" id="quizNavigation"></div>
+        
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    
+    <!-- Quiz System -->
+    <script src="/js/quiz.js"></script>
+    
+    <script>
+        // Initialize auth state
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Update user name display
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const displayName = userData.name || user.displayName || user.email;
+                const userNameDisplay = document.getElementById('userNameDisplay');
+                if (userNameDisplay) {
+                    userNameDisplay.textContent = displayName;
+                }
+            }
+            
+            // Get quiz ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('id');
+            
+            if (!quizId) {
+                showQuizError('No quiz ID provided. Please select a quiz from your module.');
+                return;
+            }
+            
+            // Load the quiz
+            await loadQuiz(quizId);
+        });
+        
+        // Logout handler
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await auth.signOut();
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Error logging out. Please try again.');
+                }
+            });
+        }
+        
+        // Prevent accidental page close if quiz in progress
+        window.addEventListener('beforeunload', (e) => {
+            if (currentQuiz && !quizEndTime) {
+                e.preventDefault();
+                e.returnValue = '';
+                return 'You have an active quiz. Are you sure you want to leave?';
+            }
+        });
+    </script>
+    
+</body>
+</html>

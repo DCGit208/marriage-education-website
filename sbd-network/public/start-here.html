@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Here | SBD Network - Transform Your Marriage</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/paywall.css">
+    
+    <style>
+        /* Start Here Page Styles */
+        .start-page {
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+        
+        /* Hero Section */
+        .start-hero {
+            background: linear-gradient(135deg, rgba(0, 15, 30, 0.95) 0%, rgba(10, 25, 50, 0.95) 100%);
+            padding: 80px 20px 60px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        
+        .start-hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #00ffcc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .start-hero-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .start-hero-cta {
+            display: inline-block;
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #000;
+            padding: 18px 50px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .start-hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+        }
+        
+        /* Content Container */
+        .start-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        
+        /* Section */
+        .start-section {
+            margin-bottom: 80px;
+        }
+        
+        .start-section h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #00ff88;
+        }
+        
+        .start-section h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            color: #00ccff;
+        }
+        
+        .start-section p {
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+        }
+        
+        .start-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 24px 0;
+        }
+        
+        .start-section li {
+            padding-left: 32px;
+            margin-bottom: 16px;
+            position: relative;
+            font-size: 18px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .start-section li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        /* Callout Box */
+        .start-callout {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 4px solid #00ff88;
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 8px;
+        }
+        
+        .start-callout p {
+            margin: 0;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* Teaser Lock */
+        .start-teaser {
+            position: relative;
+            margin-top: 40px;
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .teaser-lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 15, 30, 0.95) 70%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 40px;
+            border-radius: 12px;
+        }
+        
+        .teaser-unlock-btn {
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #000;
+            padding: 16px 40px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        .teaser-unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.6);
+        }
+        
+        /* CTA Section */
+        .start-cta-section {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 204, 255, 0.1) 100%);
+            padding: 60px 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 80px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        
+        .start-cta-section h2 {
+            font-size: 32px;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+        
+        .start-cta-section p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 32px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .start-hero h1 {
+                font-size: 32px;
+            }
+            
+            .start-hero-subtitle {
+                font-size: 16px;
+            }
+            
+            .start-section h2 {
+                font-size: 28px;
+            }
+            
+            .start-section h3 {
+                font-size: 20px;
+            }
+            
+            .start-section p,
+            .start-section li {
+                font-size: 16px;
+            }
+            
+            .start-content {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body class="start-page">
+
+    <!-- Hero Section -->
+    <div class="start-hero">
+        <h1>What if your marriage could become extraordinary?</h1>
+        <p class="start-hero-subtitle">
+            Most couples settle for survival. SBD teaches you how to build a covenant marriage that transforms everything — your intimacy, your purpose, your legacy.
+        </p>
+        <a href="#begin" class="start-hero-cta" onclick="showPaywall(); return false;">Begin Your Formation</a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="start-content">
+        
+        <!-- Section 1: What is SBD? -->
+        <div class="start-section">
+            <h2>What is SBD?</h2>
+            <p>
+                SBD (Seals By Design) is a marriage education system that teaches couples how to build <strong>covenant marriages</strong> — relationships designed for permanence, intimacy, and purpose.
+            </p>
+            <p>
+                We don't offer "communication tips" or "date night ideas." We offer <strong>formation</strong> — a systematic education that transforms how you think about marriage, sex, identity, and spiritual intimacy.
+            </p>
+            
+            <h3>What You'll Learn</h3>
+            <ul>
+                <li><strong>The Teleios Identity</strong> — Who you're designed to become in covenant</li>
+                <li><strong>Sexual Literacy</strong> — Understanding the 4 languages of sexual intimacy</li>
+                <li><strong>Spiritual Formation</strong> — Building a marriage that reflects God's design</li>
+                <li><strong>Generational Impact</strong> — Leaving a legacy that outlives you</li>
+            </ul>
+        </div>
+        
+        <!-- Section 2: Why Most Advice Fails -->
+        <div class="start-section">
+            <h2>Why Most Marriage Advice Fails</h2>
+            <p>
+                Most marriage advice focuses on <strong>symptoms</strong>, not <strong>systems</strong>. You're told to "communicate better" without understanding <em>why</em> communication breaks down. You're told to "prioritize intimacy" without understanding the <em>design</em> of sexual connection.
+            </p>
+            
+            <div class="start-callout">
+                <p>
+                    "The problem isn't that couples don't try. The problem is that they're working with incomplete information."
+                </p>
+            </div>
+            
+            <p>
+                SBD gives you the <strong>blueprint</strong>. We teach you the underlying principles that make marriages thrive — principles rooted in theology, psychology, and the lived experience of covenant.
+            </p>
+            
+            <h3>What Makes SBD Different</h3>
+            <ul>
+                <li><strong>Systematic Education</strong> — Not tips. Not hacks. A complete formation system.</li>
+                <li><strong>Identity-First Approach</strong> — Marriage isn't about compromise. It's about becoming.</li>
+                <li><strong>Practical Application</strong> — Theory + practice + community + accountability.</li>
+                <li><strong>Generational Vision</strong> — Your marriage is bigger than you. It's a legacy.</li>
+            </ul>
+        </div>
+        
+        <!-- Section 3: Teleios Identity (Teaser) -->
+        <div class="start-section">
+            <h2>The Teleios Identity</h2>
+            <p>
+                The foundation of SBD is the <strong>Teleios Identity</strong> — a framework for understanding who you're designed to become in covenant marriage.
+            </p>
+            <p>
+                Most people enter marriage with a <strong>contractual mindset</strong>: "What do I get out of this?" The Teleios Identity flips that equation. It asks: <strong>"Who am I becoming?"</strong>
+            </p>
+            
+            <!-- Teaser Content with Lock -->
+            <div class="start-teaser">
+                <h3>The Four Stages of Identity Formation</h3>
+                <p>
+                    In covenant marriage, you move through four distinct stages of identity development. Each stage builds on the last, transforming your understanding of self, spouse, and purpose.
+                </p>
+                <p>
+                    Stage 1: <strong>Apprentice</strong> — You're learning the language of covenant. You're discovering what marriage was designed to be, not just what culture taught you it was.
+                </p>
+                <p style="opacity: 0.6; filter: blur(3px);">
+                    Stage 2: Intermediate — You're practicing the skills. You're building new patterns of intimacy, communication, and spiritual connection. You're unlearning dysfunction and...
+                </p>
+                <p style="opacity: 0.3; filter: blur(5px);">
+                    Stage 3: Advanced — You're leading others. Your marriage becomes a model. You're not just surviving; you're thriving. You're teaching your children...
+                </p>
+                
+                <!-- Lock Overlay -->
+                <div class="teaser-lock-overlay">
+                    <a href="#unlock" class="teaser-unlock-btn" onclick="showPaywall(); return false;">
+                        🔒 Unlock Full Teleios Formation
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CTA Section -->
+        <div class="start-cta-section">
+            <h2>Ready to Transform Your Marriage?</h2>
+            <p>Join thousands of couples building covenant marriages through SBD formation.</p>
+            <a href="#begin" class="start-hero-cta" onclick="showPaywall(); return false;">Begin Teleios Formation</a>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/journey.html" class="nav-item">
+            <div class="nav-icon">📚</div>
+            <div class="nav-label">My Journey</div>
+        </a>
+        <a href="/schools.html" class="nav-item">
+            <div class="nav-icon">🏫</div>
+            <div class="nav-label">Schools</div>
+        </a>
+        <a href="/shop.html" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <div class="nav-label">Shop</div>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profile</div>
+        </a>
+    </div>
+    
+    <!-- Firebase Config & Paywall Logic -->
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/formation-access.js"></script>
+    
+    <script>
+        // Show paywall modal
+        function showPaywall() {
+            window.showPaywallModal && window.showPaywallModal();
+        }
+    </script>
+</body>
+</html>

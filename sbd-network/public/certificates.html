@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="My Certificates - SBD Network">
+    <meta name="theme-color" content="#000000">
+    <title>My Certificates - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/certificate.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <!-- html2canvas for certificate download (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="certificates-page bottom-nav-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="/dashboard.html" class="app-logo">SBD Network</a>
+        </div>
+        <div class="header-right">
+            <span id="userNameDisplay" class="user-name"></span>
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="certificates-container">
+        
+        <!-- Header -->
+        <div class="certificates-header">
+            <h1 class="certificates-title">My Certificates</h1>
+            <p class="certificates-subtitle">Your formation achievements and completed courses</p>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="certificates-stats" id="certificatesStats">
+            <!-- Stats rendered by JS -->
+        </div>
+        
+        <!-- Certificates Grid -->
+        <div class="certificates-grid" id="certificatesGrid">
+            <!-- Loading skeleton -->
+            <div class="quiz-loading">
+                <div class="quiz-loading-spinner"></div>
+                <div class="quiz-loading-text">Loading certificates...</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/dashboard.html">
+            🏠<span>Home</span>
+        </a>
+        <a href="/schools.html">
+            📚<span>Learn</span>
+        </a>
+        <a href="/boards.html">
+            📋<span>Boards</span>
+        </a>
+        <a href="/mv-house.html">
+            👗<span>MV House</span>
+        </a>
+        <a href="/shop.html">
+            🛒<span>Shop</span>
+        </a>
+        <a href="/profile.html" class="active">
+            👤<span>Profile</span>
+        </a>
+    </nav>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    
+    <!-- Notification System -->
+    <script src="/js/notifications.js"></script>
+    
+    <!-- Certificate System -->
+    <script src="/js/certificate.js"></script>
+    
+    <script>
+        // Initialize auth state
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                // Initialize notifications
+                try { 
+                    if (typeof initNotifications === 'function') {
+                        initNotifications(user.uid); 
+                    }
+                } catch (_) {}
+                
+                // Update user name display
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const displayName = userData.name || user.displayName || user.email;
+                    const userNameDisplay = document.getElementById('userNameDisplay');
+                    if (userNameDisplay) {
+                        userNameDisplay.textContent = displayName;
+                    }
+                }
+                
+                // Load certificates
+                await loadCertificates(user.uid);
+                
+            } catch (error) {
+                console.error('Error loading certificates page:', error);
+                
+                const container = document.getElementById('certificatesGrid');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="error-state">
+                            <p>⚠️ Error loading certificates</p>
+                            <button class="btn btn-primary" onclick="location.reload()">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        });
+        
+        // Logout handler
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await auth.signOut();
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Error logging out. Please try again.');
+                }
+            });
+        }
+    </script>
+    
+</body>
+</html>

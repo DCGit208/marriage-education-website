@@ -2,7 +2,19 @@
 // BOARD PAGE — Media Feed with Photo Lightbox + Video Overlay
 // ================================================================
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = (function() {
+  try {
+    // Reduce initial load for mobile Safari to improve performance
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const size = (isMobile && isSafari) ? 15 : 25;
+    console.log('[Board] PAGE_SIZE set to', size, 'isMobile:', isMobile, 'isSafari:', isSafari);
+    return size;
+  } catch (e) {
+    console.error('[Board] PAGE_SIZE detection error, using default:', e);
+    return 15; // Safe default for all devices if detection fails
+  }
+})();
 
 const urlParams   = new URLSearchParams(window.location.search);
 const boardId     = urlParams.get('boardId');
@@ -77,8 +89,50 @@ const addMediaBtn       = document.getElementById('addMediaBtn');
 // Track object URLs so we can revoke them when the modal closes
 let _mediaObjectURLs = [];
 
+// ── Retry helper for Firestore queries (especially important for Safari) ──
+async function retryFirestoreQuery(queryFn, maxRetries = 3, timeoutMs = 20000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Firestore query timeout')), timeoutMs)
+      );
+      const result = await Promise.race([queryFn(), timeoutPromise]);
+      return result;
+    } catch (error) {
+      console.warn(`[Retry ${attempt}/${maxRetries}] Query failed:`, error.message);
+      if (attempt === maxRetries) {
+        // Add browser info to error for debugging Safari issues
+        error.message = `${error.message} (Browser: ${navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') ? 'Safari' : 'Other'}, Attempt ${attempt}/${maxRetries})`;
+        throw error;
+      }
+      // Exponential backoff: 1s, 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
+    }
+  }
+}
+
 // ── Auth guard ───────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
+  console.log('[Board] Auth state changed, user:', user ? user.uid : 'null');
+  console.log('[Board] Firebase initialized:', typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0);
+  console.log('[Board] Firestore available:', typeof db !== 'undefined');
+  
+  // Wait for Firebase to be fully initialized (Safari sometimes races)
+  let waitCount = 0;
+  while ((!firebase || !firebase.apps || !firebase.apps.length || !db) && waitCount < 50) {
+    console.log('[Board] Waiting for Firebase initialization...', waitCount);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    waitCount++;
+  }
+  
+  if (!firebase || !firebase.apps || !firebase.apps.length || !db) {
+    console.error('[Board] Firebase failed to initialize after 5 seconds!');
+    alert('Firebase initialization failed. Please reload the page.');
+    return;
+  }
+  
+  console.log('[Board] Firebase ready, proceeding with auth check');
+  
   if (!user) { window.location.href = 'index.html'; return; }
   if (!boardId) {
     window.location.href = 'dashboard.html';
@@ -103,18 +157,47 @@ auth.onAuthStateChanged(async (user) => {
 
   try {
     showLoading(true);
-    await loadBoardInfo();
-    await loadPosts(true);
-    await loadPinnedPosts();
-    loadStories().catch(() => {}); // background load; needs Firestore index
+    console.log('[Board] Starting load for boardId:', boardId);
+    console.log('[Board] User agent:', navigator.userAgent);
+    
+    // Load critical content first: board info and initial posts
+    await Promise.all([
+      retryFirestoreQuery(() => loadBoardInfo()).catch(err => {
+        console.error('[Board] loadBoardInfo failed:', err);
+        throw err;
+      }),
+      retryFirestoreQuery(() => loadPosts(true)).catch(err => {
+        console.error('[Board] loadPosts failed:', err);
+        throw err;
+      }),
+    ]);
+    
+    console.log('[Board] Main content loaded successfully');
+    
+    // Load secondary content after main posts are visible
+    Promise.all([
+      retryFirestoreQuery(() => loadPinnedPosts()).catch(err => console.warn('[Init] loadPinnedPosts error:', err)),
+      retryFirestoreQuery(() => loadStories()).catch(err => console.warn('[Init] loadStories error:', err)),
+    ]).then(() => {
+      console.log('[Board] Secondary content loaded');
+    }).catch(err => console.warn('[Init] Secondary load error:', err));
 
     // Deep-link: ?comment=ID → expand the right post, scroll to that comment
     const targetCommentId = urlParams.get('comment');
     if (targetCommentId) {
       try {
-        const commentDoc = await db.collection('comments').doc(targetCommentId).get();
-        if (commentDoc.exists) {
-          const commentPostId = commentDoc.data().postId;
+        // Check if postId is in URL (saves a Firestore query)
+        let commentPostId = urlParams.get('post');
+        
+        // If not in URL, fetch comment document to get postId
+        if (!commentPostId) {
+          const commentDoc = await db.collection('comments').doc(targetCommentId).get();
+          if (commentDoc.exists) {
+            commentPostId = commentDoc.data().postId;
+          }
+        }
+        
+        if (commentPostId) {
           // Find card in DOM; keep loading pages until found or all posts loaded
           let card = postsContainer.querySelector(`[data-post-id="${commentPostId}"]`);
           while (!card && !allLoaded) {
@@ -161,27 +244,59 @@ auth.onAuthStateChanged(async (user) => {
     }
   } catch (err) {
     console.error('Board load error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      browser: navigator.userAgent
+    });
+    
+    // Show user-friendly error message
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:400px;text-align:center;z-index:10000;';
+    errorMsg.innerHTML = `
+      <h3 style="margin:0 0 15px 0;color:#ef4444;">Board Loading Error</h3>
+      <p style="color:#64748b;margin:0 0 20px 0;line-height:1.5;">${err.message || 'Could not load board content. This might be a connection issue.'}</p>
+      <button onclick="window.location.reload()" style="background:#667eea;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;">Reload Page</button>
+    `;
+    document.body.appendChild(errorMsg);
   } finally {
     showLoading(false);
+  }
+  
+  // Initialize mention autocomplete for post creation modal
+  const postContentTextarea = document.getElementById('postContent');
+  if (postContentTextarea && typeof initMentionAutocomplete === 'function') {
+    initMentionAutocomplete(postContentTextarea, boardId);
+  }
+  
+  // Initialize mention autocomplete for edit post modal
+  const editPostTextarea = document.getElementById('editPostContent');
+  if (editPostTextarea && typeof initMentionAutocomplete === 'function') {
+    initMentionAutocomplete(editPostTextarea, boardId);
   }
 });
 
 // ── Load board metadata ──────────────────────────────────────────
 async function loadBoardInfo() {
+  console.log('[loadBoardInfo] Starting for boardId:', boardId);
   try {
     const boardDoc = await db.collection('boards').doc(boardId).get();
+    console.log('[loadBoardInfo] Firestore query complete, exists:', boardDoc.exists);
 
     if (!boardDoc.exists) throw new Error('Board not found');
 
     currentBoardData = boardDoc.data();
+    console.log('[loadBoardInfo] Board data loaded:', currentBoardData.title);
 
     if (boardTitle)       boardTitle.textContent       = currentBoardData.title || 'Board';
     if (boardDescription) boardDescription.textContent = currentBoardData.description || '';
     if (postCountBadge && currentBoardData.postCount) {
       postCountBadge.textContent = currentBoardData.postCount + ' posts';
     }
+    console.log('[loadBoardInfo] UI updated successfully');
   } catch (error) {
-    console.error('Error loading board info:', error);
+    console.error('[loadBoardInfo] Error:', error);
     throw error;
   }
 }
@@ -191,6 +306,8 @@ async function loadPosts(reset) {
   if (allLoaded && !reset) return;
   if (isLoading) return;
   isLoading = true;
+  
+  console.log('[loadPosts] Starting, reset:', reset, 'boardId:', boardId);
 
   try {
   if (reset) {
@@ -206,11 +323,14 @@ async function loadPosts(reset) {
     .limit(PAGE_SIZE);
 
   if (lastVisible) query = query.startAfter(lastVisible);
-
+  
+  console.log('[loadPosts] Executing Firestore query...');
   const snapshot = await query.get();
+  console.log('[loadPosts] Query complete, docs:', snapshot.size);
 
   if (snapshot.empty && reset) {
     noPostsMessage.style.display = 'block';
+    console.log('[loadPosts] No posts found');
     return;
   }
 
@@ -227,6 +347,8 @@ async function loadPosts(reset) {
     }
     postsContainer.appendChild(buildPostCard(post));
   });
+  
+  console.log('[loadPosts] Posts rendered');
 
   if (snapshot.docs.length > 0) {
     lastVisible = snapshot.docs[snapshot.docs.length - 1];
@@ -238,6 +360,9 @@ async function loadPosts(reset) {
   } else {
     loadMoreArea.style.display = 'flex';
   }
+  } catch (err) {
+    console.error('[loadPosts] Error:', err);
+    throw err;
   } finally {
     isLoading = false;
   }
@@ -248,6 +373,22 @@ function buildPostCard(post) {
   const card = document.createElement('article');
   card.className = 'post-card';
   card.dataset.postId = post.id;
+  
+  // Store timestamp for sorting
+  if (post.timestamp) {
+    // Convert Firestore timestamp to milliseconds
+    const timestamp = post.timestamp.toMillis ? post.timestamp.toMillis() : post.timestamp;
+    card.dataset.timestamp = timestamp;
+  }
+  
+  // Calculate total reaction count for sorting
+  let totalReactions = 0;
+  if (post.reactions) {
+    Object.values(post.reactions).forEach(uids => {
+      if (Array.isArray(uids)) totalReactions += uids.length;
+    });
+  }
+  card.dataset.reactionCount = totalReactions;
 
   const dateStr = formatDate(post.timestamp);
   const author  = esc(post.authorName || 'Member');
@@ -427,8 +568,15 @@ function buildPostCard(post) {
       <button class="bookmark-btn${isBookmarked ? ' bookmarked' : ''}" data-postid="${esc(post.id)}" type="button" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark'}" aria-label="Bookmark">${isBookmarked ? '🔖' : '🔘'}</button>
     </div>
     ${mediaHtml}
-    ${hasText ? `<p class="post-text">${esc(post.content)}</p>` : ''}
-    ${post.forwardedFrom ? `<div class="forwarded-quote"><span class="forwarded-label">↗ Forwarded from ${esc(post.forwardedAuthorName || 'Member')}</span>${post.forwardedContent ? `<p class="forwarded-text">${esc(post.forwardedContent)}</p>` : ''}</div>` : ''}
+    ${hasText ? `<p class="post-text">${escAndLinkify(post.content)}</p>` : ''}
+    ${post.repostedFrom ? `<div class="repost-quote">
+      <div class="repost-header">
+        <span class="repost-icon">🔄</span>
+        <span class="repost-label">Reposted from <strong>${esc(post.repostedFrom.authorName || 'Member')}</strong></span>
+      </div>
+      ${post.repostedFrom.content ? `<p class="repost-content">${escAndLinkify(post.repostedFrom.content)}</p>` : ''}
+    </div>` : ''}
+    ${post.forwardedFrom ? `<div class="forwarded-quote"><span class="forwarded-label">↗ Forwarded from ${esc(post.forwardedAuthorName || 'Member')}</span>${post.forwardedContent ? `<p class="forwarded-text">${escAndLinkify(post.forwardedContent)}</p>` : ''}</div>` : ''}
     ${post.linkPreview ? buildLinkPreviewHtml(post.linkPreview) : ''}
     <div class="post-actions">
       <button class="comment-toggle-btn" data-count="${commentCount}" type="button">
@@ -631,6 +779,11 @@ function buildPostCard(post) {
   const quoteTextEl    = card.querySelector('.quote-reply-text');
   const quoteCancelBtn = card.querySelector('.quote-reply-cancel');
 
+  // Initialize mention autocomplete for comment input
+  if (commentInput && typeof initMentionAutocomplete === 'function') {
+    initMentionAutocomplete(commentInput, boardId);
+  }
+
   setReplyTo = (replyData) => {
     // Clean up any leftover media thumb from a previous media reply
     let quoteThumb = quotePreview.querySelector('.quote-media-thumb');
@@ -704,8 +857,6 @@ function buildPostCard(post) {
   commentInput.addEventListener('input', () => {
     commentInput.style.height = 'auto';
     commentInput.style.height = commentInput.scrollHeight + 'px';
-    // @mention autocomplete
-    _handleMentionInput(commentInput, card);
   });
 
   const sendComment = async () => {
@@ -1110,6 +1261,9 @@ function closeModal() {
   const _stb = document.getElementById('scheduleToggleBtn');
   if (_ss)  _ss.style.display = 'none';
   if (_stb) _stb.classList.remove('active');
+  // Reset story toggle
+  const _storBtn = document.getElementById('storyToggleBtn');
+  if (_storBtn) _storBtn.classList.remove('active');
 }
 
 createPostBtn && createPostBtn.addEventListener('click', () => {
@@ -1282,8 +1436,36 @@ if (createPostForm) {
         if (!isNaN(_d) && _d > new Date()) _scheduledAt = firebase.firestore.Timestamp.fromDate(_d);
       }
       await createPost(boardId, content, imageUrl, videoUrl, allPhotos, currentBoardData?.title || '', thumbUrl, allVideos, allThumbs, currentBoardData?.groupId || null, pendingLinkPreview, allMedia.length ? allMedia : null, _pollData, _scheduledAt);
+
+      // Also share as Story if toggle is active
+      if (document.getElementById('storyToggleBtn')?.classList.contains('active')) {
+        try {
+          const storyMediaUrl  = imageUrl || videoUrl;
+          const storyMediaType = imageUrl ? 'image' : 'video';
+          const storyThumbUrl  = storyMediaType === 'video' ? thumbUrl : null;
+          if (storyMediaUrl) {
+            const now     = firebase.firestore.Timestamp.now();
+            const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
+            await db.collection('stories').add({
+              boardId,
+              authorId:   currentUserId,
+              authorName: currentUserData.name || getCurrentUser()?.displayName || 'Member',
+              mediaUrl:   storyMediaUrl,
+              mediaType:  storyMediaType,
+              thumbUrl:   storyThumbUrl,
+              caption:    content.slice(0, 120) || '',
+              createdAt:  now,
+              expiresAt:  expires,
+              seenBy:     [currentUserId],
+            });
+          }
+        } catch (storyErr) {
+          console.warn('[Story] Could not auto-share to story:', storyErr.message);
+        }
+      }
+
       closeModal();
-      await loadPosts(true);
+      await Promise.all([loadPosts(true), loadStories()]);
     } catch (err) {
       alert('Error creating post: ' + err.message);
     } finally {
@@ -1590,14 +1772,14 @@ function renderComment(comment, onReply) {
 
   li.innerHTML = `
     <div class="comment-meta">
-      <span class="comment-author">${esc(comment.authorName || 'Member')}</span>
+      <span class="comment-author"><a href="/member.html?uid=${esc(comment.authorId || '')}" class="comment-author-link">${esc(comment.authorName || 'Member')}</a></span>
       <span class="comment-date">${dateStr}</span>
       ${onReply ? `<button class="comment-reply-btn" type="button">↩ Reply</button>` : ''}
       ${canModify ? `<button class="edit-comment-btn" type="button" aria-label="Edit comment">✏️ Edit</button>` : ''}
       ${canModify ? `<button class="delete-comment-btn" type="button" aria-label="Delete comment">✕</button>` : ''}
     </div>
     ${quoteBubbleHtml}
-    <p class="comment-text">${esc(comment.text)}</p>
+    <p class="comment-text">${escAndLinkify(comment.text)}</p>
     <div class="comment-action-bar">
       ${emojiBarHtml}
       <button class="comment-copy-link-btn" type="button" title="Copy link to comment">🔗</button>
@@ -1783,6 +1965,18 @@ function esc(str) {
   return div.innerHTML;
 }
 
+// Escape HTML and linkify @mentions and #hashtags
+function escAndLinkify(str) {
+  if (!str) return '';
+  // First escape HTML
+  let escaped = esc(str);
+  // Then linkify if functions are available
+  if (typeof linkifyContent === 'function') {
+    return linkifyContent(escaped);
+  }
+  return escaped;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT MENU — open / close / actions
 // ═══════════════════════════════════════════════════════════════
@@ -1799,6 +1993,10 @@ function openContextMenu(post, card) {
   document.getElementById('ctxEdit').style.display   = canManage     ? '' : 'none';
   document.getElementById('ctxDelete').style.display = canManage     ? '' : 'none';
   document.getElementById('ctxPin').style.display    = currentIsAdmin ? '' : 'none';
+  
+  // Show "Post to Story" only if post has media (image or video)
+  const hasMedia = !!(post.imageUrl || post.videoUrl || (post.allMedia && post.allMedia.length));
+  document.getElementById('ctxPostToStory').style.display = hasMedia ? '' : 'none';
 
   // Highlight emojis user has already reacted with
   const mySet = new Set(
@@ -1849,6 +2047,57 @@ postCtxMenu.querySelectorAll('.ctx-emoji-btn').forEach(btn => {
       renderReactionChips(card, post.reactions, post.id);
     }
   });
+});
+
+document.getElementById('ctxPostToStory').addEventListener('click', async () => {
+  const post = ctxPost;
+  closeContextMenu();
+  if (!post) return;
+  
+  // Determine media type and URL
+  let mediaUrl, mediaType, thumbUrl = null;
+  
+  if (post.allMedia && post.allMedia.length > 0) {
+    // Use first media item
+    const firstMedia = post.allMedia[0];
+    mediaUrl = firstMedia.url;
+    mediaType = firstMedia.type; // 'image' or 'video'
+    thumbUrl = firstMedia.thumbUrl || null;
+  } else if (post.videoUrl) {
+    mediaUrl = post.videoUrl;
+    mediaType = 'video';
+    // Try thumbUrl, then imageUrl as fallback thumbnail
+    thumbUrl = post.thumbUrl || post.imageUrl || null;
+  } else if (post.imageUrl) {
+    mediaUrl = post.imageUrl;
+    mediaType = 'image';
+  } else {
+    showToast('No media to share');
+    return;
+  }
+  
+  // Create story
+  try {
+    const now = firebase.firestore.Timestamp.now();
+    const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
+    await db.collection('stories').add({
+      boardId,
+      authorId: currentUserId,
+      authorName: currentUserData.name || getCurrentUser()?.displayName || 'Member',
+      mediaUrl,
+      mediaType,
+      thumbUrl: thumbUrl || null,
+      caption: post.content ? post.content.slice(0, 120) : '',
+      createdAt: now,
+      expiresAt: expires,
+      seenBy: [currentUserId],
+    });
+    await loadStories();
+    showToast('Posted to your story!');
+  } catch (err) {
+    console.error('Failed to post to story:', err);
+    showToast('Failed to post to story');
+  }
 });
 
 document.getElementById('ctxReply').addEventListener('click', () => {
@@ -1922,6 +2171,233 @@ document.getElementById('ctxForward').addEventListener('click', async () => {
   closeContextMenu();
   if (post) await openForwardModal(post);
 });
+
+// ── Repost with Thoughts ──────────────────────────────────────────
+document.getElementById('ctxRepost').addEventListener('click', async () => {
+  const post = ctxPost;
+  closeContextMenu();
+  if (post) await openRepostModal(post);
+});
+
+async function openRepostModal(post) {
+  const modal = document.getElementById('repostModal');
+  const thoughtsInput = document.getElementById('repostThoughts');
+  const originalAuthor = document.getElementById('repostOriginalAuthor');
+  const originalContent = document.getElementById('repostOriginalContent');
+  const originalMedia = document.getElementById('repostOriginalMedia');
+  const boardList = document.getElementById('repostBoardList');
+  const closeBtn = document.getElementById('repostModalClose');
+
+  if (!modal) return;
+
+  // Clear previous state
+  thoughtsInput.value = '';
+  originalAuthor.textContent = post.authorName || 'Member';
+  originalContent.textContent = post.content || 'Post with media';
+  
+  // Show media preview if exists
+  originalMedia.innerHTML = '';
+  if (post.imageUrl) {
+    originalMedia.innerHTML = `<img src="${post.imageUrl}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
+  } else if (post.videoUrl) {
+    originalMedia.innerHTML = `<video src="${post.videoUrl}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;" muted></video>`;
+  } else if (post.allMedia && post.allMedia.length > 0) {
+    const firstMedia = post.allMedia[0];
+    if (firstMedia.type === 'image') {
+      originalMedia.innerHTML = `<img src="${firstMedia.url}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
+    } else if (firstMedia.type === 'video') {
+      const thumb = firstMedia.thumbUrl || firstMedia.url;
+      originalMedia.innerHTML = `<img src="${thumb}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
+    }
+  }
+
+  // Simple board selection - default to current board, show option to pick different one
+  boardList.innerHTML = `
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-primary" id="repostToCurrentBoard" style="width:100%;font-size:0.95rem;padding:12px;">
+        🔄 Repost to This Board
+      </button>
+    </div>
+    <div style="text-align:center;margin:12px 0;color:var(--text-muted);font-size:0.85rem;">or</div>
+    <details style="border:1px solid var(--border-color);border-radius:8px;padding:8px;">
+      <summary style="cursor:pointer;padding:8px;font-size:0.9rem;color:var(--text-secondary);">Choose a Different Board</summary>
+      <div id="otherBoardsList" style="margin-top:8px;max-height:200px;overflow-y:auto;">
+        <div class="loading-skeleton" style="height:40px;border-radius:8px;"></div>
+      </div>
+    </details>
+  `;
+
+  // Handle "Repost to Current Board" button
+  modal.addEventListener('click', async (e) => {
+    if (e.target.id === 'repostToCurrentBoard') {
+      const userThoughts = thoughtsInput.value.trim();
+      await submitRepost(post, boardId, userThoughts);
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Load other boards asynchronously when details is opened
+  const detailsEl = boardList.querySelector('details');
+  const otherBoardsList = document.getElementById('otherBoardsList');
+  let otherBoardsLoaded = false;
+
+  detailsEl?.addEventListener('toggle', async function() {
+    if (this.open && !otherBoardsLoaded) {
+      otherBoardsLoaded = true;
+      
+      try {
+        const boardsSnapshot = await db.collection('boards')
+          .where('members', 'array-contains', currentUserId)
+          .get();
+        
+        if (boardsSnapshot.empty) {
+          otherBoardsList.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;font-size:0.85rem;">No other boards available.</div>';
+          return;
+        }
+        
+        const boards = boardsSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(board => board.id !== boardId); // Exclude current board
+        
+        if (boards.length === 0) {
+          otherBoardsList.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;font-size:0.85rem;">No other boards available.</div>';
+          return;
+        }
+        
+        otherBoardsList.innerHTML = boards.map(board => `
+          <div class="forward-board-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px;margin:4px 0;border-radius:6px;background:var(--bg-secondary);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:500;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(board.title)}</div>
+            </div>
+            <button class="btn btn-secondary" data-board-id="${board.id}" style="font-size:0.85rem;padding:6px 12px;margin-left:8px;">Repost</button>
+          </div>
+        `).join('');
+
+        // Handle clicks on other board buttons
+        otherBoardsList.querySelectorAll('button[data-board-id]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const targetBoardId = btn.getAttribute('data-board-id');
+            const userThoughts = thoughtsInput.value.trim();
+            await submitRepost(post, targetBoardId, userThoughts);
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+          });
+        });
+
+      } catch (error) {
+        console.error('Error loading boards for repost:', error);
+        otherBoardsList.innerHTML = '<div style="color:var(--error);padding:12px;text-align:center;font-size:0.85rem;">Error loading boards.</div>';
+      }
+    }
+  });
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  thoughtsInput.focus();
+
+  const close = () => {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  };
+
+  closeBtn.onclick = close;
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) close();
+  });
+}
+
+async function submitRepost(originalPost, targetBoardId, userThoughts) {
+  try {
+    showLoading(true);
+    
+    const user = getCurrentUser();
+    if (!user) throw new Error('Not signed in');
+
+    // ALWAYS fetch the complete post data from Firestore to ensure all fields are present
+    let fullPostData = originalPost;
+    try {
+      console.log('[Repost] Fetching full post data for:', originalPost.id);
+      const postDoc = await db.collection('posts').doc(originalPost.id).get();
+      if (postDoc.exists) {
+        fullPostData = { id: postDoc.id, ...postDoc.data() };
+        console.log('[Repost] Full post data:', fullPostData);
+        console.log('[Repost] Available fields:', Object.keys(fullPostData));
+      } else {
+        console.warn('[Repost] Post document does not exist:', originalPost.id);
+      }
+    } catch (fetchErr) {
+      console.error('[Repost] Error fetching full post data:', fetchErr);
+    }
+    
+    // Ensure we have an authorId - try multiple possible field names
+    const postAuthorId = fullPostData.authorId || 
+                         fullPostData.userId || 
+                         fullPostData.author?.id || 
+                         fullPostData.author?.uid ||
+                         originalPost.authorId ||
+                         originalPost.userId;
+    
+    // If still no author ID, log error and use current user as fallback
+    if (!postAuthorId) {
+      console.error('[Repost] WARNING: No author ID found in post data. Full data:', fullPostData);
+      console.error('[Repost] Using current user ID as fallback');
+    }
+    
+    const safeAuthorId = postAuthorId || currentUserId;
+    const safeAuthorName = fullPostData.authorName || 
+                          fullPostData.userName || 
+                          fullPostData.author?.name ||
+                          fullPostData.author?.displayName ||
+                          'Member';
+    
+    console.log('[Repost] Using authorId:', safeAuthorId, 'authorName:', safeAuthorName);
+    
+    // Create repost data with guaranteed non-undefined values
+    const repostData = {
+      content: userThoughts || '', // User's thoughts go in the main content
+      boardId: targetBoardId,
+      authorId: currentUserId,
+      authorName: currentUserData.name || user.displayName || 'Member',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      
+      // Original post data embedded
+      repostedFrom: {
+        postId: fullPostData.id,
+        authorId: safeAuthorId, // Guaranteed to have a value
+        authorName: safeAuthorName,
+        content: fullPostData.content || '',
+        timestamp: fullPostData.timestamp || firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      
+      // Preserve media references from original post
+      imageUrl: fullPostData.imageUrl || null,
+      videoUrl: fullPostData.videoUrl || null,
+      thumbUrl: fullPostData.thumbUrl || null,
+      allMedia: fullPostData.allMedia || null,
+      
+      reactions: {},
+      commentCount: 0,
+    };
+    
+    console.log('[Repost] Submitting repost data:', repostData);
+
+    await db.collection('posts').add(repostData);
+    
+    showToast('Reposted successfully!');
+    
+    // If reposting to current board, refresh the feed
+    if (targetBoardId === boardId) {
+      await loadPosts(true);
+    }
+    
+  } catch (err) {
+    console.error('[Repost] Error:', err);
+    showToast('Failed to repost: ' + err.message);
+  } finally {
+    showLoading(false);
+  }
+}
 
 // ── Share via DM ──────────────────────────────────────────────────
 document.getElementById('ctxShareDm').addEventListener('click', async () => {
@@ -2075,6 +2551,14 @@ function renderReactionChips(card, reactions, postId) {
   if (old) old.remove();
 
   const entries = Object.entries(reactions || {}).filter(([, uids]) => Array.isArray(uids) && uids.length > 0);
+  
+  // Update reaction count data attribute for sorting
+  let totalReactions = 0;
+  Object.values(reactions || {}).forEach(uids => {
+    if (Array.isArray(uids)) totalReactions += uids.length;
+  });
+  card.dataset.reactionCount = totalReactions;
+  
   if (!entries.length) return;
 
   const row = document.createElement('div');
@@ -2295,8 +2779,51 @@ function openPinnedList() {
         <span class="pinned-list-meta">${esc(post.authorName || 'Member')} · ${formatDate(post.timestamp)}</span>
         <span class="pinned-list-preview">${esc(preview)}</span>
       </div>
+      ${currentIsAdmin ? '<button class="pinned-list-unpin" data-post-id="' + post.id + '" aria-label="Unpin">✕</button>' : ''}
     `;
-    item.addEventListener('click', () => { closePinnedList(); scrollToPinnedPost(post.id); });
+    
+    // Click on item body → scroll to post
+    const itemBody = item.querySelector('.pinned-list-body');
+    itemBody.addEventListener('click', () => { closePinnedList(); scrollToPinnedPost(post.id); });
+    
+    // Click unpin button (admin only) → unpin post
+    if (currentIsAdmin) {
+      const unpinBtn = item.querySelector('.pinned-list-unpin');
+      unpinBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          await pinPost(post.id, true); // true = currentlyPinned
+          post.isPinned = false;
+          pinnedPosts = pinnedPosts.filter(p => p.id !== post.id);
+          
+          // Update the post card badge if it's in the DOM
+          const card = postsContainer.querySelector(`[data-post-id="${post.id}"]`);
+          if (card) {
+            const badge = card.querySelector('.post-pinned-badge');
+            if (badge) badge.remove();
+          }
+          
+          // Refresh pinned list display
+          pinnedBannerIndex = 0;
+          pinnedBannerDismissed = false;
+          updatePinnedBanner();
+          
+          // If no more pinned posts, close the list
+          if (pinnedPosts.length === 0) {
+            closePinnedList();
+          } else {
+            // Refresh the list without closing
+            openPinnedList();
+          }
+          
+          showToast('Post unpinned');
+        } catch (err) {
+          console.error('Unpin error:', err);
+          showToast('Failed to unpin post');
+        }
+      });
+    }
+    
     list.appendChild(item);
   });
   overlay.style.display = 'block';
@@ -2371,6 +2898,104 @@ if (typeof initPTR === 'function') {
 })();
 
 // ═══════════════════════════════════════════════════════════════
+// CONTENT FILTERS
+// ═══════════════════════════════════════════════════════════════
+(function () {
+  let currentMediaFilter = 'all'; // all, images, videos, text
+  let currentSortOrder = 'newest'; // newest, oldest, popular
+
+  // Get all filter chips
+  const filterChips = document.querySelectorAll('.filter-chip');
+  if (!filterChips.length) return;
+
+  // Handle filter chip clicks
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const filterType = chip.dataset.filterType;
+      const value = chip.dataset.value;
+
+      // Update active state for chips in same group
+      document.querySelectorAll(`[data-filter-type="${filterType}"]`).forEach(c => {
+        c.classList.remove('active');
+      });
+      chip.classList.add('active');
+
+      // Update filter state
+      if (filterType === 'media') {
+        currentMediaFilter = value;
+      } else if (filterType === 'sort') {
+        currentSortOrder = value;
+      }
+
+      // Apply filters
+      applyContentFilters();
+    });
+  });
+
+  function applyContentFilters() {
+    const cards = Array.from(postsContainer.querySelectorAll('.post-card'));
+    
+    // Apply media filter
+    cards.forEach(card => {
+      let show = true;
+      
+      if (currentMediaFilter === 'images') {
+        // Show only posts with images
+        show = card.querySelector('.post-image-grid, .post-media-single.is-image, .photo-thumb, .photo-thumb-cell, .photo-grid') !== null;
+      } else if (currentMediaFilter === 'videos') {
+        // Show only posts with videos
+        show = card.querySelector('.post-media-video, .post-media-single.is-video, .video-thumb, .video-grid') !== null;
+      } else if (currentMediaFilter === 'text') {
+        // Show only text-only posts (no images or videos)
+        show = card.querySelector('.post-image-grid, .post-media-single, .post-media-video, .photo-thumb, .photo-thumb-cell, .photo-grid, .video-thumb, .video-grid, .media-thumb') === null;
+      }
+      
+      card.dataset.filterVisible = show ? 'true' : 'false';
+      card.style.display = show ? '' : 'none';
+    });
+
+    // Apply sort order to visible cards
+    const visibleCards = cards.filter(c => c.dataset.filterVisible === 'true');
+    
+    if (currentSortOrder === 'newest') {
+      // Sort by timestamp descending (newest first)
+      visibleCards.sort((a, b) => {
+        const tsA = parseInt(a.dataset.timestamp || '0', 10);
+        const tsB = parseInt(b.dataset.timestamp || '0', 10);
+        return tsB - tsA; // Descending order
+      });
+    } else if (currentSortOrder === 'oldest') {
+      // Sort by timestamp ascending (oldest first)
+      visibleCards.sort((a, b) => {
+        const tsA = parseInt(a.dataset.timestamp || '0', 10);
+        const tsB = parseInt(b.dataset.timestamp || '0', 10);
+        return tsA - tsB; // Ascending order
+      });
+    } else if (currentSortOrder === 'popular') {
+      // Sort by reaction count descending (most reactions first)
+      visibleCards.sort((a, b) => {
+        const countA = parseInt(a.dataset.reactionCount || '0', 10);
+        const countB = parseInt(b.dataset.reactionCount || '0', 10);
+        return countB - countA; // Descending order
+      });
+    }
+    
+    // Re-append cards in new order
+    visibleCards.forEach(card => postsContainer.appendChild(card));
+    
+    console.log('[Filters] Applied:', { 
+      media: currentMediaFilter, 
+      sort: currentSortOrder,
+      visibleCount: visibleCards.length,
+      totalCount: cards.length
+    });
+  }
+
+  // Make function globally accessible for when new posts load
+  window.applyContentFilters = applyContentFilters;
+})();
+
+// ═══════════════════════════════════════════════════════════════
 // POLL BUILDER (create-post modal toggles)
 // ═══════════════════════════════════════════════════════════════
 (function () {
@@ -2397,6 +3022,15 @@ if (typeof initPTR === 'function') {
       if (inp) { const now = new Date(Date.now() + 60000); inp.min = now.toISOString().slice(0, 16); }
       if (pollArea) { pollArea.style.display = 'none'; pollBtn && pollBtn.classList.remove('active'); }
     }
+  });
+
+  // Story toggle — simple on/off (no panel, just marks the button active)
+  const storyBtn = document.getElementById('storyToggleBtn');
+  storyBtn && storyBtn.addEventListener('click', () => {
+    storyBtn.classList.toggle('active');
+    storyBtn.title = storyBtn.classList.contains('active')
+      ? 'Will also share first photo/video as a Story'
+      : 'Also share as Story';
   });
 
   addOpt && addOpt.addEventListener('click', () => {
@@ -2481,41 +3115,118 @@ function _storyRelTime(ts) {
 
 async function loadStories() {
   if (!boardId || !currentUserId) return;
-  const now  = firebase.firestore.Timestamp.now();
-  const snap = await db.collection('stories')
-    .where('boardId', '==', boardId)
-    .where('expiresAt', '>', now)
-    .orderBy('expiresAt', 'asc')
-    .get();
-  _stories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Show strip immediately so "Your Story" is always available
   renderStoriesStrip();
+  try {
+    // Query by boardId only (no orderBy) — avoids needing a composite index.
+    // Sort and filter expiry client-side.
+    const snap = await db.collection('stories')
+      .where('boardId', '==', boardId)
+      .limit(20)
+      .get();
+    const now = Date.now();
+    _stories = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(s => {
+        const exp = s.expiresAt?.toDate ? s.expiresAt.toDate().getTime() : 0;
+        return exp > now;
+      })
+      .sort((a, b) => {
+        const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return ta - tb; // oldest first so viewer plays in chronological order
+      });
+    renderStoriesStrip();
+  } catch (err) {
+    console.warn('[Stories] Load error (index may be pending):', err.message || err);
+  }
 }
 
 function renderStoriesStrip() {
   const strip  = document.getElementById('storiesStrip');
   const scroll = document.getElementById('storiesScroll');
   if (!strip || !scroll) return;
-  // Remove old story circles (keep the add-story button)
+  // Remove old story cards (keep the add-story button)
   Array.from(scroll.querySelectorAll('.story-circle:not(.story-add-circle)')).forEach(el => el.remove());
-  // Always show strip so user can tap "Your Story"
   strip.style.display = 'block';
+
   _stories.forEach((story, i) => {
-    const seen   = (story.seenBy || []).includes(currentUserId);
-    const circle = document.createElement('div');
-    circle.className = 'story-circle';
-    circle.setAttribute('role', 'button');
-    circle.setAttribute('tabindex', '0');
-    circle.setAttribute('aria-label', `${story.authorName || 'Member'}'s story`);
+    const seen    = (story.seenBy || []).includes(currentUserId);
     const initial = (story.authorName || 'M').charAt(0).toUpperCase();
-    circle.innerHTML = `
-      <div class="story-ring${seen ? ' story-seen' : ''}">
-        <div class="story-avatar-placeholder">${initial}</div>
-      </div>
-      <span class="story-label">${esc((story.authorName || 'Member').split(' ')[0])}</span>
+    const caption = story.caption || '';
+
+    // Background: use story image for image-type, thumbUrl or video preview for video-type
+    let bgHTML = '';
+    if (story.mediaType === 'image' && story.mediaUrl) {
+      bgHTML = `<div class="story-card-bg" style="background-image:url('${story.mediaUrl}')"></div>`;
+    } else if (story.mediaType === 'video') {
+      // Always show video preview for video stories
+      if (story.mediaUrl) {
+        const vidId = `story-vid-${i}`;
+        // Use thumbnail as poster if available for faster load
+        const posterAttr = story.thumbUrl ? `poster="${story.thumbUrl}"` : '';
+        bgHTML = `<video id="${vidId}" class="story-card-bg" src="${story.mediaUrl}" ${posterAttr} muted playsinline loop preload="metadata" style="object-fit:cover;"></video>`;
+      } else {
+        // Fallback if no media URL
+        bgHTML = `<div class="story-card-bg" style="background:linear-gradient(160deg,#1c2b3a 0%,#0d1b2a 100%)"></div>`;
+      }
+    } else {
+      bgHTML = `<div class="story-card-bg" style="background:linear-gradient(160deg,#1c2b3a 0%,#0d1b2a 100%)"></div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = `story-circle${seen ? '' : ' story-unseen'}`;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `${story.authorName || 'Member'}'s story`);
+    card.innerHTML = `
+      ${bgHTML}
+      <div class="story-card-overlay"></div>
+      <div class="story-card-avatar">${initial}</div>
+      <div class="story-label"><span class="story-label-inner">${esc(caption)}</span></div>
     `;
-    circle.addEventListener('click', () => openStoryViewer(i));
-    circle.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openStoryViewer(i); });
-    scroll.appendChild(circle);
+    
+    // Start video playback after adding to DOM (for all videos)
+    if (story.mediaType === 'video' && story.mediaUrl) {
+      setTimeout(() => {
+        const vidEl = card.querySelector('video.story-card-bg');
+        if (vidEl) {
+          vidEl.load();
+          vidEl.play().catch((err) => {
+            // Autoplay blocked - video will show poster/first frame
+            console.log('[Story] Video autoplay blocked for story', story.id, err.message);
+          });
+          // Add error handler to show fallback if video fails to load
+          vidEl.addEventListener('error', () => {
+            console.warn('[Story] Video load error for story', story.id);
+            // If video fails and no poster, show gradient fallback
+            if (!story.thumbUrl) {
+              const fallback = document.createElement('div');
+              fallback.className = 'story-card-bg';
+              fallback.style.background = 'linear-gradient(160deg,#1c2b3a 0%,#0d1b2a 100%)';
+              vidEl.parentNode.replaceChild(fallback, vidEl);
+            }
+          });
+        }
+      }, 100);
+    }
+    
+    // Apply marquee only if caption overflows the card width
+    if (caption) {
+      requestAnimationFrame(() => {
+        const label = card.querySelector('.story-label');
+        const inner = card.querySelector('.story-label-inner');
+        if (!label || !inner) return;
+        const overflow = inner.scrollWidth - label.clientWidth;
+        if (overflow > 4) {
+          inner.style.setProperty('--slide-dist', `-${overflow + 6}px`);
+          inner.style.animation = `story-marquee 4s ease-in-out ${Math.random() * 0.5}s infinite alternate`;
+        }
+      });
+    }
+    card.addEventListener('click', () => openStoryViewer(i));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openStoryViewer(i); });
+    scroll.appendChild(card);
   });
 }
 
@@ -2547,16 +3258,31 @@ function _renderStory() {
   document.getElementById('storyAuthorAvatar').textContent = (story.authorName || 'M').charAt(0).toUpperCase();
   document.getElementById('storyCaption').textContent = story.caption || '';
 
+  // Show/hide delete button based on ownership or admin status
+  const deleteBtn = document.getElementById('storyDeleteBtn');
+  const canDelete = story.authorId === currentUserId || currentIsAdmin;
+  if (deleteBtn) deleteBtn.style.display = canDelete ? 'block' : 'none';
+
   const img = document.getElementById('storyImg');
   const vid = document.getElementById('storyVideo');
-  if (story.mediaType === 'video') {
+  if (story.mediaType === 'video' && story.mediaUrl) {
     img.style.display = 'none';
     vid.src = story.mediaUrl;
+    // Set poster if thumbnail available for faster initial display
+    if (story.thumbUrl) {
+      vid.poster = story.thumbUrl;
+    }
     vid.style.display = 'block';
-    vid.load(); vid.play().catch(() => {});
+    vid.load();
+    vid.play().catch((err) => {
+      console.warn('[StoryViewer] Video play failed:', err.message);
+      // Show controls if autoplay fails so user can manually play
+      vid.setAttribute('controls', 'controls');
+    });
   } else {
-    vid.pause(); vid.style.display = 'none';
-    img.src = story.mediaUrl;
+    vid.pause();
+    vid.style.display = 'none';
+    img.src = story.mediaUrl || '';
     img.style.display = 'block';
   }
 
@@ -2566,9 +3292,9 @@ function _renderStory() {
     `<div class="story-progress-bar"><div class="story-progress-fill" id="spf-${i}" style="width:${i < _storyIdx ? '100%' : '0%'}"></div></div>`
   ).join('');
 
-  // Nav visibility
-  document.getElementById('storyNavPrev').style.visibility = _storyIdx > 0 ? 'visible' : 'hidden';
-  document.getElementById('storyNavNext').style.visibility = _storyIdx < _stories.length - 1 ? 'visible' : 'hidden';
+  // Nav visibility — tap zones: show/hide handled by pointer-events
+  document.getElementById('storyNavPrev').style.pointerEvents = _storyIdx > 0 ? 'auto' : 'none';
+  document.getElementById('storyNavNext').style.pointerEvents = _storyIdx < _stories.length - 1 ? 'auto' : 'none';
 
   // Auto-advance
   clearTimeout(_storyTimer);
@@ -2612,6 +3338,30 @@ function closeStoryViewer() {
   document.getElementById('storyCloseBtn')?.addEventListener('click', closeStoryViewer);
   document.getElementById('storyNavPrev')?.addEventListener('click', _storyPrev);
   document.getElementById('storyNavNext')?.addEventListener('click', _storyNext);
+  // Delete story handler
+  document.getElementById('storyDeleteBtn')?.addEventListener('click', async () => {
+    const story = _stories[_storyIdx];
+    if (!story) return;
+    const canDelete = story.authorId === currentUserId || currentIsAdmin;
+    if (!canDelete) return;
+    
+    if (!confirm('Delete this story? This cannot be undone.')) return;
+    
+    try {
+      await db.collection('stories').doc(story.id).delete();
+      _stories.splice(_storyIdx, 1);
+      if (_stories.length === 0) {
+        closeStoryViewer();
+        renderStoriesStrip();
+      } else {
+        if (_storyIdx >= _stories.length) _storyIdx = _stories.length - 1;
+        _renderStory();
+        renderStoriesStrip();
+      }
+    } catch (err) {
+      alert('Failed to delete story: ' + err.message);
+    }
+  });
   document.getElementById('storyViewer')?.addEventListener('keydown', e => {
     if (e.key === 'Escape')     closeStoryViewer();
     if (e.key === 'ArrowLeft')  _storyPrev();
@@ -2679,11 +3429,27 @@ function closeStoryViewer() {
     submitBtn.textContent = 'Sharing\u2026';
     try {
       const user = getCurrentUser();
-      let mediaUrl, mediaType;
+      let mediaUrl, mediaType, thumbUrl = null;
       if (_file.type.startsWith('image/')) {
-        mediaUrl = await uploadImage(_file, user.uid); mediaType = 'image';
+        mediaUrl = await uploadImage(_file, user.uid); 
+        mediaType = 'image';
       } else {
-        mediaUrl = await uploadVideo(_file, user.uid);  mediaType = 'video';
+        // Video: upload video + generate & upload thumbnail
+        mediaType = 'video';
+        // Always try to generate thumbnail for videos
+        const thumbBlob = await generateVideoThumbnail(_file).catch((err) => {
+          console.warn('[Story] Thumbnail generation failed:', err.message);
+          return null;
+        });
+        mediaUrl = await uploadVideo(_file, user.uid);  
+        if (thumbBlob) {
+          thumbUrl = await uploadImage(thumbBlob, user.uid).catch((err) => {
+            console.warn('[Story] Thumbnail upload failed:', err.message);
+            return null;
+          });
+        }
+        // Log for debugging
+        console.log('[Story] Video uploaded with thumbnail:', !!thumbUrl);
       }
       const now     = firebase.firestore.Timestamp.now();
       const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
@@ -2692,6 +3458,7 @@ function closeStoryViewer() {
         authorId:   currentUserId,
         authorName: currentUserData.name || user.displayName || 'Member',
         mediaUrl, mediaType,
+        thumbUrl: thumbUrl || null,
         caption:    capInp?.value.trim() || '',
         createdAt:  now,
         expiresAt:  expires,

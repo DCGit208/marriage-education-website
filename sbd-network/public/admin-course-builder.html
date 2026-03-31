@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Builder | SBD Admin</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/components.css">
+    
+    <style>
+        /* Admin Course Builder Styles */
+        .admin-page {
+            min-height: 100vh;
+            padding: 20px;
+            background: #0a0f1e;
+        }
+        
+        .admin-header {
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .admin-header h1 {
+            font-size: 28px;
+            color: #fff;
+        }
+        
+        .admin-header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+        
+        /* Sidebar */
+        .admin-sidebar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+        
+        .sidebar-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .sidebar-item.active {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+        
+        /* Main Content */
+        .admin-main {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 32px;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .content-header h2 {
+            font-size: 24px;
+            color: #fff;
+        }
+        
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .form-grid.single {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-required {
+            color: #ff5555;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-help {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 6px;
+        }
+        
+        /* Module List */
+        .module-list {
+            margin-top: 32px;
+        }
+        
+        .module-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .module-card:hover {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .module-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .module-meta {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            gap: 16px;
+        }
+        
+        /* Buttons */
+        .btn {
+            background: rgba(0, 204, 255, 0.2);
+            color: #00ccff;
+            border: 2px solid rgba(0, 204, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: rgba(0, 204, 255, 0.3);
+            border-color: #00ccff;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #000;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #00ffaa 0%, #00ddff 100%);
+        }
+        
+        .btn-danger {
+            background: rgba(255, 85, 85, 0.2);
+            color: #ff5555;
+            border-color: rgba(255, 85, 85, 0.3);
+        }
+        
+        .btn-danger:hover {
+            background: rgba(255, 85, 85, 0.3);
+            border-color: #ff5555;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .admin-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-sidebar {
+                position: static;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="admin-page">
+
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <h1>📚 Course Builder</h1>
+        <div class="admin-header-actions">
+            <a href="/admin.html" class="btn">← Back to Admin</a>
+            <a href="/dashboard.html" class="btn">← Exit to App</a>
+        </div>
+    </div>
+    
+    <!-- Admin Container -->
+    <div class="admin-container">
+        
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <h3>Navigation</h3>
+                <ul class="sidebar-list">
+                    <li class="sidebar-item active" onclick="showView('courses')">
+                        <span>📚 Courses</span>
+                        <span id="courseCount">0</span>
+                    </li>
+                    <li class="sidebar-item" onclick="showView('modules')">
+                        <span>📖 Modules</span>
+                        <span id="moduleCount">0</span>
+                    </li>
+                    <li class="sidebar-item" onclick="showView('quizzes')">
+                        <span>❓ Quizzes</span>
+                        <span id="quizCount">0</span>
+                    </li>
+                    <li class="sidebar-item" onclick="showView('assignments')">
+                        <span>📝 Assignments</span>
+                        <span id="assignmentCount">0</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Quick Actions</h3>
+                <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="showCreateCourseForm()">
+                    ➕ New Course
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-main">
+            
+            <!-- Courses View -->
+            <div id="coursesView">
+                <div class="content-header">
+                    <h2>All Courses</h2>
+                    <button class="btn btn-primary" onclick="showCreateCourseForm()">
+                        ➕ Create Course
+                    </button>
+                </div>
+                
+                <!-- Course List -->
+                <div id="courseList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <h3>No Courses Yet</h3>
+                        <p>Create your first course to get started</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Create Course Form (hidden initially) -->
+            <div id="createCourseForm" style="display: none;">
+                <div class="content-header">
+                    <h2>Create New Course</h2>
+                    <button class="btn" onclick="hideCreateCourseForm()">Cancel</button>
+                </div>
+                
+                <form onsubmit="createCourse(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Course Title
+                                <span class="form-required">*</span>
+                            </label>
+                            <input type="text" class="form-input" id="courseTitle" required placeholder="e.g., Teleios Identity">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                School
+                                <span class="form-required">*</span>
+                            </label>
+                            <select class="form-select" id="courseSchool" required>
+                                <option value="">Select School...</option>
+                                <option value="teleios-identity">Teleios Identity School</option>
+                                <option value="sexual-literacy">Sexual Literacy School</option>
+                                <option value="generational-impact">Generational Impact School</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid single">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="courseDescription" placeholder="Describe what students will learn in this course..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Required Tier
+                                <span class="form-required">*</span>
+                            </label>
+                            <select class="form-select" id="courseTier" required>
+                                <option value="free">Free</option>
+                                <option value="foundation">Foundation ($9/mo)</option>
+                                <option value="premium">Premium ($20/mo)</option>
+                                <option value="elite">Elite ($50/mo)</option>
+                            </select>
+                            <div class="form-help">Who can access this course?</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Duration (weeks)</label>
+                            <input type="number" class="form-input" id="courseDuration" min="1" placeholder="e.g., 4">
+                            <div class="form-help">How many weeks to complete?</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 32px; display: flex; gap: 12px;">
+                        <button type="submit" class="btn btn-primary">Create Course</button>
+                        <button type="button" class="btn" onclick="hideCreateCourseForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Edit Course View (hidden initially) -->
+            <div id="editCourseView" style="display: none;">
+                <div class="content-header">
+                    <h2 id="editCourseTitle">Edit Course</h2>
+                    <button class="btn" onclick="backToCourseList()">← Back to Courses</button>
+                </div>
+                
+                <!-- Course Details -->
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 24px; border-radius: 10px; margin-bottom: 32px;">
+                    <h3 style="font-size: 20px; color: #00ff88; margin-bottom: 16px;">Course Details</h3>
+                    <div id="courseDetails"></div>
+                </div>
+                
+                <!-- Modules Section -->
+                <div>
+                    <div class="content-header" style="border: none; padding-bottom: 0;">
+                        <h2>Modules</h2>
+                        <button class="btn btn-primary" onclick="showAddModuleForm()">
+                            ➕ Add Module
+                        </button>
+                    </div>
+                    
+                    <div id="moduleList" class="module-list">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📖</div>
+                            <h3>No Modules Yet</h3>
+                            <p>Add your first module to structure this course</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+        
+    </div>
+    
+    <!-- Firebase Config -->
+    <script src="/js/firebase-config.js"></script>
+    
+    <script>
+        // Simple admin course builder logic
+        let currentView = 'courses';
+        let currentCourseId = null;
+        
+        // Auth check
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = '/index.html';
+            } else {
+                loadCourses();
+            }
+        });
+        
+        // Show View
+        function showView(view) {
+            currentView = view;
+            // Update sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.sidebar-item').classList.add('active');
+            // TODO: Load view-specific content
+        }
+        
+        // Show Create Course Form
+        function showCreateCourseForm() {
+            document.getElementById('coursesView').style.display = 'none';
+            document.getElementById('createCourseForm').style.display = 'block';
+        }
+        
+        // Hide Create Course Form
+        function hideCreateCourseForm() {
+            document.getElementById('createCourseForm').style.display = 'none';
+            document.getElementById('coursesView').style.display = 'block';
+        }
+        
+        // Create Course
+        async function createCourse(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('courseTitle').value;
+            const school = document.getElementById('courseSchool').value;
+            const description = document.getElementById('courseDescription').value;
+            const tier = document.getElementById('courseTier').value;
+            const duration = document.getElementById('courseDuration').value;
+            
+            try {
+                await db.collection('courses').add({
+                    title,
+                    schoolId: school,
+                    description,
+                    requiredTier: tier,
+                    durationWeeks: parseInt(duration) || 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: firebase.auth().currentUser.uid
+                });
+                
+                alert('✅ Course created successfully!');
+                hideCreateCourseForm();
+                loadCourses();
+                
+            } catch (error) {
+                console.error('Error creating course:', error);
+                alert('Error creating course. See console.');
+            }
+        }
+        
+        // Load Courses
+        async function loadCourses() {
+            try {
+                const snapshot = await db.collection('courses').orderBy('createdAt', 'desc').get();
+                
+                const courseList = document.getElementById('courseList');
+                
+                if (snapshot.empty) {
+                    courseList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📚</div>
+                            <h3>No Courses Yet</h3>
+                            <p>Create your first course to get started</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                courseList.innerHTML = '';
+                
+                snapshot.docs.forEach(doc => {
+                    const course = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'module-card';
+                    card.innerHTML = `
+                        <div class="module-header">
+                            <div class="module-title">${course.title}</div>
+                            <div class="module-actions">
+                                <button class="btn btn-sm" onclick="editCourse('${doc.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCourse('${doc.id}')">Delete</button>
+                            </div>
+                        </div>
+                        <div class="module-meta">
+                            <span>🏫 ${course.schoolId || 'No School'}</span>
+                            <span>🔒 ${course.requiredTier || 'free'}</span>
+                            <span>⏱️ ${course.durationWeeks || 0} weeks</span>
+                        </div>
+                    `;
+                    courseList.appendChild(card);
+                });
+                
+                document.getElementById('courseCount').textContent = snapshot.size;
+                
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+        
+        // Edit Course
+        function editCourse(courseId) {
+            currentCourseId = courseId;
+            document.getElementById('coursesView').style.display = 'none';
+            document.getElementById('editCourseView').style.display = 'block';
+            loadCourseDetails(courseId);
+        }
+        
+        // Load Course Details
+        async function loadCourseDetails(courseId) {
+            try {
+                const doc = await db.collection('courses').doc(courseId).get();
+                const course = doc.data();
+                
+                document.getElementById('editCourseTitle').textContent = course.title;
+                
+                const details = document.getElementById('courseDetails');
+                details.innerHTML = `
+                    <p><strong>School:</strong> ${course.schoolId || 'Not set'}</p>
+                    <p><strong>Required Tier:</strong> ${course.requiredTier || 'free'}</p>
+                    <p><strong>Duration:</strong> ${course.durationWeeks || 0} weeks</p>
+                    <p><strong>Description:</strong> ${course.description || 'No description'}</p>
+                `;
+                
+                // Load modules for this course
+                loadModulesForCourse(courseId);
+                
+            } catch (error) {
+                console.error('Error loading course:', error);
+            }
+        }
+        
+        // Load Modules for Course
+        async function loadModulesForCourse(courseId) {
+            // TODO: Implement module loading
+            const moduleList = document.getElementById('moduleList');
+            moduleList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📖</div>
+                    <h3>No Modules Yet</h3>
+                    <p>Add your first module to structure this course</p>
+                </div>
+            `;
+        }
+        
+        // Back to Course List
+        function backToCourseList() {
+            currentCourseId = null;
+            document.getElementById('editCourseView').style.display = 'none';
+            document.getElementById('coursesView').style.display = 'block';
+        }
+        
+        // Delete Course
+        async function deleteCourse(courseId) {
+            if (!confirm('Are you sure you want to delete this course?')) return;
+            
+            try {
+                await db.collection('courses').doc(courseId).delete();
+                alert('Course deleted');
+                loadCourses();
+            } catch (error) {
+                console.error('Error deleting:', error);
+                alert('Error deleting course');
+            }
+        }
+    </script>
+</body>
+</html>

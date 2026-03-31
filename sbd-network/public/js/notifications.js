@@ -30,22 +30,34 @@ async function initNotifications(userId) {
 // ── Real-time unread count + foreground toast ─────────────────────
 function _startUnreadListener(userId) {
   if (_unsubNotif) { _unsubNotif(); _unsubNotif = null; }
-  let first = true;
-  _unsubNotif = db.collection('notifications')
-    .where('userId', '==', userId)
-    .where('read', '==', false)
-    .onSnapshot(snap => {
-      _setBadge(snap.size);
-      // On subsequent snapshots (not the initial load), show a toast for each new doc
-      if (!first) {
-        snap.docChanges().forEach(change => {
-          if (change.type === 'added') _showNotifToast(change.doc.data());
-        });
-      }
-      first = false;
-    }, err => {
-      console.error('[Notifications] Unread listener failed:', err);
-    });
+  
+  // Wait for auth to be fully ready before starting listener
+  const startListener = () => {
+    let first = true;
+    _unsubNotif = db.collection('notifications')
+      .where('userId', '==', userId)
+      .where('read', '==', false)
+      .onSnapshot(snap => {
+        _setBadge(snap.size);
+        // On subsequent snapshots (not the initial load), show a toast for each new doc
+        if (!first) {
+          snap.docChanges().forEach(change => {
+            if (change.type === 'added') _showNotifToast(change.doc.data());
+          });
+        }
+        first = false;
+      }, err => {
+        console.error('[Notifications] Unread listener failed:', err);
+        // If permission denied, user might not be fully authenticated yet - retry once
+        if (err.code === 'permission-denied') {
+          console.log('[Notifications] Retrying listener in 1s...');
+          setTimeout(() => startListener(), 1000);
+        }
+      });
+  };
+  
+  // Small delay to ensure auth token is propagated
+  setTimeout(startListener, 500);
 }
 
 function _showNotifToast(n) {
@@ -191,10 +203,11 @@ function _renderFromSnap(snap, list) {
       li.addEventListener('click', () => {
         closeNotifPanel();
         let url = `board.html?boardId=${encodeURIComponent(n.boardId)}`;
+        if (n.postId) {
+          url += `&post=${encodeURIComponent(n.postId)}`;
+        }
         if (n.commentId) {
           url += `&comment=${encodeURIComponent(n.commentId)}`;
-        } else if (n.postId) {
-          url += `&post=${encodeURIComponent(n.postId)}`;
         }
         window.location.href = url;
       });
