@@ -1,0 +1,228 @@
+/* Tier Page Styles */
+
+/* Tier Header */
+.tier-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem 1.5rem;
+  position: relative;
+}
+
+.back-btn {
+  display: inline-block;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.back-btn:hover {
+  opacity: 1;
+}
+
+.tier-hero {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.tier-hero-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.tier-hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.tier-hero p {
+  font-size: 1.1rem;
+  opacity: 0.95;
+}
+
+.tier-progress-summary {
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Tier Description Section */
+.tier-description-section {
+  padding: 1.5rem;
+  background: white;
+}
+
+.tier-description-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.tier-description-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.tier-description-card p {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.tier-access-details {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.access-detail-item {
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  border-left: 3px solid #667eea;
+}
+
+/* Tier Schools Section */
+.tier-schools-section {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  min-height: 50vh;
+}
+
+.tier-schools-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+/* School Cards (inside tier view) */
+.school-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.school-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.school-card.locked {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.school-card.partial {
+  border-left: 3px solid #ffc107;
+}
+
+.school-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.school-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.school-info h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.school-desc {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* School Status Indicators */
+.school-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.school-status.in-progress {
+  background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+  color: white;
+}
+
+.school-status.locked {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+}
+
+.school-status.partial {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  color: white;
+}
+
+.school-status.full {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.status-text {
+  flex: 1;
+}
+
+.btn-explore {
+  width: 100%;
+  padding: 0.75rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-explore:hover:not(:disabled) {
+  background: #764ba2;
+}
+
+.btn-explore:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Responsive */
+.schools-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .schools-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .schools-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
