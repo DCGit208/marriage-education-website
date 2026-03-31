@@ -118,14 +118,14 @@
   transition: width 0.3s ease;
 }
 
-/* Schools Section */
-.schools-section {
+/* Tiers Section */
+.tiers-section {
   padding: 1.5rem;
   background: #f8f9fa;
   min-height: 50vh;
 }
 
-.schools-section h2 {
+.tiers-section h2 {
   font-size: 1.3rem;
   margin-bottom: 0.5rem;
   color: #333;
@@ -137,9 +137,118 @@
   margin-bottom: 1.5rem;
 }
 
-.schools-grid {
+.tiers-grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+/* Tier Card */
+.tier-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align: center;
+  position: relative;
+}
+
+.tier-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.tier-card.active {
+  border: 2px solid #667eea;
+}
+
+.tier-card.locked {
+  opacity: 0.85;
+}
+
+.tier-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.tier-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.tier-tagline {
+  font-size: 1rem;
+  color: #667eea;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.tier-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.tier-description {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.tier-access-info {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.tier-access-info small {
+  font-size: 0.8rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.current-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+.btn-tier-action {
+  width: 100%;
+  padding: 1rem;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn-tier-action:hover {
+  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+/* Schools Section (kept for backwards compatibility but hidden on learn.html) */
+.schools-section {
+  display: none;
 }
 
 /* School Card */
@@ -254,12 +363,20 @@
 
 /* Responsive */
 @media (min-width: 768px) {
+  .tiers-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
   .schools-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (min-width: 1200px) {
+  .tiers-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
   .schools-grid {
     grid-template-columns: repeat(4, 1fr);
   }

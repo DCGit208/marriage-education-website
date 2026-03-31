@@ -123,157 +123,134 @@ function continueModule() {
 }
 
 async function loadSchools() {
+  // TIER-BASED MODEL: Load tiers instead of schools
+  loadTiers();
+}
+
+async function loadTiers() {
   try {
-    const schoolsSnapshot = await firebase.firestore()
-      .collection('schools')
-      .orderBy('order', 'asc')
-      .get();
+    const tiersGrid = document.getElementById('tiersGrid');
+    tiersGrid.innerHTML = '';
     
-    const schoolsGrid = document.getElementById('schoolsGrid');
-    schoolsGrid.innerHTML = '';
+    // Define tier structure
+    const tiers = [
+      {
+        id: 'foundation',
+        name: 'Foundation',
+        tagline: 'Start Your Journey',
+        description: 'Begin formation with essential modules across all schools',
+        price: '$9/month',
+        icon: '🟢',
+        color: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+        access: 'Partial access to Teleios, Sexual Literacy, Marriage Systems intro, Civilization preview'
+      },
+      {
+        id: 'premium',
+        name: 'Premium',
+        tagline: 'Unlock Full System',
+        description: 'Complete access to all 44 courses across all schools',
+        price: '$20/month',
+        icon: '🔵',
+        color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        access: 'Full access to all schools'
+      },
+      {
+        id: 'elite',
+        name: 'Elite',
+        tagline: 'Embody & Express',
+        description: 'Mastery + MV House + Advanced boards + Expression system',
+        price: '$50/month',
+        icon: '🔴',
+        color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        access: 'Everything + MV House + Advanced features'
+      }
+    ];
     
-    for (const doc of schoolsSnapshot.docs) {
-      const school = doc.data();
-      const schoolCard = await createSchoolCard(school);
-      schoolsGrid.appendChild(schoolCard);
+    for (const tier of tiers) {
+      const tierCard = createTierCard(tier);
+      tiersGrid.appendChild(tierCard);
     }
   } catch (error) {
-    console.error('Error loading schools:', error);
-    const schoolsGrid = document.getElementById('schoolsGrid');
-    schoolsGrid.innerHTML = `
+    console.error('Error loading tiers:', error);
+    const tiersGrid = document.getElementById('tiersGrid');
+    tiersGrid.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #666;">
-        Error loading schools. Please refresh the page.
+        Error loading tiers. Please refresh the page.
       </div>
     `;
   }
 }
 
-async function createSchoolCard(school) {
+function createTierCard(tier) {
   const card = document.createElement('div');
-  card.className = 'school-card';
+  card.className = 'tier-card';
   
-  // Check if user has ANY access to this school (even partial)
-  const accessLevel = getSchoolAccessLevel(school.id, userTier);
-  
-  // Check if user has any progress in this school
-  const hasProgress = await checkSchoolProgress(school.id);
-  
-  // Build status indicator
-  let statusHTML = '';
-  if (hasProgress.inProgress) {
-    statusHTML = `
-      <div class="school-status in-progress">
-        <span class="status-icon">✔</span>
-        <span class="status-text">In Progress</span>
-      </div>
-    `;
-  } else if (accessLevel === 'LOCKED') {
-    statusHTML = `
-      <div class="school-status locked">
-        <span class="status-icon">🔒</span>
-        <span class="status-text">Unlock with ${school.unlockTier || 'Premium'}</span>
-      </div>
-    `;
-  } else if (accessLevel === 'PARTIAL') {
-    statusHTML = `
-      <div class="school-status partial">
-        <span class="status-icon">🔓</span>
-        <span class="status-text">Limited access - upgrade for full</span>
-      </div>
-    `;
-  } else {
-    statusHTML = `
-      <div class="school-status full">
-        <span class="status-icon">✨</span>
-        <span class="status-text">Full access</span>
-      </div>
-    `;
-  }
+  // Check if user has access to this tier
+  const hasAccess = checkTierAccess(tier.id, userTier);
+  const isCurrentTier = userTier === tier.id;
   
   card.innerHTML = `
-    <div class="school-header">
-      <div class="school-icon">${school.icon || '🏛️'}</div>
-      <div class="school-info">
-        <h3>${school.name}</h3>
-        <p class="school-desc">${school.description}</p>
-      </div>
+    <div class="tier-icon">${tier.icon}</div>
+    <h3 class="tier-name">${tier.name}</h3>
+    <p class="tier-tagline">${tier.tagline}</p>
+    <p class="tier-price">${tier.price}</p>
+    <p class="tier-description">${tier.description}</p>
+    
+    <div class="tier-access-info">
+      <small>${tier.access}</small>
     </div>
     
-    ${statusHTML}
+    ${isCurrentTier ? `
+      <div class="current-tier-badge">
+        <span class="badge-icon">✓</span> Your current plan
+      </div>
+    ` : ''}
     
-    <button class="btn-explore" onclick="exploreSchool('${school.id}')" 
-            data-access="${accessLevel}">
-      ${hasProgress.inProgress ? '▶ Continue' : 
-        accessLevel === 'LOCKED' ? 'View Preview' : 
-        'Begin Journey'}
+    <button class="btn-tier-action" 
+            style="background: ${tier.color}"
+            onclick="enterTier('${tier.id}')"
+            data-has-access="${hasAccess}">
+      ${hasAccess ? '▶ Enter' : '🔒 Upgrade to ' + tier.name}
     </button>
   `;
   
-  if (accessLevel === 'LOCKED') {
+  if (!hasAccess && !isCurrentTier) {
     card.classList.add('locked');
-  } else if (accessLevel === 'PARTIAL') {
-    card.classList.add('partial');
+  }
+  
+  if (isCurrentTier) {
+    card.classList.add('active');
   }
   
   return card;
 }
 
-// Get access level: 'FULL', 'PARTIAL', 'LOCKED'
-function getSchoolAccessLevel(schoolId, tier) {
-  // School-specific access rules
-  const schoolRules = {
-    'school-1-teleios': {
-      free: 'PARTIAL',      // Intro only
-      foundation: 'PARTIAL', // First modules
-      premium: 'FULL',
-      elite: 'FULL'
-    },
-    'school-2-sexual-literacy': {
-      free: 'PARTIAL',      // Intro only
-      foundation: 'PARTIAL', // 20-30%
-      premium: 'FULL',
-      elite: 'FULL'
-    },
-    'school-3-marriage-systems': {
-      free: 'LOCKED',        // Hidden/teaser
-      foundation: 'PARTIAL', // Intro only
-      premium: 'FULL',
-      elite: 'FULL'
-    },
-    'school-4-civilization-leadership': {
-      free: 'LOCKED',        // Teaser
-      foundation: 'PARTIAL', // Teaser
-      premium: 'FULL',
-      elite: 'FULL'
-    }
-  };
+function checkTierAccess(tier, userCurrentTier) {
+  const tierHierarchy = { free: 0, foundation: 1, premium: 2, elite: 3 };
   
-  const rule = schoolRules[schoolId];
-  if (!rule) return 'LOCKED';
+  // Free users can't access any paid tier
+  if (userCurrentTier === 'free') return false;
   
-  return rule[tier] || 'LOCKED';
+  // Check if user's tier is >= tier being checked
+  return tierHierarchy[userCurrentTier] >= tierHierarchy[tier];
 }
 
-async function checkSchoolProgress(schoolId) {
-  try {
-    // Check if any courses in this school are in progress
-    const coursesSnapshot = await firebase.firestore()
-      .collection('courses')
-      .where('schoolId', '==', schoolId)
-      .get();
-    
-    for (const courseDoc of coursesSnapshot.docs) {
-      const courseId = courseDoc.id;
-      if (enrolledCourses.includes(courseId)) {
-        return { inProgress: true, courseId };
-      }
-    }
-    
-    return { inProgress: false };
-  } catch (error) {
-    console.error('Error checking school progress:', error);
-    return { inProgress: false };
+function enterTier(tierId) {
+  const hasAccess = checkTierAccess(tierId, userTier);
+  const isCurrentTier = userTier === tierId;
+  
+  if (hasAccess || isCurrentTier) {
+    // User has access - enter tier view
+    window.location.href = `/tier.html?tier=${tierId}`;
+  } else {
+    // User needs to upgrade - show upgrade modal
+    showUpgradeModal(tierId);
   }
+}
+
+function showUpgradeModal(targetTier) {
+  // Redirect to payment/upgrade page
+  window.location.href = `/upgrade.html?tier=${targetTier}`;
 }
 
 function exploreSchool(schoolId) {
