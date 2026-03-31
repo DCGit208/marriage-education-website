@@ -152,16 +152,43 @@ async function createSchoolCard(school) {
   const card = document.createElement('div');
   card.className = 'school-card';
   
-  // Check if user has access to this school
-  const hasAccess = checkSchoolAccess(school.id, userTier);
+  // Check if user has ANY access to this school (even partial)
+  const accessLevel = getSchoolAccessLevel(school.id, userTier);
   
-  // Get courses for this school
-  const coursesSnapshot = await firebase.firestore()
-    .collection('courses')
-    .where('schoolId', '==', school.id)
-    .get();
+  // Check if user has any progress in this school
+  const hasProgress = await checkSchoolProgress(school.id);
   
-  const courseCount = coursesSnapshot.size;
+  // Build status indicator
+  let statusHTML = '';
+  if (hasProgress.inProgress) {
+    statusHTML = `
+      <div class="school-status in-progress">
+        <span class="status-icon">✔</span>
+        <span class="status-text">In Progress</span>
+      </div>
+    `;
+  } else if (accessLevel === 'LOCKED') {
+    statusHTML = `
+      <div class="school-status locked">
+        <span class="status-icon">🔒</span>
+        <span class="status-text">Unlock with ${school.unlockTier || 'Premium'}</span>
+      </div>
+    `;
+  } else if (accessLevel === 'PARTIAL') {
+    statusHTML = `
+      <div class="school-status partial">
+        <span class="status-icon">🔓</span>
+        <span class="status-text">Limited access - upgrade for full</span>
+      </div>
+    `;
+  } else {
+    statusHTML = `
+      <div class="school-status full">
+        <span class="status-icon">✨</span>
+        <span class="status-text">Full access</span>
+      </div>
+    `;
+  }
   
   card.innerHTML = `
     <div class="school-header">
@@ -172,44 +199,81 @@ async function createSchoolCard(school) {
       </div>
     </div>
     
-    <div class="school-meta">
-      <span class="course-count">${courseCount} courses</span>
-      <span class="school-value">$${school.portfolioValue.toLocaleString()} value</span>
-    </div>
+    ${statusHTML}
     
-    ${!hasAccess ? `
-      <div class="lock-badge">
-        🔒 ${school.unlockTier === 'foundation' ? 'Foundation' : 
-             school.unlockTier === 'premium' ? 'Premium' : 
-             school.unlockTier === 'elite' ? 'Elite' : 'Premium'} Required
-      </div>
-    ` : ''}
-    
-    <button class="btn-explore" onclick="exploreSchool('${school.id}')">
-      ${hasAccess ? 'Explore Courses' : 'View Curriculum'}
+    <button class="btn-explore" onclick="exploreSchool('${school.id}')" 
+            data-access="${accessLevel}">
+      ${hasProgress.inProgress ? '▶ Continue' : 
+        accessLevel === 'LOCKED' ? 'View Preview' : 
+        'Begin Journey'}
     </button>
   `;
   
-  if (!hasAccess) {
+  if (accessLevel === 'LOCKED') {
     card.classList.add('locked');
+  } else if (accessLevel === 'PARTIAL') {
+    card.classList.add('partial');
   }
   
   return card;
 }
 
-function checkSchoolAccess(schoolId, tier) {
-  const tierHierarchy = { free: 0, foundation: 1, premium: 2, elite: 3 };
-  
-  // School access mapping (from Phase 0 database)
-  const schoolAccessMap = {
-    'school-1-teleios': 'free',        // Foundation School - always accessible
-    'school-2-sexual-literacy': 'foundation', // Requires Foundation+
-    'school-3-marriage-systems': 'premium',   // Requires Premium+
-    'school-4-civilization-leadership': 'premium' // Requires Premium+
+// Get access level: 'FULL', 'PARTIAL', 'LOCKED'
+function getSchoolAccessLevel(schoolId, tier) {
+  // School-specific access rules
+  const schoolRules = {
+    'school-1-teleios': {
+      free: 'PARTIAL',      // Intro only
+      foundation: 'PARTIAL', // First modules
+      premium: 'FULL',
+      elite: 'FULL'
+    },
+    'school-2-sexual-literacy': {
+      free: 'PARTIAL',      // Intro only
+      foundation: 'PARTIAL', // 20-30%
+      premium: 'FULL',
+      elite: 'FULL'
+    },
+    'school-3-marriage-systems': {
+      free: 'LOCKED',        // Hidden/teaser
+      foundation: 'PARTIAL', // Intro only
+      premium: 'FULL',
+      elite: 'FULL'
+    },
+    'school-4-civilization-leadership': {
+      free: 'LOCKED',        // Teaser
+      foundation: 'PARTIAL', // Teaser
+      premium: 'FULL',
+      elite: 'FULL'
+    }
   };
   
-  const requiredTier = schoolAccessMap[schoolId] || 'premium';
-  return tierHierarchy[tier] >= tierHierarchy[requiredTier];
+  const rule = schoolRules[schoolId];
+  if (!rule) return 'LOCKED';
+  
+  return rule[tier] || 'LOCKED';
+}
+
+async function checkSchoolProgress(schoolId) {
+  try {
+    // Check if any courses in this school are in progress
+    const coursesSnapshot = await firebase.firestore()
+      .collection('courses')
+      .where('schoolId', '==', schoolId)
+      .get();
+    
+    for (const courseDoc of coursesSnapshot.docs) {
+      const courseId = courseDoc.id;
+      if (enrolledCourses.includes(courseId)) {
+        return { inProgress: true, courseId };
+      }
+    }
+    
+    return { inProgress: false };
+  } catch (error) {
+    console.error('Error checking school progress:', error);
+    return { inProgress: false };
+  }
 }
 
 function exploreSchool(schoolId) {
