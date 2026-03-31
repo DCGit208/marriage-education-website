@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Preview Demo | SBD Network</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/video-preview.css">
+    <link rel="stylesheet" href="/css/paywall.css">
+</head>
+<body>
+
+    <div class="video-lesson-container">
+        
+        <!-- Lesson Header -->
+        <div class="lesson-info">
+            <div class="lesson-header">
+                <h1 class="lesson-title">Understanding Covenant Marriage</h1>
+                <div class="lesson-meta">
+                    <div class="lesson-meta-item">
+                        <span>⏱️</span>
+                        <span>45 minutes</span>
+                    </div>
+                    <div class="lesson-meta-item">
+                        <span>📚</span>
+                        <span>Teleios Identity School</span>
+                    </div>
+                    <div class="lesson-meta-item">
+                        <span>📖</span>
+                        <span>Week 1 • Lesson 1</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="lesson-description">
+                This foundational lesson introduces the difference between contractual and covenant thinking in marriage. You'll discover why most couples operate from a contractual mindset and how shifting to covenant transforms everything.
+            </p>
+            
+            <div class="lesson-topics">
+                <span class="lesson-topic-tag">Covenant vs Contract</span>
+                <span class="lesson-topic-tag">Identity Formation</span>
+                <span class="lesson-topic-tag">Marriage Design</span>
+                <span class="lesson-topic-tag">Spiritual Foundation</span>
+            </div>
+            
+            <div class="lesson-actions">
+                <a href="#" class="lesson-action-btn primary" onclick="unlockVideo(); return false;">
+                    🔓 Unlock Full Lesson
+                </a>
+                <a href="/dashboard.html" class="lesson-action-btn">
+                    ← Back to Dashboard
+                </a>
+                <a href="#" class="lesson-action-btn">
+                    📝 Download Workbook
+                </a>
+            </div>
+        </div>
+        
+        <!-- Video Player -->
+        <div class="video-player-wrapper">
+            <!-- Preview Badge -->
+            <div class="video-preview-badge">
+                Preview Mode
+            </div>
+            
+            <!-- Time Remaining -->
+            <div class="video-time-remaining">
+                5:00 preview left
+            </div>
+            
+            <!-- Video Element -->
+            <div class="video-player">
+                <video id="mainVideo" controls>
+                    <!-- Replace with actual video source -->
+                    <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
+                    Your browser does not support video playback.
+                </video>
+            </div>
+            
+            <!-- Preview Progress Bar -->
+            <div class="preview-progress-bar">
+                <div class="preview-progress-fill"></div>
+            </div>
+            
+            <!-- Locked Overlay (hidden initially) -->
+            <div class="video-locked-overlay">
+                <div class="video-lock-icon">🔒</div>
+                <h2 class="video-lock-title">Preview Time Ended</h2>
+                <p class="video-lock-message">
+                    You've watched 5 minutes of this 45-minute lesson. Unlock full access to continue your formation journey.
+                </p>
+                <button class="video-unlock-btn" onclick="unlockVideo()">
+                    Unlock Full Access
+                </button>
+            </div>
+        </div>
+        
+        <!-- Lesson Notes -->
+        <div class="lesson-info">
+            <h2 style="font-size: 24px; margin-bottom: 20px; color: #00ff88;">Lesson Notes</h2>
+            
+            <h3 style="font-size: 18px; margin-top: 24px; margin-bottom: 12px; color: #00ccff;">Key Concepts</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding-left: 28px; margin-bottom: 12px; position: relative; color: rgba(255,255,255,0.85);">
+                    <span style="position: absolute; left: 0; color: #00ff88; font-weight: bold;">→</span>
+                    <strong>Contract Mindset:</strong> "What do I get out of this?" Transactional, conditional, self-protecting.
+                </li>
+                <li style="padding-left: 28px; margin-bottom: 12px; position: relative; color: rgba(255,255,255,0.85);">
+                    <span style="position: absolute; left: 0; color: #00ff88; font-weight: bold;">→</span>
+                    <strong>Covenant Mindset:</strong> "Who am I becoming?" Transformational, unconditional, self-giving.
+                </li>
+                <li style="padding-left: 28px; margin-bottom: 12px; position: relative; color: rgba(255,255,255,0.85);">
+                    <span style="position: absolute; left: 0; color: #00ff88; font-weight: bold;">→</span>
+                    <strong>The Identity Shift:</strong> Moving from negotiation partner to covenant counterpart.
+                </li>
+                <li style="padding-left: 28px; margin-bottom: 12px; position: relative; color: rgba(255,255,255,0.85);">
+                    <span style="position: absolute; left: 0; color: #00ff88; font-weight: bold;">→</span>
+                    <strong>Practical Application:</strong> Learning to ask "What's faithful?" instead of "What's fair?"
+                </li>
+            </ul>
+            
+            <h3 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #00ccff;">Reflection Questions</h3>
+            <ol style="padding-left: 20px; color: rgba(255,255,255,0.85); line-height: 1.8;">
+                <li style="margin-bottom: 12px;">When conflict arises, do you naturally think "What's fair?" or "What's faithful?"</li>
+                <li style="margin-bottom: 12px;">What would change in your marriage if you viewed differences as complementary design rather than incompatibility?</li>
+                <li style="margin-bottom: 12px;">How have you been operating from a contractual mindset without realizing it?</li>
+            </ol>
+            
+            <div style="background: rgba(0,255,136,0.1); border-left: 4px solid #00ff88; padding: 20px; margin-top: 32px; border-radius: 8px;">
+                <p style="margin: 0; font-style: italic; color: rgba(255,255,255,0.9);">
+                    <strong>Next Steps:</strong> Complete the Week 1 reflection assignment and discuss these concepts with your spouse. The real transformation happens when you apply these principles together.
+                </p>
+            </div>
+        </div>
+        
+        <!-- More Lessons (Preview List) -->
+        <div style="margin-top: 60px;">
+            <h2 style="font-size: 28px; margin-bottom: 24px; color: #fff;">More Lessons in This Course</h2>
+            
+            <!-- Lesson Card 1 (Current) -->
+            <div class="lesson-card">
+                <h3 class="lesson-card-title">1. Understanding Covenant Marriage (Current)</h3>
+                <div class="lesson-card-duration">⏱️ 45 minutes</div>
+                <span class="lesson-card-preview-badge">Preview Available</span>
+            </div>
+            
+            <!-- Lesson Card 2 (Locked) -->
+            <div class="lesson-card locked">
+                <h3 class="lesson-card-title">2. The Four Stages of Identity Formation</h3>
+                <div class="lesson-card-duration">⏱️ 52 minutes</div>
+                <span class="lesson-card-locked-badge">🔒 Locked</span>
+            </div>
+            
+            <!-- Lesson Card 3 (Locked) -->
+            <div class="lesson-card locked">
+                <h3 class="lesson-card-title">3. Building Spiritual Intimacy Together</h3>
+                <div class="lesson-card-duration">⏱️ 38 minutes</div>
+                <span class="lesson-card-locked-badge">🔒 Locked</span>
+            </div>
+            
+            <!-- Lesson Card 4 (Locked) -->
+            <div class="lesson-card locked">
+                <h3 class="lesson-card-title">4. From Compromise to Complementarity</h3>
+                <div class="lesson-card-duration">⏱️ 46 minutes</div>
+                <span class="lesson-card-locked-badge">🔒 Locked</span>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/journey.html" class="nav-item active">
+            <div class="nav-icon">📚</div>
+            <div class="nav-label">My Journey</div>
+        </a>
+        <a href="/schools.html" class="nav-item">
+            <div class="nav-icon">🏫</div>
+            <div class="nav-label">Schools</div>
+        </a>
+        <a href="/shop.html" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <div class="nav-label">Shop</div>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profile</div>
+        </a>
+    </div>
+    
+    <!-- Firebase Config & Scripts -->
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/formation-access.js"></script>
+    <script src="/js/video-preview.js"></script>
+    
+    <script>
+        // Initialize video preview when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize with 5-minute (300 second) preview, requires 'foundation' tier
+            initVideoPreview('mainVideo', 300, 'foundation');
+        });
+    </script>
+</body>
+</html>

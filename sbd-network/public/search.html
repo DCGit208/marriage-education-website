@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Search | SBD Network</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/bottom-nav.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <button class="back-btn" onclick="history.back()" aria-label="Go back">←</button>
+    <h1>Search</h1>
+    <div style="width:40px;"></div>
+  </header>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <p>Searching...</p>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Search Input -->
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Search posts, hashtags, users..." 
+          autofocus
+        >
+        <button id="clearSearchBtn" class="clear-search-btn" style="display:none;" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="search-tabs">
+      <button class="search-tab active" data-tab="all">All</button>
+      <button class="search-tab" data-tab="posts">Posts</button>
+      <button class="search-tab" data-tab="comments">Comments</button>
+      <button class="search-tab" data-tab="hashtags">Hashtags</button>
+      <button class="search-tab" data-tab="users">Users</button>
+    </div>
+
+    <!-- Advanced Filters (collapsible) -->
+    <div class="search-filters" style="display:none;">
+      <div class="filter-row">
+        <label>Board:</label>
+        <select id="boardFilter" class="filter-select">
+          <option value="">All Boards</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label>Author:</label>
+        <input type="text" id="authorFilter" class="filter-input" placeholder="Username...">
+      </div>
+      <div class="filter-row">
+        <label>Date:</label>
+        <select id="dateFilter" class="filter-select">
+          <option value="">Any time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="year">This year</option>
+        </select>
+      </div>
+    </div>
+    <button id="toggleFiltersBtn" class="toggle-filters-btn">Advanced Filters ▼</button>
+
+    <!-- Results Counter -->
+    <div id="resultsCounter" class="results-counter" style="display:none;">
+      <span id="resultsCount">0</span> results
+    </div>
+
+    <!-- Search Results -->
+    <div id="searchResults" class="search-results">
+      <div class="search-placeholder">
+        <span class="search-placeholder-icon">🔍</span>
+        <p>Start typing to search...</p>
+        <div class="search-suggestions">
+          <p class="suggestions-title">Quick tips:</p>
+          <ul>
+            <li>Search for <strong>@username</strong> to find users</li>
+            <li>Search for <strong>#hashtag</strong> to find related posts</li>
+            <li>Use filters to narrow down results</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div id="noResults" class="no-results" style="display:none;">
+      <span class="no-results-icon">🔍</span>
+      <p>No results found</p>
+      <p class="no-results-hint">Try different keywords or filters</p>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="/dashboard.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="/schools.html" class="nav-item">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Learn</span>
+    </a>
+    <a href="/boards.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Boards</span>
+    </a>
+    <a href="/mv-house.html" class="nav-item">
+      <span class="nav-icon">👗</span>
+      <span class="nav-label">MV House</span>
+    </a>
+    <a href="/shop.html" class="nav-item">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label">Shop</span>
+    </a>
+    <a href="/profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profile</span>
+    </a>
+  </nav>
+
+  <!-- Firebase SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script defer src="/js/firebase.js?v=70"></script>
+  <script defer src="/js/formation-access.js?v=104"></script>
+  <script defer src="/js/sw-update-checker.js?v=96"></script>
+  <script defer src="/js/notifications.js?v=40"></script>
+  <script defer src="/js/dm-badge.js?v=40"></script>
+  <script defer src="/js/search.js?v=74"></script>
+  <script defer src="/js/transitions.js?v=40"></script>
+  <script defer src="/js/swipe-back.js?v=40"></script>
+</body>
+</html>

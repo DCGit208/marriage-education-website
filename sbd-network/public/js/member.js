@@ -2,7 +2,9 @@
 // PUBLIC MEMBER PROFILE
 // ================================================================
 
-const memberUid = new URLSearchParams(window.location.search).get('uid');
+const urlParams = new URLSearchParams(window.location.search);
+let memberUid = urlParams.get('uid');
+const memberUsername = urlParams.get('username');
 
 function esc(str) {
   if (!str) return '';
@@ -32,6 +34,36 @@ function renderMemberAvatar(name, photoUrl) {
 
 auth.onAuthStateChanged(async (viewer) => {
   if (!viewer) { window.location.href = 'index.html'; return; }
+  
+  // Resolve username to UID if needed
+  if (!memberUid && memberUsername) {
+    try {
+      // Try username field first
+      let snapshot = await db.collection('users')
+        .where('username', '==', memberUsername.toLowerCase())
+        .limit(1)
+        .get();
+      
+      if (!snapshot.empty) {
+        memberUid = snapshot.docs[0].id;
+      } else {
+        // Fallback: search by name without spaces
+        const allUsers = await db.collection('users').limit(100).get();
+        for (const doc of allUsers.docs) {
+          const userData = doc.data();
+          const name = (userData.name || '').toLowerCase().replace(/\s+/g, '');
+          const email = (userData.email || '').split('@')[0].toLowerCase();
+          if (name === memberUsername.toLowerCase() || email === memberUsername.toLowerCase()) {
+            memberUid = doc.id;
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error resolving username:', error);
+    }
+  }
+  
   if (!memberUid) { window.location.href = 'dashboard.html'; return; }
   if (memberUid === viewer.uid) { window.location.href = 'profile.html'; return; }
 

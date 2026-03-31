@@ -10,6 +10,20 @@
     <link rel="stylesheet" href="/css/board-media.css?v=40">
     <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <!-- Temporary Mobile Debug Console (Eruda) for Safari iPhone troubleshooting -->
+    <script>
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        console.log('[Debug] Loading Eruda mobile console for debugging...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        script.onload = function() {
+          eruda.init();
+          console.log('[Debug] Eruda loaded - tap floating icon to view console');
+        };
+        document.head.appendChild(script);
+      }
+    </script>
 </head>
 <body class="board-page bottom-nav-page">
 
@@ -36,14 +50,34 @@
       <input id="boardSearchInput" type="search" placeholder="Search posts…" autocomplete="off" aria-label="Search posts in this board">
     </div>
 
+    <!-- Content Filters -->
+    <div class="content-filters">
+      <div class="filter-section">
+        <span class="filter-label">Show:</span>
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter-type="media" data-value="all">All</button>
+          <button class="filter-chip" data-filter-type="media" data-value="images">Images</button>
+          <button class="filter-chip" data-filter-type="media" data-value="videos">Videos</button>
+          <button class="filter-chip" data-filter-type="media" data-value="text">Text Only</button>
+        </div>
+      </div>
+      <div class="filter-section">
+        <span class="filter-label">Sort:</span>
+        <div class="filter-chips">
+          <button class="filter-chip active" data-filter-type="sort" data-value="newest">Newest</button>
+          <button class="filter-chip" data-filter-type="sort" data-value="oldest">Oldest</button>
+          <button class="filter-chip" data-filter-type="sort" data-value="popular">Most Reactions</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Stories Strip -->
-    <div id="storiesStrip" class="stories-strip" style="display:none;">
+    <div id="storiesStrip" class="stories-strip">
       <div id="storiesScroll" class="stories-scroll">
-        <!-- Add Story circle -->
+        <!-- Add Story card -->
         <div id="addStoryBtn" class="story-circle story-add-circle" role="button" tabindex="0" aria-label="Add to Your Story">
-          <div class="story-ring story-add-ring">
-            <div class="story-add-icon">+</div>
-          </div>
+          <div class="story-card-bg" style="background:linear-gradient(160deg,#1c2b3a 0%,#0d1b2a 100%);"></div>
+          <div class="story-add-icon">+</div>
           <span class="story-label">Your Story</span>
         </div>
         <!-- Story circles injected by JS -->
@@ -129,6 +163,19 @@
                 <textarea id="postContent" class="post-caption-input"
                           placeholder="Write a caption…" maxlength="5000" rows="3"></textarea>
 
+                <!-- Extra post-type buttons row — visible immediately -->
+                <div class="post-extra-btns">
+                  <button type="button" id="pollToggleBtn" class="post-extra-btn" title="Create a Poll">
+                    <span>&#128257;</span><span>Poll</span>
+                  </button>
+                  <button type="button" id="scheduleToggleBtn" class="post-extra-btn" title="Schedule Post">
+                    <span>&#128336;</span><span>Schedule</span>
+                  </button>
+                  <button type="button" id="storyToggleBtn" class="post-extra-btn" title="Also share as Story">
+                    <span>&#9679;</span><span>Story</span>
+                  </button>
+                </div>
+
                 <!-- Hidden combined file input — accepts BOTH photos and videos -->
                 <input type="file" id="postMedia"
                        accept="image/*,video/mp4,video/webm,video/quicktime"
@@ -181,42 +228,37 @@
                 </div>
 
             </form>
-
-            <!-- Extra post-type buttons row -->
-            <div class="post-extra-btns">
-              <button type="button" id="pollToggleBtn" class="post-extra-btn" title="Create a Poll">
-                <span>&#128257;</span><span>Poll</span>
-              </button>
-              <button type="button" id="scheduleToggleBtn" class="post-extra-btn" title="Schedule Post">
-                <span>&#128336;</span><span>Schedule</span>
-              </button>
-            </div>
         </div>
     </div>
 
     <!-- ── Story Viewer ──────────────────────────────── -->
     <div id="storyViewer" class="story-viewer" style="display:none;" aria-modal="true" role="dialog" aria-label="Story viewer" tabindex="0">
-      <!-- Progress bars -->
-      <div id="storyProgressBars" class="story-progress-bars"></div>
-      <!-- Header -->
-      <div class="story-viewer-header">
-        <div class="story-viewer-author">
-          <div class="story-author-avatar" id="storyAuthorAvatar"></div>
-          <div>
-            <div id="storyAuthorName" class="story-author-name"></div>
-            <div id="storyAuthorTime" class="story-author-time"></div>
+      <div class="story-frame">
+        <!-- Media fills frame edge-to-edge -->
+        <img id="storyImg" class="story-media" src="" alt="" style="display:none;" loading="lazy">
+        <video id="storyVideo" class="story-media" src="" playsinline muted preload="metadata" style="display:none;"></video>
+        <!-- Progress bars -->
+        <div id="storyProgressBars" class="story-progress-bars"></div>
+        <!-- Header -->
+        <div class="story-viewer-header">
+          <div class="story-viewer-author">
+            <div class="story-author-avatar" id="storyAuthorAvatar"></div>
+            <div>
+              <div id="storyAuthorName" class="story-author-name"></div>
+              <div id="storyAuthorTime" class="story-author-time"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="storyDeleteBtn" class="btn btn-icon" aria-label="Delete story" style="display:none;color:#ff4444;font-size:1.1rem;padding:6px 10px;" title="Delete Story">🗑️</button>
+            <button id="storyCloseBtn" class="lightbox-close" aria-label="Close story" style="position:relative;top:0;right:0;z-index:11;">✕</button>
           </div>
         </div>
-        <button id="storyCloseBtn" class="lightbox-close" aria-label="Close story" style="position:relative;top:0;right:0;">✕</button>
+        <!-- Caption -->
+        <div id="storyCaption" class="story-caption"></div>
+        <!-- Invisible tap-zone navigation -->
+        <button id="storyNavPrev" class="story-nav-btn story-nav-prev" aria-label="Previous story"></button>
+        <button id="storyNavNext" class="story-nav-btn story-nav-next" aria-label="Next story"></button>
       </div>
-      <!-- Media -->
-      <img id="storyImg" class="story-media" src="" alt="" style="display:none;" loading="lazy">
-      <video id="storyVideo" class="story-media" src="" playsinline muted style="display:none;"></video>
-      <!-- Caption -->
-      <div id="storyCaption" class="story-caption"></div>
-      <!-- Nav zones -->
-      <button id="storyNavPrev" class="story-nav-btn story-nav-prev" aria-label="Previous story" style="visibility:hidden;">‹</button>
-      <button id="storyNavNext" class="story-nav-btn story-nav-next" aria-label="Next story">›</button>
     </div>
 
     <!-- ── Add Story Modal ────────────────────────────── -->
@@ -279,7 +321,9 @@
         <button class="ctx-emoji-btn" data-emoji="😁" aria-label="Grin">😁</button>
       </div>
       <div class="ctx-items">
+        <button class="ctx-item" id="ctxPostToStory" style="display:none;"><span class="ctx-icon">📸</span><span>Post to Story</span></button>
         <button class="ctx-item" id="ctxReply"><span class="ctx-icon">↩</span><span>Reply</span></button>
+        <button class="ctx-item" id="ctxRepost"><span class="ctx-icon">🔄</span><span>Repost with Thoughts</span></button>
         <button class="ctx-item" id="ctxEdit"><span class="ctx-icon">✏️</span><span>Edit</span></button>
         <button class="ctx-item" id="ctxPin"><span class="ctx-icon">📌</span><span id="ctxPinLabel">Pin</span></button>
         <button class="ctx-item" id="ctxCopyLink"><span class="ctx-icon">🔗</span><span>Copy Link</span></button>
@@ -304,6 +348,34 @@
             style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-primary);font-size:0.92rem;font-family:inherit;padding:10px 12px;resize:none;outline:none;"></textarea>
         </div>
         <div id="forwardBoardList" class="forward-board-list"></div>
+      </div>
+    </div>
+
+    <!-- Repost with Thoughts Modal -->
+    <div id="repostModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Repost with Your Thoughts</h3>
+          <button id="repostModalClose" class="btn btn-icon">×</button>
+        </div>
+        <div style="padding:12px 16px 0;">
+          <textarea id="repostThoughts" placeholder="Share your thoughts about this post..." maxlength="500" rows="4"
+            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-primary);font-size:0.92rem;font-family:inherit;padding:10px 12px;resize:none;outline:none;"></textarea>
+        </div>
+        <div style="padding:12px 16px;">
+          <div class="repost-preview" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-size:0.85rem;color:var(--text-muted);">Reposting from</span>
+              <span id="repostOriginalAuthor" style="font-size:0.85rem;font-weight:600;color:var(--text-primary);"></span>
+            </div>
+            <div id="repostOriginalContent" style="font-size:0.9rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;"></div>
+            <div id="repostOriginalMedia" style="margin-top:8px;"></div>
+          </div>
+        </div>
+        <div style="padding:0 16px 16px;">
+          <label style="display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Repost to:</label>
+          <div id="repostBoardList" class="forward-board-list"></div>
+        </div>
       </div>
     </div>
 
@@ -350,8 +422,11 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=40"></script>
+    <script defer src="/js/firebase.js?v=70"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
     <script defer src="/js/upload.js?v=40"></script>
+    <script defer src="/js/image-editor.js?v=76"></script>
+    <script defer src="/js/mentions.js?v=74"></script>
     <script defer src="/js/posts.js?v=40"></script>
     <script defer src="/js/notifications.js?v=40"></script>
     <script defer src="/js/dm-badge.js?v=40"></script>
@@ -376,21 +451,25 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" aria-label="Main navigation">
-    <a href="/dashboard.html" class="bn-tab active" aria-label="Home">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
       <span class="bn-icon">🏠</span>
       <span class="bn-label">Home</span>
     </a>
-    <a href="/explore.html" class="bn-tab" aria-label="Explore">
-      <span class="bn-icon">🔍</span>
-      <span class="bn-label">Explore</span>
+    <a href="/schools.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
     </a>
-    <a href="/dm.html" class="bn-tab" aria-label="Messages">
-      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
-      <span class="bn-label">Messages</span>
-    </a>
-    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+    <a href="/boards.html" class="bn-tab active" aria-label="Boards">
       <span class="bn-icon">📋</span>
       <span class="bn-label">Boards</span>
+    </a>
+    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+      <span class="bn-icon">👗</span>
+      <span class="bn-label">MV House</span>
+    </a>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
     </a>
     <a href="/profile.html" class="bn-tab" aria-label="Profile">
       <span class="bn-icon">👤</span>

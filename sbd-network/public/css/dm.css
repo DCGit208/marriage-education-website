@@ -390,6 +390,7 @@
   overflow-y: auto;
   flex: 1;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 70px; /* Space for Next button */
 }
 
 .dm-peer-row {
@@ -408,6 +409,179 @@
 .peer-name {
   font-size: 0.9rem;
   color: var(--text-primary);
+}
+
+/* ── Group Chat UI ───────────────────────────────────────────────── */
+.dm-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dm-modal-tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.dm-modal-tab.active {
+  color: var(--accent-primary);
+}
+
+.dm-modal-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+}
+
+.dm-peer-row.selectable {
+  position: relative;
+}
+
+.dm-peer-row.selected {
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.dm-peer-row .checkbox {
+  position: absolute;
+  right: 16px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.dm-peer-row.selected .checkbox {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #000;
+}
+
+/* Group Next Button - Fixed at bottom */
+#groupNextBtn {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--accent-primary) !important;
+  color: #000 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  padding: 16px !important;
+  font-weight: 600;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+}
+
+.selected-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  min-height: 50px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.member-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid var(--accent-primary);
+  border-radius: 20px;
+  padding: 4px 8px 4px 4px;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+}
+
+.member-chip .avatar-initials-sm,
+.member-chip .avatar-img-sm {
+  width: 20px;
+  height: 20px;
+  font-size: 0.6rem;
+}
+
+.member-chip .remove-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.group-avatar-stack {
+  display: flex;
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.group-avatar-stack .avatar-img-sm,
+.group-avatar-stack .avatar-initials-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.6rem;
+  border: 2px solid var(--bg-primary);
+  position: absolute;
+}
+
+.group-avatar-stack .avatar-img-sm:nth-child(1),
+.group-avatar-stack .avatar-initials-sm:nth-child(1) {
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.group-avatar-stack .avatar-img-sm:nth-child(2),
+.group-avatar-stack .avatar-initials-sm:nth-child(2) {
+  top: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.group-avatar-stack .avatar-img-sm:nth-child(3),
+.group-avatar-stack .avatar-initials-sm:nth-child(3) {
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.group-avatar-stack .avatar-img-sm:nth-child(4),
+.group-avatar-stack .avatar-initials-sm:nth-child(4) {
+  bottom: 0;
+  right: 0;
+  z-index: 0;
+}
+
+.convo-member-count {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.chat-bubble .sender-name {
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  margin-bottom: 2px;
+  display: block;
 }
 
 /* ── Empty states ────────────────────────────────────────────────── */

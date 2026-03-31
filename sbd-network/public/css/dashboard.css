@@ -1,0 +1,463 @@
+/* ============================================
+   DASHBOARD SPECIFIC STYLES
+   ============================================ */
+
+/* Dashboard Main Container */
+.dashboard-main {
+  padding: 0 20px 100px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Section Spacing */
+.dashboard-main > section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.section-header-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* ============================================
+   🔥 CONTINUE JOURNEY SECTION
+   ============================================ */
+
+.continue-journey-section {
+  margin-top: 20px;
+}
+
+.journey-card {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 204, 255, 0.1) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.journey-card:hover {
+  border-color: rgba(0, 255, 136, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 255, 136, 0.2);
+}
+
+.journey-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.progress-ring-small {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.progress-ring-small svg {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-small .progress-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 4;
+}
+
+.progress-ring-small .progress-ring-progress {
+  fill: none;
+  stroke: #00ff88;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-text-small {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+.journey-details {
+  flex: 1;
+}
+
+.journey-course-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.journey-module-name {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 6px;
+}
+
+.journey-timestamp {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-continue {
+  background: #00ff88;
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-continue:hover {
+  background: #00cc6a;
+  transform: translateX(4px);
+}
+
+/* Loading Skeleton for Journey */
+.journey-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.skel-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================
+   🧠 IDENTITY STATUS SECTION
+   ============================================ */
+
+.identity-status-section {
+  margin-top: 40px;
+}
+
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.identity-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.identity-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.identity-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.identity-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.identity-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+/* Progress Ring (SVG Circle) */
+.progress-ring-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 6;
+}
+
+.progress-ring-progress {
+  fill: none;
+  stroke: #00ff88;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-ring-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+/* ============================================
+   📅 THIS WEEK'S WORK SECTION
+   ============================================ */
+
+.week-work-section {
+  margin-top: 40px;
+}
+
+.week-work-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.week-module-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.week-module-description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 16px;
+}
+
+.week-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.week-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================
+   💬 ACTIVE DISCUSSIONS SECTION
+   ============================================ */
+
+.discussions-section {
+  margin-top: 40px;
+}
+
+.discussions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.discussion-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.discussion-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 255, 136, 0.3);
+  transform: translateX(4px);
+}
+
+.discussion-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.discussion-content {
+  flex: 1;
+}
+
+.discussion-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.discussion-meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.discussion-arrow {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.discussion-card:hover .discussion-arrow {
+  color: #00ff88;
+  transform: translateX(4px);
+}
+
+.discussion-skeleton {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ============================================
+   🎯 NEXT ACTION SECTION
+   ============================================ */
+
+.next-action-section {
+  margin-top: 40px;
+  text-align: center;
+  padding-bottom: 40px;
+}
+
+.next-action-button {
+  background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+  color: #000;
+  border: none;
+  padding: 20px 40px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+}
+
+.next-action-button:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 255, 136, 0.5);
+}
+
+.next-action-icon {
+  font-size: 24px;
+}
+
+/* ============================================
+   EMPTY STATES & ERROR STATES
+   ============================================ */
+
+.empty-state-inline {
+  text-align: center;
+  padding: 32px 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state-inline p {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.error-state {
+  text-align: center;
+  padding: 24px;
+  color: rgba(255, 100, 100, 0.8);
+  font-size: 14px;
+}
+
+/* ============================================
+   SKELETON LOADING ANIMATIONS
+   ============================================ */
+
+.skel-line {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.skel-line.w80 { width: 80%; }
+.skel-line.w60 { width: 60%; }
+.skel-line.w40 { width: 40%; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 0 16px 100px 16px;
+  }
+  
+  .journey-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .btn-continue {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .identity-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .week-actions {
+    flex-direction: column;
+  }
+  
+  .week-actions .btn {
+    width: 100%;
+  }
+  
+  .next-action-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1200px) {
+  .identity-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

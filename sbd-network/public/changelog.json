@@ -1,6 +1,603 @@
 {
-  "current": "58",
+  "current": "104",
   "versions": [
+    {
+      "version": "104",
+      "date": "2026-03-30",
+      "title": "Formation System Launch - Schools, Courses & Subscription Tiers",
+      "emoji": "🎓",
+      "changes": [
+        "🎓 NEW: Formation Journey (Schools page) - Guided roadmap: Teleios → Sexual Literacy → Expression",
+        "📚 NEW: My Learning Dashboard - Track progress, continue modules, view active/locked courses",
+        "🛍️ NEW: Shop page - Books & Bundles (own your formation)",
+        "🔒 NEW: Subscription tiers - Free, Foundation ($9), Premium ($20), Elite ($50)",
+        "✨ NEW: Smart paywall system - Upgrade prompts when accessing locked content",
+        "🎯 All 20 Advanced Muliebrity boards now Elite tier ($50/month)",
+        "📊 Database: 4 schools, 4 courses, modules with progression tracking",
+        "🧭 Updated navigation: Home → Learn → Boards → Shop → Profile",
+        "⚡ Access control enforces: Identity → Literacy → Expression hierarchy",
+        "💎 Elite subscribers get Advanced Muliebrity School (19 premium boards)",
+        "🔐 Formation system ready - UI transformation complete"
+      ]
+    },
+    {
+      "version": "103",
+      "date": "2026-03-29",
+      "title": "Analytics Fix + Repost UX Redesign",
+      "emoji": "✨",
+      "changes": [
+        "🔥 FIXED: Analytics Dashboard now works - removed orderBy from Firestore queries",
+        "✨ Analytics data will load without index errors",
+        "🎯 Repost feature redesigned - now defaults to current board",
+        "⚡ Quick repost: Just add thoughts and click \"Repost to This Board\"",
+        "📋 Optional: Choose different board using dropdown",
+        "💡 Clear separation: Repost = same board, Forward = other boards"
+      ]
+    },
+    {
+      "version": "102",
+      "date": "2026-03-28",
+      "title": "Critical Cache Fix for Analytics",
+      "emoji": "🔥",
+      "changes": [
+        "🔥 Fixed analytics.js not loading new version due to missing cache bust parameter",
+        "✨ Added version parameter to analytics.js (?v=101)",
+        "🚀 Browsers will now properly load the fixed analytics code",
+        "✅ Analytics Dashboard will now work without index errors"
+      ]
+    },
+    {
+      "version": "101",
+      "date": "2026-03-28",
+      "title": "Analytics No-Index Fix",
+      "emoji": "⚡",
+      "changes": [
+        "⚡ Fixed Analytics Dashboard index error",
+        "🔧 Modified queries to not require Firestore composite indexes",
+        "📊 Analytics now works immediately without index creation",
+        "✨ Client-side date filtering for better compatibility",
+        "🚀 Faster initial setup - no waiting for index builds",
+        "💡 Works for all users regardless of post/comment volume"
+      ]
+    },
+    {
+      "version": "100",
+      "date": "2026-03-28",
+      "title": "Fixed Analytics Dashboard Data Loading",
+      "emoji": "📊",
+      "changes": [
+        "📊 Fixed Analytics Dashboard not loading data",
+        "🔧 Added Firebase initialization check before loading analytics",
+        "⚡ Improved error handling and loading states",
+        "🔍 Added debug logging for better troubleshooting",
+        "✨ All stats now load correctly (posts, reactions, comments, engagement)",
+        "📈 Activity chart renders properly",
+        "🎯 Top posts and board stats display correctly"
+      ]
+    },
+    {
+      "version": "99",
+      "date": "2026-03-28",
+      "title": "Fixed Filter Sorting Logic",
+      "emoji": "🔧",
+      "changes": [
+        "🔧 Fixed 'Oldest' sort to properly show posts from oldest to newest",
+        "🔧 Fixed 'Most Reactions' sort to accurately count all reactions",
+        "✨ Added timestamp and reaction count data attributes to posts",
+        "⚡ Improved media filter selectors to catch all image/video elements",
+        "📊 Enhanced sort logic to use actual timestamps instead of DOM order",
+        "🎯 All filter combinations now work correctly together",
+        "🔍 Better console logging for debugging filter operations"
+      ]
+    },
+    {
+      "version": "98",
+      "date": "2026-03-28",
+      "title": "Enhanced Search & Filters Design",
+      "emoji": "✨",
+      "changes": [
+        "✨ Redesigned search bar with better visual prominence",
+        "🎨 Improved separation between search bar and filter sections",
+        "💎 Enhanced filter chip styling with smooth animations",
+        "🔍 Better focus states for search input",
+        "📱 Optimized mobile layout and spacing",
+        "⚡ Smoother hover effects on filter chips",
+        "🎯 Verified all filter functionality working correctly"
+      ]
+    },
+    {
+      "version": "97",
+      "date": "2026-03-28",
+      "title": "Mobile Filter Improvements",
+      "emoji": "📱",
+      "changes": [
+        "📱 Improved mobile styling for content filters and sort controls",
+        "✨ Better spacing and sizing on small screens",
+        "🎨 More compact layout for screens under 400px",
+        "📏 Optimized label and chip sizes for mobile devices",
+        "⚡ Smoother responsive design across all screen sizes"
+      ]
+    },
+    {
+      "version": "96",
+      "date": "2026-03-28",
+      "title": "Automatic Update Notifications",
+      "emoji": "🎉",
+      "changes": [
+        "🎉 New automatic update notifications - never miss a new version!",
+        "🔄 App automatically checks for updates every 30 seconds",
+        "✨ Beautiful update banner appears when new version is ready",
+        "⚡ One-click 'Update Now' button to refresh and get new features",
+        "🕐 Dismiss option if you want to update later (reminds in 5 minutes)",
+        "📱 Works on all devices - mobile, desktop, and PWA",
+        "🔧 No more manual cache clearing or hard refresh needed"
+      ]
+    },
+    {
+      "version": "95",
+      "date": "2026-03-28",
+      "title": "Repost with Thoughts",
+      "emoji": "🔄",
+      "changes": [
+        "🔄 New 'Repost with Thoughts' feature - share posts with your commentary",
+        "💬 Add your thoughts above the original post (like Facebook sharing)",
+        "🎯 Repost to same board or different boards",
+        "👀 Preview original post content and media before reposting",
+        "🎨 Beautiful repost UI with distinct styling from forwarded posts",
+        "✨ Accessible via context menu on any post",
+        "📱 Works seamlessly on mobile and desktop"
+      ]
+    },
+    {
+      "version": "94",
+      "date": "2026-03-28",
+      "title": "Analytics Dashboard - Phase 2 Complete! 🎉",
+      "emoji": "📊",
+      "changes": [
+        "📊 Full analytics dashboard with activity tracking",
+        "📈 View posts created, reactions received, comments made, and engagement rate",
+        "🏆 See your top performing posts with reaction counts",
+        "📅 Filter by time period: 7 days, 30 days, or all time",
+        "📊 Interactive activity chart powered by Chart.js",
+        "🛑 Board management stats for admins",
+        "✨ Accessible from Profile page",
+        "🎉 Phase 2 feature set now complete!"
+      ]
+    },
+    {
+      "version": "93",
+      "date": "2026-03-28",
+      "title": "Content Filters & Sorting",
+      "emoji": "🎯",
+      "changes": [
+        "🎯 Added content filters to boards: All, Images, Videos, Text Only",
+        "🔄 Multiple sort options: Newest, Oldest, Most Reactions",
+        "🎨 Clean filter chip design with active states",
+        "⚡ Instant filtering - no page reload needed",
+        "📱 Mobile-optimized filter layout",
+        "🔍 Works alongside existing search functionality"
+      ]
+    },
+    {
+      "version": "92",
+      "date": "2026-03-28",
+      "title": "Notification Settings",
+      "emoji": "🔔",
+      "changes": [
+        "🔔 Added comprehensive notification settings in Profile",
+        "⚙️ Control push notifications, reactions, comments, mentions, new posts, and DMs",
+        "💾 Settings sync across devices via Firestore",
+        "📱 Push notification permission request on toggle",
+        "🎨 Beautiful toggle switches with animations",
+        "✨ Settings load automatically when you open your profile"
+      ]
+    },
+    {
+      "version": "91",
+      "date": "2026-03-28",
+      "title": "Video Story Preview Enhancement",
+      "emoji": "🎥",
+      "changes": [
+        "🎥 All video stories now show video preview without exception",
+        "🖼️ Thumbnails used as poster images for faster loading",
+        "⚡ Added preload=metadata for better mobile compatibility",
+        "🛡️ Error handling with fallback if video fails to load",
+        "🎮 Manual controls appear if autoplay is blocked",
+        "📊 Better logging for thumbnail generation debugging"
+      ]
+    },
+    {
+      "version": "90",
+      "date": "2026-03-28",
+      "title": "Critical Syntax Error Fix",
+      "emoji": "🔥",
+      "changes": [
+        "🔥 Fixed critical JavaScript syntax error in board.js",
+        "✅ Removed stray template literal closing tag causing parse failure",
+        "🚀 Boards now load properly on Safari Mac and iPhone"
+      ]
+    },
+    {
+      "version": "89",
+      "date": "2026-03-28",
+      "title": "Mobile Debug Console + Firebase Init Fix",
+      "emoji": "🔧",
+      "changes": [
+        "🐛 Added Eruda mobile debug console for on-device troubleshooting",
+        "📱 Tap floating icon on mobile to view console logs and errors",
+        "⏱️ Increased Firestore timeout from 10s to 20s for slower connections",
+        "🔄 Added Firebase initialization wait logic for Safari race conditions",
+        "⚡ Improved retry backoff timing (1s, 2s, 4s) for better reliability"
+      ]
+    },
+    {
+      "version": "88",
+      "date": "2026-03-28",
+      "title": "Safari iPhone Debug & Fixes",
+      "emoji": "🐛",
+      "changes": [
+        "🐛 Added extensive console logging for Safari debugging",
+        "🔧 Improved error handling with detailed error messages",
+        "⚡ Fixed PAGE_SIZE detection with fallback for Safari",
+        "📊 Better load tracking: see exactly where boards fail",
+        "🛡️ Added try-catch blocks to isolate Safari-specific issues"
+      ]
+    },
+    {
+      "version": "87",
+      "date": "2026-03-28",
+      "title": "Performance Boost for Safari iPhone",
+      "emoji": "⚡",
+      "changes": [
+        "⚡ Reduced initial post load from 25 to 15 on mobile Safari for faster loading",
+        "🚀 Optimized load order: posts load first, stories/pinned load after",
+        "📈 Non-blocking secondary content improves perceived performance",
+        "📱 Specific optimizations for Safari iPhone browser",
+        "⏱️ Significantly faster time to interactive on mobile devices"
+      ]
+    },
+    {
+      "version": "86",
+      "date": "2026-03-28",
+      "title": "Fixed Video Story Preview",
+      "emoji": "🎥",
+      "changes": [
+        "🎥 Fixed video preview not showing in story circles when posted from context menu",
+        "🖼️ Added fallback to use post thumbnail as story thumbnail",
+        "▶️ Improved video playback initialization in story circles",
+        "🐛 Better handling of autoplay restrictions"
+      ]
+    },
+    {
+      "version": "85",
+      "date": "2026-03-28",
+      "title": "Post to Story from Context Menu",
+      "emoji": "📸",
+      "changes": [
+        "📸 Added 'Post to Story' option in post context menu (long-press)",
+        "✨ Share any post with media (photo/video) directly to your story",
+        "🎬 Uses first media item from multi-media posts",
+        "📝 Automatically includes post caption (first 120 chars)",
+        "⏱️ Stories expire after 24 hours as usual"
+      ]
+    },
+    {
+      "version": "84",
+      "date": "2026-03-28",
+      "title": "Story Deletion Feature",
+      "emoji": "🗑️",
+      "changes": [
+        "🗑️ Added ability to delete your own stories",
+        "🔒 Admins can delete any story",
+        "⚠️ Confirmation dialog before deletion",
+        "✨ Delete button appears in story viewer for story owners/admins",
+        "🔄 Stories list automatically updates after deletion"
+      ]
+    },
+    {
+      "version": "83",
+      "date": "2026-03-28",
+      "title": "Fixed Video Story Preview Sizing",
+      "emoji": "🐛",
+      "changes": [
+        "🐛 Fixed video preview zoom issue in story circles",
+        "✨ Video elements now properly fill story card containers",
+        "🎥 Video previews display at correct size with object-fit: cover"
+      ]
+    },
+    {
+      "version": "82",
+      "date": "2026-03-27",
+      "title": "Removed Video Feed & Fixed Story Thumbnails",
+      "emoji": "🔧",
+      "changes": [
+        "🗑️ Removed non-functional Videos tab (reverted to 5-tab navigation)",
+        "🎥 Fixed video story thumbnails - now show actual video preview",
+        "✨ Added video preview animation in story circles (auto-play)",
+        "📱 Improved navigation consistency (5 tabs: Home, Messages, Boards, Explore, Profile)",
+        "🐛 Fixed story thumbnail generation for video content",
+        "⚡ Stories now generate and store thumbnails for video uploads"
+      ]
+    },
+    {
+      "version": "81",
+      "date": "2026-03-27",
+      "title": "UI/UX Improvements",
+      "emoji": "✨",
+      "changes": [
+        "✨ Fixed 'Next' button visibility in group chat - now sticky at bottom",
+        "📱 Improved scrolling in group member selection modal",
+        "🎥 Changed video empty state button to 'Create a Post' (more logical)",
+        "🎨 Better button styling with shadow for visibility",
+        "📏 Added proper padding to user list for button clearance"
+      ]
+    },
+    {
+      "version": "80",
+      "date": "2026-03-27",
+      "title": "Critical Fixes - Video Feed & Group Chat",
+      "emoji": "🔧",
+      "changes": [
+        "🔧 Fixed video feed Firestore index error - now uses client-side filtering",
+        "✅ Fixed group chat user selection - can now scroll and select multiple users",
+        "🔘 Added 'Next' button for group creation (shows selected count)",
+        "↩️ Proper back navigation from group creation to user selection",
+        "📱 Improved modal flow for better UX when creating group chats"
+      ]
+    },
+    {
+      "version": "79",
+      "date": "2026-03-27",
+      "title": "Bug Fixes & Navigation Improvements",
+      "emoji": "🐛",
+      "changes": [
+        "🐛 Fixed group chat modal scroll issue - can now scroll to select all users",
+        "📋 Restored Boards tab to bottom navigation (6 tabs total)",
+        "🔄 Fixed modal layering - user selection no longer blocked by group creation modal",
+        "↩️ Back button now properly returns to user selection when creating groups",
+        "✨ Improved navigation consistency across all pages"
+      ]
+    },
+    {
+      "version": "78",
+      "date": "2026-03-27",
+      "title": "TikTok-Style Video Feed",
+      "emoji": "🎥",
+      "changes": [
+        "🎥 Full-screen vertical video feed with smooth scrolling",
+        "📱 TikTok-style interface with swipe-up navigation",
+        "▶️ Auto-play videos on scroll with smart visibility detection",
+        "❤️ Like, comment, and share directly from the feed",
+        "👤 Tap author avatar to view profile or follow",
+        "📊 Video counter showing your position (e.g., '3/15')",
+        "🔄 Native scroll-snap for fluid experience",
+        "💬 Jump to comments with a single tap",
+        "🔗 Share videos via native Web Share API"
+      ]
+    },
+    {
+      "version": "77",
+      "date": "2026-03-27",
+      "title": "Group Chat (3+ People)",
+      "emoji": "👥",
+      "changes": [
+        "👥 Create group chats with 3+ people",
+        "📝 Optional group names (defaults to 'Name + X others')",
+        "🎭 Stacked avatars for group conversations",
+        "✉️ Broadcast messages to all group members",
+        "👀 See who's typing in groups ('3 people typing...')",
+        "📋 Member count displayed in conversation list",
+        "✨ Sender names shown above messages in groups",
+        "🔔 All group members receive notifications for new messages"
+      ]
+    },
+    {
+      "version": "76",
+      "date": "2026-03-27",
+      "title": "Built-in Image Editor",
+      "emoji": "🎨",
+      "changes": [
+        "🎨 Edit images before uploading (crop, rotate, brightness)",
+        "✂️ Square crop for perfect profile photos and stories",
+        "↻ Rotate images left or right",
+        "☀️ Adjust brightness (50%-150%)",
+        "🖱️ Drag to reposition crop area",
+        "📱 Touch-friendly mobile interface",
+        "↩️ Cancel editing to use original image"
+      ]
+    },
+    {
+      "version": "75",
+      "date": "2026-03-27",
+      "title": "Comprehensive Search System",
+      "emoji": "🔍",
+      "changes": [
+        "🔍 New dedicated search page with tabs (All, Posts, Comments, Hashtags, Users)",
+        "🎯 Advanced filters: Filter by board, author, and date range",
+        "⚡ Real-time search with debouncing for better performance",
+        "🏷️ Hashtag discovery with post counts",
+        "👤 User search with profile previews",
+        "📱 Mobile-optimized with smooth transitions",
+        "🔗 Deep linking support (search.html?q=query&tab=posts)"
+      ]
+    },
+    {
+      "version": "74",
+      "date": "2026-03-27",
+      "title": "@Mentions & #Hashtags System",
+      "emoji": "🏷️",
+      "changes": [
+        "🏷️ @Mention users in posts and comments with autocomplete",
+        "#️⃣ Add #hashtags to posts and comments for discovery",
+        "🔔 Mentioned users receive notifications with direct links",
+        "🔍 Click @mentions to view user profiles",
+        "🔍 Click #hashtags to search for related content",
+        "⌨️ Autocomplete dropdown with user search (type @username)",
+        "📱 Keyboard navigation (↑↓ to select, Enter to insert, Esc to cancel)"
+      ]
+    },
+    {
+      "version": "73",
+      "date": "2026-03-27",
+      "title": "Improved pinned posts management",
+      "emoji": "📌",
+      "changes": [
+        "📌 Admins can now unpin posts directly from the pinned list",
+        "✅ Clicking pinned posts scrolls to the post with highlight animation",
+        "🔒 Pin/Unpin button only visible to admins (verified security)"
+      ]
+    },
+    {
+      "version": "72",
+      "date": "2026-03-27",
+      "title": "Improved comment notifications",
+      "emoji": "💬",
+      "changes": [
+        "✅ Fixed comment notification links to include post parameter",
+        "⚡ Optimized deep-linking — saves one Firestore query when URL has postId",
+        "🎯 Comment notifications now scroll to exact comment and highlight it"
+      ]
+    },
+    {
+      "version": "71",
+      "date": "2026-03-27",
+      "title": "Clickable author names in comments",
+      "emoji": "👤",
+      "changes": [
+        "👤 Tap author names in comments to visit their profile",
+        "🔗 Comment author names now work like post author names"
+      ]
+    },
+    {
+      "version": "70",
+      "date": "2026-03-27",
+      "title": "Safari fix - correct Firestore settings",
+      "emoji": "🍏",
+      "changes": [
+        "✅ Fixed Firebase settings conflict error",
+        "🍎 Safari now uses long polling only (no auto-detect conflict)",
+        "🔧 Removed invalid 'merge' option from settings"
+      ]
+    },
+    {
+      "version": "69",
+      "date": "2026-03-27",
+      "title": "Fix Safari board loading (fixed syntax error)",
+      "emoji": "🍎",
+      "changes": [
+        "🍎 Fixed boards not loading on Safari (iPhone, Mac, PWA)",
+        "🔧 Enabled Firestore long polling for Safari WebSocket issues",
+        "⏱️ Added retry logic with 10-second timeout per query",
+        "💬 Better error messages show what went wrong and which browser",
+        "🐛 Fixed JavaScript syntax error that broke v68"
+      ]
+    },
+    {
+      "version": "68",
+      "date": "2026-03-27",
+      "title": "Fix Safari board loading (broken - syntax error)",
+      "emoji": "⚠️",
+      "changes": [
+        "⚠️ DO NOT USE - Has syntax error in board.js"
+      ]
+    },
+    {
+      "version": "67",
+      "date": "2026-03-27",
+      "title": "Fix mobile dashboard loading",
+      "emoji": "📱",
+      "changes": [
+        "🔧 Added retry logic for slow mobile connections — auto-retries failed queries 3 times",
+        "⏱️ Added 8-second timeout for dashboard loading — faster failure on poor networks",
+        "💬 Better error messages — tells you if it's a timeout, offline, or permission issue",
+        "📡 Auto-reload when connection comes back online"
+      ]
+    },
+    {
+      "version": "66",
+      "date": "2026-03-27",
+      "title": "Speed up board loading",
+      "emoji": "🚀",
+      "changes": [
+        "⚡ Board info, posts, and stories now load in parallel — much faster initial load",
+        "📉 Reduced stories query from 50 to 20 documents"
+      ]
+    },
+    {
+      "version": "65",
+      "date": "2026-03-27",
+      "title": "Fix Story toggle visibility",
+      "emoji": "🚀",
+      "changes": [
+        "✅ Story toggle now appears right below caption field — immediately visible",
+        "🗑️ Remove buttons (x) on thumbnails already work — tap top-right corner of each preview"
+      ]
+    },
+    {
+      "version": "64",
+      "date": "2026-03-27",
+      "title": "Post to Story simultaneously",
+      "emoji": "🚀",
+      "changes": [
+        "✨ New Story toggle in create-post — tap it to also share the first photo/video as a 24h Story",
+        "🔄 Stories strip refreshes automatically after posting"
+      ]
+    },
+    {
+      "version": "63",
+      "date": "2026-03-27",
+      "title": "Story card caption preview",
+      "emoji": "🚀",
+      "changes": [
+        "✨ Story cards now show the caption at the bottom instead of the author name",
+        "🎞️ Long captions slide/marquee automatically"
+      ]
+    },
+    {
+      "version": "62",
+      "date": "2026-03-27",
+      "title": "Facebook-style stories UI",
+      "emoji": "🚀",
+      "changes": [
+        "🎬 Stories strip now shows tall portrait cards with media thumbnails as background",
+        "📱 Story viewer fills screen edge-to-edge with object-fit cover",
+        "👆 Tap left/right half to navigate — no visible buttons blocking the media"
+      ]
+    },
+    {
+      "version": "61",
+      "date": "2026-03-27",
+      "title": "Fix stories not loading",
+      "emoji": "🚀",
+      "changes": [
+        "🐛 Remove orderBy from stories query — no composite Firestore index needed",
+        "✅ Stories now sort client-side so they always appear after posting"
+      ]
+    },
+    {
+      "version": "60",
+      "date": "2026-03-27",
+      "title": "Stories fix & smoother updates",
+      "emoji": "🚀",
+      "changes": [
+        "✨ Stories strip now always visible — Your Story button shows immediately",
+        "🔄 Fixed app update loop that required deleting and reinstalling the PWA",
+        "📖 Stories query simplified — no Firestore index required"
+      ]
+    },
+    {
+      "version": "59",
+      "date": "2026-03-27",
+      "title": "5 new features",
+      "emoji": "🚀",
+      "changes": [
+        "📸 Pinch-to-zoom photos in lightbox — spread two fingers to zoom in/out, swipe to navigate",
+        "🔍 Search bar inside every board — instantly filter posts by text",
+        "📊 Polls on posts — create a vote when making a post, tap to cast your vote",
+        "🕐 Scheduled posts — set a future date/time when creating a post, it publishes automatically",
+        "✨ Stories — 24-hour disappearing posts with a swipeable strip at the top of each board"
+      ]
+    },
     {
       "version": "58",
       "date": "2026-03-27",

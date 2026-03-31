@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Are You Ready for Covenant? | SBD Network</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/quiz.css">
+    <link rel="stylesheet" href="/css/paywall.css">
+    
+    <style>
+        /* Entry Quiz Specific Styles */
+        .entry-quiz-intro {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .entry-quiz-intro h1 {
+            font-size: 36px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #00ffcc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .entry-quiz-intro p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 24px;
+        }
+        
+        .quiz-start-btn {
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #000;
+            padding: 16px 50px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .quiz-start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+        }
+        
+        /* Results Recommendation */
+        .results-recommendation {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 32px;
+            border-radius: 12px;
+            margin-top: 32px;
+        }
+        
+        .results-recommendation h3 {
+            color: #00ff88;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+        
+        .results-recommendation p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        
+        .results-course-card {
+            background: rgba(0, 204, 255, 0.1);
+            border: 1px solid rgba(0, 204, 255, 0.3);
+            padding: 24px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .results-course-card h4 {
+            color: #00ccff;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        
+        .results-course-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        
+        .results-course-card li {
+            padding-left: 24px;
+            margin-bottom: 8px;
+            position: relative;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .results-course-card li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .quiz-score-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 32px 0;
+        }
+        
+        .score-category {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .score-category-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        
+        .score-category-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body class="page-quiz">
+
+    <!-- Quiz Container -->
+    <div class="quiz-container">
+        
+        <!-- Intro Screen -->
+        <div id="quizIntro" class="entry-quiz-intro">
+            <h1>Are You Ready for Covenant?</h1>
+            <p>
+                This 10-question assessment will help you understand your current level of marriage identity awareness and recommend the best starting point for your formation journey.
+            </p>
+            <p style="font-size: 16px; color: rgba(255, 255, 255, 0.6);">
+                ⏱️ Takes 5 minutes • 📊 Personalized results • 🎯 Custom recommendations
+            </p>
+            <button class="quiz-start-btn" onclick="startQuiz()">Begin Assessment</button>
+        </div>
+        
+        <!-- Quiz Content (hidden initially) -->
+        <div id="quizContent" class="quiz-content" style="display: none;">
+            <!-- Progress Bar -->
+            <div class="quiz-progress">
+                <div id="quizProgressBar" class="quiz-progress-bar"></div>
+            </div>
+            
+            <!-- Question Card -->
+            <div id="questionContainer" class="question-card"></div>
+            
+            <!-- Navigation -->
+            <div class="quiz-navigation">
+                <button id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" disabled>
+                    Next Question
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Screen (hidden initially) -->
+        <div id="quizResults" class="quiz-results" style="display: none;"></div>
+        
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="/dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/start-here.html" class="nav-item active">
+            <div class="nav-icon">🎯</div>
+            <div class="nav-label">Start Here</div>
+        </a>
+        <a href="/schools.html" class="nav-item">
+            <div class="nav-icon">🏫</div>
+            <div class="nav-label">Schools</div>
+        </a>
+        <a href="/shop.html" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <div class="nav-label">Shop</div>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profile</div>
+        </a>
+    </div>
+    
+    <!-- Firebase Config & Quiz Logic -->
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/formation-access.js"></script>
+    
+    <script>
+        // Entry Quiz Questions
+        const quizQuestions = [
+            {
+                question: "How would you describe your understanding of covenant marriage?",
+                options: [
+                    { text: "Never heard of it", value: 1 },
+                    { text: "I've heard the term but don't know what it means", value: 2 },
+                    { text: "I have a basic understanding", value: 3 },
+                    { text: "I understand it deeply and practice it", value: 4 }
+                ],
+                category: "covenant"
+            },
+            {
+                question: "When conflicts arise in your relationship, what's your first instinct?",
+                options: [
+                    { text: "Blame my spouse", value: 1 },
+                    { text: "Retreat and avoid the issue", value: 2 },
+                    { text: "Try to compromise", value: 3 },
+                    { text: "See it as an opportunity to grow together", value: 4 }
+                ],
+                category: "identity"
+            },
+            {
+                question: "How often do you and your spouse discuss your spiritual life together?",
+                options: [
+                    { text: "Never", value: 1 },
+                    { text: "Rarely (a few times a year)", value: 2 },
+                    { text: "Sometimes (monthly)", value: 3 },
+                    { text: "Regularly (weekly or daily)", value: 4 }
+                ],
+                category: "spiritual"
+            },
+            {
+                question: "What's your primary view of sexual intimacy in marriage?",
+                options: [
+                    { text: "Physical pleasure", value: 1 },
+                    { text: "Marital duty", value: 2 },
+                    { text: "Expression of love", value: 3 },
+                    { text: "Spiritual connection and communication", value: 4 }
+                ],
+                category: "sexual"
+            },
+            {
+                question: "When you think about your marriage, what's your primary focus?",
+                options: [
+                    { text: "What I can get from it", value: 1 },
+                    { text: "Staying together and avoiding divorce", value: 2 },
+                    { text: "Finding happiness together", value: 3 },
+                    { text: "Who I'm becoming and our shared purpose", value: 4 }
+                ],
+                category: "identity"
+            },
+            {
+                question: "How do you handle differences in personality or preferences with your spouse?",
+                options: [
+                    { text: "They frustrate me constantly", value: 1 },
+                    { text: "I tolerate them", value: 2 },
+                    { text: "I try to compromise", value: 3 },
+                    { text: "I see them as complementary design", value: 4 }
+                ],
+                category: "covenant"
+            },
+            {
+                question: "What role does God play in your marriage?",
+                options: [
+                    { text: "None - this is about us", value: 1 },
+                    { text: "We believe in God but don't involve Him much", value: 2 },
+                    { text: "We pray together occasionally", value: 3 },
+                    { text: "He's the foundation and center of our marriage", value: 4 }
+                ],
+                category: "spiritual"
+            },
+            {
+                question: "How confident are you in discussing sexual needs with your spouse?",
+                options: [
+                    { text: "Very uncomfortable - we don't talk about it", value: 1 },
+                    { text: "Somewhat uncomfortable", value: 2 },
+                    { text: "Comfortable but not fluent", value: 3 },
+                    { text: "Very comfortable - we communicate openly", value: 4 }
+                ],
+                category: "sexual"
+            },
+            {
+                question: "What's your vision for your marriage's impact beyond yourselves?",
+                options: [
+                    { text: "I don't think about that", value: 1 },
+                    { text: "Maybe raising good kids", value: 2 },
+                    { text: "Being a good example to others", value: 3 },
+                    { text: "Creating a multi-generational legacy", value: 4 }
+                ],
+                category: "covenant"
+            },
+            {
+                question: "How do you view personal growth in marriage?",
+                options: [
+                    { text: "My spouse should change to fit me", value: 1 },
+                    { text: "We should both stay as we are", value: 2 },
+                    { text: "I should work on myself independently", value: 3 },
+                    { text: "We should grow together intentionally", value: 4 }
+                ],
+                category: "identity"
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let userAnswers = [];
+        
+        // Start Quiz
+        function startQuiz() {
+            document.getElementById('quizIntro').style.display = 'none';
+            document.getElementById('quizContent').style.display = 'block';
+            renderQuestion();
+        }
+        
+        // Render Current Question
+        function renderQuestion() {
+            const q = quizQuestions[currentQuestion];
+            const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
+            
+            document.getElementById('quizProgressBar').style.width = progress + '%';
+            
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = `
+                <div class="question-number">Question ${currentQuestion + 1} of ${quizQuestions.length}</div>
+                <h2 class="question-text">${q.question}</h2>
+                <div class="answer-options">
+                    ${q.options.map((option, index) => `
+                        <button class="answer-option" onclick="selectAnswer(${index}, ${option.value})">
+                            <span class="answer-letter">${String.fromCharCode(65 + index)}</span>
+                            <span class="answer-text">${option.text}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('nextBtn').disabled = true;
+        }
+        
+        // Select Answer
+        function selectAnswer(index, value) {
+            // Store answer
+            userAnswers[currentQuestion] = {
+                category: quizQuestions[currentQuestion].category,
+                value: value
+            };
+            
+            // Visual feedback
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+        
+        // Next Question
+        function nextQuestion() {
+            if (currentQuestion < quizQuestions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        // Calculate and Show Results
+        function showResults() {
+            // Calculate category scores
+            const scores = {
+                covenant: [],
+                identity: [],
+                spiritual: [],
+                sexual: []
+            };
+            
+            userAnswers.forEach(answer => {
+                scores[answer.category].push(answer.value);
+            });
+            
+            const avgScores = {};
+            let totalScore = 0;
+            let totalQuestions = 0;
+            
+            Object.keys(scores).forEach(category => {
+                const categoryTotal = scores[category].reduce((sum, val) => sum + val, 0);
+                const categoryAvg = categoryTotal / scores[category].length;
+                avgScores[category] = Math.round(categoryAvg * 25); // Convert to percentage
+                totalScore += categoryTotal;
+                totalQuestions += scores[category].length;
+            });
+            
+            const overallScore = Math.round((totalScore / (totalQuestions * 4)) * 100);
+            
+            // Determine recommendation
+            const recommendation = getRecommendation(overallScore, avgScores);
+            
+            // Show results
+            document.getElementById('quizContent').style.display = 'none';
+            const resultsContainer = document.getElementById('quizResults');
+            resultsContainer.style.display = 'block';
+            resultsContainer.innerHTML = `
+                <div class="results-icon">${recommendation.icon}</div>
+                <h2 class="results-title">${recommendation.title}</h2>
+                <div class="results-score">${overallScore}%</div>
+                <p class="results-message">${recommendation.message}</p>
+                
+                <div class="quiz-score-breakdown">
+                    <div class="score-category">
+                        <div class="score-category-label">Covenant Understanding</div>
+                        <div class="score-category-value">${avgScores.covenant}%</div>
+                    </div>
+                    <div class="score-category">
+                        <div class="score-category-label">Identity Awareness</div>
+                        <div class="score-category-value">${avgScores.identity}%</div>
+                    </div>
+                    <div class="score-category">
+                        <div class="score-category-label">Spiritual Connection</div>
+                        <div class="score-category-value">${avgScores.spiritual}%</div>
+                    </div>
+                    <div class="score-category">
+                        <div class="score-category-label">Sexual Literacy</div>
+                        <div class="score-category-value">${avgScores.sexual}%</div>
+                    </div>
+                </div>
+                
+                ${recommendation.html}
+                
+                <div class="results-actions">
+                    <button class="btn btn-primary" onclick="window.showPaywallModal && window.showPaywallModal()">
+                        Begin ${recommendation.course}
+                    </button>
+                    <a href="/start-here.html" class="btn btn-secondary">Learn More About SBD</a>
+                </div>
+            `;
+        }
+        
+        // Get Recommendation Based on Score
+        function getRecommendation(score, categoryScores) {
+            if (score >= 75) {
+                return {
+                    icon: '🏆',
+                    title: 'Advanced Formation Ready',
+                    message: 'You have a strong foundation in covenant marriage principles. You\'re ready for advanced formation.',
+                    course: 'Generational Formation',
+                    html: `
+                        <div class="results-recommendation">
+                            <h3>Recommended Path: Generational Formation</h3>
+                            <p>Based on your high scores, you're ready to learn how to:</p>
+                            <div class="results-course-card">
+                                <h4>Generational Impact School</h4>
+                                <ul>
+                                    <li>Build a marriage that influences generations</li>
+                                    <li>Teach covenant principles to your children</li>
+                                    <li>Lead other couples in their formation</li>
+                                    <li>Create a lasting family legacy</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `
+                };
+            } else if (score >= 50) {
+                return {
+                    icon: '📈',
+                    title: 'Intermediate Formation',
+                    message: 'You have some foundation but would benefit from deeper study of covenant principles.',
+                    course: 'Teleios Formation',
+                    html: `
+                        <div class="results-recommendation">
+                            <h3>Recommended Path: Teleios Identity School</h3>
+                            <p>Your scores indicate you're ready to deepen your understanding of:</p>
+                            <div class="results-course-card">
+                                <h4>Teleios Identity School</h4>
+                                <ul>
+                                    <li>The four stages of covenant identity</li>
+                                    <li>Moving from contractual to covenant thinking</li>
+                                    <li>Understanding your design and purpose</li>
+                                    <li>Building spiritual intimacy together</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `
+                };
+            } else {
+                // Find lowest scoring category
+                const lowestCategory = Object.keys(categoryScores).reduce((a, b) => 
+                    categoryScores[a] < categoryScores[b] ? a : b
+                );
+                
+                if (lowestCategory === 'sexual') {
+                    return {
+                        icon: '💡',
+                        title: 'Begin with Sexual Literacy',
+                        message: 'Your assessment shows sexual intimacy is a key growth area. Start here.',
+                        course: 'Sexual Literacy',
+                        html: `
+                            <div class="results-recommendation">
+                                <h3>Recommended Path: Sexual Literacy School</h3>
+                                <p>Based on your scores, you'll benefit most from understanding:</p>
+                                <div class="results-course-card">
+                                    <h4>Sexual Literacy School</h4>
+                                    <ul>
+                                        <li>The 4 languages of sexual communication</li>
+                                        <li>How to discuss intimacy openly</li>
+                                        <li>Understanding design differences</li>
+                                        <li>Building sexual confidence together</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `
+                    };
+                } else {
+                    return {
+                        icon: '🌱',
+                        title: 'Begin with Teleios Identity',
+                        message: 'You\'re at the beginning of your formation journey. Start with the foundation.',
+                        course: 'Teleios Formation',
+                        html: `
+                            <div class="results-recommendation">
+                                <h3>Recommended Path: Teleios Identity School</h3>
+                                <p>You're ready to learn the foundation of covenant marriage:</p>
+                                <div class="results-course-card">
+                                    <h4>Teleios Identity School</h4>
+                                    <ul>
+                                        <li>What covenant marriage actually means</li>
+                                        <li>The difference between contract and covenant</li>
+                                        <li>Understanding your identity in marriage</li>
+                                        <li>Building a foundation for growth</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `
+                    };
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,8 +2,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1013.0",
     "axios": "^1.13.4",
-    "firebase-admin": "^13.6.0",
+    "firebase-admin": "^13.7.0",
     "nodemailer": "^7.0.13",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

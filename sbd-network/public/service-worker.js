@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v58';
+const CACHE_VERSION = 'sbd-network-v104';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
@@ -58,18 +58,23 @@ const PRECACHE_URLS = [
   '/admin.html',
   '/member.html',
   '/explore.html',
+  '/search.html',
   '/css/styles.css',
   '/js/firebase.js',
+  '/js/sw-update-checker.js',
   '/js/auth.js',
   '/js/dashboard.js',
   '/js/boards.js',
   '/js/group.js',
   '/js/board.js',
   '/js/posts.js',
+  '/js/mentions.js',
+  '/js/image-editor.js',
   '/js/upload.js',
   '/js/admin.js',
   '/js/member.js',
   '/js/explore.js',
+  '/js/search.js',
   '/js/notifications.js',
   '/js/ptr.js',
   '/js/offline.js',
@@ -113,9 +118,10 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => self.clients.claim())
       .then(() => {
-        // After taking control, reload all open tabs so they get fresh HTML immediately
+        // After taking control, send a message to open tabs so they can
+        // reload at a safe moment — avoids forced navigation on installed PWAs.
         return self.clients.matchAll({ type: 'window' }).then(clients => {
-          clients.forEach(client => client.navigate(client.url));
+          clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
         });
       })
   );
@@ -232,6 +238,13 @@ self.addEventListener('notificationclick', (event) => {
       return clients.openWindow(targetUrl);
     })
   );
+});
+
+// Message handler — for update notifications
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 console.log('[Service Worker] Loaded');

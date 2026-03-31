@@ -61,11 +61,91 @@
       <p id="profileEmail" class="profile-static-value"></p>
     </section>
 
+    <!-- Analytics Link -->
+    <section class="profile-section">
+      <a href="/analytics.html" class="btn btn-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span>📊</span>
+        <span>View Your Analytics</span>
+      </a>
+    </section>
+
     <!-- Groups (read-only) -->
     <section class="profile-section profile-card">
       <h3 class="profile-section-title">My Groups</h3>
       <div id="profileGroupsList" class="profile-groups-list">
         <span class="profile-hint">Loading…</span>
+      </div>
+    </section>
+
+    <!-- Notification Settings -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Notification Settings</h3>
+      <p class="profile-hint" style="margin-bottom:16px;">Choose what updates you want to receive</p>
+      
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Push Notifications</div>
+          <div class="notif-setting-desc">Get push notifications on this device</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pushNotifToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Reactions</div>
+          <div class="notif-setting-desc">When someone reacts to your posts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="reactionsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Comments</div>
+          <div class="notif-setting-desc">When someone comments on your posts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="commentsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Mentions</div>
+          <div class="notif-setting-desc">When someone mentions you</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="mentionsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">New Posts in My Boards</div>
+          <div class="notif-setting-desc">When someone posts in boards you're in</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="newPostsNotifToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Direct Messages</div>
+          <div class="notif-setting-desc">When you receive a new message</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dmNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
       </div>
     </section>
 
@@ -127,6 +207,8 @@
 
   <!-- App Scripts -->
   <script defer src="/js/firebase.js?v=40"></script>
+  <script defer src="/js/formation-access.js?v=104"></script>
+  <script defer src="/js/sw-update-checker.js?v=96"></script>
   <script defer src="/js/upload.js?v=40"></script>
   <script defer src="/js/notifications.js?v=40"></script>
   <script defer src="/js/dm-badge.js?v=40"></script>
@@ -141,17 +223,21 @@
       <span class="bn-icon">🏠</span>
       <span class="bn-label">Home</span>
     </a>
-    <a href="/explore.html" class="bn-tab" aria-label="Explore">
-      <span class="bn-icon">🔍</span>
-      <span class="bn-label">Explore</span>
-    </a>
-    <a href="/dm.html" class="bn-tab" aria-label="Messages">
-      <span class="bn-icon">💬<span class="dm-badge" style="display:none;"></span></span>
-      <span class="bn-label">Messages</span>
+    <a href="/schools.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
     </a>
     <a href="/boards.html" class="bn-tab" aria-label="Boards">
       <span class="bn-icon">📋</span>
       <span class="bn-label">Boards</span>
+    </a>
+    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+      <span class="bn-icon">👗</span>
+      <span class="bn-label">MV House</span>
+    </a>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
     </a>
     <a href="/profile.html" class="bn-tab active" aria-label="Profile">
       <span class="bn-icon">👤</span>

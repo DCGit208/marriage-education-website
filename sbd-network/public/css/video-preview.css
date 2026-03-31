@@ -1,0 +1,441 @@
+/**
+ * VIDEO PREVIEW SYSTEM
+ * ====================
+ * 
+ * Styles for video lessons with preview mode and locked full-access.
+ * Allows 2-5 minute previews, then locks with upgrade prompt.
+ */
+
+/* ==================================================================
+   VIDEO CONTAINER
+   ================================================================== */
+
+.video-lesson-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.video-player-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 40px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================================================================
+   VIDEO PLAYER
+   ================================================================== */
+
+.video-player {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 16 / 9;
+}
+
+.video-player video {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ==================================================================
+   PREVIEW MODE INDICATOR
+   ================================================================== */
+
+.video-preview-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 165, 0, 0.95);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.video-time-remaining {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* ==================================================================
+   LOCKED OVERLAY
+   ================================================================== */
+
+.video-locked-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 15, 30, 0.95) 0%,
+        rgba(10, 25, 50, 0.95) 100%
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.video-locked-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.video-lock-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: lockPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.video-lock-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.video-lock-message {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 32px;
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.video-unlock-btn {
+    background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+    color: #000;
+    padding: 16px 50px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.video-unlock-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 255, 136, 0.6);
+}
+
+/* ==================================================================
+   LESSON INFO
+   ================================================================== */
+
+.lesson-info {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+}
+
+.lesson-header {
+    margin-bottom: 24px;
+}
+
+.lesson-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.lesson-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.lesson-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lesson-description {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 24px;
+}
+
+.lesson-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.lesson-topic-tag {
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ==================================================================
+   LESSON ACTIONS
+   ================================================================== */
+
+.lesson-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}
+
+.lesson-action-btn {
+    background: rgba(0, 204, 255, 0.1);
+    color: #00ccff;
+    border: 2px solid rgba(0, 204, 255, 0.3);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lesson-action-btn:hover {
+    background: rgba(0, 204, 255, 0.2);
+    border-color: #00ccff;
+}
+
+.lesson-action-btn.primary {
+    background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+    color: #000;
+    border: none;
+}
+
+.lesson-action-btn.primary:hover {
+    background: linear-gradient(135deg, #00ffaa 0%, #00ddff 100%);
+}
+
+/* ==================================================================
+   PREVIEW PROGRESS BAR
+   ================================================================== */
+
+.preview-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 10;
+}
+
+.preview-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9500 0%, #ff5500 100%);
+    width: 0%;
+    transition: width 0.5s linear;
+}
+
+/* ==================================================================
+   LOCKED LESSON CARD (for lesson lists)
+   ================================================================== */
+
+.lesson-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.lesson-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+.lesson-card.locked {
+    position: relative;
+    overflow: hidden;
+}
+
+.lesson-card.locked::before {
+    content: "🔒";
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 24px;
+    opacity: 0.5;
+}
+
+.lesson-card-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.lesson-card.locked .lesson-card-title {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.lesson-card-duration {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 12px;
+}
+
+.lesson-card-preview-badge {
+    display: inline-block;
+    background: rgba(255, 165, 0, 0.2);
+    color: #ff9500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+.lesson-card-locked-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+/* ==================================================================
+   MOBILE RESPONSIVE
+   ================================================================== */
+
+@media (max-width: 768px) {
+    .video-lesson-container {
+        padding: 20px 10px;
+    }
+    
+    .video-player-wrapper {
+        border-radius: 8px;
+    }
+    
+    .video-preview-badge {
+        top: 12px;
+        left: 12px;
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+    
+    .video-time-remaining {
+        top: 12px;
+        right: 12px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .video-locked-overlay {
+        padding: 20px;
+    }
+    
+    .video-lock-icon {
+        font-size: 48px;
+    }
+    
+    .video-lock-title {
+        font-size: 22px;
+    }
+    
+    .video-lock-message {
+        font-size: 14px;
+    }
+    
+    .video-unlock-btn {
+        padding: 14px 32px;
+        font-size: 16px;
+    }
+    
+    .lesson-title {
+        font-size: 24px;
+    }
+    
+    .lesson-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .lesson-actions {
+        flex-direction: column;
+    }
+    
+    .lesson-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ==================================================================
+   PRINT STYLES
+   ================================================================== */
+
+@media print {
+    .video-player-wrapper,
+    .video-locked-overlay,
+    .lesson-actions {
+        display: none;
+    }
+}
