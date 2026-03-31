@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SBD Formation Journey - Learn and Grow">
+    <meta name="theme-color" content="#667eea">
+    <title>Learn - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/learn.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    
+    <style>
+        .learn-page {
+            padding-bottom: 80px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="learn-page bottom-nav-page">
+    
+    <!-- Learn Header with Progress -->
+    <header class="learn-header">
+        <div class="user-progress">
+            <div class="streak">
+                <span class="streak-icon">🔥</span>
+                <span id="userStreak">0</span> day streak
+            </div>
+            <div class="tier-badge" id="tierBadge">Free</div>
+        </div>
+        <h1>Your Formation Journey</h1>
+        <p id="progressSummary">Loading...</p>
+    </header>
+
+    <!-- Continue Learning Section -->
+    <section class="continue-learning" id="continueSection" style="display:none;">
+        <h2>Continue Learning</h2>
+        <div class="current-module-card" id="currentModuleCard" onclick="continueModule()">
+            <div class="module-info">
+                <span class="course-name" id="currentCourseName"></span>
+                <span class="module-name" id="currentModuleName"></span>
+            </div>
+            <button class="btn-continue">Continue →</button>
+            <div class="progress-bar">
+                <div class="progress-fill" id="currentProgress" style="width: 0%"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Schools Grid -->
+    <section class="schools-section">
+        <h2>Formation Schools</h2>
+        <p class="section-subtitle">Four pillars of covenant maturity</p>
+        
+        <div class="schools-grid" id="schoolsGrid">
+            <!-- Loading state -->
+            <div class="loading-container" style="grid-column: 1 / -1;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
+                <p style="color: #666; font-size: 1.1rem;">Loading schools...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/tier-access.js"></script>
+    <script src="/js/learn.js"></script>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab active" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+            <span class="bn-icon">👗</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+</body>
+</html>
