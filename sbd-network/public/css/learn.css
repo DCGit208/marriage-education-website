@@ -185,19 +185,52 @@
 }
 
 .school-meta {
+  display: none; /* REMOVED: No course counts or prices */
+}
+
+/* School Status Indicators */
+.school-status {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   margin-bottom: 1rem;
   font-size: 0.85rem;
-  color: #666;
+  font-weight: 500;
+}
+
+.school-status.in-progress {
+  background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+  color: white;
+}
+
+.school-status.locked {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.school-status.partial {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  color: white;
+}
+
+.school-status.full {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.status-text {
+  flex: 1;
 }
 
 .lock-badge {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  text-align: center;
+  display: none; /* REMOVED: Using school-status instead */
+}
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 1rem;
