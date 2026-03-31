@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SBD Formation Journey">
+    <meta name="theme-color" content="#000000">
+    <title>Formation Journey - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <style>
+        .schools-page {
+            padding-bottom: 80px;
+        }
+        
+        .schools-hero {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--bg-secondary, #1a1a1a) 0%, var(--bg-primary, #000) 100%);
+            border-bottom: 1px solid var(--border-color, #333);
+            text-align: center;
+        }
+        
+        .schools-hero h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-primary, #00bcd4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .schools-hero p {
+            color: var(--text-secondary, #aaa);
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .journey-section {
+            padding: 30px 20px;
+        }
+        
+        .journey-section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: var(--text-primary, #fff);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .journey-section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent-primary, #00bcd4);
+            border-radius: 2px;
+        }
+        
+        .school-card {
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .school-card:hover:not(.locked) {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 188, 212, 0.2);
+            border-color: var(--accent-primary, #00bcd4);
+        }
+        
+        .school-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .school-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+        
+        .school-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .school-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .school-description {
+            color: var(--text-secondary, #aaa);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+        
+        .school-meta {
+            display: flex;
+            gap: 16px;
+            margin: 12px 0 20px 0;
+            color: var(--text-secondary, #aaa);
+            font-size: 0.9rem;
+        }
+        
+        .school-meta span {
+            padding: 6px 12px;
+            background: var(--bg-secondary, #1a1a1a);
+            border-radius: 6px;
+        }
+        
+        .school-card .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .school-card.locked .btn {
+            background: var(--bg-tertiary, #2a2a2a);
+            color: var(--text-secondary, #aaa);
+            cursor: not-allowed;
+        }
+        
+        .unlock-requirement {
+            display: none;
+            padding: 12px;
+            background: var(--bg-tertiary, #2a2a2a);
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+            text-align: center;
+        }
+        
+        .school-card.locked .unlock-requirement {
+            display: block;
+        }
+        
+        .expression-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .expression-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="schools-page bottom-nav-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button class="back-btn btn btn-icon" aria-label="Back">←</button>
+            <h1 class="page-title">Formation Journey</h1>
+        </div>
+        <div class="header-right">
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="schools-hero">
+        <h1>Your Formation Journey</h1>
+        <p>Identity → Literacy → Expression</p>
+    </section>
+    
+    <!-- Main Content -->
+    <main class="schools-main">
+        
+        <!-- SECTION 1: Start Your Formation -->
+        <section class="journey-section">
+            <h2 class="journey-section-title">Start Your Formation</h2>
+            
+            <div class="school-card" data-school-id="teleios">
+                <span class="school-icon">🧠</span>
+                <h3 class="school-name">Teleios — Become Whole</h3>
+                <p class="school-description">
+                    Foundation of identity, wholeness, and maturity. Your journey begins here.
+                </p>
+                <button class="btn btn-primary" onclick="openSchool('teleios')">
+                    Start Here
+                </button>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: Build Design Literacy -->
+        <section class="journey-section">
+            <h2 class="journey-section-title">Build Design Literacy</h2>
+            
+            <div class="school-card" data-school-id="sexual-literacy">
+                <span class="school-icon">📐</span>
+                <h3 class="school-name">Sexual Literacy — Master Design</h3>
+                <p class="school-description">
+                    Understand sexuality as covenant, not culture. Master the design of human formation.
+                </p>
+                <button class="btn btn-primary" onclick="openSchool('sexual-literacy')">
+                    Begin Course
+                </button>
+                <div class="unlock-requirement">
+                    🔒 Start Teleios to unlock
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: Step Into Expression -->
+        <section class="journey-section">
+            <h2 class="journey-section-title">Step Into Expression</h2>
+            
+            <div class="expression-grid">
+                <div class="school-card locked" data-school-id="muliebrity">
+                    <span class="school-icon">👗</span>
+                    <h3 class="school-name">Muliebrity</h3>
+                    <p class="school-description">
+                        Feminine excellence and expression mastery.
+                    </p>
+                    <button class="btn" onclick="openSchool('muliebrity')">
+                        Unlock School
+                    </button>
+                    <div class="unlock-requirement">
+                        🔒 Complete foundation to unlock
+                    </div>
+                </div>
+                
+                <div class="school-card locked" data-school-id="virility">
+                    <span class="school-icon">🎯</span>
+                    <h3 class="school-name">Virility</h3>
+                    <p class="school-description">
+                        Masculine authority and leadership.
+                    </p>
+                    <button class="btn" onclick="openSchool('virility')">
+                        Unlock School
+                    </button>
+                    <div class="unlock-requirement">
+                        🔒 Complete foundation to unlock
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=70"></script>
+    <script defer src="/js/formation-access.js?v=104"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
+    <script defer src="/js/notifications.js?v=52"></script>
+    <script defer src="/js/transitions.js?v=52"></script>
+    <script defer src="/js/schools.js?v=104"></script>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/schools.html" class="bn-tab active" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+            <span class="bn-icon">👗</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+    
+    <script defer src="/js/offline.js?v=52"></script>
+</body>
+</html>
