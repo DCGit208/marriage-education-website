@@ -46,7 +46,7 @@ async function initializeTierView() {
   
   if (!hasAccess && userTier !== currentTierView) {
     // Redirect to payment page with tier parameter
-    window.location.href = `/payment.html?tier=${currentTierView}`;
+    window.location.href = `/payment?tier=${currentTierView}`;
     return;
   }
   
