@@ -45,8 +45,8 @@ async function initializeTierView() {
   const hasAccess = checkTierAccess(currentTierView);
   
   if (!hasAccess && userTier !== currentTierView) {
-    // Redirect to upgrade page
-    window.location.href = `/upgrade.html?tier=${currentTierView}`;
+    // Redirect to payment page with tier parameter
+    window.location.href = `/payment.html?tier=${currentTierView}`;
     return;
   }
   
