@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upgrade your SBD Network tier">
+    <meta name="theme-color" content="#667eea">
+    <title>Upgrade - SBD Network</title>
+    
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/learn.css">
+    
+    <style>
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        
+        .upgrade-container {
+            max-width: 600px;
+            background: white;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .upgrade-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .upgrade-container h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .upgrade-container p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .tier-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .tier-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tier-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .tier-features {
+            text-align: left;
+            margin-top: 1.5rem;
+        }
+        
+        .tier-features li {
+            margin-bottom: 0.75rem;
+            list-style: none;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .tier-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .btn-upgrade {
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+        
+        .btn-upgrade:hover {
+            transform: scale(1.02);
+        }
+        
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="upgrade-container">
+        <div class="upgrade-icon" id="tierIcon">🎯</div>
+        <h1>Upgrade Your Formation Journey</h1>
+        <p id="upgradeMessage">Unlock deeper access to formation content and community features.</p>
+        
+        <div class="tier-info" id="tierInfo">
+            <h2 id="tierName">Loading...</h2>
+            <div class="tier-price" id="tierPrice">$0</div>
+            <ul class="tier-features" id="tierFeatures">
+                <li>Loading features...</li>
+            </ul>
+        </div>
+        
+        <button class="btn-upgrade" onclick="proceedToCheckout()">
+            Continue to Checkout
+        </button>
+        
+        <a href="/learn.html" class="back-link">← Back to Learn</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="/js/firebase.js?v=70"></script>
+    
+    <script>
+        // Get tier from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedTier = urlParams.get('tier') || 'foundation';
+        
+        // Tier configurations
+        const tierConfigs = {
+            foundation: {
+                name: 'Foundation',
+                price: '$9/month',
+                icon: '🟢',
+                color: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
+                features: [
+                    'Teleios Foundation School - Modules 1-3',
+                    'Sexual Literacy - SBD For Dummies (partial)',
+                    'Marriage Systems - Introduction module',
+                    'Civilization Leadership - Preview content',
+                    'Access to community boards',
+                    'Progress tracking'
+                ]
+            },
+            premium: {
+                name: 'Premium',
+                price: '$20/month',
+                icon: '🔵',
+                color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                features: [
+                    'Full access to all 44 courses',
+                    'All 4 formation schools (complete)',
+                    'Unlimited course access',
+                    'Advanced discussion boards',
+                    'Certificate of completion',
+                    'Priority support'
+                ]
+            },
+            elite: {
+                name: 'Elite',
+                price: '$50/month',
+                icon: '🔴',
+                color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                features: [
+                    'Everything in Premium',
+                    'MV House expression system',
+                    'Elite community boards',
+                    'Exclusive coaching sessions',
+                    '1-on-1 formation guidance',
+                    'Early access to new content'
+                ]
+            }
+        };
+        
+        // Configure page for requested tier
+        const config = tierConfigs[requestedTier] || tierConfigs.foundation;
+        
+        document.getElementById('tierIcon').textContent = config.icon;
+        document.getElementById('tierName').textContent = config.name + ' Tier';
+        document.getElementById('tierPrice').textContent = config.price;
+        document.getElementById('tierInfo').style.background = config.color;
+        
+        const featuresList = document.getElementById('tierFeatures');
+        featuresList.innerHTML = config.features.map(feature => 
+            `<li>${feature}</li>`
+        ).join('');
+        
+        function proceedToCheckout() {
+            // Check if user is logged in
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // User is logged in - proceed to Stripe checkout
+                    // For now, show alert (Phase 2 will implement Stripe)
+                    alert('Payment integration coming in Phase 2. For now, contact support to upgrade to ' + config.name + ' tier.');
+                    window.location.href = '/learn.html';
+                } else {
+                    // User not logged in - redirect to login
+                    window.location.href = '/login.html?redirect=/payment.html?tier=' + requestedTier;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
