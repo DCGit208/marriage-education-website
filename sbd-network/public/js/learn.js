@@ -249,8 +249,8 @@ function enterTier(tierId) {
 }
 
 function showUpgradeModal(targetTier) {
-  // Redirect to payment/upgrade page
-  window.location.href = `/upgrade.html?tier=${targetTier}`;
+  // Redirect to payment page with tier parameter
+  window.location.href = `/payment.html?tier=${targetTier}`;
 }
 
 function exploreSchool(schoolId) {
