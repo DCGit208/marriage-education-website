@@ -1,5 +1,5 @@
 /* ============================================
-   CINEMATIC HOME SLIDER - DARK PREMIUM DESIGN
+   CINEMATIC HOME - PIXEL-PERFECT VIDEO REPLICATION
    ============================================ */
 
 * {
@@ -9,40 +9,30 @@
 }
 
 :root {
-  /* Dark Cinematic Palette */
-  --bg-dark: #0D0D0D;
-  --bg-charcoal: #121212;
-  --gold-accent: #C6A96B;
-  --text-beige: #EAE3D2;
-  --text-muted: #999;
-  
-  /* Typography */
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  
-  /* Effects */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-primary: #0A0A0A;
+  --bg-card: #1A1A1A;
+  --gold: #C6A384;
+  --gold-dark: #B89670;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9B9B9B;
+  --text-muted: #6B6B6B;
+  --border-subtle: #2A2A2A;
+  --font-primary: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
 }
 
 body.home-cinematic {
   font-family: var(--font-primary);
-  background: var(--bg-dark);
-  color: var(--text-beige);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ============================================
-   SLIDER CONTAINER
-   ============================================ */
-
+/* SLIDER */
 .slider-container {
-  position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  touch-action: pan-y pinch-zoom;
 }
 
 .slider-track {
@@ -50,11 +40,8 @@ body.home-cinematic {
   height: 100%;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
+  cursor: grab;
 }
-
-/* ============================================
-   SLIDE CARDS
-   ============================================ */
 
 .slide-card {
   position: relative;
@@ -68,292 +55,368 @@ body.home-cinematic {
 
 .card-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   filter: brightness(0.4);
-  transition: transform 0.3s ease;
-}
-
-.slide-card:active .card-bg {
-  transform: scale(1.05);
 }
 
 .card-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    180deg,
-    rgba(13, 13, 13, 0.4) 0%,
-    rgba(13, 13, 13, 0.8) 60%,
-    rgba(13, 13, 13, 0.95) 100%
-  );
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.85) 60%, rgba(10, 10, 10, 0.95) 100%);
 }
 
 .card-content {
   position: relative;
   z-index: 2;
   text-align: center;
-  padding: 40px 24px 120px;
-  max-width: 600px;
+  padding: 60px 32px 140px;
+  max-width: 640px;
   margin: 0 auto;
 }
 
-/* ============================================
-   TYPOGRAPHY
-   ============================================ */
+/* TYPOGRAPHY */
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
 
 .card-title {
-  font-size: clamp(28px, 6vw, 42px);
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-beige);
-  margin-bottom: 16px;
+  font-size: clamp(36px, 7vw, 52px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin-bottom: 40px;
   letter-spacing: -0.02em;
 }
 
 .card-subtitle {
-  font-size: clamp(16px, 3vw, 20px);
+  font-size: 16px;
   font-weight: 400;
-  color: var(--text-muted);
-  margin-bottom: 32px;
-  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  line-height: 1.6;
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
-
+/* BUTTONS */
 .card-cta {
-  display: inline-block;
-  padding: 16px 48px;
-  background: var(--gold-accent);
-  color: var(--bg-dark);
-  font-size: 16px;
+  padding: 18px 48px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--bg-primary);
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   border: none;
-  border-radius: 50px;
+  border-radius: 12px;
   cursor: pointer;
+  box-shadow: 0 4px 20px rgba(198, 163, 132, 0.3);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(198, 169, 107, 0.3);
-  letter-spacing: 0.02em;
 }
 
 .card-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(198, 169, 107, 0.5);
+  box-shadow: 0 6px 30px rgba(198, 163, 132, 0.5);
 }
 
-.card-cta:active {
-  transform: translateY(0);
-}
-
-.card-cta-secondary {
-  display: inline-block;
+.card-cta-outline {
   padding: 14px 40px;
-  background: var(--glass-bg);
-  color: var(--text-beige);
-  font-size: 15px;
-  font-weight: 500;
-  border: 1px solid var(--glass-border);
-  border-radius: 50px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--gold);
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
-.card-cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.card-cta-outline:hover {
+  background: rgba(198, 163, 132, 0.1);
 }
 
-/* ============================================
-   TIER GRID (CARD 2)
-   ============================================ */
-
-.tier-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
+.browse-link {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-top: 32px;
 }
 
-.tier-item {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 24px 16px;
+/* TIER LIST (VERTICAL) */
+.tier-list {
+  max-width: 500px;
+  margin: 0 auto 40px;
+}
+
+.tier-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  margin-bottom: 16px;
+  border-radius: 8px;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
-.tier-item.active {
-  border-color: var(--gold-accent);
-  box-shadow: 0 0 30px rgba(198, 169, 107, 0.3);
+.tier-row:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.tier-badge {
-  font-size: 24px;
+.tier-featured {
+  border: 1.5px solid var(--gold);
+  background: rgba(198, 163, 132, 0.05);
+  padding: 28px 28px;
+  border-radius: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.tier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.tier-name {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tier-price {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.price-period {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.popular-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--gold);
+  color: var(--bg-primary);
+  font-size: 10px;
   font-weight: 700;
-  color: var(--text-beige);
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+}
+
+.tier-features {
+  list-style: none;
+  text-align: left;
+  width: 100%;
+}
+
+.tier-features li {
+  font-size: 15px;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
-.tier-badge.gold {
-  color: var(--gold-accent);
+/* PREMIUM BADGE */
+.premium-badge {
+  position: absolute;
+  top: 120px;
+  left: 32px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.tier-desc {
+/* LOCK ICON */
+.lock-icon-wrapper {
+  margin: 60px 0 40px;
+}
+
+.lock-icon {
+  display: block;
+  margin: 0 auto 20px;
+}
+
+.lock-text {
   font-size: 14px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 400;
 }
 
-/* ============================================
-   PROGRESS STATS (CARD 6)
-   ============================================ */
+/* PRODUCT LIST */
+.product-list {
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
 
-.progress-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.product-item {
+  display: flex;
+  align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  margin-bottom: 12px;
 }
 
-.stat-box {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+.product-icon {
+  font-size: 24px;
+  color: var(--gold);
+  opacity: 0.8;
+}
+
+.product-info {
+  flex: 1;
+  text-align: left;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.product-type {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* GROWTH CHART */
+.growth-chart {
+  display: block;
+  margin: 0 auto 40px;
+}
+
+/* STATS GRID (2x2) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--bg-card);
   border-radius: 12px;
-  padding: 20px 12px;
-  backdrop-filter: blur(10px);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 12px;
+  opacity: 0.7;
 }
 
 .stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--gold-accent);
-  margin-bottom: 4px;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.stat-unit {
+  display: inline;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
 }
 
 .stat-label {
   font-size: 12px;
   color: var(--text-muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-top: 4px;
 }
 
-/* ============================================
-   PAGINATION DOTS
-   ============================================ */
-
+/* PAGINATION */
 .slider-pagination {
   position: absolute;
   bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 12px;
+  gap: 8px;
   z-index: 10;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  width: 32px;
+  height: 6px;
+  background: var(--border-subtle);
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .dot.active {
-  width: 24px;
-  border-radius: 4px;
-  background: var(--gold-accent);
+  width: 48px;
+  background: var(--gold);
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .card-content {
-    padding: 32px 20px 120px;
+    padding: 40px 24px 120px;
   }
   
   .card-title {
-    font-size: 28px;
+    font-size: 32px;
+    margin-bottom: 24px;
   }
   
-  .card-subtitle {
-    font-size: 16px;
+  .tier-row {
+    padding: 16px 20px;
   }
   
-  .tier-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+  .tier-featured {
+    padding: 24px 20px;
   }
   
-  .progress-stats {
-    grid-template-columns: repeat(3, 1fr);
+  .product-item {
+    padding: 16px 20px;
+  }
+  
+  .stats-grid {
     gap: 8px;
   }
   
-  .stat-value {
-    font-size: 24px;
+  .stat-card {
+    padding: 20px 16px;
   }
   
-  .slider-pagination {
-    bottom: 90px;
+  .stat-value {
+    font-size: 28px;
   }
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.card-content {
-  animation: fadeIn 0.6s ease-out;
-}
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-
-.card-cta:focus,
-.card-cta-secondary:focus,
-.dot:focus {
-  outline: 2px solid var(--gold-accent);
-  outline-offset: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slider-track,
-  .card-bg,
-  .card-cta,
-  .tier-item,
-  .dot {
+  * {
     transition: none !important;
     animation: none !important;
   }
