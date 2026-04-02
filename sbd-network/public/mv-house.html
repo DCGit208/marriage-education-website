@@ -315,7 +315,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=73"></script>
+    <script src="/js/firebase.js?v=74"></script>
     
     <script>
         // Use auth, db, and currentUser from firebase.js (already declared)
@@ -372,8 +372,23 @@
         }
 
         function showEmptyWardrobe(context) {
-            const gridId = context.replace(/-/g, '') + 'Grid';
+            // Map context to correct grid ID (camelCase)
+            const gridIds = {
+                'corporate': 'corporateGrid',
+                'casual-day': 'casualDayGrid',
+                'casual-night': 'casualNightGrid',
+                'casual-home': 'casualHomeGrid',
+                'official': 'officialGrid'
+            };
+            
+            const gridId = gridIds[context];
             const grid = document.getElementById(gridId);
+            
+            if (!grid) {
+                console.error(`Grid not found for context: ${context}, gridId: ${gridId}`);
+                return;
+            }
+            
             grid.innerHTML = `
                 <div class="empty-wardrobe" style="grid-column: 1/-1;">
                     <div class="empty-wardrobe-icon">👗</div>
@@ -396,16 +411,53 @@
 
         function updateCompletenessBar(context, completeness) {
             const percentage = Math.round(completeness * 100);
-            const barId = context.replace(/-/g, '') + 'Completeness';
-            const textId = context.replace(/-/g, '') + 'CompletenessText';
             
-            document.getElementById(barId).style.width = `${percentage}%`;
-            document.getElementById(textId).textContent = `Your ${getContextName(context)} Expression is ${percentage}% Complete`;
+            // Map context to correct completeness IDs (camelCase)
+            const barIds = {
+                'corporate': 'corporateCompleteness',
+                'casual-day': 'casualDayCompleteness',
+                'casual-night': 'casualNightCompleteness',
+                'casual-home': 'casualHomeCompleteness',
+                'official': 'officialCompleteness'
+            };
+            
+            const textIds = {
+                'corporate': 'corporateCompletenessText',
+                'casual-day': 'casualDayCompletenessText',
+                'casual-night': 'casualNightCompletenessText',
+                'casual-home': 'casualHomeCompletenessText',
+                'official': 'officialCompletenessText'
+            };
+            
+            const barElement = document.getElementById(barIds[context]);
+            const textElement = document.getElementById(textIds[context]);
+            
+            if (barElement) {
+                barElement.style.width = `${percentage}%`;
+            }
+            
+            if (textElement) {
+                textElement.textContent = `Your ${getContextName(context)} Expression is ${percentage}% Complete`;
+            }
         }
 
         function renderLooks(context, looks) {
-            const gridId = context.replace(/-/g, '') + 'Grid';
+            // Map context to correct grid ID (camelCase)
+            const gridIds = {
+                'corporate': 'corporateGrid',
+                'casual-day': 'casualDayGrid',
+                'casual-night': 'casualNightGrid',
+                'casual-home': 'casualHomeGrid',
+                'official': 'officialGrid'
+            };
+            
+            const gridId = gridIds[context];
             const grid = document.getElementById(gridId);
+            
+            if (!grid) {
+                console.error(`Grid not found for context: ${context}, gridId: ${gridId}`);
+                return;
+            }
             
             if (looks.length === 0) {
                 showEmptyWardrobe(context);

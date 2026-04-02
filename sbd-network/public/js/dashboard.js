@@ -339,21 +339,29 @@ async function loadThisWeeksWork(uid) {
       <div class="week-work-card">
         <h4 class="week-module-title">${escapeHtml(module.title)}</h4>
         <p class="week-module-description">${escapeHtml(module.description || 'Continue your formation journey')}</p>
-        
-    if (weekWorkContainer) {
-      weekWorkContainer.innerHTML = `
-        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">📚</div>
-          <p style="color:var(--text-secondary);">Enroll in a course to see your weekly work</p>
-        </div>
-      `;
-    }    ${linkedBoardId ? `
-            <a href="${boardLink}" class="btn btn-outline">
-              💬 ${escapeHtml(boardTitle)}
-            </a>
-          ` : ''}
-        </div>
+        ${linkedBoardId ? `
+          <a href="${boardLink}" class="btn btn-outline">
+            💬 ${escapeHtml(boardTitle)}
+          </a>
+        ` : ''}
       </div>
+    `;
+  } catch (error) {
+    console.error('Error loading This Week\'s Work:', error);
+    weekWorkContainer.innerHTML = `
+      <div class="error-state">
+        <p>⚠️ Could not load this week's work</p>
+      </div>
+    `;
+  }
+}
+
+// ================================================================
+// 💬 SECTION 4: ACTIVE DISCUSSIONS (Course-linked boards only)
+// ================================================================
+
+async function loadActiveDiscussions(uid) {
+  try {
     if (!discussionsContainer) {
       console.warn('discussionsContainer element not found');
       return;
@@ -388,8 +396,9 @@ async function loadActiveDiscussions(uid) {
     
     if (boardsQuery.empty) {
       discussionsContainer.innerHTML = `
-        <div class="empty-state-inline">
-          <p>No course discussions yet. Start a course to join discussions.</p>
+        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
+          <div style="font-size:3rem;margin-bottom:16px;">💬</div>
+          <p style="color:var(--text-secondary);">Join a course to participate in discussions</p>
         </div>
       `;
       return;
@@ -401,19 +410,8 @@ async function loadActiveDiscussions(uid) {
     for (const doc of boardsQuery.docs) {
       const board = doc.data();
       
-      // Get last comment count
-      const commentsSnapshot = await db.collection('boards').doc(doc.id)
-        .collection('comments')
-        .orderBy('createdAt', 'desc')
-        .limit(1)
-    if (discussionsContainer) {
-      discussionsContainer.innerHTML = `
-        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">💬</div>
-          <p style="color:var(--text-secondary);">Course discussions will appear here</p>
-        </div>
-      `;
-    }  : commentsSnapshot.docs[0].data().createdAt;
+      // Get last activity timestamp
+      const lastActivity = board.lastPostAt || board.createdAt;
       
       const discussionCard = document.createElement('div');
       discussionCard.className = 'discussion-card';
