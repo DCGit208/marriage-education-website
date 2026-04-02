@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Your formation system">
+    <meta name="theme-color" content="#FAF8F5">
+    <title>Home - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/home-premium.css?v=1">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+</head>
+<body class="home-premium bottom-nav-page">
+    
+    <!-- HERO SECTION -->
+    <section class="home-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">You were not designed to struggle through relationships</h1>
+            <p class="hero-subtitle">This is a system of formation — not advice</p>
+            <button class="hero-cta" id="beginFormation">Begin Your Formation →</button>
+        </div>
+    </section>
+    
+    <!-- SYSTEM PATH -->
+    <section class="system-path">
+        <p class="path-label">Most people never go beyond identity</p>
+        
+        <div class="path-stages">
+            <div class="stage-card active" data-stage="teleios">
+                <h3 class="stage-title">Teleios</h3>
+                <p class="stage-description">Identity Formation</p>
+            </div>
+            
+            <div class="stage-card locked" data-stage="sexual-literacy">
+                <h3 class="stage-title">Sexual Literacy</h3>
+                <p class="stage-description">Understanding</p>
+            </div>
+            
+            <div class="stage-card locked" data-stage="marriage-systems">
+                <h3 class="stage-title">Marriage Systems</h3>
+                <p class="stage-description">Structure</p>
+            </div>
+            
+            <div class="stage-card locked" data-stage="mv-house">
+                <h3 class="stage-title">MV House</h3>
+                <p class="stage-description">Expression</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- USER STATE CARD -->
+    <section class="user-state">
+        <div class="state-card">
+            <div class="state-tier">Foundation</div>
+            <h2 class="state-current">Teleios — Identity Formation</h2>
+            
+            <div class="state-progress">
+                <div class="progress-ring">
+                    <svg width="80" height="80">
+                        <circle class="progress-ring-bg" cx="40" cy="40" r="34"></circle>
+                        <circle class="progress-ring-fill" cx="40" cy="40" r="34" 
+                                stroke-dasharray="213.6" 
+                                stroke-dashoffset="160.2"
+                                id="progressCircle"></circle>
+                    </svg>
+                    <div class="progress-percent" id="progressPercent">25%</div>
+                </div>
+                
+                <div class="progress-details">
+                    <div class="progress-label">Current progress</div>
+                    <div class="progress-value" id="progressDetail">2 of 8 lessons complete</div>
+                </div>
+            </div>
+            
+            <button class="state-cta" id="continueBtn">Continue →</button>
+        </div>
+    </section>
+    
+    <!-- DESIRE SECTION -->
+    <section class="desire-section">
+        <h2 class="desire-label">Few people reach this level</h2>
+        
+        <div class="desire-cards">
+            <div class="desire-card">
+                <div class="desire-icon">🔐</div>
+                <h3 class="desire-title">Understanding is locked</h3>
+                <p class="desire-hint">Complete Teleios to unlock Sexual Literacy</p>
+            </div>
+            
+            <div class="desire-card">
+                <div class="desire-icon">🏛️</div>
+                <h3 class="desire-title">Structure is hidden</h3>
+                <p class="desire-hint">Master foundations to access systems</p>
+            </div>
+            
+            <div class="desire-card">
+                <div class="desire-icon">👗</div>
+                <h3 class="desire-title">Expression is reserved</h3>
+                <p class="desire-hint">Premium members enter MV House</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- IDENTITY STATEMENT -->
+    <section class="identity-statement">
+        <p class="statement-primary">This is not marriage advice</p>
+        <p class="statement-secondary">This is human formation</p>
+    </section>
+    
+    <!-- TIER PROGRESSION -->
+    <section class="tier-progression">
+        <div class="tier-intro">
+            <p class="tier-intro-text">Your Journey</p>
+            <h2 class="tier-intro-title">Access expands as you commit</h2>
+        </div>
+        
+        <div class="tier-track">
+            <div class="tier-node">
+                <div class="tier-node-circle">Free</div>
+                <div class="tier-node-label">Explore</div>
+            </div>
+            
+            <div class="tier-connector"></div>
+            
+            <div class="tier-node active">
+                <div class="tier-node-circle">$9</div>
+                <div class="tier-node-label">Foundation</div>
+            </div>
+            
+            <div class="tier-connector"></div>
+            
+            <div class="tier-node">
+                <div class="tier-node-circle">$20</div>
+                <div class="tier-node-label">Premium</div>
+            </div>
+            
+            <div class="tier-connector"></div>
+            
+            <div class="tier-node">
+                <div class="tier-node-circle">$50</div>
+                <div class="tier-node-label">Elite</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+        <a href="/home-premium.html" class="bn-item active">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-item">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-item">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/mv-house.html" class="bn-item">
+            <span class="bn-icon">👗</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/shop.html" class="bn-item">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-item">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+    
+    <!-- Firebase & Scripts -->
+    <script defer src="/js/firebase.js?v=75"></script>
+    <script defer src="/js/home-premium.js?v=1"></script>
+    
+</body>
+</html>
