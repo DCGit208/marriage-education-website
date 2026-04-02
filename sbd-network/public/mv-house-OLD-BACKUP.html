@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="MV House - Elite Fashion">
+    <meta name="theme-color" content="#000000">
+    <title>MV House - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <style>
+        .mv-house-page {
+            padding-bottom: 80px;
+        }
+        
+        .mv-hero {
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
+            text-align: center;
+            color: #fff;
+        }
+        
+        .mv-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+        }
+        
+        .mv-hero .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin: 0;
+        }
+        
+        .mv-tier-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 30px 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .product-card {
+            background: var(--bg-secondary, #1a1a1a);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(106, 27, 154, 0.3);
+        }
+        
+        .product-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        
+        .product-info {
+            padding: 20px;
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .product-category {
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+            text-transform: capitalize;
+            margin-bottom: 12px;
+        }
+        
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #6a1b9a;
+        }
+        
+        .elite-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+        }
+        
+        .loading-container {
+            padding: 80px 20px;
+            text-align: center;
+        }
+        
+        .paywall-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .paywall-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .paywall-content {
+            background: var(--bg-secondary, #1a1a1a);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .paywall-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .paywall-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            background: linear-gradient(135deg, #fff 0%, #6a1b9a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .paywall-message {
+            color: var(--text-secondary, #aaa);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 0 0 30px 0;
+        }
+        
+        .paywall-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body class="mv-house-page bottom-nav-page">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button class="back-btn btn btn-icon" aria-label="Back">←</button>
+            <h1 class="page-title">MV House</h1>
+        </div>
+        <div class="header-right">
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="mv-hero">
+        <h1>MV House</h1>
+        <p class="subtitle">Muliebrity & Virility Collection</p>
+        <span class="mv-tier-badge">🔒 Elite Tier Exclusive</span>
+    </section>
+    
+    <!-- Products Grid -->
+    <div class="products-grid" id="productsGrid">
+        <!-- Loading state -->
+        <div class="loading-container" style="grid-column: 1 / -1;">
+            <div style="font-size: 3rem; margin-bottom: 16px;">👗</div>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">Loading MV House collection...</p>
+        </div>
+    </div>
+    
+    <!-- Paywall Overlay -->
+    <div class="paywall-overlay" id="paywallOverlay">
+        <div class="paywall-content">
+            <div class="paywall-icon">🔐</div>
+            <h2 class="paywall-title">Elite Tier Required</h2>
+            <p class="paywall-message">
+                MV House is exclusive to Elite tier members. Upgrade to access premium fashion collections for covenant-minded individuals.
+            </p>
+            <div class="paywall-actions">
+                <a href="/shop.html" class="btn btn-primary">Upgrade to Elite</a>
+                <button class="btn btn-secondary" onclick="closePaywall()">Back to Dashboard</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/mv-house.html" class="bn-tab active" aria-label="MV House">
+            <span class="bn-icon">👗</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=70"></script>
+    <script defer src="/js/formation-access.js?v=104"></script>
+    <script defer src="/js/mv-house.js?v=105"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
+    <script defer src="/js/notifications.js?v=52"></script>
+    <script defer src="/js/transitions.js?v=52"></script>
+    <script defer src="/js/offline.js?v=53"></script>
+</body>
+</html>

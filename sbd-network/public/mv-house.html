@@ -3,245 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="MV House - Elite Fashion">
     <meta name="theme-color" content="#000000">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>MV House - SBD Network</title>
-    
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
     
     <style>
-        .mv-house-page {
+        body {
+            background: #f5f5f7;
             padding-bottom: 80px;
         }
         
-        .mv-hero {
-            padding: 60px 20px;
-            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
-            text-align: center;
-            color: #fff;
-        }
-        
-        .mv-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0 0 12px 0;
-        }
-        
-        .mv-hero .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.95;
-            margin: 0;
-        }
-        
-        .mv-tier-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 16px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .products-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 30px 20px;
-        }
-        
-        @media (min-width: 768px) {
-            .products-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            .products-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        .product-card {
-            background: var(--bg-secondary, #1a1a1a);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(106, 27, 154, 0.3);
-        }
-        
-        .product-image {
-            width: 100%;
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-        }
-        
-        .product-info {
-            padding: 20px;
-        }
-        
-        .product-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            color: var(--text-primary, #fff);
-        }
-        
-        .product-category {
-            font-size: 0.85rem;
-            color: var(--text-secondary, #aaa);
-            text-transform: capitalize;
-            margin-bottom: 12px;
-        }
-        
-        .product-price {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #6a1b9a;
-        }
-        
-        .elite-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
-            color: #fff;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 12px;
-        }
-        
-        .loading-container {
-            padding: 80px 20px;
+        .mv-house-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1.5rem;
             text-align: center;
         }
         
-        .paywall-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 10000;
-            padding: 20px;
-            overflow-y: auto;
+        .mv-house-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
         }
         
-        .paywall-overlay.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .mv-house-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
         }
         
-        .paywall-content {
-            background: var(--bg-secondary, #1a1a1a);
+        .wardrobes-container {
+            padding: 1.5rem;
+        }
+        
+        .wardrobe-section {
+            background: white;
             border-radius: 16px;
-            padding: 40px;
-            max-width: 500px;
-            text-align: center;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
         
-        .paywall-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-        
-        .paywall-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0 0 16px 0;
-            background: linear-gradient(135deg, #fff 0%, #6a1b9a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .paywall-message {
-            color: var(--text-secondary, #aaa);
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin: 0 0 30px 0;
-        }
-        
-        .paywall-actions {
+        .wardrobe-header {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .wardrobe-header h2 {
+            font-size: 1.25rem;
+            color: #333;
+        }
+        
+        .item-count {
+            background: #f0f0f5;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .completeness-bar {
+            background: #f0f0f5;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .completeness-fill {
+            background: linear-gradient(90deg, #00b09b 0%, #96c93d 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .completeness-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .wardrobe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .look-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .look-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .look-image {
+            width: 100%;
+            height: 150px;
+            background: #e0e0e5;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            object-fit: cover;
+        }
+        
+        .look-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .look-status.saved { background: #e3f2fd; color: #1976d2; }
+        .look-status.styled { background: #f3e5f5; color: #7b1fa2; }
+        .look-status.planned { background: #fff3e0; color: #f57c00; }
+        .look-status.acquired { background: #e8f5e9; color: #388e3c; }
+        
+        .wardrobe-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            min-width: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-secondary {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            color: #667eea;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .empty-wardrobe {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #999;
+        }
+        
+        .empty-wardrobe-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .wardrobe-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .wardrobe-actions {
+                flex-direction: column;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
         }
     </style>
 </head>
-<body class="mv-house-page bottom-nav-page">
-    
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-left">
-            <button class="back-btn btn btn-icon" aria-label="Back">←</button>
-            <h1 class="page-title">MV House</h1>
-        </div>
-        <div class="header-right">
-            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
-                🔔<span class="notif-badge" style="display:none;"></span>
-            </button>
-        </div>
+<body class="bottom-nav-page">
+
+    <header class="mv-house-header">
+        <h1>🏛️ MV House</h1>
+        <p>Your Personal Expression Engine</p>
     </header>
-    
-    <!-- Hero Section -->
-    <section class="mv-hero">
-        <h1>MV House</h1>
-        <p class="subtitle">Muliebrity & Virility Collection</p>
-        <span class="mv-tier-badge">🔒 Elite Tier Exclusive</span>
-    </section>
-    
-    <!-- Products Grid -->
-    <div class="products-grid" id="productsGrid">
-        <!-- Loading state -->
-        <div class="loading-container" style="grid-column: 1 / -1;">
-            <div style="font-size: 3rem; margin-bottom: 16px;">👗</div>
-            <p style="color: var(--text-secondary); font-size: 1.1rem;">Loading MV House collection...</p>
-        </div>
-    </div>
-    
-    <!-- Paywall Overlay -->
-    <div class="paywall-overlay" id="paywallOverlay">
-        <div class="paywall-content">
-            <div class="paywall-icon">🔐</div>
-            <h2 class="paywall-title">Elite Tier Required</h2>
-            <p class="paywall-message">
-                MV House is exclusive to Elite tier members. Upgrade to access premium fashion collections for covenant-minded individuals.
-            </p>
-            <div class="paywall-actions">
-                <a href="/shop.html" class="btn btn-primary">Upgrade to Elite</a>
-                <button class="btn btn-secondary" onclick="closePaywall()">Back to Dashboard</button>
+
+    <main class="wardrobes-container">
+        
+        <!-- Corporate Wardrobe -->
+        <section class="wardrobe-section" id="corporateWardrobe">
+            <div class="wardrobe-header">
+                <h2>💼 Corporate Expression</h2>
+                <span class="item-count" id="corporateCount">0 looks</span>
             </div>
-        </div>
-    </div>
-    
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
-            <span class="bn-icon">🏠</span>
-            <span class="bn-label">Home</span>
+            <div class="completeness-bar">
+                <div class="completeness-fill" id="corporateCompleteness" style="width:0%"></div>
+            </div>
+            <p class="completeness-text" id="corporateCompletenessText">Your Corporate Expression is 0% Complete</p>
+            <div class="wardrobe-grid" id="corporateGrid"></div>
+            <div class="wardrobe-actions">
+                <button class="btn-primary" onclick="completeWardrobe('corporate')">Complete My Wardrobe</button>
+                <button class="btn-secondary" onclick="requestStyling('corporate')">Request Custom Styling</button>
+            </div>
+        </section>
+
+        <!-- Casual Day Wardrobe -->
+        <section class="wardrobe-section" id="casualDayWardrobe">
+            <div class="wardrobe-header">
+                <h2>☀️ Casual Day Expression</h2>
+                <span class="item-count" id="casualDayCount">0 looks</span>
+            </div>
+            <div class="completeness-bar">
+                <div class="completeness-fill" id="casualDayCompleteness" style="width:0%"></div>
+            </div>
+            <p class="completeness-text" id="casualDayCompletenessText">Your Casual Day Expression is 0% Complete</p>
+            <div class="wardrobe-grid" id="casualDayGrid"></div>
+            <div class="wardrobe-actions">
+                <button class="btn-primary" onclick="completeWardrobe('casual-day')">Complete My Wardrobe</button>
+                <button class="btn-secondary" onclick="requestStyling('casual-day')">Request Custom Styling</button>
+            </div>
+        </section>
+
+        <!-- Casual Night Wardrobe -->
+        <section class="wardrobe-section" id="casualNightWardrobe">
+            <div class="wardrobe-header">
+                <h2>🌙 Casual Night Expression</h2>
+                <span class="item-count" id="casualNightCount">0 looks</span>
+            </div>
+            <div class="completeness-bar">
+                <div class="completeness-fill" id="casualNightCompleteness" style="width:0%"></div>
+            </div>
+            <p class="completeness-text" id="casualNightCompletenessText">Your Casual Night Expression is 0% Complete</p>
+            <div class="wardrobe-grid" id="casualNightGrid"></div>
+            <div class="wardrobe-actions">
+                <button class="btn-primary" onclick="completeWardrobe('casual-night')">Complete My Wardrobe</button>
+                <button class="btn-secondary" onclick="requestStyling('casual-night')">Request Custom Styling</button>
+            </div>
+        </section>
+
+        <!-- Casual @Home Wardrobe -->
+        <section class="wardrobe-section" id="casualHomeWardrobe">
+            <div class="wardrobe-header">
+                <h2>🏡 Casual @Home Expression</h2>
+                <span class="item-count" id="casualHomeCount">0 looks</span>
+            </div>
+            <div class="completeness-bar">
+                <div class="completeness-fill" id="casualHomeCompleteness" style="width:0%"></div>
+            </div>
+            <p class="completeness-text" id="casualHomeCompletenessText">Your Casual @Home Expression is 0% Complete</p>
+            <div class="wardrobe-grid" id="casualHomeGrid"></div>
+            <div class="wardrobe-actions">
+                <button class="btn-primary" onclick="completeWardrobe('casual-home')">Complete My Wardrobe</button>
+                <button class="btn-secondary" onclick="requestStyling('casual-home')">Request Custom Styling</button>
+            </div>
+        </section>
+
+        <!-- Official Wardrobe -->
+        <section class="wardrobe-section" id="officialWardrobe">
+            <div class="wardrobe-header">
+                <h2>👑 Official Expression</h2>
+                <span class="item-count" id="officialCount">0 looks</span>
+            </div>
+            <div class="completeness-bar">
+                <div class="completeness-fill" id="officialCompleteness" style="width:0%"></div>
+            </div>
+            <p class="completeness-text" id="officialCompletenessText">Your Official Expression is 0% Complete</p>
+            <div class="wardrobe-grid" id="officialGrid"></div>
+            <div class="wardrobe-actions">
+                <button class="btn-primary" onclick="completeWardrobe('official')">Complete My Wardrobe</button>
+                <button class="btn-secondary" onclick="requestStyling('official')">Request Custom Styling</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation (Board Context) -->
+    <nav class="bottom-nav" aria-label="Board navigation">
+        <a href="/dm.html" class="bn-tab" aria-label="Messages">
+            <span class="bn-icon">💬</span>
+            <span class="bn-label">Messages</span>
         </a>
-        <a href="/learn.html" class="bn-tab" aria-label="Learn">
-            <span class="bn-icon">📚</span>
-            <span class="bn-label">Learn</span>
+        <a href="/explore.html" class="bn-tab" aria-label="Explore">
+            <span class="bn-icon">🔍</span>
+            <span class="bn-label">Explore</span>
         </a>
         <a href="/boards.html" class="bn-tab" aria-label="Boards">
             <span class="bn-icon">📋</span>
@@ -251,28 +306,140 @@
             <span class="bn-icon">👗</span>
             <span class="bn-label">MV House</span>
         </a>
-        <a href="/shop.html" class="bn-tab" aria-label="Shop">
-            <span class="bn-icon">🛒</span>
-            <span class="bn-label">Shop</span>
-        </a>
         <a href="/profile.html" class="bn-tab" aria-label="Profile">
             <span class="bn-icon">👤</span>
             <span class="bn-label">Profile</span>
         </a>
     </nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase.js?v=70"></script>
     
-    <!-- Firebase SDKs -->
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=70"></script>
-    <script defer src="/js/formation-access.js?v=104"></script>
-    <script defer src="/js/mv-house.js?v=105"></script>
-    <script defer src="/js/sw-update-checker.js?v=96"></script>
-    <script defer src="/js/notifications.js?v=52"></script>
-    <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/offline.js?v=53"></script>
+    <script>
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            currentUser = user;
+            await loadWardrobes();
+        });
+
+        async function loadWardrobes() {
+            const contexts = ['corporate', 'casual-day', 'casual-night', 'casual-home', 'official'];
+            
+            for (const context of contexts) {
+                await loadWardrobeContext(context);
+            }
+        }
+
+        async function loadWardrobeContext(context) {
+            try {
+                const wardrobeDoc = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('wardrobes')
+                    .doc(context)
+                    .get();
+
+                if (!wardrobeDoc.exists) {
+                    showEmptyWardrobe(context);
+                    return;
+                }
+
+                const wardrobe = wardrobeDoc.data();
+                const looks = wardrobe.looks || [];
+                
+                // Update count
+                const countId = context.replace(/-/g, '') + 'Count';
+                document.getElementById(countId).textContent = `${looks.length} look${looks.length !== 1 ? 's' : ''}`;
+                
+                // Update completeness
+                const completeness = wardrobe.completeness || 0;
+                updateCompletenessBar(context, completeness);
+                
+                // Render looks
+                renderLooks(context, looks);
+                
+            } catch (error) {
+                console.error(`Error loading ${context} wardrobe:`, error);
+                showEmptyWardrobe(context);
+            }
+        }
+
+        function showEmptyWardrobe(context) {
+            const gridId = context.replace(/-/g, '') + 'Grid';
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = `
+                <div class="empty-wardrobe" style="grid-column: 1/-1;">
+                    <div class="empty-wardrobe-icon">👗</div>
+                    <p>No looks saved yet</p>
+                    <p style="font-size:0.85rem;">Browse ${getContextName(context)} boards and apply expressions to build your wardrobe</p>
+                </div>
+            `;
+        }
+
+        function getContextName(context) {
+            const names = {
+                'corporate': 'Corporate Muliebrity',
+                'casual-day': 'Casual Day',
+                'casual-night': 'Casual Night',
+                'casual-home': 'Casual @Home',
+                'official': 'Official Muliebrity'
+            };
+            return names[context] || context;
+        }
+
+        function updateCompletenessBar(context, completeness) {
+            const percentage = Math.round(completeness * 100);
+            const barId = context.replace(/-/g, '') + 'Completeness';
+            const textId = context.replace(/-/g, '') + 'CompletenessText';
+            
+            document.getElementById(barId).style.width = `${percentage}%`;
+            document.getElementById(textId).textContent = `Your ${getContextName(context)} Expression is ${percentage}% Complete`;
+        }
+
+        function renderLooks(context, looks) {
+            const gridId = context.replace(/-/g, '') + 'Grid';
+            const grid = document.getElementById(gridId);
+            
+            if (looks.length === 0) {
+                showEmptyWardrobe(context);
+                return;
+            }
+            
+            grid.innerHTML = looks.map((look, index) => {
+                const mediaDisplay = look.mediaUrl 
+                    ? `<img src="${look.mediaUrl}" alt="" class="look-image" style="object-fit:cover;">`
+                    : `<div class="look-image">👗</div>`;
+                    
+                return `
+                    <div class="look-card" onclick="viewLook('${context}', ${index})">
+                        ${mediaDisplay}
+                        <span class="look-status ${look.status || 'saved'}">${look.status || 'saved'}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewLook(context, index) {
+            // Future: Open modal with look details
+            alert(`Look ${index + 1} in ${context} wardrobe\n\nFuture: Show full look details, edit, remove options`);
+        }
+
+        function completeWardrobe(context) {
+            alert(`Complete My ${getContextName(context)} Wardrobe\n\nFuture: Take to checkout with all looks in this wardrobe`);
+        }
+
+        function requestStyling(context) {
+            alert(`Request Custom Styling for ${getContextName(context)}\n\nFuture: Open customization request form for stylist review`);
+        }
+    </script>
 </body>
 </html>
