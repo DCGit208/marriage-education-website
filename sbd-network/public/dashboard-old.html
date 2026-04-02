@@ -1,0 +1,236 @@
+<!-- DEPRECATED: replaced by home-premium.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-bust" content="v208-1775115331">
+    <meta name="description" content="SBD Network Dashboard">
+    <meta name="theme-color" content="#000000">
+    <title>Dashboard - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="dashboard-page bottom-nav-page">
+
+  <script>
+    // Redirect old dashboard to new premium home
+    window.location.replace('/dashboard.html');
+  </script>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1 class="app-logo">SBD Network</h1>
+        </div>
+        <div class="header-right">
+            <span id="userNameDisplay" class="user-name"></span>
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications" title="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h2 id="welcomeTitle">Welcome back!</h2>
+            <p class="welcome-subtitle">Continue your learning journey</p>
+        </section>
+        
+        <!-- SECTION 1: Continue Journey -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>🎯 Continue Journey</h3>
+            </div>
+            <div id="continueJourneyCard" class="journey-card">
+                <div class="skel-card">
+                    <div class="skel-line w80"></div>
+                    <div class="skel-line w60"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: Identity Status -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>📊 Identity Status</h3>
+            </div>
+            <div class="identity-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-label">Teleios Level</div>
+                    <div id="teleiosLevel" class="stat-value">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-label">Current Streak</div>
+                    <div id="streakValue" class="stat-value">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">Completion</div>
+                    <div id="completionPercent" class="stat-value">--</div>
+                    <svg width="60" height="60" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.2;">
+                        <circle id="completionRingCircle" cx="30" cy="30" r="25" fill="none" stroke="var(--accent-color)" stroke-width="3" stroke-dasharray="157" stroke-dashoffset="157" transform="rotate(-90 30 30)"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: This Week's Work -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>📅 This Week's Work</h3>
+            </div>
+            <div id="weekWorkContainer" class="week-work-container">
+                <div class="skel-card">
+                    <div class="skel-line w70"></div>
+                    <div class="skel-line w90"></div>
+                    <div class="skel-line w50"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: Active Discussions -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>💬 Active Discussions</h3>
+                <a href="/boards.html" class="btn btn-link">View All</a>
+            </div>
+            <div id="discussionsContainer" class="discussions-container">
+                <div class="skel-card">
+                    <div class="skel-line w80"></div>
+                    <div class="skel-line w60"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 5: Next Action -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>⚡ Next Action</h3>
+            </div>
+            <div class="next-action-card">
+                <button id="nextActionButton" class="btn btn-primary btn-large" style="width:100%;">
+                    <span id="nextActionText">Loading...</span>
+                </button>
+                <p id="noProgressMessage" class="empty-state-inline" style="display:none;">
+                    Start your first course to get personalized recommendations.
+                </p>
+            </div>
+        </section>
+        
+        <!-- My Groups Section -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h3>👥 My Groups</h3>
+                <button id="adminPanelBtn" class="btn btn-link" style="display: none;">
+                    Admin Panel
+                </button>
+            </div>
+            
+            <div id="myGroupsContainer" class="groups-grid">
+                <div class="skel-card"><div class="skel-icon"></div><div class="skel-line w60"></div><div class="skel-line w80"></div><div class="skel-line w40"></div></div>
+                <div class="skel-card"><div class="skel-icon"></div><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div>
+            </div>
+            
+            <div id="noGroupsMessage" class="empty-state" style="display: none;">
+                <p>You haven't joined any groups yet.</p>
+                <p>Contact an admin to get added to groups.</p>
+            </div>
+        </section>
+        
+    </main>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- What's New Modal -->
+    <div id="whatsNewModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);align-items:flex-end;">
+      <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column;">
+        <div style="padding:20px 20px 14px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px;">
+          <span id="whatsNewEmoji" style="font-size:1.8rem;flex-shrink:0;">🚀</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">What's New</div>
+            <div id="whatsNewTitle" style="font-size:1rem;font-weight:700;color:var(--text-primary);line-height:1.3;"></div>
+          </div>
+          <button id="whatsNewClose" type="button" style="background:rgba(255,255,255,0.08);border:none;color:var(--text-secondary);font-size:1rem;width:34px;height:34px;border-radius:50%;cursor:pointer;flex-shrink:0;" aria-label="Close">✕</button>
+        </div>
+        <ul id="whatsNewList" style="flex:1;overflow-y:auto;padding:14px 20px;margin:0;list-style:none;display:flex;flex-direction:column;gap:12px;"></ul>
+        <div style="padding:14px 20px 32px;">
+          <button id="whatsNewDone" type="button" class="btn btn-primary" style="width:100%;padding:14px;">Got it 👍</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+    <div id="notifPanel" class="notif-panel">
+        <div class="notif-panel-header">
+            <h3>Notifications</h3>
+            <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+        </div>
+        <ul id="notifList" class="notif-list"></ul>
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=75&t=1775115331"></script>
+    <script defer src="/js/auth-guard.js?v=1"></script>
+    <script defer src="/js/sw-update-checker.js?v=96"></script>
+    <script defer src="/js/notifications.js?v=61"></script>
+    <script defer src="/js/dm-badge.js?v=52"></script>
+    <script defer src="/js/ptr.js?v=52"></script>
+    <script defer src="/js/dashboard.js?v=66&t=1775115331"></script>
+    <script defer src="/js/transitions.js?v=52"></script>
+    <script defer src="/js/swipe-back.js?v=52"></script>
+    <script defer src="/js/install-prompt.js?v=52"></script>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab active" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
+    </a>
+    <a href="/learn.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
+    </a>
+    <a href="/boards.html" class="bn-tab" aria-label="Boards">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Boards</span>
+    </a>
+    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+      <span class="bn-icon">👗</span>
+      <span class="bn-label">MV House</span>
+    </a>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
+    </a>
+    <a href="/profile.html" class="bn-tab" aria-label="Profile">
+      <span class="bn-icon">👤</span>
+      <span class="bn-label">Profile</span>
+    </a>
+  </nav>
+  <script defer src="/js/offline.js?v=53"></script>
+</body>
+</html>
