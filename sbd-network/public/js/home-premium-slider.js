@@ -1,19 +1,79 @@
 /* ============================================
-   CINEMATIC SLIDER - SWIPE & SNAP MECHANICS
+   CINEMATIC SLIDER - SWIPE, AUTO-SLIDE & ANIMATIONS
+   9 Slides: 4 intro text + 5 main cards
    ============================================ */
 
 let currentSlide = 0;
 const sliderTrack = document.getElementById('sliderTrack');
 const dots = document.querySelectorAll('.dot');
-const totalSlides = 6;
+const totalSlides = 9; // 4 intro + 5 main cards
 
 let startX = 0;
 let currentX = 0;
 let isDragging = false;
 let startTransform = 0;
 
+// Auto-slide variables
+let autoSlideTimer = null;
+let resumeTimer = null;
+let isPaused = false;
+
+// Timing: Intro slides are faster (4.5s), main cards are standard (5s)
+const INTRO_SLIDE_DURATION = 4500;  // 4.5s for text slides
+const MAIN_CARD_DURATION = 5000;     // 5s for main cards
+const RESUME_DELAY = 3000;           // Resume after 3s of no interaction
+
+function getSlideDuration(slideIndex) {
+  // Intro slides (0-3) are faster
+  return slideIndex < 4 ? INTRO_SLIDE_DURATION : MAIN_CARD_DURATION;
+}
+
 /* ============================================
-   SWIPE DETECTION
+   AUTO-SLIDE (CONTINUOUS LOOP WITH VARIABLE TIMING)
+   ============================================ */
+
+function startAutoSlide() {
+  stopAutoSlide();
+  scheduleNextSlide();
+  console.log('🔄 Auto-slide started (variable timing)');
+}
+
+function scheduleNextSlide() {
+  const duration = getSlideDuration(currentSlide);
+  
+  autoSlideTimer = setTimeout(() => {
+    if (!isPaused && !isDragging) {
+      const nextSlide = (currentSlide + 1) % totalSlides; // Loop 0→8→0
+      goToSlide(nextSlide);
+      scheduleNextSlide(); // Schedule next transition
+    }
+  }, duration);
+}
+
+function stopAutoSlide() {
+  if (autoSlideTimer) {
+    clearTimeout(autoSlideTimer);
+    autoSlideTimer = null;
+  }
+}
+
+function pauseAutoSlide() {
+  isPaused = true;
+  stopAutoSlide();
+  console.log('⏸️ Auto-slide paused');
+}
+
+function resumeAutoSlide() {
+  clearTimeout(resumeTimer);
+  resumeTimer = setTimeout(() => {
+    isPaused = false;
+    scheduleNextSlide();
+    console.log('▶️ Auto-slide resumed');
+  }, RESUME_DELAY);
+}
+
+/* ============================================
+   SWIPE DETECTION (with auto-slide pause)
    ============================================ */
 
 sliderTrack.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -30,6 +90,9 @@ function handleTouchStart(e) {
   isDragging = true;
   startTransform = currentSlide * -100;
   sliderTrack.style.transition = 'none';
+  
+  // Pause auto-slide on user interaction
+  pauseAutoSlide();
 }
 
 function handleTouchMove(e) {
@@ -64,6 +127,9 @@ function handleTouchEnd(e) {
   } else {
     goToSlide(currentSlide);
   }
+  
+  // Resume auto-slide after delay
+  resumeAutoSlide();
 }
 
 function handleMouseDown(e) {
@@ -72,6 +138,9 @@ function handleMouseDown(e) {
   startTransform = currentSlide * -100;
   sliderTrack.style.transition = 'none';
   sliderTrack.style.cursor = 'grabbing';
+  
+  // Pause auto-slide
+  pauseAutoSlide();
 }
 
 function handleMouseMove(e) {
@@ -105,18 +174,35 @@ function handleMouseEnd(e) {
   } else {
     goToSlide(currentSlide);
   }
+  
+  // Resume auto-slide after delay
+  resumeAutoSlide();
 }
 
 /* ============================================
-   NAVIGATION
+   NAVIGATION (with animation triggers)
    ============================================ */
 
 function goToSlide(index) {
   currentSlide = index;
-  sliderTrack.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+  sliderTrack.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
   sliderTrack.style.transform = `translateX(-${index * 100}%)`;
   updateDots();
+  
+  // Trigger card entrance animation (if home-animations.js loaded)
+  if (typeof window.animateCurrentCard === 'function') {
+    window.animateCurrentCard(index);
+  }
+  
+  // Restart auto-slide timer with new duration
+  if (!isPaused && !isDragging) {
+    stopAutoSlide();
+    scheduleNextSlide();
+  }
 }
+
+// Expose for skip button
+window.goToSlide = goToSlide;
 
 function updateDots() {
   dots.forEach((dot, idx) => {
@@ -134,7 +220,9 @@ function updateDots() {
 
 dots.forEach((dot, idx) => {
   dot.addEventListener('click', () => {
+    pauseAutoSlide(); // Pause on manual navigation
     goToSlide(idx);
+    resumeAutoSlide(); // Resume after delay
   });
 });
 
@@ -144,9 +232,13 @@ dots.forEach((dot, idx) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft') {
+    pauseAutoSlide();
     goToSlide(Math.max(0, currentSlide - 1));
+    resumeAutoSlide();
   } else if (e.key === 'ArrowRight') {
+    pauseAutoSlide();
     goToSlide(Math.min(totalSlides - 1, currentSlide + 1));
+    resumeAutoSlide();
   }
 });
 
@@ -159,15 +251,38 @@ function loadUserStats() {
   const streakDays = document.getElementById('streakDays');
   const completionRate = document.getElementById('completionRate');
   const totalLessons = document.getElementById('totalLessons');
+  const growthPoints = document.getElementById('growthPoints');
   
   // Placeholder values (replace with Firebase auth data)
-  if (streakDays) streakDays.textContent = '7';
-  if (completionRate) completionRate.textContent = '42%';
-  if (totalLessons) totalLessons.textContent = '12';
+  if (streakDays) streakDays.textContent = '12';
+  if (completionRate) completionRate.textContent = '68';
+  if (totalLessons) totalLessons.textContent = '24';
+  if (growthPoints) growthPoints.textContent = '+15';
 }
+
+/* ============================================
+   INITIALIZATION
+   ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
   loadUserStats();
   updateDots();
   sliderTrack.style.cursor = 'grab';
+  
+  // Show skip button after 2s (only on intro slides)
+  const skipBtn = document.getElementById('skipIntro');
+  if (skipBtn) {
+    setTimeout(() => {
+      if (currentSlide < 4) {
+        skipBtn.style.display = 'block';
+      }
+    }, 2000);
+  }
+  
+  // Start auto-slide after 1.5s delay (let intro animation complete)
+  setTimeout(() => {
+    startAutoSlide();
+  }, 1500);
+  
+  console.log('✅ Premium slider initialized - 9 slides with auto-advance');
 });
