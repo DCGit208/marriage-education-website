@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/home-premium.css?v=22">
+    <link rel="stylesheet" href="css/home-premium.css?v=23">
     <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
     
     <!-- Hamburger Menu Styles -->
@@ -109,9 +109,56 @@
       color: rgb(255,100,100);
       background: rgba(255,100,100,0.1);
     }
+
+    /* ── Pull-to-Refresh Indicator ─────────────────────────── */
+    #ptr-indicator {
+      position: fixed;
+      top: -70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0px);
+      z-index: 9999998;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 22px;
+      background: rgba(15, 15, 15, 0.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.88);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    #ptr-indicator .ptr-icon { font-size: 16px; transition: transform 0.25s ease; }
+    #ptr-indicator .ptr-spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      animation: ptr-spin 0.7s linear infinite;
+    }
+    @keyframes ptr-spin { to { transform: rotate(360deg); } }
+    #ptr-indicator.ptr-releasing .ptr-icon { transform: rotate(180deg); }
+    #ptr-indicator.ptr-refreshing .ptr-icon { display: none; }
+    #ptr-indicator.ptr-refreshing .ptr-spinner { display: block; }
     </style>
 </head>
 <body class="home-cinematic bottom-nav-page">
+
+    <!-- Pull-to-Refresh Indicator -->
+    <div id="ptr-indicator" aria-live="polite" role="status">
+      <div class="ptr-icon">↓</div>
+      <div class="ptr-spinner"></div>
+      <span class="ptr-label">Pull to refresh</span>
+    </div>
     
     <!-- HAMBURGER MENU -->
     <div id="menuBtn" class="menu-btn">☰</div>
@@ -417,27 +464,27 @@
     
     <!-- BOTTOM NAVIGATION -->
     <nav class="bottom-nav">
-        <a href="/dashboard.html" class="bn-item active">
+        <a href="/dashboard.html" class="bn-tab active" aria-label="Home">
             <span class="bn-icon">🏠</span>
             <span class="bn-label">Home</span>
         </a>
-        <a href="/learn.html" class="bn-item">
+        <a href="/learn.html" class="bn-tab" aria-label="Learn">
             <span class="bn-icon">📚</span>
             <span class="bn-label">Learn</span>
         </a>
-        <a href="/boards.html" class="bn-item">
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
             <span class="bn-icon">📋</span>
             <span class="bn-label">Boards</span>
         </a>
-        <a href="/mv-house.html" class="bn-item">
+        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
             <span class="bn-icon">👗</span>
             <span class="bn-label">MV House</span>
         </a>
-        <a href="/shop.html" class="bn-item">
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
             <span class="bn-icon">🛒</span>
             <span class="bn-label">Shop</span>
         </a>
-        <a href="/profile.html" class="bn-item">
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
             <span class="bn-icon">👤</span>
             <span class="bn-label">Profile</span>
         </a>
@@ -553,6 +600,82 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+    </script>
+    <!-- Service Worker Registration & Update Banner -->
+    <script src="/js/sw-update-checker.js"></script>
+
+    <!-- Pull-to-Refresh Logic -->
+    <script>
+    (function () {
+      var THRESHOLD = 80;
+      var MAX_PULL = 120;
+      var ind = document.getElementById('ptr-indicator');
+      if (!ind) return;
+
+      var startY = 0, startX = 0, isPTR = false, pullDist = 0, refreshing = false;
+
+      document.addEventListener('touchstart', function (e) {
+        if (refreshing) return;
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        isPTR = false;
+        pullDist = 0;
+      }, { passive: true });
+
+      document.addEventListener('touchmove', function (e) {
+        if (refreshing) return;
+        var dy = e.touches[0].clientY - startY;
+        var dx = Math.abs(e.touches[0].clientX - startX);
+
+        // Only activate for a predominantly downward vertical pull
+        if (!isPTR) {
+          if (dy > 15 && dy > dx * 1.5) isPTR = true;
+          else return;
+        }
+
+        pullDist = Math.min(dy, MAX_PULL);
+        if (pullDist <= 0) { isPTR = false; return; }
+
+        var travel = pullDist * 0.72;
+        ind.style.transform = 'translateX(-50%) translateY(' + travel + 'px)';
+        ind.style.opacity = Math.min(pullDist / THRESHOLD, 1).toFixed(2);
+
+        if (pullDist >= THRESHOLD) {
+          ind.classList.add('ptr-releasing');
+          ind.classList.remove('ptr-pulling');
+          ind.querySelector('.ptr-label').textContent = 'Release to refresh';
+        } else {
+          ind.classList.add('ptr-pulling');
+          ind.classList.remove('ptr-releasing');
+          ind.querySelector('.ptr-label').textContent = 'Pull to refresh';
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', function () {
+        if (!isPTR) return;
+        isPTR = false;
+
+        if (pullDist >= THRESHOLD && !refreshing) {
+          refreshing = true;
+          ind.classList.add('ptr-refreshing');
+          ind.classList.remove('ptr-releasing', 'ptr-pulling');
+          ind.querySelector('.ptr-label').textContent = 'Refreshing\u2026';
+          ind.style.transform = 'translateX(-50%) translateY(90px)';
+          ind.style.opacity = '1';
+          setTimeout(function () { window.location.reload(true); }, 500);
+        } else {
+          resetPTR();
+        }
+      }, { passive: true });
+
+      function resetPTR() {
+        pullDist = 0;
+        ind.style.transform = 'translateX(-50%) translateY(0px)';
+        ind.style.opacity = '0';
+        ind.classList.remove('ptr-pulling', 'ptr-releasing', 'ptr-refreshing');
+        ind.querySelector('.ptr-label').textContent = 'Pull to refresh';
+      }
+    })();
     </script>
 
 </body>
