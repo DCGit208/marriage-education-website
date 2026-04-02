@@ -2001,8 +2001,9 @@ function openContextMenu(post, card) {
   // Show "Apply This Expression" for Fashion/Style boards (Muliebrity/Virility)
   const applyExpressionBtn = document.getElementById('ctxApplyExpression');
   if (applyExpressionBtn) {
-    const boardName = currentBoardData?.name || '';
+    const boardName = currentBoardData?.title || currentBoardData?.name || '';
     console.log('[Apply Expression] Board name:', boardName);
+    console.log('[Apply Expression] Full board data:', currentBoardData);
     const isExpressionBoard = /muliebrity|virility|corporate|casual|official|fashion|style/i.test(boardName);
     console.log('[Apply Expression] Is expression board:', isExpressionBoard, 'Has media:', hasMedia);
     applyExpressionBtn.style.display = (isExpressionBoard && hasMedia) ? '' : 'none';
@@ -2117,7 +2118,7 @@ document.getElementById('ctxApplyExpression').addEventListener('click', async ()
   if (!post) return;
 
   // Determine expression context based on board
-  const boardName = currentBoardData?.name || '';
+  const boardName = currentBoardData?.title || currentBoardData?.name || '';
   let context = 'corporate'; // default
   const nameLower = boardName.toLowerCase();
   
