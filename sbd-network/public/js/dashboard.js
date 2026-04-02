@@ -407,11 +407,29 @@ async function loadActiveDiscussions(uid) {
     
   } catch (error) {
     console.error('Error loading Active Discussions:', error);
-    discussionsContainer.innerHTML = `
-      <div class="error-state">
-        <p>⚠️ Could not load discussions</p>
-      </div>
-    `;
+    
+    // Check if it's the missing index error
+    if (error.code === 'failed-precondition' && error.message && error.message.includes('index')) {
+      discussionsContainer.innerHTML = `
+        <div class="error-state" style="text-align:center;padding:30px 20px;">
+          <div style="font-size:2rem;margin-bottom:12px;">⚙️</div>
+          <p style="color:var(--text-secondary);margin-bottom:16px;">Active Discussions requires database setup</p>
+          <a href="https://console.firebase.google.com/project/marriage-education/firestore/indexes" 
+             target="_blank" 
+             class="btn btn-primary" 
+             style="display:inline-block;padding:10px 20px;text-decoration:none;">
+            Open Firebase Console
+          </a>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin-top:12px;">Create composite index: boards (linkedCourseId, createdAt)</p>
+        </div>
+      `;
+    } else {
+      discussionsContainer.innerHTML = `
+        <div class="error-state">
+          <p>⚠️ Could not load discussions</p>
+        </div>
+      `;
+    }
   }
 }
 

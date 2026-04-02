@@ -289,7 +289,7 @@ async function _initPush(userId) {
       permission = await Notification.requestPermission();
     }
     if (permission !== 'granted') {
-      console.info('[Push] Permission denied');
+      // User denied push notifications - this is normal, don't spam console
       return;
     }
 
