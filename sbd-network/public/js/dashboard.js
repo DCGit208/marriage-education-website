@@ -290,19 +290,14 @@ async function loadIdentityStatus(uid) {
     console.error('Error loading Identity Status:', error);
     if (teleiosLevel) teleiosLevel.textContent = 'N/A';
     if (streakValue) streakValue.textContent = '0 days';
-    if (!weekWorkContainer) {
-      console.warn('weekWorkContainer element not found');
-      return;
-    }
-    
-    const progress = currentUserData.progress || {};
-    const currentModuleId = progress.currentModuleId;
-    
-    if (!currentModuleId) {
-      weekWorkContainer.innerHTML = `
-        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">📚</div>
-          <p style="color:var(--text-secondary);">Enroll in a course to see your weekly work</p
+    if (completionPercent) completionPercent.textContent = '0%';
+  }
+}
+
+// ================================================================
+// 🗓️ SECTION 3: THIS WEEK'S WORK
+// ================================================================
+
 async function loadThisWeeksWork(uid) {
   try {
     const progress = currentUserData.progress || {};
