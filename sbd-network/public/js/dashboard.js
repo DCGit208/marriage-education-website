@@ -225,15 +225,11 @@ async function loadContinueJourney(uid) {
         </div>
         
         <button class="btn-continue" onclick="window.location.href='/module.html?id=${currentModuleId || ''}'">
-    if (continueJourneyCard) {
-      continueJourneyCard.innerHTML = `
-        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">🎓</div>
-          <p style="color:var(--text-secondary);margin-bottom:24px;">Start a course to track your progress</p>
-          <a href="/schools.html" class="btn btn-primary">Explore Schools</a>
-        </div>
-      `;
-    }tch (error) {
+          Continue &rarr;
+        </button>
+      </div>
+    `;
+  } catch (error) {
     console.error('Error loading Continue Journey:', error);
     continueJourneyCard.innerHTML = `
       <div class="error-state">
