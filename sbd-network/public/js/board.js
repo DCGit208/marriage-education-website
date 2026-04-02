@@ -1998,6 +1998,12 @@ function openContextMenu(post, card) {
   const hasMedia = !!(post.imageUrl || post.videoUrl || (post.allMedia && post.allMedia.length));
   document.getElementById('ctxPostToStory').style.display = hasMedia ? '' : 'none';
 
+  // Show "Apply This Expression" for Fashion/Style boards (Muliebrity/Virility)
+  const boardName = currentBoardData?.name || '';
+  const isExpressionBoard = /muliebrity|virility|corporate|casual|official|fashion|style/i.test(boardName);
+  const hasExpressionMedia = hasMedia; // Same requirement as story
+  document.getElementById('ctxApplyExpression').style.display = (isExpressionBoard && hasExpressionMedia) ? '' : 'none';
+
   // Highlight emojis user has already reacted with
   const mySet = new Set(
     Object.entries(post.reactions || {})
@@ -2099,6 +2105,87 @@ document.getElementById('ctxPostToStory').addEventListener('click', async () => 
     showToast('Failed to post to story');
   }
 });
+
+// Apply This Expression - Save to MV House Wardrobe
+document.getElementById('ctxApplyExpression').addEventListener('click', async () => {
+  const post = ctxPost;
+  closeContextMenu();
+  if (!post) return;
+
+  // Determine expression context based on board
+  const boardName = currentBoardData?.name || '';
+  let context = 'corporate'; // default
+  const nameLower = boardName.toLowerCase();
+  
+  if (nameLower.includes('corporate')) context = 'corporate';
+  else if (nameLower.includes('casual')) {
+    if (nameLower.includes('night')) context = 'casual-night';
+    else if (nameLower.includes('home')) context = 'casual-home';
+    else if (nameLower.includes('day')) context = 'casual-day';
+    else context = 'casual-day'; // default casual
+  }
+  else if (nameLower.includes('official')) context = 'official';
+
+  try {
+    // Get media from post
+    let mediaUrl = null;
+    if (post.allMedia && post.allMedia.length > 0) {
+      mediaUrl = post.allMedia[0].url;
+    } else if (post.imageUrl) {
+      mediaUrl = post.imageUrl;
+    } else if (post.videoUrl) {
+      mediaUrl = post.videoUrl;
+    }
+
+    // Create look object
+    const look = {
+      postId: post.id,
+      boardId: boardId,
+      boardName: boardName,
+      mediaUrl: mediaUrl,
+      content: post.content || '',
+      expressionType: context,
+      savedAt: firebase.firestore.Timestamp.now(),
+      status: 'saved'
+    };
+
+    // Get existing wardrobe or create new
+    const wardrobeRef = db.collection('users')
+      .doc(currentUserId)
+      .collection('wardrobes')
+      .doc(context);
+
+    const wardrobeDoc = await wardrobeRef.get();
+    let looks = [];
+    let completeness = 0;
+
+    if (wardrobeDoc.exists) {
+      looks = wardrobeDoc.data().looks || [];
+      completeness = wardrobeDoc.data().completeness || 0;
+    }
+
+    // Add new look
+    looks.push(look);
+
+    // Calculate completeness (simple: 10 looks = 100%)
+    completeness = Math.min(looks.length / 10, 1.0);
+
+    // Update wardrobe
+    await wardrobeRef.set({
+      looks: looks,
+      completeness: completeness,
+      updatedAt: firebase.firestore.Timestamp.now()
+    }, { merge: true });
+
+    const contextName = context.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    showToast(`✓ Applied to ${contextName} Wardrobe`);
+
+  } catch (err) {
+    console.error('Failed to apply expression:', err);
+    showToast('Failed to save expression');
+  }
+});
+
 
 document.getElementById('ctxReply').addEventListener('click', () => {
   const card = ctxCard;
