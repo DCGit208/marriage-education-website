@@ -391,7 +391,7 @@ async function loadActiveDiscussions(uid) {
       
       const discussionCard = document.createElement('div');
       discussionCard.className = 'discussion-card';
-      discussionCard.onclick = () => window.location.href = `/board.html?id=${doc.id}`;
+      discussionCard.onclick = () => window.location.href = `/board.html?boardId=${doc.id}`;
       
       discussionCard.innerHTML = `
         <div class="discussion-icon">💬</div>
