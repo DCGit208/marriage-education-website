@@ -1,6 +1,21 @@
 {
-  "current": "104",
+  "current": "105",
   "versions": [
+    {
+      "version": "105",
+      "date": "2026-04-02",
+      "title": "Dashboard Active Discussions Fix + Version Sync",
+      "emoji": "🔧",
+      "changes": [
+        "🔧 FIXED: Dashboard Active Discussions navigation (boardId parameter)",
+        "🔧 FIXED: Firestore index created for Active Discussions query",
+        "✅ All pages now use firebase.js v75 (version sync complete)",
+        "📋 Comprehensive board features audit complete",
+        "✨ MV House wardrobe system fully operational",
+        "🎯 Apply Expression → MV House flow working end-to-end",
+        "🛡️ All console errors identified and categorized"
+      ]
+    },
     {
       "version": "104",
       "date": "2026-03-30",
