@@ -1999,10 +1999,14 @@ function openContextMenu(post, card) {
   document.getElementById('ctxPostToStory').style.display = hasMedia ? '' : 'none';
 
   // Show "Apply This Expression" for Fashion/Style boards (Muliebrity/Virility)
-  const boardName = currentBoardData?.name || '';
-  const isExpressionBoard = /muliebrity|virility|corporate|casual|official|fashion|style/i.test(boardName);
-  const hasExpressionMedia = hasMedia; // Same requirement as story
-  document.getElementById('ctxApplyExpression').style.display = (isExpressionBoard && hasExpressionMedia) ? '' : 'none';
+  const applyExpressionBtn = document.getElementById('ctxApplyExpression');
+  if (applyExpressionBtn) {
+    const boardName = currentBoardData?.name || '';
+    console.log('[Apply Expression] Board name:', boardName);
+    const isExpressionBoard = /muliebrity|virility|corporate|casual|official|fashion|style/i.test(boardName);
+    console.log('[Apply Expression] Is expression board:', isExpressionBoard, 'Has media:', hasMedia);
+    applyExpressionBtn.style.display = (isExpressionBoard && hasMedia) ? '' : 'none';
+  }
 
   // Highlight emojis user has already reacted with
   const mySet = new Set(
