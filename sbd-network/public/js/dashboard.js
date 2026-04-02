@@ -362,30 +362,6 @@ async function loadThisWeeksWork(uid) {
 
 async function loadActiveDiscussions(uid) {
   try {
-    if (!discussionsContainer) {
-      console.warn('discussionsContainer element not found');
-      return;
-    }
-    
-    // Fetch all boards that are course-linked (have linkedCourseId)
-    const boardsQuery = await db.collection('boards')
-      .where('linkedCourseId', '!=', null)
-      .orderBy('linkedCourseId')
-      .orderBy('createdAt', 'desc')
-      .limit(3)
-      .get();
-    
-    if (boardsQuery.empty) {
-      discussionsContainer.innerHTML = `
-        <div class="empty-state-inline" style="text-align:center;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">💬</div>
-          <p style="color:var(--text-secondary);">Join a course to participate in discussions
-// ================================================================
-// 💬 SECTION 4: ACTIVE DISCUSSIONS (Course-linked boards only)
-// ================================================================
-
-async function loadActiveDiscussions(uid) {
-  try {
     // Fetch all boards that are course-linked (have linkedCourseId)
     const boardsQuery = await db.collection('boards')
       .where('linkedCourseId', '!=', null)
