@@ -315,7 +315,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=74"></script>
+    <script src="/js/firebase.js?v=75"></script>
     
     <script>
         // Use auth, db, and currentUser from firebase.js (already declared)
@@ -354,9 +354,19 @@
                 const wardrobe = wardrobeDoc.data();
                 const looks = wardrobe.looks || [];
                 
-                // Update count
-                const countId = context.replace(/-/g, '') + 'Count';
-                document.getElementById(countId).textContent = `${looks.length} look${looks.length !== 1 ? 's' : ''}`;
+                // Update count (map to correct camelCase ID)
+                const countIds = {
+                    'corporate': 'corporateCount',
+                    'casual-day': 'casualDayCount',
+                    'casual-night': 'casualNightCount',
+                    'casual-home': 'casualHomeCount',
+                    'official': 'officialCount'
+                };
+                
+                const countElement = document.getElementById(countIds[context]);
+                if (countElement) {
+                    countElement.textContent = `${looks.length} look${looks.length !== 1 ? 's' : ''}`;
+                }
                 
                 // Update completeness
                 const completeness = wardrobe.completeness || 0;
