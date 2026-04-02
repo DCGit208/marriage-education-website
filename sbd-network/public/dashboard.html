@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/home-premium.css?v=23">
+    <link rel="stylesheet" href="css/home-premium.css?v=24">
     <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
     
     <!-- Hamburger Menu Styles -->
@@ -601,6 +601,19 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
     </script>
+    <!-- Viewport Height Fix: resolves 100vh iOS Safari chrome bar bug -->
+    <script>
+    function setVH() {
+      var vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', vh + 'px');
+    }
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', function () {
+      setTimeout(setVH, 100); /* wait for browser chrome to settle */
+    });
+    </script>
+
     <!-- Service Worker Registration & Update Banner -->
     <script src="/js/sw-update-checker.js"></script>
 
