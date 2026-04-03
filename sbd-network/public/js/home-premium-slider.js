@@ -184,16 +184,36 @@ function handleMouseEnd(e) {
    ============================================ */
 
 function goToSlide(index) {
+  // Step 6: Subtle exit fade for continuity
+  if (typeof gsap !== 'undefined') {
+    gsap.to('.slide-card', {
+      opacity: 0.92,
+      duration: 0.3,
+      overwrite: true
+    });
+  }
+
   currentSlide = index;
-  sliderTrack.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+  // Step 5: Smoother spring-like transition easing
+  sliderTrack.style.transition = 'transform 1s cubic-bezier(0.22, 1, 0.36, 1)';
   sliderTrack.style.transform = `translateX(-${index * 100}%)`;
   updateDots();
-  
+
+  // Step 6: Re-fade after slide settles
+  setTimeout(() => {
+    if (typeof gsap !== 'undefined') {
+      gsap.to('.slide-card', {
+        opacity: 1,
+        duration: 0.5
+      });
+    }
+  }, 300);
+
   // Trigger card entrance animation (if home-animations.js loaded)
   if (typeof window.animateCurrentCard === 'function') {
     window.animateCurrentCard(index);
   }
-  
+
   // Restart auto-slide timer with new duration
   if (!isPaused && !isDragging) {
     stopAutoSlide();

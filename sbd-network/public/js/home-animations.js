@@ -18,49 +18,88 @@ document.addEventListener('DOMContentLoaded', () => {
 function animateIntroSlide1() {
   const slide = document.querySelector('[data-card="intro-1"]');
   if (!slide) return;
-  
+
   const words = slide.querySelectorAll('.word');
-  
+  const bg = slide.querySelector('.intro-bg');
+
+  // Step 4: Subtle slide fade-in
+  gsap.fromTo(slide,
+    { opacity: 0 },
+    { opacity: 1, duration: 1.2, ease: 'power1.out' }
+  );
+
+  // Step 1: Background parallax (very subtle)
+  if (bg) {
+    gsap.fromTo(bg,
+      { scale: 1.08, y: 0 },
+      { scale: 1.12, y: -20, duration: 6, ease: 'none' }
+    );
+  }
+
+  // Steps 2 & 3: blur(8px) → blur(0px), scale(0.98) → scale(1)
   gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
-    .from(words, {
-      opacity: 0,
-      y: 20,
-      filter: 'blur(6px)',
-      stagger: 0.28,
-      duration: 1.0
-    });
+    .fromTo(words,
+      { opacity: 0, y: 20, filter: 'blur(8px)', scale: 0.98 },
+      { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, stagger: 0.28, duration: 1.0 }
+    );
 }
 
 function animateIntroSlide2() {
   const slide = document.querySelector('[data-card="intro-2"]');
   if (!slide) return;
-  
+
   const words = slide.querySelectorAll('.word');
-  
+  const bg = slide.querySelector('.intro-bg');
+
+  // Step 4: Subtle slide fade-in
+  gsap.fromTo(slide,
+    { opacity: 0 },
+    { opacity: 1, duration: 1.2, ease: 'power1.out' }
+  );
+
+  // Step 1: Background parallax (very subtle)
+  if (bg) {
+    gsap.fromTo(bg,
+      { scale: 1.08, y: 0 },
+      { scale: 1.12, y: -20, duration: 6, ease: 'none' }
+    );
+  }
+
+  // Steps 2 & 3: blur(8px) → blur(0px), scale(0.98) → scale(1)
   gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
-    .from(words, {
-      opacity: 0,
-      y: 20,
-      filter: 'blur(6px)',
-      stagger: 0.28,
-      duration: 1.0
-    });
+    .fromTo(words,
+      { opacity: 0, y: 20, filter: 'blur(8px)', scale: 0.98 },
+      { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, stagger: 0.28, duration: 1.0 }
+    );
 }
 
 function animateIntroSlide3() {
   const slide = document.querySelector('[data-card="intro-3"]');
   if (!slide) return;
-  
+
   const words = slide.querySelectorAll('.word');
-  
+  const bg = slide.querySelector('.intro-bg');
+
+  // Step 4: Subtle slide fade-in
+  gsap.fromTo(slide,
+    { opacity: 0 },
+    { opacity: 1, duration: 1.2, ease: 'power1.out' }
+  );
+
+  // Step 1: Background parallax (very subtle)
+  if (bg) {
+    gsap.fromTo(bg,
+      { scale: 1.08, y: 0 },
+      { scale: 1.12, y: -20, duration: 6, ease: 'none' }
+    );
+  }
+
+  // Steps 2 & 3: blur(8px) → blur(0px), scale(0.98) → scale(1)
   gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
-    .from(words, {
-      opacity: 0,
-      y: 20,
-      filter: 'blur(6px)',
-      stagger: 0.28,
-      duration: 1.0
-    });
+    .fromTo(words,
+      { opacity: 0, y: 20, filter: 'blur(8px)', scale: 0.98 },
+      { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, stagger: 0.28, duration: 1.0 }
+    );
 }
 
 /**
@@ -69,29 +108,41 @@ function animateIntroSlide3() {
 function animateIntroSlide4() {
   const slide = document.querySelector('[data-card="intro-4"]');
   if (!slide) return;
-  
+
   const wordsAll = slide.querySelectorAll('.word');
   if (!wordsAll.length) return;
-  
+
   const leadWords = Array.from(wordsAll).slice(0, -1);
   const lastWord = wordsAll[wordsAll.length - 1];
-  
-  // Lead words: slower stagger with breath delay
+  const bg = slide.querySelector('.intro-bg');
+
+  // Step 4: Subtle slide fade-in
+  gsap.fromTo(slide,
+    { opacity: 0 },
+    { opacity: 1, duration: 1.2, ease: 'power1.out' }
+  );
+
+  // Step 1: Background parallax (very subtle)
+  if (bg) {
+    gsap.fromTo(bg,
+      { scale: 1.08, y: 0 },
+      { scale: 1.12, y: -20, duration: 6, ease: 'none' }
+    );
+  }
+
+  // Lead words: slower stagger — Steps 2 & 3 applied
   if (leadWords.length) {
     gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.6 })
-      .from(leadWords, {
-        opacity: 0,
-        y: 20,
-        filter: 'blur(6px)',
-        stagger: 0.35,
-        duration: 1.2
-      });
+      .fromTo(leadWords,
+        { opacity: 0, y: 20, filter: 'blur(8px)', scale: 0.98 },
+        { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, stagger: 0.35, duration: 1.2 }
+      );
   }
 
   // Last word: heavier emphasis — lands like a statement
   gsap.fromTo(
     lastWord,
-    { opacity: 0, y: 20, scale: 0.95 },
+    { opacity: 0, y: 20, scale: 0.98 },
     { opacity: 1, y: 0, scale: 1, duration: 1.2, delay: 0.8, ease: 'power2.out' }
   );
 }

@@ -1,6 +1,21 @@
 {
-  "current": "105",
+  "current": "223",
   "versions": [
+    {
+      "version": "223",
+      "date": "2026-04-03",
+      "title": "Apple-level Motion Design",
+      "emoji": "🚀",
+      "changes": [
+        "✨ Parallax background drift on intro slides 1-4",
+        "✨ Text blur-focus depth (8px → 0px) on word reveals",
+        "✨ Micro scale animation (0.98 → 1) on all intro words",
+        "✨ Subtle slide fade-in on each intro slide",
+        "✨ Smoother spring easing on slide transitions",
+        "✨ Exit fade continuity between slides",
+        "⚡ GPU-accelerated intro-bg with will-change: transform"
+      ]
+    },
     {
       "version": "105",
       "date": "2026-04-02",
