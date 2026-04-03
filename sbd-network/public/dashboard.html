@@ -271,7 +271,8 @@
                                 <div class="membership-tier-price">Free</div>
                             </div>
                             <div class="membership-card-features">
-                                <div class="membership-feature">✓ Foundation School + previews</div>
+                                <div class="membership-feature">✓ Access to Foundation School (intro lessons)</div>
+                                <div class="membership-feature">✓ Preview selected courses</div>
                             </div>
                         </div>
                         
@@ -282,7 +283,8 @@
                                 <div class="membership-tier-price">$9<span>/mo</span></div>
                             </div>
                             <div class="membership-card-features">
-                                <div class="membership-feature">✓ Partial School 1 & 2 access</div>
+                                <div class="membership-feature">✓ Access to core courses in School 1 & 2</div>
+                                <div class="membership-feature">✓ Structured learning path</div>
                             </div>
                         </div>
                         
@@ -295,10 +297,10 @@
                                 </div>
                                 <div class="membership-tier-price">$20<span>/mo</span></div>
                             </div>
-                            <div class="membership-card-features" style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">
-                                <div class="membership-feature">✓ All Foundation</div>
-                                <div class="membership-feature">✓ School 1 & 2</div>
-                                <div class="membership-feature">✓ Certificates</div>
+                            <div class="membership-card-features">
+                                <div class="membership-feature">✓ Everything in Foundation</div>
+                                <div class="membership-feature">✓ Full access to School 1 & 2 courses</div>
+                                <div class="membership-feature">✓ Certificates & progress boards</div>
                                 <div class="membership-feature">✓ Priority support</div>
                             </div>
                         </div>
@@ -310,8 +312,12 @@
                                 <div class="membership-tier-price">$50<span>/mo</span></div>
                             </div>
                             <div class="membership-card-features">
-                                <div class="membership-feature">✓ All courses in School 3 & 4</div>
-                                <div class="membership-feature">✓ MV House access</div>
+                                <div class="membership-feature">✓ Everything in Explore, Foundation & Premium</div>
+                                <div class="membership-feature">✓ Access to 44 Courses (across 4 Schools)</div>
+                                <div class="membership-feature">✓ Advanced Muliebrity & Virility Training School</div>
+                                <div class="membership-feature">✓ Powered by Advanced Muliebrity & Virility Media Boards</div>
+                                <div class="membership-feature">✓ Teaching Sexuality Like Never Before</div>
+                                <div class="membership-feature">✓ Full MV Fashion House Access</div>
                             </div>
                         </div>
                     </div>
@@ -519,6 +525,70 @@
     <!-- Home Slider Scripts -->
     <script defer src="/js/home-animations.js?v=8"></script>
     <script defer src="/js/home-premium-slider.js?v=3"></script>
+
+    <script>
+// FINAL POLISH: cinematic smoothing + subtle motion tuning
+(function () {
+  // Slight global animation smoothing
+  if (window.gsap) {
+    gsap.config({ force3D: true });
+  }
+
+  // Add micro parallax stabilization (prevents jitter on iOS)
+  document.querySelectorAll('.intro-bg').forEach(function(bg) {
+    bg.style.transform = 'translateZ(0) scale(1.12)';
+    bg.style.willChange = 'transform';
+  });
+
+  // Subtle tap feedback (pseudo-haptic feel)
+  document.querySelectorAll('button, a').forEach(function(el) {
+    el.addEventListener('touchstart', function () {
+      el.style.transform = 'scale(0.97)';
+    }, { passive: true });
+
+    el.addEventListener('touchend', function () {
+      el.style.transform = 'scale(1)';
+    }, { passive: true });
+  });
+
+  // Smooth out slide snapping perception
+  const track = document.getElementById('sliderTrack');
+  if (track) {
+    track.style.transition = 'transform 1s cubic-bezier(0.22, 1, 0.36, 1)';
+  }
+
+  // MICRO PAUSE AFTER TEXT COMPLETION (cinematic breathing)
+  const introSlides = document.querySelectorAll('.intro-slide');
+  introSlides.forEach(function(slide) {
+    const words = slide.querySelectorAll('.word');
+    if (!words.length) return;
+
+    const lastWord = words[words.length - 1];
+
+    // Add subtle emphasis when last word finishes
+    lastWord.style.transition = 'transform 0.6s ease, opacity 0.6s ease';
+
+    setTimeout(() => {
+      lastWord.style.transform = 'scale(1.04)';
+      lastWord.style.opacity = '1';
+
+      setTimeout(() => {
+        lastWord.style.transform = 'scale(1)';
+      }, 600);
+
+    }, 1200);
+  });
+
+  // MICRO DELAY BEFORE USER CAN SWIPE (intentional pacing)
+  const slider = document.querySelector('.slider-container');
+  if (slider) {
+    slider.style.pointerEvents = 'none';
+    setTimeout(() => {
+      slider.style.pointerEvents = 'auto';
+    }, 1200);
+  }
+})();
+    </script>
 
     <script>
 document.addEventListener('DOMContentLoaded', function () {
