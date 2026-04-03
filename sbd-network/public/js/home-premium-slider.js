@@ -201,7 +201,7 @@ function goToSlide(index) {
   }
 }
 
-// Expose for skip button
+// Expose for external navigation
 window.goToSlide = goToSlide;
 
 function updateDots() {
@@ -268,16 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadUserStats();
   updateDots();
   sliderTrack.style.cursor = 'grab';
-  
-  // Show skip button after 2s (only on intro slides)
-  const skipBtn = document.getElementById('skipIntro');
-  if (skipBtn) {
-    setTimeout(() => {
-      if (currentSlide < 4) {
-        skipBtn.style.display = 'block';
-      }
-    }, 2000);
-  }
   
   // Start auto-slide after 1.5s delay (let intro animation complete)
   setTimeout(() => {
