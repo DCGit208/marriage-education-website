@@ -21,13 +21,13 @@ function animateIntroSlide1() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power2.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
     .from(words, {
       opacity: 0,
       y: 20,
-      filter: 'blur(4px)',
-      stagger: 0.22,
-      duration: 0.9
+      filter: 'blur(6px)',
+      stagger: 0.28,
+      duration: 1.0
     });
 }
 
@@ -37,13 +37,13 @@ function animateIntroSlide2() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power2.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
     .from(words, {
       opacity: 0,
       y: 20,
-      filter: 'blur(4px)',
-      stagger: 0.22,
-      duration: 0.9
+      filter: 'blur(6px)',
+      stagger: 0.28,
+      duration: 1.0
     });
 }
 
@@ -53,33 +53,47 @@ function animateIntroSlide3() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power2.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.4 })
     .from(words, {
       opacity: 0,
       y: 20,
-      filter: 'blur(4px)',
-      stagger: 0.22,
-      duration: 0.9
+      filter: 'blur(6px)',
+      stagger: 0.28,
+      duration: 1.0
     });
 }
 
 /**
- * INTRO SLIDE 4: POWER LINE - Same subtle style as slides 1-3
+ * INTRO SLIDE 4: POWER LINE - Heavier, slower — the emotional impact moment
  */
 function animateIntroSlide4() {
   const slide = document.querySelector('[data-card="intro-4"]');
   if (!slide) return;
   
-  const words = slide.querySelectorAll('.word');
+  const wordsAll = slide.querySelectorAll('.word');
+  if (!wordsAll.length) return;
   
-  gsap.timeline({ defaults: { ease: 'power2.out' } })
-    .from(words, {
-      opacity: 0,
-      y: 20,
-      filter: 'blur(4px)',
-      stagger: 0.22,
-      duration: 0.9
-    });
+  const leadWords = Array.from(wordsAll).slice(0, -1);
+  const lastWord = wordsAll[wordsAll.length - 1];
+  
+  // Lead words: slower stagger with breath delay
+  if (leadWords.length) {
+    gsap.timeline({ defaults: { ease: 'power2.out' }, delay: 0.6 })
+      .from(leadWords, {
+        opacity: 0,
+        y: 20,
+        filter: 'blur(6px)',
+        stagger: 0.35,
+        duration: 1.2
+      });
+  }
+
+  // Last word: heavier emphasis — lands like a statement
+  gsap.fromTo(
+    lastWord,
+    { opacity: 0, y: 20, scale: 0.95 },
+    { opacity: 1, y: 0, scale: 1, duration: 1.2, delay: 0.8, ease: 'power2.out' }
+  );
 }
 
 /**
