@@ -1,6 +1,17 @@
 {
-  "current": "223",
+  "current": "224",
   "versions": [
+    {
+      "version": "224",
+      "date": "2026-04-03",
+      "title": "What's New popup restored",
+      "emoji": "🚀",
+      "changes": [
+        "🐛 Fixed: What's New modal was missing from dashboard — popup now works after every update",
+        "✅ Pull-to-refresh will now correctly show update sheet",
+        "✅ SW auto-update → reload → changelog popup chain fully restored"
+      ]
+    },
     {
       "version": "223",
       "date": "2026-04-03",
