@@ -47,7 +47,7 @@ body.home-cinematic {
   font-family: var(--font-primary);
   background: var(--bg-primary);
   color: var(--text-primary);
-  overflow-x: hidden;
+  overflow: hidden; /* prevent body scroll — slides handle all navigation */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -100,6 +100,8 @@ body.home-cinematic {
 .intro-bg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -168,6 +170,7 @@ body.home-cinematic {
 
 /* SLIDER */
 .slider-container {
+  position: relative;
   width: 100%;
   height: 100vh; /* fallback */
   height: calc(var(--vh, 1vh) * 100); /* JS-driven — fixes iOS Safari */
@@ -176,6 +179,7 @@ body.home-cinematic {
 
 .slider-track {
   display: flex;
+  width: 100%; /* explicit width so child percentages resolve correctly */
   height: 100%;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
@@ -184,17 +188,20 @@ body.home-cinematic {
 
 .slide-card {
   position: relative;
-  min-width: 100%;
+  flex: 0 0 100%; /* lock each slide to exactly one screen width */
+  width: 100%;
   height: 100%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .card-bg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   filter: brightness(0.4);
@@ -203,6 +210,8 @@ body.home-cinematic {
 .card-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(180deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.85) 60%, rgba(10, 10, 10, 0.95) 100%);
 }
 
@@ -307,14 +316,13 @@ body.home-cinematic {
 }
 
 .membership-container {
-  width: 100vw;
-  height: 100vh; /* fallback */
-  height: calc(var(--vh, 1vh) * 100); /* JS-driven — fixes iOS Safari */
+  width: 100%; /* 100vw causes horizontal overflow — use 100% of the slide instead */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* content starts from top and scrolls down */
   align-items: center;
-  padding: 40px 20px;
+  padding: 40px 20px 120px;
   box-sizing: border-box;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -942,10 +950,9 @@ body.home-cinematic {
   height: 100dvh; /* modern browsers without JS */
 }
 
+/* slide-card: height 100% of track — no min-height which could break flex layout */
 .slide-card {
   height: 100%;
-  min-height: calc(var(--vh, 1vh) * 100); /* primary: JS-driven */
-  min-height: 100dvh; /* modern browsers without JS */
 }
 
 /* Skip intro: don't collide with hamburger on mobile */
