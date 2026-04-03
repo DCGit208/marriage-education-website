@@ -18,14 +18,45 @@ let autoSlideTimer = null;
 let resumeTimer = null;
 let isPaused = false;
 
-// Timing: Intro slides are faster (4.5s), main cards are standard (5s)
-const INTRO_SLIDE_DURATION = 6000;  // 6s for text slides — cinematic hold time
-const MAIN_CARD_DURATION = 5000;     // 5s for main cards
-const RESUME_DELAY = 3000;           // Resume after 3s of no interaction
+const RESUME_DELAY = 3000; // Resume after 3s of no interaction
+const INTRO_SLIDE_COUNT = 4; // Slides 0–3 are intro slides
+
+/* ============================================
+   INTELLIGENT BEHAVIOR-BASED PACING
+   Only applies to intro slides (0–3)
+   ============================================ */
+
+let userBehavior = {
+  swipeSpeed: 0,
+  slidesViewed: 0,
+  startTime: Date.now()
+};
+
+// Load returning user profile from previous session
+(function loadSavedProfile() {
+  const savedType = localStorage.getItem('user_pacing_type');
+  if (savedType) {
+    userBehavior.swipeSpeed = savedType === 'fast'   ? 1500 :
+                              savedType === 'normal' ? 3000 :
+                              5000; // slow
+  }
+}());
+
+function getUserType() {
+  if (userBehavior.slidesViewed < 2) return 'new';
+  if (userBehavior.swipeSpeed < 2000) return 'fast';
+  if (userBehavior.swipeSpeed < 4000) return 'normal';
+  return 'slow';
+}
 
 function getSlideDuration(slideIndex) {
-  // Intro slides (0-3) are faster
-  return slideIndex < 4 ? INTRO_SLIDE_DURATION : MAIN_CARD_DURATION;
+  if (slideIndex >= INTRO_SLIDE_COUNT) return null; // product slides: no auto-advance
+  const type = getUserType();
+  if (type === 'new')    return 6500;
+  if (type === 'slow')   return 6000;
+  if (type === 'normal') return 4500;
+  if (type === 'fast')   return 2500;
+  return 4500;
 }
 
 /* ============================================
@@ -40,12 +71,27 @@ function startAutoSlide() {
 
 function scheduleNextSlide() {
   const duration = getSlideDuration(currentSlide);
-  
+
+  // Stop auto-advance once past intro slides
+  if (duration === null) {
+    stopAutoSlide();
+    return;
+  }
+
   autoSlideTimer = setTimeout(() => {
     if (!isPaused && !isDragging) {
-      const nextSlide = (currentSlide + 1) % totalSlides; // Loop 0→8→0
-      goToSlide(nextSlide);
-      scheduleNextSlide(); // Schedule next transition
+      const nextSlide = currentSlide + 1;
+      // Only auto-advance within intro slides
+      if (nextSlide < INTRO_SLIDE_COUNT) {
+        goToSlide(nextSlide);
+        scheduleNextSlide();
+      } else {
+        // Reached end of intro — advance once to first product slide then stop
+        goToSlide(nextSlide);
+        stopAutoSlide();
+        // Persist pacing profile for returning visits
+        localStorage.setItem('user_pacing_type', getUserType());
+      }
     }
   }, duration);
 }
@@ -184,6 +230,12 @@ function handleMouseEnd(e) {
    ============================================ */
 
 function goToSlide(index) {
+  // Track user interaction for behavior-based pacing
+  userBehavior.slidesViewed++;
+  const now = Date.now();
+  const timeSpent = now - userBehavior.startTime;
+  userBehavior.swipeSpeed = timeSpent / userBehavior.slidesViewed;
+
   // Step 6: Subtle exit fade for continuity
   if (typeof gsap !== 'undefined') {
     gsap.to('.slide-card', {
@@ -214,10 +266,12 @@ function goToSlide(index) {
     window.animateCurrentCard(index);
   }
 
-  // Restart auto-slide timer with new duration
+  // Restart auto-slide timer only for intro slides
   if (!isPaused && !isDragging) {
     stopAutoSlide();
-    scheduleNextSlide();
+    if (index < INTRO_SLIDE_COUNT) {
+      scheduleNextSlide();
+    }
   }
 }
 
