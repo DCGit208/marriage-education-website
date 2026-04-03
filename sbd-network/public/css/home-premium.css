@@ -67,6 +67,7 @@ body.home-cinematic {
   background-size: cover;
   background-position: center 65%; /* shift focal point down so hands/hands don't interfere with text */
   background-repeat: no-repeat;
+  will-change: transform; /* Step 7: GPU-optimised for parallax */
 }
 
 /* Subtle radial overlay on intro backgrounds */
