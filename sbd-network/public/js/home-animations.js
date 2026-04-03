@@ -21,12 +21,13 @@ function animateIntroSlide1() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power3.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' } })
     .from(words, {
       opacity: 0,
-      y: 30,
-      stagger: 0.18,
-      duration: 0.8
+      y: 20,
+      filter: 'blur(4px)',
+      stagger: 0.22,
+      duration: 0.9
     });
 }
 
@@ -36,12 +37,13 @@ function animateIntroSlide2() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power3.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' } })
     .from(words, {
       opacity: 0,
-      y: 30,
-      stagger: 0.18,
-      duration: 0.8
+      y: 20,
+      filter: 'blur(4px)',
+      stagger: 0.22,
+      duration: 0.9
     });
 }
 
@@ -51,12 +53,13 @@ function animateIntroSlide3() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power3.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' } })
     .from(words, {
       opacity: 0,
-      y: 30,
-      stagger: 0.18,
-      duration: 0.8
+      y: 20,
+      filter: 'blur(4px)',
+      stagger: 0.22,
+      duration: 0.9
     });
 }
 
@@ -69,12 +72,13 @@ function animateIntroSlide4() {
   
   const words = slide.querySelectorAll('.word');
   
-  gsap.timeline({ defaults: { ease: 'power3.out' } })
+  gsap.timeline({ defaults: { ease: 'power2.out' } })
     .from(words, {
       opacity: 0,
-      y: 30,
-      stagger: 0.18,
-      duration: 0.8
+      y: 20,
+      filter: 'blur(4px)',
+      stagger: 0.22,
+      duration: 0.9
     });
 }
 
@@ -296,14 +300,6 @@ window.animateCurrentCard = function(cardIndex) {
   console.log(`🎬 Animating slide ${cardIndex + 1}/9`);
   // 🔒 Production-safe reset (prevents hidden/ghost states)
   gsap.set('.slide-card *', { clearProps: 'opacity,transform' });
-  
-  // Hide skip button after intro slides
-  const skipBtn = document.getElementById('skipIntro');
-  if (skipBtn && cardIndex >= 4) {
-    skipBtn.classList.add('hidden');
-  } else if (skipBtn && cardIndex < 4) {
-    skipBtn.classList.remove('hidden');
-  }
   
   switch(cardIndex) {
     case 0: animateIntroSlide1(); break;
