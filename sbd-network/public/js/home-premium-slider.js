@@ -19,7 +19,7 @@ let resumeTimer = null;
 let isPaused = false;
 
 // Timing: Intro slides are faster (4.5s), main cards are standard (5s)
-const INTRO_SLIDE_DURATION = 4500;  // 4.5s for text slides
+const INTRO_SLIDE_DURATION = 6000;  // 6s for text slides — cinematic hold time
 const MAIN_CARD_DURATION = 5000;     // 5s for main cards
 const RESUME_DELAY = 3000;           // Resume after 3s of no interaction
 
@@ -185,7 +185,7 @@ function handleMouseEnd(e) {
 
 function goToSlide(index) {
   currentSlide = index;
-  sliderTrack.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+  sliderTrack.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
   sliderTrack.style.transform = `translateX(-${index * 100}%)`;
   updateDots();
   
