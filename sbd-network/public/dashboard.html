@@ -259,13 +259,14 @@
                 <div class="card-bg" style="background: linear-gradient(180deg, #0a0a0a, #1a1a1a); position:absolute; inset:0; z-index:0;"></div>
                 <div class="card-overlay" style="position:absolute; inset:0; z-index:1; pointer-events:none;"></div>
 
-                <div class="card-content membership-container" style="position:relative; z-index:2; opacity:1; height:100%; overflow-y:auto; padding:32px 20px 140px; display:flex; flex-direction:column; justify-content:flex-start;">
+                <div class="card-content membership-container" style="position:relative; z-index:2; opacity:1; height:100%; overflow-y:auto; padding:36px 20px 180px; display:flex; flex-direction:column; justify-content:flex-start;">
                     <div class="membership-label">MEMBERSHIP</div>
                     <h2 class="membership-title">Choose Your Path</h2>
+                    <div style="height:18px;"></div>
                     
-                    <div class="membership-cards">
+                    <div class="membership-cards" style="display:flex; flex-direction:column; gap:14px;">
                         <!-- EXPLORE (FREE) -->
-                        <div class="membership-card">
+                        <div class="membership-card" style="margin-top:6px;">
                             <div class="membership-card-header">
                                 <div class="membership-tier-name">Explore</div>
                                 <div class="membership-tier-price">Free</div>
@@ -289,7 +290,7 @@
                         </div>
                         
                         <!-- PREMIUM ($20) - FEATURED -->
-                        <div class="membership-card membership-card-featured">
+                        <div class="membership-card membership-card-featured" style="padding:16px 14px;">
                             <div class="membership-card-header">
                                 <div class="membership-tier-name">
                                     Premium
@@ -306,12 +307,13 @@
                         </div>
                         
                         <!-- ELITE ($50) -->
-                        <div class="membership-card membership-card-featured" style="border:1px solid rgba(198,163,132,0.35); background:linear-gradient(180deg, rgba(198,163,132,0.08), rgba(0,0,0,0.4));">
+                        <div class="membership-card membership-card-featured" style="border:1px solid rgba(198,163,132,0.5); background:linear-gradient(180deg, rgba(198,163,132,0.12), rgba(0,0,0,0.5)); padding:18px 16px; margin-top:10px; margin-bottom:20px;">
                             <div class="membership-card-header">
                                 <div class="membership-tier-name">Elite</div>
                                 <div class="membership-tier-price">$50<span>/mo</span></div>
                             </div>
-                            <div class="membership-card-features" style="display:flex; flex-direction:column; gap:6px; font-size:13px; line-height:1.35;">
+                            <div style="height:10px;"></div>
+                            <div class="membership-card-features" style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; line-height:1.45; margin-top:4px;">
                                 <div class="membership-feature">✓ Everything in Explore, Foundation & Premium</div>
                                 <div class="membership-feature">✓ Access to 44 Courses (across 4 Schools)</div>
                                 <div class="membership-feature">✓ Advanced Muliebrity & Virility Training School</div>
