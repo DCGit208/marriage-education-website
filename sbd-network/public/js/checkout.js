@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Check auth
   firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) {
-      window.location.href = '/index.html';
+      window.location.href = '/auth';
       return;
     }
     
@@ -312,6 +312,29 @@ async function createOrder(orderData) {
 }
 
 // ==================================================================
+// COMMUNITY GROUP AUTO-ASSIGNMENT
+// ==================================================================
+
+// Groups are cumulative — each tier includes all lower-tier groups
+const TIER_GROUPS = {
+  free:       ['group-sbd-community'],
+  foundation: ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies'],
+  premium:    ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
+               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
+  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
+               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13',
+               'group-marriage-systems', 'group-civilization-leadership',
+               'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
+};
+
+async function autoAssignCommunityGroups(userRef, tier) {
+  const groups = TIER_GROUPS[tier];
+  if (!groups || groups.length === 0) return;
+  await userRef.update({ groups: firebase.firestore.FieldValue.arrayUnion(...groups) });
+  console.log('[Checkout] Community groups auto-assigned for tier:', tier, groups);
+}
+
+// ==================================================================
 // CONTENT UNLOCKING
 // ==================================================================
 
@@ -376,6 +399,7 @@ async function unlockContent(productId) {
       endDate.setMonth(endDate.getMonth() + rule.months);
       
       await userRef.update({
+        tier: rule.tier,
         'subscription.tier': rule.tier,
         'subscription.status': 'active',
         'subscription.startDate': firebase.firestore.FieldValue.serverTimestamp(),
@@ -384,6 +408,9 @@ async function unlockContent(productId) {
       });
       
       console.log('[Checkout] Subscription activated:', rule.tier, `for ${rule.months} months`);
+
+      // Auto-enroll user into all community groups for this tier
+      await autoAssignCommunityGroups(userRef, rule.tier);
     }
     
   } catch (error) {

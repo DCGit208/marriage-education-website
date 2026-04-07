@@ -37,6 +37,9 @@ let pinnedBannerDismissed = false;
 let isSubmitting          = false; // prevents double-submit on Post button
 let pendingLinkPreview    = null;  // populated by URL detection in caption textarea
 let currentUserBookmarks  = new Set();
+let bulkSelectMode    = false;         // true while select mode is active
+let bulkSelected      = new Set();     // Set of selected post IDs
+let bulkSelectedPosts = {};            // { postId: postData }
 
 // ── DOM refs ─────────────────────────────────────────────────────
 const backBtn           = document.getElementById('backBtn');
@@ -86,6 +89,11 @@ const postMediaInput    = document.getElementById('postMedia');
 const mediaPreviewGrid  = document.getElementById('mediaPreviewGrid');
 const addMediaBtn       = document.getElementById('addMediaBtn');
 
+// Bulk-select UI (select-mode header)
+const bulkCountLabel   = document.getElementById('bulkCountLabel');
+const bulkForwardBtn   = document.getElementById('bulkForwardBtn');
+const bulkCancelBtn    = document.getElementById('bulkCancelBtn');
+
 // Track object URLs so we can revoke them when the modal closes
 let _mediaObjectURLs = [];
 
@@ -133,7 +141,7 @@ auth.onAuthStateChanged(async (user) => {
   
   console.log('[Board] Firebase ready, proceeding with auth check');
   
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
   if (!boardId) {
     window.location.href = 'dashboard.html';
     return;
@@ -154,6 +162,34 @@ auth.onAuthStateChanged(async (user) => {
     currentUserData = uDoc.exists ? uDoc.data() : {};
     currentUserBookmarks = new Set(currentUserData.bookmarks || []);
   } catch (_) {}
+
+  // ── Tier access gate ───────────────────────────────────────────────
+  // Check board's requiredTier before loading any content.
+  // Done here (sequential, before Promise.all) so loadPosts never starts.
+  try {
+    const _boardMeta = await db.collection('boards').doc(boardId).get();
+    if (_boardMeta.exists) {
+      const _BO   = { free: 0, foundation: 1, premium: 2, elite: 3 };
+      const bTier = _boardMeta.data().requiredTier || 'free';
+      const uTier = currentUserData.tier || 'free';
+      if ((_BO[uTier] ?? 0) < (_BO[bTier] ?? 0)) {
+        const _cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+        if (boardTitle)    boardTitle.textContent    = _boardMeta.data().title || 'Board';
+        if (createPostBtn) createPostBtn.style.display = 'none';
+        if (postsContainer) postsContainer.innerHTML = `
+          <div style="text-align:center;padding:3rem 1.5rem;color:var(--text-sec)">
+            <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+            <h3 style="margin:0 0 .5rem;color:#fff">${_cap(bTier)} Required</h3>
+            <p style="margin:0 0 1.5rem">This board is for ${_cap(bTier)} members and above.</p>
+            <a href="/payment?tier=${bTier}" style="display:inline-block;background:var(--gold,#c6a96b);color:#000;padding:.75rem 2rem;border-radius:8px;font-weight:700;text-decoration:none">Upgrade to ${_cap(bTier)} →</a>
+            <br><a href="/boards.html" style="display:inline-block;margin-top:1rem;font-size:13px;color:var(--text-sec);text-decoration:none">← Back to Community</a>
+          </div>`;
+        showLoading(false);
+        return; // abort — loadPosts never starts
+      }
+    }
+  } catch (_) {} // if check fails, fall through and let loadBoardInfo handle it
+  // ────────────────────────────────────────────────────────────
 
   try {
     showLoading(true);
@@ -897,6 +933,7 @@ function buildPostCard(post) {
   let pressTimer = null;
   let touchMoved = false;
   const startPress = (e) => {
+    if (bulkSelectMode) return;  // select mode intercepts via overlay
     if (e.target.closest('button, a, textarea, input')) return;
     touchMoved = false;
     pressTimer = setTimeout(() => {
@@ -918,6 +955,31 @@ function buildPostCard(post) {
     lastLongPress = Date.now();
     openContextMenu(post, card);
   });
+
+  // ── Bulk-select overlay (sits above card content in select mode) ──
+  card.style.position = 'relative'; // containment for absolute overlay
+  const selOverlay = document.createElement('div');
+  selOverlay.className = 'post-select-overlay';
+  const selCheck = document.createElement('span');
+  selCheck.className = 'post-select-check';
+  selCheck.textContent = '✓';
+  selOverlay.appendChild(selCheck);
+  selOverlay.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!bulkSelectMode) return;
+    if ('vibrate' in navigator) navigator.vibrate(12);
+    if (bulkSelected.has(post.id)) {
+      bulkSelected.delete(post.id);
+      delete bulkSelectedPosts[post.id];
+      card.classList.remove('post-card--selected');
+    } else {
+      bulkSelected.add(post.id);
+      bulkSelectedPosts[post.id] = post;
+      card.classList.add('post-card--selected');
+    }
+    updateBulkBar();
+  });
+  card.appendChild(selOverlay);
 
   return card;
 }
@@ -1294,6 +1356,26 @@ if (postMediaInput) {
         img.src = url;
         img.alt = 'Photo';
         item.appendChild(img);
+
+        // Opt-in edit button — only shown on photos, never auto-triggers
+        if (typeof window.imageEditor !== 'undefined') {
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'media-thumb-edit';
+          editBtn.textContent = '✏️';
+          editBtn.setAttribute('aria-label', 'Edit photo');
+          editBtn.addEventListener('click', async () => {
+            const editedBlob = await window.imageEditor.open(file);
+            if (!editedBlob) return; // user cancelled — keep original
+            const editedFile = new File([editedBlob], file.name, { type: 'image/jpeg' });
+            const dt = new DataTransfer();
+            Array.from(postMediaInput.files).forEach((f, i) => dt.items.add(i === idx ? editedFile : f));
+            postMediaInput.files = dt.files;
+            postMediaInput.value = '';
+            postMediaInput.dispatchEvent(new Event('change'));
+          });
+          item.appendChild(editBtn);
+        }
       } else {
         // Extract first frame via canvas so iOS Safari shows a real thumbnail
         const badge = document.createElement('span');
@@ -1338,6 +1420,7 @@ if (postMediaInput) {
         const dt = new DataTransfer();
         Array.from(postMediaInput.files).filter((_, i) => i !== idx).forEach(f => dt.items.add(f));
         postMediaInput.files = dt.files;
+        postMediaInput.value = ''; // reset so iOS re-pick of same file fires change
         postMediaInput.dispatchEvent(new Event('change'));
       });
       item.appendChild(rm);
@@ -1347,132 +1430,111 @@ if (postMediaInput) {
 }
 
 if (createPostForm) {
-  createPostForm.addEventListener('submit', async e => {
+  createPostForm.addEventListener('submit', e => {
     e.preventDefault();
     // Synchronous guard — stops double-tap / double-click before any paint happens
     if (isSubmitting) return;
 
-    const content     = document.getElementById('postContent').value.trim();
-    const allFiles    = postMediaInput ? Array.from(postMediaInput.files) : [];
-    const imageFiles  = allFiles.filter(f => f.type.startsWith('image/'));
-    const videoFiles  = allFiles.filter(f => f.type.startsWith('video/'));
+    const content  = document.getElementById('postContent').value.trim();
+    const allFiles = postMediaInput ? Array.from(postMediaInput.files) : [];
     if (!content && !allFiles.length) { alert('Add a caption, photo, or video.'); return; }
 
+    // ── Snapshot all form data BEFORE closeModal() wipes the form ──
+    let _pollData = null;
+    if (document.getElementById('pollBuilder')?.style.display !== 'none') {
+      const _pq   = document.getElementById('pollQuestion')?.value.trim();
+      const _opts = Array.from(document.querySelectorAll('#pollOptionsList .poll-option-input'))
+        .map(i => i.value.trim()).filter(Boolean);
+      if (_pq && _opts.length >= 2) _pollData = { question: _pq, options: _opts, votes: {} };
+    }
+    let _scheduledAt = null;
+    const _si = document.getElementById('scheduleDateInput');
+    if (document.getElementById('scheduleSection')?.style.display !== 'none' && _si?.value) {
+      const _d = new Date(_si.value);
+      if (!isNaN(_d) && _d > new Date()) _scheduledAt = firebase.firestore.Timestamp.fromDate(_d);
+    }
+    const _shareAsStory = document.getElementById('storyToggleBtn')?.classList.contains('active');
+    const _linkPreview  = pendingLinkPreview;
+    const _boardId      = boardId;
+    const _boardTitle   = currentBoardData?.title  || '';
+    const _groupId      = currentBoardData?.groupId || null;
+
+    // ── Close modal immediately — user can start another post right now ──
     isSubmitting = true;
-    const postBtn = createPostForm.querySelector('button[type="submit"]');
-    if (postBtn) { postBtn.disabled = true; postBtn.textContent = 'Posting…'; }
-    // Disable the add-media button and remove-buttons during upload
-    if (addMediaBtn) addMediaBtn.disabled = true;
-    const thumbItems = mediaPreviewGrid ? Array.from(mediaPreviewGrid.querySelectorAll('.media-thumb-item')) : [];
+    closeModal();
+    isSubmitting = false;
 
-    // Helper: show spinning overlay on a specific thumbnail cell
-    function _thumbUploading(idx) {
-      const cell = thumbItems[idx];
-      if (!cell) return;
-      cell.querySelectorAll('.media-thumb-remove').forEach(b => b.style.display = 'none');
-      const ov = document.createElement('div');
-      ov.className = 'media-thumb-uploading';
-      ov.innerHTML = '<div class="media-thumb-spinner"></div>';
-      cell.appendChild(ov);
-    }
-    // Helper: replace spinner with ✓ on a specific thumbnail cell
-    function _thumbDone(idx) {
-      const cell = thumbItems[idx];
-      if (!cell) return;
-      cell.querySelector('.media-thumb-uploading')?.remove();
-      const ov = document.createElement('div');
-      ov.className = 'media-thumb-done';
-      ov.textContent = '✓';
-      cell.appendChild(ov);
+    // ── Show persistent "uploading" indicator ──
+    const _toastEl = document.getElementById('appToast');
+    if (_toastEl) {
+      clearTimeout(_toastEl._timer);
+      _toastEl.textContent = '⬆ Uploading…';
+      _toastEl.classList.add('show');
     }
 
-    try {
-      const user = getCurrentUser();
+    // ── Background fire-and-forget — does NOT block the UI ──
+    (async () => {
+      try {
+        const user = getCurrentUser();
 
-      // Upload all files in their selection order (parallel), maintaining position for spinners
-      const uploadJobs = allFiles.map((file, fileIdx) => {
-        _thumbUploading(fileIdx);
-        if (file.type.startsWith('image/')) {
-          return uploadImage(file, user.uid).then(url => {
-            _thumbDone(fileIdx);
-            return { type: 'image', url };
-          });
-        } else {
-          const thumbP = generateVideoThumbnail(file).catch(() => null);
-          const vidP   = uploadVideo(file, user.uid).then(url => { _thumbDone(fileIdx); return url; });
-          return Promise.all([vidP, thumbP]).then(async ([vidUrl, thumbBlob]) => {
-            const thumbUrl = thumbBlob ? await uploadImage(thumbBlob, user.uid).catch(() => null) : null;
-            return { type: 'video', url: vidUrl, thumbUrl };
-          });
-        }
-      });
-
-      const allMedia = await Promise.all(uploadJobs);
-
-      // Derive legacy fields (for backward compat with old render paths)
-      const firstImage = allMedia.find(m => m.type === 'image');
-      const firstVideo = allMedia.find(m => m.type === 'video');
-      const imageUrl   = firstImage?.url || null;
-      const videoUrl   = firstVideo?.url || null;
-      const allPhotos  = allMedia.filter(m => m.type === 'image').map(m => m.url);
-      const allVideos  = allMedia.filter(m => m.type === 'video').map(m => m.url);
-      const thumbUrl   = firstVideo?.thumbUrl || null;
-      const allThumbs  = allMedia.filter(m => m.type === 'video').map(m => m.thumbUrl || null);
-
-      if (postBtn) postBtn.textContent = 'Saving…';
-      // Collect poll data
-      let _pollData = null;
-      if (document.getElementById('pollBuilder')?.style.display !== 'none') {
-        const _pq   = document.getElementById('pollQuestion')?.value.trim();
-        const _opts = Array.from(document.querySelectorAll('#pollOptionsList .poll-option-input'))
-          .map(i => i.value.trim()).filter(Boolean);
-        if (_pq && _opts.length >= 2) _pollData = { question: _pq, options: _opts, votes: {} };
-      }
-      // Collect schedule data
-      let _scheduledAt = null;
-      const _si = document.getElementById('scheduleDateInput');
-      if (document.getElementById('scheduleSection')?.style.display !== 'none' && _si?.value) {
-        const _d = new Date(_si.value);
-        if (!isNaN(_d) && _d > new Date()) _scheduledAt = firebase.firestore.Timestamp.fromDate(_d);
-      }
-      await createPost(boardId, content, imageUrl, videoUrl, allPhotos, currentBoardData?.title || '', thumbUrl, allVideos, allThumbs, currentBoardData?.groupId || null, pendingLinkPreview, allMedia.length ? allMedia : null, _pollData, _scheduledAt);
-
-      // Also share as Story if toggle is active
-      if (document.getElementById('storyToggleBtn')?.classList.contains('active')) {
-        try {
-          const storyMediaUrl  = imageUrl || videoUrl;
-          const storyMediaType = imageUrl ? 'image' : 'video';
-          const storyThumbUrl  = storyMediaType === 'video' ? thumbUrl : null;
-          if (storyMediaUrl) {
-            const now     = firebase.firestore.Timestamp.now();
-            const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
-            await db.collection('stories').add({
-              boardId,
-              authorId:   currentUserId,
-              authorName: currentUserData.name || getCurrentUser()?.displayName || 'Member',
-              mediaUrl:   storyMediaUrl,
-              mediaType:  storyMediaType,
-              thumbUrl:   storyThumbUrl,
-              caption:    content.slice(0, 120) || '',
-              createdAt:  now,
-              expiresAt:  expires,
-              seenBy:     [currentUserId],
+        const uploadJobs = allFiles.map(file => {
+          if (file.type.startsWith('image/')) {
+            return uploadImage(file, user.uid).then(url => ({ type: 'image', url }));
+          } else {
+            const thumbP = generateVideoThumbnail(file).catch(() => null);
+            const vidP   = uploadVideo(file, user.uid);
+            return Promise.all([vidP, thumbP]).then(async ([vidUrl, thumbBlob]) => {
+              const thumbUrl = thumbBlob ? await uploadImage(thumbBlob, user.uid).catch(() => null) : null;
+              return { type: 'video', url: vidUrl, thumbUrl };
             });
           }
-        } catch (storyErr) {
-          console.warn('[Story] Could not auto-share to story:', storyErr.message);
-        }
-      }
+        });
 
-      closeModal();
-      await Promise.all([loadPosts(true), loadStories()]);
-    } catch (err) {
-      alert('Error creating post: ' + err.message);
-    } finally {
-      isSubmitting = false;
-      if (postBtn) { postBtn.disabled = false; postBtn.textContent = 'Post'; }
-      if (addMediaBtn) addMediaBtn.disabled = false;
-    }
+        const allMedia   = allFiles.length ? await Promise.all(uploadJobs) : [];
+        const firstImage = allMedia.find(m => m.type === 'image');
+        const firstVideo = allMedia.find(m => m.type === 'video');
+        const imageUrl   = firstImage?.url || null;
+        const videoUrl   = firstVideo?.url || null;
+        const allPhotos  = allMedia.filter(m => m.type === 'image').map(m => m.url);
+        const allVideos  = allMedia.filter(m => m.type === 'video').map(m => m.url);
+        const thumbUrl   = firstVideo?.thumbUrl || null;
+        const allThumbs  = allMedia.filter(m => m.type === 'video').map(m => m.thumbUrl || null);
+
+        await createPost(_boardId, content, imageUrl, videoUrl, allPhotos, _boardTitle, thumbUrl, allVideos, allThumbs, _groupId, _linkPreview, allMedia.length ? allMedia : null, _pollData, _scheduledAt);
+
+        // Share as Story if toggle was active
+        if (_shareAsStory) {
+          try {
+            const storyMediaUrl  = imageUrl || videoUrl;
+            const storyMediaType = imageUrl ? 'image' : 'video';
+            const storyThumbUrl  = storyMediaType === 'video' ? thumbUrl : null;
+            if (storyMediaUrl) {
+              const now     = firebase.firestore.Timestamp.now();
+              const expires = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 24 * 3600 * 1000));
+              await db.collection('stories').add({
+                boardId:    _boardId,
+                authorId:   currentUserId,
+                authorName: currentUserData.name || getCurrentUser()?.displayName || 'Member',
+                mediaUrl:   storyMediaUrl,
+                mediaType:  storyMediaType,
+                thumbUrl:   storyThumbUrl,
+                caption:    content.slice(0, 120) || '',
+                createdAt:  now,
+                expiresAt:  expires,
+                seenBy:     [currentUserId],
+              });
+            }
+          } catch (storyErr) {
+            console.warn('[Story] Could not auto-share to story:', storyErr.message);
+          }
+        }
+
+        showToast('✓ Posted!');
+        await Promise.all([loadPosts(true), loadStories()]);
+      } catch (err) {
+        showToast('Post failed: ' + err.message);
+      }
+    })();
   });
 }
 
@@ -1674,7 +1736,7 @@ backBtn && backBtn.addEventListener('click', () => {
 
 logoutBtn && logoutBtn.addEventListener('click', async () => {
   await auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = '/auth';
 });
 
 // ── Comments ──────────────────────────────────────────────────────
@@ -2264,6 +2326,18 @@ document.getElementById('ctxForward').addEventListener('click', async () => {
   if (post) await openForwardModal(post);
 });
 
+document.getElementById('ctxSelect').addEventListener('click', () => {
+  const post = ctxPost;
+  closeContextMenu();
+  if (!post) return;
+  enterBulkSelect();
+  // Immediately select the post that was long-pressed
+  bulkSelected.add(post.id);
+  bulkSelectedPosts[post.id] = post;
+  if (ctxCard) ctxCard.classList.add('post-card--selected');
+  updateBulkBar();
+});
+
 // ── Repost with Thoughts ──────────────────────────────────────────
 document.getElementById('ctxRepost').addEventListener('click', async () => {
   const post = ctxPost;
@@ -2687,111 +2761,199 @@ function renderReactionChips(card, reactions, postId) {
   });
 }
 
-// ── Forward modal ─────────────────────────────────────────────────
-async function openForwardModal(post) {
-  const modal      = document.getElementById('forwardModal');
-  const list       = document.getElementById('forwardBoardList');
-  const closeBtn   = document.getElementById('forwardModalClose');
-  const msgInput   = document.getElementById('forwardMessage');
-  const pickerWrap = document.getElementById('forwardMediaPicker');
-
-  // ── Build a flat list of all media items in this post ─────────
-  const mediaItems = [];
-  if (post.allMedia && post.allMedia.length > 0) {
-    post.allMedia.forEach(item => mediaItems.push({ type: item.type, url: item.url, thumbUrl: item.thumbUrl || null }));
-  } else {
-    if (post.videoUrl) mediaItems.push({ type: 'video', url: post.videoUrl, thumbUrl: post.thumbUrl || null });
-    if (Array.isArray(post.allVideos)) {
-      post.allVideos.forEach((url, i) => {
-        if (url && url !== post.videoUrl) mediaItems.push({ type: 'video', url, thumbUrl: (post.allThumbs || [])[i] || null });
-      });
-    }
-    if (post.imageUrl) mediaItems.push({ type: 'image', url: post.imageUrl, thumbUrl: post.imageUrl });
-    if (Array.isArray(post.allPhotos)) {
-      post.allPhotos.forEach(url => {
-        if (url && url !== post.imageUrl) mediaItems.push({ type: 'image', url, thumbUrl: url });
-      });
-    }
-  }
-
-  // ── Render media picker (only when >1 item) ────────────────────
-  const selected = new Set(mediaItems.map((_, i) => i)); // all selected by default
-  if (mediaItems.length > 1) {
-    pickerWrap.style.display = 'block';
-    const renderPicker = () => {
-      pickerWrap.innerHTML = `<p class="fwd-picker-label">Select items to forward (${selected.size} of ${mediaItems.length})</p>
-        <div class="fwd-media-strip">${mediaItems.map((item, i) => {
-          const thumb = item.thumbUrl
-            ? `<img src="${esc(item.thumbUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:6px;">`
-            : `<div style="width:100%;height:100%;background:#222;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;">${item.type === 'video' ? '🎬' : '🖼'}</div>`;
-          const playIcon = item.type === 'video' ? '<span class="fwd-play-overlay">▶</span>' : '';
-          const check = selected.has(i) ? '<span class="fwd-check">✓</span>' : '';
-          return `<div class="fwd-media-cell${selected.has(i) ? ' selected' : ''}" data-idx="${i}">${thumb}${playIcon}${check}</div>`;
-        }).join('')}</div>`;
-      // wire tap events
-      pickerWrap.querySelectorAll('.fwd-media-cell').forEach(cell => {
-        cell.addEventListener('click', () => {
-          const idx = parseInt(cell.dataset.idx, 10);
-          if (selected.has(idx)) {
-            if (selected.size > 1) selected.delete(idx); // keep at least 1 selected
-          } else {
-            selected.add(idx);
-          }
-          renderPicker();
-        });
-      });
-    };
-    renderPicker();
-  } else {
-    pickerWrap.style.display = 'none';
-    pickerWrap.innerHTML = '';
-  }
-
-  list.innerHTML   = '<p style="padding:16px;color:rgba(255,255,255,0.4);">Loading boards…</p>';
-  msgInput.value   = '';
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-
-  const close = () => { modal.style.display = 'none'; document.body.style.overflow = ''; msgInput.value = ''; pickerWrap.innerHTML = ''; pickerWrap.style.display = 'none'; };
-  closeBtn.onclick = close;
-  modal.addEventListener('click', e => { if (e.target === modal) close(); }, { once: true });
-
-  try {
-    const snap = await db.collection('boards').orderBy('title').get();
-    list.innerHTML = '';
-    snap.forEach(doc => {
-      if (doc.id === boardId) return;
-      const btn = document.createElement('button');
-      btn.className   = 'forward-board-item';
-      btn.textContent = doc.data().title;
-      const targetId  = doc.id;
-      btn.addEventListener('click', async () => {
-        btn.disabled    = true;
-        btn.textContent = 'Forwarding…';
-        try {
-          const message      = msgInput.value.trim();
-          // If picker was shown, pass only selected items; otherwise null = forward all
-          const chosenMedia  = mediaItems.length > 1
-            ? mediaItems.filter((_, i) => selected.has(i))
-            : null;
-          await forwardPost(post, targetId, message, chosenMedia);
-          close();
-          showToast('Post forwarded!');
-        } catch (err) {
-          alert('Could not forward: ' + err.message);
-          btn.disabled    = false;
-          btn.textContent = doc.data().title;
-        }
-      });
-      list.appendChild(btn);
-    });
-    if (!list.children.length) {
-      list.innerHTML = '<p style="padding:16px;color:rgba(255,255,255,0.4);">No other boards available.</p>';
-    }
-  } catch (err) {
-    list.innerHTML = `<p style="padding:16px;color:#f55;">${err.message}</p>`;
-  }
+// ── Boards cache – pre-fetched so sheet opens instantly ───────────
+let _boardsCache = null;
+function _prefetchBoards() {
+  if (_boardsCache) return;
+  db.collection('boards').orderBy('title').get()
+    .then(snap => {
+      _boardsCache = [];
+      snap.forEach(doc => _boardsCache.push({ id: doc.id, ...doc.data() }));
+    })
+    .catch(() => {});
 }
+_prefetchBoards();
+
+// ── Unified forward sheet (Telegram-style) ────────────────────────
+// posts – array of post objects; works for single & bulk
+function openForwardSheet(posts) {
+  const overlay  = document.getElementById('fwdOverlay');
+  const sheet    = document.getElementById('fwdSheet');
+  const titleEl  = document.getElementById('fwdSheetTitle');
+  const closeBtn = document.getElementById('fwdSheetClose');
+  const searchEl = document.getElementById('fwdSearch');
+  const pickerEl = document.getElementById('fwdMediaPicker');
+  const listEl   = document.getElementById('fwdBoardList');
+  const footer   = document.getElementById('fwdFooter');
+  const caption  = document.getElementById('fwdCaption');
+  const sendBtn  = document.getElementById('fwdSendBtn');
+  if (!sheet) return;
+
+  const isBulk     = posts.length > 1;
+  const singlePost = posts[0];
+
+  // Title
+  titleEl.textContent = isBulk ? `Forward ${posts.length} posts` : 'Forward';
+
+  // ── Media picker — single post only ──────────────────────────
+  const mediaItems = [];
+  if (!isBulk && singlePost) {
+    const p = singlePost;
+    if (p.allMedia && p.allMedia.length > 0) {
+      p.allMedia.forEach(item =>
+        mediaItems.push({ type: item.type, url: item.url, thumbUrl: item.thumbUrl || null }));
+    } else {
+      if (p.videoUrl) mediaItems.push({ type: 'video', url: p.videoUrl, thumbUrl: p.thumbUrl || null });
+      (p.allVideos || []).forEach((url, i) => {
+        if (url && url !== p.videoUrl)
+          mediaItems.push({ type: 'video', url, thumbUrl: (p.allThumbs || [])[i] || null });
+      });
+      if (p.imageUrl) mediaItems.push({ type: 'image', url: p.imageUrl, thumbUrl: p.imageUrl });
+      (p.allPhotos || []).forEach(url => {
+        if (url && url !== p.imageUrl) mediaItems.push({ type: 'image', url, thumbUrl: url });
+      });
+    }
+  }
+  const selectedMedia = new Set(mediaItems.map((_, i) => i));
+  const renderPicker = () => {
+    if (mediaItems.length <= 1) { pickerEl.style.display = 'none'; return; }
+    pickerEl.style.display = 'block';
+    pickerEl.innerHTML = `<div class="fwd-media-picker-wrap">
+      <p class="fwd-picker-label">Select items to forward (${selectedMedia.size}/${mediaItems.length})</p>
+      <div class="fwd-media-strip">${mediaItems.map((item, i) => {
+        const thumb = item.thumbUrl
+          ? `<img src="${esc(item.thumbUrl)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">`
+          : `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">${item.type === 'video' ? '🎬' : '🖼'}</div>`;
+        const play = item.type === 'video' ? '<span class="fwd-play-overlay">▶</span>' : '';
+        const chk  = selectedMedia.has(i) ? '<span class="fwd-check">✓</span>' : '';
+        return `<div class="fwd-media-cell${selectedMedia.has(i) ? ' selected' : ''}" data-idx="${i}">${thumb}${play}${chk}</div>`;
+      }).join('')}</div>
+    </div>`;
+    pickerEl.querySelectorAll('.fwd-media-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const idx = parseInt(cell.dataset.idx, 10);
+        if (selectedMedia.has(idx)) { if (selectedMedia.size > 1) selectedMedia.delete(idx); }
+        else { selectedMedia.add(idx); }
+        renderPicker();
+      });
+    });
+  };
+  renderPicker();
+
+  // ── Multi-destination board selection ─────────────────────────
+  const selectedBoards = new Set();
+  let allBoardItems = [];
+  const renderBoards = (filter) => {
+    const q = (filter || '').toLowerCase().trim();
+    const visible = q ? allBoardItems.filter(b => b.title.toLowerCase().includes(q)) : allBoardItems;
+    if (!visible.length) {
+      listEl.innerHTML = `<div class="fwd-board-empty">${q ? 'No boards match your search.' : 'No other boards available.'}</div>`;
+      return;
+    }
+    listEl.innerHTML = '';
+    visible.forEach(board => {
+      const sel  = selectedBoards.has(board.id);
+      const item = document.createElement('div');
+      item.className = 'fwd-board-item' + (sel ? ' selected' : '');
+      item.innerHTML = `<div class="fwd-board-avatar">📋</div>
+        <span class="fwd-board-name">${esc(board.title)}</span>
+        <div class="fwd-board-check">${sel ? '✓' : ''}</div>`;
+      item.addEventListener('click', () => {
+        if (selectedBoards.has(board.id)) selectedBoards.delete(board.id);
+        else selectedBoards.add(board.id);
+        updateFooter();
+        renderBoards(searchEl.value);
+      });
+      listEl.appendChild(item);
+    });
+  };
+  const updateFooter = () => {
+    if (selectedBoards.size > 0) {
+      footer.style.display = 'flex';
+      const n = selectedBoards.size;
+      sendBtn.textContent = `↗ Forward to ${n} board${n > 1 ? 's' : ''}`;
+    } else {
+      footer.style.display = 'none';
+    }
+  };
+  updateFooter();
+
+  const populate = (boards) => {
+    allBoardItems = boards.filter(b => b.id !== boardId);
+    renderBoards('');
+  };
+  if (_boardsCache) {
+    populate(_boardsCache);
+  } else {
+    listEl.innerHTML = '<div class="fwd-board-empty">Loading boards…</div>';
+    db.collection('boards').orderBy('title').get()
+      .then(snap => {
+        _boardsCache = [];
+        snap.forEach(doc => _boardsCache.push({ id: doc.id, ...doc.data() }));
+        populate(_boardsCache);
+      })
+      .catch(err => {
+        listEl.innerHTML = `<div class="fwd-board-empty" style="color:#f55;">${err.message}</div>`;
+      });
+  }
+
+  // Search
+  searchEl.value = '';
+  searchEl.oninput = () => renderBoards(searchEl.value);
+  caption.value = '';
+
+  // Open
+  overlay.classList.add('visible');
+  sheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => searchEl.focus(), 350);
+
+  const close = () => {
+    overlay.classList.remove('visible');
+    sheet.classList.remove('open');
+    document.body.style.overflow = '';
+    selectedBoards.clear();
+    searchEl.oninput = null;
+    pickerEl.style.display = 'none';
+    footer.style.display = 'none';
+    sendBtn.onclick = null;
+    closeBtn.onclick = null;
+  };
+  closeBtn.onclick = close;
+  overlay.addEventListener('click', close, { once: true });
+
+  // Send
+  sendBtn.onclick = async () => {
+    if (!selectedBoards.size) return;
+    sendBtn.disabled    = true;
+    sendBtn.textContent = 'Forwarding…';
+    const msg         = caption.value.trim();
+    const authorName  = (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.name) || '';
+    const targetIds   = [...selectedBoards];
+    const chosenMedia = mediaItems.length > 1 ? mediaItems.filter((_, i) => selectedMedia.has(i)) : null;
+    try {
+      await Promise.all(posts.map(p => forwardPost(p, targetIds, msg, chosenMedia, authorName)));
+      close();
+      if (isBulk) exitBulkSelect();
+      const nb = targetIds.length, np = posts.length;
+      showToast(`✓ ${np > 1 ? np + ' posts' : 'Post'} forwarded to ${nb} board${nb > 1 ? 's' : ''}!`);
+    } catch (err) {
+      sendBtn.disabled    = false;
+      const nb = selectedBoards.size;
+      sendBtn.textContent = `↗ Forward to ${nb} board${nb > 1 ? 's' : ''}`;
+      showToast('⚠ Could not forward: ' + err.message);
+    }
+  };
+}
+
+// Backwards-compatible aliases
+function openForwardModal(post)   { openForwardSheet([post]); }
+function openBulkForwardModal()   {
+  const posts = Object.values(bulkSelectedPosts);
+  if (!posts.length) { showToast('Select at least one post first'); return; }
+  openForwardSheet(posts);
+}
+
 
 // ── Toast ─────────────────────────────────────────────────────────
 function showToast(msg) {
@@ -2801,6 +2963,39 @@ function showToast(msg) {
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => toast.classList.remove('show'), 2600);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// BULK POST SELECTION
+// ═══════════════════════════════════════════════════════════════
+
+function enterBulkSelect() {
+  bulkSelectMode = true;
+  bulkSelected.clear();
+  bulkSelectedPosts = {};
+  document.body.classList.add('bulk-select-mode');
+  document.querySelectorAll('.post-card--selected').forEach(c => c.classList.remove('post-card--selected'));
+  updateBulkBar();
+}
+
+function exitBulkSelect() {
+  bulkSelectMode = false;
+  bulkSelected.clear();
+  bulkSelectedPosts = {};
+  document.body.classList.remove('bulk-select-mode');
+  document.querySelectorAll('.post-card--selected').forEach(c => c.classList.remove('post-card--selected'));
+}
+
+function updateBulkBar() {
+  if (!bulkCountLabel) return;
+  const n = bulkSelected.size;
+  bulkCountLabel.textContent = n === 1 ? '1 Selected' : `${n} Selected`;
+  // Disable Forward if nothing selected
+  if (bulkForwardBtn) bulkForwardBtn.disabled = (n === 0);
+}
+
+// Wire select-mode header buttons
+if (bulkForwardBtn) bulkForwardBtn.addEventListener('click', openBulkForwardModal);
+if (bulkCancelBtn)  bulkCancelBtn.addEventListener('click', exitBulkSelect);
 
 // ═══════════════════════════════════════════════════════════════
 // PINNED BANNER + PINNED MESSAGES LIST
@@ -2966,7 +3161,7 @@ _pinnedListOverlay && _pinnedListOverlay.addEventListener('click', closePinnedLi
 
 // Pull-to-refresh (mobile)
 if (typeof initPTR === 'function') {
-  initPTR(function () { window.location.reload(); });
+  initPTR(async function () { await loadPosts(true); });
 }
 
 // ═══════════════════════════════════════════════════════════════

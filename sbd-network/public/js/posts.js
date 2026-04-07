@@ -2,6 +2,8 @@
 // POSTS MANAGEMENT
 // ================================================================
 
+const _NOTIF_TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
+
 // Create a new post
 async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, boardName, thumbUrl, allVideos, allThumbs, groupId, linkPreview = null, allMedia = null, poll = null, scheduledAt = null) {
   const user = getCurrentUser();
@@ -226,11 +228,15 @@ async function _writePostNotifications(postId, boardId, boardName, authorName, c
   const currentUid = getCurrentUser()?.uid;
   if (!currentUid) return;
 
-  // Resolve the groupId for this board so we only notify group members
-  let groupId = null;
+  // Resolve the groupId and requiredTier for this board
+  let groupId      = null;
+  let requiredTier = 'free';
   try {
     const boardDoc = await db.collection('boards').doc(boardId).get();
-    if (boardDoc.exists) groupId = boardDoc.data().groupId || null;
+    if (boardDoc.exists) {
+      groupId      = boardDoc.data().groupId      || null;
+      requiredTier = boardDoc.data().requiredTier || 'free';
+    }
   } catch (_) {}
 
   // Fetch only users who belong to this group; fall back to all users if groupId unknown
@@ -246,6 +252,9 @@ async function _writePostNotifications(postId, boardId, boardName, authorName, c
   const body  = `${authorName}: ${(content || 'Shared a photo or video').substring(0, 80)}`;
   usersSnap.forEach(userDoc => {
     if (userDoc.id === currentUid) return;
+    // Tier guard — never notify users who cannot access this board
+    const uTier = userDoc.data().tier || 'free';
+    if ((_NOTIF_TIER_ORDER[uTier] ?? 0) < (_NOTIF_TIER_ORDER[requiredTier] ?? 0)) return;
     const ref = db.collection('notifications').doc();
     batch.set(ref, {
       userId:    userDoc.id,
@@ -304,14 +313,16 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
 
   // ── Step 2: notify all other group members (if we have a boardId) ──────────
   if (boardId) {
-    let groupId   = null;
-    let boardName = 'board';
+    let groupId          = null;
+    let boardName        = 'board';
+    let boardRequiredTier = 'free';
     try {
       const boardDoc = await db.collection('boards').doc(boardId).get();
       if (boardDoc.exists) {
-        groupId   = boardDoc.data().groupId || null;
-        boardName = boardDoc.data().title   || 'board';
-        console.log('[Notif:comment] board resolved:', { boardName, groupId });
+        groupId           = boardDoc.data().groupId      || null;
+        boardName         = boardDoc.data().title        || 'board';
+        boardRequiredTier = boardDoc.data().requiredTier || 'free';
+        console.log('[Notif:comment] board resolved:', { boardName, groupId, boardRequiredTier });
       } else {
         console.warn('[Notif:comment] board doc not found:', boardId);
       }
@@ -332,6 +343,9 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
         usersSnap.forEach(userDoc => {
           if (userDoc.id === currentUid)    return; // don't notify commenter
           if (notifiedUids.has(userDoc.id)) return; // already notified (post author)
+          // Tier guard — skip users who cannot access this board
+          const uTier = userDoc.data().tier || 'free';
+          if ((_NOTIF_TIER_ORDER[uTier] ?? 0) < (_NOTIF_TIER_ORDER[boardRequiredTier] ?? 0)) return;
           const ref = db.collection('notifications').doc();
           batch.set(ref, {
             userId:    userDoc.id,
@@ -352,7 +366,33 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
           '— Check that users have this groupId in their "groups" array (admin panel → Manage Groups)');
       }
     } else {
-      console.warn('[Notif:comment] board has no groupId field — cannot fan out to group members');
+      // No groupId on board — fall back to all users (same strategy as _writePostNotifications)
+      console.warn('[Notif:comment] board has no groupId — falling back to all-users notification');
+      let fallbackSnap;
+      try {
+        fallbackSnap = await db.collection('users').get();
+      } catch (e) {
+        console.error('[Notif:comment] Failed to fetch users for fallback:', e);
+      }
+      if (fallbackSnap && !fallbackSnap.empty) {
+        fallbackSnap.forEach(userDoc => {
+          if (userDoc.id === currentUid)    return;
+          if (notifiedUids.has(userDoc.id)) return;
+          const ref = db.collection('notifications').doc();
+          batch.set(ref, {
+            userId:    userDoc.id,
+            type:      'new_comment',
+            title:     `New comment in ${boardName}`,
+            body,
+            boardId,
+            postId,
+            commentId,
+            read:      false,
+            timestamp: now,
+          });
+          notifiedUids.add(userDoc.id);
+        });
+      }
     }
   }
 
@@ -572,15 +612,18 @@ async function reactToComment(commentId, emoji, userId) {
   }
 }
 
-// ── Forward a post to another board ──────────────────────────────
-async function forwardPost(post, targetBoardId, forwardMessage = '', selectedMedia = null) {
+// ── Forward a post to one or more boards ─────────────────────────
+// targetBoardIds  – string OR array of strings
+// forwardMessage  – optional caption
+// selectedMedia   – optional filtered media array
+// authorName      – caller passes currentUserData.name to avoid an extra read
+async function forwardPost(post, targetBoardIds, forwardMessage = '', selectedMedia = null, authorName = '') {
   const user = getCurrentUser();
   if (!user) throw new Error('Not authenticated');
-  const userDoc  = await db.collection('users').doc(user.uid).get();
-  const userData = userDoc.data();
 
-  // If specific media items were selected, forward only those (as allMedia).
-  // Otherwise copy the original post's media wholesale.
+  const name = authorName || (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.name)
+    || user.displayName || 'Anonymous';
+
   let allMedia, imageUrl, allPhotos, videoUrl, allVideos, thumbUrl, allThumbs;
   if (selectedMedia && selectedMedia.length > 0) {
     allMedia  = selectedMedia;
@@ -595,29 +638,35 @@ async function forwardPost(post, targetBoardId, forwardMessage = '', selectedMed
     allThumbs = post.allThumbs || [];
   }
 
-  await db.collection('posts').add({
-    boardId:              targetBoardId,
-    authorId:             user.uid,
-    authorName:           userData.name || user.displayName || 'Anonymous',
-    content:              forwardMessage,
-    imageUrl,
-    allPhotos,
-    videoUrl,
-    allVideos,
-    allMedia,
-    thumbUrl,
-    allThumbs,
-    timestamp:            firebase.firestore.Timestamp.fromDate(new Date()),
-    commentCount:         0,
-    isPinned:             false,
-    forwardedFrom:        post.id,
-    forwardedAuthorName:  post.authorName || 'Member',
-    forwardedContent:     post.content   || '',
-    reactions:            {},
-  });
   const preview = forwardMessage || (post.content ? post.content.slice(0, 80) : '📎 Media');
-  db.collection('boards').doc(targetBoardId).update({
-    lastPostAt:      firebase.firestore.Timestamp.fromDate(new Date()),
-    lastPostPreview: preview,
-  }).catch(() => {});
+  const now     = firebase.firestore.Timestamp.fromDate(new Date());
+  const ids     = Array.isArray(targetBoardIds) ? targetBoardIds : [targetBoardIds];
+
+  await Promise.all(ids.map(targetBoardId =>
+    db.collection('posts').add({
+      boardId:              targetBoardId,
+      authorId:             user.uid,
+      authorName:           name,
+      content:              forwardMessage,
+      imageUrl,
+      allPhotos,
+      videoUrl,
+      allVideos,
+      allMedia,
+      thumbUrl,
+      allThumbs,
+      timestamp:            now,
+      commentCount:         0,
+      isPinned:             false,
+      forwardedFrom:        post.id,
+      forwardedAuthorName:  post.authorName || 'Member',
+      forwardedContent:     post.content   || '',
+      reactions:            {},
+    }).then(() => {
+      db.collection('boards').doc(targetBoardId).update({
+        lastPostAt:      now,
+        lastPostPreview: preview,
+      }).catch(() => {});
+    })
+  ));
 }
