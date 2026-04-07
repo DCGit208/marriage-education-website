@@ -43,13 +43,14 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v224';
+const CACHE_VERSION = 'sbd-network-v238';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
 // Assets to cache immediately
 const PRECACHE_URLS = [
   '/',
+  '/auth.html',
   '/index.html',
   '/dashboard.html',
   '/boards.html',
@@ -165,7 +166,24 @@ self.addEventListener('fetch', (event) => {
 
   // For HTML pages — stale-while-revalidate: serve cache instantly, update in background.
   // This gives users an immediate response (skeleton → content) on every visit.
+  // EXCEPTION: Auth and dashboard pages should always be fresh from network.
+  // They change often, and stale HTML here causes redirect and asset-path bugs.
   if (request.headers.get('Accept').includes('text/html')) {
+    const pathname = url.pathname;
+    
+    // Skip cache for auth and dashboard pages — always fetch from network
+    if (
+      pathname === '/auth' ||
+      pathname === '/auth.html' ||
+      pathname === '/index' ||
+      pathname === '/index.html' ||
+      pathname === '/dashboard' ||
+      pathname === '/dashboard.html'
+    ) {
+      event.respondWith(fetch(request));
+      return;
+    }
+    
     event.respondWith(
       caches.open(RUNTIME_CACHE).then(cache =>
         cache.match(request).then(cached => {
