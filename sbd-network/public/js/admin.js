@@ -1,6 +1,18 @@
 // ================================================================
-// ADMIN PANEL LOGIC  —  v49
+// ADMIN PANEL LOGIC  —  v50
 // ================================================================
+
+// Tier → community group mapping (mirrors checkout.js — keep in sync)
+const ADMIN_TIER_GROUPS = {
+  free:       ['group-sbd-community'],
+  foundation: ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies'],
+  premium:    ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
+               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
+  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
+               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13',
+               'group-marriage-systems', 'group-civilization-leadership',
+               'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
+};
 
 let allGroups = [];
 let allBoards = [];
@@ -20,6 +32,7 @@ const analyticsList = document.getElementById('analyticsList');
 const createGroupBtn = document.getElementById('createGroupBtn');
 const createBoardBtn = document.getElementById('createBoardBtn');
 const broadcastBtn = document.getElementById('broadcastBtn');
+const refreshUsersBtn = document.getElementById('refreshUsersBtn');
 const refreshAnalyticsBtn = document.getElementById('refreshAnalyticsBtn');
 const createGroupModal = document.getElementById('createGroupModal');
 const editGroupModal = document.getElementById('editGroupModal');
@@ -32,7 +45,7 @@ const loadingOverlay = document.getElementById('loadingOverlay');
 
 // ── Auth guard ────────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
   try {
     showLoading(true);
     const isAdmin = await isUserAdmin();
@@ -58,6 +71,7 @@ tabBtns.forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     document.getElementById(tabName + 'Tab').classList.add('active');
+    if (tabName === 'users') loadUsers();
     if (tabName === 'content') loadContent();
     if (tabName === 'analytics') loadAnalytics();
   });
@@ -79,8 +93,10 @@ async function loadGroups() {
       allGroups.push({ id: doc.id, ...g });
       const card = document.createElement('div');
       card.className = 'admin-card' + (g.archived ? ' admin-card-archived' : '');
+      const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+      const tBadge = g.requiredTier ? `<span class="admin-tier-badge tier-${g.requiredTier}">${tierLabel[g.requiredTier] || g.requiredTier}</span>` : '';
       card.innerHTML = `
-        <h4>${escapeHtml(g.title)}${g.archived ? ' <span class="badge-archived">Archived</span>' : ''}</h4>
+        <h4>${escapeHtml(g.title)} ${tBadge}${g.archived ? ' <span class="badge-archived">Archived</span>' : ''}</h4>
         <p>${escapeHtml(g.description || 'No description')}</p>
         <div class="admin-card-actions">
           <button class="btn btn-sm btn-secondary edit-group-btn" data-id="${doc.id}">Edit</button>
@@ -105,6 +121,7 @@ function handleEditGroup(groupId) {
   document.getElementById('editGroupId').value = groupId;
   document.getElementById('editGroupTitle').value = g.title || '';
   document.getElementById('editGroupDescription').value = g.description || '';
+  document.getElementById('editGroupRequiredTier').value = g.requiredTier || 'elite';
   openModal(editGroupModal);
 }
 
@@ -113,10 +130,11 @@ document.getElementById('editGroupForm')?.addEventListener('submit', async (e) =
   const groupId = document.getElementById('editGroupId').value;
   const title = document.getElementById('editGroupTitle').value.trim();
   const description = document.getElementById('editGroupDescription').value.trim();
+  const requiredTier = document.getElementById('editGroupRequiredTier').value || 'elite';
   if (!title) { alert('Title is required'); return; }
   try {
     showLoading(true);
-    await db.collection('groups').doc(groupId).update({ title, description });
+    await db.collection('groups').doc(groupId).update({ title, description, requiredTier });
     closeAllModals();
     await loadGroups();
   } catch (err) {
@@ -156,10 +174,11 @@ document.getElementById('createGroupForm')?.addEventListener('submit', async (e)
   e.preventDefault();
   const title = document.getElementById('groupTitle').value.trim();
   const description = document.getElementById('groupDescription').value.trim();
+  const requiredTier = document.getElementById('groupRequiredTier').value || 'elite';
   if (!title) { alert('Please enter a group title'); return; }
   try {
     showLoading(true);
-    await db.collection('groups').add({ title, description, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('groups').add({ title, description, requiredTier, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     closeAllModals();
     document.getElementById('createGroupForm').reset();
     await loadGroups();
@@ -180,25 +199,50 @@ async function loadBoards() {
     allBoards = [];
     boardsList.innerHTML = '';
     if (snap.empty) { boardsList.innerHTML = '<p class="empty-state">No boards yet</p>'; return; }
+
     snap.forEach(doc => {
       const b = doc.data();
       allBoards.push({ id: doc.id, ...b });
-      const group = allGroups.find(g => g.id === b.groupId);
-      const groupName = group ? group.title : 'Unknown Group';
-      const card = document.createElement('div');
-      card.className = 'admin-card' + (b.archived ? ' admin-card-archived' : '');
-      card.innerHTML = `
-        <h4>${escapeHtml(b.title)}${b.archived ? ' <span class="badge-archived">Archived</span>' : ''}</h4>
-        <p class="small-text">Group: ${escapeHtml(groupName)}</p>
-        <p>${escapeHtml(b.description || 'No description')}</p>
-        <div class="admin-card-actions">
-          <button class="btn btn-sm btn-secondary edit-board-btn" data-id="${doc.id}">Edit</button>
-          <button class="btn btn-sm btn-secondary archive-board-btn" data-id="${doc.id}" data-archived="${!!b.archived}">${b.archived ? 'Unarchive' : 'Archive'}</button>
-          <button class="btn btn-sm btn-secondary clear-board-btn" data-id="${doc.id}">Clear Posts</button>
-          <button class="btn btn-sm btn-danger delete-board-btn" data-id="${doc.id}">Delete</button>
-        </div>`;
-      boardsList.appendChild(card);
     });
+
+    // Organise boards by group
+    const grouped = {}; // groupId → [boards]
+    allBoards.forEach(b => {
+      const gid = b.groupId || '__unassigned__';
+      if (!grouped[gid]) grouped[gid] = [];
+      grouped[gid].push(b);
+    });
+
+    const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+
+    Object.entries(grouped).forEach(([gid, boards]) => {
+      const group = allGroups.find(g => g.id === gid);
+      const groupName = group ? group.title : (gid === '__unassigned__' ? 'Unassigned' : `Unknown (${gid})`);
+
+      // Group header
+      const header = document.createElement('div');
+      header.className = 'admin-group-header';
+      header.textContent = `${groupName} (${boards.length})`;
+      boardsList.appendChild(header);
+
+      boards.forEach(b => {
+        const tierBadge = b.requiredTier ? `<span class="admin-tier-badge tier-${b.requiredTier}">${tierLabel[b.requiredTier] || b.requiredTier}</span>` : '';
+        const card = document.createElement('div');
+        card.className = 'admin-card admin-card--board' + (b.archived ? ' admin-card-archived' : '');
+        card.innerHTML = `
+          <h4>${escapeHtml(b.title)} ${tierBadge}${b.archived ? ' <span class="badge-archived">Archived</span>' : ''}</h4>
+          <p class="small-text">Group: ${escapeHtml(group ? group.title : gid)}</p>
+          <p>${escapeHtml(b.description || 'No description')}</p>
+          <div class="admin-card-actions">
+            <button class="btn btn-sm btn-secondary edit-board-btn" data-id="${b.id}">Edit / Reassign</button>
+            <button class="btn btn-sm btn-secondary archive-board-btn" data-id="${b.id}" data-archived="${!!b.archived}">${b.archived ? 'Unarchive' : 'Archive'}</button>
+            <button class="btn btn-sm btn-secondary clear-board-btn" data-id="${b.id}">Clear Posts</button>
+            <button class="btn btn-sm btn-danger delete-board-btn" data-id="${b.id}">Delete</button>
+          </div>`;
+        boardsList.appendChild(card);
+      });
+    });
+
     boardsList.querySelectorAll('.edit-board-btn').forEach(b => b.addEventListener('click', () => handleEditBoard(b.dataset.id)));
     boardsList.querySelectorAll('.archive-board-btn').forEach(b => b.addEventListener('click', () => handleArchiveBoard(b.dataset.id, b.dataset.archived === 'true')));
     boardsList.querySelectorAll('.clear-board-btn').forEach(b => b.addEventListener('click', () => handleClearBoard(b.dataset.id)));
@@ -215,6 +259,7 @@ function handleEditBoard(boardId) {
   document.getElementById('editBoardId').value = boardId;
   document.getElementById('editBoardTitle').value = b.title || '';
   document.getElementById('editBoardDescription').value = b.description || '';
+  document.getElementById('editBoardRequiredTier').value = b.requiredTier || 'free';
   // Reset file input
   document.getElementById('editBoardCoverFile').value = '';
   // Show existing cover if present
@@ -249,7 +294,8 @@ document.getElementById('editBoardForm')?.addEventListener('submit', async (e) =
   if (!groupId || !title) { alert('Please fill in all required fields'); return; }
   try {
     showLoading(true);
-    const update = { groupId, title, description };
+    const requiredTier = document.getElementById('editBoardRequiredTier').value || 'free';
+    const update = { groupId, title, description, requiredTier };
     if (coverFile) {
       update.coverUrl = await uploadImage(coverFile, getCurrentUser()?.uid);
     }
@@ -341,7 +387,8 @@ document.getElementById('createBoardForm')?.addEventListener('submit', async (e)
   if (!groupId || !title) { alert('Please fill in all required fields'); return; }
   try {
     showLoading(true);
-    const data = { groupId, title, description, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const requiredTier = document.getElementById('boardRequiredTier').value || 'free';
+    const data = { groupId, title, description, requiredTier, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
     if (coverFile) {
       data.coverUrl = await uploadImage(coverFile, getCurrentUser()?.uid);
     }
@@ -399,6 +446,16 @@ async function handleManageUser(userId) {
   document.getElementById('manageUserTitle').textContent = 'Manage User';
   document.getElementById('manageUserName').textContent = `${u.name || u.email} — ${u.email}`;
 
+  // Tier
+  const currentTier = u.tier || 'free';
+  const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+  document.getElementById('manageUserTier').textContent = tierLabel[currentTier] || currentTier;
+  document.getElementById('setUserTierSelect').value = currentTier;
+  document.getElementById('setUserTierBtn').onclick = () => {
+    const selectedTier = document.getElementById('setUserTierSelect').value;
+    handleSetUserTier(userId, selectedTier);
+  };
+
   // Role
   const role = u.role || 'member';
   document.getElementById('manageUserRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
@@ -427,14 +484,17 @@ async function handleManageUser(userId) {
   // Hard delete button
   document.getElementById('hardDeleteUserBtn').onclick = () => handleHardDeleteUser(userId, u.email);
 
-  // Groups checklist
+  // Groups checklist — shows tier badge per group
   const checklist = document.getElementById('userGroupsChecklist');
   checklist.innerHTML = '';
+  const tierColors = { free: '#4caf50', foundation: '#2196f3', premium: '#9c27b0', elite: '#c6a96b' };
   allGroups.forEach(g => {
     const checked = u.groups && u.groups.includes(g.id);
+    const tColor = tierColors[g.requiredTier] || '#888';
+    const tLabel = g.requiredTier ? ` <span style="font-size:10px;background:${tColor}22;color:${tColor};border:1px solid ${tColor}44;border-radius:4px;padding:1px 5px;vertical-align:middle">${g.requiredTier}</span>` : '';
     const lbl = document.createElement('label');
     lbl.className = 'checkbox-label';
-    lbl.innerHTML = `<input type="checkbox" value="${g.id}" ${checked ? 'checked' : ''}><span>${escapeHtml(g.title)}</span>`;
+    lbl.innerHTML = `<input type="checkbox" value="${g.id}" ${checked ? 'checked' : ''}><span>${escapeHtml(g.title)}${tLabel}</span>`;
     checklist.appendChild(lbl);
   });
 
@@ -451,6 +511,30 @@ async function handleToggleRole(userId, newRole) {
   } catch (err) {
     console.error('toggleRole:', err);
     alert('Error updating role');
+  } finally { showLoading(false); }
+}
+
+async function handleSetUserTier(userId, newTier) {
+  const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+  if (!confirm(`Set this user's tier to "${tierLabel[newTier] || newTier}" and auto-assign all corresponding community groups?`)) return;
+  try {
+    showLoading(true);
+    const userRef = db.collection('users').doc(userId);
+    const groups  = ADMIN_TIER_GROUPS[newTier] || [];
+    await userRef.update({
+      tier: newTier,
+      'subscription.tier': newTier,
+      'subscription.status': 'active',
+    });
+    if (groups.length > 0) {
+      await userRef.update({ groups: firebase.firestore.FieldValue.arrayUnion(...groups) });
+    }
+    closeAllModals();
+    await loadUsers();
+    alert(`✅ Tier set to "${tierLabel[newTier]}" and ${groups.length} group(s) assigned.`);
+  } catch (err) {
+    console.error('setUserTier:', err);
+    alert('Error updating tier: ' + err.message);
   } finally { showLoading(false); }
 }
 
@@ -745,6 +829,7 @@ async function loadAnalytics() {
 }
 
 if (refreshAnalyticsBtn) refreshAnalyticsBtn.addEventListener('click', loadAnalytics);
+if (refreshUsersBtn) refreshUsersBtn.addEventListener('click', loadUsers);
 
 // ================================================================
 // HELPERS
@@ -781,7 +866,7 @@ function closeAllModals() {
 
 // Back and logout
 if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'dashboard.html');
-if (logoutBtn) logoutBtn.addEventListener('click', async () => { await auth.signOut(); window.location.href = 'index.html'; });
+if (logoutBtn) logoutBtn.addEventListener('click', async () => { await auth.signOut(); window.location.href = '/auth'; });
 
 function showLoading(show) {
   if (loadingOverlay) loadingOverlay.style.display = show ? 'flex' : 'none';
