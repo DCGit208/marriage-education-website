@@ -372,7 +372,7 @@
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const baseUrl = isLocal 
           ? 'http://localhost:4242/checkout.html'
-          : '/stripe/public/checkout.html';
+          : '/checkout.html';
         
         let checkoutUrl = baseUrl + '?product=' + encodeURIComponent(productId);
         checkoutUrl += '&name=' + encodeURIComponent(productName);
