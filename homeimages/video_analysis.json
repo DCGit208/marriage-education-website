@@ -1,0 +1,18 @@
+{
+  "video_info": {
+    "fps": 59.84344422700587,
+    "total_frames": 1529,
+    "duration": 25.55
+  },
+  "scenes": [
+    {
+      "scene_num": 1,
+      "start_frame": 0,
+      "end_frame": 1471,
+      "start_time": 0.0,
+      "end_time": 24.597514715500328,
+      "duration": 24.597514715500328,
+      "transition_intensity": 0
+    }
+  ]
+}

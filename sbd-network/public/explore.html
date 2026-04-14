@@ -67,41 +67,71 @@
   <!-- App Scripts -->
   <script defer src="/js/firebase.js?v=75"></script>
   <script defer src="/js/formation-access.js?v=104"></script>
-  <script defer src="/js/sw-update-checker.js?v=96"></script>
+  <script defer src="/js/sw-update-checker.js?v=97"></script>
   <script defer src="/js/notifications.js?v=52"></script>
   <script defer src="/js/dm-badge.js?v=52"></script>
   <script defer src="/js/transitions.js?v=52"></script>
   <script defer src="/js/explore.js?v=52"></script>
 
-  <!-- Bottom Navigation (Board Context) -->
-  <nav class="bottom-nav" aria-label="Board navigation">
-    <a href="/dm.html" class="bn-tab" aria-label="Messages">
-      <span class="bn-icon">💬</span>
-      <span class="bn-label">Messages</span>
+  <!-- HAMBURGER -->
+  <div id="menuBtn" class="menu-btn">☰</div>
+  <div id="menuOverlay" class="menu-overlay"></div>
+  <div id="sideMenu" class="side-menu">
+    <div class="menu-links">
+      <div class="ham-section">
+        <div class="ham-section-label">💘 Relationship</div>
+        <a href="/dating.html">💘 Dating</a>
+        <a href="/dm.html">✉️ Messages</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">👗 Expression</div>
+        <a href="/mv-house.html">👗 MV House</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">📚 Resources</div>
+        <a href="/resources.html">📖 Resources Library</a>
+        <a href="/certificates.html">🏅 Certifications</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">⚙️ System</div>
+        <a href="/profile.html">⚙️ Settings</a>
+        <div id="adminSection" style="display:none;">
+          <a href="/admin.html">🔑 Admin Panel</a>
+        </div>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">👤 Account</div>
+        <a href="/profile.html">👤 Profile</a>
+        <button id="logoutMenuBtn">🚪 Logout</button>
+      </div>
+      <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
     </a>
-    <a href="/explore.html" class="bn-tab active" aria-label="Explore">
-      <span class="bn-icon">🔍</span>
-      <span class="bn-label">Explore</span>
+    <a href="/learn.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
     </a>
     <a href="/boards.html" class="bn-tab" aria-label="Boards">
-      <span class="bn-icon">📋</span>
+      <span class="bn-icon">💬</span>
       <span class="bn-label">Boards</span>
     </a>
-    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
-      <span class="bn-icon">👗</span>
-      <span class="bn-label">MV House</span>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
     </a>
     <a href="/profile.html" class="bn-tab" aria-label="Profile">
       <span class="bn-icon">👤</span>
       <span class="bn-label">Profile</span>
     </a>
   </nav>
-    </a>
-  </nav>
-      <span class="bn-icon">👤</span>
-      <span class="bn-label">Profile</span>
-    </a>
-  </nav>
   <script defer src="/js/offline.js?v=52"></script>
+  <script defer src="/js/ham-nav.js?v=1"></script>
 </body>
 </html>

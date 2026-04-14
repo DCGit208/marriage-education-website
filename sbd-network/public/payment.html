@@ -204,16 +204,11 @@
         ).join('');
         
         function proceedToCheckout() {
-            // Check if user is logged in
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
-                    // User is logged in - proceed to Stripe checkout
-                    // For now, show alert (Phase 2 will implement Stripe)
-                    alert('Payment integration coming in Phase 2. For now, contact support to upgrade to ' + config.name + ' tier.');
-                    window.location.href = '/learn.html';
+                    window.location.href = `/checkout.html?product=${requestedTier}-monthly`;
                 } else {
-                    // User not logged in - redirect to login
-                    window.location.href = '/login.html?redirect=/payment.html?tier=' + requestedTier;
+                    window.location.href = '/auth?next=/payment&tier=' + requestedTier + '&src=payment';
                 }
             });
         }

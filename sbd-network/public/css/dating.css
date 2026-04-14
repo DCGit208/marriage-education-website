@@ -1,0 +1,675 @@
+/**
+ * COVENANT MATCHING SYSTEM — Dating CSS v249
+ * ============================================
+ * Dark theme matching lesson.html / mv-house.html CSS variables.
+ * Formation-gated. Not a dating app. A marriage pipeline.
+ */
+
+:root {
+  --bg:          #0D0D0D;
+  --surface:     #151515;
+  --surface2:    #1C1C1C;
+  --gold:        #C6A96B;
+  --gold-dim:    rgba(198,169,107,0.14);
+  --gold-glow:   rgba(198,169,107,0.25);
+  --rose:        #C96B8A;
+  --rose-dim:    rgba(201,107,138,0.14);
+  --text:        #EAE3D2;
+  --text-sec:    #A8A29E;
+  --border:      rgba(255,255,255,0.08);
+  --border-gold: rgba(198,169,107,0.25);
+  --border-rose: rgba(201,107,138,0.22);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+/* ── TOP BAR ─────────────────────────────────────────────────── */
+.dt-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 20;
+}
+.dt-back {
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dt-topbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  flex: 1;
+}
+.dt-topbar-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  background: var(--rose-dim);
+  color: var(--rose);
+  border: 1px solid var(--border-rose);
+}
+
+/* ── STATE WRAPPER ───────────────────────────────────────────── */
+.dt-state { display: none; }
+.dt-state.active { display: block; }
+
+/* ── LOCKED STATE (Free / Foundation) ───────────────────────── */
+.dt-lock-hero {
+  padding: 3rem 1.5rem 2rem;
+  text-align: center;
+}
+.dt-lock-emblem {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+  line-height: 1;
+}
+.dt-lock-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.6rem;
+}
+.dt-lock-sub {
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  line-height: 1.7;
+  max-width: 340px;
+  margin: 0 auto 2rem;
+}
+.dt-lock-law {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* Formation progress bars */
+.dt-progress-section {
+  padding: 0 1.25rem 2rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.dt-progress-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 1rem;
+}
+.dt-req-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.dt-req-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+.dt-req-body { flex: 1; }
+.dt-req-name {
+  font-size: 0.8rem;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+.dt-progress-bar {
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.dt-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--rose) 0%, var(--gold) 100%);
+  transition: width 0.6s ease;
+}
+.dt-req-val {
+  font-size: 0.7rem;
+  color: var(--text-sec);
+  flex-shrink: 0;
+  width: 36px;
+  text-align: right;
+}
+.dt-req-row.met .dt-req-name { color: #4ade80; }
+.dt-req-row.met .dt-progress-fill { background: #4ade80; }
+
+/* Upgrade CTA */
+.dt-upgrade-btn {
+  display: block;
+  max-width: 340px;
+  margin: 0 auto;
+  background: var(--gold);
+  color: #0D0D0D;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: 'Georgia', serif;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.dt-upgrade-btn:hover { background: #D4B87A; }
+
+/* Blurred profile teasers (visible-but-locked per Master Prompt law) */
+.dt-teaser-section {
+  padding: 1.5rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.dt-teaser-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 1rem;
+}
+.dt-teaser-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.dt-teaser-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.dt-teaser-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: var(--surface2);
+  filter: blur(8px);
+  user-select: none;
+}
+.dt-teaser-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+.dt-teaser-footer {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.65rem;
+  color: var(--text-sec);
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* ── PREMIUM LIMITED STATE ───────────────────────────────────── */
+.dt-limited-banner {
+  margin: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: var(--rose-dim);
+  border: 1px solid var(--border-rose);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.dt-limited-banner-icon { font-size: 1.4rem; flex-shrink: 0; }
+.dt-limited-banner-body { flex: 1; }
+.dt-limited-banner-title { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+.dt-limited-banner-sub { font-size: 0.72rem; color: var(--text-sec); line-height: 1.5; }
+.dt-limited-banner-btn {
+  flex-shrink: 0;
+  background: var(--rose);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'Georgia', serif;
+}
+
+/* Profile cards (limited view) */
+.dt-profiles-section {
+  padding: 0 1.25rem;
+}
+.dt-profiles-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 1rem;
+}
+.dt-profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.dt-profile-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 60%, var(--bg) 100%);
+  pointer-events: none;
+}
+.dt-profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.dt-profile-info { flex: 1; overflow: hidden; }
+.dt-profile-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dt-profile-score-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dt-profile-score-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 10px;
+  background: var(--gold-dim);
+  color: var(--gold);
+  border: 1px solid var(--border-gold);
+}
+.dt-profile-sub {
+  font-size: 0.7rem;
+  color: var(--text-sec);
+}
+.dt-profile-action {
+  flex-shrink: 0;
+  z-index: 1;
+}
+.dt-msg-locked {
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* ── ELITE FULL DASHBOARD ────────────────────────────────────── */
+.dt-hero-stats {
+  padding: 1.5rem 1.25rem 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.dt-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 0.75rem;
+  text-align: center;
+}
+.dt-stat-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.dt-stat-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+}
+
+/* Token strip */
+.dt-token-strip {
+  margin: 0 1.25rem 1.25rem;
+  background: var(--gold-dim);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.dt-token-strip-icon { font-size: 1.3rem; flex-shrink: 0; }
+.dt-token-strip-body { flex: 1; }
+.dt-token-strip-label { font-size: 0.75rem; font-weight: 700; color: var(--text); }
+.dt-token-strip-sub { font-size: 0.65rem; color: var(--text-sec); }
+.dt-token-buy-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+}
+.dt-token-buy-btn:hover { background: var(--gold-dim); }
+
+/* Elite sections */
+.dt-section {
+  padding: 0 1.25rem 1.5rem;
+}
+.dt-section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 1rem;
+}
+
+/* Match cards (Elite) */
+.dt-match-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.22s;
+}
+.dt-match-card:hover {
+  border-color: var(--border-rose);
+  box-shadow: 0 6px 20px rgba(201,107,138,0.1);
+}
+.dt-match-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+.dt-match-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.dt-match-info { flex: 1; }
+.dt-match-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+.dt-match-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.dt-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+.dt-badge--compat { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--border-rose); }
+.dt-badge--formed { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--border-gold); }
+.dt-badge--stage  { background: rgba(99,102,241,0.14); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+.dt-badge--new    { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+
+.dt-match-stage-bar {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.dt-match-stage-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--rose) 0%, var(--gold) 100%);
+}
+
+.dt-match-actions { display: flex; gap: 0.6rem; }
+.dt-match-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+  transition: all 0.2s;
+}
+.dt-match-btn:hover { border-color: var(--border-rose); color: var(--rose); }
+.dt-match-btn--primary {
+  background: var(--rose-dim);
+  border-color: var(--border-rose);
+  color: var(--rose);
+  font-weight: 700;
+}
+.dt-match-btn--primary:hover { background: rgba(201,107,138,0.25); }
+
+/* Coaching CTA */
+.dt-coaching-cta {
+  margin: 0 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(198,169,107,0.1) 0%, rgba(201,107,138,0.08) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+.dt-coaching-cta-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+.dt-coaching-cta-sub { font-size: 0.78rem; color: var(--text-sec); line-height: 1.6; margin-bottom: 1rem; }
+.dt-coaching-btn {
+  background: var(--gold);
+  color: #0D0D0D;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+}
+.dt-coaching-btn:hover { background: #D4B87A; }
+
+/* Structured conversation flow */
+.dt-conversation-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.dt-conv-header {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.dt-conv-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.dt-conv-name { font-size: 0.85rem; font-weight: 700; }
+.dt-conv-stage-badge { margin-left: auto; }
+.dt-conv-body { padding: 1rem; }
+.dt-conv-prompt {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 0.85rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--rose);
+}
+.dt-conv-prompt-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rose);
+  margin-bottom: 0.4rem;
+}
+.dt-conv-actions { display: flex; gap: 0.6rem; }
+.dt-conv-reply-btn {
+  flex: 1;
+  background: var(--rose-dim);
+  border: 1px solid var(--border-rose);
+  color: var(--rose);
+  padding: 0.55rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+}
+
+/* Empty match state */
+.dt-empty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  color: var(--text-sec);
+}
+.dt-empty-icon { font-size: 2.5rem; opacity: 0.35; margin-bottom: 0.75rem; }
+.dt-empty p { font-size: 0.82rem; line-height: 1.6; }
+.dt-empty a { color: var(--gold); text-decoration: none; }
+
+/* Formation score ring (mini) */
+.dt-score-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.78rem;
+}
+.dt-score-ring-num { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+
+/* Match suggestion refresh CTA */
+.dt-refresh-cta {
+  text-align: center;
+  padding: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-sec);
+}
+.dt-refresh-cta a { color: var(--rose); text-decoration: none; }
+
+/* Modal overlay for coaching / token purchase */
+.dt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+}
+.dt-modal-overlay.hidden { display: none; }
+.dt-modal-box {
+  background: #181818;
+  border: 1px solid var(--border-gold);
+  border-radius: 18px 18px 14px 14px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  font-family: 'Georgia', serif;
+  animation: dtSlideUp 0.3s ease;
+}
+@keyframes dtSlideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.dt-modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+.dt-modal-sub { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; margin-bottom: 1.5rem; }
+.dt-modal-actions { display: flex; gap: 0.75rem; }
+.dt-modal-cta {
+  flex: 1;
+  background: var(--gold);
+  color: #0D0D0D;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+}
+.dt-modal-dismiss {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+}
+
+/* Loading */
+.dt-loading {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-sec);
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 380px) {
+  .dt-hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .dt-teaser-grid { grid-template-columns: repeat(2, 1fr); }
+}

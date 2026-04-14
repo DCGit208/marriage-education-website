@@ -24,6 +24,10 @@
     0 -4px 24px rgba(0, 0, 0, 0.5),
     0 -1px 0 rgba(198, 163, 132, 0.05);
   
+  /* GPU layer — prevents nav from jumping during iOS scroll/keyboard */
+  will-change: transform;
+  transform: translateZ(0);
+  
   /* Smooth slide when hidden in chat view */
   transition: transform 0.25s ease;
 }
@@ -241,6 +245,109 @@
 @keyframes blink {
   0%, 100% { opacity: 1;    }
   50%       { opacity: 0.2; }
+}
+
+/* ── Hamburger / Side-Menu (shared across all pages) ────────────── */
+.menu-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 999999;
+  font-size: 22px;
+  color: white;
+  cursor: pointer;
+  background: rgba(0,0,0,0.6);
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-btn:hover { background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.2); }
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 9997;
+  display: none;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 260px;
+  height: 100vh;
+  background: #0a0a0a;
+  z-index: 9998;
+  padding: 60px 0 32px;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+}
+.side-menu.open { left: 0; }
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Section headers */
+.ham-section {
+  padding: 4px 0;
+}
+.ham-section + .ham-section {
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.ham-section-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  padding: 10px 20px 2px;
+}
+
+/* Links inside side-menu */
+.side-menu a,
+.side-menu button {
+  display: block;
+  width: 100%;
+  color: rgba(255,255,255,0.82);
+  text-decoration: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  border-radius: 0;
+  transition: background 0.15s, color 0.15s;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+.side-menu a:hover,
+.side-menu button:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
+}
+
+#logoutMenuBtn {
+  color: rgba(255,100,100,0.8);
+  margin-top: 2px;
+}
+#logoutMenuBtn:hover {
+  color: rgb(255,100,100) !important;
+  background: rgba(255,100,100,0.1) !important;
 }
 
 /* ── Page Transition Animations ─────────────────────────────────── */

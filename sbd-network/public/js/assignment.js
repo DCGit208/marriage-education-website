@@ -24,7 +24,7 @@ async function loadAssignment(assignmentId) {
   try {
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      window.location.href = '/index.html';
+      window.location.href = '/auth';
       return;
     }
     

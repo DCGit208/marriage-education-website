@@ -1,0 +1,104 @@
+{
+  "video_info": {
+    "fps": 59.84344422700587,
+    "resolution": "2240x1306",
+    "total_frames": 1529,
+    "duration": 25.55
+  },
+  "cards": [
+    {
+      "card_number": 1,
+      "start_time": 0.0,
+      "end_time": 1.1028776978417267,
+      "duration": 1.1028776978417267,
+      "start_frame": 0,
+      "end_frame": 66
+    },
+    {
+      "card_number": 2,
+      "start_time": 1.1028776978417267,
+      "end_time": 7.41935905820798,
+      "duration": 6.316481360366253,
+      "start_frame": 66,
+      "end_frame": 444
+    },
+    {
+      "card_number": 3,
+      "start_time": 7.41935905820798,
+      "end_time": 10.978646173969915,
+      "duration": 3.5592871157619355,
+      "start_frame": 444,
+      "end_frame": 657
+    },
+    {
+      "card_number": 4,
+      "start_time": 10.978646173969915,
+      "end_time": 16.09198822759974,
+      "duration": 5.1133420536298235,
+      "start_frame": 657,
+      "end_frame": 963
+    },
+    {
+      "card_number": 5,
+      "start_time": 16.09198822759974,
+      "end_time": 18.548397645519948,
+      "duration": 2.4564094179202094,
+      "start_frame": 963,
+      "end_frame": 1110
+    },
+    {
+      "card_number": 6,
+      "start_time": 18.548397645519948,
+      "end_time": 21.85703073904513,
+      "duration": 3.308633093525181,
+      "start_frame": 1110,
+      "end_frame": 1308
+    },
+    {
+      "card_number": 7,
+      "start_time": 21.85703073904513,
+      "end_time": 25.55,
+      "duration": 3.6929692609548717,
+      "start_frame": 1308,
+      "end_frame": 1529
+    }
+  ],
+  "transitions": [
+    {
+      "card": 2,
+      "frame": 66,
+      "time": 1.1028776978417267,
+      "motion_intensity": 10.099387442572741
+    },
+    {
+      "card": 3,
+      "frame": 444,
+      "time": 7.41935905820798,
+      "motion_intensity": 6.704816232771822
+    },
+    {
+      "card": 4,
+      "frame": 657,
+      "time": 10.978646173969915,
+      "motion_intensity": 8.78990428790199
+    },
+    {
+      "card": 5,
+      "frame": 963,
+      "time": 16.09198822759974,
+      "motion_intensity": 6.473564318529863
+    },
+    {
+      "card": 6,
+      "frame": 1110,
+      "time": 18.548397645519948,
+      "motion_intensity": 6.800333078101072
+    },
+    {
+      "card": 7,
+      "frame": 1308,
+      "time": 21.85703073904513,
+      "motion_intensity": 7.604835375191424
+    }
+  ]
+}

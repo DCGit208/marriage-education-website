@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First 10 Beneficiaries Template — CRLA Foundation School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #fff;
+            color: #1a2332;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in 0.85in;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a2332;
+            padding-bottom: 18px;
+            margin-bottom: 26px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1a2332;
+            color: #f0c040;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 34px;
+            color: #1a2332;
+            line-height: 1.15;
+        }
+        .subtitle {
+            font-style: italic;
+            color: #5a6a7e;
+            font-size: 14.5px;
+            margin-top: 6px;
+        }
+
+        /* ── INSTRUCTION BOX ── */
+        .instruction {
+            background: #f8f7f2;
+            border-left: 5px solid #1a2332;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-radius: 0 4px 4px 0;
+        }
+        .instruction p {
+            font-size: 13.5px;
+            line-height: 1.65;
+            color: #334;
+        }
+        .instruction strong { color: #1a2332; }
+
+        /* ── NETWORK CATEGORIES ── */
+        .network-section {
+            margin-bottom: 22px;
+        }
+        .network-section h2 {
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-bottom: 8px;
+        }
+        .network-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .network-category {
+            background: #f8f7f2;
+            border-radius: 4px;
+            padding: 12px 14px;
+        }
+        .network-category h4 {
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #1a2332;
+            margin-bottom: 6px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e0ddd4;
+        }
+        .network-category ul {
+            list-style: none;
+            padding: 0;
+        }
+        .network-category ul li {
+            font-size: 12.5px;
+            color: #556;
+            line-height: 1.65;
+        }
+        .network-category ul li::before { content: "·  "; color: #1a2332; }
+
+        /* ── MAIN TRACKING TABLE ── */
+        h2.section-title {
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-top: 28px;
+            margin-bottom: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-bottom: 24px;
+        }
+        thead tr {
+            background: #1a2332;
+            color: #f0c040;
+        }
+        thead th {
+            padding: 10px 9px;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-weight: 700;
+            font-size: 10.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+        tbody tr:nth-child(even) { background: #fafaf8; }
+        tbody tr.example-row { opacity: 0.55; font-style: italic; }
+        tbody td {
+            padding: 12px 9px;
+            vertical-align: top;
+            color: #334;
+            line-height: 1.5;
+        }
+        tbody td:first-child { font-weight: 600; }
+
+        /* mode badges */
+        .mode {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .mode-protection { background: #fdf0f0; color: #c62828; }
+        .mode-relief     { background: #fff8e0; color: #946200; }
+        .mode-hope       { background: #eef6ee; color: #2e7d32; }
+
+        /* ── MODE GUIDE ── */
+        .mode-guide {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .mode-card {
+            padding: 14px 16px;
+            border-radius: 4px;
+        }
+        .mode-card.protection { background: #fdf0f0; border-top: 3px solid #c62828; }
+        .mode-card.relief     { background: #fff8e0; border-top: 3px solid #e6a800; }
+        .mode-card.hope       { background: #eef6ee; border-top: 3px solid #2e7d32; }
+        .mode-card h4 {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .mode-card.protection h4 { color: #c62828; }
+        .mode-card.relief h4     { color: #946200; }
+        .mode-card.hope h4       { color: #2e7d32; }
+        .mode-card p {
+            font-size: 12px;
+            color: #445;
+            line-height: 1.55;
+        }
+        .mode-card .sign {
+            font-size: 11.5px;
+            color: #667;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* ── DAILY PRACTICES ── */
+        .practices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .practice-block {
+            border: 1.5px solid #1a2332;
+            border-radius: 4px;
+            padding: 16px 18px;
+        }
+        .practice-block h3 {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #1a2332;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #d0cbd0;
+        }
+        .practice-block .step {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid #1a2332;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-top: 1px;
+        }
+        .step-text {
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #334;
+        }
+        .step-text strong { color: #1a2332; }
+
+        /* ── HIGH IMPACT ── */
+        .high-impact {
+            background: #fff8e0;
+            border-left: 5px solid #e6a800;
+            padding: 14px 18px;
+            border-radius: 0 4px 4px 0;
+            margin-bottom: 22px;
+        }
+        .high-impact h4 {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #946200;
+            margin-bottom: 8px;
+        }
+        .high-impact ul {
+            list-style: none;
+            padding: 0;
+        }
+        .high-impact ul li {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #334;
+        }
+        .high-impact ul li::before { content: "★  "; color: #e6a800; }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 14px;
+            border-top: 2px solid #1a2332;
+            color: #8a9ab0;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-bar { text-align: right; margin-bottom: 18px; }
+        .print-btn {
+            background: #1a2332;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        .print-btn:hover { background: #2c3e50; }
+
+        @media print {
+            body { padding: 0.4in 0.65in; }
+            .print-bar { display: none; }
+            table { font-size: 11px; }
+            tbody td { padding: 8px 7px; }
+            thead th { padding: 8px 7px; font-size: 9px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-bar">
+        <button class="print-btn" onclick="window.print()">⬇ Print / Save as PDF</button>
+    </div>
+
+    <div class="header">
+        <div class="badge">CRLA Foundation School &nbsp;·&nbsp; Week 1 &nbsp;·&nbsp; Advocacy Track</div>
+        <h1>FIRST 10 BENEFICIARIES TEMPLATE</h1>
+        <p class="subtitle">A tracking worksheet to map, deploy, and follow up with your initial advocacy network</p>
+    </div>
+
+    <div class="instruction">
+        <p><strong>Instructions:</strong> Every advocate begins with 10 names. Think through the people already in your life — family, friends, church, work, community. Identify their psychological state (Protection / Relief / Hope), match a resource to their need, and write a clear next step. This list is your first deployment field.</p>
+    </div>
+
+    <!-- WHO TO IDENTIFY -->
+    <div class="network-section">
+        <h2>Where to Find Your First 10</h2>
+        <div class="network-grid">
+            <div class="network-category">
+                <h4>Personal Relationships</h4>
+                <ul>
+                    <li>Family preparing for marriage</li>
+                    <li>Friends with relationship challenges</li>
+                    <li>Colleagues navigating marriage</li>
+                    <li>Siblings or cousins</li>
+                </ul>
+            </div>
+            <div class="network-category">
+                <h4>Community Connections</h4>
+                <ul>
+                    <li>Church members</li>
+                    <li>Neighbors</li>
+                    <li>Coworkers</li>
+                    <li>Social media followers</li>
+                </ul>
+            </div>
+            <div class="network-category">
+                <h4>High-Impact Targets ★</h4>
+                <ul>
+                    <li>Pastors (reach entire congregations)</li>
+                    <li>School teachers (reach families)</li>
+                    <li>Community leaders (reach networks)</li>
+                    <li>Business owners</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="high-impact">
+        <h4>Why High-Impact Targets Matter</h4>
+        <ul>
+            <li>A pastor who deploys Foundation School to his congregation = Community Access (100+ beneficiaries from one conversation)</li>
+            <li>A teacher who recommends the SBD books to parents = ripple deployment you can't do alone</li>
+            <li>Include at least 2 high-impact targets in your first 10</li>
+        </ul>
+    </div>
+
+    <!-- MODE GUIDE -->
+    <h2 class="section-title">Psychological Mode Reference</h2>
+    <div class="mode-guide">
+        <div class="mode-card protection">
+            <h4>🛡 Protection Mode</h4>
+            <p>"I must defend myself from further harm."</p>
+            <p class="sign">Signs: Defensive, "I'm fine," skeptical, deflects, blames others</p>
+            <p class="sign"><em>Approach: Slow down. Validate caution. Offer free resources first. No pitch.</em></p>
+        </div>
+        <div class="mode-card relief">
+            <h4>🔧 Relief Mode</h4>
+            <p>"I know something's wrong and I need help."</p>
+            <p class="sign">Signs: Open, sharing struggles, asking questions, actively searching</p>
+            <p class="sign"><em>Approach: Name their pain. Match resource to problem. Offer clear next step.</em></p>
+        </div>
+        <div class="mode-card hope">
+            <h4>🚀 Hope Mode</h4>
+            <p>"We're doing okay — but we want to be great."</p>
+            <p class="sign">Signs: Excited, asks "what's next?", already consuming resources</p>
+            <p class="sign"><em>Approach: Cast vision. Show path from good to great. Invite into deeper resources.</em></p>
+        </div>
+    </div>
+
+    <!-- TRACKING TABLE -->
+    <h2 class="section-title">Your First 10 Beneficiaries</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Relationship to You</th>
+                <th>Need / Stage</th>
+                <th>Mode</th>
+                <th>Deployment Model</th>
+                <th>Resource to Deploy</th>
+                <th>Next Step</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Example row 1 -->
+            <tr class="example-row">
+                <td>Ex.</td>
+                <td>John &amp; Mary</td>
+                <td>Church friends</td>
+                <td>Pre-marriage (engaged)</td>
+                <td><span class="mode mode-hope">Hope</span></td>
+                <td>Personal Access</td>
+                <td>Foundation School</td>
+                <td>Share ambassador link</td>
+                <td>—</td>
+            </tr>
+            <!-- Example row 2 -->
+            <tr class="example-row">
+                <td>Ex.</td>
+                <td>Pastor David</td>
+                <td>Church leader</td>
+                <td>Congregation need</td>
+                <td><span class="mode mode-relief">Relief</span></td>
+                <td>Community Access</td>
+                <td>Foundation School cohort</td>
+                <td>Pitch group study idea</td>
+                <td>—</td>
+            </tr>
+            <!-- Rows 1-10 for filling in -->
+            <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+
+    <!-- DAILY PRACTICE -->
+    <h2 class="section-title">Daily Advocacy Practice</h2>
+    <div class="practices-grid">
+        <div class="practice-block">
+            <h3>Morning Practice — 10 Minutes</h3>
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text"><strong>Pray for your list</strong> — Call your first 10 beneficiaries by name before God.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong>Review your role</strong> — Re-read the Advocate's Code. Recommit to empathy-first deployment.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong>Plan one conversation</strong> — Who will you reach out to today? What is their mode?</div>
+            </div>
+        </div>
+        <div class="practice-block">
+            <h3>Evening Practice — 15 Minutes</h3>
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text"><strong>Reflect on conversations</strong> — What went well? What would you do differently?</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong>Update your list</strong> — Record progress, mode changes, and next steps for each beneficiary.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong>Learn from resources</strong> — Read 10 pages from any Marriage Education resource you deploy.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REFLECTION SPACE -->
+    <h2 class="section-title">Weekly Reflection</h2>
+    <table style="margin-bottom:0;">
+        <thead>
+            <tr>
+                <th>Question</th>
+                <th>Your Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td style="width:40%">How many of my 10 have I reached out to this week?</td><td></td></tr>
+            <tr><td>Which conversation was hardest? What made it hard?</td><td></td></tr>
+            <tr><td>Which person showed the most openness? What was the result?</td><td></td></tr>
+            <tr><td>What did I learn about myself as an advocate this week?</td><td></td></tr>
+            <tr><td>Who on this list should I escalate to a Community Access deployment?</td><td></td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <strong>Marriage Education &nbsp;|&nbsp; CRLA Foundation School</strong>&nbsp;·&nbsp;
+        marriageducation.com &nbsp;·&nbsp; Week 1 Advocacy Track — Tracking Worksheet
+    </div>
+
+</body>
+</html>

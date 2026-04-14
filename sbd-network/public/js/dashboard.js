@@ -6,8 +6,8 @@ let currentUserData = null;
 
 // DOM Elements
 const userNameDisplay = document.getElementById('userNameDisplay');
-const logoutBtn = document.getElementById('logoutBtn');
-const adminPanelBtn = document.getElementById('adminPanelBtn');
+const logoutBtn = document.getElementById('logoutMenuBtn');
+const adminPanelBtn = document.getElementById('adminSection');
 const loadingOverlay = document.getElementById('loadingOverlay');
 
 // Continue Journey Elements
@@ -52,9 +52,30 @@ async function retryFirestoreQuery(queryFn, maxRetries = 3, timeoutMs = 8000) {
 // Initialize dashboard
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = 'index.html';
+    document.body.classList.add('auth-guest');
+    document.body.classList.remove('auth-user');
+    if (adminPanelBtn) adminPanelBtn.style.display = 'none';
+    // Switch menu button to Login
+    if (logoutBtn) {
+      logoutBtn.textContent = '🔑 Login';
+      logoutBtn.classList.add('is-login');
+    }
+    window.dispatchEvent(new CustomEvent('sbd-auth-state', {
+      detail: { isAuthenticated: false, user: null }
+    }));
     return;
   }
+
+  document.body.classList.add('auth-user');
+  document.body.classList.remove('auth-guest');
+  // Switch menu button to Logout
+  if (logoutBtn) {
+    logoutBtn.textContent = '🚪 Logout';
+    logoutBtn.classList.remove('is-login');
+  }
+  window.dispatchEvent(new CustomEvent('sbd-auth-state', {
+    detail: { isAuthenticated: true, user }
+  }));
   
   try {
     showLoading(true);
@@ -79,7 +100,7 @@ auth.onAuthStateChanged(async (user) => {
       if (currentUserData.disabled) {
         await auth.signOut();
         alert('Your account has been suspended. Please contact an administrator.');
-        window.location.href = 'index.html';
+        window.location.href = '/auth';
         return;
       }
       
@@ -87,7 +108,7 @@ auth.onAuthStateChanged(async (user) => {
       const displayName = currentUserData.name || user.displayName || user.email;
       if (userNameDisplay) userNameDisplay.textContent = displayName;
       
-      // Show admin button if user is admin
+      // Show admin section if user is admin
       if (currentUserData.role === 'admin' && adminPanelBtn) {
         adminPanelBtn.style.display = 'block';
       }
@@ -477,9 +498,13 @@ function setupNextAction() {
 // Logout handler
 if (logoutBtn) {
   logoutBtn.addEventListener('click', async () => {
+    if (logoutBtn.classList.contains('is-login')) {
+      window.location.href = '/auth';
+      return;
+    }
     try {
       await auth.signOut();
-      window.location.href = 'index.html';
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Logout error:', error);
       alert('Error logging out. Please try again.');
@@ -487,12 +512,7 @@ if (logoutBtn) {
   });
 }
 
-// Admin panel button
-if (adminPanelBtn) {
-  adminPanelBtn.addEventListener('click', () => {
-    window.location.href = 'admin.html';
-  });
-}
+// Admin panel section — navigation handled by the <a> tag directly
 
 // Helper: Show loading overlay
 function showLoading(show) {
@@ -538,13 +558,20 @@ async function checkForVersionUpdate(uid) {
     const log = await res.json();
     const current = String(log.current || '');
     const seen = localStorage.getItem('sbd-seen-version');
+
+    // Always show the version number in the side menu pill
+    const pill = document.getElementById('versionPill');
+    if (pill && current) pill.textContent = `v${current}`;
+
     if (!current || current === seen) return;
 
     const entry = (log.versions || []).find(v => String(v.version) === current);
     if (!entry) return;
 
-    // Show the bottom sheet
-    showWhatsNew(entry);
+    // Show the bottom sheet — mark as seen only when user explicitly dismisses
+    showWhatsNew(entry, () => {
+      localStorage.setItem('sbd-seen-version', current);
+    });
 
     // Write a Firestore notification for this user (fire-and-forget)
     db.collection('notifications').add({
@@ -556,14 +583,12 @@ async function checkForVersionUpdate(uid) {
       read: false,
     }).catch(() => {});
 
-    // Mark this version as seen
-    localStorage.setItem('sbd-seen-version', current);
   } catch (err) {
     console.warn('checkForVersionUpdate:', err);
   }
 }
 
-function showWhatsNew(entry) {
+function showWhatsNew(entry, onDismiss) {
   const modal   = document.getElementById('whatsNewModal');
   const titleEl = document.getElementById('whatsNewTitle');
   const emojiEl = document.getElementById('whatsNewEmoji');
@@ -592,6 +617,7 @@ function showWhatsNew(entry) {
   const close = () => {
     modal.style.display = 'none';
     document.body.style.overflow = '';
+    if (typeof onDismiss === 'function') onDismiss();
   };
 
   closeBtn.onclick = close;

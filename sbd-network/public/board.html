@@ -14,34 +14,28 @@
     <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
-    <!-- Temporary Mobile Debug Console (Eruda) for Safari iPhone troubleshooting -->
-    <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        console.log('[Debug] Loading Eruda mobile console for debugging...');
-        var script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-        script.onload = function() {
-          eruda.init();
-          console.log('[Debug] Eruda loaded - tap floating icon to view console');
-        };
-        document.head.appendChild(script);
-      }
-    </script>
 </head>
 <body class="board-page bottom-nav-page">
 
     <!-- Header -->
     <header class="app-header">
-        <div class="header-left">
+        <!-- Normal state -->
+        <div class="header-left" id="headerNormalLeft">
             <button id="backBtn" class="btn btn-icon">←</button>
             <h1 id="boardTitle" class="page-title">Board</h1>
         </div>
-        <div class="header-right">
+        <div class="header-right" id="headerNormalRight">
             <span id="postCountBadge" class="post-count-badge"></span>
             <button class="notif-bell-btn btn btn-icon" aria-label="Notifications" title="Notifications">
                 🔔<span class="notif-badge" style="display:none;"></span>
             </button>
             <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+        </div>
+        <!-- Select mode state (Telegram/Instagram style) -->
+        <div class="select-mode-header" id="selectModeHeader">
+            <button id="bulkCancelBtn" class="sel-cancel-btn">Cancel</button>
+            <span id="bulkCountLabel" class="sel-count">0 Selected</span>
+            <button id="bulkForwardBtn" class="sel-forward-btn">↗ Forward</button>
         </div>
     </header>
 
@@ -334,24 +328,33 @@
         <button class="ctx-item" id="ctxShareDm"><span class="ctx-icon">💬</span><span>Share via DM</span></button>
         <button class="ctx-item" id="ctxSaveCollection"><span class="ctx-icon">🗂</span><span>Save to Collection</span></button>
         <button class="ctx-item" id="ctxForward"><span class="ctx-icon">↗</span><span>Forward to Board</span></button>
+        <button class="ctx-item" id="ctxSelect"><span class="ctx-icon">☑</span><span>Select</span></button>
         <hr class="ctx-divider">
         <button class="ctx-item ctx-delete" id="ctxDelete"><span class="ctx-icon">🗑</span><span>Delete</span></button>
       </div>
     </div>
 
-    <!-- Forward Board Picker -->
-    <div id="forwardModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Forward to Board</h3>
-          <button id="forwardModalClose" class="btn btn-icon">×</button>
-        </div>
-        <div id="forwardMediaPicker" style="display:none;padding:12px 16px 0;"></div>
-        <div style="padding:12px 16px 0;">
-          <textarea id="forwardMessage" placeholder="Add a message (optional)…" maxlength="500" rows="3"
-            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text-primary);font-size:0.92rem;font-family:inherit;padding:10px 12px;resize:none;outline:none;"></textarea>
-        </div>
-        <div id="forwardBoardList" class="forward-board-list"></div>
+<!-- ── Unified Forward Sheet (Telegram-style) ── -->
+    <div id="fwdOverlay" class="fwd-overlay" aria-hidden="true"></div>
+    <div id="fwdSheet" class="fwd-sheet" role="dialog" aria-modal="true" aria-label="Forward post">
+      <div class="fwd-sheet-handle"></div>
+      <div class="fwd-sheet-header">
+        <span id="fwdSheetTitle" class="fwd-sheet-title">Forward</span>
+        <button id="fwdSheetClose" class="btn btn-icon fwd-close-btn" aria-label="Close">×</button>
+      </div>
+      <!-- Search -->
+      <div class="fwd-search-wrap">
+        <span class="fwd-search-icon">🔍</span>
+        <input id="fwdSearch" class="fwd-search-input" type="search" placeholder="Search boards…" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <!-- Media picker (only shown when post has >1 media item) -->
+      <div id="fwdMediaPicker" style="display:none;"></div>
+      <!-- Board list -->
+      <div id="fwdBoardList" class="fwd-board-list"></div>
+      <!-- Caption + Send -->
+      <div class="fwd-footer" id="fwdFooter" style="display:none;">
+        <textarea id="fwdCaption" class="fwd-caption" placeholder="Add a caption (optional)…" maxlength="500" rows="2"></textarea>
+        <button id="fwdSendBtn" class="fwd-send-btn">↗ Forward</button>
       </div>
     </div>
 
@@ -428,14 +431,14 @@
     <!-- App Scripts -->
     <script defer src="/js/firebase.js?v=75"></script>
     <script defer src="/js/sw-update-checker.js?v=97"></script>
-    <script defer src="/js/upload.js?v=60"></script>
+    <script defer src="/js/upload.js?v=61"></script>
     <script defer src="/js/image-editor.js?v=77"></script>
     <script defer src="/js/mentions.js?v=75"></script>
-    <script defer src="/js/posts.js?v=60"></script>
+    <script defer src="/js/posts.js?v=61"></script>
     <script defer src="/js/notifications.js?v=60"></script>
     <script defer src="/js/dm-badge.js?v=60"></script>
     <script defer src="/js/ptr.js?v=60"></script>
-    <script defer src="/js/board.js?v=105"></script>
+    <script defer src="/js/board.js?v=111"></script>
     <script defer src="/js/transitions.js?v=60"></script>
     <script defer src="/js/swipe-back.js?v=60"></script>
 
@@ -453,23 +456,58 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation (Board Context) -->
-  <nav class="bottom-nav" aria-label="Board navigation">
-    <a href="/dm.html" class="bn-tab" aria-label="Messages">
-      <span class="bn-icon">💬</span>
-      <span class="bn-label">Messages</span>
+  <!-- HAMBURGER -->
+  <div id="menuBtn" class="menu-btn">☰</div>
+  <div id="menuOverlay" class="menu-overlay"></div>
+  <div id="sideMenu" class="side-menu">
+    <div class="menu-links">
+      <div class="ham-section">
+        <div class="ham-section-label">💘 Relationship</div>
+        <a href="/dating.html">💘 Dating</a>
+        <a href="/dm.html">✉️ Messages</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">👗 Expression</div>
+        <a href="/mv-house.html">👗 MV House</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">📚 Resources</div>
+        <a href="/resources.html">📖 Resources Library</a>
+        <a href="/certificates.html">🏅 Certifications</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">⚙️ System</div>
+        <a href="/profile.html">⚙️ Settings</a>
+        <div id="adminSection" style="display:none;">
+          <a href="/admin.html">🔑 Admin Panel</a>
+        </div>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">👤 Account</div>
+        <a href="/profile.html">👤 Profile</a>
+        <button id="logoutMenuBtn">🚪 Logout</button>
+      </div>
+      <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+      <span class="bn-icon">🏠</span>
+      <span class="bn-label">Home</span>
     </a>
-    <a href="/explore.html" class="bn-tab" aria-label="Explore">
-      <span class="bn-icon">🔍</span>
-      <span class="bn-label">Explore</span>
+    <a href="/learn.html" class="bn-tab" aria-label="Learn">
+      <span class="bn-icon">📚</span>
+      <span class="bn-label">Learn</span>
     </a>
     <a href="/boards.html" class="bn-tab active" aria-label="Boards">
-      <span class="bn-icon">📋</span>
+      <span class="bn-icon">💬</span>
       <span class="bn-label">Boards</span>
     </a>
-    <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
-      <span class="bn-icon">👗</span>
-      <span class="bn-label">MV House</span>
+    <a href="/shop.html" class="bn-tab" aria-label="Shop">
+      <span class="bn-icon">🛒</span>
+      <span class="bn-label">Shop</span>
     </a>
     <a href="/profile.html" class="bn-tab" aria-label="Profile">
       <span class="bn-icon">👤</span>
@@ -477,5 +515,6 @@
     </a>
   </nav>
   <script defer src="/js/offline.js?v=60"></script>
+  <script defer src="/js/ham-nav.js?v=1"></script>
 </body>
 </html>

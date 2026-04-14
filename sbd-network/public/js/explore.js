@@ -23,7 +23,7 @@ function getInitials(name) {
 // ---- Auth entry point ----
 
 auth.onAuthStateChanged(async (user) => {
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
   currentUserUid = user.uid;
 
   if (typeof initNotifications === 'function') initNotifications(user.uid);

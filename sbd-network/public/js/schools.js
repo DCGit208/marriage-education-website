@@ -14,7 +14,7 @@ let userProgress = null;
 
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = '/index.html';
+    window.location.href = '/auth';
     return;
   }
   

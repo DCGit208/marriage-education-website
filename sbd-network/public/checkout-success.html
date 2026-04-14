@@ -171,9 +171,6 @@
             <a href="/dashboard.html" class="success-btn success-btn-secondary">
                 🏠 Back to Dashboard
             </a>
-            <a href="/orders.html" class="success-btn success-btn-secondary">
-                📋 View Order History
-            </a>
         </div>
         
     </div>
@@ -210,9 +207,11 @@
                 }
             }
             
-            // Generate mock order ID (in production, this comes from Firestore)
-            const orderId = 'ORD-' + Date.now().toString().slice(-8);
-            document.getElementById('order-id').textContent = orderId;
+            // Use Stripe session ID as order reference
+            const sessionId = urlParams.get('session_id');
+            document.getElementById('order-id').textContent = sessionId
+              ? sessionId.slice(0, 28) + '...'
+              : 'Confirmed';
         });
     </script>
     

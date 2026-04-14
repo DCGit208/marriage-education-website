@@ -7,6 +7,26 @@ let userProgress = {};
 let userStreak = 0;
 let enrolledCourses = [];
 
+function getRequestedTier() {
+  const tier = (new URLSearchParams(window.location.search).get('tier') || '').toLowerCase();
+  if (!tier) return '';
+  if (tier === 'explore') return 'free';
+  if (tier === 'foundation' || tier === 'premium' || tier === 'elite' || tier === 'free') return tier;
+  return '';
+}
+
+function applyTierPreselection() {
+  const requestedTier = getRequestedTier();
+  if (!requestedTier) return;
+
+  const card = document.querySelector(`.tier-card[data-tier="${requestedTier}"]`);
+  if (!card) return;
+
+  card.classList.add('active');
+  card.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.24), 0 16px 32px rgba(0,0,0,0.24)';
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 // Initialize
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
@@ -15,7 +35,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     await loadSchools();
     await loadContinueLearning();
   } else {
-    window.location.href = '/login.html';
+    window.location.href = '/auth?next=/learn';
   }
 });
 
@@ -28,7 +48,16 @@ async function loadUserData() {
     
     if (userDoc.exists) {
       const userData = userDoc.data();
-      userTier = userData.tier || 'free';
+      const subscription = userData.subscription || {};
+      const now = Date.now();
+      const subEndMs = subscription.endDate && typeof subscription.endDate.toMillis === 'function'
+        ? subscription.endDate.toMillis()
+        : 0;
+      const subscriptionTier = subscription.status === 'active' && subEndMs > now
+        ? (subscription.tier || '')
+        : '';
+
+      userTier = subscriptionTier || userData.tier || 'free';
       userProgress = userData.progress || {};
       userStreak = userData.streak || 0;
       enrolledCourses = userData.enrolledCourses || [];
@@ -135,6 +164,16 @@ async function loadTiers() {
     // Define tier structure
     const tiers = [
       {
+        id: 'free',
+        name: 'Explore',
+        tagline: 'Start For Free',
+        description: 'Get your first experience of the SBD system before upgrading',
+        price: 'Free',
+        icon: '⚪',
+        color: 'linear-gradient(135deg, #5f6368 0%, #3c4043 100%)',
+        access: 'Intro lessons, selected previews, community onboarding, and progress starter path'
+      },
+      {
         id: 'foundation',
         name: 'Foundation',
         tagline: 'Start Your Journey',
@@ -170,6 +209,8 @@ async function loadTiers() {
       const tierCard = createTierCard(tier);
       tiersGrid.appendChild(tierCard);
     }
+
+    applyTierPreselection();
   } catch (error) {
     console.error('Error loading tiers:', error);
     const tiersGrid = document.getElementById('tiersGrid');
@@ -184,6 +225,7 @@ async function loadTiers() {
 function createTierCard(tier) {
   const card = document.createElement('div');
   card.className = 'tier-card';
+  card.dataset.tier = tier.id;
   
   // Check if user has access to this tier
   const hasAccess = checkTierAccess(tier.id, userTier);
@@ -210,7 +252,9 @@ function createTierCard(tier) {
             style="background: ${tier.color}"
             onclick="enterTier('${tier.id}')"
             data-has-access="${hasAccess}">
-      ${hasAccess ? '▶ Enter' : '🔒 Upgrade to ' + tier.name}
+      ${isCurrentTier
+        ? (tier.id === 'free' ? '▶ Start Free Path' : '▶ Enter')
+        : (hasAccess ? '▶ Enter' : '🔒 Upgrade to ' + tier.name)}
     </button>
   `;
   
@@ -227,15 +271,20 @@ function createTierCard(tier) {
 
 function checkTierAccess(tier, userCurrentTier) {
   const tierHierarchy = { free: 0, foundation: 1, premium: 2, elite: 3 };
-  
-  // Free users can't access any paid tier
-  if (userCurrentTier === 'free') return false;
-  
-  // Check if user's tier is >= tier being checked
-  return tierHierarchy[userCurrentTier] >= tierHierarchy[tier];
+
+  const currentValue = tierHierarchy[userCurrentTier] ?? 0;
+  const requiredValue = tierHierarchy[tier] ?? 0;
+
+  // Allow access to current tier and all lower tiers.
+  return currentValue >= requiredValue;
 }
 
 function enterTier(tierId) {
+  if (tierId === 'free') {
+    window.location.href = '/boards.html?access=free';
+    return;
+  }
+
   const hasAccess = checkTierAccess(tierId, userTier);
   const isCurrentTier = userTier === tierId;
   

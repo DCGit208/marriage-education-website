@@ -54,7 +54,7 @@ async function uploadToR2(file, folder) {
 }
 
 // Upload image → R2 (with optional editing)
-async function uploadImage(file, _userId, allowEdit = true) {
+async function uploadImage(file, _userId, allowEdit = false) {
   if (!file) return null;
 
   const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic'];

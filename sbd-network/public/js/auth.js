@@ -10,6 +10,52 @@ const showLoginLink = document.getElementById('showLogin');
 const authMessage = document.getElementById('authMessage');
 const loadingOverlay = document.getElementById('loadingOverlay');
 
+const AUTH_REDIRECT_ALLOWLIST = new Set([
+  '/dashboard', '/dashboard.html',
+  '/learn', '/learn.html',
+  '/profile', '/profile.html',
+  '/boards', '/boards.html',
+  '/payment', '/payment.html'
+]);
+
+function getAuthEntryIntent() {
+  const params = new URLSearchParams(window.location.search);
+  const src = (params.get('src') || '').toLowerCase();
+  const tier = (params.get('tier') || '').toLowerCase();
+  const hasTierIntent = tier === 'foundation' || tier === 'premium' || tier === 'elite';
+  const explicitSigninSource = src.includes('signin') || src.includes('login');
+  return { hasTierIntent, explicitSigninSource };
+}
+
+function isAuthRoute(pathname) {
+  const normalized = (pathname || '/').replace(/\/+$/, '') || '/';
+  return normalized === '/' ||
+         normalized === '/auth' ||
+         normalized === '/auth.html' ||
+         normalized === '/index' ||
+         normalized === '/index.html';
+}
+
+function getPostAuthRedirectUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const nextRaw = (params.get('next') || '/dashboard').trim();
+  const tier = (params.get('tier') || '').trim().toLowerCase();
+  const src = (params.get('src') || '').trim();
+
+  const safeNext = nextRaw.startsWith('/') ? nextRaw : '/dashboard';
+  const nextUrl = new URL(safeNext, window.location.origin);
+  const pathOnly = nextUrl.pathname.replace(/\/+$/, '') || '/';
+
+  if (!AUTH_REDIRECT_ALLOWLIST.has(pathOnly)) {
+    return '/dashboard';
+  }
+
+  if (tier) nextUrl.searchParams.set('tier', tier);
+  if (src) nextUrl.searchParams.set('src', src);
+
+  return `${nextUrl.pathname}${nextUrl.search}`;
+}
+
 // Toggle between login and signup
 if (showSignupLink) {
   showSignupLink.addEventListener('click', (e) => {
@@ -27,6 +73,13 @@ if (showLoginLink) {
     loginForm.style.display = 'block';
     clearMessage();
   });
+}
+
+// Entry UX: if user arrives from a signup CTA with tier intent, open signup form by default.
+const entryIntent = getAuthEntryIntent();
+if (entryIntent.hasTierIntent && !entryIntent.explicitSigninSource && loginForm && signupForm) {
+  loginForm.style.display = 'none';
+  signupForm.style.display = 'block';
 }
 
 // Forgot password
@@ -82,9 +135,9 @@ if (loginForm) {
       
       showMessage('Login successful! Redirecting...', 'success');
       
-      // Redirect to dashboard
+      // Redirect using canonical contract (next/tier/src)
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = getPostAuthRedirectUrl();
       }, 1000);
       
     } catch (error) {
@@ -131,13 +184,30 @@ if (signupForm) {
       
       console.log('Signup successful:', user.uid);
       
+      // Optional: auto-enroll new free users into default free community groups
+      let starterGroups = [];
+      try {
+        const defaultGroupsSnap = await db.collection('groups')
+          .where('isDefaultFree', '==', true)
+          .limit(3)
+          .get();
+        starterGroups = defaultGroupsSnap.docs.map(doc => doc.id);
+      } catch (groupError) {
+        console.warn('Default free groups lookup failed:', groupError);
+      }
+
       // Create user document in Firestore
       await db.collection('users').doc(user.uid).set({
         uid: user.uid,
         name: name,
         email: email,
+        tier: 'free',
+        subscription: {
+          tier: 'free',
+          status: 'inactive'
+        },
         role: 'member',
-        groups: [],
+        groups: starterGroups,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -149,9 +219,9 @@ if (signupForm) {
       
       showMessage('Account created! Redirecting...', 'success');
       
-      // Redirect to dashboard
+      // Redirect using canonical contract (next/tier/src)
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = getPostAuthRedirectUrl();
       }, 1000);
       
     } catch (error) {
@@ -206,9 +276,9 @@ function getErrorMessage(errorCode) {
 
 // Check if already logged in
 auth.onAuthStateChanged((user) => {
-  if (user && window.location.pathname.includes('index.html')) {
-    // Already logged in, redirect to dashboard
-    window.location.href = 'dashboard.html';
+  if (user && isAuthRoute(window.location.pathname)) {
+    // Already logged in on auth route, route with the same redirect contract
+    window.location.href = getPostAuthRedirectUrl();
   }
 });
 
@@ -216,7 +286,7 @@ auth.onAuthStateChanged((user) => {
 window.logout = async function() {
   try {
     await auth.signOut();
-    window.location.href = 'index.html';
+    window.location.href = '/auth';
   } catch (error) {
     console.error('Logout error:', error);
   }

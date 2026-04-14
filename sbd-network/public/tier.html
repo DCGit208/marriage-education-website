@@ -69,8 +69,44 @@
     
     <!-- App Scripts -->
     <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
     <script src="/js/tier-access.js?v=102"></script>
     <script src="/js/tier.js?v=102"></script>
+
+    <!-- HAMBURGER -->
+    <div id="menuBtn" class="menu-btn">☰</div>
+    <div id="menuOverlay" class="menu-overlay"></div>
+    <div id="sideMenu" class="side-menu">
+      <div class="menu-links">
+        <div class="ham-section">
+          <div class="ham-section-label">💘 Relationship</div>
+          <a href="/dating.html">💘 Dating</a>
+          <a href="/dm.html">✉️ Messages</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">👗 Expression</div>
+          <a href="/mv-house.html">👗 MV House</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">📚 Resources</div>
+          <a href="/resources.html">📖 Resources Library</a>
+          <a href="/certificates.html">🏅 Certifications</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">⚙️ System</div>
+          <a href="/profile.html">⚙️ Settings</a>
+          <div id="adminSection" style="display:none;">
+            <a href="/admin.html">🔑 Admin Panel</a>
+          </div>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">👤 Account</div>
+          <a href="/profile.html">👤 Profile</a>
+          <button id="logoutMenuBtn">🚪 Logout</button>
+        </div>
+        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+      </div>
+    </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Main navigation">
@@ -83,12 +119,8 @@
             <span class="bn-label">Learn</span>
         </a>
         <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">📋</span>
+            <span class="bn-icon">💬</span>
             <span class="bn-label">Boards</span>
-        </a>
-        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
-            <span class="bn-icon">👗</span>
-            <span class="bn-label">MV House</span>
         </a>
         <a href="/shop.html" class="bn-tab" aria-label="Shop">
             <span class="bn-icon">🛒</span>
@@ -99,5 +131,6 @@
             <span class="bn-label">Profile</span>
         </a>
     </nav>
+    <script defer src="/js/ham-nav.js?v=1"></script>
 </body>
 </html>

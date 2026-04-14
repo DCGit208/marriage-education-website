@@ -679,6 +679,32 @@
   background: rgba(255,80,80,0.1);
 }
 
+/* ── Wardrobe save button (MV House boards, Elite only) ─────────── */
+.wardrobe-save-btn {
+  background: none;
+  border: 1px solid rgba(198,169,107,0.25);
+  color: rgba(198,169,107,0.6);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 20px;
+  transition: all 0.18s;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.wardrobe-save-btn:hover {
+  color: rgba(198,169,107,1);
+  border-color: rgba(198,169,107,0.6);
+  background: rgba(198,169,107,0.08);
+}
+
+.wardrobe-save-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .delete-post-btn:focus-visible {
   outline: 2px solid rgba(255,80,80,0.5);
   outline-offset: 2px;

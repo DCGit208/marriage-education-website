@@ -18,7 +18,7 @@ const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_KEY_HERE';
 
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = '/index.html';
+    window.location.href = '/auth';
     return;
   }
   
@@ -219,7 +219,7 @@ async function buyProduct(productId) {
   
   if (!currentUserId) {
     showNotification('Please log in to purchase', 'error');
-    window.location.href = '/index.html';
+    window.location.href = '/auth';
     return;
   }
   

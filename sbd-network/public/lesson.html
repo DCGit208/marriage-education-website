@@ -544,6 +544,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
 
     <script>
         const params   = new URLSearchParams(location.search);
@@ -577,7 +578,6 @@
                     userTier = uData.role === 'admin' ? 'elite' : (active || 'free');
                 }
             } catch (e) { console.error('tier load', e); }
-
             // ── Load module ─────────────────────────────────────
             try {
                 const mDoc = await firebase.firestore().collection('modules').doc(moduleId).get();
@@ -590,6 +590,32 @@
             if (TIER_ORDER[userTier] < TIER_ORDER[requiredTier]) {
                 showUpgradeWall(requiredTier, currentMod.title);
                 return;
+            }
+
+            // ── Drip gate check (v245) ───────────────────────────
+            // Elite & admin bypass drip entirely — instant access
+            if (userTier !== 'elite' && uData?.role !== 'admin') {
+                const sub        = uData?.subscription || {};
+                const dripStartMs = sub.dripStartDate?.toMillis ? sub.dripStartDate.toMillis() : null;
+                const weekNum     = currentMod.week || currentMod.weekNumber || null;
+
+                if (dripStartMs && weekNum && weekNum > 1) {
+                    const DRIP_MS      = 7 * 24 * 60 * 60 * 1000; // 7 days per week
+                    const weeksElapsed = Math.floor((Date.now() - dripStartMs) / DRIP_MS) + 1;
+
+                    if (weekNum > weeksElapsed) {
+                        const unlockMs    = dripStartMs + (weekNum - 1) * DRIP_MS;
+                        const unlockDate  = new Date(unlockMs);
+                        const daysLeft    = Math.ceil((unlockMs - Date.now()) / (24 * 60 * 60 * 1000));
+                        const unlockLabel = daysLeft <= 1
+                            ? 'Unlocks tomorrow'
+                            : daysLeft <= 7
+                                ? `Unlocks in ${daysLeft} days`
+                                : `Unlocks ${unlockDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
+                        showDripWall(weekNum, unlockLabel, unlockDate, currentMod.title);
+                        return;
+                    }
+                }
             }
 
             // ── Load progress ───────────────────────────────────
@@ -827,6 +853,33 @@
             document.getElementById('lessonBody').innerHTML       = renderMarkdown(mod.content || '_Content coming soon._');
         }
 
+        // ── DRIP WALL (time-locked, subscriber is current) ──────
+        function showDripWall(weekNum, unlockLabel, unlockDate, courseTitle) {
+            document.getElementById('partBreadcrumb').style.display = 'none';
+            document.getElementById('lessonMeta').textContent  = 'Drip-Locked — Active Subscriber';
+            document.getElementById('lessonTitle').textContent = `⏳ Week ${weekNum} — Not Yet`;
+            document.getElementById('lessonSubtitle').textContent = courseTitle || '';
+            document.getElementById('upgradeWall').style.display = 'none';
+
+            // Format date for display
+            const dateStr = unlockDate
+                ? unlockDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                : '';
+
+            document.getElementById('lessonBody').innerHTML = `
+                <div class="lesson-upgrade-wall" style="display:block">
+                    <div style="font-size:2.5rem;margin-bottom:16px">⏳</div>
+                    <h3 style="margin-bottom:12px">Week ${weekNum} — ${unlockLabel}</h3>
+                    <p style="margin-bottom: 8px">Your formation is on schedule. Each week drips to give you time to live the content — not just read it.</p>
+                    ${dateStr ? `<p style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:20px">📅 ${dateStr}</p>` : ''}
+                    <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:24px">
+                        Use this time to re-read the previous week, apply the principles, and share your reflection in the community boards.
+                    </p>
+                    <a href="/boards.html" class="btn-upgrade" style="display:inline-block;margin-bottom:12px">💬 Visit Community Boards →</a><br>
+                    <a href="/learn.html" style="font-size:13px;color:var(--text-sec);text-decoration:none">← Back to Formation Hub</a>
+                </div>`;
+        }
+
         // ── UPGRADE WALL ────────────────────────────────────────
         function showUpgradeWall(tier, title) {
             document.getElementById('lessonBody').innerHTML = '';
@@ -836,6 +889,8 @@
             document.getElementById('upgradeWall').querySelector('a').href = '/payment?tier=' + tier;
             document.getElementById('topbarTitle').textContent = 'Locked';
             document.getElementById('lessonTitle').textContent = '🔒 ' + (title || 'Locked');
+            // Track lock hit for upgrade nudge system (v248)
+            if (window.UpgradeTracker) window.UpgradeTracker.trackLockHit(tier, 'lesson');
         }
 
         function showError(msg) {
@@ -869,29 +924,65 @@
         function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
     </script>
 
+    <!-- HAMBURGER -->
+    <div id="menuBtn" class="menu-btn">☰</div>
+    <div id="menuOverlay" class="menu-overlay"></div>
+    <div id="sideMenu" class="side-menu">
+      <div class="menu-links">
+        <div class="ham-section">
+          <div class="ham-section-label">💘 Relationship</div>
+          <a href="/dating.html">💘 Dating</a>
+          <a href="/dm.html">✉️ Messages</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">👗 Expression</div>
+          <a href="/mv-house.html">👗 MV House</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">📚 Resources</div>
+          <a href="/resources.html">📖 Resources Library</a>
+          <a href="/certificates.html">🏅 Certifications</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">⚙️ System</div>
+          <a href="/profile.html">⚙️ Settings</a>
+          <div id="adminSection" style="display:none;">
+            <a href="/admin.html">🔑 Admin Panel</a>
+          </div>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">👤 Account</div>
+          <a href="/profile.html">👤 Profile</a>
+          <button id="logoutMenuBtn">🚪 Logout</button>
+        </div>
+        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+      </div>
+    </div>
+
     <!-- Bottom Nav -->
     <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="/dashboard.html" class="bn-tab">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
             <span class="bn-icon">🏠</span>
             <span class="bn-label">Home</span>
         </a>
-        <a href="/learn.html" class="bn-tab active">
-            <span class="bn-icon">📖</span>
+        <a href="/learn.html" class="bn-tab active" aria-label="Learn">
+            <span class="bn-icon">📚</span>
             <span class="bn-label">Learn</span>
         </a>
-        <a href="/boards.html" class="bn-tab">
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
             <span class="bn-icon">💬</span>
-            <span class="bn-label">Community</span>
+            <span class="bn-label">Boards</span>
         </a>
-        <a href="/resources.html" class="bn-tab">
-            <span class="bn-icon">🗂</span>
-            <span class="bn-label">Resources</span>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
         </a>
-        <a href="/profile.html" class="bn-tab">
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
             <span class="bn-icon">👤</span>
             <span class="bn-label">Profile</span>
         </a>
     </nav>
+    <script defer src="/js/ham-nav.js?v=1"></script>
 
 </body>
 </html>

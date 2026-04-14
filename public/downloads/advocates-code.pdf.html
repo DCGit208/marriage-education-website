@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Advocate's Code — CRLA Foundation School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #fff;
+            color: #1a2332;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in 0.85in;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a2332;
+            padding-bottom: 18px;
+            margin-bottom: 28px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1a2332;
+            color: #f0c040;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 38px;
+            color: #1a2332;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+        .subtitle {
+            font-style: italic;
+            color: #5a6a7e;
+            font-size: 15px;
+            margin-top: 6px;
+        }
+
+        /* ── CODE SECTION ── */
+        .code-block {
+            background: #f8f7f2;
+            border-left: 5px solid #1a2332;
+            padding: 24px 28px;
+            margin: 28px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .code-block h2 {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            font-family: Arial, sans-serif;
+            margin-bottom: 16px;
+        }
+        .commitment {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e0ddd4;
+        }
+        .commitment:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .commit-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: #1a2332;
+            color: #f0c040;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+        .commit-body strong {
+            font-size: 16px;
+            display: block;
+            margin-bottom: 4px;
+            color: #1a2332;
+        }
+        .commit-body p {
+            font-size: 13.5px;
+            color: #445060;
+            line-height: 1.55;
+            font-style: italic;
+        }
+
+        /* ── TWO-COLUMN TABLE ── */
+        .is-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+        }
+        .is-col {
+            padding: 18px 20px;
+            border-radius: 4px;
+        }
+        .is-col.yes {
+            background: #eef6ee;
+            border-top: 4px solid #2e7d32;
+        }
+        .is-col.no {
+            background: #fdf0f0;
+            border-top: 4px solid #c62828;
+        }
+        .is-col h3 {
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-family: Arial, sans-serif;
+            margin-bottom: 12px;
+        }
+        .is-col.yes h3 { color: #2e7d32; }
+        .is-col.no h3 { color: #c62828; }
+        .is-col ul {
+            list-style: none;
+            padding: 0;
+        }
+        .is-col ul li {
+            font-size: 13.5px;
+            line-height: 1.6;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .is-col ul li:last-child { border-bottom: none; }
+        .is-col.yes ul li::before { content: "✓  "; color: #2e7d32; font-weight: bold; }
+        .is-col.no ul li::before  { content: "✗  "; color: #c62828; font-weight: bold; }
+
+        /* ── DAILY COMMITMENT ── */
+        .daily-practice {
+            border: 2px solid #1a2332;
+            border-radius: 4px;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+        .daily-practice h3 {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: Arial, sans-serif;
+            color: #5a6a7e;
+            margin-bottom: 14px;
+        }
+        .practice-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .practice-time {
+            flex-shrink: 0;
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #f0c040;
+            background: #1a2332;
+            padding: 3px 8px;
+            border-radius: 2px;
+            margin-top: 3px;
+        }
+        .practice-steps {
+            font-size: 13.5px;
+            color: #334;
+            line-height: 1.7;
+        }
+        .practice-steps strong { color: #1a2332; }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            padding-top: 16px;
+            border-top: 2px solid #1a2332;
+            color: #8a9ab0;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-bar {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .print-btn {
+            background: #1a2332;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        .print-btn:hover { background: #2c3e50; }
+
+        @media print {
+            body { padding: 0.5in 0.7in; }
+            .print-bar { display: none; }
+            .commitment { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-bar">
+        <button class="print-btn" onclick="window.print()">⬇ Print / Save as PDF</button>
+    </div>
+
+    <div class="header">
+        <div class="badge">CRLA Foundation School &nbsp;·&nbsp; Week 1 &nbsp;·&nbsp; Advocacy Track</div>
+        <h1>THE ADVOCATE'S CODE</h1>
+        <p class="subtitle">Five commitments that define ethical, empathy-first marriage literacy deployment</p>
+    </div>
+
+    <div class="code-block">
+        <h2>I Commit To:</h2>
+
+        <div class="commitment">
+            <div class="commit-number">1</div>
+            <div class="commit-body">
+                <strong>Truth-Telling</strong>
+                <p>I will never exaggerate or promise what resources cannot deliver. I represent what I know to be true — no hype, no manipulation.</p>
+            </div>
+        </div>
+
+        <div class="commitment">
+            <div class="commit-number">2</div>
+            <div class="commit-body">
+                <strong>Empathy-First</strong>
+                <p>I will listen before I recommend. Every person I encounter deserves to be heard fully before I offer any solution.</p>
+            </div>
+        </div>
+
+        <div class="commitment">
+            <div class="commit-number">3</div>
+            <div class="commit-body">
+                <strong>Access-Focus</strong>
+                <p>I will prioritize getting resources into hands, not just making sales. Access is the mission; commissions are the fruit, never the goal.</p>
+            </div>
+        </div>
+
+        <div class="commitment">
+            <div class="commit-number">4</div>
+            <div class="commit-body">
+                <strong>Community-Building</strong>
+                <p>I will connect people to each other, not just to products. The goal is a network of growing households, not a solo income stream.</p>
+            </div>
+        </div>
+
+        <div class="commitment">
+            <div class="commit-number">5</div>
+            <div class="commit-body">
+                <strong>Continuous Learning</strong>
+                <p>I will study the resources I deploy so I can guide wisely. I cannot lead someone to a destination I have not visited myself.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="is-grid">
+        <div class="is-col yes">
+            <h3>An Advocate IS:</h3>
+            <ul>
+                <li>A <strong>guide</strong> to resources, not a guru with all answers</li>
+                <li>A <strong>facilitator</strong> of access, not a salesperson</li>
+                <li>A <strong>connector</strong> between need and solution</li>
+                <li>A <strong>witness</strong> to transformation — sharing what you've experienced</li>
+                <li>A <strong>learner</strong> who stays ahead by staying humble</li>
+            </ul>
+        </div>
+        <div class="is-col no">
+            <h3>An Advocate is NOT:</h3>
+            <ul>
+                <li>A marriage counselor (not licensed to counsel)</li>
+                <li>A profit-maximizer (motive is access, not income)</li>
+                <li>A manipulator using people's pain to make sales</li>
+                <li>A lone ranger — you are part of a deployment network</li>
+                <li>A preacher delivering lectures no one asked for</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="daily-practice">
+        <h3>Morning Advocacy Practice (10 min)</h3>
+        <div class="practice-row">
+            <span class="practice-time">STEP 1</span>
+            <div class="practice-steps"><strong>Pray for your list</strong> — Call your first 10 beneficiaries by name before God.</div>
+        </div>
+        <div class="practice-row">
+            <span class="practice-time">STEP 2</span>
+            <div class="practice-steps"><strong>Review your role</strong> — Re-read the five commitments above. Recommit to empathy-first.</div>
+        </div>
+        <div class="practice-row" style="margin-bottom:0">
+            <span class="practice-time">STEP 3</span>
+            <div class="practice-steps"><strong>Plan one conversation</strong> — Who will you reach out to today? What is their mode (Protection / Relief / Hope)?</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Marriage Education &nbsp;|&nbsp; CRLA Foundation School</strong>&nbsp;·&nbsp;
+        marriageducation.com &nbsp;·&nbsp; Print and post in your workspace as a daily reminder
+    </div>
+
+</body>
+</html>

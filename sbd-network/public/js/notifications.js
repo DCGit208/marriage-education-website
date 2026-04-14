@@ -65,7 +65,7 @@ function _showNotifToast(n) {
   const panel = document.getElementById('notifPanel');
   if (panel && panel.classList.contains('open')) return;
 
-  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : '💬';
+  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
   const toast = document.createElement('div');
   toast.className = 'notif-toast';
   toast.innerHTML = `<span class="notif-toast-icon">${icon}</span><div class="notif-toast-body"><div class="notif-toast-title">${_esc(n.title)}</div>${n.body ? `<div class="notif-toast-text">${_esc(n.body.substring(0, 80))}${n.body.length > 80 ? '…' : ''}</div>` : ''}</div>`;
@@ -189,7 +189,7 @@ function _renderFromSnap(snap, list) {
     const li = document.createElement('li');
     li.className = 'notif-item' + (n.read ? '' : ' unread');
     const ago  = n.timestamp?.toDate ? _timeAgo(n.timestamp.toDate()) : '';
-    const icon = n.type === 'new_post' ? '📝' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : '💬';
+    const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
     li.innerHTML = `
       <span class="ni-icon">${icon}</span>
       <div class="ni-body">

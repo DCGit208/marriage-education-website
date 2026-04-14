@@ -2,388 +2,327 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Resources | SBD Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Resources | SBD Network</title>
     
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="/css/global.css">
-    <link rel="stylesheet" href="/css/components.css">
-    <link rel="stylesheet" href="/css/paywall.css">
-    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+
     <style>
-        /* Resources Page Styles */
-        .resources-page {
+        /* ——— RESOURCES PAGE — CINEMATIC DARK DESIGN SYSTEM ——— */
+        :root {
+            --bg:        #0D0D0D;
+            --surface:   #151515;
+            --surface-2: #1C1C1C;
+            --gold:      #C6A96B;
+            --gold-dim:  rgba(198,169,107,0.15);
+            --gold-glow: rgba(198,169,107,0.25);
+            --text:      #EAE3D2;
+            --text-sec:  #A8A29E;
+            --border:    rgba(255,255,255,0.08);
+            --free-badge: rgba(198,169,107,0.18);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Georgia', serif;
             min-height: 100vh;
-            padding-bottom: 100px;
+            padding-bottom: 90px;
         }
-        
-        .resources-header {
-            background: linear-gradient(135deg, rgba(0, 15, 30, 0.95) 0%, rgba(10, 25, 50, 0.95) 100%);
-            padding: 60px 20px;
+
+        /* ——— HERO ——— */
+        .res-hero {
+            padding: 52px 20px 36px;
             text-align: center;
-            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            border-bottom: 1px solid var(--border);
         }
-        
-        .resources-header h1 {
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #fff;
-        }
-        
-        .resources-header p {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        
-        .resources-content {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 60px 20px;
-        }
-        
-        /* Article Card */
-        .article-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 32px;
-            margin-bottom: 40px;
-            transition: all 0.3s ease;
-        }
-        
-        .article-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(0, 255, 136, 0.3);
-        }
-        
-        .article-badge {
+        .res-free-badge {
             display: inline-block;
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
+            background: var(--free-badge);
+            border: 1px solid rgba(198,169,107,0.4);
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 18px;
         }
-        
-        .article-card h2 {
-            font-size: 28px;
+        .res-hero h1 {
+            font-size: 32px;
             font-weight: 700;
-            color: #fff;
-            margin-bottom: 16px;
-        }
-        
-        .article-card p {
-            font-size: 16px;
-            line-height: 1.7;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 16px;
-        }
-        
-        .article-read-more {
-            color: #00ccff;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .article-read-more:hover {
-            color: #00ff88;
-            gap: 12px;
-        }
-        
-        /* Inline CTA */
-        .inline-cta {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 204, 255, 0.1) 100%);
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 12px;
-            padding: 32px;
-            margin: 40px 0;
-            text-align: center;
-        }
-        
-        .inline-cta h3 {
-            font-size: 24px;
-            color: #00ff88;
+            color: var(--text);
+            line-height: 1.2;
             margin-bottom: 12px;
         }
-        
-        .inline-cta p {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 24px;
+        .res-hero p {
+            font-size: 15px;
+            color: var(--text-sec);
+            max-width: 440px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
-        
-        .inline-cta-btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
-            color: #000;
-            padding: 14px 40px;
-            border-radius: 10px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+
+        /* ——— CONTENT WRAPPER ——— */
+        .res-content {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 36px 20px 48px;
         }
-        
-        .inline-cta-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.5);
+
+        /* ——— SECTION LABEL ——— */
+        .res-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
         }
-        
-        /* Locked Content */
-        .locked-content {
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        /* ——— RESOURCE GRID ——— */
+        .res-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        @media (max-width: 580px) {
+            .res-grid { grid-template-columns: 1fr; }
+            .res-hero h1 { font-size: 26px; }
+        }
+
+        /* ——— RESOURCE CARD ——— */
+        .res-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 32px;
-            margin: 40px 0;
-            overflow: hidden;
-        }
-        
-        .locked-content-inner {
-            filter: blur(4px);
-            opacity: 0.5;
-            user-select: none;
-        }
-        
-        .locked-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            padding: 22px 20px 20px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(180deg, transparent 0%, rgba(0, 15, 30, 0.95) 50%);
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+            text-decoration: none;
         }
-        
-        .locked-overlay-content {
+        .res-card:hover {
+            border-color: var(--gold);
+            background: var(--surface-2);
+            box-shadow: 0 0 18px var(--gold-glow);
+        }
+        .res-card-tag {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        .res-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        .res-card-read {
+            margin-top: auto;
+            font-size: 13px;
+            color: var(--text-sec);
+            transition: color 0.2s;
+        }
+        .res-card:hover .res-card-read {
+            color: var(--gold);
+        }
+
+        /* ——— BOTTOM CTA BLOCK ——— */
+        .res-cta {
+            background: var(--surface);
+            border: 1px solid rgba(198,169,107,0.3);
+            border-radius: 16px;
+            padding: 36px 28px;
             text-align: center;
-            padding: 20px;
         }
-        
-        .locked-overlay h3 {
-            font-size: 24px;
-            color: #00ff88;
-            margin-bottom: 12px;
+        .res-cta-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 14px;
         }
-        
-        .locked-overlay p {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.85);
+        .res-cta-headline {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        .res-cta-sub {
+            font-size: 14px;
+            color: var(--text-sec);
             margin-bottom: 24px;
+            line-height: 1.6;
         }
-        
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .resources-header h1 {
-                font-size: 32px;
-            }
-            
-            .article-card h2 {
-                font-size: 22px;
-            }
-            
-            .article-card {
-                padding: 24px;
-            }
-            
-            .inline-cta {
-                padding: 24px;
-            }
+        .res-cta-btn {
+            display: inline-block;
+            background: var(--gold);
+            color: #0D0D0D;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding: 13px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: opacity 0.2s, box-shadow 0.2s;
+        }
+        .res-cta-btn:hover {
+            opacity: 0.88;
+            box-shadow: 0 4px 20px var(--gold-glow);
         }
     </style>
 </head>
-<body class="resources-page">
+<body class="bottom-nav-page">
 
-    <!-- Header -->
-    <div class="resources-header">
-        <h1>Free Marriage Resources</h1>
-        <p>Articles, insights, and practical wisdom to strengthen your marriage. Start here, grow deeper with SBD formation.</p>
+    <!-- HERO -->
+    <div class="res-hero">
+        <div class="res-free-badge">Free Access</div>
+        <h1>Knowledge Base</h1>
+        <p>All resources below are available to every member, no subscription required.</p>
     </div>
-    
-    <!-- Content -->
-    <div class="resources-content">
-        
-        <!-- Article 1 -->
-        <div class="article-card">
-            <span class="article-badge">Free Resource</span>
-            <h2>What is Covenant Marriage?</h2>
-            <p>
-                Most couples think marriage is a contract: "I'll do this if you do that." But covenant marriage operates on a completely different principle. It's not about negotiation — it's about transformation.
-            </p>
-            <p>
-                In a contract, you protect your interests. In a covenant, you lay down your life. This isn't weakness — it's the most powerful force in human relationships. When both partners commit to covenant, everything changes.
-            </p>
-            <p>
-                Covenant marriage asks a different question. Instead of "What do I get out of this?" it asks "Who am I becoming?" This shift in perspective transforms conflict, intimacy, and purpose.
-            </p>
-            <a href="#" class="article-read-more">Continue Reading →</a>
+
+    <!-- RESOURCE CARDS -->
+    <div class="res-content">
+        <div class="res-section-label">From marriageducation.com</div>
+
+        <div class="res-grid">
+
+            <a class="res-card"
+               href="https://marriageducation.com/what-is-marriage-education.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Foundation</div>
+                <div class="res-card-title">What is Marriage Education?</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/marriage-education-program.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Programs</div>
+                <div class="res-card-title">Marriage Education Programs</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/how-to-prepare-for-marriage.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Preparation</div>
+                <div class="res-card-title">How to Prepare for Marriage</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/signs-you-are-not-ready-for-marriage.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Self-Assessment</div>
+                <div class="res-card-title">Signs You're Not Ready for Marriage</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/how-to-build-a-successful-marriage.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Growth</div>
+                <div class="res-card-title">How to Build a Successful Marriage</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/why-marriages-fail.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Insight</div>
+                <div class="res-card-title">Why Marriages Fail</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/marriage-education-for-women.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">For Women</div>
+                <div class="res-card-title">Marriage Education for Women</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/marriage-education-for-men.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">For Men</div>
+                <div class="res-card-title">Marriage Education for Men</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/marriage-education-cameroon.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Regional</div>
+                <div class="res-card-title">Marriage Education in Cameroon</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
+            <a class="res-card"
+               href="https://marriageducation.com/marriage-education-africa.html"
+               target="_blank" rel="noopener noreferrer">
+                <div class="res-card-tag">Regional</div>
+                <div class="res-card-title">Marriage Education Across Africa</div>
+                <div class="res-card-read">Read article →</div>
+            </a>
+
         </div>
-        
-        <!-- Inline CTA 1 -->
-        <div class="inline-cta">
-            <h3>Ready to Learn the Full System?</h3>
-            <p>This is just the introduction. The Teleios Identity School teaches you the complete framework for building a covenant marriage.</p>
-            <a href="#" class="inline-cta-btn" onclick="window.showPaywallModal && window.showPaywallModal(); return false;">Start Teleios Formation</a>
-        </div>
-        
-        <!-- Article 2 -->
-        <div class="article-card">
-            <span class="article-badge">Free Resource</span>
-            <h2>Why Communication Advice Doesn't Work</h2>
-            <p>
-                You've tried the communication tips. You've read the books. You've worked on "active listening" and "I statements." But you're still having the same fights.
-            </p>
-            <p>
-                Here's why: Most communication advice treats symptoms, not systems. The problem isn't that you don't know <em>how</em> to communicate. The problem is you don't know <em>what</em> you're communicating.
-            </p>
-            <p>
-                Every conversation in marriage is operating on multiple levels simultaneously. Surface level (the words), emotional level (the feelings), identity level (who you believe you are), and spiritual level (the unseen realities). Most couples only engage the surface.
-            </p>
-            <a href="#" class="article-read-more">Continue Reading →</a>
-        </div>
-        
-        <!-- Article 3 -->
-        <div class="article-card">
-            <span class="article-badge">Free Resource</span>
-            <h2>The Sexual Literacy Gap</h2>
-            <p>
-                Here's an uncomfortable truth: Most married couples are sexually illiterate. Not because they're inexperienced, but because they've never been taught the <em>language</em> of sexual intimacy.
-            </p>
-            <p>
-                Sex is communication. It has grammar, vocabulary, and dialects. But nobody teaches you this. You're expected to figure it out through trial and error, shame and silence.
-            </p>
-            <p>
-                The cost of sexual illiteracy is enormous: misunderstanding, frustration, disconnection, resentment. But the good news is <strong>literacy can be learned</strong>.
-            </p>
-            <a href="#" class="article-read-more">Continue Reading →</a>
-        </div>
-        
-        <!-- Inline CTA 2 -->
-        <div class="inline-cta">
-            <h3>Interested in Deeper Sexual Understanding?</h3>
-            <p>The Sexual Literacy School teaches you the 4 languages of sexual communication and how to become fluent together.</p>
-            <a href="#" class="inline-cta-btn" onclick="window.showPaywallModal && window.showPaywallModal(); return false;">Explore Sexual Literacy School</a>
-        </div>
-        
-        <!-- Locked Content Example -->
-        <div class="locked-content">
-            <div class="locked-content-inner">
-                <span class="article-badge">Premium Content</span>
-                <h2>The Four Stages of Covenant Identity</h2>
-                <p>
-                    When you enter covenant marriage, you begin a journey of identity transformation. This isn't about becoming a better version of yourself — it's about becoming something entirely new together.
-                </p>
-                <p>
-                    Stage 1: Apprentice — You're learning the language of covenant. You're discovering what marriage was designed to be, not just what culture taught you it was. You're unlearning contractual thinking and beginning to see your spouse not as a negotiation partner but as a covenant counterpart.
-                </p>
-                <p>
-                    Stage 2: Intermediate — You're practicing the skills. You're building new patterns of intimacy, communication, and spiritual connection. The old reflexes still surface, but you're developing new muscle memory. You're learning to stop asking "What's fair?" and start asking "What's faithful?"
-                </p>
-                <p>
-                    Stage 3: Advanced — You're integrating the principles. Covenant thinking is becoming natural. You're moving from conscious competence to unconscious competence. Your marriage is becoming a model for others. You're not just surviving; you're thriving...
-                </p>
+
+        <!-- BOTTOM CTA -->
+        <div class="res-cta">
+            <div class="res-cta-eyebrow">This is information</div>
+            <div class="res-cta-headline">The system is different.</div>
+            <div class="res-cta-sub">
+                Articles inform. Formation transforms. The SBD Network is where knowledge becomes practice, and practice becomes identity.
             </div>
-            <div class="locked-overlay">
-                <div class="locked-overlay-content">
-                    <h3>🔒 Premium Content</h3>
-                    <p>Unlock the complete framework for covenant identity formation</p>
-                    <a href="#" class="inline-cta-btn" onclick="window.showPaywallModal && window.showPaywallModal(); return false;">
-                        Unlock Full Access
-                    </a>
-                </div>
-            </div>
+            <a href="/learn" class="res-cta-btn">Enter the System →</a>
         </div>
-        
-        <!-- Article 4 -->
-        <div class="article-card">
-            <span class="article-badge">Free Resource</span>
-            <h2>Building Spiritual Intimacy</h2>
-            <p>
-                Most couples pray together occasionally. Few couples build genuine spiritual intimacy. There's a difference.
-            </p>
-            <p>
-                Praying together is a practice. Spiritual intimacy is a posture. It's the ability to be vulnerable before God <em>together</em>, to see your marriage as a spiritual reality, not just a social contract.
-            </p>
-            <p>
-                Spiritual intimacy doesn't require you to have the same personality, the same spiritual gifts, or even the same prayer style. It requires you to be willing to grow together in faith.
-            </p>
-            <a href="#" class="article-read-more">Continue Reading →</a>
-        </div>
-        
-        <!-- Article 5 -->
-        <div class="article-card">
-            <span class="article-badge">Free Resource</span>
-            <h2>Your Marriage Is Bigger Than You</h2>
-            <p>
-                Here's a paradigm shift: Your marriage isn't just about you and your spouse. It's about generations. It's about legacy. It's about something that outlives you.
-            </p>
-            <p>
-                When you build a covenant marriage, you're creating a foundation that your children inherit, that your children's children inherit. You're modeling something that shapes family culture for generations.
-            </p>
-            <p>
-                This isn't pressure — it's purpose. Your marriage matters more than you think.
-            </p>
-            <a href="#" class="article-read-more">Continue Reading →</a>
-        </div>
-        
-        <!-- Final CTA -->
-        <div class="inline-cta" style="margin-top: 60px;">
-            <h3>Ready to Go Deeper?</h3>
-            <p>These free resources are just the beginning. Join thousands of couples transforming their marriages through systematic SBD formation.</p>
-            <a href="#" class="inline-cta-btn" onclick="window.showPaywallModal && window.showPaywallModal(); return false;">Begin Formation</a>
-            <div style="margin-top: 20px;">
-                <a href="/entry-quiz.html" style="color: #00ccff; font-size: 14px; text-decoration: none;">
-                    Not sure where to start? Take the assessment →
-                </a>
-            </div>
-        </div>
-        
+
     </div>
-    
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <a href="/dashboard.html" class="nav-item">
-            <div class="nav-icon">🏠</div>
-            <div class="nav-label">Home</div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <a href="/learn" class="nav-item">
+            <div class="nav-icon">📖</div>
+            <div class="nav-label">Learn</div>
         </a>
-        <a href="/start-here.html" class="nav-item">
-            <div class="nav-icon">🎯</div>
-            <div class="nav-label">Start Here</div>
+        <a href="/boards" class="nav-item">
+            <div class="nav-icon">💬</div>
+            <div class="nav-label">Boards</div>
         </a>
-        <a href="/schools.html" class="nav-item">
-            <div class="nav-icon">🏫</div>
-            <div class="nav-label">Schools</div>
-        </a>
-        <a href="/resources.html" class="nav-item active">
-            <div class="nav-icon">📚</div>
+        <a href="/resources" class="nav-item active">
+            <div class="nav-icon">🗂</div>
             <div class="nav-label">Resources</div>
         </a>
-        <a href="/profile.html" class="nav-item">
+        <a href="/shop" class="nav-item">
+            <div class="nav-icon">🛒</div>
+            <div class="nav-label">Shop</div>
+        </a>
+        <a href="/profile" class="nav-item">
             <div class="nav-icon">👤</div>
             <div class="nav-label">Profile</div>
         </a>
-    </div>
-    
-    <!-- Firebase Config -->
-    <script src="/js/firebase-config.js"></script>
-    <script src="/js/formation-access.js"></script>
+    </nav>
+
+    <script src="/js/firebase-config.js?v=75"></script>
+
 </body>
 </html>

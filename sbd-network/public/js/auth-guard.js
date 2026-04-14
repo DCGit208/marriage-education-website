@@ -3,6 +3,13 @@
 // ================================================================
 
 (function() {
+  const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+  const guestAllowedRoutes = new Set(['/dashboard', '/dashboard.html', '/auth', '/auth.html', '/index', '/index.html']);
+
+  if (guestAllowedRoutes.has(normalizedPath)) {
+    return;
+  }
+
   // Show loading screen immediately
   document.body.style.opacity = '0.3';
   document.body.style.pointerEvents = 'none';
@@ -20,7 +27,7 @@
     const timeout = setTimeout(() => {
       if (!authChecked) {
         console.warn('[Auth Guard] Timeout waiting for auth, redirecting to login');
-        window.location.href = '/index.html';
+        window.location.href = '/auth';
       }
     }, 5000);
     
@@ -30,7 +37,7 @@
       
       if (!user) {
         // Not authenticated, redirect
-        window.location.href = '/index.html';
+        window.location.href = '/auth';
       } else {
         // Authenticated, show page
         document.body.style.opacity = '';

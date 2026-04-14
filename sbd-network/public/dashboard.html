@@ -679,23 +679,39 @@
     
     <div id="sideMenu" class="side-menu">
       <div class="menu-links">
-        <a href="/dashboard.html">🏠 Home</a>
-        <a href="/learn.html">📚 Learn</a>
-        <a href="/boards.html">💬 Community</a>
-        <a href="/dm.html">✉️ Messages</a>
-        <a href="/mv-house.html">👗 MV House</a>
-        <a href="/shop.html">🛍️ Shop</a>
-        
-        <div id="adminSection" style="display:none;">
-          <hr>
-          <a href="/admin.html">⚙️ Admin Panel</a>
+
+        <div class="ham-section">
+          <div class="ham-section-label">💘 Relationship</div>
+          <a href="/dating.html">💘 Dating</a>
+          <a href="/dm.html">✉️ Messages</a>
         </div>
-        
-        <hr>
-        
-        <a href="/profile.html">👤 Profile</a>
-        <button id="logoutMenuBtn">🚪 Logout</button>
-        <div style="padding: 12px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.25); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+
+        <div class="ham-section">
+          <div class="ham-section-label">👗 Expression</div>
+          <a href="/mv-house.html">👗 MV House</a>
+        </div>
+
+        <div class="ham-section">
+          <div class="ham-section-label">📚 Resources</div>
+          <a href="/resources.html">📖 Resources Library</a>
+          <a href="/certificates.html">🏅 Certifications</a>
+        </div>
+
+        <div class="ham-section">
+          <div class="ham-section-label">⚙️ System</div>
+          <a href="/profile.html">⚙️ Settings</a>
+          <div id="adminSection" style="display:none;">
+            <a href="/admin.html">🔑 Admin Panel</a>
+          </div>
+        </div>
+
+        <div class="ham-section">
+          <div class="ham-section-label">👤 Account</div>
+          <a href="/profile.html">👤 Profile</a>
+          <button id="logoutMenuBtn">🚪 Logout</button>
+        </div>
+
+        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
       </div>
     </div>
     
@@ -1099,7 +1115,7 @@
     </div>
 
     <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" aria-label="Main navigation">
         <a href="/dashboard.html" class="bn-tab active" aria-label="Home">
             <span class="bn-icon">🏠</span>
             <span class="bn-label">Home</span>
@@ -1109,16 +1125,12 @@
             <span class="bn-label">Learn</span>
         </a>
         <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">📋</span>
-            <span class="bn-label">Community</span>
+            <span class="bn-icon">💬</span>
+            <span class="bn-label">Boards</span>
         </a>
-        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
-            <span class="bn-icon">👗</span>
-            <span class="bn-label">MV House</span>
-        </a>
-        <a href="/dating.html" class="bn-tab" aria-label="Match">
-            <span class="bn-icon">💒</span>
-            <span class="bn-label">Match</span>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
         </a>
         <a href="/profile.html" class="bn-tab" aria-label="Profile">
             <span class="bn-icon">👤</span>

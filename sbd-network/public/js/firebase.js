@@ -26,7 +26,8 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 if (isSafari) {
   console.log('Safari detected — enabling Firestore long polling');
   db.settings({
-    experimentalForceLongPolling: true
+    experimentalForceLongPolling: true,
+    merge: true
   });
 }
 
@@ -57,6 +58,22 @@ console.log('✅ sbd-network: Firestore initialized successfully');
 // Current user state
 let currentUser = null;
 
+function normalizePathname(pathname) {
+  const trimmed = (pathname || '/').replace(/\/+$/, '');
+  return trimmed || '/';
+}
+
+function isPublicGuestRoute(pathname) {
+  const normalized = normalizePathname(pathname);
+  return normalized === '/' ||
+         normalized === '/auth' ||
+         normalized === '/auth.html' ||
+         normalized === '/index' ||
+         normalized === '/index.html' ||
+         normalized === '/dashboard' ||
+         normalized === '/dashboard.html';
+}
+
 // Auth state listener
 auth.onAuthStateChanged((user) => {
   currentUser = user;
@@ -70,9 +87,8 @@ auth.onAuthStateChanged((user) => {
     localStorage.removeItem('sbdUserId');
     localStorage.removeItem('sbdUserEmail');
     // Redirect to login if not on login page
-    if (!window.location.pathname.includes('index.html') && 
-        !window.location.pathname.endsWith('/')) {
-      window.location.href = 'index.html';
+    if (!isPublicGuestRoute(window.location.pathname)) {
+      window.location.href = '/auth';
     }
   }
 });
