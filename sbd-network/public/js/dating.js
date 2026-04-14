@@ -101,6 +101,11 @@ async function init(uid) {
         loadMatches(uid),
         loadSuggested(uid, _formationScore),
       ]);
+      // Mode B — On-demand: if no active matches exist, auto-generate
+      if (matches.length === 0) {
+        await generateOnDemandMatches(uid);
+        matches = await loadMatches(uid);
+      }
     } else if (access.level === 'limited') {
       suggested = await loadLimitedProfiles(uid);
     }
@@ -461,12 +466,12 @@ function renderBoostStrip(boost) {
 
 // ── MATCH CARD ────────────────────────────────────────────────────
 function buildMatchCard(match, uid) {
-  // Determine partner info
-  const isA     = match.userA === uid;
-  const pUid    = isA ? match.userB : match.userA;
-  const pName   = isA ? (match.userBName || 'Partner') : (match.userAName || 'Partner');
-  const stage   = match.stage || 1;
+  const isA      = match.userA === uid;
+  const pUid     = isA ? match.userB : match.userA;
+  const pName    = isA ? (match.userBName || 'Partner') : (match.userAName || 'Partner');
+  const stage    = match.stage || 1;
   const stagePct = Math.round(((stage - 1) / 3) * 100);
+  const feedback = match.feedback; // 'accepted'|'ignored'|'rejected'|null
 
   const promptsHtml = stage === 1
     ? `<div class="dt-prompts">
@@ -474,10 +479,21 @@ function buildMatchCard(match, uid) {
        </div>`
     : `<button class="dt-btn dt-btn--rose" onclick="openConversation('${escHtml(match.id)}')">Open Conversation →</button>`;
 
+  const feedbackHtml = feedback === 'rejected'
+    ? `<p style="font-size:0.72rem;color:var(--text-sec);padding:6px 0;">Match declined.</p>`
+    : feedback === 'accepted'
+    ? `<p style="font-size:0.72rem;color:#4ade80;padding:6px 0;">✅ Match accepted</p>`
+    : `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;">
+        <button class="dt-btn dt-btn--rose" style="font-size:0.75rem;padding:5px 14px;" onclick="submitMatchFeedback('${escHtml(match.id)}','accepted',this)">✔ Accept</button>
+        <button class="dt-btn" style="font-size:0.75rem;padding:5px 14px;background:transparent;border:1px solid var(--border);" onclick="submitMatchFeedback('${escHtml(match.id)}','rejected',this)">Decline</button>
+        <button class="dt-btn" style="font-size:0.65rem;padding:5px 10px;margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--text-sec);" onclick="openReportModal('${escHtml(pUid)}','${escHtml(match.id)}')">⚑ Report</button>
+        <button class="dt-btn" style="font-size:0.65rem;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--text-sec);" onclick="confirmBlockUser('${escHtml(pUid)}','${escHtml(match.id)}')">⛔ Block</button>
+      </div>`;
+
   return `
     <div class="dt-match-card" data-match-id="${escHtml(match.id)}">
       <div class="dt-match-header">
-        <div class="dt-match-avatar">${escHtml(pName[0])}</div>
+        <div class="dt-match-avatar">${escHtml(pName[0] || '?')}</div>
         <div class="dt-match-meta">
           <div class="dt-match-name">${escHtml(pName)}</div>
           <div class="dt-match-stage">Stage ${stage} of 3</div>
@@ -487,7 +503,8 @@ function buildMatchCard(match, uid) {
       <div class="dt-stage-bar-wrap">
         <div class="dt-stage-bar" style="width:${stagePct}%"></div>
       </div>
-      ${promptsHtml}
+      ${feedbackHtml}
+      ${feedback !== 'rejected' ? promptsHtml : ''}
     </div>`;
 }
 
@@ -711,15 +728,54 @@ function openConversation(matchId) {
   showToast('Opening conversation… (Stage 2 messaging coming soon)');
 }
 
+// ── ON-DEMAND MATCH GENERATION ────────────────────────────────────
+async function generateOnDemandMatches(uid) {
+  try {
+    const v2score = _v2Profile?.totalScore || _formationScore?.totalScore || 0;
+    if (v2score < 60) return; // not eligible
+
+    // Check weekly quota
+    const weeklyCount  = _userData.weeklyMatchesCount || 0;
+    const lastReset    = _userData.lastMatchReset;
+    const lastResetMs  = lastReset?.toMillis ? lastReset.toMillis() : 0;
+    const resetExpired = Date.now() - lastResetMs >= 7 * 24 * 60 * 60 * 1000;
+    const curCount     = resetExpired ? 0 : weeklyCount;
+    if (curCount >= 3) return; // weekly limit reached, need tokens
+
+    // Write a matchRequest — Cloud Function handles full matching pipeline,
+    // but also do a lightweight client-side suggestion save
+    await db.collection('matchRequests').add({
+      uid,
+      score:    v2score,
+      source:   'on-demand',
+      status:   'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Increment weekly count
+    await db.collection('users').doc(uid).update({
+      weeklyMatchesCount: firebase.firestore.FieldValue.increment(1),
+      ...(resetExpired ? { lastMatchReset: firebase.firestore.FieldValue.serverTimestamp() } : {}),
+    });
+  } catch (err) {
+    console.error('[dating.js] generateOnDemandMatches:', err);
+  }
+}
+
 // ── REQUEST NEW MATCHES ────────────────────────────────────────────
 async function requestNewMatches() {
   try {
     showToast('Requesting new matches — your coach will review soon…');
     await db.collection('matchRequests').add({
       uid:       _currentUid,
-      score:     _formationScore?.totalScore || 0,
+      score:     _v2Profile?.totalScore || _formationScore?.totalScore || 0,
+      source:    'manual',
       status:    'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Increment weekly count
+    await db.collection('users').doc(_currentUid).update({
+      weeklyMatchesCount: firebase.firestore.FieldValue.increment(1),
     });
   } catch (err) {
     console.error('[dating.js] requestNewMatches error:', err);
@@ -838,6 +894,94 @@ function showToast(message, isError = false) {
   toast.style.opacity    = '1';
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+}
+
+// ── MATCH FEEDBACK ─────────────────────────────────────────────────
+async function submitMatchFeedback(matchId, verdict, btn) {
+  if (!matchId || !_currentUid) return;
+  btn.disabled = true;
+  try {
+    await db.collection('matches').doc(matchId).update({ feedback: verdict });
+    // Re-render match list to reflect the new state
+    const matches = await loadMatches(_currentUid);
+    const matchList = document.getElementById('eliteMatchesList');
+    if (matchList) matchList.innerHTML = matches.map(m => buildMatchCard(m, _currentUid)).join('');
+    if (verdict === 'rejected') showToast('Match declined.');
+    if (verdict === 'accepted') showToast('Match accepted — proceed with Stage 1 prompts.');
+  } catch (err) {
+    btn.disabled = false;
+    showToast('Could not submit feedback. Try again.', true);
+  }
+}
+
+// ── REPORT USER ────────────────────────────────────────────────────
+let _reportTargetUid = null, _reportMatchId = null;
+function openReportModal(targetUid, matchId) {
+  _reportTargetUid = targetUid;
+  _reportMatchId   = matchId;
+  // Reuse or create a lightweight report modal
+  let modal = document.getElementById('dtReportModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id        = 'dtReportModal';
+    modal.className = 'dt-modal-overlay hidden';
+    modal.innerHTML = `
+      <div class="dt-modal-box">
+        <p class="dt-modal-title">&#9873; Report Member</p>
+        <p class="dt-modal-sub">Describe the issue. Reports are reviewed by Dr. Coach Achu's team.</p>
+        <textarea id="dtReportText" class="dt-reply-input" maxlength="500" rows="4"
+          placeholder="What happened? (max 500 chars)"></textarea>
+        <div class="dt-modal-actions">
+          <button class="dt-modal-cta" onclick="submitReport()">Submit Report</button>
+          <button class="dt-modal-dismiss" onclick="closeModal('dtReportModal')">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove('hidden');
+}
+
+async function submitReport() {
+  const reason = (document.getElementById('dtReportText')?.value || '').trim();
+  if (!reason) { showToast('Please describe the issue.', true); return; }
+  try {
+    await db.collection('reports').add({
+      reportedBy:  _currentUid,
+      reportedUid: _reportTargetUid,
+      matchId:     _reportMatchId || null,
+      reason,
+      status:      'open',
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    closeModal('dtReportModal');
+    showToast('Report submitted. Thank you.');
+  } catch (err) {
+    showToast('Could not submit report. Try again.', true);
+  }
+}
+
+// ── BLOCK USER ─────────────────────────────────────────────────────
+async function confirmBlockUser(targetUid, matchId) {
+  if (!confirm('Block this member? They will not appear in your matches again.')) return;
+  try {
+    // Write to blockedUsers collection
+    await db.collection('blockedUsers').add({
+      blockedBy:  _currentUid,
+      blockedUid: targetUid,
+      createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Also flag the match as removed
+    if (matchId) {
+      await db.collection('matches').doc(matchId).update({ status: 'blocked' });
+    }
+    showToast('Member blocked. This match has been removed.');
+    // Reload matches
+    const matches = await loadMatches(_currentUid);
+    const matchList = document.getElementById('eliteMatchesList');
+    if (matchList) matchList.innerHTML = matches.map(m => buildMatchCard(m, _currentUid)).join('');
+  } catch (err) {
+    showToast('Could not block member. Try again.', true);
+  }
 }
 
 function showError() {
