@@ -494,7 +494,7 @@ async function loadBoards() {
 // Initialize
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = 'index.html';
+    window.location.href = '/auth';
     return;
   }
 

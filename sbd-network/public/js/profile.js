@@ -42,7 +42,7 @@ function renderAvatar(name, photoUrl) {
 }
 
 auth.onAuthStateChanged(async (user) => {
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
 
   if (typeof initNotifications === 'function') initNotifications(user.uid);
   if (typeof initDmBadge === 'function') initDmBadge(user.uid);
@@ -293,7 +293,7 @@ avatarInput.addEventListener('change', async () => {
 backBtn && backBtn.addEventListener('click', () => { window.location.href = 'dashboard.html'; });
 logoutBtn && logoutBtn.addEventListener('click', async () => {
   await auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = '/auth';
 });
 
 // ── Delete My Account ─────────────────────────────────────────────
@@ -315,7 +315,7 @@ deleteAccountBtn && deleteAccountBtn.addEventListener('click', async () => {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Deletion failed');
     await auth.signOut();
-    window.location.href = 'index.html';
+    window.location.href = '/auth';
   } catch (err) {
     const loadingOverlay = document.getElementById('loadingOverlay');
     if (loadingOverlay) loadingOverlay.style.display = 'none';

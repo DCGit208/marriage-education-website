@@ -30,7 +30,7 @@ function showLoading(show) {
 auth.onAuthStateChanged(async (user) => {
   if (!user) { 
     console.log('[Analytics] No user, redirecting to login');
-    window.location.href = 'index.html'; 
+    window.location.href = '/auth'; 
     return; 
   }
   

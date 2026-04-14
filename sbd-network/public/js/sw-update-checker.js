@@ -64,12 +64,18 @@
         newWorker = registration.installing;
         console.log('[SW] New version found, installing...');
 
+        // Set flag EARLY — before statechange — so controllerchange fires
+        // reliably on iOS PWA (avoids race: SW skipWaiting() can fire
+        // controllerchange before statechange reaches 'installed').
+        if (navigator.serviceWorker.controller) {
+          updateAvailable = true;
+        }
+
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              // New version available
+              // New version available — show banner for manual update option
               console.log('[SW] New version installed, ready to activate');
-              updateAvailable = true;
               showUpdateNotification();
             } else {
               // First install

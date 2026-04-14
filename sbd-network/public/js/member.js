@@ -33,7 +33,7 @@ function renderMemberAvatar(name, photoUrl) {
 }
 
 auth.onAuthStateChanged(async (viewer) => {
-  if (!viewer) { window.location.href = 'index.html'; return; }
+  if (!viewer) { window.location.href = '/auth'; return; }
   
   // Resolve username to UID if needed
   if (!memberUid && memberUsername) {

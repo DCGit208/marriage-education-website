@@ -519,13 +519,15 @@ async function handleSetUserTier(userId, newTier) {
   if (!confirm(`Set this user's tier to "${tierLabel[newTier] || newTier}" and auto-assign all corresponding community groups?`)) return;
   try {
     showLoading(true);
-    const userRef = db.collection('users').doc(userId);
-    const groups  = ADMIN_TIER_GROUPS[newTier] || [];
-    await userRef.update({
-      tier: newTier,
-      'subscription.tier': newTier,
-      'subscription.status': 'active',
-    });
+    const userRef  = db.collection('users').doc(userId);
+    const groups   = ADMIN_TIER_GROUPS[newTier] || [];
+    // For free tier, clear the subscription; for paid tiers set a far-future end date
+    // so learn-v2.js (which checks sub.status === 'active' && subEnd > now) resolves correctly.
+    const farFuture = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
+    const subUpdate = newTier === 'free'
+      ? { tier: 'free', 'subscription.tier': 'free', 'subscription.status': 'inactive', 'subscription.endDate': firebase.firestore.Timestamp.fromDate(new Date(0)) }
+      : { tier: newTier, 'subscription.tier': newTier, 'subscription.status': 'active', 'subscription.endDate': farFuture };
+    await userRef.update(subUpdate);
     if (groups.length > 0) {
       await userRef.update({ groups: firebase.firestore.FieldValue.arrayUnion(...groups) });
     }

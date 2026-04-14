@@ -345,6 +345,22 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     const session = event.data.object;
     
     try {
+      // ── SBD Network branch ──────────────────────────────────────────
+      if (session.metadata?.app === 'sbd') {
+        const uid       = session.metadata.uid;
+        const productId = session.metadata.productId;
+        if (!uid || !productId) {
+          console.error('[SBD] Webhook missing uid or productId:', session.metadata);
+          return res.json({ received: true, action: 'sbd-missing-metadata' });
+        }
+        await unlockSbdContent(uid, productId, session);
+        const prodName = SBD_CATALOG_SERVER[productId]?.name || productId;
+        const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : '';
+        await sendTelegram(`✅ SBD NETWORK PAYMENT\n\n📦 ${prodName}\n💵 ${amt}\n👤 ${session.customer_details?.email || uid}`);
+        return res.json({ received: true, action: 'sbd' });
+      }
+      // ────────────────────────────────────────────────────────────────
+
       // Extract course info from metadata
       const courseId = session.metadata?.courseId || session.metadata?.product;
       const customerEmail = session.customer_details?.email || session.metadata?.email;
@@ -413,6 +429,41 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  // ── SBD subscription cancelled (recurring billing stopped by user) ──
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    try {
+      const snap = await db.collection('users').where('stripeSubscriptionId', '==', sub.id).limit(1).get();
+      if (!snap.empty) {
+        const userRef   = snap.docs[0].ref;
+        const userData  = snap.docs[0].data();
+        const userEmail = userData.email || snap.docs[0].id;
+
+        // Save drip position so user can resume on re-subscribe (Decision 3 — Resume)
+        const dripStartMs = userData.subscription?.dripStartDate?.toMillis
+          ? userData.subscription.dripStartDate.toMillis()
+          : null;
+        const dripWeeksUnlocked = dripStartMs
+          ? Math.max(1, Math.floor((Date.now() - dripStartMs) / (7 * 24 * 60 * 60 * 1000)) + 1)
+          : 0;
+
+        await userRef.update({
+          tier: 'free',
+          'subscription.tier': 'free',
+          'subscription.status': 'cancelled',
+          'subscription.endDate': admin.firestore.Timestamp.fromDate(new Date()),
+          'subscription.dripWeeksUnlocked': dripWeeksUnlocked,
+        });
+        console.log(`[SBD] Sub ${sub.id} cancelled → ${userEmail} downgraded to free. Drip position saved: week ${dripWeeksUnlocked}`);
+        await sendTelegram(`❌ SBD SUBSCRIPTION CANCELLED\n\n👤 ${userEmail}\n🆔 Sub: ${sub.id}\n📍 Drip position saved: week ${dripWeeksUnlocked}`);
+      }
+    } catch (e) {
+      console.error('[SBD] subscription.deleted error:', e);
+    }
+    return res.json({ received: true, action: 'sbd-sub-cancelled' });
+  }
+  // ─────────────────────────────────────────────────────────────────────
 
   res.json({ received: true });
 });
@@ -2500,6 +2551,147 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
  * Create Stripe Checkout Session
  * HTTPS endpoint to replace Render backend for Stripe payments
  */
+// ═══════════════════════════════════════════════════════════════════
+// SBD NETWORK — PAYMENT CONSTANTS & HELPERS
+// ═══════════════════════════════════════════════════════════════════
+
+const SBD_CATALOG_SERVER = {
+  'foundation-monthly': { name: 'SBD Network — Foundation',    amount: 900,   mode: 'subscription', tier: 'foundation' },
+  'premium-monthly':    { name: 'SBD Network — Premium',       amount: 2000,  mode: 'subscription', tier: 'premium'    },
+  'elite-monthly':      { name: 'SBD Network — Elite',         amount: 5000,  mode: 'subscription', tier: 'elite'      },
+  'sbd-dummies':        { name: 'Sex By Design for Dummies',   amount: 2700,  mode: 'payment'                          },
+  'teleios-blueprint':  { name: 'Teleios Blueprint',           amount: 24700, mode: 'payment'                          },
+  'starter-bundle':     { name: 'Starter Bundle',              amount: 3700,  mode: 'payment',       tier: 'premium'   },
+  'teleios-bundle':     { name: 'Teleios Bundle',              amount: 29700, mode: 'payment',       tier: 'premium'   },
+  'elite-bundle':       { name: 'Elite Formation Bundle',      amount: 49700, mode: 'payment',       tier: 'elite'     },
+};
+
+const SBD_UNLOCK_RULES = {
+  'foundation-monthly': { tier: 'foundation', months: 1 },
+  'premium-monthly':    { tier: 'premium',    months: 1 },
+  'elite-monthly':      { tier: 'elite',      months: 1 },
+  'sbd-dummies':        { courses: ['sbd-dummies-course'] },
+  'teleios-blueprint':  { courses: ['teleios-blueprint'] },
+  'starter-bundle':     { courses: ['sbd-dummies-course'],                        tier: 'premium', months: 1 },
+  'teleios-bundle':     { courses: ['teleios-blueprint'],                         tier: 'premium', months: 3 },
+  'elite-bundle':       { courses: ['sbd-dummies-course', 'teleios-blueprint'],  tier: 'elite',   months: 6 },
+};
+
+const SBD_TIER_GROUPS = {
+  free:       ['group-sbd-community'],
+  foundation: ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies'],
+  premium:    ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies', 'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
+  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies', 'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13', 'group-marriage-systems', 'group-civilization-leadership', 'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
+};
+
+async function unlockSbdContent(uid, productId, session) {
+  const rule = SBD_UNLOCK_RULES[productId];
+  if (!rule) { console.warn(`[SBD] No unlock rule for: ${productId}`); return; }
+
+  const userRef = db.collection('users').doc(uid);
+
+  if (rule.tier) {
+    // Recurring subscriptions: endDate = 2099 (Stripe manages billing cancellation).
+    // One-time bundles: endDate = now + N months.
+    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(productId);
+    const endDate = isRecurring
+      ? new Date('2099-12-31')
+      : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
+
+    // Drip resume logic: if user had a saved drip position (from prior cancel),
+    // offset the dripStartDate backward so their drip continues from where they left off.
+    const userSnap = await userRef.get();
+    const existingDripWeeks = userSnap.exists
+      ? (userSnap.data()?.subscription?.dripWeeksUnlocked || 0)
+      : 0;
+    const dripStartDate = existingDripWeeks > 0
+      ? admin.firestore.Timestamp.fromMillis(Date.now() - existingDripWeeks * 7 * 24 * 60 * 60 * 1000)
+      : admin.firestore.Timestamp.now();
+
+    const tierUpdate = {
+      tier: rule.tier,
+      'subscription.tier': rule.tier,
+      'subscription.status': 'active',
+      'subscription.startDate': admin.firestore.FieldValue.serverTimestamp(),
+      'subscription.endDate': admin.firestore.Timestamp.fromDate(endDate),
+      'subscription.lastPayment': admin.firestore.FieldValue.serverTimestamp(),
+      'subscription.dripStartDate': dripStartDate,
+      'subscription.dripWeeksUnlocked': admin.firestore.FieldValue.delete(),
+    };
+    if (session?.id)           tierUpdate['subscription.stripeSessionId'] = session.id;
+    if (session?.customer)     tierUpdate['stripeCustomerId']              = session.customer;
+    if (session?.subscription) tierUpdate['stripeSubscriptionId']         = session.subscription;
+
+    await userRef.update(tierUpdate);
+
+    const groups = SBD_TIER_GROUPS[rule.tier] || [];
+    if (groups.length > 0) {
+      await userRef.update({ groups: admin.firestore.FieldValue.arrayUnion(...groups) });
+    }
+  }
+
+  if (rule.courses && rule.courses.length > 0) {
+    await userRef.update({ ownedCourses: admin.firestore.FieldValue.arrayUnion(...rule.courses) });
+  }
+
+  // Audit trail
+  await db.collection('orders').add({
+    app: 'sbd-network',
+    userId: uid,
+    productId,
+    productName: SBD_CATALOG_SERVER[productId]?.name || productId,
+    amount: session?.amount_total ? session.amount_total / 100 : 0,
+    currency: session?.currency?.toUpperCase() || 'USD',
+    status: 'completed',
+    stripeSessionId: session?.id || null,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  console.log(`[SBD] Unlocked: uid=${uid} product=${productId}`);
+}
+
+/**
+ * Create SBD Network Stripe Checkout Session
+ * Called from sbd-network app; returns Stripe-hosted checkout URL.
+ */
+exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be signed in to purchase.');
+  }
+
+  const { productId } = data;
+  const uid   = context.auth.uid;
+  const email = context.auth.token.email || '';
+
+  const product = SBD_CATALOG_SERVER[productId];
+  if (!product) {
+    throw new functions.https.HttpsError('invalid-argument', `Unknown product: ${productId}`);
+  }
+
+  const baseUrl    = 'https://sbd-network.web.app';
+  const cancelTier = product.tier || productId.replace('-monthly', '');
+  const priceData  = {
+    currency: 'usd',
+    product_data: { name: product.name },
+    unit_amount: product.amount,
+    ...(product.mode === 'subscription' ? { recurring: { interval: 'month' } } : {}),
+  };
+
+  const session = await stripe.checkout.sessions.create({
+    customer_email: email,
+    metadata: { app: 'sbd', uid, productId },
+    mode: product.mode,
+    line_items: [{ price_data: priceData, quantity: 1 }],
+    success_url: `${baseUrl}/checkout-success.html?product=${productId}&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${baseUrl}/payment?tier=${cancelTier}&cancelled=true`,
+  });
+
+  console.log(`[SBD Checkout] uid=${uid} product=${productId} session=${session.id}`);
+  return { url: session.url };
+});
+
+// ═══════════════════════════════════════════════════════════════════
+
 exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
   // Enable CORS
   res.set('Access-Control-Allow-Origin', '*');
@@ -4307,3 +4499,902 @@ async function promoteToExecutive(ambassadorCode, ambassadorData) {
     throw error;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COVENANT MATCHING SYSTEM — v249
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * calculateFormationScore (HTTPS Callable)
+ * -----------------------------------------
+ * Reads the user's course progress + board activity, applies the canonical
+ * formation score formula, and writes the result back to users/{uid}.formationScore.
+ *
+ * Formula:
+ *   (courseCompletion × 0.40) + (boardParticipation × 0.25)
+ * + (consistency × 0.15)     + (assessmentScores × 0.20)
+ *
+ * Called client-side via:
+ *   firebase.functions().httpsCallable('calculateFormationScore')()
+ */
+exports.calculateFormationScore = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+  }
+  const uid = context.auth.uid;
+
+  try {
+    // ── Course completion ──────────────────────────────────────
+    const progressSnap = await db.collection('userProgress')
+      .where('userId', '==', uid)
+      .get();
+
+    let school1Total = 0, school1Done = 0;
+    let school2Total = 0, school2Done = 0;
+    let assessTotal  = 0, assessDoneSum = 0;
+
+    progressSnap.forEach(doc => {
+      const d = doc.data();
+      const school = d.schoolId || '';
+      if (school.includes('school-1') || school.includes('teleios')) {
+        school1Total++;
+        if (d.status === 'complete' || d.completed) school1Done++;
+      } else if (school.includes('school-2') || school.includes('sexual-literacy')) {
+        school2Total++;
+        if (d.status === 'complete' || d.completed) school2Done++;
+      }
+      if (typeof d.assessmentScore === 'number') {
+        assessTotal++;
+        assessDoneSum += Math.min(d.assessmentScore, 100) / 100;
+      }
+    });
+
+    const school1Pct       = school1Total > 0 ? Math.round((school1Done / school1Total) * 100) : 0;
+    const school2Pct       = school2Total > 0 ? Math.round((school2Done / school2Total) * 100) : 0;
+    const courseCompletion = Math.round((school1Pct + school2Pct) / 2);
+    const assessmentScore  = assessTotal > 0 ? Math.round((assessDoneSum / assessTotal) * 100) : 0;
+
+    // ── Board participation ────────────────────────────────────
+    const userSnap         = await db.collection('users').doc(uid).get();
+    const userData         = userSnap.data() || {};
+    const activity         = userData.activity || {};
+    const posts            = activity.postsCount  || 0;
+    const boards           = activity.boardVisits || 0;
+    const boardParticipation = Math.min(100, Math.round((posts * 5) + (boards * 1)));
+
+    // ── Consistency ────────────────────────────────────────────
+    const loginStreak  = activity.loginStreak  || 0;
+    const weeklyActive = activity.weeklyActive || 0;
+    const consistency  = Math.min(100, Math.round((loginStreak * 2) + (weeklyActive * 5)));
+
+    // ── Composite ──────────────────────────────────────────────
+    const totalScore = Math.round(
+      (courseCompletion    * 0.40) +
+      (boardParticipation  * 0.25) +
+      (consistency         * 0.15) +
+      (assessmentScore     * 0.20)
+    );
+
+    const score = {
+      courseCompletion,
+      school1Pct,
+      school2Pct,
+      boardParticipation,
+      consistency,
+      assessmentScore,
+      totalScore,
+      calculatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await db.collection('users').doc(uid).update({ formationScore: score });
+
+    return { success: true, formationScore: score };
+  } catch (err) {
+    console.error('[calculateFormationScore] error:', err);
+    throw new functions.https.HttpsError('internal', 'Failed to calculate formation score.');
+  }
+});
+
+/**
+ * triggerMatchingCycle (HTTPS Callable — admin only)
+ * ---------------------------------------------------
+ * Pairs qualified users who have opted into dating (datingActive === true)
+ * but do not yet have an active match.
+ *
+ * Matching rules:
+ *   - Both must have tier === 'elite' and formationScore.totalScore >= 70
+ *   - Opposite gender (male ↔ female)
+ *   - No existing active match between the two users
+ *   - Closest formation score pairing (greedy, sorted by score desc)
+ *
+ * Creates: matches/{matchId} documents
+ * Sends:   /notifications documents for each matched user
+ */
+exports.triggerMatchingCycle = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+  }
+  // Verify admin role
+  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
+  const callerData = callerSnap.data() || {};
+  if (callerData.role !== 'admin' && callerData.isAdmin !== true) {
+    throw new functions.https.HttpsError('permission-denied', 'Admin access required.');
+  }
+
+  try {
+    // Load all active dating candidates
+    const snap = await db.collection('users')
+      .where('tier', '==', 'elite')
+      .where('datingActive', '==', true)
+      .get();
+
+    const males   = [];
+    const females = [];
+    snap.forEach(doc => {
+      const d   = doc.data();
+      const score = d.formationScore?.totalScore || 0;
+      if (score < 70) return;
+      const candidate = { uid: doc.id, score, gender: d.gender, displayName: d.displayName || '' };
+      if (d.gender === 'male')   males.push(candidate);
+      if (d.gender === 'female') females.push(candidate);
+    });
+
+    // Sort by score descending for greedy closest-score pairing
+    males.sort((a, b)   => b.score - a.score);
+    females.sort((a, b) => b.score - a.score);
+
+    // Load existing active matches to prevent duplicates
+    const existingSnap = await db.collection('matches').where('status', '==', 'active').get();
+    const existingPairs = new Set();
+    existingSnap.forEach(d => {
+      const { userA, userB } = d.data();
+      existingPairs.add(`${userA}:${userB}`);
+      existingPairs.add(`${userB}:${userA}`);
+    });
+
+    const batch        = db.batch();
+    let matchesCreated = 0;
+
+    for (const male of males) {
+      if (females.length === 0) break;
+      // Find closest-scoring available female
+      let bestIdx   = 0;
+      let bestDelta = Math.abs(male.score - females[0].score);
+      for (let i = 1; i < females.length; i++) {
+        const delta = Math.abs(male.score - females[i].score);
+        if (delta < bestDelta) { bestDelta = delta; bestIdx = i; }
+      }
+      const female = females[bestIdx];
+      const pairKey = `${male.uid}:${female.uid}`;
+      if (existingPairs.has(pairKey)) continue;
+
+      const matchRef = db.collection('matches').doc();
+      batch.set(matchRef, {
+        userA:      male.uid,
+        userAName:  male.displayName,
+        userB:      female.uid,
+        userBName:  female.displayName,
+        status:     'active',
+        stage:      1,
+        scoreA:     male.score,
+        scoreB:     female.score,
+        createdAt:  admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Notifications
+      [male.uid, female.uid].forEach(uid => {
+        const notifRef = db.collection('notifications').doc();
+        batch.set(notifRef, {
+          userId:    uid,
+          type:      'new_match',
+          message:   'You have a new Covenant Match! Visit your matching dashboard.',
+          read:      false,
+          link:      '/dating.html',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      females.splice(bestIdx, 1);
+      matchesCreated++;
+    }
+
+    await batch.commit();
+    console.log(`[triggerMatchingCycle] Created ${matchesCreated} new matches.`);
+    return { success: true, matchesCreated };
+  } catch (err) {
+    console.error('[triggerMatchingCycle] error:', err);
+    throw new functions.https.HttpsError('internal', 'Matching cycle failed.');
+  }
+});
+
+/**
+ * requestCoachingSession (HTTPS Callable)
+ * ----------------------------------------
+ * Writes a coaching request to coachingRequests/{id} and notifies admin.
+ * Called from submitCoachingRequest() in dating.js (and optionally profile.js).
+ */
+exports.requestCoachingSession = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Authentication required.');
+  }
+  const uid = context.auth.uid;
+  const { matchId = null, type = 'relationship', notes = '' } = data || {};
+
+  // Sanitize notes — max 1000 chars
+  const safeNotes = String(notes).slice(0, 1000);
+
+  try {
+    const userSnap = await db.collection('users').doc(uid).get();
+    const userData = userSnap.data() || {};
+
+    const reqRef = await db.collection('coachingRequests').add({
+      userId:    uid,
+      userName:  userData.displayName || '',
+      userEmail: userData.email       || '',
+      matchId,
+      type,
+      status:    'pending',
+      notes:     safeNotes,
+      score:     userData.formationScore?.totalScore || 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Notify admin
+    const adminNotifRef = db.collection('admin_notifications').doc();
+    await adminNotifRef.set({
+      type:      'coaching_request',
+      userId:    uid,
+      userName:  userData.displayName || '',
+      requestId: reqRef.id,
+      message:   `New coaching request from ${userData.displayName || uid}`,
+      read:      false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return { success: true, requestId: reqRef.id };
+  } catch (err) {
+    console.error('[requestCoachingSession] error:', err);
+    throw new functions.https.HttpsError('internal', 'Failed to submit coaching request.');
+  }
+});
+
+// ─── WARDROBE RE-ENGAGEMENT NUDGE (weekly scheduled) ─────────────────────────
+// Fires weekly; finds Elite users whose wardrobe hasn't been updated in 14+ days
+// and writes an in-app notification to the notifications collection.
+
+exports.wardrobeReEngagement = functions.pubsub
+  .schedule('every 168 hours')
+  .onRun(async () => {
+    const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+    const cutoff       = new Date(Date.now() - TWO_WEEKS_MS);
+
+    try {
+      // Get all Elite users
+      const usersSnap = await db.collection('users')
+        .where('subscription.tier', '==', 'elite').get();
+
+      const batchWrites = [];
+
+      for (const userDoc of usersSnap.docs) {
+        const uid = userDoc.id;
+        try {
+          // Check last saved item
+          const wardSnap = await db.collection('wardrobes').doc(uid)
+            .collection('items')
+            .orderBy('savedAt', 'desc')
+            .limit(1)
+            .get();
+
+          let shouldNudge = false;
+          if (wardSnap.empty) {
+            shouldNudge = true;   // Never saved anything
+          } else {
+            const lastSaved = wardSnap.docs[0].data().savedAt?.toDate?.();
+            if (!lastSaved || lastSaved < cutoff) shouldNudge = true;
+          }
+
+          if (shouldNudge) {
+            const notifRef = db.collection('notifications').doc();
+            batchWrites.push({
+              ref: notifRef,
+              data: {
+                userId:    uid,
+                type:      'wardrobe_nudge',
+                message:   "Your MV House wardrobe hasn't been updated in a while. Browse the boards and save new looks to keep your style fresh! 👗",
+                read:      false,
+                link:      '/mv-house.html',
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              },
+            });
+          }
+        } catch (userErr) {
+          console.warn('[wardrobeReEngagement] user error:', uid, userErr.code);
+        }
+      }
+
+      // Write in batches of 500 (Firestore limit)
+      for (let i = 0; i < batchWrites.length; i += 500) {
+        const chunk = batchWrites.slice(i, i + 500);
+        const batch = db.batch();
+        chunk.forEach(({ ref, data }) => batch.set(ref, data));
+        await batch.commit();
+      }
+
+      console.log(`[wardrobeReEngagement] Sent ${batchWrites.length} nudge notifications.`);
+      return null;
+    } catch (err) {
+      console.error('[wardrobeReEngagement] fatal error:', err);
+      return null;
+    }
+  });
+
+// ═══════════════════════════════════════════════════════════════════
+// FORMATION INTELLIGENCE SYSTEM v2 — Cloud Functions
+// All writes target: users/{uid}.formationProfile_v2
+// Runs IN PARALLEL with existing formationScore system — safe migration.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── SHARED: Normalize + Decay (mirrors formation-scoring-v2.js) ──
+function _fisNorm(v, max)   { return max ? Math.min((v / max) * 100, 100) : 0; }
+function _fisDecay(s, days) { return days > 60 ? s * 0.3 : days > 30 ? s * 0.6 : s; }
+
+// ── SHARED: Compute v2 Score Profile for a single UID ────────────
+async function _computeV2Profile(uid) {
+  const snap = await db.collection('users').doc(uid).get();
+  if (!snap.exists) return null;
+  const d = snap.data();
+
+  // Admin manual override takes priority
+  if (d.formationOverride_v2) {
+    return { ...d.formationOverride_v2, lastUpdated: admin.firestore.FieldValue.serverTimestamp(), version: 2 };
+  }
+
+  const agg = d.activityAggregates || {};
+  const old = d.formationScore     || {};  // old system — school progress cached here
+
+  const school1Progress = old.school1Pct || 0;
+  const school2Progress = old.school2Pct || 0;
+
+  // Formation (35%)
+  const formation = (school1Progress * 0.5) + (school2Progress * 0.5);
+
+  // Days since last active (for engagement decay)
+  const lastTs = d.lastActive || d.lastLoginAt;
+  const lastActiveDays = lastTs && lastTs.toMillis
+    ? Math.floor((Date.now() - lastTs.toMillis()) / 86400000)
+    : 999;
+
+  // Engagement (25%) — weekly anti-gaming caps
+  const posts    = Math.min(agg.postsLast7Days    || 0, 5);
+  const comments = Math.min(agg.commentsLast7Days || 0, 20);
+  const likes    = agg.likesReceivedTotal          || 0;
+  const depth    = agg.avgCommentLength            || 0;  // EMA of chars, capped at 200
+
+  const engRaw =
+    (_fisNorm(posts,    5)   * 0.30) +
+    (_fisNorm(comments, 20)  * 0.25) +
+    (_fisNorm(likes,    200) * 0.25) +
+    (_fisNorm(depth,    200) * 0.20);
+  const engagement = _fisDecay(engRaw, lastActiveDays);
+
+  // Expression / MV House (20%)
+  const expression =
+    (_fisNorm(agg.recentPurchases       || 0, 10)  * 0.30) +
+    (_fisNorm(agg.purchaseCount         || 0, 50)  * 0.20) +
+    (_fisNorm(agg.wardrobeCategoryCount || 0, 5)   * 0.20) +
+    (_fisNorm(agg.wardrobeCompleteness  || 0, 100) * 0.15) +
+    (_fisNorm(agg.customizations        || 0, 10)  * 0.15);
+
+  // Consistency (10%)
+  const consistency = _fisNorm(agg.activeDaysLast30 || 0, 30);
+
+  // Validation (10%)
+  const validation = Math.min(100, (
+    _fisNorm(agg.certificationCount   || 0, 10) +
+    _fisNorm(agg.coachingSessionCount || 0, 10)
+  ) / 2);
+
+  const totalScore = Math.round(
+    (formation   * 0.35) +
+    (engagement  * 0.25) +
+    (expression  * 0.20) +
+    (consistency * 0.10) +
+    (validation  * 0.10)
+  );
+
+  return {
+    formation:       Math.round(formation),
+    engagement:      Math.round(engagement),
+    expression:      Math.round(expression),
+    consistency:     Math.round(consistency),
+    validation:      Math.round(validation),
+    totalScore,
+    school1Progress,
+    school2Progress,
+    expressionGated: Math.round(expression) < 20,
+    lastUpdated:     admin.firestore.FieldValue.serverTimestamp(),
+    version:         2,
+  };
+}
+
+// ── EVENT TRIGGER 1: POST WRITTEN ────────────────────────────────
+// Path: posts/{postId}
+// Credits postsLast7Days on creation; tracks likesReceivedTotal on reaction changes.
+exports.onPostWrittenV2 = functions.firestore
+  .document('posts/{postId}')
+  .onWrite(async (change, context) => {
+    try {
+      const after  = change.after.exists  ? change.after.data()  : null;
+      const before = change.before.exists ? change.before.data() : null;
+      if (!after) return null; // deletion — ignore
+
+      const authorId = after.authorId || after.uid;
+      if (!authorId) return null;
+
+      const updates = {};
+
+      // New post (not an update)
+      if (!before) {
+        updates['activityAggregates.postsLast7Days']    = admin.firestore.FieldValue.increment(1);
+        updates['activityAggregates.totalPostsAllTime'] = admin.firestore.FieldValue.increment(1);
+      }
+
+      // Reaction / like change — credit post author
+      const countReactions = (r) =>
+        Object.values(r || {}).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0);
+      const diff = countReactions(after.reactions) - countReactions(before?.reactions);
+      if (diff !== 0) {
+        updates['activityAggregates.likesReceivedTotal'] = admin.firestore.FieldValue.increment(diff);
+      }
+
+      if (Object.keys(updates).length === 0) return null;
+      await db.collection('users').doc(authorId).update(updates);
+
+      const profile = await _computeV2Profile(authorId);
+      if (profile) await db.collection('users').doc(authorId).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onPostWrittenV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── EVENT TRIGGER 2: COMMENT WRITTEN ─────────────────────────────
+// Path: comments/{commentId}
+// Credits commentsLast7Days + updates avgCommentLength (discussion depth signal).
+exports.onCommentWrittenV2 = functions.firestore
+  .document('comments/{commentId}')
+  .onWrite(async (change, context) => {
+    try {
+      const after  = change.after.exists  ? change.after.data()  : null;
+      const before = change.before.exists ? change.before.data() : null;
+      // Only new comments (not edits or deletions)
+      if (!after || before) return null;
+
+      const authorId = after.authorId || after.uid;
+      if (!authorId) return null;
+
+      const charLen  = (after.content || after.text || '').length;
+      const userSnap = await db.collection('users').doc(authorId).get();
+      const curAvg   = userSnap.data()?.activityAggregates?.avgCommentLength || 0;
+      const newAvg   = curAvg === 0 ? charLen : Math.round(0.8 * curAvg + 0.2 * charLen);
+
+      await db.collection('users').doc(authorId).update({
+        'activityAggregates.commentsLast7Days':    admin.firestore.FieldValue.increment(1),
+        'activityAggregates.totalCommentsAllTime': admin.firestore.FieldValue.increment(1),
+        'activityAggregates.avgCommentLength':     newAvg,
+      });
+
+      const profile = await _computeV2Profile(authorId);
+      if (profile) await db.collection('users').doc(authorId).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onCommentWrittenV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── EVENT TRIGGER 3: ORDER COMPLETED ─────────────────────────────
+// Path: orders/{orderId}
+// Credits purchaseCount + recentPurchases (30-day rolling window).
+exports.onOrderCompletedV2 = functions.firestore
+  .document('orders/{orderId}')
+  .onCreate(async (snap, context) => {
+    try {
+      const order = snap.data();
+      if (order.status !== 'completed' || order.app !== 'sbd-network') return null;
+
+      const uid = order.userId;
+      if (!uid) return null;
+
+      const orderMs  = order.createdAt?.toMillis ? order.createdAt.toMillis() : Date.now();
+      const isRecent = Date.now() - orderMs < 30 * 86400000;
+
+      const updates = { 'activityAggregates.purchaseCount': admin.firestore.FieldValue.increment(1) };
+      if (isRecent) updates['activityAggregates.recentPurchases'] = admin.firestore.FieldValue.increment(1);
+
+      await db.collection('users').doc(uid).update(updates);
+
+      const profile = await _computeV2Profile(uid);
+      if (profile) await db.collection('users').doc(uid).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onOrderCompletedV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── EVENT TRIGGER 4: WARDROBE ITEM WRITTEN ───────────────────────
+// Path: wardrobes/{uid}/items/{itemId}
+// Recounts wardrobe items + distinct categories + completeness %.
+exports.onWardrobeItemWrittenV2 = functions.firestore
+  .document('wardrobes/{uid}/items/{itemId}')
+  .onWrite(async (change, context) => {
+    const uid = context.params.uid;
+    try {
+      const itemsSnap = await db.collection('wardrobes').doc(uid).collection('items').get();
+      const totalItems = itemsSnap.size;
+      const categories = new Set();
+      itemsSnap.forEach(d => {
+        const cat = d.data().category || d.data().context || 'uncategorized';
+        categories.add(cat);
+      });
+      const TARGET_LOOKS         = 10;
+      const wardrobeCompleteness = Math.min(100, Math.round((totalItems / TARGET_LOOKS) * 100));
+
+      await db.collection('users').doc(uid).update({
+        'activityAggregates.wardrobeItemCount':     totalItems,
+        'activityAggregates.wardrobeCategoryCount': categories.size,
+        'activityAggregates.wardrobeCompleteness':  wardrobeCompleteness,
+      });
+
+      const profile = await _computeV2Profile(uid);
+      if (profile) await db.collection('users').doc(uid).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onWardrobeItemWrittenV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── DAILY JOB 1: BATCH SCORE RECALCULATION ───────────────────────
+// Every 24h — processes only users active in last 30 days. Batch of 100.
+exports.runDailyScoreRecalcV2 = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('America/New_York')
+  .onRun(async () => {
+    try {
+      const cutoff = admin.firestore.Timestamp.fromDate(new Date(Date.now() - 30 * 86400000));
+      const activeSnap = await db.collection('users')
+        .where('lastLoginAt', '>=', cutoff)
+        .get();
+
+      console.log(`[FIS_V2] Daily recalc: ${activeSnap.size} active users`);
+
+      // Process in chunks of 100 (avoid overwhelming Firestore)
+      const docs = activeSnap.docs;
+      for (let i = 0; i < docs.length; i += 100) {
+        await Promise.all(docs.slice(i, i + 100).map(async (userDoc) => {
+          try {
+            const profile = await _computeV2Profile(userDoc.id);
+            if (profile) {
+              await db.collection('users').doc(userDoc.id).update({ formationProfile_v2: profile });
+            }
+          } catch (e) {
+            console.warn('[FIS_V2] recalc skip uid=' + userDoc.id + ':', e.code);
+          }
+        }));
+      }
+
+      console.log('[FIS_V2] Daily recalc complete.');
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] runDailyScoreRecalcV2 fatal:', err);
+      return null;
+    }
+  });
+
+// ── DAILY JOB 2: MATCHING ENGINE v2 ──────────────────────────────
+// Every 24h — generates top 3-5 system-curated matches per eligible user.
+// Eligibility: tier >= premium, v2 totalScore >= 60, school1/2 >= 70 (or 60 in low pool),
+//              expression >= 20, datingBanned !== true.
+exports.runDailyMatchingEngineV2 = functions.pubsub
+  .schedule('every 24 hours')
+  .timeZone('America/New_York')
+  .onRun(async () => {
+    try {
+      // Load scoring weights from admin settings (falls back to defaults)
+      let WEIGHTS = { formation: 0.35, engagement: 0.25, expression: 0.20, consistency: 0.10, validation: 0.10 };
+      try {
+        const wSnap = await db.collection('admin').doc('settings').collection('scoringWeights').doc('current').get();
+        if (wSnap.exists) WEIGHTS = { ...WEIGHTS, ...wSnap.data() };
+      } catch (_) { /* use defaults */ }
+
+      // Fetch premium and elite users (both tier fields)
+      const [premSnap, eliteSnap, premSubSnap, eliteSubSnap] = await Promise.all([
+        db.collection('users').where('tier', '==', 'premium').get(),
+        db.collection('users').where('tier', '==', 'elite').get(),
+        db.collection('users').where('subscription.tier', '==', 'premium').get(),
+        db.collection('users').where('subscription.tier', '==', 'elite').get(),
+      ]);
+
+      // Merge and deduplicate
+      const userMap = new Map();
+      [...premSnap.docs, ...eliteSnap.docs, ...premSubSnap.docs, ...eliteSubSnap.docs]
+        .forEach(d => { if (!userMap.has(d.id)) userMap.set(d.id, { uid: d.id, ...d.data() }); });
+
+      // Filter: must have v2 score >= 60 and not banned
+      const candidates = [...userMap.values()].filter(u => {
+        const p = u.formationProfile_v2;
+        return p && p.totalScore >= 60 && u.datingBanned !== true;
+      });
+
+      // Low-pool fallback: loosen school threshold if < 50 eligible
+      const schoolThreshold = candidates.length < 50 ? 60 : 70;
+
+      const eligible = candidates.filter(u => {
+        const p = u.formationProfile_v2;
+        return p.school1Progress >= schoolThreshold &&
+               p.school2Progress >= schoolThreshold &&
+               p.expression >= 20;
+      });
+
+      const females = eligible.filter(u => u.gender === 'female');
+      const males   = eligible.filter(u => u.gender === 'male');
+
+      console.log(`[FIS_V2] Matching pool: ${females.length}F / ${males.length}M, schoolThresh=${schoolThreshold}`);
+
+      // Load existing active v2 matches to build history (avoid re-matching same pair)
+      const existingSnap = await db.collection('matches')
+        .where('generatedBy', '==', 'daily-engine-v2')
+        .where('status', '==', 'active')
+        .get();
+
+      const historyMap = new Map(); // uid → Set of matched UIDs
+      existingSnap.forEach(d => {
+        const { userA, userB } = d.data();
+        if (!historyMap.has(userA)) historyMap.set(userA, new Set());
+        if (!historyMap.has(userB)) historyMap.set(userB, new Set());
+        historyMap.get(userA).add(userB);
+        historyMap.get(userB).add(userA);
+      });
+
+      // Compatibility score between two eligible users
+      function compatScore(a, b) {
+        const pA = a.formationProfile_v2;
+        const pB = b.formationProfile_v2;
+        const sim = (va, vb) => 1 - Math.abs(va - vb) / 100;
+        const intentMatch = (a.marriageIntent === true && b.marriageIntent === true) ? 1 : 0.5;
+        return (
+          (sim(pA.formation,   pB.formation)   * 0.30) +
+          (sim(pA.engagement,  pB.engagement)  * 0.20) +
+          (sim(pA.expression,  pB.expression)  * 0.15) +
+          (sim(pA.consistency, pB.consistency) * 0.10) +
+          (intentMatch                          * 0.15) +
+          (0.5                                  * 0.10)  // location-neutral placeholder
+        );
+      }
+
+      const SCORE_GAP_MAX = 15;
+      const matchesToWrite = [];
+      const writtenPairs   = new Set();
+
+      // Generate matches: female ↔ male direction
+      for (const female of females) {
+        const pF      = female.formationProfile_v2;
+        const history = historyMap.get(female.uid) || new Set();
+
+        const pool = males.filter(m => {
+          const pairKey = [female.uid, m.uid].sort().join('|');
+          return !history.has(m.uid) &&
+                 !writtenPairs.has(pairKey) &&
+                 Math.abs(pF.totalScore - m.formationProfile_v2.totalScore) <= SCORE_GAP_MAX;
+        });
+
+        if (pool.length === 0) continue;
+
+        const ranked = pool
+          .map(m => ({ m, score: compatScore(female, m) }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+
+        for (const { m, score } of ranked) {
+          const pairKey = [female.uid, m.uid].sort().join('|');
+          if (writtenPairs.has(pairKey)) continue;
+          writtenPairs.add(pairKey);
+          matchesToWrite.push({
+            userA:       female.uid,
+            userB:       m.uid,
+            scoreA:      pF.totalScore,
+            scoreB:      m.formationProfile_v2.totalScore,
+            compatScore: Math.round(score * 100),
+            stage:       1,
+            status:      'active',
+            feedback:    null,
+            generatedBy: 'daily-engine-v2',
+            createdAt:   admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      // Write in Firestore batches of 500
+      console.log(`[FIS_V2] Writing ${matchesToWrite.length} new matches`);
+      for (let i = 0; i < matchesToWrite.length; i += 500) {
+        const batch = db.batch();
+        matchesToWrite.slice(i, i + 500).forEach(m => batch.set(db.collection('matches').doc(), m));
+        await batch.commit();
+      }
+
+      console.log('[FIS_V2] Matching engine complete.');
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] runDailyMatchingEngineV2 fatal:', err);
+      return null;
+    }
+  });
+
+// ── EVENT TRIGGER 5: USER LOGIN (lastLoginAt written by auth flow) ──
+// Path: users/{uid}  onUpdate — detects lastLoginAt changes to track activeDaysLast30.
+// Also enforces weekly match token reset (lastMatchReset + weeklyMatchesCount).
+exports.onUserLoginV2 = functions.firestore
+  .document('users/{uid}')
+  .onUpdate(async (change, context) => {
+    const uid    = context.params.uid;
+    const before = change.before.data();
+    const after  = change.after.data();
+
+    // Only fire when lastLoginAt actually changes
+    const beforeLogin = before.lastLoginAt?.toMillis ? before.lastLoginAt.toMillis() : 0;
+    const afterLogin  = after.lastLoginAt?.toMillis  ? after.lastLoginAt.toMillis()  : 0;
+    if (afterLogin === beforeLogin) return null;
+
+    try {
+      const updates = {};
+
+      // ── Consistency: increment activeDaysLast30 (if not already counted today) ──
+      const agg         = after.activityAggregates || {};
+      const lastCountMs = agg.lastActiveCountedAt?.toMillis ? agg.lastActiveCountedAt.toMillis() : 0;
+      const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+      if (lastCountMs < startOfToday.getTime()) {
+        updates['activityAggregates.activeDaysLast30']    = admin.firestore.FieldValue.increment(1);
+        updates['activityAggregates.lastActiveCountedAt'] = admin.firestore.FieldValue.serverTimestamp();
+      }
+
+      // ── Weekly match token reset (every 7 days) ──────────────────
+      const lastReset   = after.lastMatchReset?.toMillis ? after.lastMatchReset.toMillis() : 0;
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - lastReset >= sevenDaysMs) {
+        updates['weeklyMatchesCount'] = 0;
+        updates['lastMatchReset']     = admin.firestore.FieldValue.serverTimestamp();
+      }
+
+      if (Object.keys(updates).length === 0) return null;
+      await db.collection('users').doc(uid).update(updates);
+
+      // Recompute v2 score (consistency just changed)
+      const profile = await _computeV2Profile(uid);
+      if (profile) await db.collection('users').doc(uid).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onUserLoginV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── EVENT TRIGGER 6: COURSE PROGRESS COMPLETED ───────────────────
+// Path: userProgress/{progressId}
+// When a lesson/course is marked complete, refresh school1Pct / school2Pct immediately
+// so formation score updates without waiting for the daily batch.
+exports.onCourseProgressV2 = functions.firestore
+  .document('userProgress/{progressId}')
+  .onWrite(async (change, context) => {
+    try {
+      const after  = change.after.exists  ? change.after.data()  : null;
+      const before = change.before.exists ? change.before.data() : null;
+      if (!after) return null;
+
+      const uid = after.userId || after.uid;
+      if (!uid) return null;
+
+      // Only act when status becomes 'complete'
+      const wasComplete = before?.status === 'complete' || before?.completed;
+      const isComplete  = after.status  === 'complete' || after.completed;
+      if (wasComplete || !isComplete) return null;
+
+      // Recount school progress for this user
+      const progressSnap = await db.collection('userProgress')
+        .where('userId', '==', uid)
+        .get();
+
+      let s1Total = 0, s1Done = 0, s2Total = 0, s2Done = 0;
+      progressSnap.forEach(doc => {
+        const d      = doc.data();
+        const school = d.schoolId || '';
+        if (school.includes('school-1') || school.includes('teleios')) {
+          s1Total++;
+          if (d.status === 'complete' || d.completed) s1Done++;
+        } else if (school.includes('school-2') || school.includes('sexual-literacy')) {
+          s2Total++;
+          if (d.status === 'complete' || d.completed) s2Done++;
+        }
+      });
+
+      const school1Pct = s1Total > 0 ? Math.round((s1Done / s1Total) * 100) : 0;
+      const school2Pct = s2Total > 0 ? Math.round((s2Done / s2Total) * 100) : 0;
+
+      // Update the cached formation score synchronously so _computeV2Profile sees it
+      await db.collection('users').doc(uid).update({
+        'formationScore.school1Pct': school1Pct,
+        'formationScore.school2Pct': school2Pct,
+      });
+
+      // Now recompute full v2 profile with the fresh school numbers
+      const profile = await _computeV2Profile(uid);
+      if (profile) await db.collection('users').doc(uid).update({ formationProfile_v2: profile });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onCourseProgressV2:', err.code || err.message);
+      return null;
+    }
+  });
+
+// ── WEEKLY MATCH COUNT ENFORCEMENT (injected into matching engine) ─
+// The daily matching engine respects weeklyMatchesCount already via the
+// eligibility check. This helper is also called by on-demand matching.
+// Rule: Elite gets 3 free matches/week; extra = paid tokens.
+async function _checkAndIncrementWeeklyMatches(uid) {
+  const snap = await db.collection('users').doc(uid).get();
+  const d    = snap.data() || {};
+
+  // Auto-reset if 7 days elapsed
+  const lastReset   = d.lastMatchReset?.toMillis ? d.lastMatchReset.toMillis() : 0;
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  let weeklyCount   = typeof d.weeklyMatchesCount === 'number' ? d.weeklyMatchesCount : 0;
+
+  if (Date.now() - lastReset >= sevenDaysMs) {
+    weeklyCount = 0;
+    await db.collection('users').doc(uid).update({
+      weeklyMatchesCount: 0,
+      lastMatchReset:     admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  const MAX_FREE = 3;
+  const hasFreeSlot = weeklyCount < MAX_FREE ||
+    (typeof d.tokensMonthly === 'number' && d.tokensMonthly > 0) ||
+    (typeof d.tokensExtra   === 'number' && d.tokensExtra   > 0);
+
+  return { weeklyCount, hasFreeSlot };
+}
+
+// ── REVENUE PROFILE TRACKING ──────────────────────────────────────
+// Triggered by onOrderCompletedV2 — also updates users/{uid}/revenueProfile.
+// This extends the existing onOrderCompletedV2 by writing a revenueProfile sub-doc.
+exports.onOrderRevenueProfileV2 = functions.firestore
+  .document('orders/{orderId}')
+  .onCreate(async (snap, context) => {
+    try {
+      const order = snap.data();
+      if (order.status !== 'completed' || order.app !== 'sbd-network') return null;
+      const uid = order.userId;
+      if (!uid) return null;
+
+      const amount = order.amount || 0;
+      await db.collection('users').doc(uid).update({
+        'revenueProfile.totalSpent':    admin.firestore.FieldValue.increment(amount),
+        'revenueProfile.orderCount':    admin.firestore.FieldValue.increment(1),
+        'revenueProfile.lastPurchaseAt': admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return null;
+    } catch (err) {
+      console.error('[FIS_V2] onOrderRevenueProfileV2:', err.code || err.message);
+      return null;
+    }
+  });

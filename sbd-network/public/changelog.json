@@ -1,6 +1,216 @@
 {
-  "current": "224",
+  "current": "249",
   "versions": [
+    {
+      "version": "249",
+      "date": "2026-04-14",
+      "title": "Covenant Matching System",
+      "emoji": "🚀",
+      "changes": [
+        "💒 Formation-gated dating access — no formation, no matching",
+        "📊 Formation score system across courses + boards + consistency",
+        "🔒 3-tier access: Free/Foundation locked, Premium limited, Elite full",
+        "💰 Match tokens, priority boost, coaching pipeline, marriage track"
+      ]
+    },
+    {
+      "version": "248",
+      "date": "2026-04-14",
+      "title": "Upgrade Conversion Engine",
+      "emoji": "🚀",
+      "changes": [
+        "📊 Lock hit tracking — nudge modal fires after 3 lock encounters",
+        "📈 Analytics written to Firestore upgradeEvents collection",
+        "🔗 UpgradeTracker wired into lesson.html, learn.html, tier.html"
+      ]
+    },
+    {
+      "version": "247",
+      "date": "2026-04-14",
+      "title": "MV House — Covenant Wardrobe System",
+      "emoji": "🚀",
+      "changes": [
+        "🏠 MV House rebuilt: dark theme, 5 wardrobe categories",
+        "🛍 Save to Wardrobe button on all MV House board posts (Elite)",
+        "👗 Wardrobe saves to wardrobes/{uid}/items/ in Firestore",
+        "💳 Purchase + Custom Styling CTAs"
+      ]
+    },
+    {
+      "version": "246",
+      "date": "2026-04-14",
+      "title": "Locked UI — Visible Upgrade Architecture",
+      "emoji": "🚀",
+      "changes": [
+        "🔒 Foundation sees Schools 2/3/4 locked with course counts",
+        "⚡ Upgrade pressure banners throughout all tier hubs",
+        "📣 Pressure cards gold-highlighted for primary CTAs"
+      ]
+    },
+    {
+      "version": "245",
+      "date": "2026-04-13",
+      "title": "Drip Engine — Time-gated content delivery",
+      "emoji": "🚀",
+      "changes": [
+        "⏳ Foundation gets full Teleios (6wks) + SBD Dummies (13wks) dripped weekly",
+        "🔄 Re-subscribe resumes from saved drip week position",
+        "🔒 Elite bypasses drip gate entirely — instant full access",
+        "🚫 showDripWall added to lesson.html for time-locked content"
+      ]
+    },
+    {
+      "version": "244",
+      "date": "2026-04-11",
+      "title": "Fix checkout duplicate variable error",
+      "emoji": "🚀",
+      "changes": [
+        "🔧 Fixed: SyntaxError duplicate currentUserId declaration on checkout page — old dead code removed"
+      ]
+    },
+    {
+      "version": "243",
+      "date": "2026-04-11",
+      "title": "Real Stripe Payment — Hosted Checkout Live",
+      "emoji": "🚀",
+      "changes": [
+        "💳 New: Checkout now uses real Stripe Hosted Checkout — users are redirected to Stripe's secure payment page",
+        "✅ New: Subscribing/purchasing activates your tier instantly via webhook — no manual approval needed",
+        "📧 New: Telegram notification fires on every successful SBD Network payment",
+        "❌ New: Cancelling a recurring subscription automatically downgrades the account to free tier",
+        "🔧 Fixed: payment.html upgrade button now goes to checkout instead of showing an alert"
+      ]
+    },
+    {
+      "version": "242",
+      "date": "2026-04-07",
+      "title": "Admin Tier Fix — endDate now set correctly",
+      "emoji": "🚀",
+      "changes": [
+        "🔧 Fixed: Admin-assigned tiers now set subscription.endDate to 2099 so the learn page correctly resolves the tier (was falling back to free)",
+        "⚙️ Fixed: Demoting to free now sets subscription.status to inactive"
+      ]
+    },
+    {
+      "version": "241",
+      "date": "2026-04-07",
+      "title": "Community Boards — Critical URL Fix",
+      "emoji": "🔗",
+      "changes": [
+        "🔧 Fixed: Tapping any board in the Community tab now opens the correct board (was redirecting to dashboard due to wrong URL parameter)",
+        "🔒 Fixed: Board pages now enforce tier access — lower-tier users see an upgrade wall instead of empty board",
+        "🔔 Fixed: Notifications are no longer sent to users whose tier is below the board's required tier",
+        "⬆️ Fixed: Upgrading your tier now automatically assigns you to the correct community groups"
+      ]
+    },
+    {
+      "version": "240",
+      "date": "2026-04-07",
+      "title": "Admin Tier Management",
+      "emoji": "⚙️",
+      "changes": [
+        "⚙️ New: Admin panel — promote or demote any user's subscription tier directly from their profile",
+        "👥 New: Setting a user's tier automatically assigns them to all the correct community groups",
+        "🏷 New: Group checklist in admin now shows colour-coded tier badge for each group"
+      ]
+    },
+    {
+      "version": "239",
+      "date": "2026-04-07",
+      "title": "Tier-Gated Boards & Notifications",
+      "emoji": "🔒",
+      "changes": [
+        "🔒 New: Boards enforce tier access — visits requiring a higher tier show an upgrade wall",
+        "🔔 New: Notifications are only delivered to users whose tier meets the board's requirement",
+        "⬆️ New: Purchasing a plan auto-assigns community groups matching your new tier"
+      ]
+    },
+    {
+      "version": "238",
+      "date": "2026-04-07",
+      "title": "Week Complete — Join the Discussion Link",
+      "emoji": "💬",
+      "changes": [
+        "💬 New: After completing a week, a gold link invites you to share your breakthrough in the matching community board",
+        "🌱 Free users: link goes to Formation Talk",
+        "🎓 Foundation+ users: link goes to the Teleios Formation Circle board"
+      ]
+    },
+    {
+      "version": "229",
+      "date": "2026-04-08",
+      "title": "Formation Hub — Tier Hub Pages + Firestore Fixes",
+      "emoji": "🏗",
+      "changes": [
+        "🏗 New: Tier pages (/learn?tier=X) now show a full Feature Hub — six cards (Learning, Community, Resources, Certificates, MV House, Direct Access) each linking to the relevant system page",
+        "🎯 New: Locked features (e.g. MV House on Foundation) show a dimmed card with tier label instead of hiding entirely",
+        "📖 Fixed: TIER_HIGHLIGHTS on selector cards now show accurate real course content (Teleios Blueprint 6 weeks, SBD Dummies 13 weeks, School 1+2 counts, MV House)",
+        "🔧 Fixed: Firestore — Schools 3 and 4 unlockTier corrected from \"premium\" to \"elite\"",
+        "🔧 Fixed: Firestore — Teleios Blueprint 6 modules seeded (all Foundation-tier — full course)",
+        "🔧 Fixed: Firestore — SBD For Dummies weeks 5–13 corrected from \"premium\" to \"foundation\" (Foundation tier gets the full 13-week course)"
+      ]
+    },
+    {
+      "version": "228",
+      "date": "2026-04-07",
+      "title": "Formation Hub — Tier Selector Redesign",
+      "emoji": "🛤",
+      "changes": [
+        "🛤 New: Formation tab is now a Tier Selector — four cards (Free · Foundation · Premium · Elite) in a clean 2×2 grid",
+        "🎯 New: Tap a tier card to enter that tier's own page — content scoped to that path only",
+        "🔒 New: Locked tiers show price and highlights, tap to go to payment — no more confusing stacked blocks",
+        "🌱 New: Free tier page loads Teleios Week 1 content directly from Firestore, with Part 1 and Part 2 lesson rows",
+        "👑 New: Admin and Elite users see all four tiers as accessible — full view of every formation path",
+        "🛠 Fixed: Formation tab no longer shows a stacked wall of all four tiers at once",
+        "🛠 Fixed: Removed the orientation 'Your X World' panel from the Learn page — World navigation lives in the bottom nav"
+      ]
+    },
+    {
+      "version": "227",
+      "date": "2026-04-07",
+      "title": "Community Redesign — Groups, AMTS & Admin Control",
+      "emoji": "🏛",
+      "changes": [
+        "🏛 New: Community page now shows Groups — tap 'View Group' to enter and browse boards inside",
+        "📚 New: Advanced Muliebrity Training School — all 20 boards now live inside this group",
+        "🔒 New: Groups are tier-gated — each group shows locked if your tier doesn't include it",
+        "⚙️ New: Admin panel — create, rename, delete groups and assign a required tier to each",
+        "⚙️ New: Admin panel — boards now listed under their parent group; reassign any board to a different group in one step",
+        "🎓 New: Your Free World panel on the Learn page — see exactly what's included in your tier (Learn, Boards, Resources)",
+        "🛠 Fixed: Community page no longer previews all board names before you enter a group",
+        "🛠 Fixed: Floating Shop and Profile labels no longer appear below the bottom nav bar"
+      ]
+    },
+    {
+      "version": "226",
+      "date": "2026-04-06",
+      "title": "Boards: Select & Forward + UI Fixes",
+      "emoji": "✅",
+      "changes": [
+        "✅ New: Select multiple posts and forward them all to another board at once",
+        "🔔 Fixed: Notification bell + banners now work on the dashboard (not just boards)",
+        "📸 Fixed: Photo editor no longer interrupts posting — tap ✏️ to edit a photo when you want to",
+        "🔒 Fixed: Version update sheet now stays open until you dismiss it",
+        "🔄 Fixed: Version update sheet will reappear if the app closed before you saw it"
+      ]
+    },
+    {
+      "version": "225",
+      "date": "2026-04-05",
+      "title": "Speed, Stability & Smart Fixes",
+      "emoji": "⚡",
+      "changes": [
+        "⚡ Posts upload in the background — modal closes instantly like Telegram",
+        "🔔 Notification icons fixed for comments (💬) and mentions (🔔)",
+        "🔔 Comment notifications now reach all members, not just group members",
+        "🔒 Admin Panel now correctly shows for admin accounts",
+        "🔒 Logout button fixed — signs out reliably every time",
+        "🔄 Pull-to-refresh now reloads feed instantly (no full page reload)",
+        "📱 iOS fix: same photo can be re-selected after removing it",
+        "🎯 Bottom nav no longer jumps during iOS scroll/address bar animation",
+        "🛠 Service worker updates now deliver reliably on iOS PWA"
+      ]
+    },
     {
       "version": "224",
       "date": "2026-04-03",

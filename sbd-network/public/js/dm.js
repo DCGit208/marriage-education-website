@@ -58,7 +58,7 @@ const attachInput      = document.getElementById('attachInput');
 
 // ── Auth guard ───────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
-  if (!user) { window.location.href = 'index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
   currentUserId = user.uid;
 
   if (typeof initNotifications === 'function') initNotifications(user.uid);

@@ -1335,8 +1335,9 @@
       // ============================================
       const examNavItem = document.getElementById('exam-nav-item');
       if (examNavItem) {
-        // Check if all 6 weeks are completed - with detailed logging
-        const completionStatus = Array.from({length: 6}, (_, i) => ({
+        // Check if all weeks are completed - with detailed logging
+        const totalModules = (courseModules && courseModules.length) || 6;
+        const completionStatus = Array.from({length: totalModules}, (_, i) => ({
           week: i + 1,
           completed: isModuleCompleted(i)
         }));
@@ -1355,7 +1356,7 @@
           if (durationEl) {
             durationEl.textContent = '50 Questions • 80% Pass';
           }
-          console.log('🎓 Final Exam UNLOCKED (all 6 weeks completed)');
+          console.log('🎓 Final Exam UNLOCKED (all ' + totalModules + ' weeks completed)');
         } else {
           // Keep locked
           const incompleteWeeks = completionStatus.filter(w => !w.completed).map(w => w.week);
@@ -1364,7 +1365,7 @@
           examNavItem.setAttribute('tabindex', '-1');
           examNavItem.onclick = null;
           if (durationEl) {
-            durationEl.textContent = '🔒 Complete all 6 weeks to unlock';
+            durationEl.textContent = '🔒 Complete all ' + totalModules + ' weeks to unlock';
           }
           console.log('🔒 Final Exam locked - incomplete weeks:', incompleteWeeks);
         }
@@ -1419,7 +1420,8 @@
         console.log('[Course Viewer] Course loaded:', course.title);
 
         document.getElementById('sidebarTitle').textContent = course.title;
-        document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
+        const durationWeeks = course.duration_weeks || parseInt(course.duration) || (course.modules && course.modules.length) || 6;
+        document.getElementById('courseDuration').textContent = durationWeeks + ' weeks';
         document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
         document.title = course.title;
         
@@ -1435,7 +1437,7 @@
         const tabsContent = document.getElementById('tabsContent');
 
         // Create placeholder weeks if modules don't exist
-        const totalWeeks = course.duration_weeks || 6;
+        const totalWeeks = course.duration_weeks || parseInt(course.duration) || modules.length || 6;
         const modules = course.modules || [];
         courseModules = modules; // Store globally for progress tracking
         setTimeout(updateMobileNav, 300); // init mobile prev/next buttons after modules load
@@ -1621,6 +1623,7 @@
       
       currentModuleIndex = index;
       updateMobileNav(); // keep prev/next footer buttons in sync
+      const module = courseModules[index];
       console.log('switchModule called:', {index, moduleTitle: module ? module.title : 'N/A', moduleId: module ? module.moduleId : 'N/A'});
       
       // Reload progress data for the newly selected module

@@ -6,7 +6,7 @@ const noBoardsMessage = document.getElementById('noBoardsMessage');
 const logoutBtn = document.getElementById('logoutBtn');
 
 auth.onAuthStateChanged(async (user) => {
-  if (!user) { window.location.href = '/index.html'; return; }
+  if (!user) { window.location.href = '/auth'; return; }
 
   if (typeof initNotifications === 'function') initNotifications(user.uid);
 
@@ -111,7 +111,7 @@ function createBoardCard(boardId, board) {
 
 if (logoutBtn) {
   logoutBtn.addEventListener('click', async () => {
-    try { await auth.signOut(); window.location.href = '/index.html'; } catch (e) { console.error(e); }
+    try { await auth.signOut(); window.location.href = '/auth'; } catch (e) { console.error(e); }
   });
 }
 

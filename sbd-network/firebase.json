@@ -13,7 +13,40 @@
     ],
     "cleanUrls": true,
     "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/index",
+        "destination": "/auth",
+        "type": 302
+      },
+      {
+        "source": "/index.html",
+        "destination": "/auth",
+        "type": 302
+      },
+      {
+        "source": "/",
+        "destination": "/dashboard",
+        "type": 302
+      }
+    ],
     "headers": [
+      {
+        "source": "/dashboard",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      },
+      {
+        "source": "/dashboard.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      },
+      {
+        "source": "/auth",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      },
+      {
+        "source": "/auth.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      },
       {
         "source": "/service-worker.js",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Models Overview — CRLA Foundation School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #fff;
+            color: #1a2332;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in 0.85in;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a2332;
+            padding-bottom: 18px;
+            margin-bottom: 28px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1a2332;
+            color: #f0c040;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 34px;
+            color: #1a2332;
+            line-height: 1.15;
+        }
+        .subtitle {
+            font-style: italic;
+            color: #5a6a7e;
+            font-size: 14.5px;
+            margin-top: 6px;
+        }
+
+        /* ── COMPARISON OVERVIEW ── */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .model-tile {
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1.5px solid #ddd;
+        }
+        .model-tile-header {
+            background: #1a2332;
+            color: #f0c040;
+            padding: 14px 16px;
+            text-align: center;
+        }
+        .model-tile-header .model-num {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+        .model-tile-header .model-name {
+            font-size: 17px;
+            font-weight: 700;
+            display: block;
+            margin-top: 4px;
+            line-height: 1.2;
+        }
+        .model-tile-body {
+            padding: 14px 15px;
+        }
+        .meta-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 9px;
+            font-size: 12.5px;
+        }
+        .meta-label {
+            flex-shrink: 0;
+            font-family: Arial, sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #8a9ab0;
+            padding-top: 2px;
+            width: 64px;
+        }
+        .meta-value { color: #334; line-height: 1.5; }
+
+        /* ── SECTION TITLES ── */
+        h2.section-title {
+            font-size: 12.5px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-bottom: 14px;
+            margin-top: 28px;
+        }
+
+        /* ── MODEL DETAIL CARDS ── */
+        .model-detail {
+            border: 2px solid #1a2332;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .model-detail-header {
+            background: #1a2332;
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .model-detail-header .big-num {
+            font-size: 36px;
+            font-weight: 700;
+            color: #f0c040;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .model-detail-header .header-text h3 {
+            font-size: 20px;
+            color: #fff;
+        }
+        .model-detail-header .header-text p {
+            font-size: 12.5px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 3px;
+            font-style: italic;
+        }
+        .model-detail-body {
+            padding: 20px 22px;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .detail-section h4 {
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e5e2da;
+        }
+        .detail-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .detail-section ul li {
+            font-size: 12.5px;
+            color: #334;
+            line-height: 1.65;
+            padding: 3px 0;
+        }
+        .detail-section ul li::before { content: "›  "; color: #1a2332; font-weight: bold; }
+
+        /* ── FLOW STEPS ── */
+        .flow-steps {
+            margin-top: 14px;
+        }
+        .flow-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+        .flow-num {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            background: #1a2332;
+            color: #f0c040;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+        .flow-text {
+            font-size: 12.5px;
+            color: #334;
+            line-height: 1.6;
+        }
+        .flow-text strong { color: #1a2332; }
+
+        /* ── PITCH BOX ── */
+        .pitch-box {
+            background: #f8f7f2;
+            border-left: 4px solid #1a2332;
+            padding: 12px 16px;
+            margin-top: 14px;
+            border-radius: 0 4px 4px 0;
+        }
+        .pitch-box span {
+            font-family: Arial, sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #8a9ab0;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .pitch-box p {
+            font-size: 12.5px;
+            font-style: italic;
+            color: #334;
+            line-height: 1.65;
+        }
+
+        /* ── SPONSORED TRACKING TABLE ── */
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 14px;
+        }
+        .mini-table thead tr { background: #1a2332; color: #f0c040; }
+        .mini-table thead th {
+            padding: 8px 9px;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .mini-table tbody tr { border-bottom: 1px solid #ddd; }
+        .mini-table tbody tr:nth-child(even) { background: #fafaf8; }
+        .mini-table tbody tr.ex { opacity: 0.55; font-style: italic; }
+        .mini-table tbody td { padding: 9px 9px; color: #334; }
+
+        /* ── COMMUNITY FORMATS ── */
+        .formats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .format-card {
+            background: #f8f7f2;
+            border-radius: 4px;
+            padding: 12px 14px;
+        }
+        .format-card h5 {
+            font-family: Arial, sans-serif;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 4px;
+        }
+        .format-card p {
+            font-size: 12px;
+            color: #556;
+            line-height: 1.55;
+        }
+
+        /* ── PIPELINE ── */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 20px 0;
+        }
+        .pipe-stage {
+            flex: 1;
+            background: #1a2332;
+            color: #fff;
+            text-align: center;
+            padding: 12px 8px;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+        }
+        .pipe-stage:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 0;
+            border-top: 24px solid transparent;
+            border-bottom: 24px solid transparent;
+            border-left: 10px solid #1a2332;
+            z-index: 1;
+        }
+        .pipe-stage:nth-child(2) { background: #2c3e50; }
+        .pipe-stage:nth-child(3) { background: #34495e; }
+        .pipe-stage:nth-child(4) { background: #1a5276; }
+        .pipe-stage:nth-child(5) { background: #1a6678; }
+        .pipe-stage:nth-child(2)::after { border-left-color: #2c3e50; }
+        .pipe-stage:nth-child(3)::after { border-left-color: #34495e; }
+        .pipe-stage:nth-child(4)::after { border-left-color: #1a5276; }
+
+        /* ── MONTHLY TARGETS ── */
+        .targets-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .target-card {
+            border: 1.5px solid #1a2332;
+            border-radius: 4px;
+            text-align: center;
+            padding: 14px 10px;
+        }
+        .target-card .num {
+            font-size: 30px;
+            font-weight: 700;
+            color: #1a2332;
+            display: block;
+            line-height: 1;
+        }
+        .target-card .label {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            display: block;
+            margin-top: 5px;
+        }
+        .target-card .sub {
+            font-size: 11.5px;
+            color: #334;
+            display: block;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 14px;
+            border-top: 2px solid #1a2332;
+            color: #8a9ab0;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-bar { text-align: right; margin-bottom: 18px; }
+        .print-btn {
+            background: #1a2332;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        @media print {
+            body { padding: 0.4in 0.65in; font-size: 11.5px; }
+            .print-bar { display: none; }
+            .model-detail { page-break-inside: avoid; }
+            .overview-grid { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-bar">
+        <button class="print-btn" onclick="window.print()">⬇ Print / Save as PDF</button>
+    </div>
+
+    <div class="header">
+        <div class="badge">CRLA Foundation School &nbsp;·&nbsp; Week 1 &nbsp;·&nbsp; Advocacy Track</div>
+        <h1>DEPLOYMENT MODELS OVERVIEW</h1>
+        <p class="subtitle">A visual reference guide to Personal Access, Sponsored Access, and Community Access</p>
+    </div>
+
+    <!-- OVERVIEW TILES -->
+    <div class="overview-grid">
+        <div class="model-tile">
+            <div class="model-tile-header">
+                <div class="model-num">Model 1</div>
+                <span class="model-name">Personal Access</span>
+            </div>
+            <div class="model-tile-body">
+                <div class="meta-row"><span class="meta-label">Also called</span><span class="meta-value">Direct Purchase</span></div>
+                <div class="meta-row"><span class="meta-label">Who it's for</span><span class="meta-value">Individuals with financial capacity who are in Relief or Hope mode</span></div>
+                <div class="meta-row"><span class="meta-label">Your role</span><span class="meta-value">Share testimony → explain resource → provide link → follow up</span></div>
+                <div class="meta-row"><span class="meta-label">Scale</span><span class="meta-value">1 person / 1 couple at a time</span></div>
+            </div>
+        </div>
+        <div class="model-tile">
+            <div class="model-tile-header">
+                <div class="model-num">Model 2</div>
+                <span class="model-name">Sponsored Access</span>
+            </div>
+            <div class="model-tile-body">
+                <div class="meta-row"><span class="meta-label">Also called</span><span class="meta-value">Gift Deployment</span></div>
+                <div class="meta-row"><span class="meta-label">Who it's for</span><span class="meta-value">High-need individuals who lack funds — young couples, students, families in crisis</span></div>
+                <div class="meta-row"><span class="meta-label">Your role</span><span class="meta-value">Bridge sponsor and beneficiary; deploy through your ambassador link</span></div>
+                <div class="meta-row"><span class="meta-label">Scale</span><span class="meta-value">1+ people per sponsor</span></div>
+            </div>
+        </div>
+        <div class="model-tile">
+            <div class="model-tile-header">
+                <div class="model-num">Model 3</div>
+                <span class="model-name">Community Access</span>
+            </div>
+            <div class="model-tile-body">
+                <div class="meta-row"><span class="meta-label">Also called</span><span class="meta-value">Group Deployment</span></div>
+                <div class="meta-row"><span class="meta-label">Who it's for</span><span class="meta-value">Churches, NGOs, workplaces, community centers — any group of 10+ people</span></div>
+                <div class="meta-row"><span class="meta-label">Your role</span><span class="meta-value">Propose → secure buy-in → facilitate sessions → measure impact</span></div>
+                <div class="meta-row"><span class="meta-label">Scale</span><span class="meta-value">10–500+ people per program</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODEL 1: PERSONAL ACCESS -->
+    <div class="model-detail">
+        <div class="model-detail-header">
+            <div class="big-num">1</div>
+            <div class="header-text">
+                <h3>Personal Access — Direct Purchase</h3>
+                <p>The simplest deployment: an individual buys through your ambassador link</p>
+            </div>
+        </div>
+        <div class="model-detail-body">
+            <div class="two-col">
+                <div class="detail-section">
+                    <h4>When to Use It</h4>
+                    <ul>
+                        <li>Person has financial capacity to purchase</li>
+                        <li>They see the value immediately after your witness</li>
+                        <li>They prefer private, self-paced learning</li>
+                        <li>They are in Relief Mode or Hope Mode</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>5-Step Conversation Flow</h4>
+                    <div class="flow-steps">
+                        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Assess readiness</strong> — Are they in Relief or Hope mode?</div></div>
+                        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Match resource to need</strong> — e.g., communication struggles → Communication Fidelity</div></div>
+                        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Share your experience</strong> — be specific, stay humble</div></div>
+                        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Provide a clear next step</strong> — "Here's my link, it's [price], you can start tonight"</div></div>
+                        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Offer to journey together</strong> — follow up in 2 weeks</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="pitch-box">
+                <span>Example Statement</span>
+                <p>"I read Sex By Design and it transformed how I understand intimacy. Here's my ambassador link if you want to grab a copy — I'd love to discuss it with you after you read it."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODEL 2: SPONSORED ACCESS -->
+    <div class="model-detail">
+        <div class="model-detail-header">
+            <div class="big-num">2</div>
+            <div class="header-text">
+                <h3>Sponsored Access — Gift Deployment</h3>
+                <p>Someone with resources sponsors books/courses for those who cannot afford them</p>
+            </div>
+        </div>
+        <div class="model-detail-body">
+            <div class="two-col">
+                <div class="detail-section">
+                    <h4>The 3 Sponsor Types</h4>
+                    <ul>
+                        <li><strong>Direct Sponsors</strong> — individuals who sponsor specific people they know personally</li>
+                        <li><strong>Anonymous Sponsors</strong> — donors who fund a pool of resources you deploy as needed</li>
+                        <li><strong>Organizational Sponsors</strong> — churches, NGOs, businesses that sponsor bulk access</li>
+                    </ul>
+                    <div class="pitch-box" style="margin-top:12px">
+                        <span>Pitch to a Sponsor</span>
+                        <p>"I know a couple preparing for marriage. They can't afford the Foundation School (120,000 FCFA). Would you sponsor their enrollment? I'll journey with them to ensure they complete it. Your investment could save their marriage before it even starts."</p>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4>How to Activate It (5 Steps)</h4>
+                    <div class="flow-steps">
+                        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Identify high-need beneficiaries</strong> from your first 10 list</div></div>
+                        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Find potential sponsors</strong> — who in your network has capacity AND heart?</div></div>
+                        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Make the connection</strong> — bridge sponsor and beneficiary</div></div>
+                        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Facilitate the gift</strong> — process through your ambassador link</div></div>
+                        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Follow up with both</strong> — thank sponsor; journey with beneficiary through completion</div></div>
+                    </div>
+                    <div class="pitch-box" style="margin-top:12px">
+                        <span>Pitch to a Beneficiary</span>
+                        <p>"Someone in our community wants to gift you the Foundation School — completely free, no strings attached. They believe in you. Would you be open to accepting it?"</p>
+                    </div>
+                </div>
+            </div>
+            <h4 style="font-family:Arial,sans-serif;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#5a6a7e;margin-top:16px;margin-bottom:8px">Sponsored Access Tracking Table</h4>
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Beneficiary</th>
+                        <th>Sponsor</th>
+                        <th>Resource</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Completion</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="ex">
+                        <td>John &amp; Mary</td>
+                        <td>Anonymous</td>
+                        <td>Foundation School</td>
+                        <td>120,000 FCFA</td>
+                        <td>Enrolled</td>
+                        <td>Week 3</td>
+                        <td>—</td>
+                    </tr>
+                    <tr class="ex">
+                        <td>David</td>
+                        <td>Pastor Paul</td>
+                        <td>SBD Book</td>
+                        <td>1,500 FCFA</td>
+                        <td>Completed</td>
+                        <td>100%</td>
+                        <td>—</td>
+                    </tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODEL 3: COMMUNITY ACCESS -->
+    <div class="model-detail">
+        <div class="model-detail-header">
+            <div class="big-num">3</div>
+            <div class="header-text">
+                <h3>Community Access — Group Deployment</h3>
+                <p>Highest-impact model: churches, NGOs, workplaces host group studies — 10 to 500+ people per program</p>
+            </div>
+        </div>
+        <div class="model-detail-body">
+            <h4 style="font-family:Arial,sans-serif;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#5a6a7e;margin-bottom:10px">The 5 Community Access Formats</h4>
+            <div class="formats-grid">
+                <div class="format-card">
+                    <h5>1. Church Marriage Series</h5>
+                    <p>6–12 weeks. Facilitated by an ambassador + church leadership. Ideal for couples at all stages.</p>
+                </div>
+                <div class="format-card">
+                    <h5>2. Pre-Marriage Cohort</h5>
+                    <p>8 weeks. Designed for engaged couples. High conversion to full Foundation School enrollment.</p>
+                </div>
+                <div class="format-card">
+                    <h5>3. Workplace Workshop</h5>
+                    <p>1-day intensive or lunch-and-learns over 8 weeks. HR-friendly pitch: reduced absenteeism, higher retention.</p>
+                </div>
+                <div class="format-card">
+                    <h5>4. Community Circle</h5>
+                    <p>6–10 people, 6–8 weeks. Neighborhood or small-group format. Low overhead, high intimacy.</p>
+                </div>
+                <div class="format-card">
+                    <h5>5. School Assembly</h5>
+                    <p>Ages 16–25. Preventive deployment before marriage. Single-session or 4-week module.</p>
+                </div>
+            </div>
+
+            <div class="two-col" style="margin-top:20px">
+                <div class="detail-section">
+                    <h4>Community Access Blueprint (8 Steps)</h4>
+                    <div class="flow-steps">
+                        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Choose your community</strong> — church, workplace, neighborhood, school, or online group</div></div>
+                        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Identify the need</strong> — what problem does this community face?</div></div>
+                        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Select the resource</strong> — match to the identified need</div></div>
+                        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Design the format</strong> — length, frequency, location, facilitator</div></div>
+                        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Secure buy-in</strong> — pitch to leadership (pastor, HR director, principal)</div></div>
+                        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Recruit participants</strong> — target minimum 10</div></div>
+                        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text"><strong>Launch and facilitate</strong> — use the 90-minute session structure below</div></div>
+                        <div class="flow-step"><div class="flow-num">8</div><div class="flow-text"><strong>Measure impact</strong> — testimonies, completion rates, follow-on enrollments</div></div>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4>90-Minute Session Structure</h4>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-num" style="background:#2e7d32">15</div>
+                            <div class="flow-text"><strong>Check-In</strong> — "How did last week's practice go?" Accountability and celebration.</div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num" style="background:#2e7d32">30</div>
+                            <div class="flow-text"><strong>Teaching</strong> — 3 key takeaways + a story or real-life example from the facilitator.</div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num" style="background:#2e7d32">30</div>
+                            <div class="flow-text"><strong>Discussion</strong> — Small groups of 3–4 couples with reflection questions.</div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-num" style="background:#2e7d32">15</div>
+                            <div class="flow-text"><strong>Application</strong> — "What will you practice this week?" Written + accountability partner assigned.</div>
+                        </div>
+                    </div>
+                    <div class="pitch-box" style="margin-top:12px">
+                        <span>Pitch to a Church (example)</span>
+                        <p>"Pastor, what if we ran a 6-week marriage preparation series using the Foundation School curriculum? I can facilitate it — the church just needs to cover the books for each couple."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEPLOYMENT PIPELINE -->
+    <h2 class="section-title">The Deployment Pipeline — How Every Beneficiary Moves</h2>
+    <div class="pipeline">
+        <div class="pipe-stage">Awareness</div>
+        <div class="pipe-stage">Interest</div>
+        <div class="pipe-stage">Enrollment</div>
+        <div class="pipe-stage">Completion</div>
+        <div class="pipe-stage">Advocacy</div>
+    </div>
+    <p style="font-size:12.5px;color:#445;font-style:italic;text-align:center;margin-bottom:24px;line-height:1.6">
+        Every beneficiary you deploy should eventually reach the <strong>Advocacy</strong> stage — becoming an ambassador themselves. Your goal is multiplication, not just access.
+    </p>
+
+    <!-- MONTHLY TARGETS -->
+    <h2 class="section-title">Monthly Deployment Targets (After Certification)</h2>
+    <div class="targets-row">
+        <div class="target-card">
+            <span class="num">5</span>
+            <span class="label">Personal Access</span>
+            <span class="sub">Direct purchases through your link</span>
+        </div>
+        <div class="target-card">
+            <span class="num">2</span>
+            <span class="label">Sponsored Access</span>
+            <span class="sub">Gifted enrollments / books</span>
+        </div>
+        <div class="target-card">
+            <span class="num">1</span>
+            <span class="label">Community Program</span>
+            <span class="sub">Group study with 10+ participants</span>
+        </div>
+        <div class="target-card">
+            <span class="num">10+</span>
+            <span class="label">Total Beneficiaries</span>
+            <span class="sub">Minimum per month for advocacy portfolio</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Marriage Education &nbsp;|&nbsp; CRLA Foundation School</strong>&nbsp;·&nbsp;
+        marriageducation.com &nbsp;·&nbsp; Week 1 Advocacy Track — Deployment Models Visual Reference
+    </div>
+
+</body>
+</html>

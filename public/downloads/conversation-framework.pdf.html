@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation Framework Guide — CRLA Foundation School</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #fff;
+            color: #1a2332;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in 0.85in;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #1a2332;
+            padding-bottom: 18px;
+            margin-bottom: 26px;
+        }
+        .badge {
+            display: inline-block;
+            background: #1a2332;
+            color: #f0c040;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 34px;
+            color: #1a2332;
+            line-height: 1.15;
+        }
+        .subtitle {
+            font-style: italic;
+            color: #5a6a7e;
+            font-size: 14.5px;
+            margin-top: 6px;
+        }
+
+        /* ── LVWI OVERVIEW ── */
+        .framework-strip {
+            display: flex;
+            margin: 24px 0 28px;
+            border: 2px solid #1a2332;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .fw-step {
+            flex: 1;
+            text-align: center;
+            padding: 14px 8px;
+            border-right: 1px solid #1a2332;
+        }
+        .fw-step:last-child { border-right: none; }
+        .fw-step .letter {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2332;
+            display: block;
+            line-height: 1;
+        }
+        .fw-step .label {
+            font-family: Arial, sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-top: 4px;
+            display: block;
+        }
+        .fw-step .pct {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            color: #f0c040;
+            background: #1a2332;
+            padding: 2px 6px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        /* ── STEP CARDS ── */
+        h2.section-title {
+            font-size: 12.5px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-bottom: 14px;
+            margin-top: 28px;
+        }
+
+        .step-card {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e2da;
+            align-items: flex-start;
+        }
+        .step-card:last-of-type { border-bottom: none; }
+        .step-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: #1a2332;
+            color: #f0c040;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .step-content { flex: 1; }
+        .step-content h3 {
+            font-size: 17px;
+            color: #1a2332;
+            margin-bottom: 6px;
+        }
+        .step-content .objective {
+            font-style: italic;
+            color: #5a6a7e;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .step-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        .step-content ul li {
+            font-size: 13px;
+            line-height: 1.65;
+            color: #334;
+            padding: 3px 0;
+        }
+        .step-content ul li::before { content: "›  "; color: #1a2332; font-weight: bold; }
+        .phrase-box {
+            background: #f8f7f2;
+            border-radius: 3px;
+            padding: 8px 12px;
+            margin-top: 10px;
+        }
+        .phrase-box span {
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .phrase-box p {
+            font-size: 12.5px;
+            color: #334;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        /* ── FULL PRACTICE SCRIPT ── */
+        .script-block {
+            background: #f8f7f2;
+            border-radius: 4px;
+            padding: 22px 26px;
+            margin: 24px 0;
+            border-left: 5px solid #1a2332;
+        }
+        .script-block h3 {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #5a6a7e;
+            margin-bottom: 16px;
+        }
+        .script-line {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .script-speaker {
+            flex-shrink: 0;
+            width: 60px;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding-top: 3px;
+        }
+        .script-speaker.you   { color: #1a2332; }
+        .script-speaker.them  { color: #c62828; }
+        .script-text {
+            font-size: 13px;
+            color: #334;
+            line-height: 1.65;
+        }
+        .script-text em { font-style: italic; }
+        .script-text .note {
+            font-family: Arial, sans-serif;
+            font-size: 10.5px;
+            color: #8a9ab0;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        /* ── 3 DEADLY ERRORS ── */
+        .errors-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .error-card {
+            background: #fdf0f0;
+            border-top: 3px solid #c62828;
+            border-radius: 4px;
+            padding: 14px 15px;
+        }
+        .error-card h4 {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #c62828;
+            margin-bottom: 6px;
+        }
+        .error-card p {
+            font-size: 12.5px;
+            color: #445;
+            line-height: 1.55;
+        }
+
+        /* ── QUICK DIAGNOSTIC ── */
+        .diag-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-bottom: 20px;
+        }
+        .diag-table thead tr { background: #1a2332; color: #f0c040; }
+        .diag-table thead th {
+            padding: 9px 10px;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .diag-table tbody tr { border-bottom: 1px solid #ddd; }
+        .diag-table tbody tr:nth-child(even) { background: #fafaf8; }
+        .diag-table tbody td { padding: 10px 10px; color: #334; vertical-align: top; }
+        .diag-table tbody td:first-child { font-style: italic; color: #1a2332; }
+
+        /* ── EMPATHY LEVELS ── */
+        .empathy-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .emp-level {
+            flex: 1;
+            padding: 12px 12px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .emp-level:nth-child(1) { background: #fdf0f0; }
+        .emp-level:nth-child(2) { background: #fff8e0; }
+        .emp-level:nth-child(3) { background: #eef6ee; }
+        .emp-level:nth-child(4) { background: #f0f4ff; }
+        .emp-level .lv-num {
+            font-family: Arial, sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            display: block;
+            line-height: 1;
+        }
+        .emp-level .lv-name {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #445;
+            display: block;
+            margin: 4px 0 6px;
+        }
+        .emp-level p { font-size: 11.5px; color: #556; line-height: 1.5; }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 14px;
+            border-top: 2px solid #1a2332;
+            color: #8a9ab0;
+            font-size: 11px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-bar { text-align: right; margin-bottom: 18px; }
+        .print-btn {
+            background: #1a2332;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        @media print {
+            body { padding: 0.4in 0.65in; font-size: 11.5px; }
+            .print-bar { display: none; }
+            .step-card { page-break-inside: avoid; }
+            .script-block { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-bar">
+        <button class="print-btn" onclick="window.print()">⬇ Print / Save as PDF</button>
+    </div>
+
+    <div class="header">
+        <div class="badge">CRLA Foundation School &nbsp;·&nbsp; Week 1 &nbsp;·&nbsp; Advocacy Track</div>
+        <h1>CONVERSATION FRAMEWORK GUIDE</h1>
+        <p class="subtitle">The step-by-step LVWI script for empathy-first marriage literacy advocacy</p>
+    </div>
+
+    <!-- FRAMEWORK OVERVIEW STRIP -->
+    <div class="framework-strip">
+        <div class="fw-step">
+            <span class="letter">L</span>
+            <span class="label">Listen</span>
+            <span class="pct">80% of time</span>
+        </div>
+        <div class="fw-step">
+            <span class="letter">V</span>
+            <span class="label">Validate</span>
+            <span class="pct">Empathy first</span>
+        </div>
+        <div class="fw-step">
+            <span class="letter">W</span>
+            <span class="label">Witness</span>
+            <span class="pct">Your story</span>
+        </div>
+        <div class="fw-step">
+            <span class="letter">I</span>
+            <span class="label">Invite</span>
+            <span class="pct">Clear next step</span>
+        </div>
+        <div class="fw-step">
+            <span class="letter">F</span>
+            <span class="label">Follow Up</span>
+            <span class="pct">Stay connected</span>
+        </div>
+    </div>
+
+    <!-- STEP 1: LISTEN -->
+    <div class="step-card">
+        <div class="step-icon">STEP<br>1</div>
+        <div class="step-content">
+            <h3>LISTEN — Give them the floor (80% of the conversation)</h3>
+            <p class="objective">Your goal: understand their need before you open any door.</p>
+            <ul>
+                <li>Ask open-ended questions — never yes/no</li>
+                <li>Let them talk without interrupting; resist the urge to fix</li>
+                <li>Identify their psychological state: Protection, Relief, or Hope?</li>
+                <li>Listen for the root emotion beneath the surface complaint</li>
+            </ul>
+            <div class="phrase-box">
+                <span>Example phrases</span>
+                <p>"Tell me more about that." &nbsp;·&nbsp; "What's that like for you?" &nbsp;·&nbsp; "How long has this been going on?" &nbsp;·&nbsp; "What have you tried so far?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: VALIDATE -->
+    <div class="step-card">
+        <div class="step-icon">STEP<br>2</div>
+        <div class="step-content">
+            <h3>VALIDATE — Name the emotion, honor the struggle</h3>
+            <p class="objective">Your goal: make them feel heard before they can be helped.</p>
+            <ul>
+                <li>Name what they feel — don't minimize, don't compare</li>
+                <li>Never move to solutions until validation is genuinely felt</li>
+                <li>You can validate without agreeing with their conclusions</li>
+            </ul>
+            <div class="phrase-box">
+                <span>Example phrases</span>
+                <p>"That sounds really hard." &nbsp;·&nbsp; "I hear you." &nbsp;·&nbsp; "That makes complete sense given what you've been through." &nbsp;·&nbsp; "I've been there too."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: WITNESS -->
+    <div class="step-card">
+        <div class="step-icon">STEP<br>3</div>
+        <div class="step-content">
+            <h3>WITNESS — Share your own experience with the resource</h3>
+            <p class="objective">Your goal: demonstrate change, not credentials.</p>
+            <ul>
+                <li>Be specific: "Before I read SBD, I…" / "After, I…"</li>
+                <li>Stay humble: "I'm still learning, but this helped me"</li>
+                <li>Be vulnerable — not preachy, not a lecture</li>
+                <li>Your testimony removes the skepticism no pitch ever could</li>
+            </ul>
+            <div class="phrase-box">
+                <span>Example phrases</span>
+                <p>"I was in a similar place. What changed for me was..." &nbsp;·&nbsp; "I read this book and honestly — I wasn't expecting much. But it shifted something in how I..."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: INVITE -->
+    <div class="step-card">
+        <div class="step-icon">STEP<br>4</div>
+        <div class="step-content">
+            <h3>INVITE — Offer one clear, pressure-free next step</h3>
+            <p class="objective">Your goal: open a door, not push someone through it.</p>
+            <ul>
+                <li>Give exactly ONE specific invitation — not a menu of options</li>
+                <li>Speak to their mode: financial concern? Offer sponsored access</li>
+                <li>Frame it as an invitation, never a pitch or obligation</li>
+                <li>If they say no — respect it and stay connected anyway</li>
+            </ul>
+            <div class="phrase-box">
+                <span>Example phrases</span>
+                <p>"Would you like me to send you the link?" &nbsp;·&nbsp; "Can I gift you this book?" &nbsp;·&nbsp; "What if we read it together and discuss it over coffee in two weeks?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 5: FOLLOW UP -->
+    <div class="step-card">
+        <div class="step-icon">STEP<br>5</div>
+        <div class="step-content">
+            <h3>FOLLOW UP — Stay in the journey with them</h3>
+            <p class="objective">Your goal: advocate through completion, not just at enrollment.</p>
+            <ul>
+                <li>Set a specific follow-up date before the conversation ends</li>
+                <li>Track progress on your First 10 Beneficiaries worksheet</li>
+                <li>Ask open-ended follow-up questions — don't quiz, accompany</li>
+                <li>Celebrate every milestone, no matter how small</li>
+            </ul>
+            <div class="phrase-box">
+                <span>Example phrases</span>
+                <p>"I'll check in next week to see how it's going." &nbsp;·&nbsp; "Let me know if anything raises a question — I'm here." &nbsp;·&nbsp; "Let's plan to talk again in two weeks."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL PRACTICE SCRIPT -->
+    <h2 class="section-title">Full Practice Script — Scenario: Communication Breakdown</h2>
+    <div class="script-block">
+        <h3>Setting: A friend mentions they are struggling in their marriage</h3>
+
+        <div class="script-line">
+            <div class="script-speaker you">YOU</div>
+            <div class="script-text"><em>"Tell me more — what's the hardest part right now?"</em> <span class="note">← Listen</span></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker them">FRIEND</div>
+            <div class="script-text"><em>"We just can't communicate. Every conversation turns into a fight."</em></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker you">YOU</div>
+            <div class="script-text"><em>"That sounds exhausting. I've been there. We used to fight over everything — and I didn't even know why."</em> <span class="note">← Validate + Witness</span></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker you">YOU</div>
+            <div class="script-text"><em>"I read a book called Communication Fidelity and it completely changed how my spouse and I talk. It's practical — not theory. Would you be open to checking it out?"</em> <span class="note">← Witness + Invite</span></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker them">FRIEND</div>
+            <div class="script-text"><em>"Maybe. How much is it?"</em></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker you">YOU</div>
+            <div class="script-text"><em>"1,500 FCFA — less than a meal out. And honestly, if money is tight right now, I'd be happy to gift it to you. This is too important to let budget stop you."</em> <span class="note">← Access-focus</span></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker them">FRIEND</div>
+            <div class="script-text"><em>"Okay, let's try it."</em></div>
+        </div>
+        <div class="script-line">
+            <div class="script-speaker you">YOU</div>
+            <div class="script-text"><em>"Great. I'll send you the link tonight. Let's plan to have coffee in two weeks and you can tell me what stood out. Deal?"</em> <span class="note">← Follow Up</span></div>
+        </div>
+    </div>
+
+    <!-- 3-MINUTE DIAGNOSTIC -->
+    <h2 class="section-title">3-Minute Diagnostic — Identifying Psychological Mode</h2>
+    <table class="diag-table">
+        <thead>
+            <tr>
+                <th>Ask This</th>
+                <th>If They Say…</th>
+                <th>Mode Likely Is</th>
+                <th>Your Next Move</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>"How are things in your relationship right now?"</td>
+                <td>"Fine" or "We're okay" (dismissive)</td>
+                <td>Protection</td>
+                <td>Slow down. Validate. Don't pitch. Offer free resource.</td>
+            </tr>
+            <tr>
+                <td>"How are things in your relationship right now?"</td>
+                <td>"Honestly, it's been hard lately…"</td>
+                <td>Relief</td>
+                <td>Match resource to stated pain. Give clear next step.</td>
+            </tr>
+            <tr>
+                <td>"How are things in your relationship right now?"</td>
+                <td>"Good — we just want to go deeper together"</td>
+                <td>Hope</td>
+                <td>Cast vision. Invite to Foundation School or advanced resource.</td>
+            </tr>
+            <tr>
+                <td>"What's the hardest part right now?"</td>
+                <td>"I don't know" or silence</td>
+                <td>Protection</td>
+                <td>Share your story. Make it safe. Exit gracefully if needed.</td>
+            </tr>
+            <tr>
+                <td>"Have you tried anything to address it?"</td>
+                <td>"We've tried everything — nothing works"</td>
+                <td>Protection</td>
+                <td>Empathize first. Don't promise your resource will work. Just share your experience.</td>
+            </tr>
+            <tr>
+                <td>"Have you tried anything to address it?"</td>
+                <td>"I know I need better tools"</td>
+                <td>Relief</td>
+                <td>You're in — match resource directly to their pain point.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- EMPATHY LEVELS -->
+    <h2 class="section-title">The 4 Levels of Listening</h2>
+    <div class="empathy-row">
+        <div class="emp-level">
+            <span class="lv-num">1</span>
+            <span class="lv-name">Waiting to Talk</span>
+            <p>You're physically present but mentally preparing your response. The other person can feel it.</p>
+        </div>
+        <div class="emp-level">
+            <span class="lv-num">2</span>
+            <span class="lv-name">Surface Listening</span>
+            <p>You hear words but miss tone, emotion, and the unspoken need underneath.</p>
+        </div>
+        <div class="emp-level">
+            <span class="lv-num">3</span>
+            <span class="lv-name">Empathic Listening</span>
+            <p>You hear content AND emotion. You ask clarifying questions. You resist the urge to fix.</p>
+        </div>
+        <div class="emp-level">
+            <span class="lv-num">4</span>
+            <span class="lv-name">Soul Listening</span>
+            <p>You are fully present — body, mind, spirit. You sense what isn't said. You hold the space.</p>
+        </div>
+    </div>
+    <p style="font-size:12.5px; color:#445; margin-bottom:22px; font-style:italic; line-height:1.6">
+        <strong>Target:</strong> Level 3 in every advocacy conversation. Reach for Level 4 in repeated, trusted relationships. Never operate at Level 1 or 2 — if you're not ready to truly listen, reschedule the conversation.
+    </p>
+
+    <!-- 3 DEADLY ERRORS -->
+    <h2 class="section-title">3 Deadly Advocacy Errors to Avoid</h2>
+    <div class="errors-grid">
+        <div class="error-card">
+            <h4>Error #1 — Wrong Timing</h4>
+            <p>Pushing solutions before building trust. Pitching to someone in Protection Mode before they feel safe. <br><em>"You just need to buy this book!"</em></p>
+        </div>
+        <div class="error-card">
+            <h4>Error #2 — Wrong Match</h4>
+            <p>Giving generic advice instead of specific resources. Not matching the tool to the actual pain point the person named.</p>
+        </div>
+        <div class="error-card">
+            <h4>Error #3 — Wrong Level</h4>
+            <p>Offering basic resources to advanced learners. Telling someone in Hope Mode about the introductory book when they're ready for Foundation School.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Marriage Education &nbsp;|&nbsp; CRLA Foundation School</strong>&nbsp;·&nbsp;
+        marriageducation.com &nbsp;·&nbsp; Week 1 Advocacy Track — Conversation Framework (LVWI)
+    </div>
+
+</body>
+</html>

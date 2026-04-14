@@ -1,422 +1,103 @@
 /**
- * CHECKOUT PAGE — STRIPE PAYMENT PROCESSING
- * ==========================================
- * Handle Stripe payment form and order creation
+ * CHECKOUT PAGE — STRIPE HOSTED CHECKOUT
+ * ========================================
+ * Calls the createSbdCheckoutSession Cloud Function to create a
+ * Stripe-hosted checkout session, then redirects the user to Stripe.
+ * Card details are collected securely by Stripe’s own pages.
  */
 
-// REPLACE WITH YOUR STRIPE PUBLISHABLE KEY
-const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_KEY_HERE';
+let currentUserId  = null;
+let currentProductId = null;
 
-let stripe = null;
-let cardElement = null;
-let currentUserId = null;
-let currentProduct = null;
-
-// Product catalog (imported from shop.js logic)
 const PRODUCT_CATALOG = {
   'sbd-dummies': {
-    id: 'sbd-dummies',
     name: 'Sex By Design for Dummies',
     description: 'Entry-level guide to sexual design and intimacy',
-    price: 27,
-    image: '📚'
+    price: 27, image: '\uD83D\uDCDA', recurring: false
   },
   'teleios-blueprint': {
-    id: 'teleios-blueprint',
     name: 'Teleios Blueprint',
     description: 'Foundation of identity, wholeness, and maturity',
-    price: 247,
-    image: '🎯'
+    price: 247, image: '\uD83C\uDFAF', recurring: false
   },
   'foundation-monthly': {
-    id: 'foundation-monthly',
     name: 'Foundation Tier',
-    description: 'Monthly subscription to beginner courses',
-    price: 9,
-    image: '🟢'
+    description: 'Monthly access to formation content and community',
+    price: 9, image: '\uD83D\uDFE2', recurring: true
   },
   'premium-monthly': {
-    id: 'premium-monthly',
     name: 'Premium Tier',
-    description: 'Full access to core schools',
-    price: 20,
-    image: '🔵'
+    description: 'Full access to all formation schools',
+    price: 20, image: '\uD83D\uDD35', recurring: true
   },
   'elite-monthly': {
-    id: 'elite-monthly',
     name: 'Elite Tier',
-    description: 'Advanced content and coaching',
-    price: 50,
-    image: '🔴'
+    description: 'Advanced content, coaching and full community access',
+    price: 50, image: '\uD83D\uDD34', recurring: true
   },
   'starter-bundle': {
-    id: 'starter-bundle',
     name: 'Starter Bundle',
-    description: 'Book + 1 month premium',
-    price: 37,
-    image: '🚀'
+    description: 'SBD Dummies book + 1 month Premium access',
+    price: 37, image: '\uD83D\uDE80', recurring: false
   },
   'teleios-bundle': {
-    id: 'teleios-bundle',
     name: 'Teleios Bundle',
-    description: 'Blueprint + 3 months premium',
-    price: 297,
-    image: '🎓'
+    description: 'Teleios Blueprint + 3 months Premium',
+    price: 297, image: '\uD83C\uDF93', recurring: false
   },
   'elite-bundle': {
-    id: 'elite-bundle',
     name: 'Elite Formation Bundle',
-    description: 'Complete library + 6 months elite',
-    price: 497,
-    image: '💎'
-  }
+    description: 'Full library + 6 months Elite access',
+    price: 497, image: '\uD83D\uDC8E', recurring: false
+  },
 };
 
-// ==================================================================
-// INITIALIZATION
-// ==================================================================
-
-document.addEventListener('DOMContentLoaded', async () => {
-  
-  // Check auth
-  firebase.auth().onAuthStateChanged(async (user) => {
+document.addEventListener('DOMContentLoaded', () => {
+  firebase.auth().onAuthStateChanged((user) => {
     if (!user) {
-      window.location.href = '/auth';
+      window.location.href = '/auth?next=' + encodeURIComponent(window.location.pathname + window.location.search);
       return;
     }
-    
     currentUserId = user.uid;
-    
-    // Pre-fill email
-    document.getElementById('email').value = user.email || '';
-    
-    // Initialize Stripe
-    initializeStripe();
-    
-    // Load product from URL
     loadProduct();
   });
-  
 });
-
-// ==================================================================
-// STRIPE INITIALIZATION
-// ==================================================================
-
-function initializeStripe() {
-  // Initialize Stripe.js
-  stripe = Stripe(STRIPE_PUBLIC_KEY);
-  
-  // Create card element
-  const elements = stripe.elements();
-  
-  cardElement = elements.create('card', {
-    style: {
-      base: {
-        color: '#fff',
-        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
-        fontSmoothing: 'antialiased',
-        fontSize: '16px',
-        '::placeholder': {
-          color: '#aaa'
-        }
-      },
-      invalid: {
-        color: '#ff4444',
-        iconColor: '#ff4444'
-      }
-    }
-  });
-  
-  // Mount card element
-  cardElement.mount('#card-element');
-  
-  // Handle real-time validation errors
-  cardElement.on('change', (event) => {
-    const displayError = document.getElementById('card-errors');
-    if (event.error) {
-      displayError.textContent = event.error.message;
-    } else {
-      displayError.textContent = '';
-    }
-  });
-  
-  console.log('[Checkout] Stripe initialized');
-}
-
-// ==================================================================
-// LOAD PRODUCT
-// ==================================================================
 
 function loadProduct() {
-  // Get product ID from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get('product');
-  
-  if (!productId) {
-    alert('No product specified');
+  const productId = new URLSearchParams(window.location.search).get('product');
+  if (!productId || !PRODUCT_CATALOG[productId]) {
     window.location.href = '/shop.html';
     return;
   }
-  
-  currentProduct = PRODUCT_CATALOG[productId];
-  
-  if (!currentProduct) {
-    alert('Product not found');
-    window.location.href = '/shop.html';
-    return;
-  }
-  
-  // Display product info
-  document.getElementById('product-icon').textContent = currentProduct.image;
-  document.getElementById('product-name').textContent = currentProduct.name;
-  document.getElementById('product-description').textContent = currentProduct.description;
-  document.getElementById('order-total').textContent = `$${currentProduct.price}`;
-  
-  console.log('[Checkout] Product loaded:', currentProduct);
+  currentProductId = productId;
+  const p = PRODUCT_CATALOG[productId];
+  document.getElementById('product-icon').textContent        = p.image;
+  document.getElementById('product-name').textContent        = p.name;
+  document.getElementById('product-description').textContent = p.description;
+  document.getElementById('order-total').textContent         = `$${p.price}${p.recurring ? '/mo' : ''}`;
 }
 
-// ==================================================================
-// PAYMENT FORM SUBMISSION
-// ==================================================================
+async function startStripeCheckout(productId) {
+  const btn   = document.getElementById('pay-button');
+  const errEl = document.getElementById('checkout-error');
+  if (!productId || !currentUserId) return;
+  if (errEl) errEl.textContent = '';
+  if (btn)   { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Redirecting to Stripe...'; }
 
-document.getElementById('payment-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  if (!currentProduct || !currentUserId) {
-    alert('Error: Missing product or user data');
-    return;
-  }
-  
-  const payButton = document.getElementById('pay-button');
-  const originalButtonText = payButton.textContent;
-  
-  // Disable button and show loading
-  payButton.disabled = true;
-  payButton.innerHTML = '<span class="loading-spinner"></span> Processing...';
-  
   try {
-    
-    // Get form data
-    const email = document.getElementById('email').value;
-    const cardName = document.getElementById('card-name').value;
-    
-    console.log('[Checkout] Processing payment...');
-    
-    // ==================================================================
-    // TEMPORARY: Direct Stripe Payment Intent (No Cloud Function)
-    // ==================================================================
-    // NOTE: In production, you should create Payment Intent server-side
-    // for security. This is a simplified demo flow.
-    
-    // For now, we'll simulate success and create order directly
-    // In production, replace with actual Stripe Payment Intent flow
-    
-    const mockPaymentSuccess = await simulatePayment(email, cardName);
-    
-    if (mockPaymentSuccess) {
-      // Create order in Firestore
-      await createOrder({
-        productId: currentProduct.id,
-        productName: currentProduct.name,
-        amount: currentProduct.price,
-        currency: 'USD',
-        userEmail: email,
-        cardholderName: cardName
-      });
-      
-      // Redirect to success page
-      window.location.href = `/checkout-success.html?product=${currentProduct.id}`;
+    const createSession = firebase.functions().httpsCallable('createSbdCheckoutSession');
+    const result        = await createSession({ productId });
+    if (result.data?.url) {
+      window.location.href = result.data.url;
+    } else {
+      throw new Error('No checkout URL returned from server.');
     }
-    
-  } catch (error) {
-    console.error('[Checkout] Payment failed:', error);
-    alert('Payment failed. Please try again.');
-    
-    // Re-enable button
-    payButton.disabled = false;
-    payButton.textContent = originalButtonText;
-  }
-});
-
-// ==================================================================
-// SIMULATE PAYMENT (TEMPORARY FOR TESTING)
-// ==================================================================
-
-async function simulatePayment(email, cardName) {
-  // This simulates a successful payment
-  // In production, this would be replaced with actual Stripe token creation
-  
-  console.log('[Checkout] Simulating payment...');
-  
-  // Validate card with Stripe
-  const { token, error } = await stripe.createToken(cardElement, {
-    name: cardName
-  });
-  
-  if (error) {
-    throw new Error(error.message);
-  }
-  
-  console.log('[Checkout] Stripe token created:', token.id);
-  
-  // In production, you would send this token to your server
-  // For now, we simulate success
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true);
-    }, 1500); // Simulate network delay
-  });
-}
-
-// ==================================================================
-// CREATE ORDER
-// ==================================================================
-
-async function createOrder(orderData) {
-  try {
-    const orderRef = await firebase.firestore().collection('orders').add({
-      userId: currentUserId,
-      userEmail: orderData.userEmail,
-      productId: orderData.productId,
-      productName: orderData.productName,
-      productType: currentProduct.type || 'product',
-      amount: orderData.amount,
-      currency: orderData.currency,
-      paymentMethod: 'stripe',
-      status: 'completed',
-      cardholderName: orderData.cardholderName,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      metadata: {
-        checkoutVersion: 'v1.0',
-        userAgent: navigator.userAgent
-      }
-    });
-    
-    console.log('[Checkout] Order created:', orderRef.id);
-    
-    // Add to user's purchases
-    await firebase.firestore().collection('users').doc(currentUserId).update({
-      purchases: firebase.firestore.FieldValue.arrayUnion(orderRef.id)
-    });
-    
-    // Unlock content based on product type
-    await unlockContent(orderData.productId);
-    
-    return orderRef.id;
-    
-  } catch (error) {
-    console.error('[Checkout] Order creation failed:', error);
-    throw error;
+  } catch (err) {
+    console.error('[Checkout] Session creation failed:', err);
+    const msg = err.message || 'Something went wrong. Please try again.';
+    if (errEl) errEl.textContent = msg;
+    if (btn)   { btn.disabled = false; btn.innerHTML = '\uD83D\uDCB3 Pay with Card'; }
   }
 }
 
-// ==================================================================
-// COMMUNITY GROUP AUTO-ASSIGNMENT
-// ==================================================================
-
-// Groups are cumulative — each tier includes all lower-tier groups
-const TIER_GROUPS = {
-  free:       ['group-sbd-community'],
-  foundation: ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies'],
-  premium:    ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
-               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
-  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
-               'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13',
-               'group-marriage-systems', 'group-civilization-leadership',
-               'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
-};
-
-async function autoAssignCommunityGroups(userRef, tier) {
-  const groups = TIER_GROUPS[tier];
-  if (!groups || groups.length === 0) return;
-  await userRef.update({ groups: firebase.firestore.FieldValue.arrayUnion(...groups) });
-  console.log('[Checkout] Community groups auto-assigned for tier:', tier, groups);
-}
-
-// ==================================================================
-// CONTENT UNLOCKING
-// ==================================================================
-
-async function unlockContent(productId) {
-  const userRef = firebase.firestore().collection('users').doc(currentUserId);
-  
-  // Define unlock logic per product
-  const unlockRules = {
-    'sbd-dummies': {
-      courses: ['sbd-dummies-course']
-    },
-    'teleios-blueprint': {
-      courses: ['teleios-blueprint']
-    },
-    'foundation-monthly': {
-      tier: 'foundation',
-      months: 1
-    },
-    'premium-monthly': {
-      tier: 'premium',
-      months: 1
-    },
-    'elite-monthly': {
-      tier: 'elite',
-      months: 1
-    },
-    'starter-bundle': {
-      courses: ['sbd-dummies-course'],
-      tier: 'premium',
-      months: 1
-    },
-    'teleios-bundle': {
-      courses: ['teleios-blueprint'],
-      tier: 'premium',
-      months: 3
-    },
-    'elite-bundle': {
-      courses: ['sbd-dummies-course', 'teleios-blueprint'],
-      tier: 'elite',
-      months: 6
-    }
-  };
-  
-  const rule = unlockRules[productId];
-  if (!rule) {
-    console.log('[Checkout] No unlock rule for product:', productId);
-    return;
-  }
-  
-  try {
-    // Unlock courses
-    if (rule.courses) {
-      await userRef.update({
-        ownedCourses: firebase.firestore.FieldValue.arrayUnion(...rule.courses)
-      });
-      console.log('[Checkout] Courses unlocked:', rule.courses);
-    }
-    
-    // Activate subscription tier
-    if (rule.tier) {
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + rule.months);
-      
-      await userRef.update({
-        tier: rule.tier,
-        'subscription.tier': rule.tier,
-        'subscription.status': 'active',
-        'subscription.startDate': firebase.firestore.FieldValue.serverTimestamp(),
-        'subscription.endDate': firebase.firestore.Timestamp.fromDate(endDate),
-        'subscription.lastPayment': firebase.firestore.FieldValue.serverTimestamp()
-      });
-      
-      console.log('[Checkout] Subscription activated:', rule.tier, `for ${rule.months} months`);
-
-      // Auto-enroll user into all community groups for this tier
-      await autoAssignCommunityGroups(userRef, rule.tier);
-    }
-    
-  } catch (error) {
-    console.error('[Checkout] Content unlock failed:', error);
-    throw error;
-  }
-}
-
-console.log('[Checkout] Script loaded');
+console.log('[Checkout] Ready — Stripe Hosted Checkout v1');

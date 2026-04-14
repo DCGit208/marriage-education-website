@@ -1,7 +1,17 @@
-/* 
- * TIER ACCESS CONTROL SYSTEM
- * Implements Master Prompt tier logic with strict compliance
- * DO NOT MODIFY without reviewing Master Prompt requirements
+/*
+ * TIER ACCESS CONTROL SYSTEM v2 — DRIP MODEL
+ * ============================================
+ * Master Prompt canonical. DO NOT MODIFY without full system review.
+ *
+ * MODEL (locked April 13 2026):
+ *   Free       → Teleios Week 1 preview only
+ *   Foundation → Teleios Blueprint (6wks) + SBD Dummies (13wks) — TIME-DRIPPED
+ *   Premium    → Schools 1+2 (28 courses) — TIME-DRIPPED, more parallel lanes
+ *   Elite      → All 44 courses + MV House — TIME-DRIPPED, all lanes concurrent
+ *
+ * DRIP RULE: 1 week unlocks per 7 calendar days from subscription.dripStartDate
+ * DRIP BYPASS: Elite tier & admin role bypass drip (no wait, immediate access)
+ * RE-SUBSCRIBE: dripWeeksUnlocked saved on cancel → resume from saved position
  */
 
 const TIER_HIERARCHY = {
@@ -11,341 +21,382 @@ const TIER_HIERARCHY = {
   elite: 3
 };
 
-// FREE TIER ACCESS (Master Prompt Compliant)
-const FREE_ACCESS = {
-  courses: {
-    'foundation-school': { type: 'FULL', weeks: 'ALL' },
-    'sex-by-design-for-dummies': { type: 'PARTIAL', weeks: [1] },
-    'the-teleios-blueprint-full-human-maturity': { type: 'PARTIAL', weeks: [1] }
-  },
-  boards: ['public'],
-  features: {
-    certificates: false,
-    downloads: false,
-    advancedBoards: false
-  }
+// ── DRIP CONSTANTS ──────────────────────────────────────────────
+const DRIP_DAYS_PER_WEEK = 7; // 1 module every 7 calendar days
+
+// ── COURSE → MINIMUM TIER to access at all ─────────────────────
+// DRIP = accessible at this tier but time-gated by dripStartDate
+// FULL = no drip gate (used for elite bypassing drip)
+const COURSE_TIER_MAP = {
+  // Free preview
+  'the-teleios-blueprint-full-human-maturity': { minTier: 'free',        freeWeeks: [1] },
+  'sex-by-design-for-dummies':                { minTier: 'free',        freeWeeks: [1] },
+  // Foundation dripped
+  'foundation-school':                        { minTier: 'foundation',  drip: true },
+  // School 1 — Teleios (Foundation dripped, Premium full drip)
+  'school-1-teleios':                         { minTier: 'foundation',  drip: true },
+  // School 2 — Sexual Literacy (Premium+)
+  'school-2-sexual-literacy':                 { minTier: 'premium',     drip: true },
+  // School 3 — Marriage Systems (Elite only)
+  'school-3-marriage-systems':                { minTier: 'elite',       drip: false },
+  // School 4 — Civilization (Elite only)
+  'school-4-civilization-leadership':         { minTier: 'elite',       drip: false },
 };
 
-// FOUNDATION TIER ACCESS ($9/month - PARTIAL MODEL)
-const FOUNDATION_ACCESS = {
-  courses: {
-    'foundation-school': { type: 'FULL', weeks: 'ALL' },
-    'sex-by-design-for-dummies': { type: 'PARTIAL', weeks: [1, 2, 3] }, // Weeks 4-13 LOCKED
-    'the-teleios-blueprint-full-human-maturity': { type: 'PARTIAL', weeks: [1, 2] } // Weeks 3-6 LOCKED
-  },
-  boards: ['foundation-board', 'teleios-board'],
-  features: {
-    certificates: true, // Foundation School only
-    downloads: true,
-    advancedBoards: false
-  }
-};
+// MV House boards — Elite only
+const MV_HOUSE_BOARDS = [
+  'advanced-muliebrity-corporate',
+  'advanced-muliebrity-casual-home',
+  'advanced-muliebrity-casual-day',
+  'advanced-muliebrity-casual-night',
+  'advanced-muliebrity-official',
+  'advanced-virility-corporate',
+  'advanced-virility-casual-home',
+  'advanced-virility-casual-day',
+  'advanced-virility-casual-night',
+  'advanced-virility-official',
+];
 
-// PREMIUM TIER ACCESS ($20/month - FULL LEARNING)
-const PREMIUM_ACCESS = {
-  courses: {
-    ALL: { type: 'FULL', weeks: 'ALL' } // All 44 courses
-  },
-  boards: ['all-standard-boards', 'course-linked-boards'],
-  features: {
-    certificates: true,
-    downloads: true,
-    advancedBoards: false // Elite only
-  }
-};
-
-// ELITE TIER ACCESS ($50/month - EVERYTHING)
-const ELITE_ACCESS = {
-  courses: {
-    ALL: { type: 'FULL', weeks: 'ALL' }
-  },
-  boards: [
-    'all-standard-boards',
-    'advanced-muliebrity-boards',
-    'advanced-virility-boards'
-  ],
-  features: {
-    certificates: true,
-    downloads: true,
-    advancedBoards: true,
-    mvHouse: true
-  }
-};
-
+// ── DRIP GATE ───────────────────────────────────────────────────
 /**
- * Check if user can access a specific course
- * @param {string} courseId - Course document ID
- * @param {string} userTier - User's current tier
- * @returns {object} { canAccess: boolean, reason: string }
+ * Calculate drip gate for a module.
+ * @param {object} module       - Firestore module data (must have .week)
+ * @param {string} userTier     - User's current tier
+ * @param {object} subscription - users/{uid}.subscription (must have .dripStartDate Timestamp)
+ * @returns {{ dripLocked: boolean, weeksElapsed: number, unlockDate: Date|null, unlockLabel: string }}
+ */
+function getDripGate(module, userTier, subscription) {
+  // Elite bypasses drip entirely — instant access to everything
+  if (userTier === 'elite') {
+    return { dripLocked: false, weeksElapsed: Infinity, unlockDate: null, unlockLabel: '' };
+  }
+
+  const weekNum = module.week || module.weekNumber || 1;
+  const dripStartMs = subscription?.dripStartDate?.toMillis
+    ? subscription.dripStartDate.toMillis()
+    : null;
+
+  if (!dripStartMs) {
+    // No drip start date means they haven't subscribed yet
+    return { dripLocked: true, weeksElapsed: 0, unlockDate: null, unlockLabel: 'Subscribe to start' };
+  }
+
+  const weeksElapsed = Math.floor((Date.now() - dripStartMs) / (DRIP_DAYS_PER_WEEK * 24 * 60 * 60 * 1000)) + 1;
+
+  if (weekNum > weeksElapsed) {
+    const unlockMs   = dripStartMs + (weekNum - 1) * DRIP_DAYS_PER_WEEK * 24 * 60 * 60 * 1000;
+    const unlockDate = new Date(unlockMs);
+    const daysLeft   = Math.ceil((unlockMs - Date.now()) / (24 * 60 * 60 * 1000));
+    const unlockLabel = daysLeft === 1
+      ? 'Unlocks tomorrow'
+      : daysLeft <= 7
+        ? `Unlocks in ${daysLeft} days`
+        : `Unlocks ${unlockDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
+    return { dripLocked: true, weeksElapsed, unlockDate, unlockLabel, daysLeft };
+  }
+
+  return { dripLocked: false, weeksElapsed, unlockDate: null, unlockLabel: '' };
+}
+
+// ── TIER GATE ───────────────────────────────────────────────────
+/**
+ * Check if user's tier grants access to a course at all (before drip check).
+ * @param {string} courseId  - Course Firestore ID
+ * @param {string} userTier
+ * @returns {{ canAccess: boolean, requiredTier?: string, reason?: string }}
  */
 function canAccessCourse(courseId, userTier) {
-  const tier = userTier || 'free';
-  
-  // Premium and Elite have full access
-  if (tier === 'premium' || tier === 'elite') {
-    return { canAccess: true, accessType: 'FULL' };
+  const tier      = userTier || 'free';
+  const tierLevel = TIER_HIERARCHY[tier] ?? 0;
+
+  // Teleios Blueprint & SBD Dummies: free gets week 1 preview
+  if (courseId === 'the-teleios-blueprint-full-human-maturity' ||
+      courseId === 'sex-by-design-for-dummies') {
+    if (tierLevel >= TIER_HIERARCHY['foundation']) return { canAccess: true, accessType: 'DRIP' };
+    return { canAccess: true, accessType: 'PREVIEW', freeWeeks: [1] };
   }
-  
-  // Foundation tier - check specific course access
-  if (tier === 'foundation') {
-    const access = FOUNDATION_ACCESS.courses[courseId];
-    if (access) {
-      return {
-        canAccess: true,
-        accessType: access.type,
-        allowedWeeks: access.weeks
-      };
-    }
-    // Course not in Foundation list = locked
-    return {
-      canAccess: false,
-      reason: 'Upgrade to Premium to access this course',
-      requiredTier: 'premium'
-    };
+
+  const rule = COURSE_TIER_MAP[courseId];
+  if (!rule) {
+    // Unknown course — default: Foundation+
+    if (tierLevel >= TIER_HIERARCHY['foundation']) return { canAccess: true, accessType: 'DRIP' };
+    return { canAccess: false, requiredTier: 'foundation', reason: 'Upgrade to Foundation to access this course' };
   }
-  
-  // Free tier - very limited access
-  const access = FREE_ACCESS.courses[courseId];
-  if (access) {
-    return {
-      canAccess: true,
-      accessType: access.type,
-      allowedWeeks: access.weeks
-    };
-  }
-  
+
+  const minLevel = TIER_HIERARCHY[rule.minTier] ?? 0;
+  if (tierLevel >= minLevel) return { canAccess: true, accessType: rule.drip ? 'DRIP' : 'FULL' };
+
   return {
     canAccess: false,
-    reason: 'Upgrade to Foundation to start this course',
-    requiredTier: 'foundation'
+    requiredTier: rule.minTier,
+    reason: tierUpgradeReason(rule.minTier)
   };
 }
 
+function tierUpgradeReason(requiredTier) {
+  const map = {
+    foundation: 'Upgrade to Foundation ($9/month) to access this course',
+    premium:    'Upgrade to Premium ($20/month) to access School 2 — Sexual Literacy',
+    elite:      'Upgrade to Elite ($50/month) to access Schools 3 & 4 + MV House',
+  };
+  return map[requiredTier] || 'Upgrade to access this content';
+}
+
 /**
- * Check if user can access a specific module
- * @param {object} module - Module document data
- * @param {string} userTier - User's current tier
- * @returns {object} { canAccess: boolean, reason: string, lockMessage: string }
+ * Check module access — tier gate only (no drip check).
+ * Use getDripGate() additionally in lesson.html for the drip wall.
  */
 function canAccessModule(module, userTier) {
-  const tier = userTier || 'free';
+  const tier     = userTier || 'free';
   const courseId = module.courseId;
-  const weekNumber = module.week;
-  
-  // First check course access
+  const weekNum  = module.week || module.weekNumber || 1;
+
   const courseAccess = canAccessCourse(courseId, tier);
-  
-  if (!courseAccess.canAccess) {
-    return courseAccess;
-  }
-  
-  // If course access is FULL, all modules unlocked
-  if (courseAccess.accessType === 'FULL') {
-    return { canAccess: true };
-  }
-  
-  // If course access is PARTIAL, check week number
-  if (courseAccess.accessType === 'PARTIAL') {
-    const allowedWeeks = courseAccess.allowedWeeks;
-    
-    if (allowedWeeks === 'ALL' || allowedWeeks.includes(weekNumber)) {
-      return { canAccess: true };
-    }
-    
-    // Module is locked - determine which tier unlocks it
-    const lockMessage = getLockMessage(courseId, weekNumber, tier);
-    
+  if (!courseAccess.canAccess) return courseAccess;
+
+  // Free preview: only week 1
+  if (courseAccess.accessType === 'PREVIEW') {
+    if (weekNum === 1) return { canAccess: true };
+    const requiredTier = 'foundation';
     return {
       canAccess: false,
-      reason: lockMessage.reason,
-      lockMessage: lockMessage.message,
-      requiredTier: lockMessage.requiredTier
+      requiredTier,
+      reason: `Upgrade to Foundation ($9/month) to access week ${weekNum} and beyond`,
     };
   }
-  
+
+  // DRIP or FULL: tier is satisfied — drip is checked separately by caller
   return { canAccess: true };
 }
 
+// ── BOARD GATE ──────────────────────────────────────────────────
 /**
- * Get appropriate lock message based on course and tier
- */
-function getLockMessage(courseId, weekNumber, currentTier) {
-  if (courseId === 'sex-by-design-for-dummies') {
-    if (currentTier === 'free') {
-      return {
-        reason: 'Week 2+ requires Foundation',
-        message: 'Upgrade to Foundation ($9/month) to unlock weeks 2-3',
-        requiredTier: 'foundation'
-      };
-    }
-    if (currentTier === 'foundation') {
-      return {
-        reason: 'Week 4+ requires Premium',
-        message: `🔒 Week ${weekNumber} is locked. You've completed ${Math.round((3/13) * 100)}% of SBD for Dummies. Upgrade to Premium ($20/month) to unlock weeks 4-13 and complete your sexual literacy education.`,
-        requiredTier: 'premium'
-      };
-    }
-  }
-  
-  if (courseId === 'the-teleios-blueprint-full-human-maturity') {
-    if (currentTier === 'free') {
-      return {
-        reason: 'Week 2+ requires Foundation',
-        message: 'Upgrade to Foundation ($9/month) to unlock weeks 2-3',
-        requiredTier: 'foundation'
-      };
-    }
-    if (currentTier === 'foundation') {
-      return {
-        reason: 'Week 3+ requires Premium',
-        message: `🔒 Week ${weekNumber} is locked. You've completed 50% of Teleios Blueprint. Upgrade to Premium ($20/month) to unlock weeks 3-6 and complete your foundation in covenant maturity.`,
-        requiredTier: 'premium'
-      };
-    }
-  }
-  
-  // Default lock message
-  return {
-    reason: 'Premium required',
-    message: 'Upgrade to Premium ($20/month) to access all courses',
-    requiredTier: 'premium'
-  };
-}
-
-/**
- * Check if user can access a board
+ * Check if user can access a board.
+ * MV House boards: Elite only.
+ * Standard boards: Foundation+ full access, Free = read-only.
  */
 function canAccessBoard(boardId, userTier) {
-  const tier = userTier || 'free';
-  
-  // Elite has full access
-  if (tier === 'elite') {
-    return { canAccess: true };
-  }
-  
-  // Check if board is MV House advanced board
-  const advancedBoards = [
-    'advanced-muliebrity-corporate',
-    'advanced-muliebrity-casual-home',
-    'advanced-muliebrity-casual-day',
-    'advanced-muliebrity-casual-night',
-    'advanced-muliebrity-official',
-    'advanced-virility-corporate',
-    'advanced-virility-casual-home',
-    'advanced-virility-casual-day',
-    'advanced-virility-casual-night',
-    'advanced-virility-official'
-  ];
-  
-  if (advancedBoards.includes(boardId)) {
+  const tier      = userTier || 'free';
+  const tierLevel = TIER_HIERARCHY[tier] ?? 0;
+
+  // Elite → full access everywhere
+  if (tier === 'elite') return { canAccess: true, canPost: true, canWardrobe: true };
+
+  // MV House boards: Elite only
+  if (MV_HOUSE_BOARDS.includes(boardId)) {
     return {
       canAccess: false,
-      reason: 'Elite tier required for MV House boards',
-      requiredTier: 'elite'
+      requiredTier: 'elite',
+      reason: '🏠 MV House is an Elite-only expression system. Upgrade to access.',
+      upgradeUrl: '/payment?tier=elite',
     };
   }
-  
-  // Standard boards accessible by Foundation+
-  if (tier === 'foundation' || tier === 'premium') {
-    return { canAccess: true };
+
+  // Standard boards: Foundation+ can post
+  if (tierLevel >= TIER_HIERARCHY['foundation']) {
+    return { canAccess: true, canPost: true, canWardrobe: false };
   }
-  
-  // Free tier - read-only public boards
-  return {
-    canAccess: true,
-    readOnly: true
-  };
+
+  // Free: read-only on public boards
+  if (tier === 'free') {
+    return { canAccess: true, canPost: false, readOnly: true };
+  }
+
+  return { canAccess: false, requiredTier: 'foundation', reason: 'Upgrade to Foundation to join the community' };
 }
 
+// ── UPGRADE PROMPTS ─────────────────────────────────────────────
 /**
- * Get upgrade prompt copy based on context
+ * Return upgrade prompt copy based on required tier and context.
+ * All prompts must create upward pressure (Master Prompt law).
  */
 function getUpgradePrompt(requiredTier, context = 'course') {
   const prompts = {
     foundation: {
       course: {
-        headline: 'Unlock Your Next Level',
-        description: 'Start Teleios Blueprint and SBD for Dummies with Foundation tier',
-        cta: 'Upgrade to Foundation - $9/month',
+        headline: '🏗 Start Your Formation — Foundation',
+        description: 'Get full access to Teleios Blueprint (6 weeks) and Sex By Design For Dummies (13 weeks) — dripped weekly as you progress.',
+        cta: 'Unlock Foundation — $9/month →',
         benefits: [
-          '✅ Access Teleios Blueprint (weeks 1-2)',
-          '✅ Access SBD for Dummies (weeks 1-3)',
-          '✅ Foundation School certificate',
-          '✅ Downloadable resources'
-        ]
-      }
+          '✅ Teleios Blueprint — all 6 weeks (dripped weekly)',
+          '✅ SBD For Dummies — all 13 weeks (dripped weekly)',
+          '✅ Foundation community boards',
+          '✅ Foundation Certificate on completion',
+          '🔒 School 2 Sexual Literacy — 15 courses (Premium)',
+          '🔒 MV House expression system (Elite)',
+        ],
+        upgradeUrl: '/payment?tier=foundation',
+      },
     },
     premium: {
       course: {
-        headline: 'Complete Your Formation',
-        description: 'Unlock all 44 courses across 4 schools',
-        cta: 'Upgrade to Premium - $20/month',
+        headline: '⚡ Unlock Full Formation — Premium',
+        description: '28 courses across School 1 (Teleios) and School 2 (Sexual Literacy) — all dripped weekly. 15 Sexual Literacy courses unlocked immediately.',
+        cta: 'Unlock Premium — $20/month →',
         benefits: [
-          '✅ All 44 courses (full access)',
-          '✅ All 4 formation schools',
-          '✅ All certificates',
-          '✅ Course-linked boards',
-          '✅ Download all materials'
-        ]
-      }
+          '✅ Full School 1 — 13 Teleios courses',
+          '✅ Full School 2 — 15 Sexual Literacy courses',
+          '✅ All standard community boards',
+          '✅ School 1 + 2 certificates',
+          '🔒 School 3 — Marriage Systems (8 courses, Elite)',
+          '🔒 School 4 — Civilization Leadership (8 courses, Elite)',
+          '🔒 MV House expression system (Elite)',
+        ],
+        upgradeUrl: '/payment?tier=premium',
+      },
+      board: {
+        headline: '⚡ Premium — Full Community Access',
+        description: 'All standard boards. Post, reply, and engage with the full formation community.',
+        cta: 'Unlock Premium — $20/month →',
+        benefits: [
+          '✅ All standard boards — full posting access',
+          '✅ Course-linked discussion boards',
+          '🔒 Advanced Muliebrity & Virility boards (Elite)',
+          '🔒 MV House boards (Elite)',
+        ],
+        upgradeUrl: '/payment?tier=premium',
+      },
     },
     elite: {
       mvhouse: {
-        headline: 'Embody Your Identity',
-        description: 'Access advanced formation content and MV House',
-        cta: 'Upgrade to Elite - $50/month',
+        headline: '👑 MV House — Identity Becomes Expression',
+        description: 'The wardrobe system of covenant expression. Build your Muliebrity or Virility wardrobe. Corporate, Casual, Official — curated, purchased, customized.',
+        cta: 'Unlock Elite — $50/month →',
         benefits: [
-          '✅ Everything in Premium',
+          '✅ ALL 44 courses — Schools 1–4',
+          '✅ MV House — full wardrobe system',
           '✅ Advanced Muliebrity boards',
           '✅ Advanced Virility boards',
+          '✅ Mastery Certification',
+          '✅ Direct access — Dr. Coach Achu',
+        ],
+        upgradeUrl: '/payment?tier=elite',
+      },
+      course: {
+        headline: '👑 Elite — Full Embodiment Access',
+        description: 'All 44 courses across all 4 schools, plus MV House, advanced boards, and Mastery Certification.',
+        cta: 'Unlock Elite — $50/month →',
+        benefits: [
+          '✅ ALL 44 courses — Schools 1–4',
+          '✅ School 3 — Marriage Systems (8 courses)',
+          '✅ School 4 — Civilization Leadership (8 courses)',
           '✅ MV House full access',
-          '✅ Advanced media library'
-        ]
-      }
-    }
+          '✅ Advanced boards + Mastery cert',
+        ],
+        upgradeUrl: '/payment?tier=elite',
+      },
+      board: {
+        headline: '👑 Elite — Advanced Formation Community',
+        description: 'Access Advanced Muliebrity, Virility, and MV House boards. The identity expression layer.',
+        cta: 'Unlock Elite — $50/month →',
+        benefits: [
+          '✅ Advanced Muliebrity Training School boards',
+          '✅ Advanced Virility boards',
+          '✅ MV House wardrobe boards',
+          '✅ Full community + all 44 courses',
+        ],
+        upgradeUrl: '/payment?tier=elite',
+      },
+    },
   };
-  
-  return prompts[requiredTier]?.[context] || prompts.premium.course;
+
+  return prompts[requiredTier]?.[context]
+    || prompts[requiredTier]?.course
+    || prompts.premium.course;
 }
 
+// ── UPGRADE MODAL ───────────────────────────────────────────────
 /**
- * Show upgrade modal (called when user hits locked content)
+ * Show upgrade modal when user hits locked content.
+ * Calls UpgradeTracker.trackLockHit() if available (v248).
  */
 function showUpgradeModal(requiredTier, context = 'course') {
   const prompt = getUpgradePrompt(requiredTier, context);
-  
+
+  // Track lock hit for nudge engine (v248)
+  if (window.UpgradeTracker) {
+    window.UpgradeTracker.trackLockHit(requiredTier, context);
+  }
+
+  // Remove any existing modal
+  const existing = document.querySelector('.upgrade-modal');
+  if (existing) existing.remove();
+
   const modal = document.createElement('div');
   modal.className = 'upgrade-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
   modal.innerHTML = `
     <div class="upgrade-modal-content">
-      <button class="close-modal" onclick="this.closest('.upgrade-modal').remove(); document.body.style.overflow = '';">×</button>
-      
-      <div class="upgrade-icon">🔓</div>
+      <button class="close-modal" aria-label="Close" onclick="this.closest('.upgrade-modal').remove();document.body.style.overflow='';">×</button>
+      <div class="upgrade-icon">🔒</div>
       <h2>${prompt.headline}</h2>
       <p class="upgrade-desc">${prompt.description}</p>
-      
-      <div class="upgrade-benefits">
-        ${prompt.benefits.map(benefit => `<div class="benefit-item">${benefit}</div>`).join('')}
-      </div>
-      
-      <button class="btn-upgrade" onclick="window.location.href='/subscription.html?tier=${requiredTier}'">
-        ${prompt.cta}
-      </button>
-      
-      <p class="upgrade-footer">30-day money-back guarantee</p>
+      <ul class="upgrade-benefits">
+        ${prompt.benefits.map(b => `<li>${b}</li>`).join('')}
+      </ul>
+      <a class="btn-upgrade" href="${prompt.upgradeUrl}">${prompt.cta}</a>
+      <p class="upgrade-footer">Cancel anytime. Formation stays with you.</p>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
   document.body.style.overflow = 'hidden';
+
+  // Close on backdrop click
+  modal.addEventListener('click', e => {
+    if (e.target === modal) { modal.remove(); document.body.style.overflow = ''; }
+  });
+
+  // Close on Escape
+  const onKey = e => {
+    if (e.key === 'Escape') { modal.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', onKey); }
+  };
+  document.addEventListener('keydown', onKey);
 }
 
-// Export functions for use in other scripts
+// ── DRIP WALL (shown when content is time-locked, NOT upgrade-locked) ──
+/**
+ * Show drip wall for subscribers who are waiting for next week.
+ * This is NOT an upgrade modal — they are already subscribed.
+ */
+function showDripWallModal(unlockLabel, weekNum, courseName) {
+  const existing = document.querySelector('.drip-wall-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'drip-wall-modal upgrade-modal'; // reuse modal backdrop styles
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="upgrade-modal-content drip-wall-content">
+      <div class="upgrade-icon">⏳</div>
+      <h2>Week ${weekNum} — Coming Soon</h2>
+      <p class="upgrade-desc">${courseName ? `<strong>${courseName}</strong><br>` : ''}Your formation continues on schedule.<br>${unlockLabel}.</p>
+      <p style="font-size:13px;color:var(--text-sec,#666);line-height:1.6;margin-top:8px">
+        This is the drip system protecting your transformation — one week at a time, so you truly absorb each stage before moving forward.
+      </p>
+      <button class="btn-upgrade" onclick="this.closest('.drip-wall-modal').remove();document.body.style.overflow='';" style="margin-top:20px">Got it →</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+  modal.addEventListener('click', e => {
+    if (e.target === modal) { modal.remove(); document.body.style.overflow = ''; }
+  });
+}
+
+// ── EXPORTS ─────────────────────────────────────────────────────
 window.TierAccess = {
   canAccessCourse,
   canAccessModule,
   canAccessBoard,
+  getDripGate,
   showUpgradeModal,
+  showDripWallModal,
   getUpgradePrompt,
-  TIER_HIERARCHY
+  TIER_HIERARCHY,
+  MV_HOUSE_BOARDS,
+  DRIP_DAYS_PER_WEEK,
 };

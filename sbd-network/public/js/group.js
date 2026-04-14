@@ -21,7 +21,7 @@ const loadingOverlay = document.getElementById('loadingOverlay');
 // Initialize group page
 auth.onAuthStateChanged((user) => {
   if (!user) {
-    window.location.href = 'index.html';
+    window.location.href = '/auth';
     return;
   }
   
@@ -42,13 +42,29 @@ async function loadGroupPage(user) {
 
     if (typeof initNotifications === 'function') initNotifications(user.uid);
     
-    // Verify user has access to this group
+    // Verify user has tier access to this group
     const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.data();
-    
-    if (!userData || !userData.groups || !userData.groups.includes(groupId)) {
-      alert('You do not have access to this group');
-      window.location.href = 'dashboard.html';
+    const userData = userDoc.data() || {};
+    const sub = userData.subscription || {};
+    const now = Date.now();
+    const subEnd = sub.endDate?.toMillis ? sub.endDate.toMillis() : 0;
+    const activeSub = sub.status === 'active' && subEnd > now ? (sub.tier || '') : '';
+    const isAdminUser = userData.role === 'admin';
+    const effectiveTier = isAdminUser ? 'elite' : (activeSub || 'free');
+    const TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
+
+    // Load group doc to check its requiredTier
+    const groupDoc = await db.collection('groups').doc(groupId).get();
+    if (!groupDoc.exists) {
+      alert('Group not found');
+      window.location.href = '/boards.html';
+      return;
+    }
+    const groupData = groupDoc.data();
+    const groupTier = groupData.requiredTier || 'elite';
+    if ((TIER_ORDER[effectiveTier] ?? 0) < (TIER_ORDER[groupTier] ?? 3)) {
+      alert('Your current tier does not include access to this group.');
+      window.location.href = '/boards.html';
       return;
     }
     
@@ -180,7 +196,7 @@ if (logoutBtn) {
   logoutBtn.addEventListener('click', async () => {
     try {
       await auth.signOut();
-      window.location.href = 'index.html';
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Logout error:', error);
     }

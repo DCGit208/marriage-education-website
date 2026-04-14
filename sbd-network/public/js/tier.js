@@ -18,7 +18,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     await loadUserData();
     await initializeTierView();
   } else {
-    window.location.href = '/login.html';
+    window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }
 });
 

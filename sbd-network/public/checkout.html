@@ -12,8 +12,7 @@
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
-    <!-- Stripe.js -->
-    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Stripe.js no longer needed — using Stripe Hosted Checkout via Cloud Function -->
     
     <style>
         .checkout-page {
@@ -290,48 +289,28 @@
             </div>
         </div>
         
-        <!-- Payment Form -->
+        <!-- Payment Action -->
         <div class="payment-form">
-            <h2>Payment Details</h2>
-            
-            <form id="payment-form">
-                
-                <!-- Email -->
-                <div class="form-row">
-                    <label class="form-label" for="email">Email</label>
-                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
-                </div>
-                
-                <!-- Name on Card -->
-                <div class="form-row">
-                    <label class="form-label" for="card-name">Name on Card</label>
-                    <input type="text" id="card-name" class="form-input" placeholder="John Doe" required>
-                </div>
-                
-                <!-- Card Element (Stripe) -->
-                <div class="form-row">
-                    <label class="form-label">Card Information</label>
-                    <div id="card-element"></div>
-                    <div id="card-errors" role="alert"></div>
-                </div>
-                
-                <!-- Submit Button -->
-                <button type="submit" id="pay-button" class="pay-button">
-                    Pay Now
-                </button>
-                
-                <!-- Cancel Button -->
-                <button type="button" class="cancel-button" onclick="window.location.href='/shop.html'">
-                    Cancel
-                </button>
-                
-                <!-- Secure Badge -->
-                <div class="secure-badge">
-                    <span class="secure-badge-icon">🔒</span>
-                    <span class="secure-badge-text">Secure payment powered by Stripe</span>
-                </div>
-                
-            </form>
+            <h2>Payment</h2>
+            <p style="color:var(--text-secondary,#aaa);font-size:0.9rem;margin:0 0 20px 0;line-height:1.6">
+                You'll be taken to Stripe's secure checkout page to enter your card details.
+                Your payment is processed by Stripe — we never see your card number.
+            </p>
+
+            <div id="checkout-error" style="color:#ff4444;font-size:0.85rem;margin-bottom:16px;min-height:20px"></div>
+
+            <button id="pay-button" class="pay-button" onclick="startStripeCheckout(currentProductId)">
+                💳 Pay with Card
+            </button>
+
+            <button type="button" class="cancel-button" onclick="window.location.href='/shop.html'">
+                Cancel
+            </button>
+
+            <div class="secure-badge">
+                <span class="secure-badge-icon">🔒</span>
+                <span class="secure-badge-text">Secure checkout powered by Stripe</span>
+            </div>
         </div>
         
     </div>
@@ -340,6 +319,7 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     <script defer src="/js/firebase.js"></script>
     
     <!-- Checkout Script -->

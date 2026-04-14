@@ -1,5 +1,5 @@
 /**
- * Send Ambassador Emails via SendGrid API
+ * Send Ambassador Emails via Resend API
  * Reliable email delivery without PHP mail() issues
  */
 
@@ -14,12 +14,12 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// SendGrid API Configuration
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 'YOUR_SENDGRID_API_KEY_HERE';
+// Resend API Configuration
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_4kUwZSah_EoJWU7gtdZ4DFKrEjJzfDFAG';
 const FROM_EMAIL = 'orders@marriageducation.com';
 const FROM_NAME = 'Marriage Education';
 
-async function sendEmailViaSendGrid(to, ambassadorCode, fullName, bookUrl) {
+async function sendEmailViaResend(to, ambassadorCode, fullName, bookUrl) {
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
@@ -114,41 +114,24 @@ Marriage Education | marriageducation.com
   `;
   
   const payload = {
-    personalizations: [{
-      to: [{ email: to }],
-      subject: `Welcome Ambassador ${ambassadorCode} - Your Credentials Inside`
-    }],
-    from: {
-      email: FROM_EMAIL,
-      name: FROM_NAME
-    },
-    reply_to: {
-      email: FROM_EMAIL,
-      name: FROM_NAME
-    },
-    content: [
-      {
-        type: 'text/plain',
-        value: plainText
-      },
-      {
-        type: 'text/html',
-        value: htmlContent
-      }
-    ]
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: [to],
+    subject: `Welcome Ambassador ${ambassadorCode} - Your Credentials Inside`,
+    html: htmlContent,
+    text: plainText,
   };
   
   try {
-    const response = await axios.post('https://api.sendgrid.com/v3/mail/send', payload, {
+    const response = await axios.post('https://api.resend.com/emails', payload, {
       headers: {
-        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json'
       }
     });
     
     return { success: true, status: response.status };
   } catch (error) {
-    console.error('SendGrid error:', error.response?.data || error.message);
+    console.error('Resend error:', error.response?.data || error.message);
     return { success: false, error: error.response?.data || error.message };
   }
 }
@@ -179,9 +162,9 @@ async function sendAmbassadorEmail(ambassadorCode, email) {
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
     
-    // Send via SendGrid
-    console.log('📨 Sending via SendGrid API...');
-    const result = await sendEmailViaSendGrid(
+    // Send via Resend
+    console.log('📨 Sending via Resend API...');
+    const result = await sendEmailViaResend(
       email,
       ambassadorCode,
       ambassadorData.fullName || 'Ambassador',
@@ -206,7 +189,7 @@ async function sendAmbassadorEmail(ambassadorCode, email) {
 // Run
 const args = process.argv.slice(2);
 if (args.length < 2) {
-  console.log('Usage: node send-via-sendgrid.js <AMBASSADOR_CODE> <EMAIL>');
+  console.log('Usage: node send-via-sendgrid.js <AMBASSADOR_CODE> <EMAIL>'); // now uses Resend
   console.log('Example: node send-via-sendgrid.js AMB-MAKO-7550 bthedugrp@gmail.com');
   process.exit(1);
 }

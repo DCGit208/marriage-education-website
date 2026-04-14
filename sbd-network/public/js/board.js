@@ -41,6 +41,14 @@ let bulkSelectMode    = false;         // true while select mode is active
 let bulkSelected      = new Set();     // Set of selected post IDs
 let bulkSelectedPosts = {};            // { postId: postData }
 
+// MV House board IDs — save-to-wardrobe button visible on these boards for Elite users
+const MV_HOUSE_BOARD_IDS = [
+  'mv-house-corporate', 'mv-house-casual-day', 'mv-house-casual-night',
+  'mv-house-casual-home', 'mv-house-official',
+  'muliebrity-corporate', 'muliebrity-casual', 'virility-corporate', 'virility-casual',
+  'mv-house-general',
+];
+
 // ── DOM refs ─────────────────────────────────────────────────────
 const backBtn           = document.getElementById('backBtn');
 const logoutBtn         = document.getElementById('logoutBtn');
@@ -270,8 +278,12 @@ auth.onAuthStateChanged(async (user) => {
           card = postsContainer.querySelector(`[data-post-id="${targetPostId}"]`);
         }
         if (card) {
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
           card.classList.add('pin-highlight');
+          // Scroll once immediately, then again after 600ms to survive any layout shifts
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 600);
           card.addEventListener('animationend', () => card.classList.remove('pin-highlight'), { once: true });
         }
       } catch (err) {
@@ -596,6 +608,14 @@ function buildPostCard(post) {
   const commentCount = post.commentCount || 0;
   const isBookmarked  = (currentUserBookmarks || new Set()).has(post.id);
 
+  // Wardrobe button: Elite users on MV House boards
+  const uTierLocal   = currentUserData?.subscription?.tier || currentUserData?.tier || 'free';
+  const isElite      = uTierLocal === 'elite' || currentIsAdmin;
+  const isMvBoard    = MV_HOUSE_BOARD_IDS.includes(boardId);
+  const wardrobeBtn  = (isElite && isMvBoard)
+    ? `<button class="wardrobe-save-btn" data-postid="${esc(post.id)}" type="button" title="Save to Wardrobe">🏠 Save</button>`
+    : '';
+
   card.innerHTML = `
     <div class="post-meta">
       <span class="post-author"><a href="/member.html?uid=${esc(post.authorId || '')}" class="post-author-link">${author}</a></span>
@@ -618,6 +638,7 @@ function buildPostCard(post) {
       <button class="comment-toggle-btn" data-count="${commentCount}" type="button">
         💬 ${commentCount > 0 ? commentCount + ' comment' + (commentCount !== 1 ? 's' : '') : 'Comment'}
       </button>
+      ${wardrobeBtn}
     </div>
     <div class="comment-section" style="display:none;">
       <ul class="comment-list"></ul>
@@ -790,6 +811,14 @@ function buildPostCard(post) {
   const section     = card.querySelector('.comment-section');
   const commentList = card.querySelector('.comment-list');
   let commentsLoaded = false;
+
+  // ── Save to Wardrobe (MV House boards, Elite only) ──
+  const savWardBtn = card.querySelector('.wardrobe-save-btn');
+  if (savWardBtn) {
+    savWardBtn.addEventListener('click', async () => {
+      await saveToWardrobe(post, savWardBtn);
+    });
+  }
 
   let activeReplyTo = null;
   let setReplyTo    = null; // assigned below, after DOM refs are ready
@@ -3761,3 +3790,67 @@ function closeStoryViewer() {
     }
   });
 })();
+
+// ================================================================
+// SAVE TO WARDROBE — MV House only, Elite only (v247)
+// ================================================================
+
+async function saveToWardrobe(post, btn) {
+  if (!currentUserId) return;
+
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    // Determine wardrobe category from boardId
+    const categoryMap = {
+      'mv-house-corporate':    'corporate',
+      'muliebrity-corporate':  'corporate',
+      'virility-corporate':    'corporate',
+      'mv-house-casual-day':   'casual-day',
+      'muliebrity-casual':     'casual-day',
+      'virility-casual':       'casual-day',
+      'mv-house-casual-night': 'casual-night',
+      'mv-house-casual-home':  'casual-home',
+      'mv-house-official':     'official',
+      'mv-house-general':      'saved',
+    };
+    const category = categoryMap[boardId] || 'saved';
+
+    // Build item document
+    const itemData = {
+      postId:     post.id,
+      boardId:    boardId,
+      boardName:  (typeof currentBoardData !== 'undefined' && currentBoardData?.title) || boardId,
+      mediaUrl:   post.imageUrl || (Array.isArray(post.allMedia) && post.allMedia[0]?.url) || null,
+      caption:    post.content ? post.content.slice(0, 200) : '',
+      authorName: post.authorName || 'Member',
+      category:   category,
+      savedAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    // Write to wardrobes/{uid}/items/{postId}  (postId as doc ID prevents duplicates)
+    await firebase.firestore()
+      .collection('wardrobes')
+      .doc(currentUserId)
+      .collection('items')
+      .doc(post.id)
+      .set(itemData, { merge: true });
+
+    btn.textContent = '✓ Saved';
+    btn.style.color = '#4ade80';
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      btn.style.color = '';
+    }, 2500);
+
+  } catch (err) {
+    console.error('[Wardrobe] save error:', err);
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+    alert('Could not save to wardrobe. Try again.');
+  }
+}
