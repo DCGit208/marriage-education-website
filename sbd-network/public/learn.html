@@ -3,77 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="SBD Formation Journey - Learn and Grow">
-    <meta name="theme-color" content="#667eea">
-    <title>Learn - SBD Network</title>
-    
+    <meta name="description" content="Formation — SBD Network">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Formation - SBD Network</title>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/learn.css">
+    <link rel="stylesheet" href="/css/learn-v2.css?v=5">
     <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
-    
-    <style>
-        .learn-page {
-            padding-bottom: 80px;
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
-    </style>
 </head>
-<body class="learn-page bottom-nav-page">
-    
-    <!-- Learn Header with Progress -->
-    <header class="learn-header">
-        <div class="user-progress">
-            <div class="streak">
-                <span class="streak-icon">🔥</span>
-                <span id="userStreak">0</span> day streak
-            </div>
-            <div class="tier-badge" id="tierBadge">Free</div>
-        </div>
-        <h1>Your Formation Journey</h1>
-        <p id="progressSummary">Loading...</p>
-    </header>
+<body class="learn-page-v2 bottom-nav-page">
 
-    <!-- Continue Learning Section -->
-    <section class="continue-learning" id="continueSection" style="display:none;">
-        <h2>Continue Learning</h2>
-        <div class="current-module-card" id="currentModuleCard" onclick="continueModule()">
-            <div class="module-info">
-                <span class="course-name" id="currentCourseName"></span>
-                <span class="module-name" id="currentModuleName"></span>
-            </div>
-            <button class="btn-continue">Continue →</button>
-            <div class="progress-bar">
-                <div class="progress-fill" id="currentProgress" style="width: 0%"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Tier Selection Grid -->
-    <section class="tiers-section">
-        <h2>Choose Your Path</h2>
-        <p class="section-subtitle">Select your formation level</p>
-        
-        <div class="tiers-grid" id="tiersGrid">
-            <!-- Loading state -->
-            <div class="loading-container" style="grid-column: 1 / -1;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">🎯</div>
-                <p style="color: #666; font-size: 1.1rem;">Loading tiers...</p>
-            </div>
-        </div>
-    </section>
+    <!-- JS renders the selector or tier page into this shell -->
+    <div id="learnApp" class="learn-app-shell">
+        <div class="tier-loading" style="padding:4rem 1.5rem;text-align:center;">Loading…</div>
+    </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
+
     <!-- App Scripts -->
     <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
     <script src="/js/tier-access.js?v=102"></script>
-    <script src="/js/learn.js?v=103"></script>
+    <script src="/js/learn-v2.js?v=8"></script>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Main navigation">
@@ -86,21 +42,22 @@
             <span class="bn-label">Learn</span>
         </a>
         <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">📋</span>
-            <span class="bn-label">Boards</span>
+            <span class="bn-icon">💬</span>
+            <span class="bn-label">Community</span>
         </a>
-        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
-            <span class="bn-icon">👗</span>
-            <span class="bn-label">MV House</span>
+        <a href="/resources.html" class="bn-tab" aria-label="Resources">
+            <span class="bn-icon">🗂</span>
+            <span class="bn-label">Resources</span>
         </a>
-        <a href="/shop.html" class="bn-tab" aria-label="Shop">
-            <span class="bn-icon">🛒</span>
-            <span class="bn-label">Shop</span>
+        <a href="/dating.html" class="bn-tab" aria-label="Match">
+            <span class="bn-icon">💒</span>
+            <span class="bn-label">Match</span>
         </a>
         <a href="/profile.html" class="bn-tab" aria-label="Profile">
             <span class="bn-icon">👤</span>
             <span class="bn-label">Profile</span>
         </a>
     </nav>
+
 </body>
 </html>

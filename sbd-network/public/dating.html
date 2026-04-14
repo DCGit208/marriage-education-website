@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Covenant Matching | SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/dating.css?v=249">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
+</head>
+<body class="bottom-nav-page">
+
+    <!-- Top Bar -->
+    <div class="dt-topbar">
+        <a href="/profile.html" class="dt-back">←</a>
+        <span class="dt-topbar-title">Covenant Matching</span>
+        <span class="dt-topbar-badge" id="dtAccessBadge">Formation Gate</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="dt-loading" id="dtLoading">Checking formation status…</div>
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- STATE 1: LOCKED — Free / Foundation                      -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="dt-state" id="stateLocked">
+
+        <div class="dt-lock-hero">
+            <div class="dt-lock-emblem">💒</div>
+            <h1 class="dt-lock-title">Marriage Requires Formation</h1>
+            <p class="dt-lock-sub">
+                Covenant Matching is not open to everyone. It is a privilege earned through
+                consistent formation — study, community, and character.
+            </p>
+            <p class="dt-lock-law">Formation Before Union — Non-Negotiable</p>
+        </div>
+
+        <!-- Formation progress -->
+        <div class="dt-progress-section">
+            <p class="dt-progress-label">Your Formation Progress</p>
+
+            <div class="dt-req-row" id="lockReq1">
+                <span class="dt-req-icon">📖</span>
+                <div class="dt-req-body">
+                    <p class="dt-req-name">School 1 — Teleios Blueprint</p>
+                    <div class="dt-progress-bar">
+                        <div class="dt-progress-fill" id="lockBar1" style="width:0%"></div>
+                    </div>
+                </div>
+                <span class="dt-req-val" id="lockVal1">0%</span>
+            </div>
+
+            <div class="dt-req-row" id="lockReq2">
+                <span class="dt-req-icon">⚡</span>
+                <div class="dt-req-body">
+                    <p class="dt-req-name">School 2 — Sexual Literacy</p>
+                    <div class="dt-progress-bar">
+                        <div class="dt-progress-fill" id="lockBar2" style="width:0%"></div>
+                    </div>
+                </div>
+                <span class="dt-req-val" id="lockVal2">0%</span>
+            </div>
+
+            <div class="dt-req-row" id="lockReq3">
+                <span class="dt-req-icon">💬</span>
+                <div class="dt-req-body">
+                    <p class="dt-req-name">Board Participation</p>
+                    <div class="dt-progress-bar">
+                        <div class="dt-progress-fill" id="lockBar3" style="width:0%"></div>
+                    </div>
+                </div>
+                <span class="dt-req-val" id="lockVal3">0</span>
+            </div>
+
+            <div class="dt-req-row" id="lockReqScore">
+                <span class="dt-req-icon">🏅</span>
+                <div class="dt-req-body">
+                    <p class="dt-req-name">Formation Score (need ≥60)</p>
+                    <div class="dt-progress-bar">
+                        <div class="dt-progress-fill" id="lockBarScore" style="width:0%"></div>
+                    </div>
+                </div>
+                <span class="dt-req-val" id="lockValScore">0</span>
+            </div>
+        </div>
+
+        <!-- Upgrade / Path CTA -->
+        <div style="padding: 0 1.25rem 2rem;">
+            <a href="/payment?tier=premium" class="dt-upgrade-btn" id="lockUpgradeBtn">
+                Begin Formation — Premium $20/mo →
+            </a>
+        </div>
+
+        <!-- Blurred teaser profiles (always visible, always locked — Master Prompt law) -->
+        <div class="dt-teaser-section">
+            <p class="dt-teaser-label">Matched Members — Qualified &amp; Waiting</p>
+            <div class="dt-teaser-grid">
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">🌟</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 84</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">✨</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 91</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">💫</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Premium · Score 72</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">🌙</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 88</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">👑</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 79</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">⭐</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Premium · Score 65</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /stateLocked -->
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- STATE 2: PREMIUM LIMITED                                  -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="dt-state" id="statePremium">
+
+        <!-- Persistent upgrade pressure banner -->
+        <div class="dt-limited-banner">
+            <span class="dt-limited-banner-icon">⚡</span>
+            <div class="dt-limited-banner-body">
+                <p class="dt-limited-banner-title">Limited View — Elite Messaging Locked</p>
+                <p class="dt-limited-banner-sub">You can see curated profiles. Messaging requires Elite.</p>
+            </div>
+            <button class="dt-limited-banner-btn" onclick="window.location.href='/payment?tier=elite'">
+                Upgrade →
+            </button>
+        </div>
+
+        <!-- Formation score indicator -->
+        <div style="padding: 0 1.25rem 1.25rem; display:flex; align-items:center; gap:0.75rem;">
+            <div class="dt-score-ring">
+                <span>Formation Score</span>
+                <span class="dt-score-ring-num" id="premiumScore">—</span>
+            </div>
+            <span style="font-size:0.72rem; color: var(--text-sec);" id="premiumScoreMsg"></span>
+        </div>
+
+        <!-- Curated profiles (view-only) -->
+        <div class="dt-profiles-section">
+            <p class="dt-profiles-label">Curated Matches — 3 Profiles Visible</p>
+            <div id="premiumProfilesList">
+                <!-- Injected by dating.js -->
+            </div>
+        </div>
+
+        <!-- Locked messaging explanation -->
+        <div style="margin: 0 1.25rem 1.5rem; padding:1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius:12px;">
+            <p style="font-size:0.85rem; font-weight:700; margin-bottom:0.4rem;">Why is messaging locked?</p>
+            <p style="font-size:0.78rem; color: var(--text-sec); line-height:1.6; margin-bottom:1rem;">
+                Covenant Matching uses a structured interaction system — not free messaging.
+                To protect formation integrity, Stage 1 conversation prompts require Elite tier.
+            </p>
+            <a href="/payment?tier=elite" class="dt-upgrade-btn" style="font-size:0.83rem; padding:0.75rem 1.5rem;">
+                Unlock Elite — $50/mo →
+            </a>
+        </div>
+
+        <!-- Elite users are matching now (social proof) -->
+        <div style="margin: 0 1.25rem 1.5rem; padding:1rem; border:1px solid var(--border-rose); border-radius:12px; background: var(--rose-dim);">
+            <p style="font-size:0.78rem; color:var(--rose); font-weight:700; margin-bottom:0.3rem;">💒 Elite members are matching now</p>
+            <p style="font-size:0.72rem; color:var(--text-sec); line-height:1.5;">
+                <span id="eliteMatchCount">—</span> Elite members with formation scores ≥70 are in active structured conversations today.
+            </p>
+        </div>
+
+        <!-- More locked profiles (blurred) -->
+        <div style="padding: 0 1.25rem; border-top: 1px solid var(--border); padding-top:1.25rem; margin-top:0.5rem;">
+            <p class="dt-profiles-label">More Qualified Members — Locked</p>
+            <div class="dt-teaser-grid">
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">🌟</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 88</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">💎</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 92</div>
+                </div>
+                <div class="dt-teaser-card">
+                    <div class="dt-teaser-avatar">👑</div>
+                    <div class="dt-teaser-overlay">🔒</div>
+                    <div class="dt-teaser-footer">Elite · Score 76</div>
+                </div>
+            </div>
+            <p style="font-size:0.72rem; color:var(--text-sec); text-align:center; margin-top:1rem; padding:0.75rem 0; border-top: 1px solid var(--border);">
+                Upgrade to Elite to view all <span id="totalEliteCount">—</span> qualified members
+            </p>
+        </div>
+
+    </div><!-- /statePremium -->
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- STATE 3: ELITE FULL DASHBOARD                            -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    <div class="dt-state" id="stateElite">
+
+        <!-- Stats -->
+        <div class="dt-hero-stats">
+            <div class="dt-stat-card">
+                <div class="dt-stat-num" id="eliteStatScore">—</div>
+                <div class="dt-stat-label">Formation Score</div>
+            </div>
+            <div class="dt-stat-card">
+                <div class="dt-stat-num" id="eliteStatMatches">—</div>
+                <div class="dt-stat-label">Active Matches</div>
+            </div>
+            <div class="dt-stat-card">
+                <div class="dt-stat-num" id="eliteStatTokens">—</div>
+                <div class="dt-stat-label">Match Tokens</div>
+            </div>
+        </div>
+
+        <!-- Token strip -->
+        <div class="dt-token-strip">
+            <span class="dt-token-strip-icon">🎟</span>
+            <div class="dt-token-strip-body">
+                <p class="dt-token-strip-label"><span id="eliteTokenCount">3</span> monthly tokens remaining</p>
+                <p class="dt-token-strip-sub">Resets monthly · Buy extra tokens anytime</p>
+            </div>
+            <button class="dt-token-buy-btn" onclick="openTokenModal()">Buy Tokens</button>
+        </div>
+
+        <!-- Priority Boost -->
+        <div style="margin: 0 1.25rem 1.25rem; padding:0.85rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius:12px; display:flex; align-items:center; gap:0.75rem;">
+            <span style="font-size:1.3rem; flex-shrink:0;">🚀</span>
+            <div style="flex:1;">
+                <p style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Priority Match Boost</p>
+                <p style="font-size:0.68rem; color:var(--text-sec);" id="boostStatus">Not active — boost your visibility in the matching pool</p>
+            </div>
+            <button class="dt-token-buy-btn" onclick="openBoostModal()" id="boostBtn">Boost</button>
+        </div>
+
+        <!-- Active Matches -->
+        <div class="dt-section">
+            <p class="dt-section-label">Active Matches</p>
+            <div id="eliteMatchesList">
+                <!-- Injected by dating.js -->
+            </div>
+        </div>
+
+        <!-- Suggested Matches -->
+        <div class="dt-section">
+            <p class="dt-section-label">Suggested for You</p>
+            <div id="eliteSuggestedList">
+                <!-- Injected by dating.js -->
+            </div>
+            <div class="dt-refresh-cta">
+                <a href="#" onclick="requestNewMatches(); return false;">Request new suggested matches →</a>
+            </div>
+        </div>
+
+        <!-- Coaching CTA -->
+        <div class="dt-coaching-cta">
+            <p class="dt-coaching-cta-title">💼 Premarital Coaching</p>
+            <p class="dt-coaching-cta-sub">
+                Work with Dr. Coach Achu to navigate courtship, resolving relational patterns,
+                and building a covenant-grade foundation before marriage.
+            </p>
+            <button class="dt-coaching-btn" onclick="openCoachingModal()">Request Coaching Session</button>
+        </div>
+
+        <!-- Marriage Track -->
+        <div class="dt-section" style="padding-top:0;">
+            <p class="dt-section-label">Marriage Track</p>
+            <div style="background: var(--surface); border: 1px solid var(--border-gold); border-radius:14px; padding:1.1rem;">
+                <p style="font-size:0.88rem; font-weight:700; margin-bottom:0.4rem;">💒 The Marriage Pipeline</p>
+                <p style="font-size:0.78rem; color:var(--text-sec); line-height:1.6; margin-bottom:1rem;">
+                    Ready to move from matching to covenant? The Marriage Track assigns a dedicated coach,
+                    premarital curriculum, and a structured path to marriage.
+                </p>
+                <button class="dt-coaching-btn" style="background: transparent; border: 1px solid var(--border-gold); color: var(--gold);"
+                        onclick="openMarriageTrackModal()">Enter Marriage Track</button>
+            </div>
+        </div>
+
+    </div><!-- /stateElite -->
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- MODALS                                                    -->
+    <!-- ════════════════════════════════════════════════════════ -->
+
+    <!-- Token Purchase Modal -->
+    <div class="dt-modal-overlay hidden" id="tokenModal">
+        <div class="dt-modal-box">
+            <p class="dt-modal-title">🎟 Buy Match Tokens</p>
+            <p class="dt-modal-sub">
+                Extra tokens let you request matches beyond your monthly allowance.
+                Each token = 1 match request.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.25rem;">
+                <div style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.85rem; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.85rem;">3 tokens</span>
+                    <span style="color:var(--gold); font-weight:700;">$4.99</span>
+                </div>
+                <div style="background:var(--surface2); border:1px solid var(--border-gold); border-radius:10px; padding:0.85rem; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.85rem;">10 tokens</span>
+                    <span style="color:var(--gold); font-weight:700;">$12.99</span>
+                </div>
+                <div style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.85rem; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.85rem;">Unlimited month</span>
+                    <span style="color:var(--gold); font-weight:700;">$19.99</span>
+                </div>
+            </div>
+            <div class="dt-modal-actions">
+                <button class="dt-modal-cta" onclick="closeModal('tokenModal')">Purchase (Coming Soon)</button>
+                <button class="dt-modal-dismiss" onclick="closeModal('tokenModal')">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boost Modal -->
+    <div class="dt-modal-overlay hidden" id="boostModal">
+        <div class="dt-modal-box">
+            <p class="dt-modal-title">🚀 Priority Match Boost</p>
+            <p class="dt-modal-sub">
+                Boost places your profile at the top of the match pool for 48 hours,
+                dramatically increasing your match rate.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.25rem;">
+                <div style="background:var(--surface2); border:1px solid var(--border-gold); border-radius:10px; padding:0.85rem; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.85rem;">48-hour boost</span>
+                    <span style="color:var(--gold); font-weight:700;">$7.99</span>
+                </div>
+                <div style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.85rem; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:0.85rem;">Weekly boost (7 days)</span>
+                    <span style="color:var(--gold); font-weight:700;">$19.99</span>
+                </div>
+            </div>
+            <div class="dt-modal-actions">
+                <button class="dt-modal-cta" onclick="closeModal('boostModal')">Activate Boost (Coming Soon)</button>
+                <button class="dt-modal-dismiss" onclick="closeModal('boostModal')">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coaching Modal -->
+    <div class="dt-modal-overlay hidden" id="coachingModal">
+        <div class="dt-modal-box">
+            <p class="dt-modal-title">💼 Coaching Request</p>
+            <p class="dt-modal-sub">
+                Dr. Coach Achu will review your formation score, your active match stages,
+                and contact you to schedule a premarital coaching session.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.25rem;">
+                <div style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.85rem;">
+                    <p style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Relationship Coaching</p>
+                    <p style="font-size:0.72rem; color:var(--text-sec);">60-min · Online · 1-on-1 · $150</p>
+                </div>
+                <div style="background:var(--surface2); border:1px solid var(--border-gold); border-radius:10px; padding:0.85rem;">
+                    <p style="font-size:0.82rem; font-weight:700; margin-bottom:0.2rem;">Premarital Intensive</p>
+                    <p style="font-size:0.72rem; color:var(--text-sec);">4-session package · $497</p>
+                </div>
+            </div>
+            <div class="dt-modal-actions">
+                <button class="dt-modal-cta" onclick="submitCoachingRequest()">Request Session</button>
+                <button class="dt-modal-dismiss" onclick="closeModal('coachingModal')">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marriage Track Modal -->
+    <div class="dt-modal-overlay hidden" id="marriageModal">
+        <div class="dt-modal-box">
+            <p class="dt-modal-title">💒 Marriage Track</p>
+            <p class="dt-modal-sub">
+                The Marriage Track is the highest-commitment pathway in SBD Network.
+                You and your match will be assigned a dedicated coach and a structured
+                4-stage premarital curriculum leading to covenant preparation.
+            </p>
+            <p style="font-size:0.78rem; color:var(--gold); margin-bottom:1.25rem; padding:0.75rem; background:var(--gold-dim); border-radius:8px; border:1px solid var(--border-gold);">
+                Both partners must consent and maintain Elite status throughout the track.
+            </p>
+            <div class="dt-modal-actions">
+                <button class="dt-modal-cta" onclick="submitMarriageTrackRequest()">Enter Marriage Track</button>
+                <button class="dt-modal-dismiss" onclick="closeModal('marriageModal')">Not Yet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">📋</span>
+            <span class="bn-label">Community</span>
+        </a>
+        <a href="/dating.html" class="bn-tab active" aria-label="Match">
+            <span class="bn-icon">💒</span>
+            <span class="bn-label">Match</span>
+        </a>
+        <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">MV House</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
+    <script src="/js/dating.js?v=249"></script>
+</body>
+</html>
