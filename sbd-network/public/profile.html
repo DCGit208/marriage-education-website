@@ -158,6 +158,19 @@
       <button id="logoutBtn" class="btn btn-secondary profile-logout-btn">Log out</button>
     </section>
 
+    <!-- Dating Eligibility -->
+    <section class="profile-card profile-section" id="datingEligibilitySection" style="border:1px solid rgba(201,107,138,0.25);background:rgba(201,107,138,0.05);">
+      <h3 class="profile-section-title" style="display:flex;align-items:center;gap:8px;">
+        <span>💒</span> Covenant Matching
+      </h3>
+      <div id="datingEligibilityContent" style="font-size:0.85rem;color:var(--text-muted,#888);margin-bottom:12px;">
+        Loading your formation eligibility…
+      </div>
+      <a href="/dating.html" style="display:inline-block;padding:10px 20px;background:rgba(201,107,138,0.15);border:1px solid rgba(201,107,138,0.4);border-radius:8px;color:#C96B8A;font-size:0.85rem;text-decoration:none;font-weight:600;">
+        Check My Eligibility →
+      </a>
+    </section>
+
     <!-- My Collections -->
     <section class="profile-card profile-section" id="myCollectionsSection">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -212,7 +225,7 @@
   <!-- App Scripts -->
   <script defer src="/js/firebase.js?v=75&t=1775115331"></script>
   <script defer src="/js/formation-access.js?v=104"></script>
-  <script defer src="/js/sw-update-checker.js?v=96"></script>
+  <script defer src="/js/sw-update-checker.js?v=97"></script>
   <script defer src="/js/upload.js?v=74"></script>
   <script defer src="/js/notifications.js?v=74"></script>
   <script defer src="/js/dm-badge.js?v=40"></script>
@@ -220,6 +233,57 @@
   <script defer src="/js/transitions.js?v=40"></script>
   <script defer src="/js/swipe-back.js?v=40"></script>
   <script defer src="/js/install-prompt.js?v=40"></script>
+
+  <!-- Dating Eligibility Widget -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('datingEligibilityContent');
+      if (!el) return;
+      // Wait for firebase.js to init (runs deferred, so auth is ready)
+      function checkEligibility() {
+        if (typeof auth === 'undefined' || typeof db === 'undefined') {
+          setTimeout(checkEligibility, 200);
+          return;
+        }
+        auth.onAuthStateChanged(function(user) {
+          if (!user) return;
+          db.collection('users').doc(user.uid).get().then(function(snap) {
+            if (!snap.exists) return;
+            var data = snap.data();
+            var tier = data.tier || data.subscription && data.subscription.tier || 'free';
+            var fs   = data.formationScore || {};
+            var score = fs.totalScore || 0;
+            var s1    = fs.school1Pct || 0;
+            var s2    = fs.school2Pct || 0;
+
+            var msg = '';
+            var color = '#888';
+            if (tier === 'free' || tier === 'foundation') {
+              msg = 'Upgrade to Premium and reach a formation score of 60+ to qualify.';
+            } else if (tier === 'premium') {
+              if (score >= 60 && s1 >= 70 && s2 >= 70) {
+                msg = 'Qualified for Limited Access — 3 curated profiles available. Upgrade to Elite for messaging.';
+                color = '#C96B8A';
+              } else {
+                msg = 'Formation score: ' + score + '/100. Need \u226560 + School 1 \u226570% + School 2 \u226570%.';
+              }
+            } else if (tier === 'elite') {
+              if (score >= 70) {
+                msg = 'Full access active — formation score ' + score + '/100.';
+                color = '#C6A96B';
+              } else {
+                msg = 'Elite — increase formation score to 70+ for full matching. Current: ' + score + '/100.';
+                color = '#C96B8A';
+              }
+            }
+            el.textContent = msg;
+            el.style.color = color;
+          });
+        });
+      }
+      checkEligibility();
+    });
+  </script>
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" aria-label="Main navigation">
@@ -233,15 +297,15 @@
     </a>
     <a href="/boards.html" class="bn-tab" aria-label="Boards">
       <span class="bn-icon">📋</span>
-      <span class="bn-label">Boards</span>
+      <span class="bn-label">Community</span>
     </a>
     <a href="/mv-house.html" class="bn-tab" aria-label="MV House">
       <span class="bn-icon">👗</span>
       <span class="bn-label">MV House</span>
     </a>
-    <a href="/shop.html" class="bn-tab" aria-label="Shop">
-      <span class="bn-icon">🛒</span>
-      <span class="bn-label">Shop</span>
+    <a href="/dating.html" class="bn-tab" aria-label="Match">
+      <span class="bn-icon">💒</span>
+      <span class="bn-label">Match</span>
     </a>
     <a href="/profile.html" class="bn-tab active" aria-label="Profile">
       <span class="bn-icon">👤</span>
