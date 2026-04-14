@@ -206,10 +206,21 @@ async function calculateAndCacheFormationScore(uid, userData) {
  * @returns {{ level: 'none'|'limited'|'full', reason: string, tier: string }}
  */
 function canAccessDating(userData, formationScore) {
+  const role       = userData.role || '';
   const tier       = userData.tier || userData.subscription?.tier || 'free';
   const score      = formationScore?.totalScore   || 0;
   const school1Pct = formationScore?.school1Pct   || 0;
   const school2Pct = formationScore?.school2Pct   || 0;
+
+  // Admin always gets full access regardless of tier or score
+  if (role === 'admin') {
+    return { level: 'full', reason: '', tier };
+  }
+
+  // Elite members get full access without formation score gate
+  if (tier === 'elite') {
+    return { level: 'full', reason: '', tier };
+  }
 
   if (tier === 'free' || tier === 'foundation') {
     return {
@@ -232,18 +243,6 @@ function canAccessDating(userData, formationScore) {
       reason: `Formation score or school progress below threshold. Score: ${score}/100.`,
       tier,
       showProgress: true,
-    };
-  }
-
-  if (tier === 'elite') {
-    if (score >= THRESH.eliteScore) {
-      return { level: 'full', reason: '', tier };
-    }
-    // Elite but score not yet ≥70 → show limited with coaching nudge
-    return {
-      level: 'limited',
-      reason: `Increase your formation score to ${THRESH.eliteScore} to unlock full matching. Current: ${score}.`,
-      tier,
     };
   }
 
