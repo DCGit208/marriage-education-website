@@ -43,11 +43,12 @@ const THRESH = {
 };
 
 // ── STATE ───────────────────────────────────────────────────────
-let _currentUid    = null;
-let _userData      = null;
+let _currentUid     = null;
+let _userData       = null;
 let _formationScore = null;
-let _tokens        = { monthly: 3, extra: 0 };
-let _boost         = null;
+let _v2Profile      = null;   // formationProfile_v2 — parallel system
+let _tokens         = { monthly: 3, extra: 0 };
+let _boost          = null;
 
 // ── ENTRY POINT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -74,6 +75,17 @@ async function init(uid) {
 
     // Load or calculate formation score
     _formationScore = await loadFormationScore(uid, _userData);
+
+    // Load v2 profile (parallel system — does NOT replace formationScore)
+    _v2Profile = _userData.formationProfile_v2 || null;
+    if (!_v2Profile || _isV2Stale(_v2Profile)) {
+      // Background calculation — non-blocking, updates on next render cycle
+      if (window.FIS_V2) {
+        FIS_V2.calculateAndSave(uid, _userData)
+          .then(p => { _v2Profile = p; })
+          .catch(() => {});
+      }
+    }
 
     // Determine access level
     const access = canAccessDating(_userData, _formationScore);
@@ -258,9 +270,17 @@ function renderState(access, formationScore, matches, suggested) {
   // Update access badge in topbar
   const badge = document.getElementById('dtAccessBadge');
   if (badge) {
-    if (access.level === 'full')    { badge.textContent = 'Elite'; badge.className = 'dt-access-badge dt-badge--compat'; }
-    else if (access.level === 'limited') { badge.textContent = 'Premium'; badge.className = 'dt-access-badge'; }
-    else                             { badge.textContent = 'Locked'; badge.className = 'dt-access-badge dt-badge--stage'; }
+    if (access.level === 'full') {
+      const covenantReady = _v2Profile && _v2Profile.totalScore >= 85;
+      badge.textContent = covenantReady ? '🏅 Covenant Ready' : 'Elite';
+      badge.className   = 'dt-access-badge dt-badge--compat';
+    } else if (access.level === 'limited') {
+      badge.textContent = 'Premium';
+      badge.className   = 'dt-access-badge';
+    } else {
+      badge.textContent = 'Locked';
+      badge.className   = 'dt-access-badge dt-badge--stage';
+    }
   }
 
   if (access.level === 'none') {
@@ -296,6 +316,14 @@ function renderLockedState(fs, tier) {
   });
   const scoreBar = document.getElementById('lockBarScore');
   if (scoreBar) scoreBar.classList.toggle('met', fs.totalScore >= THRESH.premiumScore);
+
+  // v2 dimensional breakdown
+  const bkLk = document.getElementById('v2BreakdownLocked');
+  if (bkLk) {
+    const src = _v2Profile || fs;
+    bkLk.innerHTML = _buildV2BreakdownHTML(src, !!_v2Profile);
+    bkLk.style.display = 'block';
+  }
 
   // Upgrade button
   const btn = document.getElementById('lockUpgradeBtn');
@@ -368,12 +396,20 @@ function buildPremiumProfileCard(profile) {
 
 // ── ELITE STATE (FULL DASHBOARD) ───────────────────────────────────
 function renderEliteState(fs, matches, suggested, tokens, boost) {
-  // Stats
-  setText('eliteStatScore',   fs.totalScore);
+  // Stats — prefer v2 totalScore when available
+  const displayScore = _v2Profile ? _v2Profile.totalScore : fs.totalScore;
+  setText('eliteStatScore',   displayScore);
   setText('eliteStatMatches', matches.length);
   const totalTok = (tokens.monthly || 0) + (tokens.extra || 0);
   setText('eliteStatTokens', totalTok);
   setText('eliteTokenCount', totalTok);
+
+  // v2 dimensional breakdown in elite state
+  const bkEl = document.getElementById('v2BreakdownElite');
+  if (bkEl && _v2Profile) {
+    bkEl.innerHTML = _buildV2BreakdownHTML(_v2Profile, true);
+    bkEl.style.display = 'block';
+  }
 
   // Boost strip
   renderBoostStrip(boost);
@@ -807,4 +843,49 @@ function showToast(message, isError = false) {
 function showError() {
   const loading = document.getElementById('dtLoading');
   if (loading) loading.innerHTML = '<p style="color:#ef4444;padding:40px 20px;text-align:center;">Error loading data. Please refresh.</p>';
+}
+
+// ── V2 HELPERS ──────────────────────────────────────────────────────
+function _isV2Stale(p) {
+  if (!p || !p.lastUpdated) return true;
+  const ms = p.lastUpdated.toMillis ? p.lastUpdated.toMillis() : new Date(p.lastUpdated).getTime();
+  return Date.now() - ms > 24 * 60 * 60 * 1000;
+}
+
+function _buildV2BreakdownHTML(profile, isV2) {
+  const score  = profile.totalScore  || profile.totalScore  || 0;
+  const form   = profile.formation   || profile.courseCompletion || 0;
+  const eng    = profile.engagement  || profile.boardParticipation || 0;
+  const expr   = profile.expression  || 0;
+  const cons   = profile.consistency || profile.consistency || 0;
+  const valid  = profile.validation  || profile.assessmentScore || 0;
+
+  const readyLabel = score >= 85
+    ? '🏅 Covenant Ready'
+    : `You are ${score}% Ready`;
+
+  const scoreColor = score >= 85 ? 'var(--gold)' : score >= 70 ? '#4ade80' : 'var(--text-sec)';
+
+  const row = (icon, label, val, warn) => `
+    <div class="dt-req-row" style="${warn ? 'background:rgba(239,68,68,0.06);border-radius:8px;' : ''}">
+      <span class="dt-req-icon" style="font-size:0.7rem;min-width:18px;text-align:center;">${icon}</span>
+      <div class="dt-req-body">
+        <p class="dt-req-name" style="font-size:0.76rem;">${escHtml(label)}</p>
+        <div class="dt-progress-bar">
+          <div class="dt-progress-fill${val >= 70 ? ' met' : ''}" style="width:${Math.min(100,val)}%"></div>
+        </div>
+      </div>
+      <span class="dt-req-val">${val}%</span>
+    </div>`;
+
+  return `
+    <p style="font-size:0.82rem;font-weight:700;color:${scoreColor};margin-bottom:0.5rem;">${readyLabel}</p>
+    ${row('📖', 'Formation (Schools)',        form)}
+    ${row('💬', 'Engagement (Boards)',        eng)}
+    ${row(expr < 20 ? '⚠️' : '👗', 'Expression (MV House)' + (expr < 20 ? ' — needs attention' : ''), expr, expr < 20)}
+    ${row('📅', 'Consistency',                cons)}
+    ${row('🏅', 'Validation (Certs/Coaching)',valid)}
+    ${!isV2 ? '<p style="font-size:0.68rem;color:var(--text-sec);margin-top:0.4rem;">v1 scores shown — v2 profile loading…</p>' : ''}
+    ${expr < 20 ? '<p style="font-size:0.72rem;color:#ef4444;margin-top:0.5rem;padding:0.5rem;background:rgba(239,68,68,0.06);border-radius:6px;line-height:1.5;">Add looks to your <a href="/mv-house.html" style="color:#ef4444;font-weight:700;">MV House wardrobe</a> to meet the Expression requirement for matching.</p>' : ''}
+  `;
 }
