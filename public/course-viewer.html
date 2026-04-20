@@ -1241,7 +1241,10 @@
       }
       
       // For other courses, check localStorage
-      const progressKey = `progress_${courseId}_module_${moduleIndex}`;
+      // CRITICAL: Use the same moduleId logic as the save function (module.moduleId || index)
+      const module = courseModules[moduleIndex];
+      const moduleId = module ? (module.moduleId || moduleIndex) : moduleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
       const progress = localStorage.getItem(progressKey);
       if (progress) {
         const data = JSON.parse(progress);
