@@ -22,6 +22,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/tier-access.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -1070,6 +1071,8 @@
         </div>
         <div class="progress-text"><span id="progressPercent">0</span>% Complete</div>
       </div>
+      <!-- Formation Score Widget (shown for SBD course) -->
+      <div id="formationScoreWidget" style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);display:none"></div>
       <nav class="modules-nav">
         <h3>Course Curriculum</h3>
         <div id="modulesNav"></div>
@@ -1423,6 +1426,13 @@
         console.log('[Course Viewer] Course loaded:', course.title);
 
         document.getElementById('sidebarTitle').textContent = course.title;
+        
+        // Show formation score widget for SBD course
+        if (courseId === 'sex-by-design-for-dummies') {
+          const fWidget = document.getElementById('formationScoreWidget');
+          if (fWidget) fWidget.style.display = 'block';
+        }
+        
         const durationWeeks = course.duration_weeks || parseInt(course.duration) || (course.modules && course.modules.length) || 6;
         document.getElementById('courseDuration').textContent = durationWeeks + ' weeks';
         document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
@@ -2444,6 +2454,17 @@
           updateMarkCompleteButton(true);
           updateCourseProgressBar();
           refreshModuleLockStates(); // Refresh sidebar to show checkmarks and unlock next week
+          
+          // ── SBD Formation Score update (non-breaking) ──────────────
+          if (courseId === 'sex-by-design-for-dummies') {
+            const aCode = localStorage.getItem('ambassadorCode');
+            if (aCode && typeof updateFormationScore === 'function') {
+              let completedCount = 0;
+              const totalMods = courseModules.length || 13;
+              for (let i = 0; i < totalMods; i++) { if (isModuleCompleted(i)) completedCount++; }
+              updateFormationScore(aCode, completedCount, totalMods);
+            }
+          }
         });
         
         // Show success notification
@@ -3861,5 +3882,18 @@
   </script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>
+
+  <!-- System Gate Modal -->
+  <div id="systemGateModal" class="hidden" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:24px">
+    <div style="background:white;border-radius:20px;padding:40px;max-width:480px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+      <h2 style="color:#0f172a;font-size:1.5rem;margin-bottom:12px">Feature Locked</h2>
+      <p id="gateReason" style="color:#475569;line-height:1.7;margin-bottom:28px">This feature requires a higher Formation Score.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="ambassador-payment.html" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem">Upgrade Now</a>
+        <button onclick="closeSystemGate()" style="background:#f1f5f9;color:#475569;border:none;padding:12px 28px;border-radius:10px;font-weight:600;cursor:pointer;font-size:0.95rem">Close</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
