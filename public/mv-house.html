@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MV House — Your Wardrobe System</title>
+  <link rel="stylesheet" href="css/design-system.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 24px;
+    }
+    .lock-card {
+      background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+      border: 2px solid #4f46e5;
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 540px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(79, 70, 229, 0.3);
+    }
+    .lock-icon { font-size: 4rem; margin-bottom: 20px; }
+    h1 { font-size: 2rem; margin-bottom: 12px; color: #f1f5f9; }
+    .subtitle { color: #94a3b8; margin-bottom: 32px; line-height: 1.6; }
+    .score-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+    }
+    .score-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .score-value { font-size: 2.5rem; font-weight: 700; color: #7c3aed; }
+    .score-required { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
+    .score-bar {
+      background: #334155;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+    .score-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+    .action-btn {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+      transition: transform 0.2s;
+    }
+    .action-btn:hover { transform: translateY(-2px); }
+    .back-link {
+      color: #64748b;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 8px;
+    }
+    .back-link:hover { color: #94a3b8; }
+    #lockedView, #unlockedView { display: none; }
+    .wardrobe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .wardrobe-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .wardrobe-card:hover { background: rgba(255,255,255,0.08); border-color: #4f46e5; }
+    .wardrobe-card .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .wardrobe-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .wardrobe-card p { font-size: 0.85rem; color: #94a3b8; line-height: 1.5; }
+    .unlocked-header { text-align: center; margin-bottom: 40px; }
+    .unlocked-header h1 { color: #f1f5f9; font-size: 2.2rem; margin-bottom: 10px; }
+    .unlocked-header p { color: #94a3b8; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <!-- LOCKED STATE (default until score check) -->
+  <div class="lock-card" id="lockedView">
+    <div class="lock-icon">🔒</div>
+    <h1>MV House</h1>
+    <p class="subtitle">Your personalized wardrobe system — built for the virile man who leads by presence. Unlock by reaching Formation Score 60.</p>
+    <div class="score-box">
+      <div class="score-label">Your Formation Score</div>
+      <div class="score-value" id="lockScoreValue">–</div>
+      <div class="score-required">Required: 60 / 100</div>
+      <div class="score-bar"><div class="score-fill" id="lockScoreFill" style="width:0%"></div></div>
+    </div>
+    <button class="action-btn" onclick="window.location.href='courses.html?courseId=sex-by-design-for-dummies'">↩ Return to Course →</button>
+    <a href="courses.html" class="back-link">← Back to All Courses</a>
+  </div>
+
+  <!-- UNLOCKED STATE -->
+  <div style="max-width:900px;width:100%;padding:40px 0" id="unlockedView">
+    <div class="unlocked-header">
+      <div style="font-size:3rem;margin-bottom:16px">👔</div>
+      <h1>MV House — Your Wardrobe System</h1>
+      <p>Five wardrobe categories. One standard: intentional presence.</p>
+    </div>
+    <div class="wardrobe-grid">
+      <div class="wardrobe-card">
+        <div class="icon">🏠</div>
+        <h3>Casual Day</h3>
+        <p>Clean, coordinated, intentional. Never sloppy — even at home.</p>
+      </div>
+      <div class="wardrobe-card">
+        <div class="icon">🌙</div>
+        <h3>Date Night</h3>
+        <p>Elevated. You have dressed for her specifically. She should see the effort.</p>
+      </div>
+      <div class="wardrobe-card">
+        <div class="icon">🛋️</div>
+        <h3>Home Presence</h3>
+        <p>Dignified casualness. You are still presenting to your wife.</p>
+      </div>
+      <div class="wardrobe-card">
+        <div class="icon">💼</div>
+        <h3>Corporate</h3>
+        <p>Professional gravity. Authority communicated through appearance.</p>
+      </div>
+      <div class="wardrobe-card">
+        <div class="icon">🎖️</div>
+        <h3>Official</h3>
+        <p>Full presence for high-stakes moments. No compromise.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <a href="course-viewer.html?courseId=sex-by-design-for-dummies" style="color:#94a3b8;font-size:0.9rem;text-decoration:none">← Back to Course</a>
+    </div>
+  </div>
+
+  <script>
+    async function checkMVHouseAccess() {
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      document.getElementById('lockedView').style.display = 'flex';
+      document.getElementById('lockedView').style.flexDirection = 'column';
+      document.getElementById('lockedView').style.alignItems = 'center';
+
+      if (!ambassadorCode) {
+        setScore(0);
+        return;
+      }
+
+      try {
+        const doc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
+        if (!doc.exists) { setScore(0); return; }
+        const data = doc.data();
+        const score = (data && data.formation && data.formation.teleiosProgress) || 0;
+        setScore(score);
+
+        if (score >= 60) {
+          document.getElementById('lockedView').style.display = 'none';
+          document.getElementById('unlockedView').style.display = 'block';
+        }
+      } catch (e) {
+        console.error('MV House access check error:', e);
+        setScore(0);
+      }
+    }
+
+    function setScore(score) {
+      const val = document.getElementById('lockScoreValue');
+      const fill = document.getElementById('lockScoreFill');
+      if (val) val.textContent = score;
+      if (fill) fill.style.width = Math.min(100, score) + '%';
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkMVHouseAccess);
+    } else {
+      checkMVHouseAccess();
+    }
+  </script>
+</body>
+</html>
