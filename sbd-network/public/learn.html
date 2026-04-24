@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/learn.html — run: node build.js -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,9 +12,9 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/learn-v2.css?v=5">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
 </head>
-<body class="learn-page-v2 bottom-nav-page">
+<body data-page="learn" class="learn-page-v2 bottom-nav-page">
 
     <!-- JS renders the selector or tier page into this shell -->
     <div id="learnApp" class="learn-app-shell">
@@ -29,67 +30,77 @@
     <script src="/js/firebase.js?v=75"></script>
     <script src="/js/upgrade-tracker.js?v=248"></script>
     <script src="/js/tier-access.js?v=102"></script>
-    <script src="/js/learn-v2.js?v=9"></script>
+    <script src="/js/learn-v2.js?v=10"></script>
 
-    <!-- HAMBURGER -->
+
+        <!-- HAMBURGER -->
     <div id="menuBtn" class="menu-btn">☰</div>
     <div id="menuOverlay" class="menu-overlay"></div>
     <div id="sideMenu" class="side-menu">
       <div class="menu-links">
         <div class="ham-section">
-          <div class="ham-section-label">💘 Relationship</div>
-          <a href="/dating.html">💘 Dating</a>
-          <a href="/dm.html">✉️ Messages</a>
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">👗 Expression</div>
-          <a href="/mv-house.html">👗 MV House</a>
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">📚 Resources</div>
-          <a href="/resources.html">📖 Resources Library</a>
-          <a href="/certificates.html">🏅 Certifications</a>
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">⚙️ System</div>
-          <a href="/profile.html">⚙️ Settings</a>
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
           <div id="adminSection" style="display:none;">
-            <a href="/admin.html">🔑 Admin Panel</a>
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
           </div>
+          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
         </div>
-        <div class="ham-section">
-          <div class="ham-section-label">👤 Account</div>
-          <a href="/profile.html">👤 Profile</a>
-          <button id="logoutMenuBtn">🚪 Logout</button>
-        </div>
-        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+        <div id="versionPill"></div>
       </div>
     </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
-            <span class="bn-icon">🏠</span>
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
             <span class="bn-label">Home</span>
         </a>
-        <a href="/learn.html" class="bn-tab active" aria-label="Learn">
-            <span class="bn-icon">📚</span>
+        <a id="learnNavTab" href="/learn.html" class="bn-tab active" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
             <span class="bn-label">Learn</span>
         </a>
-        <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">💬</span>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
             <span class="bn-label">Boards</span>
         </a>
-        <a href="/shop.html" class="bn-tab" aria-label="Shop">
-            <span class="bn-icon">🛒</span>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
             <span class="bn-label">Shop</span>
         </a>
-        <a href="/profile.html" class="bn-tab" aria-label="Profile">
-            <span class="bn-icon">👤</span>
-            <span class="bn-label">Profile</span>
+        <a href="/profile.html" class="bn-tab" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/ham-nav.js?v=1"></script>
+    <script defer src="/js/ham-nav.js?v=2"></script>
+    <script>
+      // Keep ?tier= param on the Learn nav tab so tapping Learn while viewing a tier stays in place
+      (function() {
+        const tier = new URLSearchParams(location.search).get('tier');
+        if (tier) {
+          const tab = document.getElementById('learnNavTab');
+          if (tab) tab.href = '/learn?tier=' + encodeURIComponent(tier);
+        }
+      })();
+    </script>
+
 
 </body>
 </html>
