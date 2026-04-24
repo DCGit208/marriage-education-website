@@ -36,6 +36,7 @@ const _SCHOOL_META = {
   'sexual-literacy': { name: 'Sexual Literacy',    icon: '📐' },
   'muliebrity':      { name: 'Muliebrity',         icon: '👗' },
   'virility':        { name: 'Virility',            icon: '🎯' },
+  'standalone':      { name: 'SBD Flagship Course', icon: '📖' },
   '__standalone':    { name: 'SBD Flagship Course', icon: '📖' },
 };
 
@@ -44,9 +45,9 @@ function _sortCourses(courses) {
   return [...courses].sort((a, b) => {
     const ao = _SCHOOL_ORDER[a.schoolId] ?? 98;
     const bo = _SCHOOL_ORDER[b.schoolId] ?? 98;
-    // null schoolId (standalone SBD) goes after schools but before total unknown
-    const as = (a.schoolId == null) ? 97 : ao;
-    const bs = (b.schoolId == null) ? 97 : bo;
+    // standalone schoolId (SBD For Dummies) goes after schools but before total unknown
+    const as = (a.schoolId == null || a.schoolId === 'standalone') ? 97 : ao;
+    const bs = (b.schoolId == null || b.schoolId === 'standalone') ? 97 : bo;
     if (as !== bs) return as - bs;
     return (a.courseNo ?? 999) - (b.courseNo ?? 999);
   });
@@ -361,8 +362,8 @@ function renderEliteRoadmap(activeCourses) {
   const container = document.getElementById('activeCoursesContainer');
 
   // SBD Dummies (schoolId: null) — feature at top; rest grouped by school
-  const sbdDummies    = activeCourses.find(c => c.schoolId == null);
-  const schoolCourses = activeCourses.filter(c => c.schoolId != null);
+  const sbdDummies    = activeCourses.find(c => c.schoolId == null || c.schoolId === 'standalone');
+  const schoolCourses = activeCourses.filter(c => c.schoolId != null && c.schoolId !== 'standalone');
 
   const schools   = [];
   const schoolMap = new Map();
