@@ -16,7 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="css/home-premium.css?v=34">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
+    <link rel="stylesheet" href="/css/dashboard.css">
     
     <!-- Hamburger Menu Styles -->
     <style>
@@ -612,48 +613,6 @@
     <script defer src="/js/swipe-back.js?v=53"></script>
     <script defer src="/js/install-prompt.js?v=53"></script>
 
-    <!-- Covenant Matching CTA widget -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        function loadDatingCta() {
-          if (typeof auth === 'undefined' || typeof db === 'undefined') {
-            setTimeout(loadDatingCta, 250);
-            return;
-          }
-          auth.onAuthStateChanged(function(user) {
-            if (!user) return;
-            db.collection('users').doc(user.uid).get().then(function(snap) {
-              if (!snap.exists) return;
-              var data  = snap.data();
-              var tier  = data.tier || (data.subscription && data.subscription.tier) || 'free';
-              var fs    = data.formationScore || {};
-              var score = fs.totalScore || 0;
-              var card  = document.getElementById('datingCtaCard');
-              var msg   = document.getElementById('datingCtaMsg');
-              var lbl   = document.getElementById('datingCtaScore');
-              if (!card || !msg || !lbl) return;
-              if (tier === 'free' || tier === 'foundation') {
-                msg.textContent = 'Covenant Matching unlocks at Premium';
-                lbl.textContent = 'Complete formation to qualify';
-              } else if (tier === 'premium') {
-                if (score >= 60 && (fs.school1Pct || 0) >= 70 && (fs.school2Pct || 0) >= 70) {
-                  msg.textContent = 'Limited Access Active — 3 curated profiles';
-                  lbl.textContent = 'Formation score: ' + score + '/100';
-                } else {
-                  msg.textContent = 'Formation score below threshold';
-                  lbl.textContent = score + '/100 — need 60+';
-                }
-              } else if (tier === 'elite') {
-                msg.textContent = score >= 70 ? 'Full Matching Dashboard Active' : 'Increase formation score to unlock full matching';
-                lbl.textContent = 'Formation score: ' + score + '/100';
-              }
-              card.style.display = 'block';
-            }).catch(function() {});
-          });
-        }
-        loadDatingCta();
-      });
-    </script>
 </head>
 <body class="home-cinematic bottom-nav-page auth-guest">
 
@@ -682,36 +641,36 @@
 
         <div class="ham-section">
           <div class="ham-section-label">💘 Relationship</div>
-          <a href="/dating.html">💘 Dating</a>
-          <a href="/dm.html">✉️ Messages</a>
+          <a href="/dating.html"><span class="menu-icon">💘</span> Dating</a>
+          <a href="/dm.html"><span class="menu-icon">✉️</span> Messages</a>
         </div>
 
         <div class="ham-section">
           <div class="ham-section-label">👗 Expression</div>
-          <a href="/mv-house.html">👗 MV House</a>
+          <a href="/mv-house.html"><span class="menu-icon">👗</span> MV House</a>
         </div>
 
         <div class="ham-section">
           <div class="ham-section-label">📚 Resources</div>
-          <a href="/resources.html">📖 Resources Library</a>
-          <a href="/certificates.html">🏅 Certifications</a>
+          <a href="/resources.html"><span class="menu-icon">📖</span> Resources Library</a>
+          <a href="/certificates.html"><span class="menu-icon">🏅</span> Certifications</a>
         </div>
 
         <div class="ham-section">
           <div class="ham-section-label">⚙️ System</div>
-          <a href="/profile.html">⚙️ Settings</a>
+          <a href="/profile.html"><span class="menu-icon">⚙️</span> Settings</a>
           <div id="adminSection" style="display:none;">
-            <a href="/admin.html">🔑 Admin Panel</a>
+            <a href="/admin.html"><span class="menu-icon">🔑</span> Admin Panel</a>
           </div>
         </div>
 
         <div class="ham-section">
           <div class="ham-section-label">👤 Account</div>
-          <a href="/profile.html">👤 Profile</a>
-          <button id="logoutMenuBtn">🚪 Logout</button>
+          <a href="/profile.html"><span class="menu-icon">👤</span> Profile</a>
+          <button id="logoutMenuBtn"><span class="menu-icon">🚪</span> Logout</button>
         </div>
 
-        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+        <div id="versionPill"></div>
       </div>
     </div>
     
@@ -1079,22 +1038,8 @@
         </div>
     </div>
 
-    <!-- COVENANT MATCHING CTA CARD (hidden until formation score loads) -->
-    <div id="datingCtaCard" style="display:none;margin:0 16px 16px;padding:16px 18px;background:linear-gradient(135deg,rgba(201,107,138,0.12),rgba(198,169,107,0.08));border:1px solid rgba(201,107,138,0.3);border-radius:14px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <span style="font-size:1.5rem;">💒</span>
-        <div>
-          <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:rgba(201,107,138,0.8);margin-bottom:2px;">Covenant Matching</div>
-          <div id="datingCtaMsg" style="font-size:0.9rem;font-weight:600;color:var(--text-primary,#fff);"></div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span id="datingCtaScore" style="font-size:0.8rem;color:rgba(201,107,138,0.9);"></span>
-        <a href="/dating.html" style="margin-left:auto;padding:8px 16px;background:rgba(201,107,138,0.2);border:1px solid rgba(201,107,138,0.5);border-radius:8px;color:#C96B8A;font-size:0.82rem;font-weight:700;text-decoration:none;">
-          Open →
-        </a>
-      </div>
-    </div>
+    <!-- Continue Journey Card -->
+    <div id="continueJourneyCard" style="margin:0 16px 16px;"></div>
 
     <!-- What's New Modal -->
     <div id="whatsNewModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);align-items:flex-end;">
@@ -1178,7 +1123,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (menuOverlay) menuOverlay.style.display = "none";
     }
 
-    if (menuBtn) menuBtn.addEventListener("click", openMenu);
+    if (menuBtn) menuBtn.addEventListener("click", function () {
+      const isOpen = sideMenu && sideMenu.style.left === "0px";
+      isOpen ? closeMenu() : openMenu();
+    });
     if (menuOverlay) menuOverlay.addEventListener("click", closeMenu);
 
     // =========================
