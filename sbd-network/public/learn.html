@@ -40,7 +40,7 @@
       <div class="menu-links">
         <div class="ham-section">
           <div class="ham-section-label">Formation</div>
-          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a id="hamLearnLink" href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
           <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
           <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
@@ -90,14 +90,16 @@
         </a>
     </nav>
     <script defer src="/js/ham-nav.js?v=2"></script>
-    <script>
-      // Keep ?tier= param on the Learn nav tab so tapping Learn while viewing a tier stays in place
+    <script defer>
+      // Keep ?tier= param on all Learn links so tapping Learn while viewing a tier stays in place
       (function() {
         const tier = new URLSearchParams(location.search).get('tier');
-        if (tier) {
-          const tab = document.getElementById('learnNavTab');
-          if (tab) tab.href = '/learn?tier=' + encodeURIComponent(tier);
-        }
+        if (!tier) return;
+        const encoded = encodeURIComponent(tier);
+        const tab = document.getElementById('learnNavTab');
+        if (tab) tab.href = '/learn?tier=' + encoded;
+        const ham = document.getElementById('hamLearnLink');
+        if (ham) ham.href = '/learn?tier=' + encoded;
       })();
     </script>
 
