@@ -221,6 +221,12 @@ async function loadContinueJourney(uid) {
     const completedModules = progress.completedModules || [];
     const totalModules = course.moduleCount || 1;
     const progressPercent = Math.round((completedModules.length / totalModules) * 100);
+
+    // Only show the card if the user has made actual progress
+    if (completedModules.length === 0) {
+      continueJourneyCard.innerHTML = '';
+      return;
+    }
     
     // Format last activity time
     const lastActivityText = lastActivity 
@@ -245,7 +251,7 @@ async function loadContinueJourney(uid) {
           <p class="journey-timestamp">Last activity: ${lastActivityText}</p>
         </div>
         
-        <button class="btn-continue" onclick="window.location.href='/module.html?id=${currentModuleId || ''}'">
+        <button class="btn-continue" onclick="window.location.href='/lesson.html?moduleId=${currentModuleId || ''}'">  
           Continue &rarr;
         </button>
       </div>
@@ -320,6 +326,7 @@ async function loadIdentityStatus(uid) {
 // ================================================================
 
 async function loadThisWeeksWork(uid) {
+  if (!weekWorkContainer) return;
   try {
     const progress = currentUserData.progress || {};
     const currentModuleId = progress.currentModuleId;
@@ -382,6 +389,7 @@ async function loadThisWeeksWork(uid) {
 // ================================================================
 
 async function loadActiveDiscussions(uid) {
+  if (!discussionsContainer) return;
   try {
     // Fetch all boards that are course-linked (have linkedCourseId)
     const boardsQuery = await db.collection('boards')
