@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/courses.html — run: node build.js -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +11,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
     <style>
@@ -18,24 +19,7 @@
             padding-bottom: 80px;
         }
         
-        .courses-hero {
-            padding: 30px 20px;
-            background: linear-gradient(135deg, var(--bg-secondary, #1a1a1a) 0%, var(--bg-primary, #000) 100%);
-            border-bottom: 1px solid var(--border-color, #333);
-        }
-        
-        .courses-hero h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0 0 5px 0;
-            color: var(--text-primary, #fff);
-        }
-        
-        .courses-hero p {
-            color: var(--text-secondary, #aaa);
-            font-size: 0.95rem;
-            margin: 0;
-        }
+
         
         .learning-section {
             padding: 24px 20px;
@@ -195,11 +179,47 @@
         }
         
         .lock-badge {
-            background: var(--bg-tertiary, #2a2a2a);
+            background: rgba(255,255,255,0.07);
             padding: 6px 12px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary, #aaa);
+        }
+        
+        .start-btn {
+            background: var(--accent-primary, #00bcd4);
+            color: #000;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
+        }
+
+        /* School grouping headers — shown when multiple schools are visible (Premium / Elite) */
+        .school-group {
+            margin-bottom: 8px;
+        }
+        .school-group-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted, #888);
+            padding: 14px 0 6px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin-top: 4px;
+        }
+        .school-group:first-child .school-group-header {
+            border-top: none;
+            padding-top: 4px;
+        }
+        .school-group-icon {
+            font-size: 1rem;
         }
         
         .empty-state {
@@ -217,9 +237,294 @@
             font-size: 1rem;
             margin: 0;
         }
+
+        /* ─── Course Week Sheet ─────────────────────────────────── */
+        .course-sheet-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 950;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .course-sheet-backdrop.active { opacity: 1; }
+
+        .course-sheet-panel {
+            display: none;
+            position: fixed; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary, #0a0a0a);
+            border-radius: 20px 20px 0 0;
+            z-index: 951;
+            max-height: 78vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            /* Clear bottom nav bar + safe area */
+            padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        }
+        .course-sheet-panel.active { transform: translateY(0); }
+
+        .course-sheet-handle {
+            width: 36px; height: 4px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 2px;
+            margin: 12px auto 0;
+        }
+        .course-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        .course-sheet-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary, #fff);
+        }
+        .sheet-close-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-primary, #fff);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .sheet-loading {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary, #aaa);
+            font-size: 0.9rem;
+        }
+        .week-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .week-row:active { background: rgba(255,255,255,0.05); }
+        .week-row.locked { opacity: 0.5; cursor: default; }
+
+        .week-num-pill {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary, #aaa);
+            flex-shrink: 0;
+            letter-spacing: 0.04em;
+        }
+        .week-row.current .week-num-pill {
+            background: var(--accent-primary, #00bcd4);
+            border-color: var(--accent-primary, #00bcd4);
+            color: #000;
+        }
+        .week-row.completed .week-num-pill {
+            background: rgba(0,200,100,0.12);
+            border-color: rgba(0,200,100,0.3);
+            color: #00c864;
+        }
+        .week-row-info { flex: 1; min-width: 0; }
+        .week-row-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+            margin: 0 0 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .week-row-meta {
+            font-size: 0.78rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0;
+        }
+        .week-row-arrow {
+            font-size: 1rem;
+            color: var(--text-secondary, #aaa);
+            flex-shrink: 0;
+        }
+        .week-row.current .week-row-arrow { color: var(--accent-primary, #00bcd4); }
+
+        /* ── Formation Roadmap — Elite ──────────────────────────── */
+        .formation-arc-banner {
+            background: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(0,188,212,0.05));
+            border: 1px solid rgba(255,193,7,0.2);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+        }
+        .formation-arc-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ffc107;
+            margin: 0 0 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .formation-arc-sub {
+            font-size: 0.78rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0 0 12px;
+        }
+        .formation-arc-schools {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .arc-school {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+            background: rgba(255,255,255,0.06);
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+        .arc-arrow { font-size: 0.65rem; color: #555; }
+
+        /* ── Featured Entry Card — SBD Dummies ──────────────────── */
+        .featured-entry-card {
+            background: linear-gradient(135deg, rgba(0,188,212,0.1), rgba(0,150,136,0.06));
+            border: 1px solid rgba(0,188,212,0.28);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .featured-entry-card:hover {
+            border-color: rgba(0,188,212,0.55);
+            transform: translateY(-2px);
+        }
+        .fec-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #00bcd4;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        .fec-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary, #fff);
+            margin: 0 0 5px;
+        }
+        .fec-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0 0 14px;
+        }
+        .fec-cta {
+            background: #00bcd4;
+            color: #000;
+            border: none;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 9px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .fec-progress {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .fec-progress-bar {
+            height: 100%;
+            background: #00bcd4;
+            border-radius: 2px;
+        }
+        .fec-progress-label { font-size: 0.73rem; color: #00bcd4; margin: 0; }
+
+        /* ── Roadmap School Sections ─────────────────────────────── */
+        .roadmap-school-section {
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .roadmap-school-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 16px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.03);
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .roadmap-school-header:active { background: rgba(255,255,255,0.07); }
+        .roadmap-school-icon { font-size: 1.15rem; }
+        .roadmap-school-name {
+            flex: 1;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary, #fff);
+        }
+        .roadmap-school-count { font-size: 0.73rem; color: var(--text-muted, #888); }
+        .roadmap-school-chevron { font-size: 0.68rem; color: var(--text-muted, #888); }
+        .roadmap-school-courses { padding: 0 8px 8px; }
+        .roadmap-school-courses.collapsed { display: none; }
+
+        /* ── Featured Course Card (Course 1 / Start Here) ────────── */
+        .course-card--featured {
+            border-color: rgba(255,193,7,0.28);
+            background: rgba(255,193,7,0.03);
+        }
+        .course-card--featured:hover { border-color: rgba(255,193,7,0.55) !important; }
+        .start-here-badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: rgba(255,193,7,0.14);
+            color: #ffc107;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* ── Guided Path Intro Cards (Foundation / Premium) ─────── */
+        .path-intro-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 13px 15px;
+            margin-bottom: 16px;
+        }
+        .path-intro-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .path-intro-text { flex: 1; }
+        .path-intro-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary, #fff);
+            margin: 0 0 3px;
+        }
+        .path-intro-sub {
+            font-size: 0.77rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0;
+        }
     </style>
 </head>
-<body class="courses-page bottom-nav-page">
+<body data-page="learn" class="courses-page bottom-nav-page has-header">
     
     <!-- Header -->
     <header class="app-header">
@@ -234,11 +539,7 @@
         </div>
     </header>
     
-    <!-- Hero Section -->
-    <section class="courses-hero">
-        <h1>My Learning</h1>
-        <p id="welcomeMessage">Continue your formation journey</p>
-    </section>
+
     
     <!-- Main Content -->
     <main class="courses-main">
@@ -266,14 +567,21 @@
             <div id="activeCoursesContainer"></div>
         </section>
         
-        <!-- Locked Courses Section -->
-        <section class="learning-section" id="lockedSection" style="display: none;">
+        <!-- Coming Up Next (progression-locked: same tier, finish prev course) -->
+        <section class="learning-section" id="progressionSection" style="display: none;">
             <div class="section-header">
-                <h2 class="section-title">Locked Courses</h2>
-                <a href="/learn.html" class="section-link">View All →</a>
+                <h2 class="section-title">Coming Up Next 🔓</h2>
             </div>
-            
-            <div id="lockedCoursesContainer"></div>
+            <div id="progressionCoursesContainer"></div>
+        </section>
+
+        <!-- Upgrade to Unlock (tier-locked: need higher plan) -->
+        <section class="learning-section" id="upgradeSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Upgrade to Unlock 🔒</h2>
+                <a href="/upgrade.html" class="section-link">See Plans →</a>
+            </div>
+            <div id="upgradeCoursesContainer"></div>
         </section>
         
         <!-- Completed Courses Section -->
@@ -286,6 +594,19 @@
         </section>
         
     </main>
+
+    <!-- Course Week Selection Sheet -->
+    <div id="courseSheetBackdrop" class="course-sheet-backdrop" onclick="closeCourseSheet()"></div>
+    <div id="courseSheetPanel" class="course-sheet-panel">
+        <div class="course-sheet-handle"></div>
+        <div class="course-sheet-header">
+            <h2 class="course-sheet-title" id="sheetCourseTitle">Loading…</h2>
+            <button class="sheet-close-btn" onclick="closeCourseSheet()">✕</button>
+        </div>
+        <div id="sheetWeekList">
+            <div class="sheet-loading">Loading weeks…</div>
+        </div>
+    </div>
     
     <!-- Firebase SDKs -->
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -295,71 +616,71 @@
     
     <!-- App Scripts -->
     <script defer src="/js/firebase.js?v=75"></script>
-    <script defer src="/js/formation-access.js?v=104"></script>
-    <script defer src="/js/sw-update-checker.js?v=97"></script>
+    <script defer src="/js/tier-access.js?v=106"></script>
+    <script defer src="/js/formation-access.js?v=105"></script>
+    <script defer src="/js/sw-update-checker.js?v=98"></script>
     <script defer src="/js/notifications.js?v=52"></script>
     <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/courses.js?v=104"></script>
+    <script defer src="/js/courses.js?v=110"></script>
     
-    <!-- HAMBURGER -->
+
+        <!-- HAMBURGER -->
     <div id="menuBtn" class="menu-btn">☰</div>
     <div id="menuOverlay" class="menu-overlay"></div>
     <div id="sideMenu" class="side-menu">
       <div class="menu-links">
         <div class="ham-section">
-          <div class="ham-section-label">💘 Relationship</div>
-          <a href="/dating.html">💘 Dating</a>
-          <a href="/dm.html">✉️ Messages</a>
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">👗 Expression</div>
-          <a href="/mv-house.html">👗 MV House</a>
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">📚 Resources</div>
-          <a href="/resources.html">📖 Resources Library</a>
-          <a href="/certificates.html">🏅 Certifications</a>
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">⚙️ System</div>
-          <a href="/profile.html">⚙️ Settings</a>
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
           <div id="adminSection" style="display:none;">
-            <a href="/admin.html">🔑 Admin Panel</a>
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
           </div>
+          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
         </div>
-        <div class="ham-section">
-          <div class="ham-section-label">👤 Account</div>
-          <a href="/profile.html">👤 Profile</a>
-          <button id="logoutMenuBtn">🚪 Logout</button>
-        </div>
-        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+        <div id="versionPill"></div>
       </div>
     </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
-            <span class="bn-icon">🏠</span>
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
             <span class="bn-label">Home</span>
         </a>
-        <a href="/learn.html" class="bn-tab active" aria-label="Learn">
-            <span class="bn-icon">📚</span>
+        <a href="/learn.html" class="bn-tab active" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
             <span class="bn-label">Learn</span>
         </a>
-        <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">💬</span>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
             <span class="bn-label">Boards</span>
         </a>
-        <a href="/shop.html" class="bn-tab" aria-label="Shop">
-            <span class="bn-icon">🛒</span>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
             <span class="bn-label">Shop</span>
         </a>
-        <a href="/profile.html" class="bn-tab" aria-label="Profile">
-            <span class="bn-icon">👤</span>
-            <span class="bn-label">Profile</span>
+        <a href="/profile.html" class="bn-tab" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/offline.js?v=52"></script>
-    <script defer src="/js/ham-nav.js?v=1"></script>
+    <script defer src="/js/ham-nav.js?v=2"></script>
+
 </body>
 </html>
