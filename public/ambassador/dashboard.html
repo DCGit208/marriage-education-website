@@ -1037,14 +1037,28 @@
                     </button>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
                 <div style="background:#0D0D0D;border:1px solid #C6A96B33;border-radius:10px;padding:16px;text-align:center;">
                     <div id="sbdSignupsCount" style="font-size:2rem;font-weight:700;color:#C6A96B;">0</div>
                     <div style="color:#A8A29E;font-size:0.8rem;margin-top:4px;">App Signups</div>
                 </div>
                 <div style="background:#0D0D0D;border:1px solid #C6A96B33;border-radius:10px;padding:16px;text-align:center;">
                     <div id="sbdSubscribersCount" style="font-size:2rem;font-weight:700;color:#00b894;">0</div>
-                    <div style="color:#A8A29E;font-size:0.8rem;margin-top:4px;">Active Subscribers ($9/mo)</div>
+                    <div style="color:#A8A29E;font-size:0.8rem;margin-top:4px;">Total Subscribers</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:12px;text-align:center;">
+                    <div id="sbdFoundationCount" style="font-size:1.5rem;font-weight:700;color:#A8A29E;">0</div>
+                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Foundation</div>
+                </div>
+                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:12px;text-align:center;">
+                    <div id="sbdPremiumCount" style="font-size:1.5rem;font-weight:700;color:#C6A96B;">0</div>
+                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Premium</div>
+                </div>
+                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:12px;text-align:center;">
+                    <div id="sbdEliteCount" style="font-size:1.5rem;font-weight:700;color:#fff;">0</div>
+                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Elite</div>
                 </div>
             </div>
             <div style="text-align:center;">
@@ -1872,6 +1886,9 @@
             const referrals = stats.sbdReferrals || {};
             document.getElementById('sbdSignupsCount').textContent = referrals.signups || 0;
             document.getElementById('sbdSubscribersCount').textContent = referrals.subscribers || 0;
+            document.getElementById('sbdFoundationCount').textContent = referrals.foundation || 0;
+            document.getElementById('sbdPremiumCount').textContent = referrals.premium || 0;
+            document.getElementById('sbdEliteCount').textContent = referrals.elite || 0;
 
             section.style.display = 'block';
         }
