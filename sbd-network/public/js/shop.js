@@ -338,6 +338,21 @@ async function unlockContent(productId) {
       });
       
       console.log('[Shop] Subscription activated:', product.unlocks.tier);
+
+      // If this user was referred by an ambassador, increment their subscriber count
+      try {
+        const userSnap = await userRef.get();
+        const referralCode = userSnap.exists ? userSnap.data().referredBy : null;
+        if (referralCode) {
+          const ambSnap = await firebase.firestore().collection('ambassadors')
+            .where('sbdReferralCode', '==', referralCode).limit(1).get();
+          if (!ambSnap.empty) {
+            await ambSnap.docs[0].ref.update({
+              'sbdReferrals.subscribers': firebase.firestore.FieldValue.increment(1)
+            });
+          }
+        }
+      } catch (_) {} // non-critical
       
     } else if (product.unlocks.type === 'course') {
       // Grant access to specific courses
