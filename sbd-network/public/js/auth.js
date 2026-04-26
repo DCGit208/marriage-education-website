@@ -197,6 +197,9 @@ if (signupForm) {
       }
 
       // Create user document in Firestore
+      // Capture ?ref= SBD ambassador referral code if present
+      const refCode = new URLSearchParams(window.location.search).get('ref') || null;
+
       await db.collection('users').doc(user.uid).set({
         uid: user.uid,
         name: name,
@@ -208,10 +211,24 @@ if (signupForm) {
         },
         role: 'member',
         groups: starterGroups,
+        ...(refCode ? { referredBy: refCode } : {}),
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
       });
       
+      // If referred by an ambassador, increment their signup count
+      if (refCode) {
+        db.collection('ambassadors').where('sbdReferralCode', '==', refCode).limit(1).get()
+          .then(snap => {
+            if (!snap.empty) {
+              snap.docs[0].ref.update({
+                'sbdReferrals.signups': firebase.firestore.FieldValue.increment(1)
+              });
+            }
+          })
+          .catch(() => {}); // non-critical
+      }
+
       // Update profile
       await user.updateProfile({
         displayName: name
