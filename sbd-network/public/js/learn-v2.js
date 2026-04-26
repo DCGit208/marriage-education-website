@@ -243,7 +243,7 @@ const TIER_HUB = {
       icon: '📖',
       title: 'Learning',
       sub: 'Teleios Blueprint (6 weeks) + Sex By Design For Dummies (13 weeks) — dripped weekly',
-      href: '/schools.html',
+      href: '/courses.html?viewTier=foundation',
       locked: false,
     },
     {
@@ -325,7 +325,7 @@ const TIER_HUB = {
       icon: '📖',
       title: 'Learning',
       sub: 'Full School 1 (13 courses) + Full School 2 (15 courses) — dripped weekly',
-      href: '/schools.html',
+      href: '/courses.html?viewTier=premium',
       locked: false,
     },
     {
@@ -399,7 +399,7 @@ const TIER_HUB = {
       icon: '📖',
       title: 'Learning',
       sub: 'All 4 schools — 44 courses across every formation discipline',
-      href: '/schools.html',
+      href: '/courses.html',
       locked: false,
     },
     {
@@ -465,24 +465,24 @@ function buildHubCard(card) {
       ? 'thub-card thub-card--locked thub-card--pressure'
       : 'thub-card thub-card--locked';
     return `
-      <div class="${cls}" onclick="window.location.href='${escHtml(card.href)}'">
+      <a class="${cls}" href="${escHtml(card.href)}">
         <div class="thub-icon-row">
           <span class="thub-icon">${card.icon}</span>
           <span class="thub-lock-badge${card.pressure ? ' thub-lock-badge--cta' : ''}">${escHtml(card.lockLabel || 'Locked')}</span>
         </div>
         <p class="thub-title">${escHtml(card.title)}</p>
         <p class="thub-sub">${escHtml(card.sub)}</p>
-      </div>`;
+      </a>`;
   }
   return `
-    <div class="thub-card" onclick="window.location.href='${escHtml(card.href)}'">
+    <a class="thub-card" href="${escHtml(card.href)}">
       <div class="thub-icon-row">
         <span class="thub-icon">${card.icon}</span>
         <span class="thub-arrow">→</span>
       </div>
       <p class="thub-title">${escHtml(card.title)}</p>
       <p class="thub-sub">${escHtml(card.sub)}</p>
-    </div>`;
+    </a>`;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
