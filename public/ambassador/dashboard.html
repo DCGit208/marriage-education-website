@@ -1281,6 +1281,13 @@
                         <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
                         <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
                     </tr>
+                    <tr>
+                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">👥</span><span style="font-weight: 600;">Recruitment</span></td>
+                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">0</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">0 FCFA</td>
+                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">0%</td>
+                    </tr>
                 </tbody>
                 <tfoot>
                     <tr style="background: #f8f9fa; font-weight: 700;">
@@ -2072,14 +2079,15 @@
                     courses: { icon: '📖', name: 'Courses', units: 0, revenue: 0, earnings: 0 },
                     premium: { icon: '💼', name: 'Premium', units: 0, revenue: 0, earnings: 0 },
                     corporate: { icon: '🏢', name: 'Corporate', units: 0, revenue: 0, earnings: 0 },
-                    community: { icon: '🤝', name: 'Community', units: 0, revenue: 0, earnings: 0 }
+                    community: { icon: '🤝', name: 'Community', units: 0, revenue: 0, earnings: 0 },
+                    recruitment: { icon: '👥', name: 'Recruitment', units: 0, revenue: 0, earnings: 0 }
                 };
                 
                 // Fill in actual data
                 for (const [key, cat] of Object.entries(categories)) {
                     cat.units = stats.deployment_by_category?.[key] || 0;
                     cat.earnings = stats.revenue_by_category?.[key] || 0;
-                    cat.revenue = cat.earnings * 10; // Approximate
+                    cat.revenue = key === 'recruitment' ? cat.earnings : cat.earnings * 10; // Recruitment bonus IS the revenue
                 }
                 
                 // Build table rows
@@ -2123,15 +2131,47 @@
             try {
                 const db = firebase.firestore();
                 const tbody = document.getElementById('commissionHistoryBody');
-                
-                // One-time fetch for commissions
-                const snapshot = await db.collection('sales')
+
+                // Fetch product sales commissions
+                const salesSnap = await db.collection('sales')
                     .where('source_ambassador', '==', ambassadorCode)
                     .orderBy('sale_date', 'desc')
                     .limit(20)
                     .get();
-                
-                if (snapshot.empty) {
+
+                // Fetch recruitment bonuses from admin_notifications
+                const bonusSnap = await db.collection('admin_notifications')
+                    .where('rd_code', '==', ambassadorCode)
+                    .where('type', '==', 'rd_recruitment_bonus')
+                    .get();
+
+                const allRows = [];
+
+                salesSnap.forEach((doc) => {
+                    const sale = doc.data();
+                    allRows.push({
+                        date: sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date(0),
+                        source: sale.customer_name || sale.customer_email || 'Customer',
+                        product: sale.product_name || 'Product Sale',
+                        commission: sale.commissions?.ambassador || 0,
+                        badge: '10%',
+                        badgeColor: '#00b894'
+                    });
+                });
+
+                bonusSnap.forEach((doc) => {
+                    const b = doc.data();
+                    allRows.push({
+                        date: b.created_at?.toDate ? b.created_at.toDate() : new Date(0),
+                        source: b.ambassador_name || b.ambassador_code || 'New Recruit',
+                        product: '🤝 Recruitment Bonus — ' + (b.ambassador_code || ''),
+                        commission: b.amount || 0,
+                        badge: 'Bonus',
+                        badgeColor: '#6c5ce7'
+                    });
+                });
+
+                if (allRows.length === 0) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="5" style="padding: 2rem; text-align: center; color: #636e72;">
@@ -2141,30 +2181,25 @@
                     `;
                     return;
                 }
-                
+
+                // Sort newest first
+                allRows.sort((a, b) => b.date - a.date);
+
                 tbody.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const sale = doc.data();
-                    const date = sale.sale_date?.toDate ? sale.sale_date.toDate() : new Date();
-                    const formattedDate = date.toLocaleDateString('en-US', { 
-                        month: 'short', day: 'numeric', year: 'numeric', 
-                        hour: '2-digit', minute: '2-digit' 
+                allRows.forEach((row) => {
+                    const formattedDate = row.date.toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
                     });
-                    
-                    const commission = sale.commissions?.ambassador || 0;
-                    const productName = sale.product_name || 'Product Sale';
-                    const source = sale.customer_name || sale.customer_email || 'Customer';
-                    
-                    const row = `
+                    tbody.innerHTML += `
                         <tr style="border-bottom: 1px solid #e9ecef; transition: background 0.2s;">
                             <td style="padding: 1rem;">${formattedDate}</td>
-                            <td style="padding: 1rem;">${source}</td>
-                            <td style="padding: 1rem;">${productName}</td>
-                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${commission.toLocaleString()} FCFA</td>
-                            <td style="padding: 1rem; text-align: center;"><span style="background: #00b894; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">10%</span></td>
+                            <td style="padding: 1rem;">${row.source}</td>
+                            <td style="padding: 1rem;">${row.product}</td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #00b894; font-family: monospace;">${row.commission.toLocaleString()} FCFA</td>
+                            <td style="padding: 1rem; text-align: center;"><span style="background: ${row.badgeColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${row.badge}</span></td>
                         </tr>
                     `;
-                    tbody.innerHTML += row;
                 });
             } catch (error) {
                 console.error('Error loading commission history:', error);
