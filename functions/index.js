@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const stripe = require('stripe')(functions.config().stripe?.secret_key);
 const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 const axios = require('axios');
 const { jsPDF } = require('jspdf');
 
@@ -19,11 +19,9 @@ admin.initializeApp();
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
 
-// Initialize SendGrid if available
-const SENDGRID_API_KEY = functions.config().sendgrid?.api_key;
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-}
+// Initialize Resend
+const RESEND_KEY = functions.config().resend?.key || 're_PDX9ycaB_HDkbmWkZqdtrASUp1X5oazKM';
+const resend = new Resend(RESEND_KEY);
 
 // Telegram Configuration
 const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
@@ -854,11 +852,7 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
 
     // Send admin notification email (non-blocking - don't fail payment if email fails)
     try {
-      if (SENDGRID_API_KEY) {
-        await sendAdminPaymentNotification(paymentData);
-      } else {
-        await sendAdminPaymentNotificationSMTP(paymentData);
-      }
+      await sendAdminPaymentNotification(paymentData);
       console.log('[EMAIL] Admin notification sent');
     } catch (emailError) {
       console.warn('[EMAIL] Admin notification failed (continuing anyway):', emailError.message);
@@ -1205,44 +1199,72 @@ exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
       paid_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Update RD's pending balance
-    const rdRef = db.collection('regional_directors').doc(rd_code);
-    const rdDoc = await rdRef.get();
-    
-    if (rdDoc.exists) {
-      await rdRef.update({
-        recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
-        recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
-        updated_at: admin.firestore.FieldValue.serverTimestamp()
-      });
+    // Update recruiter's pending balance (RD-* or AMB-*)
+    let recruiterName = 'Unknown';
+    let remainingPending = 0;
 
-      // Update recruitment_history status
-      const rdData = rdDoc.data();
-      const recruitmentHistory = rdData.recruitment_history || [];
-      const updatedHistory = recruitmentHistory.map(entry => {
-        if (entry.status === 'pending' && entry.amount === amount) {
-          return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
-        }
-        return entry;
-      });
+    if (rd_code && rd_code.startsWith('RD-')) {
+      const rdRef = db.collection('regional_directors').doc(rd_code);
+      const rdDoc = await rdRef.get();
 
-      await rdRef.update({
-        recruitment_history: updatedHistory
-      });
+      if (rdDoc.exists) {
+        const rdData = rdDoc.data();
+        recruiterName = rdData.name || 'Unknown';
 
-      console.log(`[RD PAYMENT] ${rd_code} payment marked as paid: ${amount} FCFA`);
+        await rdRef.update({
+          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
+          recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
 
-      // Send Telegram confirmation
-      if (TELEGRAM_BOT_TOKEN) {
-        const remainingPending = (rdData.recruitment_bonus_pending || 0) - amount;
-        const telegramMsg = `✅ RD PAYMENT MARKED AS PAID\n\n` +
-          `RD: ${rd_code}\n` +
-          `Name: ${rdData.name || 'Unknown'}\n` +
-          `Amount Paid: ${amount.toLocaleString()} FCFA\n` +
-          `Remaining Pending: ${remainingPending.toLocaleString()} FCFA`;
-        
-        await sendTelegram(telegramMsg, false);
+        const recruitmentHistory = rdData.recruitment_history || [];
+        const updatedHistory = recruitmentHistory.map(entry => {
+          if (entry.status === 'pending' && entry.amount === amount) {
+            return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
+          }
+          return entry;
+        });
+        await rdRef.update({ recruitment_history: updatedHistory });
+        remainingPending = Math.max(0, (rdData.recruitment_bonus_pending || 0) - amount);
       }
+    } else if (rd_code && rd_code.startsWith('AMB-')) {
+      const ambRef = db.collection('ambassadors').doc(rd_code);
+      const ambDoc = await ambRef.get();
+
+      if (ambDoc.exists) {
+        const ambData = ambDoc.data();
+        recruiterName = ambData.name || ambData.fullName || 'Unknown';
+
+        await ambRef.update({
+          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
+          recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
+          commission_earned: admin.firestore.FieldValue.increment(amount),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        const recruitmentHistory = ambData.recruitment_history || [];
+        const updatedHistory = recruitmentHistory.map(entry => {
+          if (entry.status === 'pending' && entry.amount === amount) {
+            return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
+          }
+          return entry;
+        });
+        await ambRef.update({ recruitment_history: updatedHistory });
+        remainingPending = Math.max(0, (ambData.recruitment_bonus_pending || 0) - amount);
+      }
+    }
+
+    console.log(`[RECRUITMENT PAYMENT] ${rd_code} payment marked as paid: ${amount} FCFA`);
+
+    // Send Telegram confirmation
+    if (TELEGRAM_BOT_TOKEN) {
+      const telegramMsg = `✅ RECRUITMENT BONUS PAYMENT MARKED AS PAID\n\n` +
+        `Recruiter: ${rd_code}\n` +
+        `Name: ${recruiterName}\n` +
+        `Amount Paid: ${amount.toLocaleString()} FCFA\n` +
+        `Remaining Pending: ${remainingPending.toLocaleString()} FCFA`;
+
+      await sendTelegram(telegramMsg, false);
     }
 
     return {
@@ -1880,72 +1902,133 @@ async function activateAmbassador(payment) {
   await db.collection('ambassadors').doc(ambassadorCode).set(ambassadorAccount);
   console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
 
-  // Update RD statistics if recruited by RD
-  if (payment.regional_director && payment.regional_director.startsWith('RD-')) {
+  // Update recruiter statistics for any recruiter code (RD-* or AMB-*)
+  if (payment.regional_director) {
     try {
-      const rdRef = db.collection('regional_directors').doc(payment.regional_director);
-      const rdDoc = await rdRef.get();
-      
-      if (rdDoc.exists) {
-        const recruitmentBonus = 1500; // 10% of 15,000 FCFA signup fee
-        
-        // Update RD with recruitment bonus
-        await rdRef.update({
-          downline_count: admin.firestore.FieldValue.increment(1),
-          team_ambassadors: admin.firestore.FieldValue.increment(1),
-          recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
-          recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
-          recruitment_count: admin.firestore.FieldValue.increment(1),
-          updated_at: admin.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // Add to recruitment history
-        const rdData = rdDoc.data();
-        const recruitmentHistory = rdData.recruitment_history || [];
-        recruitmentHistory.push({
-          ambassador_code: ambassadorCode,
-          ambassador_name: ambassadorData.fullName,
-          amount: recruitmentBonus,
-          date: new Date().toISOString(),
-          status: 'pending'
-        });
-        
-        await rdRef.update({
-          recruitment_history: recruitmentHistory
-        });
-        
-        console.log(`[RD] Updated ${payment.regional_director} - earned ${recruitmentBonus} FCFA recruitment bonus`);
-        
-        // Create admin notification for RD payment
-        await db.collection('admin_notifications').add({
-          type: 'rd_recruitment_bonus',
-          rd_code: payment.regional_director,
-          rd_name: rdData.name || 'Unknown',
-          ambassador_code: ambassadorCode,
-          ambassador_name: ambassadorData.fullName,
-          amount: recruitmentBonus,
-          status: 'pending',
-          created_at: admin.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // Send Telegram notification to admin about RD recruitment bonus
-        if (TELEGRAM_BOT_TOKEN) {
-          const rdTotalPending = (rdData.recruitment_bonus_pending || 0) + recruitmentBonus;
-          const rdMsg = `💰 RD RECRUITMENT BONUS\n\n` +
-            `RD: ${payment.regional_director}\n` +
-            `Name: ${rdData.name || 'Unknown'}\n` +
-            `New Ambassador: ${ambassadorCode}\n` +
-            `Ambassador Name: ${ambassadorData.fullName}\n` +
-            `Bonus: 1,500 FCFA\n\n` +
-            `RD Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
-            `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
-          
-          await sendTelegram(rdMsg, false);
-          console.log('[Telegram] RD recruitment bonus notification sent');
+      const recruiterCode = payment.regional_director;
+      const recruitmentBonus = 1500; // 10% of 15,000 FCFA signup fee
+
+      if (recruiterCode.startsWith('RD-')) {
+        const rdRef = db.collection('regional_directors').doc(recruiterCode);
+        const rdDoc = await rdRef.get();
+
+        if (rdDoc.exists) {
+          await rdRef.update({
+            downline_count: admin.firestore.FieldValue.increment(1),
+            team_ambassadors: admin.firestore.FieldValue.increment(1),
+            recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
+            recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
+            recruitment_count: admin.firestore.FieldValue.increment(1),
+            updated_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+
+          const rdData = rdDoc.data();
+          const recruitmentHistory = rdData.recruitment_history || [];
+          recruitmentHistory.push({
+            ambassador_code: ambassadorCode,
+            ambassador_name: ambassadorData.fullName,
+            amount: recruitmentBonus,
+            date: new Date().toISOString(),
+            status: 'pending'
+          });
+
+          await rdRef.update({ recruitment_history: recruitmentHistory });
+
+          await db.collection('admin_notifications').add({
+            type: 'rd_recruitment_bonus',
+            recruiter_type: 'regional_director',
+            rd_code: recruiterCode, // Legacy field kept for dashboard compatibility
+            rd_name: rdData.name || 'Unknown',
+            ambassador_code: ambassadorCode,
+            ambassador_name: ambassadorData.fullName,
+            amount: recruitmentBonus,
+            status: 'pending',
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+
+          if (TELEGRAM_BOT_TOKEN) {
+            const rdTotalPending = (rdData.recruitment_bonus_pending || 0) + recruitmentBonus;
+            const rdMsg = `💰 RECRUITMENT BONUS (RD)\n\n` +
+              `Recruiter: ${recruiterCode}\n` +
+              `Name: ${rdData.name || 'Unknown'}\n` +
+              `New Ambassador: ${ambassadorCode}\n` +
+              `Ambassador Name: ${ambassadorData.fullName}\n` +
+              `Bonus: 1,500 FCFA\n\n` +
+              `Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
+              `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
+            await sendTelegram(rdMsg, false);
+          }
+        }
+      } else if (recruiterCode.startsWith('AMB-')) {
+        const ambRef = db.collection('ambassadors').doc(recruiterCode);
+        const ambDoc = await ambRef.get();
+
+        if (ambDoc.exists) {
+          const ambData = ambDoc.data();
+          const currentRecruits = ambData.recruits_count || 0;
+          const updatedRecruits = currentRecruits + 1;
+
+          const ambUpdates = {
+            recruits_count: admin.firestore.FieldValue.increment(1),
+            directAmbassadorCount: admin.firestore.FieldValue.increment(1),
+            recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
+            recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
+            recruitment_count: admin.firestore.FieldValue.increment(1),
+            'deployment_by_category.recruitment': admin.firestore.FieldValue.increment(1),
+            'revenue_by_category.recruitment': admin.firestore.FieldValue.increment(recruitmentBonus),
+            rdCode: ambData.rdCode || '',
+            updated_at: admin.firestore.FieldValue.serverTimestamp()
+          };
+
+          // Auto-promotion: Ambassador → Senior at 10 successful ambassador recruits
+          if (updatedRecruits >= 10 && ambData.ambassador_type !== 'senior' && ambData.ambassador_type !== 'regional_director') {
+            ambUpdates.ambassador_type = 'senior';
+            ambUpdates.role_level = Math.max(ambData.role_level || 1, 2);
+            ambUpdates.level = ambData.level || 'Senior Ambassador';
+            ambUpdates.promotion_date = admin.firestore.FieldValue.serverTimestamp();
+          }
+
+          await ambRef.update(ambUpdates);
+
+          const recruitmentHistory = ambData.recruitment_history || [];
+          recruitmentHistory.push({
+            ambassador_code: ambassadorCode,
+            ambassador_name: ambassadorData.fullName,
+            amount: recruitmentBonus,
+            date: new Date().toISOString(),
+            status: 'pending'
+          });
+          await ambRef.update({ recruitment_history: recruitmentHistory });
+
+          await db.collection('admin_notifications').add({
+            type: 'rd_recruitment_bonus',
+            recruiter_type: ambData.ambassador_type === 'senior' ? 'senior' : 'ambassador',
+            rd_code: recruiterCode, // Legacy field kept for dashboard compatibility
+            rd_name: ambData.name || ambData.fullName || 'Unknown',
+            ambassador_code: ambassadorCode,
+            ambassador_name: ambassadorData.fullName,
+            amount: recruitmentBonus,
+            status: 'pending',
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+
+          if (TELEGRAM_BOT_TOKEN) {
+            const ambTotalPending = (ambData.recruitment_bonus_pending || 0) + recruitmentBonus;
+            const ambMsg = `💰 RECRUITMENT BONUS (AMBASSADOR)\n\n` +
+              `Recruiter: ${recruiterCode}\n` +
+              `Name: ${ambData.name || ambData.fullName || 'Unknown'}\n` +
+              `New Ambassador: ${ambassadorCode}\n` +
+              `Ambassador Name: ${ambassadorData.fullName}\n` +
+              `Bonus: 1,500 FCFA\n` +
+              `Recruit Count: ${updatedRecruits}\n\n` +
+              `Total Pending: ${ambTotalPending.toLocaleString()} FCFA\n\n` +
+              `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
+            await sendTelegram(ambMsg, false);
+          }
         }
       }
     } catch (error) {
-      console.error('Error updating RD stats:', error);
+      console.error('Error updating recruiter stats:', error);
     }
   }
 
@@ -1955,22 +2038,16 @@ async function activateAmbassador(payment) {
   console.log(`[BOOK] Generated simple download URL for ${ambassadorCode}: ${bookUrl}`);
   
   // Send ambassador credentials + book link email via SendGrid
-  // Architecture: Firebase → SendGrid API → Inbox (95%+ delivery rate)
+  // Architecture: Firebase → Resend API → Inbox (95%+ delivery rate)
   let emailSent = false;
   let emailError = null;
   try {
-    if (!SENDGRID_API_KEY) {
-      throw new Error('SendGrid API key not configured');
-    }
 
     const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
     
     const emailContent = {
       to: payment.email,
-      from: {
-        email: 'orders@marriageducation.com',
-        name: 'Marriage Education'
-      },
+      from: 'Marriage Education <orders@marriageducation.com>',
       subject: `Account Activated: ${ambassadorCode}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -2034,15 +2111,12 @@ async function activateAmbassador(payment) {
       `
     };
 
-    await sgMail.send(emailContent);
+    await resend.emails.send(emailContent);
     emailSent = true;
-    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via SendGrid`);
+    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via Resend`);
   } catch (error) {
     emailError = error.message;
-    console.error(`[EMAIL ERROR] Failed to send via SendGrid:`, error.message);
-    if (error.response) {
-      console.error(`[EMAIL ERROR] SendGrid response:`, error.response.body);
-    }
+    console.error(`[EMAIL ERROR] Failed to send via Resend:`, error.message);
   }
 
   // Send Telegram notification with ALL details including book link
@@ -2064,7 +2138,144 @@ async function activateAmbassador(payment) {
     await sendTelegram(msg, false);
   }
   
+  // ── SBD Network Access Provisioning ─────────────────────────────
+  // Isolated block — failure here never blocks ambassador activation
+  try {
+    await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName);
+    console.log(`[SBD] Access provisioned for ${ambassadorCode}`);
+  } catch (sbdError) {
+    console.error(`[SBD] Provisioning failed (non-critical) for ${ambassadorCode}:`, sbdError.message);
+    if (TELEGRAM_BOT_TOKEN) {
+      await sendTelegram(
+        `⚠️ SBD Network provisioning failed for ${ambassadorCode}\n` +
+        `Email: ${payment.email}\n` +
+        `Error: ${sbdError.message}\n\n` +
+        `Ambassador is active. SBD access needs manual fix.`,
+        false
+      );
+    }
+  }
+
   console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
+}
+
+// ── SBD Network Access Provisioner ───────────────────────────────
+// Called after ambassador activation. Creates a Firebase Auth account
+// on the same project (marriage-education) and writes a users/ doc so
+// the ambassador can log into sbd-network.web.app with Foundation tier.
+async function provisionSBDAccess(email, ambassadorCode, fullName) {
+  const emailLower = email.toLowerCase();
+
+  // Generate a unique SBD referral code derived from the ambassador code
+  // e.g. AMB-MAKO-0599 → SBD-MAKO-0599
+  const sbdReferralCode = ambassadorCode.replace(/^AMB-/, 'SBD-');
+
+  // 1. Get or create Firebase Auth user
+  let uid = null;
+  try {
+    const existingUser = await admin.auth().getUserByEmail(emailLower);
+    uid = existingUser.uid;
+    console.log(`[SBD] Found existing Auth user: ${uid}`);
+  } catch (notFoundErr) {
+    // User doesn't exist yet — create them with a random temp password
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    const tempPassword = Array.from({ length: 14 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+
+    const userRecord = await admin.auth().createUser({
+      email: emailLower,
+      password: tempPassword,
+      displayName: fullName,
+      emailVerified: false,
+    });
+    uid = userRecord.uid;
+    console.log(`[SBD] Created Auth user: ${uid}`);
+
+    // Send password-reset email so ambassador can set their own password
+    const resetLink = await admin.auth().generatePasswordResetLink(emailLower);
+    // Fire-and-forget — don't await so it can't block provisioning
+    sendSBDWelcomeEmail(emailLower, fullName, ambassadorCode, sbdReferralCode, resetLink)
+      .catch(e => console.error('[SBD] Welcome email failed:', e.message));
+  }
+
+  // 2. Write / merge users doc (SBD Network reads this for tier)
+  // Never overwrite an existing admin role
+  const existingDoc = await db.collection('users').doc(uid).get();
+  const existingRole = existingDoc.exists ? existingDoc.data().role : null;
+  if (existingRole !== 'admin') {
+    await db.collection('users').doc(uid).set({
+      uid,
+      name: fullName,
+      email: emailLower,
+      tier: 'foundation',
+      subscription: {
+        tier: 'foundation',
+        status: 'active',
+        source: 'ambassador',
+        ambassadorCode,
+      },
+      role: 'member',
+      sbdReferralCode,
+      groups: [],
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastActive:  admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  }
+
+  // 3. Write sbdReferralCode back onto the ambassadors doc
+  await db.collection('ambassadors').doc(ambassadorCode).update({
+    sbdReferralCode,
+    sbdAccessProvisioned: true,
+    sbdUid: uid,
+    sbdReferrals: { signups: 0, subscribers: 0 },
+  });
+
+  console.log(`[SBD] ${ambassadorCode} → uid:${uid} tier:foundation referral:${sbdReferralCode}`);
+}
+
+async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralCode, resetLink) {
+  const { Resend } = require('resend');
+  const resendClient = new Resend(process.env.RESEND_API_KEY || functions.config().resend?.api_key);
+  const referralLink = `https://sbd-network.web.app/auth?ref=${sbdReferralCode}`;
+
+  await resendClient.emails.send({
+    to: email,
+    from: 'Marriage Education <orders@marriageducation.com>',
+    subject: `Your SBD Network access is ready — ${ambassadorCode}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#0D0D0D 0%,#1a1a1a 100%);color:#EAE3D2;padding:30px;text-align:center;">
+          <h1 style="margin:0;font-size:26px;">📖 SBD Network Access</h1>
+          <p style="margin:10px 0 0;opacity:0.8;">Your ambassador perks just got bigger</p>
+        </div>
+        <div style="padding:30px;background:#f9f9f9;">
+          <p style="font-size:16px;color:#333;">Dear ${fullName},</p>
+          <p style="color:#555;">As an active ambassador, you now have <strong>Foundation-tier access</strong> to the SBD Network app — free for life while you're an ambassador.</p>
+
+          <div style="background:#fff;border-left:4px solid #C6A96B;padding:15px;margin:20px 0;">
+            <h3 style="margin-top:0;color:#C6A96B;">Your SBD Network Login</h3>
+            <p style="margin:5px 0;"><strong>URL:</strong> <a href="https://sbd-network.web.app">sbd-network.web.app</a></p>
+            <p style="margin:5px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin:5px 0;"><strong>Password:</strong> Set yours using the button below</p>
+          </div>
+
+          <div style="text-align:center;margin:25px 0;">
+            <a href="${resetLink}" style="display:inline-block;background:#C6A96B;color:#0D0D0D;font-weight:700;padding:14px 35px;text-decoration:none;border-radius:8px;font-size:15px;">Set My Password →</a>
+          </div>
+
+          <div style="background:#fff;border:2px solid #C6A96B;border-radius:8px;padding:15px;margin:20px 0;">
+            <h3 style="margin-top:0;color:#C6A96B;">Your SBD Referral Link</h3>
+            <p style="margin:5px 0;color:#555;">Share this link to earn credit when people sign up and subscribe:</p>
+            <p style="font-family:monospace;font-size:13px;word-break:break-all;background:#f0f0f0;padding:10px;border-radius:5px;">${referralLink}</p>
+            <p style="margin:5px 0;font-size:13px;color:#888;"><strong>Your SBD Referral Code:</strong> ${sbdReferralCode}</p>
+          </div>
+
+          <p style="color:#777;font-size:13px;">Questions? Contact <a href="mailto:orders@marriageducation.com">orders@marriageducation.com</a></p>
+        </div>
+      </div>
+    `,
+  });
 }
 
 async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
@@ -2244,7 +2455,7 @@ async function sendAdminPaymentNotification(payment) {
     `
   };
 
-  await sgMail.send(msg);
+  await resend.emails.send(msg);
 }
 
 async function sendCustomerApprovalEmail(payment) {
@@ -2260,7 +2471,7 @@ async function sendCustomerApprovalEmail(payment) {
     `
   };
 
-  await sgMail.send(msg);
+  await resend.emails.send(msg);
 }
 
 async function sendRDCredentialsEmail(rd) {
@@ -2277,7 +2488,7 @@ async function sendRDCredentialsEmail(rd) {
     `
   };
 
-  await sgMail.send(msg);
+  await resend.emails.send(msg);
 }
 
 async function sendReferralMilestoneEmail(referral, milestone, commission) {
@@ -2294,7 +2505,7 @@ async function sendReferralMilestoneEmail(referral, milestone, commission) {
     `
   };
 
-  await sgMail.send(msg);
+  await resend.emails.send(msg);
 }
 
 async function sendAdminMilestoneNotification(referral, milestone, commission) {
@@ -2311,7 +2522,7 @@ async function sendAdminMilestoneNotification(referral, milestone, commission) {
     `
   };
 
-  await sgMail.send(msg);
+  await resend.emails.send(msg);
 }
 
 // ============================================
@@ -2556,9 +2767,10 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 const SBD_CATALOG_SERVER = {
-  'foundation-monthly': { name: 'SBD Network — Foundation',    amount: 900,   mode: 'subscription', tier: 'foundation' },
-  'premium-monthly':    { name: 'SBD Network — Premium',       amount: 2000,  mode: 'subscription', tier: 'premium'    },
-  'elite-monthly':      { name: 'SBD Network — Elite',         amount: 5000,  mode: 'subscription', tier: 'elite'      },
+  // amount = USD cents (Stripe). revenueBaseFCFA = net revenue after 200 FCFA OPEX, used for commission calc.
+  'foundation-monthly': { name: 'SBD Network — Foundation',    amount: 900,   mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000 },
+  'premium-monthly':    { name: 'SBD Network — Premium',       amount: 2000,  mode: 'subscription', tier: 'premium',    revenueBaseFCFA: 5000 },
+  'elite-monthly':      { name: 'SBD Network — Elite',         amount: 5000,  mode: 'subscription', tier: 'elite',      revenueBaseFCFA: 5000 },
   'sbd-dummies':        { name: 'Sex By Design for Dummies',   amount: 2700,  mode: 'payment'                          },
   'teleios-blueprint':  { name: 'Teleios Blueprint',           amount: 24700, mode: 'payment'                          },
   'starter-bundle':     { name: 'Starter Bundle',              amount: 3700,  mode: 'payment',       tier: 'premium'   },
@@ -2601,6 +2813,72 @@ async function unlockSbdContent(uid, productId, session) {
     // Drip resume logic: if user had a saved drip position (from prior cancel),
     // offset the dripStartDate backward so their drip continues from where they left off.
     const userSnap = await userRef.get();
+
+    // ── Ambassador commission credit (first subscription only, no double-count on upgrades) ──
+    // Direct Ambassador:  10% of revenueBaseFCFA = 500 FCFA
+    // Senior Ambassador:   5% of revenueBaseFCFA = 250 FCFA (override on recruits' sales)
+    try {
+      const userData = userSnap.exists ? userSnap.data() : {};
+      const wasAlreadySubscribed = userData.subscription?.status === 'active';
+      const referralCode = userData.referredBy || null;
+      if (referralCode && !wasAlreadySubscribed) {
+        const ambSnap = await db.collection('ambassadors')
+          .where('sbdReferralCode', '==', referralCode).limit(1).get();
+        if (!ambSnap.empty) {
+          const ambDoc  = ambSnap.docs[0];
+          const ambData = ambDoc.data();
+          const tierKey        = rule.tier; // 'foundation', 'premium', or 'elite'
+          const revenueBase    = SBD_CATALOG_SERVER[productId]?.revenueBaseFCFA || 5000;
+          const ambCommission  = Math.round(revenueBase * 0.10); // 500 FCFA
+
+          // ── Credit direct ambassador ──
+          await ambDoc.ref.update({
+            'sbdReferrals.subscribers':         admin.firestore.FieldValue.increment(1),
+            [`sbdReferrals.${tierKey}`]:         admin.firestore.FieldValue.increment(1),
+            'sbdReferrals.commissionPending':   admin.firestore.FieldValue.increment(ambCommission),
+            'sbdReferrals.commissionEarned':    admin.firestore.FieldValue.increment(ambCommission),
+          });
+          console.log(`[SBD] Ambassador ${ambData.ambassadorCode} +${ambCommission} FCFA commission (tier=${tierKey})`);
+
+          // ── Senior Ambassador override (5%) ──
+          let seniorCode       = null;
+          let seniorCommission = 0;
+          const uplineCode = ambData.regional_director || null;
+          if (uplineCode && uplineCode.startsWith('AMB-')) {
+            const seniorSnap = await db.collection('ambassadors').doc(uplineCode).get();
+            if (seniorSnap.exists) {
+              seniorCommission = Math.round(revenueBase * 0.05); // 250 FCFA
+              seniorCode       = uplineCode;
+              await seniorSnap.ref.update({
+                'sbdReferrals.overrideCommissionPending': admin.firestore.FieldValue.increment(seniorCommission),
+                'sbdReferrals.overrideCommissionEarned':  admin.firestore.FieldValue.increment(seniorCommission),
+                'sbdReferrals.overrideSubscribers':       admin.firestore.FieldValue.increment(1),
+              });
+              console.log(`[SBD] Senior Ambassador ${uplineCode} +${seniorCommission} FCFA override (tier=${tierKey})`);
+            }
+          }
+
+          // ── Audit record in sbd_sales ──
+          await db.collection('sbd_sales').add({
+            ambassadorCode:          ambData.ambassadorCode || null,
+            ambassadorName:          ambData.fullName || '',
+            sbdReferralCode:         referralCode,
+            subscriberUid:           uid,
+            productId,
+            tier:                    tierKey,
+            revenueBaseFCFA:         revenueBase,
+            ambassadorCommission:    ambCommission,
+            seniorAmbassadorCode:    seniorCode,
+            seniorAmbassadorCommission: seniorCommission,
+            status:                  'pending',
+            createdAt:               admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    } catch (refErr) {
+      console.error('[SBD] Ambassador commission credit failed (non-critical):', refErr.message);
+    }
+    // ────────────────────────────────────────────────────────────────────────────────────────
     const existingDripWeeks = userSnap.exists
       ? (userSnap.data()?.subscription?.dripWeeksUnlocked || 0)
       : 0;
@@ -2971,10 +3249,10 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
       }
     }
     
-    // Fallback to SendGrid if SMTP fails
-    if (!emailSent && SENDGRID_API_KEY) {
+    // Fallback to Resend if SMTP fails
+    if (!emailSent) {
       try {
-        await sgMail.send({
+        await resend.emails.send({
           from: 'ambassadors@marriageducation.com',
           to: 'ambassadors@marriageducation.com',
           replyTo: data.email,
@@ -2982,10 +3260,10 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
           html: emailHtml
         });
         emailSent = true;
-        emailMethod = 'SendGrid';
-        console.log('[Ambassador] Email sent via SendGrid');
-      } catch (sendgridError) {
-        console.warn('[Ambassador] SendGrid failed:', sendgridError.message);
+        emailMethod = 'Resend';
+        console.log('[Ambassador] Email sent via Resend');
+      } catch (resendError) {
+        console.warn('[Ambassador] Resend failed:', resendError.message);
       }
     }
     
@@ -3322,24 +3600,13 @@ async function sendCertificateEmail(recipientEmail, studentName, courseTitle, pd
     </html>
   `;
 
-  // Try SendGrid first, fallback to SMTP
-  if (SENDGRID_API_KEY) {
-    await sgMail.send({
-      to: recipientEmail,
-      from: 'certificates@marriageducation.com',
-      subject: `🎉 Your Certificate is Ready - ${courseTitle}`,
-      html: emailHtml
-    });
-  } else if (transporter) {
-    await transporter.sendMail({
-      from: SMTP_CONFIG.from,
-      to: recipientEmail,
-      subject: `🎉 Your Certificate is Ready - ${courseTitle}`,
-      html: emailHtml
-    });
-  } else {
-    throw new Error('No email service configured');
-  }
+  // Send via Resend
+  await resend.emails.send({
+    to: recipientEmail,
+    from: 'certificates@marriageducation.com',
+    subject: `🎉 Your Certificate is Ready - ${courseTitle}`,
+    html: emailHtml
+  });
 }
 
 // ============================================
@@ -3528,43 +3795,114 @@ async function getOrCreateCustomerWithAttribution(email, phone, name, refCode) {
  */
 async function parseReferralCodeAndGetUpline(refCode) {
   if (!refCode) return null;
-  
-  const match = refCode.match(/(AMB|SNR|RD)-([A-Z])-(\d+)/);
-  if (!match) return null;
-  
-  const [, type, region, number] = match;
-  const fullCode = `${type}-${region}-${number}`;
-  
-  if (type === 'AMB' || type === 'SNR') {
-    const ambassadorQuery = await db.collection('ambassadors')
-      .where('code', '==', fullCode)
+
+  const normalizedCode = String(refCode).trim().toUpperCase();
+  if (!normalizedCode) return null;
+
+  async function findAmbassadorByCode(code) {
+    const directDoc = await db.collection('ambassadors').doc(code).get();
+    if (directDoc.exists) {
+      return { id: directDoc.id, ...directDoc.data() };
+    }
+
+    const codeQuery = await db.collection('ambassadors')
+      .where('code', '==', code)
       .limit(1)
       .get();
-    
-    if (ambassadorQuery.empty) return null;
-    
-    const ambassador = ambassadorQuery.docs[0].data();
-    
+
+    if (!codeQuery.empty) {
+      return { id: codeQuery.docs[0].id, ...codeQuery.docs[0].data() };
+    }
+
+    const sbdQuery = await db.collection('ambassadors')
+      .where('sbdReferralCode', '==', code)
+      .limit(1)
+      .get();
+
+    if (!sbdQuery.empty) {
+      return { id: sbdQuery.docs[0].id, ...sbdQuery.docs[0].data() };
+    }
+
+    return null;
+  }
+
+  async function findRegionalDirectorByCode(code) {
+    const directDoc = await db.collection('regional_directors').doc(code).get();
+    if (directDoc.exists) {
+      return { id: directDoc.id, ...directDoc.data() };
+    }
+
+    const codeQuery = await db.collection('regional_directors')
+      .where('code', '==', code)
+      .limit(1)
+      .get();
+
+    if (!codeQuery.empty) {
+      return { id: codeQuery.docs[0].id, ...codeQuery.docs[0].data() };
+    }
+
+    const rdCodeQuery = await db.collection('regional_directors')
+      .where('rd_code', '==', code)
+      .limit(1)
+      .get();
+
+    if (!rdCodeQuery.empty) {
+      return { id: rdCodeQuery.docs[0].id, ...rdCodeQuery.docs[0].data() };
+    }
+
+    return null;
+  }
+
+  async function buildAmbassadorAttribution(ambassadorRecord) {
+    let seniorId = ambassadorRecord.senior_code || ambassadorRecord.recruited_by_senior || null;
+    let rdId = ambassadorRecord.recruited_by_rd || null;
+    const recruiterCode = ambassadorRecord.rdCode || null;
+
+    if (!seniorId && recruiterCode && recruiterCode.startsWith('AMB-')) {
+      seniorId = recruiterCode;
+    }
+
+    if (!rdId && recruiterCode && recruiterCode.startsWith('RD-')) {
+      rdId = recruiterCode;
+    }
+
+    if (!rdId && seniorId) {
+      const seniorDoc = await db.collection('ambassadors').doc(seniorId).get();
+      if (seniorDoc.exists) {
+        const seniorData = seniorDoc.data();
+        rdId = seniorData.recruited_by_rd
+          || (seniorData.rdCode && seniorData.rdCode.startsWith('RD-') ? seniorData.rdCode : null)
+          || null;
+      }
+    }
+
     return {
-      ambassador_id: ambassadorQuery.docs[0].id,
-      senior_id: ambassador.recruited_by_senior || null,
-      rd_id: ambassador.recruited_by_rd || ambassador.rdCode || null
+      ambassador_id: ambassadorRecord.id,
+      senior_id: seniorId,
+      rd_id: rdId
     };
-  } else if (type === 'RD') {
-    const rdQuery = await db.collection('regional_directors')
-      .where('code', '==', fullCode)
-      .limit(1)
-      .get();
-    
-    if (rdQuery.empty) return null;
-    
+  }
+
+  if (normalizedCode.startsWith('RD-')) {
+    const regionalDirector = await findRegionalDirectorByCode(normalizedCode);
+    if (!regionalDirector) return null;
+
     return {
       ambassador_id: null,
       senior_id: null,
-      rd_id: rdQuery.docs[0].id
+      rd_id: regionalDirector.id
     };
   }
-  
+
+  const ambassadorCode = normalizedCode.startsWith('SNR-')
+    ? normalizedCode.replace(/^SNR-/, 'AMB-')
+    : normalizedCode;
+
+  const ambassadorRecord = await findAmbassadorByCode(ambassadorCode);
+  if (!ambassadorRecord) return null;
+
+  return buildAmbassadorAttribution(ambassadorRecord);
+
   return null;
 }
 

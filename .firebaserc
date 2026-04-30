@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "marriage-education"
-  }
+  },
+  "targets": {
+    "marriage-education": {
+      "hosting": {
+        "marriageducation": [
+          "marriageducation"
+        ],
+        "main": [
+          "marriage-education"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
