@@ -1260,10 +1260,10 @@
                     </button>
                 </div>
                 
-                <!-- RD Recruitment Bonuses -->
+                <!-- Recruitment Bonuses -->
                 <div class="table-card" style="margin-bottom: 2rem;">
                     <div class="table-header">
-                        <h2>🎯 RD Recruitment Bonuses (Immediate Payment Required)</h2>
+                        <h2>🎯 Recruitment Bonuses (Immediate Payment Required)</h2>
                         <div class="table-actions">
                             <button class="btn btn-success btn-sm" onclick="loadRDPaymentsTable()">
                                 <i class="fas fa-sync"></i> Refresh
@@ -1274,8 +1274,9 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>RD Code</th>
-                                    <th>RD Name</th>
+                                    <th>Recruiter Code</th>
+                                    <th>Recruiter Name</th>
+                                    <th>Role</th>
                                     <th>New Ambassador</th>
                                     <th>Ambassador Name</th>
                                     <th>Bonus Amount</th>
@@ -1285,9 +1286,9 @@
                             </thead>
                             <tbody id="rdPaymentsTableBody">
                                 <tr>
-                                    <td colspan="7" class="loading">
+                                    <td colspan="8" class="loading">
                                         <div class="spinner"></div>
-                                        <p>Loading RD payments...</p>
+                                        <p>Loading recruitment bonus payments...</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1439,6 +1440,76 @@
                     </table>
                     </div>
                 </div>
+
+                <div class="table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h2>Senior Ambassadors</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadSeniorAmbassadorsTable()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Recruits</th>
+                                    <th>Override Earned</th>
+                                    <th>SBD Subscribers</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seniorAmbassadorsTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Loading senior ambassadors...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h2>Seller Portfolio Overview</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadSellerPortfolioTable()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Role</th>
+                                    <th>Name</th>
+                                    <th>Portfolio Units</th>
+                                    <th>Direct Earnings</th>
+                                    <th>Team / Network</th>
+                                    <th>Recruitment</th>
+                                    <th>SBD Subs</th>
+                                    <th>Total Tracked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellerPortfolioTableBody">
+                                <tr>
+                                    <td colspan="9" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Loading seller portfolio overview...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- Referrals Section -->
@@ -1474,6 +1545,79 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h2>SBD Network Subscription Referrals</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadSBDReferralAnalyticsTable()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Role</th>
+                                    <th>Name</th>
+                                    <th>SBD Code</th>
+                                    <th>Signups</th>
+                                    <th>Subscribers</th>
+                                    <th>Foundation</th>
+                                    <th>Premium</th>
+                                    <th>Elite</th>
+                                    <th>Direct SBD</th>
+                                    <th>Override SBD</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sbdReferralTableBody">
+                                <tr>
+                                    <td colspan="11" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Loading SBD referral analytics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h2>Recent SBD Subscription Sales</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadSBDSalesTable()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Ambassador</th>
+                                    <th>SBD Code</th>
+                                    <th>Tier</th>
+                                    <th>Direct Commission</th>
+                                    <th>Senior</th>
+                                    <th>Senior Override</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sbdSalesTableBody">
+                                <tr>
+                                    <td colspan="8" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Loading SBD sales audit trail...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1754,9 +1898,15 @@
                 
                 // Load ambassadors table
                 loadAmbassadorsTable();
+                loadSeniorAmbassadorsTable();
+                loadSellerPortfolioTable();
                 
                 // Load RD payments table
                 loadRDPaymentsTable();
+
+                // Load SBD analytics
+                loadSBDReferralAnalyticsTable();
+                loadSBDSalesTable();
                 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -1896,10 +2046,10 @@
             }
         }
 
-        // Load RD Payments Table
+        // Load Recruitment Bonus Payments Table (RD + Senior + Ambassador)
         async function loadRDPaymentsTable() {
             try {
-                console.log('[Dashboard] Loading RD payments table...');
+                console.log('[Dashboard] Loading recruitment bonus payments table...');
                 const snapshot = await db.collection('admin_notifications')
                     .where('type', '==', 'rd_recruitment_bonus')
                     .where('status', '==', 'pending')
@@ -1909,7 +2059,7 @@
                 const tbody = document.getElementById('rdPaymentsTableBody');
                 
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#636e72;"><i class="fas fa-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>No pending RD payments</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#636e72;"><i class="fas fa-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>No pending recruitment bonus payments</td></tr>';
                     return;
                 }
                 
@@ -1917,17 +2067,26 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const date = data.created_at ? data.created_at.toDate().toLocaleString() : 'N/A';
+                    const recruiterCode = data.rd_code || data.recruiter_code || 'N/A';
+                    const recruiterName = data.rd_name || data.recruiter_name || 'N/A';
+                    const recruiterType = data.recruiter_type || (String(recruiterCode).startsWith('RD-') ? 'regional_director' : 'ambassador');
+                    const roleLabel = recruiterType === 'regional_director'
+                        ? '<span class="badge" style="background:#9333ea;">RD</span>'
+                        : (recruiterType === 'senior'
+                            ? '<span class="badge" style="background:#6c5ce7;">Senior</span>'
+                            : '<span class="badge" style="background:#00b894;">Ambassador</span>');
                     
                     html += `
                         <tr>
-                            <td><strong style="color:var(--primary);">${data.rd_code || 'N/A'}</strong></td>
-                            <td>${data.rd_name || 'N/A'}</td>
+                            <td><strong style="color:var(--primary);">${recruiterCode}</strong></td>
+                            <td>${recruiterName}</td>
+                            <td>${roleLabel}</td>
                             <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span></td>
                             <td>${data.ambassador_name || 'N/A'}</td>
                             <td><strong style="color:var(--success);font-size:1.1rem;">${(data.amount || 0).toLocaleString()} FCFA</strong></td>
                             <td style="font-size:0.85rem;color:#636e72;">${date}</td>
                             <td>
-                                <button class="btn btn-success btn-sm" onclick="markRDPaymentPaid('${doc.id}', '${data.rd_code}', ${data.amount})" title="Mark as Paid">
+                                <button class="btn btn-success btn-sm" onclick="markRDPaymentPaid('${doc.id}', '${recruiterCode}', ${data.amount || 0})" title="Mark as Paid">
                                     <i class="fas fa-check"></i> Pay
                                 </button>
                             </td>
@@ -1936,11 +2095,11 @@
                 });
                 
                 tbody.innerHTML = html;
-                console.log('[Dashboard] RD payments table loaded:', snapshot.size);
+                console.log('[Dashboard] Recruitment bonus payments table loaded:', snapshot.size);
             } catch (error) {
-                console.error('[Dashboard] Error loading RD payments:', error);
+                console.error('[Dashboard] Error loading recruitment bonus payments:', error);
                 const tbody = document.getElementById('rdPaymentsTableBody');
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> Error loading RD payments</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> Error loading recruitment bonus payments</td></tr>';
             }
         }
 
@@ -2128,9 +2287,13 @@
                     break;
                 case 'ambassadors':
                     loadAmbassadorsTable();
+                    loadSeniorAmbassadorsTable();
+                    loadSellerPortfolioTable();
                     break;
                 case 'referrals':
                     loadReferralsTable();
+                    loadSBDReferralAnalyticsTable();
+                    loadSBDSalesTable();
                     break;
             }
         }
@@ -2302,6 +2465,132 @@
             }
         }
 
+        function sumNumericValues(valueMap) {
+            return Object.values(valueMap || {}).reduce((sum, value) => sum + (Number(value) || 0), 0);
+        }
+
+        function getRoleDisplay(data, fallbackCode = '') {
+            const role = data.ambassador_type || (String(fallbackCode).startsWith('RD-') ? 'regional_director' : 'ambassador');
+            if (role === 'regional_director') return '<span class="badge" style="background:#9333ea;">RD</span>';
+            if (role === 'senior') return '<span class="badge" style="background:#6c5ce7;">Senior</span>';
+            if (role === 'executive') return '<span class="badge" style="background:#111827;">Executive</span>';
+            return '<span class="badge" style="background:#00b894;">Ambassador</span>';
+        }
+
+        async function loadSeniorAmbassadorsTable() {
+            const tbody = document.getElementById('seniorAmbassadorsTableBody');
+            if (!tbody) return;
+
+            try {
+                const snapshot = await db.collection('ambassadors')
+                    .where('ambassador_type', '==', 'senior')
+                    .get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#636e72;">No senior ambassadors found</td></tr>';
+                    return;
+                }
+
+                const seniors = [];
+                snapshot.forEach((doc) => seniors.push({ id: doc.id, ...doc.data() }));
+                seniors.sort((a, b) => (b.recruits_count || 0) - (a.recruits_count || 0));
+
+                tbody.innerHTML = seniors.map((data) => `
+                    <tr>
+                        <td><strong>${data.code || data.id}</strong></td>
+                        <td>${data.name || data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'N/A'}</td>
+                        <td>${data.email || 'N/A'}</td>
+                        <td>${data.recruits_count || 0}</td>
+                        <td>${((data.team_override_earned || data.override_commission || 0)).toLocaleString()} FCFA</td>
+                        <td>${((data.sbdReferrals || {}).subscribers || 0).toLocaleString()}</td>
+                        <td>${getRoleDisplay(data, data.code || data.id)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading senior ambassadors:', error);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#d63031;">Error loading senior ambassadors</td></tr>';
+            }
+        }
+
+        async function loadSellerPortfolioTable() {
+            const tbody = document.getElementById('sellerPortfolioTableBody');
+            if (!tbody) return;
+
+            try {
+                const [ambassadorsSnapshot, rdSnapshot] = await Promise.all([
+                    db.collection('ambassadors').get(),
+                    db.collection('regional_directors').get()
+                ]);
+
+                const rows = [];
+
+                ambassadorsSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.ambassador_type === 'regional_director') return;
+
+                    const directUnits = sumNumericValues(data.deployment_by_category) || data.access_units_deployed || data.sales_count || 0;
+                    const directEarnings = Number(data.commissionEarned || data.commission_earned || sumNumericValues(data.revenue_by_category) || 0);
+                    const teamNetwork = Number(data.team_override_earned || data.override_commission || data.executive_override_earned || 0);
+                    const recruitment = Number(data.recruitment_bonus_earned || 0);
+                    const sbdSubscribers = Number((data.sbdReferrals || {}).subscribers || 0);
+                    const sbdCommission = Number((data.sbdReferrals || {}).commissionEarned || 0) + Number((data.sbdReferrals || {}).overrideCommissionEarned || 0);
+
+                    rows.push({
+                        code: data.code || doc.id,
+                        roleHtml: getRoleDisplay(data, data.code || doc.id),
+                        name: data.name || data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'N/A',
+                        directUnits,
+                        directEarnings,
+                        teamNetwork,
+                        recruitment,
+                        sbdSubscribers,
+                        totalTracked: directEarnings + teamNetwork + recruitment + sbdCommission
+                    });
+                });
+
+                rdSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const directUnits = sumNumericValues(data.deployment_by_category) || data.access_units_deployed || data.team_books_sold || 0;
+                    const directEarnings = Number(data.commissionEarned || data.commission_earned || 0);
+                    const teamNetwork = Number(data.network_override_earned || data.totalCommissionEarned || data.override_commission || 0);
+                    const recruitment = Number(data.recruitment_bonus_earned || 0);
+                    const sbdSubscribers = Number((data.sbdReferrals || {}).subscribers || 0);
+                    const sbdCommission = Number((data.sbdReferrals || {}).commissionEarned || 0) + Number((data.sbdReferrals || {}).overrideCommissionEarned || 0);
+
+                    rows.push({
+                        code: data.code || doc.id,
+                        roleHtml: getRoleDisplay({ ambassador_type: 'regional_director' }, data.code || doc.id),
+                        name: data.name || data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'N/A',
+                        directUnits,
+                        directEarnings,
+                        teamNetwork,
+                        recruitment,
+                        sbdSubscribers,
+                        totalTracked: directEarnings + teamNetwork + recruitment + sbdCommission
+                    });
+                });
+
+                rows.sort((a, b) => b.totalTracked - a.totalTracked);
+
+                tbody.innerHTML = rows.map((row) => `
+                    <tr>
+                        <td><strong>${row.code}</strong></td>
+                        <td>${row.roleHtml}</td>
+                        <td>${row.name}</td>
+                        <td>${row.directUnits.toLocaleString()}</td>
+                        <td>${row.directEarnings.toLocaleString()} FCFA</td>
+                        <td>${row.teamNetwork.toLocaleString()} FCFA</td>
+                        <td>${row.recruitment.toLocaleString()} FCFA</td>
+                        <td>${row.sbdSubscribers.toLocaleString()}</td>
+                        <td><strong>${row.totalTracked.toLocaleString()} FCFA</strong></td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading seller portfolio table:', error);
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#d63031;">Error loading seller portfolio overview</td></tr>';
+            }
+        }
+
         // Load Referrals Table
         async function loadReferralsTable() {
             const tbody = document.getElementById('referralsTableBody');
@@ -2343,6 +2632,91 @@
             } catch (error) {
                 console.error('Error loading referrals:', error);
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d63031;">Error loading referrals</td></tr>';
+            }
+        }
+
+        async function loadSBDReferralAnalyticsTable() {
+            const tbody = document.getElementById('sbdReferralTableBody');
+            if (!tbody) return;
+
+            try {
+                const snapshot = await db.collection('ambassadors').get();
+                const sellers = [];
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (!data.sbdReferralCode) return;
+                    sellers.push({ id: doc.id, ...data });
+                });
+
+                if (sellers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#636e72;">No SBD referral data found</td></tr>';
+                    return;
+                }
+
+                sellers.sort((a, b) => ((b.sbdReferrals || {}).subscribers || 0) - ((a.sbdReferrals || {}).subscribers || 0));
+
+                tbody.innerHTML = sellers.map((data) => {
+                    const referrals = data.sbdReferrals || {};
+                    return `
+                        <tr>
+                            <td><strong>${data.code || data.id}</strong></td>
+                            <td>${getRoleDisplay(data, data.code || data.id)}</td>
+                            <td>${data.name || data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'N/A'}</td>
+                            <td><code>${data.sbdReferralCode}</code></td>
+                            <td>${(referrals.signups || 0).toLocaleString()}</td>
+                            <td>${(referrals.subscribers || 0).toLocaleString()}</td>
+                            <td>${(referrals.foundation || 0).toLocaleString()}</td>
+                            <td>${(referrals.premium || 0).toLocaleString()}</td>
+                            <td>${(referrals.elite || 0).toLocaleString()}</td>
+                            <td>${((referrals.commissionEarned || 0)).toLocaleString()} FCFA</td>
+                            <td>${((referrals.overrideCommissionEarned || 0)).toLocaleString()} FCFA</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading SBD referral analytics:', error);
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#d63031;">Error loading SBD referral analytics</td></tr>';
+            }
+        }
+
+        async function loadSBDSalesTable() {
+            const tbody = document.getElementById('sbdSalesTableBody');
+            if (!tbody) return;
+
+            try {
+                const snapshot = await db.collection('sbd_sales')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#636e72;">No SBD subscription sales recorded yet</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString() : 'N/A';
+                    html += `
+                        <tr>
+                            <td>${date}</td>
+                            <td><strong>${data.ambassadorCode || 'N/A'}</strong><br><small>${data.ambassadorName || ''}</small></td>
+                            <td><code>${data.sbdReferralCode || 'N/A'}</code></td>
+                            <td>${String(data.tier || 'N/A').replace(/^./, (match) => match.toUpperCase())}</td>
+                            <td>${((data.ambassadorCommission || 0)).toLocaleString()} FCFA</td>
+                            <td>${data.seniorAmbassadorCode || '—'}</td>
+                            <td>${((data.seniorAmbassadorCommission || 0)).toLocaleString()} FCFA</td>
+                            <td>${data.status || 'pending'}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading SBD sales table:', error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#d63031;">Error loading SBD sales audit trail</td></tr>';
             }
         }
 
