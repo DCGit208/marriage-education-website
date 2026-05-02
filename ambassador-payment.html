@@ -721,6 +721,12 @@
 
           if (result.data.success) {
             showAlert('✅ Payment successful! Your ambassador account is now active. Redirecting to dashboard...', 'success');
+            sessionStorage.setItem('stripeConfirmationContext', JSON.stringify({
+              code,
+              email,
+              paymentMethod: 'stripe',
+              savedAt: Date.now()
+            }));
             // Clear session data
             sessionStorage.removeItem('ambassadorData');
             setTimeout(() => {
