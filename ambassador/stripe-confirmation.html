@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="cache-bust" content="v2-20260502-stripe-ambassador-confirmation">
+  <title>Stripe Payment Confirmed - Ambassador Access</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      max-width: 760px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #fff;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: #d1d5db;
+      font-size: 16px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .badge {
+      display: inline-block;
+      background: #ecfeff;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .label {
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .value {
+      color: #111827;
+      font-size: 17px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+      display: inline-block;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(0, 184, 148, 0.3);
+    }
+    .btn-dark {
+      background: #111827;
+      color: #fff;
+    }
+    .btn-ghost {
+      background: #fff;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+    .notice {
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+    .notice-success {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+    .notice-warning {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+    .notice-error {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+    @media (max-width: 720px) {
+      .grid, .actions { grid-template-columns: 1fr; }
+      .header h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Payment Confirmed</h1>
+      <p>Your Stripe payment was successful. Your ambassador access is ready.</p>
+    </div>
+
+    <div class="content">
+      <div class="badge">Stripe Ambassador Confirmation</div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="label">Ambassador Code</div>
+          <div class="value" id="code-value">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="label">Email</div>
+          <div class="value" id="email-value">Loading...</div>
+        </div>
+        <div class="card">
+          <div class="label">Dashboard Login</div>
+          <div class="value">ambassador-login.html</div>
+        </div>
+        <div class="card">
+          <div class="label">Book Access</div>
+          <div class="value">Instant download available</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a id="dashboard-btn" class="btn btn-primary" href="#">Open Ambassador Dashboard</a>
+        <a id="download-btn" class="btn btn-dark" href="#">Download Welcome Book</a>
+        <a class="btn btn-ghost" href="/ambassador-login.html">Go to Login Page</a>
+        <button id="resend-btn" class="btn btn-ghost" type="button">Resend Access Email</button>
+      </div>
+
+      <div id="status" class="notice notice-warning">
+        We are confirming your email delivery now. If you do not see it, check Spam/Junk and click "Resend Access Email".
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return (params.get(name) || '').trim();
+    }
+
+    async function resendStripeEmail(ambassadorCode, email, silent) {
+      const statusEl = document.getElementById('status');
+      const resendBtn = document.getElementById('resend-btn');
+
+      try {
+        resendBtn.disabled = true;
+        if (!silent) {
+          resendBtn.textContent = 'Sending...';
+          statusEl.className = 'notice notice-warning';
+          statusEl.textContent = 'Sending ambassador credentials and book access email...';
+        }
+
+        const resend = firebase.functions().httpsCallable('resendAmbassadorStripeAccessEmail');
+        const result = await resend({ ambassadorCode, email });
+
+        if (result.data && result.data.success) {
+          statusEl.className = 'notice notice-success';
+          statusEl.textContent = 'Access email sent successfully. Please check your Inbox and Spam/Junk folder.';
+        } else {
+          throw new Error('Email resend did not complete.');
+        }
+      } catch (error) {
+        console.error('Resend email error:', error);
+        statusEl.className = 'notice notice-error';
+        statusEl.textContent = 'We could not send the email right now. You can still use the dashboard and download links on this page.';
+      } finally {
+        resendBtn.disabled = false;
+        resendBtn.textContent = 'Resend Access Email';
+      }
+    }
+
+    (function initStripeConfirmation() {
+      const code = getQueryParam('code');
+      const email = getQueryParam('email');
+
+      if (!code || !email) {
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'notice notice-error';
+        statusEl.textContent = 'Missing confirmation details. Please contact support with your payment receipt.';
+        return;
+      }
+
+      const dashboardUrl = `/ambassador/dashboard.html?code=${encodeURIComponent(code)}`;
+      const downloadUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${encodeURIComponent(code)}`;
+
+      document.getElementById('code-value').textContent = code;
+      document.getElementById('email-value').textContent = email;
+      document.getElementById('dashboard-btn').href = dashboardUrl;
+      document.getElementById('download-btn').href = downloadUrl;
+
+      document.getElementById('resend-btn').addEventListener('click', function() {
+        resendStripeEmail(code, email, false);
+      });
+
+      const onceKey = `stripe_email_resend_${code}`;
+      if (!sessionStorage.getItem(onceKey)) {
+        sessionStorage.setItem(onceKey, '1');
+        resendStripeEmail(code, email, true);
+      } else {
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'notice notice-success';
+        statusEl.textContent = 'Payment confirmed. Use the links above for immediate dashboard and book access.';
+      }
+    })();
+  </script>
+</body>
+</html>

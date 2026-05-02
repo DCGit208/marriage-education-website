@@ -2125,16 +2125,62 @@ async function activateAmbassador(payment) {
   const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}`;
   console.log(`[BOOK] Generated simple download URL for ${ambassadorCode}: ${bookUrl}`);
   
-  // Send ambassador credentials + book link email via SendGrid
-  // Architecture: Firebase → Resend API → Inbox (95%+ delivery rate)
-  let emailSent = false;
-  let emailError = null;
-  try {
+  // Send ambassador credentials + book link email
+  const accessEmailResult = await sendAmbassadorAccessEmail({
+    email: payment.email,
+    ambassadorCode,
+    ambassadorName: ambassadorData.fullName,
+    bookUrl
+  });
+  const emailSent = accessEmailResult.sent;
+  const emailError = accessEmailResult.error;
 
+  // Send Telegram notification with ALL details including book link
+  if (TELEGRAM_BOT_TOKEN) {
+    const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
     const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
     
-    const emailContent = {
-      to: payment.email,
+    const msg = `✅ AMBASSADOR REGISTRATION APPROVED\n\n` +
+      `🎯 Code: ${ambassadorCode}\n` +
+      `👤 Name: ${ambassadorData.fullName}\n` +
+      `📧 Email: ${payment.email}\n` +
+      `📱 Phone: ${payment.phone}\n` +
+      `${payment.regional_director ? `👑 Recruited By: ${payment.regional_director}\n` : ''}` +
+      `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
+      `📧 Email Status: ${emailStatus}${emailError ? ` (${emailError})` : ''}\n` +
+      `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
+      `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
+    
+    await sendTelegram(msg, false);
+  }
+  
+  // ── SBD Network Access Provisioning ─────────────────────────────
+  // Isolated block — failure here never blocks ambassador activation
+  try {
+    await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName);
+    console.log(`[SBD] Access provisioned for ${ambassadorCode}`);
+  } catch (sbdError) {
+    console.error(`[SBD] Provisioning failed (non-critical) for ${ambassadorCode}:`, sbdError.message);
+    if (TELEGRAM_BOT_TOKEN) {
+      await sendTelegram(
+        `⚠️ SBD Network provisioning failed for ${ambassadorCode}\n` +
+        `Email: ${payment.email}\n` +
+        `Error: ${sbdError.message}\n\n` +
+        `Ambassador is active. SBD access needs manual fix.`,
+        false
+      );
+    }
+  }
+
+  console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
+}
+
+async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName, bookUrl }) {
+  try {
+    const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+    await resend.emails.send({
+      to: email,
       from: 'Marriage Education <orders@marriageducation.com>',
       subject: `Account Activated: ${ambassadorCode}`,
       html: `
@@ -2145,15 +2191,15 @@ async function activateAmbassador(payment) {
           </div>
           
           <div style="padding: 30px; background: #f9f9f9;">
-            <p style="font-size: 16px; color: #333;">Dear ${ambassadorData.fullName},</p>
+            <p style="font-size: 16px; color: #333;">Dear ${ambassadorName || 'Ambassador'},</p>
             
             <p style="color: #555;">Congratulations! Your ambassador account has been approved and activated.</p>
             
             <div style="background: #fff; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0;">
               <h3 style="margin-top: 0; color: #667eea;">Your Credentials</h3>
               <p style="margin: 5px 0;"><strong>Ambassador Code:</strong> ${ambassadorCode}</p>
-              <p style="margin: 5px 0;"><strong>Name:</strong> ${ambassadorData.fullName}</p>
-              <p style="margin: 5px 0;"><strong>Email:</strong> ${payment.email}</p>
+              <p style="margin: 5px 0;"><strong>Name:</strong> ${ambassadorName || 'Ambassador'}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
             </div>
             
             <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 5px; padding: 15px; margin: 20px 0;">
@@ -2197,55 +2243,72 @@ async function activateAmbassador(payment) {
           </div>
         </div>
       `
-    };
+    });
 
-    await resend.emails.send(emailContent);
-    emailSent = true;
-    console.log(`[EMAIL] Ambassador credentials sent to ${payment.email} via Resend`);
+    console.log(`[EMAIL] Ambassador credentials sent to ${email} via Resend`);
+    return { sent: true, error: null };
   } catch (error) {
-    emailError = error.message;
-    console.error(`[EMAIL ERROR] Failed to send via Resend:`, error.message);
+    console.error('[EMAIL ERROR] Failed to send ambassador access email:', error.message);
+    return { sent: false, error: error.message };
   }
-
-  // Send Telegram notification with ALL details including book link
-  if (TELEGRAM_BOT_TOKEN) {
-    const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
-    const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
-    
-    const msg = `✅ AMBASSADOR REGISTRATION APPROVED\n\n` +
-      `🎯 Code: ${ambassadorCode}\n` +
-      `👤 Name: ${ambassadorData.fullName}\n` +
-      `📧 Email: ${payment.email}\n` +
-      `📱 Phone: ${payment.phone}\n` +
-      `${payment.regional_director ? `👑 Recruited By: ${payment.regional_director}\n` : ''}` +
-      `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
-      `📧 Email Status: ${emailStatus}${emailError ? ` (${emailError})` : ''}\n` +
-      `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
-      `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
-    
-    await sendTelegram(msg, false);
-  }
-  
-  // ── SBD Network Access Provisioning ─────────────────────────────
-  // Isolated block — failure here never blocks ambassador activation
-  try {
-    await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName);
-    console.log(`[SBD] Access provisioned for ${ambassadorCode}`);
-  } catch (sbdError) {
-    console.error(`[SBD] Provisioning failed (non-critical) for ${ambassadorCode}:`, sbdError.message);
-    if (TELEGRAM_BOT_TOKEN) {
-      await sendTelegram(
-        `⚠️ SBD Network provisioning failed for ${ambassadorCode}\n` +
-        `Email: ${payment.email}\n` +
-        `Error: ${sbdError.message}\n\n` +
-        `Ambassador is active. SBD access needs manual fix.`,
-        false
-      );
-    }
-  }
-
-  console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
 }
+
+exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, context) => {
+  try {
+    const ambassadorCode = String(data?.ambassadorCode || '').trim();
+    const email = String(data?.email || '').trim().toLowerCase();
+
+    if (!ambassadorCode || !email) {
+      throw new functions.https.HttpsError('invalid-argument', 'Missing required fields: ambassadorCode, email');
+    }
+
+    const stripePaymentDoc = await db.collection('stripe_payments').doc(ambassadorCode).get();
+    if (!stripePaymentDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Stripe payment record not found for this ambassador code.');
+    }
+
+    const stripePayment = stripePaymentDoc.data();
+    if (stripePayment.payment_method !== 'stripe' || stripePayment.status !== 'approved') {
+      throw new functions.https.HttpsError('failed-precondition', 'This ambassador is not eligible for Stripe access email resend.');
+    }
+
+    if (String(stripePayment.email || '').toLowerCase() !== email) {
+      throw new functions.https.HttpsError('permission-denied', 'Email does not match the paid ambassador record.');
+    }
+
+    const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+    if (!ambassadorDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Ambassador account not found.');
+    }
+
+    const ambassador = ambassadorDoc.data();
+    const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${ambassadorCode}`;
+
+    const sendResult = await sendAmbassadorAccessEmail({
+      email,
+      ambassadorCode,
+      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador',
+      bookUrl
+    });
+
+    if (!sendResult.sent) {
+      throw new functions.https.HttpsError('internal', sendResult.error || 'Failed to resend access email.');
+    }
+
+    return {
+      success: true,
+      message: 'Access email resent successfully.',
+      ambassadorCode,
+      email
+    };
+  } catch (error) {
+    console.error('[STRIPE] resendAmbassadorStripeAccessEmail error:', error.message);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError('internal', error.message || 'Failed to resend Stripe access email.');
+  }
+});
 
 // ── SBD Network Access Provisioner ───────────────────────────────
 // Called after ambassador activation. Creates a Firebase Auth account
@@ -2496,7 +2559,7 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
       receipt_email: email,
       description: description || `Ambassador Registration - ${ambassadorCode}`,
       metadata: ambassadorMetadata,
-      return_url: `https://marriageducation.com/ambassador/dashboard.html?code=${ambassadorCode}`
+      return_url: `https://marriageducation.com/ambassador/stripe-confirmation.html?code=${ambassadorCode}&email=${encodeURIComponent(email)}`
     });
 
     console.log('[STRIPE] PaymentIntent created:', paymentIntent.id, 'status:', paymentIntent.status);
