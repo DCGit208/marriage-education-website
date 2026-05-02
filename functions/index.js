@@ -2496,7 +2496,7 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
       receipt_email: email,
       description: description || `Ambassador Registration - ${ambassadorCode}`,
       metadata: ambassadorMetadata,
-      return_url: `https://marriageducation.com/ambassador-dashboard.html?code=${ambassadorCode}`
+      return_url: `https://marriageducation.com/ambassador/dashboard.html?code=${ambassadorCode}`
     });
 
     console.log('[STRIPE] PaymentIntent created:', paymentIntent.id, 'status:', paymentIntent.status);
@@ -2544,7 +2544,7 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
           `📧 Email: ${email}\n` +
           `💰 Amount: $${(paymentIntent.amount / 100).toFixed(2)} ${(paymentIntent.currency || 'USD').toUpperCase()}\n` +
           `👑 Recruited By: ${paymentForActivation.regional_director || 'None'}\n\n` +
-          `🔗 Dashboard: https://marriageducation.com/ambassador-dashboard.html`;
+          `🔗 Dashboard: https://marriageducation.com/ambassador/dashboard.html`;
         await sendTelegram(activationMsg, false);
       }
     }
