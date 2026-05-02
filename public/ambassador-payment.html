@@ -724,13 +724,14 @@
             sessionStorage.setItem('stripeConfirmationContext', JSON.stringify({
               code,
               email,
+              paymentIntentId: result.data.paymentIntentId || '',
               paymentMethod: 'stripe',
               savedAt: Date.now()
             }));
             // Clear session data
             sessionStorage.removeItem('ambassadorData');
             setTimeout(() => {
-              window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email);
+              window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email) + '&payment_intent=' + encodeURIComponent(result.data.paymentIntentId || '');
             }, 2000);
           } else {
             cardErrors.textContent = result.data.error || 'Payment processing failed';
