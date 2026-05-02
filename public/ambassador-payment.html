@@ -724,7 +724,7 @@
             // Clear session data
             sessionStorage.removeItem('ambassadorData');
             setTimeout(() => {
-              window.location.href = '/ambassador-dashboard.html?code=' + code;
+              window.location.href = '/ambassador/dashboard.html?code=' + code;
             }, 2000);
           } else {
             cardErrors.textContent = result.data.error || 'Payment processing failed';
