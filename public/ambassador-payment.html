@@ -686,10 +686,13 @@
           billing_details: { email }
         });
 
-        if (error) {
+          const stripeAmountEl = document.getElementById('stripe-amount-display');
+          const stripeAmountText = stripeAmountEl ? stripeAmountEl.textContent : '$30 USD';
+
+          if (error) {
           cardErrors.textContent = error.message;
           submitBtn.disabled = false;
-          submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+          submitBtn.textContent = '💳 Pay ' + stripeAmountText;
           return;
         }
 
@@ -697,7 +700,11 @@
           let ambassadorData = null;
           const storedData = sessionStorage.getItem('ambassadorData');
           if (storedData) {
-            ambassadorData = JSON.parse(storedData);
+            try {
+              ambassadorData = JSON.parse(storedData);
+            } catch (parseError) {
+              console.warn('Failed to parse ambassadorData:', parseError.message);
+            }
           }
 
           // Call Firebase Cloud Function to create payment intent
@@ -722,13 +729,13 @@
           } else {
             cardErrors.textContent = result.data.error || 'Payment processing failed';
             submitBtn.disabled = false;
-            submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+            submitBtn.textContent = '💳 Pay ' + stripeAmountText;
           }
       } catch (err) {
         console.error('Stripe error:', err);
           cardErrors.textContent = 'Error: ' + (err.message || 'Payment processing failed');
         submitBtn.disabled = false;
-        submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+        submitBtn.textContent = '💳 Pay ' + stripeAmountText;
       }
     }
 
