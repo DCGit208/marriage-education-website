@@ -154,9 +154,52 @@
       color: #991b1b;
       border-color: #fecaca;
     }
+    .tracker {
+      margin-top: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .tracker h3 {
+      font-size: 14px;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+    .tracker-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px dashed #e5e7eb;
+      padding-top: 8px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    .tracker-row:first-of-type {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+    .tracker-key {
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .tracker-value {
+      color: #111827;
+      font-weight: 700;
+      text-align: right;
+      word-break: break-word;
+    }
     @media (max-width: 720px) {
       .grid, .actions { grid-template-columns: 1fr; }
       .header h1 { font-size: 24px; }
+      .tracker-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .tracker-value {
+        text-align: left;
+      }
     }
   </style>
 </head>
@@ -199,6 +242,22 @@
       <div id="status" class="notice notice-warning">
         We are confirming your email delivery now. If you do not see it, check Spam/Junk and click "Resend Access Email".
       </div>
+
+      <div class="tracker">
+        <h3>Email Delivery Tracker</h3>
+        <div class="tracker-row">
+          <div class="tracker-key">Latest Status</div>
+          <div class="tracker-value" id="tracker-status">Pending</div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-key">Last Attempt</div>
+          <div class="tracker-value" id="tracker-last-attempt">Not started</div>
+        </div>
+        <div class="tracker-row">
+          <div class="tracker-key">Last Trigger</div>
+          <div class="tracker-value" id="tracker-trigger">None</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -208,12 +267,24 @@
       return (params.get(name) || '').trim();
     }
 
+    function formatNow() {
+      return new Date().toLocaleString();
+    }
+
+    function updateTracker(status, triggerLabel) {
+      document.getElementById('tracker-status').textContent = status;
+      document.getElementById('tracker-last-attempt').textContent = formatNow();
+      document.getElementById('tracker-trigger').textContent = triggerLabel;
+    }
+
     async function resendStripeEmail(ambassadorCode, email, silent) {
       const statusEl = document.getElementById('status');
       const resendBtn = document.getElementById('resend-btn');
+      const triggerLabel = silent ? 'Auto verification' : 'Manual resend';
 
       try {
         resendBtn.disabled = true;
+        updateTracker('Sending...', triggerLabel);
         if (!silent) {
           resendBtn.textContent = 'Sending...';
           statusEl.className = 'notice notice-warning';
@@ -224,6 +295,7 @@
         const result = await resend({ ambassadorCode, email });
 
         if (result.data && result.data.success) {
+          updateTracker('Delivered', triggerLabel);
           statusEl.className = 'notice notice-success';
           statusEl.textContent = 'Access email sent successfully. Please check your Inbox and Spam/Junk folder.';
         } else {
@@ -231,6 +303,7 @@
         }
       } catch (error) {
         console.error('Resend email error:', error);
+        updateTracker('Failed', triggerLabel);
         statusEl.className = 'notice notice-error';
         statusEl.textContent = 'We could not send the email right now. You can still use the dashboard and download links on this page.';
       } finally {
@@ -265,11 +338,13 @@
       const onceKey = `stripe_email_resend_${code}`;
       if (!sessionStorage.getItem(onceKey)) {
         sessionStorage.setItem(onceKey, '1');
+        updateTracker('Queued', 'Auto verification');
         resendStripeEmail(code, email, true);
       } else {
         const statusEl = document.getElementById('status');
         statusEl.className = 'notice notice-success';
         statusEl.textContent = 'Payment confirmed. Use the links above for immediate dashboard and book access.';
+        updateTracker('Ready', 'Page reload');
       }
     })();
   </script>
