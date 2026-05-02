@@ -267,6 +267,18 @@
       return (params.get(name) || '').trim();
     }
 
+    function getStoredConfirmationContext() {
+      try {
+        const raw = sessionStorage.getItem('stripeConfirmationContext');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch (error) {
+        console.warn('Invalid stored Stripe confirmation context:', error.message);
+        return null;
+      }
+    }
+
     function formatNow() {
       return new Date().toLocaleString();
     }
@@ -313,13 +325,20 @@
     }
 
     (function initStripeConfirmation() {
-      const code = getQueryParam('code');
-      const email = getQueryParam('email');
+      let code = getQueryParam('code');
+      let email = getQueryParam('email');
+
+      if (!code || !email) {
+        const storedContext = getStoredConfirmationContext();
+        if (!code && storedContext?.code) code = storedContext.code;
+        if (!email && storedContext?.email) email = storedContext.email;
+      }
 
       if (!code || !email) {
         const statusEl = document.getElementById('status');
         statusEl.className = 'notice notice-error';
-        statusEl.textContent = 'Missing confirmation details. Please contact support with your payment receipt.';
+        statusEl.textContent = 'Missing confirmation details. Please return to the payment page or contact support with your payment reference.';
+        updateTracker('Missing details', 'Page opened without code/email');
         return;
       }
 
