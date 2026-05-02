@@ -161,6 +161,30 @@
       border-radius: 10px;
       padding: 14px;
     }
+    .reference-box {
+      margin-top: 18px;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .reference-box h3 {
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .reference-code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+      color: #fbbf24;
+    }
+    .reference-help {
+      color: #d1d5db;
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
     .tracker h3 {
       font-size: 14px;
       color: #111827;
@@ -243,6 +267,17 @@
         We are confirming your email delivery now. If you do not see it, check Spam/Junk and click "Resend Access Email".
       </div>
 
+      <div class="reference-box">
+        <h3>Payment Reference</h3>
+        <div class="reference-code" id="support-reference">Loading...</div>
+        <div class="actions" style="margin-bottom: 0; margin-top: 14px;">
+          <button id="copy-reference-btn" class="btn btn-ghost" type="button">Copy Payment Reference</button>
+        </div>
+        <div class="reference-help">
+          Use this reference for support, Stripe follow-up, or any email delivery issue.
+        </div>
+      </div>
+
       <div class="tracker">
         <h3>Email Delivery Tracker</h3>
         <div class="tracker-row">
@@ -281,6 +316,30 @@
 
     function formatNow() {
       return new Date().toLocaleString();
+    }
+
+    function buildSupportReference(code, email, paymentIntentId) {
+      return [
+        `Ambassador Code: ${code}`,
+        `Email: ${email}`,
+        `Stripe Payment ID: ${paymentIntentId || 'Not available'}`
+      ].join('\n');
+    }
+
+    async function copySupportReference(referenceText) {
+      const copyBtn = document.getElementById('copy-reference-btn');
+      const originalText = copyBtn.textContent;
+      try {
+        await navigator.clipboard.writeText(referenceText);
+        copyBtn.textContent = 'Copied';
+      } catch (error) {
+        console.error('Copy reference error:', error);
+        copyBtn.textContent = 'Copy failed';
+      } finally {
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      }
     }
 
     function updateTracker(status, triggerLabel) {
@@ -327,11 +386,13 @@
     (function initStripeConfirmation() {
       let code = getQueryParam('code');
       let email = getQueryParam('email');
+      let paymentIntentId = getQueryParam('payment_intent');
 
       if (!code || !email) {
         const storedContext = getStoredConfirmationContext();
         if (!code && storedContext?.code) code = storedContext.code;
         if (!email && storedContext?.email) email = storedContext.email;
+        if (!paymentIntentId && storedContext?.paymentIntentId) paymentIntentId = storedContext.paymentIntentId;
       }
 
       if (!code || !email) {
@@ -349,6 +410,12 @@
       document.getElementById('email-value').textContent = email;
       document.getElementById('dashboard-btn').href = dashboardUrl;
       document.getElementById('download-btn').href = downloadUrl;
+
+      const supportReference = buildSupportReference(code, email, paymentIntentId);
+      document.getElementById('support-reference').textContent = supportReference;
+      document.getElementById('copy-reference-btn').addEventListener('click', function() {
+        copySupportReference(supportReference);
+      });
 
       document.getElementById('resend-btn').addEventListener('click', function() {
         resendStripeEmail(code, email, false);
