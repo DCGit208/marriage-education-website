@@ -520,7 +520,7 @@
           </div>
 
           <button type="button" class="submit-btn" onclick="processStripePayment()" id="stripe-submit-btn">
-            💳 Pay <span id="stripe-amount-display">15,000 FCFA</span>
+            💳 Pay <span id="stripe-amount-display">$30 USD</span>
           </button>
 
           <div class="secure-badge" style="margin-top: 20px;">
@@ -676,8 +676,8 @@
       cardErrors.textContent = '';
 
       try {
-          // Convert FCFA to USD (rate: 1 USD ≈ 600 FCFA)
-        const amountInUSD = Math.round((amount / 600) * 100); // Stripe uses cents
+          // Fixed Stripe amount for ambassador registration to cover fees/FX
+          const amountInUSD = 3000; // $30.00 in cents
 
         // Create payment method
         const { paymentMethod, error } = await stripe.createPaymentMethod({
@@ -774,7 +774,7 @@
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
     document.getElementById('amount-text').textContent = `${amount} FCFA`;
-    document.getElementById('stripe-amount-display').textContent = `${amount} FCFA`;
+    document.getElementById('stripe-amount-display').textContent = '$30 USD';
 
     // Handle form submission
     document.getElementById('confirmation-form').addEventListener('submit', async (e) => {

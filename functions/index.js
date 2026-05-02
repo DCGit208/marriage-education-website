@@ -343,6 +343,94 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     const session = event.data.object;
     
     try {
+      // ── AMBASSADOR REGISTRATION (Auto-approve via Stripe) ──────────────────────
+      if (session.metadata?.type === 'ambassador') {
+        const ambassadorCode = session.metadata.ambassadorCode;
+        const ambassadorEmail = session.customer_details?.email || session.metadata.email;
+        const paymentIntentId = session.payment_intent || session.id;
+        
+        if (!ambassadorCode) {
+          console.error('[STRIPE] Ambassador webhook missing code:', session.metadata);
+          return res.json({ received: true, action: 'ambassador-missing-code' });
+        }
+        
+        // Create Stripe payment record (auto-approved)
+        const stripePaymentData = {
+          reference: ambassadorCode,
+          payment_intent_id: paymentIntentId,
+          product_id: 'ambassador-registration',
+          product_name: 'Ambassador Registration',
+          amount: Math.round((session.amount_total || 0) / 100),
+          currency: session.currency || 'usd',
+          email: ambassadorEmail,
+          phone: session.metadata.phone || '',
+          type: 'ambassador',
+          payment_method: 'stripe',
+          status: 'approved',
+          ambassador_code: ambassadorCode,
+          regional_director: session.metadata.recruitedBy || '',
+          created_at: admin.firestore.FieldValue.serverTimestamp(),
+          approved_at: admin.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await db.collection('stripe_payments').doc(ambassadorCode).set(stripePaymentData);
+        console.log('[STRIPE] Stored ambassador payment:', ambassadorCode);
+        
+        let ambassadorData = null;
+        try {
+          if (session.metadata.ambassadorData) {
+            ambassadorData = JSON.parse(session.metadata.ambassadorData);
+          }
+        } catch (e) {
+          console.warn('[STRIPE] Failed to parse ambassadorData:', e.message);
+        }
+        
+        const paymentForActivation = {
+          reference: ambassadorCode,
+          ambassador_code: ambassadorCode,
+          email: ambassadorEmail,
+          phone: session.metadata.phone || '',
+          regional_director: session.metadata.recruitedBy || '',
+          ambassador_data: ambassadorData || {
+            fullName: session.metadata.fullName || 'Ambassador',
+            email: ambassadorEmail,
+            phone: session.metadata.phone || ''
+          }
+        };
+        
+        try {
+          await activateAmbassador(paymentForActivation);
+          console.log('[STRIPE] ✅ Ambassador auto-activated:', ambassadorCode);
+          
+          if (TELEGRAM_BOT_TOKEN) {
+            const activationMsg = `✅ AMBASSADOR ACTIVATED (Auto via Stripe)\n\n` +
+              `🎯 Code: ${ambassadorCode}\n` +
+              `👤 Name: ${paymentForActivation.ambassador_data?.fullName || 'N/A'}\n` +
+              `📧 Email: ${ambassadorEmail}\n` +
+              `💰 Amount: $${(session.amount_total / 100).toFixed(2)} ${session.currency || 'USD'}\n` +
+              `👑 Recruited By: ${session.metadata.recruitedBy || 'None'}\n\n` +
+              `🔗 Dashboard: https://marriageducation.com/ambassador-dashboard.html`;
+            await sendTelegram(activationMsg, false);
+          }
+          
+          return res.json({ received: true, action: 'ambassador-activated', code: ambassadorCode });
+        } catch (activationError) {
+          console.error('[STRIPE] Ambassador activation failed:', activationError.message);
+          
+          if (TELEGRAM_BOT_TOKEN) {
+            const errorMsg = `🚨 STRIPE AMBASSADOR ACTIVATION FAILED\n\n` +
+              `Code: ${ambassadorCode}\n` +
+              `Email: ${ambassadorEmail}\n` +
+              `Error: ${activationError.message}\n\n` +
+              `⚠️ Manual activation required`;
+            await sendTelegram(errorMsg, false);
+          }
+          
+          return res.status(500).json({ error: 'Activation failed', details: activationError.message });
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────────────
+      
       // ── SBD Network branch ──────────────────────────────────────────
       if (session.metadata?.app === 'sbd') {
         const uid       = session.metadata.uid;
@@ -2359,6 +2447,109 @@ async function trackAmbassadorSale(ambassadorCode, amount) {
     console.error('trackAmbassadorSale error:', error);
   }
 }
+
+/**
+ * Create Stripe PaymentIntent for Ambassador Registration
+ * Frontend calls this to get clientSecret for card payment
+ */
+exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) => {
+  try {
+    const {
+      paymentMethodId,
+      email,
+      amount,
+      currency,
+      ambassadorCode,
+      ambassadorData,
+      description
+    } = data;
+
+    if (!paymentMethodId || !email || !amount || !ambassadorCode) {
+      throw new Error('Missing required fields: paymentMethodId, email, amount, ambassadorCode');
+    }
+
+    const ambassadorMetadata = {
+      type: 'ambassador',
+      ambassadorCode,
+      email,
+      phone: ambassadorData?.phone || '',
+      fullName: ambassadorData?.fullName || '',
+      recruitedBy: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
+      ambassadorData: ambassadorData ? JSON.stringify(ambassadorData) : '{}'
+    };
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount),
+      currency: currency || 'usd',
+      payment_method: paymentMethodId,
+      confirm: true,
+      receipt_email: email,
+      description: description || `Ambassador Registration - ${ambassadorCode}`,
+      metadata: ambassadorMetadata,
+      return_url: `https://marriageducation.com/ambassador-dashboard.html?code=${ambassadorCode}`
+    });
+
+    console.log('[STRIPE] PaymentIntent created:', paymentIntent.id, 'status:', paymentIntent.status);
+
+    // Auto-activate ambassador immediately on successful payment intent.
+    // This keeps activation working even if webhook routing differs by app/domain.
+    if (paymentIntent.status === 'succeeded') {
+      const paymentForActivation = {
+        reference: ambassadorCode,
+        ambassador_code: ambassadorCode,
+        email,
+        phone: ambassadorData?.phone || '',
+        regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
+        ambassador_data: ambassadorData || {
+          fullName: 'Ambassador',
+          email,
+          phone: ambassadorData?.phone || ''
+        }
+      };
+
+      await db.collection('stripe_payments').doc(ambassadorCode).set({
+        reference: ambassadorCode,
+        payment_intent_id: paymentIntent.id,
+        product_id: 'ambassador-registration',
+        product_name: 'Ambassador Registration',
+        amount: Math.round(paymentIntent.amount / 100),
+        currency: paymentIntent.currency || 'usd',
+        email,
+        phone: ambassadorData?.phone || '',
+        type: 'ambassador',
+        payment_method: 'stripe',
+        status: 'approved',
+        ambassador_code: ambassadorCode,
+        regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+        approved_at: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await activateAmbassador(paymentForActivation);
+
+      if (TELEGRAM_BOT_TOKEN) {
+        const activationMsg = `✅ AMBASSADOR ACTIVATED (Auto via Stripe)\n\n` +
+          `🎯 Code: ${ambassadorCode}\n` +
+          `👤 Name: ${paymentForActivation.ambassador_data?.fullName || 'N/A'}\n` +
+          `📧 Email: ${email}\n` +
+          `💰 Amount: $${(paymentIntent.amount / 100).toFixed(2)} ${(paymentIntent.currency || 'USD').toUpperCase()}\n` +
+          `👑 Recruited By: ${paymentForActivation.regional_director || 'None'}\n\n` +
+          `🔗 Dashboard: https://marriageducation.com/ambassador-dashboard.html`;
+        await sendTelegram(activationMsg, false);
+      }
+    }
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      status: paymentIntent.status
+    };
+  } catch (error) {
+    console.error('[STRIPE] createAmbassadorCheckout error:', error.message);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
 
 async function trackRDOverride(rdCode, ambassadorCode, saleAmount) {
   try {
