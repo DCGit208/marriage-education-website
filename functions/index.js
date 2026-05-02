@@ -2470,12 +2470,14 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
 
     const ambassadorMetadata = {
       type: 'ambassador',
-      ambassadorCode,
-      email,
-      phone: ambassadorData?.phone || '',
-      fullName: ambassadorData?.fullName || '',
-      recruitedBy: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
-      ambassadorData: ambassadorData ? JSON.stringify(ambassadorData) : '{}'
+      ambassadorCode: String(ambassadorCode).slice(0, 100),
+      email: String(email || '').slice(0, 200),
+      phone: String(ambassadorData?.phone || '').slice(0, 50),
+      fullName: String(
+        ambassadorData?.fullName ||
+        `${ambassadorData?.firstName || ''} ${ambassadorData?.lastName || ''}`.trim()
+      ).slice(0, 200),
+      recruitedBy: String(ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '').slice(0, 100)
     };
 
     const paymentIntent = await stripe.paymentIntents.create({
