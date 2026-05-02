@@ -678,8 +678,8 @@
         const stripeAmountText = stripeAmountEl ? stripeAmountEl.textContent : '$30 USD';
 
       try {
-          // Fixed Stripe amount for ambassador registration to cover fees/FX
-          const amountInUSD = 3000; // $30.00 in cents
+          // Default is $30. Optional one-dollar live test is enabled only with ?stripe_test=1usd
+          const amountInUSD = stripeTestMode ? 100 : 3000;
 
         // Create payment method
         const { paymentMethod, error } = await stripe.createPaymentMethod({
@@ -714,6 +714,7 @@
             amount: amountInUSD,
             currency: 'usd',
             ambassadorCode: code,
+              allowOneUsdTest: stripeTestMode,
               ambassadorData: ambassadorData,
             description: 'Ambassador Registration - ' + code
           });
@@ -773,6 +774,8 @@
     const code = getUrlParameter('code') || 'AMB-UNKNOWN';
     const amount = getUrlParameter('amount') || '15000';
     const reference = code;
+    const stripeTestMode = getUrlParameter('stripe_test') === '1usd';
+    const stripeDisplayAmount = stripeTestMode ? '$1 USD (Live Test)' : '$30 USD';
 
     // Update page content
     document.getElementById('registration-code').textContent = code;
@@ -780,7 +783,7 @@
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
     document.getElementById('amount-text').textContent = `${amount} FCFA`;
-    document.getElementById('stripe-amount-display').textContent = '$30 USD';
+    document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
 
     // Handle form submission
     document.getElementById('confirmation-form').addEventListener('submit', async (e) => {

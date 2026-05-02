@@ -2457,16 +2457,24 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
     const {
       paymentMethodId,
       email,
-      amount,
       currency,
+      allowOneUsdTest,
       ambassadorCode,
       ambassadorData,
       description
     } = data;
 
-    if (!paymentMethodId || !email || !amount || !ambassadorCode) {
-      throw new Error('Missing required fields: paymentMethodId, email, amount, ambassadorCode');
+    if (!paymentMethodId || !email || !ambassadorCode) {
+      throw new Error('Missing required fields: paymentMethodId, email, ambassadorCode');
     }
+
+    const requestedCurrency = String(currency || 'usd').toLowerCase();
+    if (requestedCurrency !== 'usd') {
+      throw new functions.https.HttpsError('invalid-argument', 'Only USD is supported for Stripe ambassador checkout.');
+    }
+
+    // Do not trust client amount. Default charge is $30; allow $1 only when explicit test flag is set.
+    const resolvedAmount = allowOneUsdTest === true ? 100 : 3000;
 
     const ambassadorMetadata = {
       type: 'ambassador',
@@ -2481,8 +2489,8 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
     };
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount),
-      currency: currency || 'usd',
+      amount: resolvedAmount,
+      currency: requestedCurrency,
       payment_method: paymentMethodId,
       confirm: true,
       receipt_email: email,
@@ -2545,7 +2553,9 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
       success: true,
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
-      status: paymentIntent.status
+      status: paymentIntent.status,
+      chargedAmount: resolvedAmount,
+      chargedCurrency: requestedCurrency
     };
   } catch (error) {
     console.error('[STRIPE] createAmbassadorCheckout error:', error.message);
