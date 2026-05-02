@@ -674,6 +674,8 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Processing...';
       cardErrors.textContent = '';
+        const stripeAmountEl = document.getElementById('stripe-amount-display');
+        const stripeAmountText = stripeAmountEl ? stripeAmountEl.textContent : '$30 USD';
 
       try {
           // Fixed Stripe amount for ambassador registration to cover fees/FX
@@ -685,9 +687,6 @@
           card: cardElement,
           billing_details: { email }
         });
-
-          const stripeAmountEl = document.getElementById('stripe-amount-display');
-          const stripeAmountText = stripeAmountEl ? stripeAmountEl.textContent : '$30 USD';
 
           if (error) {
           cardErrors.textContent = error.message;

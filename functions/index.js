@@ -2549,7 +2549,14 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
     };
   } catch (error) {
     console.error('[STRIPE] createAmbassadorCheckout error:', error.message);
-    throw new functions.https.HttpsError('internal', error.message);
+    // Return card/user errors as client-actionable responses instead of generic 500.
+    if (error?.type === 'StripeCardError' || error?.raw?.type === 'card_error') {
+      throw new functions.https.HttpsError('failed-precondition', error.message || 'Card payment failed.');
+    }
+    if (error?.type === 'StripeInvalidRequestError' || error?.raw?.type === 'invalid_request_error') {
+      throw new functions.https.HttpsError('invalid-argument', error.message || 'Invalid payment request.');
+    }
+    throw new functions.https.HttpsError('internal', error.message || 'Payment processing error.');
   }
 });
 
