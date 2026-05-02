@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ambassador Registration Payment - Marriage Education</title>
   
+  <!-- Stripe SDK -->
+  <script src="https://js.stripe.com/v3/"></script>
+  
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script>
+    // Stripe Configuration (replace with your publishable key)
+    const STRIPE_PUBLISHABLE_KEY = 'pk_live_51S4PByJFVcOiuICpKXZ5oFjIWuhbZRNuFTBdBfk8II61iBhyOVhzQQJ22AUUM938xCLobMr23IVI8miaPEmsRYTj00yKjh6776';
+    
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
@@ -290,6 +296,87 @@
       margin-bottom: 30px;
       border: 2px solid #00b894;
     }
+    .payment-method-selector {
+      background: #f9fafb;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 2px solid #e5e7eb;
+    }
+    .payment-method-selector h3 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      color: #1f2937;
+    }
+    .payment-methods {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .payment-method-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 15px 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .payment-method-btn:hover {
+      border-color: #00b894;
+      background: #f0fdf4;
+    }
+    .payment-method-btn.active {
+      border-color: #00b894;
+      background: linear-gradient(135deg, #e6f7f4 0%, #d1f2eb 100%);
+      color: #00a085;
+    }
+    .stripe-section {
+      display: none;
+    }
+    .stripe-section.active {
+      display: block;
+    }
+    .momo-section {
+      display: block;
+    }
+    .momo-section.hidden {
+      display: none;
+    }
+    .stripe-form {
+      background: #f9fafb;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 1px solid #e5e7eb;
+    }
+    .stripe-form h3 {
+      font-size: 18px;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    #card-element {
+      padding: 14px 16px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      margin-bottom: 20px;
+    }
+    #card-element.StripeElement--focus {
+      border-color: #00b894;
+    }
+    #card-errors {
+      color: #991b1b;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
     .benefits h3 {
       color: #00796b;
       font-size: 18px;
@@ -322,176 +409,20 @@
     }
     
     @media (max-width: 768px) {
-      /* Body & Container */
-      body {
-        padding: 10px;
-      }
-
-      .container {
-        max-width: 100%;
-      }
-
-      /* Header */
-      .header {
-        padding: 30px 20px;
-      }
-
-      .header .logo {
-        font-size: 48px;
-      }
-
-      .header h1 {
-        font-size: 22px;
-      }
-
-      .header p {
-        font-size: 14px;
-      }
-
-      /* Content */
-      .content {
-        padding: 25px 20px;
-      }
-
-      /* Registration Info */
-      .registration-info {
-        padding: 20px 15px;
-      }
-
-      .registration-code {
-        font-size: 24px;
-        letter-spacing: 1px;
-      }
-
-      .registration-price {
-        font-size: 32px;
-      }
-
-      /* Reference Code */
-      .reference-value {
-        font-size: 24px;
-        letter-spacing: 1px;
-        word-break: break-all;
-      }
-
-      .copy-btn {
-        width: 100%;
-        padding: 14px;
-        font-size: 15px;
-      }
-
-      /* Instructions */
-      .instructions h2 {
-        font-size: 18px;
-      }
-
-      .step {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .step-number {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
-        margin: 0 auto;
-      }
-
-      .step-content h3 {
-        font-size: 16px;
-        text-align: center;
-      }
-
-      .step-content p {
-        font-size: 14px;
-      }
-
-      /* Benefits Table */
-      .benefits {
-        padding: 15px;
-      }
-
-      .benefits h3 {
-        font-size: 16px;
-      }
-
-      .benefits-table {
-        display: block;
-      }
-
-      .benefits-table tbody {
-        display: block;
-      }
-
-      .benefits-table tr {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(0, 184, 148, 0.2);
-      }
-
-      .benefits-table tr:last-child {
-        border-bottom: none;
-      }
-
-      .benefits-table td {
-        display: block;
-        width: 100% !important;
-        padding: 4px 0;
-        border-bottom: none;
-      }
-
-      .benefit-name {
-        font-size: 15px;
-        margin-bottom: 4px;
-      }
-
-      .benefit-detail {
-        font-size: 13px;
-        opacity: 0.9;
-      }
-
-      /* Form */
-      .form-group label {
-        font-size: 14px;
-      }
-
-      .form-group input,
-      .form-group select {
-        padding: 12px;
-        font-size: 16px; /* Prevents iOS zoom */
-        min-height: 44px;
-      }
-
-      .submit-btn {
-        padding: 16px;
-        font-size: 16px;
-        min-height: 50px;
-        width: 100%;
-      }
-
-      /* Note */
-      .note {
-        font-size: 13px;
-        padding: 15px;
-      }
-
-      /* Alert */
-      .alert {
-        font-size: 14px;
-        padding: 14px;
-      }
-
-      /* Momo Numbers */
-      .momo-numbers {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .number-card {
-        padding: 15px;
-      }
+      body { padding: 10px; }
+      .header { padding: 30px 20px; }
+      .header .logo { font-size: 48px; }
+      .header h1 { font-size: 22px; }
+      .header p { font-size: 14px; }
+      .content { padding: 25px 20px; }
+      .registration-code { font-size: 24px; }
+      .registration-price { font-size: 32px; }
+      .reference-value { font-size: 28px; }
+      .instructions h2 { font-size: 18px; }
+      .step-number { width: 32px; height: 32px; font-size: 16px; }
+      .step-content h3 { font-size: 16px; }
+      .form-group input { padding: 12px; font-size: 16px; }
+      .submit-btn { padding: 14px; font-size: 16px; }
     }
   </style>
 </head>
@@ -509,6 +440,19 @@
         <div class="registration-label">YOUR AMBASSADOR CODE</div>
         <div class="registration-code" id="registration-code">Loading...</div>
         <div class="registration-price" id="registration-price">Loading...</div>
+      </div>
+
+      <!-- Payment Method Selector -->
+      <div class="payment-method-selector">
+        <h3>📱 Select Payment Method</h3>
+        <div class="payment-methods">
+          <button class="payment-method-btn active" onclick="selectPaymentMethod('momo')">
+            <span>🇨🇲</span> MTN MOMO
+          </button>
+          <button class="payment-method-btn" onclick="selectPaymentMethod('stripe')">
+            <span>💳</span> Credit Card
+          </button>
+        </div>
       </div>
 
       <!-- Benefits -->
@@ -555,6 +499,39 @@
         <button class="copy-btn" onclick="copyReference()">📋 Copy Reference</button>
       </div>
 
+      <!-- Stripe Payment Section -->
+      <div class="stripe-section" id="stripe-payment-section">
+        <div class="stripe-form">
+          <h3>💳 Card Payment</h3>
+          <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">Pay securely with your credit or debit card. Your payment is processed by Stripe.</p>
+          
+          <div id="card-element"></div>
+          <div id="card-errors" role="alert"></div>
+
+          <div class="form-group">
+            <label for="stripe-email">Email Address</label>
+            <input 
+              type="email" 
+              id="stripe-email" 
+              name="stripe-email" 
+              placeholder="your@email.com" 
+              required
+            >
+          </div>
+
+          <button type="button" class="submit-btn" onclick="processStripePayment()" id="stripe-submit-btn">
+            💳 Pay <span id="stripe-amount-display">15,000 FCFA</span>
+          </button>
+
+          <div class="secure-badge" style="margin-top: 20px;">
+            <span class="secure-badge-icon">🔒</span>
+            <span class="secure-badge-text">Secure checkout powered by Stripe</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOMO Payment Section -->
+      <div class="momo-section" id="momo-payment-section">
       <!-- Instructions -->
       <div class="instructions">
         <h2>📝 Payment Instructions</h2>
@@ -638,10 +615,123 @@
           Your payment will be verified within 5-15 minutes during business hours. Once confirmed, you'll receive your login credentials via email with your ambassador code and dashboard access link.
         </div>
       </div>
+      </div>
     </div>
   </div>
 
   <script>
+    // Stripe instance
+    let stripe = null;
+    let elements = null;
+    let cardElement = null;
+    let currentPaymentMethod = 'momo';
+
+    // Initialize Stripe
+    function initializeStripe() {
+      if (!stripe) {
+        stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+        elements = stripe.elements();
+        cardElement = elements.create('card');
+      }
+    }
+
+    // Switch payment method
+    function selectPaymentMethod(method) {
+      currentPaymentMethod = method;
+      
+      // Update button states
+      document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.closest('.payment-method-btn').classList.add('active');
+
+      if (method === 'stripe') {
+        document.getElementById('momo-payment-section').classList.add('hidden');
+        document.getElementById('stripe-payment-section').classList.add('active');
+        initializeStripe();
+        if (!cardElement.parentElement) {
+          cardElement.mount('#card-element');
+        }
+      } else {
+        document.getElementById('momo-payment-section').classList.remove('hidden');
+        document.getElementById('stripe-payment-section').classList.remove('active');
+      }
+    }
+
+    // Process Stripe payment
+    async function processStripePayment() {
+      const email = document.getElementById('stripe-email').value;
+      const submitBtn = document.getElementById('stripe-submit-btn');
+      const cardErrors = document.getElementById('card-errors');
+      const code = document.getElementById('registration-code').textContent;
+      const amount = parseInt(document.getElementById('registration-price').textContent) || 15000;
+
+      if (!email) {
+        cardErrors.textContent = 'Please enter your email address.';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      cardErrors.textContent = '';
+
+      try {
+          // Convert FCFA to USD (rate: 1 USD ≈ 600 FCFA)
+        const amountInUSD = Math.round((amount / 600) * 100); // Stripe uses cents
+
+        // Create payment method
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardElement,
+          billing_details: { email }
+        });
+
+        if (error) {
+          cardErrors.textContent = error.message;
+          submitBtn.disabled = false;
+          submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+          return;
+        }
+
+          // Get ambassador data from sessionStorage
+          let ambassadorData = null;
+          const storedData = sessionStorage.getItem('ambassadorData');
+          if (storedData) {
+            ambassadorData = JSON.parse(storedData);
+          }
+
+          // Call Firebase Cloud Function to create payment intent
+          const createCheckout = firebase.functions().httpsCallable('createAmbassadorCheckout');
+          const result = await createCheckout({
+            paymentMethodId: paymentMethod.id,
+            email,
+            amount: amountInUSD,
+            currency: 'usd',
+            ambassadorCode: code,
+              ambassadorData: ambassadorData,
+            description: 'Ambassador Registration - ' + code
+          });
+
+          if (result.data.success) {
+            showAlert('✅ Payment successful! Your ambassador account is now active. Redirecting to dashboard...', 'success');
+            // Clear session data
+            sessionStorage.removeItem('ambassadorData');
+            setTimeout(() => {
+              window.location.href = '/ambassador-dashboard.html?code=' + code;
+            }, 2000);
+          } else {
+            cardErrors.textContent = result.data.error || 'Payment processing failed';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+          }
+      } catch (err) {
+        console.error('Stripe error:', err);
+          cardErrors.textContent = 'Error: ' + (err.message || 'Payment processing failed');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💳 Pay ' + document.getElementById('stripe-amount-display').textContent;
+      }
+    }
+
     // Get URL parameters
     function getUrlParameter(name) {
       name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -684,6 +774,7 @@
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
     document.getElementById('amount-text').textContent = `${amount} FCFA`;
+    document.getElementById('stripe-amount-display').textContent = `${amount} FCFA`;
 
     // Handle form submission
     document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
@@ -697,27 +788,12 @@
       const email = document.getElementById('email').value;
 
       try {
-        // Get ambassador data from sessionStorage OR Firestore
+        // Get ambassador data from sessionStorage
         let ambassadorData = null;
         const storedData = sessionStorage.getItem('ambassadorData');
         if (storedData) {
           ambassadorData = JSON.parse(storedData);
-          console.log('✅ Retrieved ambassador data from sessionStorage:', ambassadorData);
-        } else {
-          // Fallback: Load from Firestore if sessionStorage is empty
-          console.log('⚠️ sessionStorage empty, loading from Firestore...');
-          try {
-            const doc = await firebase.firestore().collection('ambassador_registrations').doc(code).get();
-            if (doc.exists) {
-              ambassadorData = doc.data();
-              console.log('✅ Retrieved ambassador data from Firestore:', ambassadorData);
-            } else {
-              throw new Error('Ambassador registration not found. Please register again.');
-            }
-          } catch (firestoreError) {
-            console.error('❌ Failed to load from Firestore:', firestoreError);
-            throw new Error('Registration data not found. Please start registration again.');
-          }
+          console.log('📝 Retrieved ambassador data:', ambassadorData);
         }
 
         // Prepare payment data
@@ -731,11 +807,18 @@
           email: email,
           type: 'ambassador',
           ambassador_code: code,
-          regional_director: ambassadorData?.recruitedBy || '',
-          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to remove Firestore Timestamps
+          regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
+          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to clean up data
         };
-
-        console.log('Sending payment data:', paymentData);
+        
+        console.log('💳 Payment data being submitted:', {
+          reference,
+          ambassador_code: code,
+          regional_director: paymentData.regional_director,
+          recruitedBy: ambassadorData?.recruitedBy,
+          regional_director_code: ambassadorData?.regional_director_code,
+          ambassador_data: ambassadorData
+        });
 
         // Call Firebase Cloud Function
         const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
@@ -763,7 +846,5 @@
       }
     });
   </script>
-  <!-- Marriage Education Chatbot -->
-  <script src="marriage-chatbot.js"></script>
 </body>
 </html>
