@@ -102,6 +102,28 @@ async function sendTelegram(message, useMarkdown = false) {
 }
 
 /**
+ * Write-through unified payment ledger record.
+ * This is additive and does not replace existing collections.
+ */
+async function writeUnifiedPaymentRecord(record) {
+  try {
+    const source = String(record.source || 'unknown').toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+    const reference = String(record.reference || record.external_reference || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-');
+    const ledgerId = `${source}__${reference}`;
+
+    await db.collection('payments').doc(ledgerId).set({
+      ...record,
+      source,
+      reference,
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    // Non-blocking: ledger write should never break payment operations.
+    console.warn('[LEDGER] Failed to write payment record:', error.message);
+  }
+}
+
+/**
  * Generate signed download URL from Firebase Storage
  */
 async function generateDownloadURL(productId) {
@@ -375,6 +397,28 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         await db.collection('stripe_payments').doc(ambassadorCode).set(stripePaymentData);
         console.log('[STRIPE] Stored ambassador payment:', ambassadorCode);
+
+        await writeUnifiedPaymentRecord({
+          source: 'stripe_ambassador',
+          reference: ambassadorCode,
+          external_reference: paymentIntentId,
+          record_type: 'customer_payment',
+          channel: 'stripe',
+          payment_method: 'card',
+          payment_category: 'ambassador-registration',
+          product_id: 'ambassador-registration',
+          product_name: 'Ambassador Registration',
+          amount: Math.round((session.amount_total || 0) / 100),
+          currency: session.currency || 'usd',
+          customer_email: ambassadorEmail || '',
+          customer_phone: session.metadata.phone || '',
+          ambassador_code: ambassadorCode,
+          recruiter_code: session.metadata.recruitedBy || '',
+          status: 'approved',
+          action_required: false,
+          approved_at: admin.firestore.FieldValue.serverTimestamp(),
+          created_at: admin.firestore.FieldValue.serverTimestamp()
+        });
         
         let ambassadorData = null;
         try {
@@ -938,6 +982,27 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
 
     await db.collection('pending_payments').doc(reference).set(paymentData);
 
+    await writeUnifiedPaymentRecord({
+      source: 'manual_payment',
+      reference,
+      external_reference: reference,
+      record_type: 'customer_payment',
+      channel: 'manual',
+      payment_method: 'momo',
+      payment_category: type || 'book-purchase',
+      product_id,
+      product_name,
+      amount: Number(amount || 0),
+      currency: currency || 'XAF',
+      customer_email: email || '',
+      customer_phone: phone || '',
+      ambassador_code: ambassador_code || '',
+      recruiter_code: regional_director || rd_code || '',
+      status: 'pending',
+      action_required: true,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
     // Send admin notification email (non-blocking - don't fail payment if email fails)
     try {
       await sendAdminPaymentNotification(paymentData);
@@ -1009,6 +1074,27 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     // Update payment status
     await paymentRef.update({
       status: 'approved',
+      approved_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    await writeUnifiedPaymentRecord({
+      source: 'manual_payment',
+      reference,
+      external_reference: reference,
+      record_type: 'customer_payment',
+      channel: 'manual',
+      payment_method: (payment.type === 'ambassador' || payment.product_id === 'ambassador-registration') ? 'manual' : 'momo',
+      payment_category: payment.type || payment.product_id || 'book-purchase',
+      product_id: payment.product_id || '',
+      product_name: payment.product_name || '',
+      amount: Number(payment.amount || 0),
+      currency: payment.currency || 'XAF',
+      customer_email: payment.email || '',
+      customer_phone: payment.phone || '',
+      ambassador_code: payment.ambassador_code || '',
+      recruiter_code: payment.regional_director || payment.rd_code || '',
+      status: 'approved',
+      action_required: false,
       approved_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
@@ -2598,6 +2684,28 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
         approved_at: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
+      await writeUnifiedPaymentRecord({
+        source: 'stripe_ambassador',
+        reference: ambassadorCode,
+        external_reference: paymentIntent.id,
+        record_type: 'customer_payment',
+        channel: 'stripe',
+        payment_method: 'card',
+        payment_category: 'ambassador-registration',
+        product_id: 'ambassador-registration',
+        product_name: 'Ambassador Registration',
+        amount: Math.round(paymentIntent.amount / 100),
+        currency: paymentIntent.currency || 'usd',
+        customer_email: email || '',
+        customer_phone: ambassadorData?.phone || '',
+        ambassador_code: ambassadorCode,
+        recruiter_code: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
+        status: 'approved',
+        action_required: false,
+        approved_at: admin.firestore.FieldValue.serverTimestamp(),
+        created_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+
       await activateAmbassador(paymentForActivation);
 
       if (TELEGRAM_BOT_TOKEN) {
@@ -3196,6 +3304,28 @@ async function unlockSbdContent(uid, productId, session) {
     status: 'completed',
     stripeSessionId: session?.id || null,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  await writeUnifiedPaymentRecord({
+    source: 'stripe_sbd',
+    reference: session?.id || `${uid}-${productId}`,
+    external_reference: session?.payment_intent || session?.id || '',
+    record_type: 'customer_payment',
+    channel: 'stripe',
+    payment_method: 'card',
+    payment_category: productId,
+    product_id: productId,
+    product_name: SBD_CATALOG_SERVER[productId]?.name || productId,
+    amount: session?.amount_total ? session.amount_total / 100 : 0,
+    currency: session?.currency?.toUpperCase() || 'USD',
+    customer_email: session?.customer_details?.email || '',
+    customer_phone: '',
+    ambassador_code: '',
+    recruiter_code: '',
+    status: 'completed',
+    action_required: false,
+    approved_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: admin.firestore.FieldValue.serverTimestamp()
   });
 
   console.log(`[SBD] Unlocked: uid=${uid} product=${productId}`);
