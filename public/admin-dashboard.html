@@ -1260,6 +1260,46 @@
                     </button>
                 </div>
 
+                <!-- Payment Parity Summary (Legacy vs Unified) -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header">
+                        <h2>📊 Migration Parity Snapshot (Read-Only)</h2>
+                        <div class="table-actions">
+                            <span id="parityStateBadge" class="badge badge-secondary">Checking...</span>
+                            <button class="btn btn-success btn-sm" onclick="loadPaymentParitySummary()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 0.75rem;">
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Legacy Pending (Books)</div>
+                            <div id="legacyPendingCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Legacy Pending (Bonuses)</div>
+                            <div id="legacyRDBonusCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Legacy Action Queue</div>
+                            <div id="legacyActionQueueCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Unified Action Required</div>
+                            <div id="unifiedActionQueueCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Unified Status Pending</div>
+                            <div id="unifiedPendingStatusCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                        <div class="stat-card" style="padding: 1rem;">
+                            <div class="stat-label">Queue Delta (Unified - Legacy)</div>
+                            <div id="parityDeltaCount" class="stat-value" style="font-size:1.6rem;">-</div>
+                        </div>
+                    </div>
+                    <p id="parityUpdatedAt" style="margin:0;color:#636e72;font-size:0.85rem;">Last updated: checking...</p>
+                </div>
+
                 <!-- Unified Payments Preview (Read-Only) -->
                 <div class="table-card" style="margin-bottom: 2rem;">
                     <div class="table-header">
@@ -2083,6 +2123,63 @@
             }
         }
 
+        // Load Payment Parity Summary (Legacy vs Unified, Read-Only)
+        async function loadPaymentParitySummary() {
+            const legacyPendingEl = document.getElementById('legacyPendingCount');
+            const legacyBonusEl = document.getElementById('legacyRDBonusCount');
+            const legacyActionEl = document.getElementById('legacyActionQueueCount');
+            const unifiedActionEl = document.getElementById('unifiedActionQueueCount');
+            const unifiedPendingEl = document.getElementById('unifiedPendingStatusCount');
+            const parityDeltaEl = document.getElementById('parityDeltaCount');
+            const parityStateBadge = document.getElementById('parityStateBadge');
+            const parityUpdatedAt = document.getElementById('parityUpdatedAt');
+
+            if (!legacyPendingEl || !legacyBonusEl || !legacyActionEl || !unifiedActionEl || !unifiedPendingEl || !parityDeltaEl || !parityStateBadge || !parityUpdatedAt) {
+                return;
+            }
+
+            try {
+                parityStateBadge.className = 'badge badge-secondary';
+                parityStateBadge.textContent = 'Checking...';
+
+                const [legacyPendingSnap, legacyBonusSnap, unifiedActionSnap, unifiedPendingSnap] = await Promise.all([
+                    db.collection('pending_payments').where('status', '==', 'pending').get(),
+                    db.collection('admin_notifications').where('type', '==', 'rd_recruitment_bonus').where('status', '==', 'pending').get(),
+                    db.collection('payments').where('action_required', '==', true).get(),
+                    db.collection('payments').where('status', '==', 'pending').get()
+                ]);
+
+                const legacyPending = legacyPendingSnap.size;
+                const legacyBonuses = legacyBonusSnap.size;
+                const legacyActionQueue = legacyPending + legacyBonuses;
+                const unifiedActionQueue = unifiedActionSnap.size;
+                const unifiedPending = unifiedPendingSnap.size;
+                const delta = unifiedActionQueue - legacyActionQueue;
+
+                legacyPendingEl.textContent = legacyPending.toLocaleString();
+                legacyBonusEl.textContent = legacyBonuses.toLocaleString();
+                legacyActionEl.textContent = legacyActionQueue.toLocaleString();
+                unifiedActionEl.textContent = unifiedActionQueue.toLocaleString();
+                unifiedPendingEl.textContent = unifiedPending.toLocaleString();
+                parityDeltaEl.textContent = delta.toLocaleString();
+
+                if (delta === 0) {
+                    parityStateBadge.className = 'badge badge-success';
+                    parityStateBadge.textContent = 'In Parity';
+                } else {
+                    parityStateBadge.className = 'badge badge-warning';
+                    parityStateBadge.textContent = 'Drift Detected';
+                }
+
+                parityUpdatedAt.textContent = 'Last updated: ' + new Date().toLocaleString();
+            } catch (error) {
+                console.error('[Dashboard] Error loading payment parity summary:', error);
+                parityStateBadge.className = 'badge badge-danger';
+                parityStateBadge.textContent = 'Unavailable';
+                parityUpdatedAt.textContent = 'Last updated: failed to load parity snapshot';
+            }
+        }
+
         // Load Unified Payments Preview (Read-Only)
         async function loadUnifiedPaymentsPreview() {
             const tbody = document.getElementById('unifiedPaymentsPreviewBody');
@@ -2369,6 +2466,7 @@
 
         // Refresh Payments
         function refreshPayments() {
+            loadPaymentParitySummary();
             loadPaymentsTable();
             loadRDPaymentsTable();
             loadUnifiedPaymentsPreview();
@@ -2381,6 +2479,7 @@
                     loadDashboardData();
                     break;
                 case 'payments':
+                    loadPaymentParitySummary();
                     loadPaymentsTable();
                     loadRDPaymentsTable();
                     loadUnifiedPaymentsPreview();
@@ -3060,6 +3159,7 @@
 
         // Refresh Payments
         document.getElementById('refreshPaymentsBtn')?.addEventListener('click', () => {
+            loadPaymentParitySummary();
             loadPaymentsTable();
             loadRDPaymentsTable();
             loadUnifiedPaymentsPreview();
@@ -3074,6 +3174,7 @@
                 loadDashboardData();
             }
             if (document.querySelector('.section.active')?.id === 'payments') {
+                loadPaymentParitySummary();
                 loadPaymentsTable();
                 loadRDPaymentsTable();
                 loadUnifiedPaymentsPreview();
