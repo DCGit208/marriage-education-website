@@ -1259,6 +1259,43 @@
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
                 </div>
+
+                <!-- Unified Payments Preview (Read-Only) -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header">
+                        <h2>🧾 All Payments (Unified Preview - Read Only)</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-success btn-sm" onclick="loadUnifiedPaymentsPreview()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Updated</th>
+                                    <th>Reference</th>
+                                    <th>Channel</th>
+                                    <th>Category</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action Required</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unifiedPaymentsPreviewBody">
+                                <tr>
+                                    <td colspan="9" class="loading">
+                                        <div class="spinner"></div>
+                                        <p>Loading unified payments preview...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 
                 <!-- Recruitment Bonuses -->
                 <div class="table-card" style="margin-bottom: 2rem;">
@@ -2046,6 +2083,71 @@
             }
         }
 
+        // Load Unified Payments Preview (Read-Only)
+        async function loadUnifiedPaymentsPreview() {
+            const tbody = document.getElementById('unifiedPaymentsPreviewBody');
+            if (!tbody) return;
+
+            try {
+                const snapshot = await db.collection('payments')
+                    .orderBy('updated_at', 'desc')
+                    .limit(75)
+                    .get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#636e72;padding:1.5rem;">No unified payment records yet</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const updatedAt = data.updated_at ? data.updated_at.toDate().toLocaleString() : (data.created_at ? data.created_at.toDate().toLocaleString() : 'N/A');
+                    const amountVal = Number(data.amount || 0);
+                    const amountDisplay = Number.isFinite(amountVal) ? amountVal.toLocaleString() : String(data.amount || 0);
+                    const currency = data.currency || 'N/A';
+                    const customer = data.customer_email || data.email || 'N/A';
+
+                    const channel = String(data.channel || 'unknown').toLowerCase();
+                    const channelBadge = channel === 'stripe'
+                        ? '<span class="badge" style="background:#635bff;">Stripe</span>'
+                        : (channel === 'manual'
+                            ? '<span class="badge" style="background:#00b894;">Manual</span>'
+                            : `<span class="badge badge-secondary">${channel}</span>`);
+
+                    const status = String(data.status || 'unknown').toLowerCase();
+                    const statusBadge = status === 'approved' || status === 'completed'
+                        ? '<span class="badge badge-success">' + status + '</span>'
+                        : (status === 'pending'
+                            ? '<span class="badge badge-warning">pending</span>'
+                            : '<span class="badge badge-secondary">' + status + '</span>');
+
+                    const actionRequired = data.action_required === true
+                        ? '<span class="badge badge-warning">Yes</span>'
+                        : '<span class="badge badge-success">No</span>';
+
+                    html += `
+                        <tr>
+                            <td><small>${updatedAt}</small></td>
+                            <td><code>${data.reference || doc.id}</code></td>
+                            <td>${channelBadge}</td>
+                            <td>${data.payment_category || data.product_id || 'N/A'}</td>
+                            <td><strong>${customer}</strong></td>
+                            <td><strong>${amountDisplay} ${currency}</strong></td>
+                            <td>${statusBadge}</td>
+                            <td>${actionRequired}</td>
+                            <td><small>${data.source || 'N/A'}</small></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error('[Dashboard] Error loading unified payments preview:', error);
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:1.5rem;">Unable to load unified payments preview (check rules/indexes)</td></tr>';
+            }
+        }
+
         // Load Recruitment Bonus Payments Table (RD + Senior + Ambassador)
         async function loadRDPaymentsTable() {
             try {
@@ -2268,6 +2370,8 @@
         // Refresh Payments
         function refreshPayments() {
             loadPaymentsTable();
+            loadRDPaymentsTable();
+            loadUnifiedPaymentsPreview();
         }
 
         // Load Section Data
@@ -2278,6 +2382,8 @@
                     break;
                 case 'payments':
                     loadPaymentsTable();
+                    loadRDPaymentsTable();
+                    loadUnifiedPaymentsPreview();
                     break;
                 case 'crm':
                     loadCRMTable();
@@ -2955,6 +3061,8 @@
         // Refresh Payments
         document.getElementById('refreshPaymentsBtn')?.addEventListener('click', () => {
             loadPaymentsTable();
+            loadRDPaymentsTable();
+            loadUnifiedPaymentsPreview();
             loadDashboardData();
             alert('🔄 Data refreshed!');
         });
@@ -2968,6 +3076,7 @@
             if (document.querySelector('.section.active')?.id === 'payments') {
                 loadPaymentsTable();
                 loadRDPaymentsTable();
+                loadUnifiedPaymentsPreview();
             }
         }, 30000);
 
