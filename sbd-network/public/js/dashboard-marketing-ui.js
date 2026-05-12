@@ -135,33 +135,6 @@
     );
   }
 
-  function removeMvVideoUnlockControl(slide) {
-    if (!slide) return;
-    if (slide._mvPlayCheckT) {
-      clearTimeout(slide._mvPlayCheckT);
-      slide._mvPlayCheckT = null;
-    }
-    const btn = slide.querySelector('.mv-motion-unlock-btn');
-    if (btn) btn.remove();
-  }
-
-  function ensureMvVideoUnlockControl(slide) {
-    if (!slide || slide.dataset.card !== 'mv-house') return;
-    if (prefersReducedMotion()) return;
-    const video = slide.querySelector('video.video-bg');
-    if (!video || slide.querySelector('.mv-motion-unlock-btn')) return;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'mv-motion-unlock-btn';
-    btn.textContent = 'Tap to play motion';
-    btn.setAttribute('aria-label', 'Play background video');
-    btn.addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      playMvHouseVideo(slide);
-    });
-    slide.appendChild(btn);
-  }
-
   function detachMvHouseVideoEndListeners(slide, video) {
     if (!video) return;
     if (slide._mvOnEnded) {
@@ -192,7 +165,6 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
-    removeMvVideoUnlockControl(slide);
     slide._mvRevealPhaseDone = false;
     slide.classList.remove('mv-slide-phase-bg', 'mv-slide-reveal-done');
     const video = slide.querySelector('video.video-bg');
@@ -249,14 +221,10 @@
       const retry = function () {
         video.removeEventListener('canplay', retry);
         const p2 = video.play();
-        if (p2 && typeof p2.then === 'function') {
-          p2
-            .then(function () {
-              removeMvVideoUnlockControl(slide);
-            })
-            .catch(function () {
-              ensureMvVideoUnlockControl(slide);
-            });
+        if (p2 && typeof p2.catch === 'function') {
+          p2.catch(function () {
+            /* ignore */
+          });
         }
       };
       video.addEventListener('canplay', retry, { once: true });
@@ -265,33 +233,11 @@
     function attemptPlay() {
       const p = video.play();
       if (p && typeof p.then === 'function') {
-        p.then(function () {
-          removeMvVideoUnlockControl(slide);
-        }).catch(function () {
-          ensureMvVideoUnlockControl(slide);
+        p.catch(function () {
           armCanPlayRetry();
         });
       } else {
-        ensureMvVideoUnlockControl(slide);
         armCanPlayRetry();
-      }
-
-      if (slide._mvPlayCheckT) {
-        clearTimeout(slide._mvPlayCheckT);
-        slide._mvPlayCheckT = null;
-      }
-      if (!prefersReducedMotion()) {
-        slide._mvPlayCheckT = setTimeout(function () {
-          slide._mvPlayCheckT = null;
-          if (!slide.isConnected || slide.dataset.card !== 'mv-house') return;
-          try {
-            if (video.paused && !video.ended) {
-              ensureMvVideoUnlockControl(slide);
-            }
-          } catch (e) {
-            /* ignore */
-          }
-        }, 520);
       }
     }
 
@@ -356,23 +302,16 @@
       }
       const p = video.play();
       if (p && typeof p.then === 'function') {
-        p.then(function () {
-          removeMvVideoUnlockControl(slide);
-        }).catch(function () {
-          ensureMvVideoUnlockControl(slide);
+        p.catch(function () {
           video.addEventListener(
             'canplay',
             function once() {
               video.removeEventListener('canplay', once);
               const p2 = video.play();
-              if (p2 && typeof p2.then === 'function') {
-                p2
-                  .then(function () {
-                    removeMvVideoUnlockControl(slide);
-                  })
-                  .catch(function () {
-                    ensureMvVideoUnlockControl(slide);
-                  });
+              if (p2 && typeof p2.catch === 'function') {
+                p2.catch(function () {
+                  /* ignore */
+                });
               }
             },
             { once: true }
@@ -403,7 +342,6 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
-    removeMvVideoUnlockControl(slide);
     slide._mvRevealPhaseDone = false;
 
     const video = slide.querySelector('video.video-bg');
@@ -488,15 +426,6 @@
     }
 
     slide.classList.add('mv-slide-phase-bg');
-
-    /* Safari / PWA: first user gesture on the slide counts as activation for play() */
-    slide.addEventListener(
-      'pointerdown',
-      function sbdMvGesturePlay() {
-        playMvHouseVideo(slide);
-      },
-      { capture: true, once: true }
-    );
 
     playMvHouseVideo(slide);
 
