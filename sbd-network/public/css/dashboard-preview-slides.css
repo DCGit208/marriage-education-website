@@ -423,11 +423,6 @@
   opacity: 0.4;
 }
 
-/* Let taps reach the video layer during lead-in (Safari / PWA gesture unlock) */
-.dashboard-page .slide-card[data-card="mv-house"].mv-slide-phase-bg > .card-overlay {
-  pointer-events: none;
-}
-
 .dashboard-page [data-card="mv-house"].mv-slide-reveal-done .video-overlay-dark {
   opacity: 1;
 }
@@ -1107,33 +1102,6 @@
   overflow-y: hidden !important;
   padding-top: calc(22px + env(safe-area-inset-top, 0px)) !important;
   padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-/* iOS / PWA: unlock button is direct child of slide (not .card-content — lead-in uses pointer-events:none there) */
-.dashboard-page .slide-card[data-card="mv-house"] > .mv-motion-unlock-btn {
-  position: absolute;
-  left: 50%;
-  bottom: calc(58px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  z-index: 50;
-  pointer-events: auto;
-  -webkit-appearance: none;
-  appearance: none;
-  margin: 0;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font: inherit;
-  font-size: clamp(11px, 3.1cqw, 13px);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #fff;
-  background: rgba(12, 10, 14, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  max-width: calc(100% - 28px);
-  white-space: nowrap;
 }
 
 .dashboard-page .slide-card[data-card="mv-house"] .premium-badge,
