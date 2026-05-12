@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/tier.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SBD Formation Tier - Your Learning Journey">
+    <meta name="theme-color" content="#667eea">
+    <title>Formation Tier - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/learn.css">
+    <link rel="stylesheet" href="/css/tier.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+    
+    <style>
+        .tier-page {
+            padding-bottom: 80px;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body data-page="learn" class="tier-page bottom-nav-page">
+    
+    <!-- Tier Header -->
+    <header class="tier-header" id="tierHeader">
+        <a href="/learn.html" class="back-btn">← Back to Tiers</a>
+        <div class="tier-hero">
+            <div class="tier-hero-icon" id="tierIcon">🟢</div>
+            <h1 id="tierName">Foundation</h1>
+            <p id="tierTagline">Start Your Journey</p>
+        </div>
+        <div class="tier-progress-summary" id="tierProgressSummary">
+            <p>Loading...</p>
+        </div>
+    </header>
+
+    <!-- Tier Description -->
+    <section class="tier-description-section">
+        <div class="tier-description-card">
+            <h2>What's Included in This Tier</h2>
+            <p id="tierDescriptionText">Loading...</p>
+            <div class="tier-access-details" id="tierAccessDetails">
+                <!-- Dynamically loaded based on tier -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Schools Inside This Tier -->
+    <section class="tier-schools-section">
+        <h2>Formation Schools</h2>
+        <p class="section-subtitle">Your learning structure within this tier</p>
+        
+        <div class="schools-grid" id="schoolsGrid">
+            <!-- Loading state -->
+            <div class="loading-container" style="grid-column: 1 / -1;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📚</div>
+                <p style="color: #666; font-size: 1.1rem;">Loading schools...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
+    <script src="/js/tier-access.js?v=102"></script>
+    <script src="/js/tier.js?v=102"></script>
+
+
+    <!-- NAV_INJECT -->
+</body>
+</html>

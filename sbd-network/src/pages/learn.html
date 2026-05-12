@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/learn.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Formation — SBD Network">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Formation - SBD Network</title>
+
+        <style>
+            /* Critical first-paint nav pinning: prevents top flash before CSS loads */
+            .bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 900;
+            }
+            .learn-page-v2 {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+        </style>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+        <link rel="preload" href="/css/bottom-nav.css?v=41" as="style">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/learn-v2.css?v=5">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+</head>
+<body data-page="learn" class="learn-page-v2 bottom-nav-page">
+
+    <!-- JS renders the selector or tier page into this shell -->
+    <div id="learnApp" class="learn-app-shell">
+        <div class="tier-loading" style="padding:4rem 1.5rem;text-align:center;">Loading…</div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
+    <script src="/js/tier-access.js?v=102"></script>
+    <script src="/js/learn-v2.js?v=9"></script>
+
+
+    <!-- NAV_INJECT -->
+
+</body>
+</html>

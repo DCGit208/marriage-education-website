@@ -150,7 +150,7 @@ As He is, so are we. Not "as He is, so we hope to become." Not "as He is, so we 
 
 The phrase "full age" is not about chronological years. It's about maturity—the capacity to bear the weight of covenant.
 
-The UDHR enshrines a biblical principle: marriage requires wholeness. Not perfection as "sinlessness," but perfection as "fitness for purpose"—the structural integrity to sustain covenant under load.
+The UDHR reflects a biblical principle: marriage requires wholeness. Perfection is the operation of a person within their divine design—our natural state—from which covenant thrives.
 
 ### The Comparison
 
@@ -340,7 +340,7 @@ This is not self-help. This is not positive thinking. This is theology—the tru
 
 ## The Central Truth
 
-Marriage literacy is not a luxury — it is a human right. Your role as an advocate is to deploy access to marriage foundation education across Cameroon and beyond.
+Marriage literacy is not a luxury — it is a human right. Your role as an advocate is to deploy access to marriage foundation education across your community and the world.
 
 You are not selling a product. You are facilitating access to foundational knowledge that transforms relationships, families, and communities.
 
@@ -364,21 +364,21 @@ By the end of this week, you will:
 
 ## What Is Marriage Foundation Access?
 
-Marriage Foundation Access is the democratization of marriage literacy.
+Marriage Foundation Access is the removal of barriers to structured marriage intelligence.
 
-For too long, covenant-grade marriage education has been:
+For too long, covenant-grade marriage formation has been:
 
-- **Expensive** — accessible only to the wealthy
-- **Western-centric** — ignoring African contexts
-- **Church-exclusive** — missing those outside religious communities
-- **Theory-heavy** — disconnected from daily life
+- **Fragmented** — scattered across books, traditions, and unstructured teaching
+- **Inconsistent** — shaped by culture rather than grounded in design
+- **Restricted** — limited by cost, access, or institutional boundaries
+- **Theoretical** — lacking practical application in daily life
 
-Marriage Foundation Access changes this through:
+Marriage Foundation Access changes this by providing:
 
-- **Affordability:** Books, courses, and schools priced for African incomes
-- **Contextualization:** Content rooted in African realities while maintaining biblical foundations
-- **Accessibility:** Multiple pathways — free, sponsored, community-based
-- **Practicality:** Tools, not just theory
+- **Structured Access** — a clear, progressive system for understanding marriage
+- **Universal Relevance** — grounded in human design, not geography or culture
+- **Accessibility** — multiple entry points (free, guided, and advanced)
+- **Application** — tools that translate directly into lived experience
 
 ## The Problem You're Solving
 

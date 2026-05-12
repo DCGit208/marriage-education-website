@@ -21,7 +21,9 @@
     if (menuOverlay) menuOverlay.style.display = 'none';
   }
 
-  menuBtn.addEventListener('click', openMenu);
+  menuBtn.addEventListener('click', function () {
+    sideMenu.classList.contains('open') ? closeMenu() : openMenu();
+  });
   if (menuOverlay) menuOverlay.addEventListener('click', closeMenu);
 
   // Close on link click (smooth navigation)

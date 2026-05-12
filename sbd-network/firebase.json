@@ -1,4 +1,10 @@
 {
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "sbdnetworkdm"
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   },
@@ -32,24 +38,8 @@
     ],
     "headers": [
       {
-        "source": "/dashboard",
+        "source": "/**",
         "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-      },
-      {
-        "source": "/dashboard.html",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-      },
-      {
-        "source": "/auth",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-      },
-      {
-        "source": "/auth.html",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-      },
-      {
-        "source": "/service-worker.js",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
       {
         "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico)",
@@ -57,7 +47,15 @@
       },
       {
         "source": "**/*.@(js|css)",
-        "headers": [{ "key": "Cache-Control", "value": "max-age=86400" }]
+        "headers": [{ "key": "Cache-Control", "value": "max-age=31536000, immutable" }]
+      },
+      {
+        "source": "/service-worker.js",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" }]
+      },
+      {
+        "source": "/version.json",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" }]
       }
     ]
   },

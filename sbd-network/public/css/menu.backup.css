@@ -1,0 +1,82 @@
+
+.menu-open {
+  left: 0 !important;
+}
+
+.menu-overlay-visible {
+  display: block !important;
+}
+.menu-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 999999;
+  font-size: 22px;
+  color: white;
+  cursor: pointer;
+  background: rgba(0,0,0,0.6);
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.menu-btn:hover {
+  background: rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 9997;
+  display: none;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 260px;
+  height: 100vh;
+  background: #0a0a0a;
+  z-index: 9998;
+  padding: 60px 20px 20px 20px;
+  transition: left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-menu a,
+.side-menu button {
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  padding: 12px 16px;
+  font-size: 15px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.side-menu a:hover,
+.side-menu button:hover {
+  background: rgba(255,255,255,0.05);
+  color: white;
+}

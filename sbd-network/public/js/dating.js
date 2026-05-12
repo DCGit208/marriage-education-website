@@ -234,9 +234,17 @@ function canAccessDating(userData, formationScore) {
     return { level: 'full', reason: '', tier };
   }
 
-  // Elite members get full access without formation score gate
+  // Elite members: formation score gate still applies (tier = billing, formation = access)
   if (tier === 'elite') {
-    return { level: 'full', reason: '', tier };
+    if (score >= THRESH.eliteScore) {
+      return { level: 'full', reason: '', tier };
+    }
+    return {
+      level: 'none',
+      reason: `Elite — increase formation score to ${THRESH.eliteScore}+ for full matching. Current: ${score}/100.`,
+      tier,
+      showProgress: true,
+    };
   }
 
   if (tier === 'free' || tier === 'foundation') {

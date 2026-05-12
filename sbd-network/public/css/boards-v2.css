@@ -13,12 +13,13 @@
   background: var(--bg-dark);
   color: var(--text-primary);
   padding-bottom: 80px;
-  min-height: 100vh;
+  min-height: 100%;
 }
 
 /* Community Hero Header */
 .boards-hero {
-  padding: 2.5rem 1.5rem 1.8rem;
+  /* Push content below iPhone notch / Dynamic Island */
+  padding: calc(2.5rem + env(safe-area-inset-top)) 1.5rem 1.8rem;
   background: linear-gradient(180deg, #1a1a1a 0%, #0D0D0D 100%);
   border-bottom: 1px solid var(--border-light);
   text-align: center;
@@ -252,13 +253,13 @@
 .boards-page-v2 {
   background: var(--bg-dark);
   color: var(--text-primary);
-  padding-bottom: 80px;
-  min-height: 100vh;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  min-height: 100%;
 }
 
 /* Community Hero Header */
 .boards-hero {
-  padding: 3rem 1.5rem 2rem;
+  padding: calc(3rem + env(safe-area-inset-top)) 1.5rem 2rem;
   text-align: center;
   background: linear-gradient(180deg, #1a1a1a 0%, #0D0D0D 100%);
   border-bottom: 1px solid var(--border-light);

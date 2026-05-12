@@ -314,6 +314,25 @@ async function createOrder(orderData) {
 // CONTENT UNLOCKING (CALLED AFTER ORDER CREATION)
 // ==================================================================
 
+// Credit ambassador only on a user's FIRST subscription (prevents double-counting on upgrades)
+async function _creditAmbassadorReferral(userRef, tier, wasAlreadySubscribed) {
+  if (wasAlreadySubscribed) return; // upgrade — already counted
+  try {
+    const userSnap = await userRef.get();
+    const referralCode = userSnap.exists ? userSnap.data().referredBy : null;
+    if (!referralCode) return;
+    const ambSnap = await firebase.firestore().collection('ambassadors')
+      .where('sbdReferralCode', '==', referralCode).limit(1).get();
+    if (ambSnap.empty) return;
+    const tierKey = tier || 'foundation';
+    await ambSnap.docs[0].ref.update({
+      'sbdReferrals.subscribers': firebase.firestore.FieldValue.increment(1),
+      [`sbdReferrals.${tierKey}`]: firebase.firestore.FieldValue.increment(1)
+    });
+    console.log('[Shop] Ambassador referral credited for tier:', tierKey);
+  } catch (_) {} // non-critical
+}
+
 async function unlockContent(productId) {
   const product = PRODUCT_CATALOG[productId];
   if (!product || !product.unlocks) {
@@ -323,6 +342,11 @@ async function unlockContent(productId) {
   
   try {
     const userRef = firebase.firestore().collection('users').doc(currentUserId);
+
+    // Read BEFORE updating so we can detect first-time vs upgrade
+    const preSnap = await userRef.get();
+    const preData = preSnap.exists ? preSnap.data() : {};
+    const wasAlreadySubscribed = preData.subscription?.status === 'active';
     
     if (product.unlocks.type === 'tier') {
       // Update subscription tier
@@ -338,21 +362,7 @@ async function unlockContent(productId) {
       });
       
       console.log('[Shop] Subscription activated:', product.unlocks.tier);
-
-      // If this user was referred by an ambassador, increment their subscriber count
-      try {
-        const userSnap = await userRef.get();
-        const referralCode = userSnap.exists ? userSnap.data().referredBy : null;
-        if (referralCode) {
-          const ambSnap = await firebase.firestore().collection('ambassadors')
-            .where('sbdReferralCode', '==', referralCode).limit(1).get();
-          if (!ambSnap.empty) {
-            await ambSnap.docs[0].ref.update({
-              'sbdReferrals.subscribers': firebase.firestore.FieldValue.increment(1)
-            });
-          }
-        }
-      } catch (_) {} // non-critical
+      await _creditAmbassadorReferral(userRef, product.unlocks.tier, wasAlreadySubscribed);
       
     } else if (product.unlocks.type === 'course') {
       // Grant access to specific courses
@@ -388,6 +398,8 @@ async function unlockContent(productId) {
           'subscription.startDate': firebase.firestore.FieldValue.serverTimestamp(),
           'subscription.endDate': firebase.firestore.Timestamp.fromDate(endDate)
         });
+
+        await _creditAmbassadorReferral(userRef, product.unlocks.subscription.tier, wasAlreadySubscribed);
       }
       
       console.log('[Shop] Bundle unlocked');

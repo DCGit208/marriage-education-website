@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/boards.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Community - SBD Network">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Community - SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/boards-v2.css?v=1">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=53">
+</head>
+<body data-page="boards" class="boards-page-v2 bottom-nav-page">
+
+    <!-- COMMUNITY — Group-based navigation -->
+
+    <!-- Community Header -->
+    <header class="boards-hero">
+        <h1>Community</h1>
+        <p class="boards-subtext" id="communitySubtext">Your groups are loading…</p>
+    </header>
+
+    <!-- Groups Section — dynamically rendered by boards-v2.js -->
+    <section class="groups-section">
+        <div id="groupsContainer" class="groups-container">
+            <!-- Groups rendered here (unlocked + locked) -->
+        </div>
+    </section>
+
+    <!-- Participation Limit Block (initially hidden) -->
+    <section class="participation-limit" id="participationLimit" style="display:none;">
+        <div class="limit-icon">🔒</div>
+        <h3>You've reached your participation limit</h3>
+        <p>Continue engaging inside the full system</p>
+        <button class="btn-unlock" onclick="showUpgradeModal('foundation')">
+            Unlock Full Access →
+        </button>
+    </section>
+
+    <!-- Empty State -->
+    <div id="emptyState" style="display:none;" class="empty-state-container">
+        <p>No groups available yet.</p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- App Scripts -->
+    <script defer src="/js/formation-access.js?v=104"></script>
+    <script defer src="/js/firebase.js?v=75"></script>
+    <script defer src="/js/boards-v2.js?v=3"></script>
+
+
+    <!-- NAV_INJECT -->
+
+</body>
+</html>

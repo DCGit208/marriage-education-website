@@ -1,0 +1,317 @@
+/* =========================================================
+   ONBOARDING UI
+========================================================= */
+
+/* ===============================
+   TOP RIGHT AUTH BUTTON
+================================= */
+
+#onboardingAuthBtn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10050;
+
+  min-width: 96px;
+  height: 46px;
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+
+  background: rgba(8,8,8,0.72);
+  backdrop-filter: blur(16px);
+
+  color: rgba(255,255,255,0.96);
+
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  cursor: pointer;
+
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.18s ease;
+}
+
+#onboardingAuthBtn:hover {
+  background: rgba(18,18,18,0.88);
+  border-color: rgba(255,255,255,0.2);
+}
+
+#onboardingAuthBtn:active {
+  transform: scale(0.96);
+}
+
+/* ===============================
+   SIGNUP PROMPT SHEET
+================================= */
+
+.signup-prompt-sheet {
+  position: fixed;
+
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+
+  transform:
+    translateX(-50%)
+    translateY(40px);
+
+  width: calc(100vw - 28px);
+  max-width: 430px;
+
+  padding: 24px 20px 20px;
+
+  background: rgba(10,10,10,0.94);
+  backdrop-filter: blur(24px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.72),
+    0 0 0 1px rgba(255,255,255,0.03);
+
+  z-index: 10040;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 0.34s ease,
+    transform 0.34s ease,
+    visibility 0.34s ease;
+
+  overflow: hidden;
+}
+
+/* ===============================
+   OPEN STATE
+================================= */
+
+.signup-prompt-sheet.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform:
+    translateX(-50%)
+    translateY(0);
+}
+
+/* ===============================
+   CLOSE BUTTON
+================================= */
+
+.signup-prompt-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.06);
+
+  color: rgba(255,255,255,0.82);
+
+  font-size: 14px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.signup-prompt-close:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.signup-prompt-close:active {
+  transform: scale(0.92);
+}
+
+/* ===============================
+   TEXT
+================================= */
+
+.signup-prompt-title {
+  margin: 0 0 10px;
+
+  color: #fff;
+
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.signup-prompt-subtitle {
+  margin: 0 0 22px;
+
+  color: rgba(255,255,255,0.68);
+
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================= */
+
+.signup-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signup-prompt-btn {
+  width: 100%;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.04);
+
+  color: rgba(255,255,255,0.96);
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.16s ease;
+}
+
+.signup-prompt-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+}
+
+.signup-prompt-btn:active {
+  transform: scale(0.98);
+}
+
+/* ===============================
+   FOOTER
+================================= */
+
+.signup-prompt-footer {
+  margin-top: 18px;
+
+  text-align: center;
+
+  color: rgba(255,255,255,0.62);
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.signup-prompt-footer a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signup-prompt-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ===============================
+   DESKTOP SAFETY
+================================= */
+
+@media (min-width: 641px) {
+
+  .signup-prompt-sheet {
+    left: 50%;
+    right: auto;
+  }
+
+}
+
+/* ===============================
+   MOBILE
+================================= */
+
+@media (max-width: 640px) {
+
+  #onboardingAuthBtn {
+    top: 16px;
+    right: 16px;
+
+    min-width: 90px;
+    height: 44px;
+  }
+
+  .signup-prompt-sheet {
+    left: 8px;
+    right: 8px;
+
+    width: auto;
+    max-width: none;
+
+    bottom: calc(88px + env(safe-area-inset-bottom));
+
+    padding:
+      22px
+      16px
+      calc(18px + env(safe-area-inset-bottom));
+
+    transform: translateY(40px);
+  }
+
+  .signup-prompt-sheet.open {
+    transform: translateY(0);
+  }
+
+  .signup-prompt-title {
+    font-size: 24px;
+  }
+
+}
+
+/* ===============================
+   BODY STATES
+================================= */
+
+body.auth-user .signup-prompt-sheet {
+  display: none !important;
+}
+
+body.auth-user #onboardingAuthBtn {
+  background: rgba(12,12,12,0.82);
+}
+
+/* ===============================
+   PREVENT LAYOUT BLEED
+================================= */
+
+.signup-prompt-sheet *,
+.signup-prompt-sheet *::before,
+.signup-prompt-sheet *::after {
+  box-sizing: border-box;
+}

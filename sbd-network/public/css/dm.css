@@ -2,29 +2,57 @@
    DM (DIRECT MESSAGES) PAGE STYLES
    ================================================================ */
 
+/* ── STEP 8: Universal box model — no element can overflow ───────  */
+*, *::before, *::after { box-sizing: border-box !important; }
+
+html, body { overflow-x: hidden; touch-action: manipulation; }
+
 .dm-page { background: var(--bg-primary); }
 
+/* ── Inbox: dm-main sits between header and bottom nav ─────────── */
 .dm-main {
-  position: fixed;
-  top: 60px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  /* No flex needed — both child views use position:absolute */
 }
 
-/* Both views absolutely fill dm-main.
-   This is the most robust approach — no flex height chain that can break. */
+/* Both views fill dm-main as flex children */
 .dm-view {
-  position: absolute;
-  inset: 0;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
 }
 
-/* ── Inbox / conversation list ───────────────────────────────────── */
+/* ── body.in-chat: fallback. Main rules are in dm.html inline <style>. ── */
+/* NO position:fixed on body — it makes body the containing block for fixed children on iOS,
+   causing #chatView (position:fixed) to be body-relative instead of viewport-relative,
+   which means the header shifts when iOS moves the body on keyboard open.
+   overflow:hidden is enough to stop background scroll. */
+body.in-chat { overflow: hidden; }
+body.in-chat .app-header { display: none !important; }
+body.in-chat .bottom-nav  { display: none !important; }
+body.in-chat .dm-main     { display: none !important; }
+body.in-chat #chatView    { display: flex !important; }
+
+/* ── #chatView, #chatHeader, #chatInputBar, #messagesContainer ────────
+   Layout is defined in dm.html inline <style> which loads first and
+   cannot be overridden by this external file. Rules here are a no-op
+   fallback only.                                                          */
+
+/* ── Inbox hides when renderChatUI() adds .hidden class ──────────  */
+#inboxView.hidden { display: none; }
+
+/* ── Empty-state messages ────────────────────────────────────────  */
+#noConvsMessage,
+#noGroupDmMessage { display: none; }
+#noConvsMessage.visible,
+#noGroupDmMessage.visible { display: block; }
+
+
 .conversation-list {
   display: flex;
   flex-direction: column;
@@ -142,45 +170,53 @@
   margin-top: 4px;
 }
 
-/* ── Chat view ───────────────────────────────────────────────────── */
-/* #chatView is absolutely positioned (via .dm-view) inside dm-main.
-   We switch it from the default overflow-y:auto to a flex column so
-   the messages area scrolls and the input bar stays pinned at the bottom. */
-#chatView {
+
+/* ── #messagesContainer ───────────────────────────────────────────── */
+#messagesContainer {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;  /* children control their own scroll */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-bottom: 20px;
 }
 
-.chat-messages {
+/* Spacer: pushes messages to bottom when few exist */
+.msg-spacer {
   flex: 1;
-  min-height: 0;   /* CRITICAL: lets a flex child shrink so siblings stay visible */
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  padding: 12px 14px 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-sizing: border-box;
+  min-height: 0;
+  pointer-events: none;
+  flex-shrink: 1;
 }
 
 .chat-bubble {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: flex-end;
-  gap: 6px;
-  /* 75% of chat-messages content width — leaves comfortable margin on both
-     sides on any phone size and accounts for avatar + gap space */
-  max-width: 75%;
-  min-width: 0;
-  position: relative;            /* anchor for .swipe-reply-icon */
-  /* Prevent iOS native long-press callout / text-select popup */
+  column-gap: 8px;
+  width: 100%;
+  position: relative;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
   touch-action: pan-y;
 }
+
+.chat-bubble, .chat-bubble * {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.chat-bubble.theirs .bubble-avatar { grid-column: 1; }
+.chat-bubble.theirs .bubble-content { grid-column: 2; justify-self: start; }
+
+.chat-bubble.mine .bubble-content { grid-column: 3; justify-self: end; }
+.chat-bubble.mine .bubble-avatar  { grid-column: 3; }
 
 /* ── Swipe-to-reply icon (revealed as bubble slides right) ───────── */
 .swipe-reply-icon {
@@ -196,20 +232,18 @@
   transition: opacity 0.08s;
 }
 
-.chat-bubble.mine {
-  align-self: flex-end;
-  flex-direction: row-reverse;
-}
-
-.chat-bubble.theirs { align-self: flex-start; }
+/* mine/theirs alignment handled via grid-column above */
 
 .bubble-content {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  max-width: 100%;
-  /* Do NOT use overflow:hidden here — it clips text instead of wrapping it */
+  max-width: 78%;
+  width: auto !important;
+  word-break: break-word;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .bubble-name {
@@ -259,24 +293,21 @@
   color: var(--text-muted);
   padding: 0 6px;
   align-self: flex-end;
+  white-space: nowrap;
 }
 
-.chat-input-bar {
-  display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+/* ── #chatInputBar ─────────────────────────────────────────────────── */
+#chatInputBar {
   flex-shrink: 0;
-  /* Safe-area padding so input never sits under the home-indicator notch.
-     NOTE: dm-main is already positioned above the safe-area when in-chat
-     (bottom: env(safe-area-inset-bottom)), so this is redundant in that
-     mode but harmless — it just adds visual breathing room. */
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  align-items: flex-end;
-  width: 100%;
-  box-sizing: border-box;
-  /* Do NOT set overflow:hidden here — it clips the Send button */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+
+  background: #111;
+  border-top: 1px solid #333;
 }
 
 .attach-btn {
@@ -358,7 +389,8 @@
   z-index: 501;
   display: flex;
   flex-direction: column;
-  max-height: 70vh;
+  max-height: 80vh;
+  max-height: 80svh; /* shrinks with keyboard on modern browsers */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -628,7 +660,14 @@
   pointer-events: none;
   transition: opacity 0.25s, transform 0.25s;
   z-index: 9999;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: calc(100vw - 48px);
+  text-align: center;
+  word-break: break-word;
+}
+/* Lift toast above input bar when a chat is open */
+body.in-chat .app-toast {
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 
 .app-toast.show {
@@ -821,7 +860,8 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  max-width: 260px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .bubble-reply-name {
@@ -833,9 +873,11 @@
 .bubble-reply-text {
   font-size: 0.75rem;
   color: var(--text-muted);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 /* ── Reply banner (above input bar) ─────────────────────────────── */

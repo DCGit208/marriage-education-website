@@ -19,14 +19,14 @@ const TIERS = {
   ELITE: 'elite'
 };
 
-const TIER_HIERARCHY = ['free', 'foundation', 'premium', 'elite'];
+const _FA_TIER_ORDER = ['free', 'foundation', 'premium', 'elite'];
 
 /**
  * Check if user's tier is sufficient for required tier
  */
 function hasSufficientTier(userTier, requiredTier) {
-  const userIndex = TIER_HIERARCHY.indexOf(userTier || 'free');
-  const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier || 'free');
+  const userIndex = _FA_TIER_ORDER.indexOf(userTier || 'free');
+  const requiredIndex = _FA_TIER_ORDER.indexOf(requiredTier || 'free');
   return userIndex >= requiredIndex;
 }
 
@@ -81,7 +81,8 @@ async function getUserTier(userId) {
       }
     }
     
-    return 'free';
+    // Fall back to direct tier field if subscription object not present/active
+    return userData.tier || 'free';
   } catch (error) {
     console.error('[Access Control] Error fetching user tier:', error);
     return 'free';
@@ -437,8 +438,8 @@ function showPaywall(requiredTier, context = {}) {
   // Highlight required tier
   modal.querySelectorAll('[data-tier]').forEach(el => {
     const tier = el.getAttribute('data-tier');
-    const tierIndex = TIER_HIERARCHY.indexOf(tier);
-    const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
+    const tierIndex = _FA_TIER_ORDER.indexOf(tier);
+    const requiredIndex = _FA_TIER_ORDER.indexOf(requiredTier);
     
     if (tierIndex >= requiredIndex) {
       el.classList.add('recommended');
@@ -491,8 +492,8 @@ function showPaywallModal(options = {}) {
   const tierCards = modal.querySelectorAll('[data-tier]');
   tierCards.forEach(card => {
     const tier = card.getAttribute('data-tier');
-    const tierIndex = TIER_HIERARCHY.indexOf(tier);
-    const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
+    const tierIndex = _FA_TIER_ORDER.indexOf(tier);
+    const requiredIndex = _FA_TIER_ORDER.indexOf(requiredTier);
     
     if (tierIndex >= requiredIndex) {
       card.classList.add('recommended');
@@ -606,6 +607,134 @@ if (typeof window !== 'undefined') {
 }
 
 // ==================================================================
+// FEATURE GATE — canAccessFeature(uid, feature)
+// ==================================================================
+
+/**
+ * Formation-gated feature access.
+ * Tier = billing privilege. Formation = access privilege.
+ * Elite users are NOT exempt — they must still meet formation thresholds.
+ *
+ * Features:
+ *   'dating'    — Premium + score≥60 + S1≥70 + S2≥70 | Elite + score≥70
+ *   'mv_house'  — Elite + FIS_V2 expression≥20
+ *   'school2'   — Premium+ (tier gate only, formation-access.js already handles)
+ *   'boards'    — foundation+ (tier gate only)
+ *
+ * @param {string} uid
+ * @param {string} feature
+ * @returns {Promise<{ allowed: boolean, reason: string, showPaywall: boolean }>}
+ */
+async function canAccessFeature(uid, feature) {
+  if (!uid) return { allowed: false, reason: 'Not authenticated.', showPaywall: false };
+
+  const db = typeof window !== 'undefined' ? window.db : null;
+  if (!db) return { allowed: false, reason: 'Firestore unavailable.', showPaywall: false };
+
+  let userData;
+  try {
+    const snap = await db.collection('users').doc(uid).get();
+    userData = snap.exists ? snap.data() : {};
+  } catch (_) {
+    return { allowed: false, reason: 'Could not load user data.', showPaywall: false };
+  }
+
+  // Admin bypass — always allowed
+  if (userData.role === 'admin') {
+    return { allowed: true, reason: '', showPaywall: false };
+  }
+
+  const tier       = userData?.subscription?.tier || userData?.tier || 'free';
+  const tierLevel  = _FA_TIER_ORDER.indexOf(tier);
+  // Old formationScore (used by dating)
+  const fs         = userData.formationScore || {};
+  const totalScore = fs.totalScore  || 0;
+  const school1Pct = fs.school1Pct  || 0;
+  const school2Pct = fs.school2Pct  || 0;
+  // FIS_V2 profile (used by mv_house)
+  const v2         = userData.formationProfile_v2 || {};
+  const expression = v2.expression  || 0;
+
+  // ── DATING ───────────────────────────────────────────────────────
+  if (feature === 'dating') {
+    if (tierLevel < _FA_TIER_ORDER.indexOf('premium')) {
+      return {
+        allowed: false,
+        reason: 'Upgrade to Premium and reach a formation score of 60+ to unlock Covenant Matching.',
+        showPaywall: true,
+      };
+    }
+    if (tier === 'premium') {
+      if (totalScore >= 60 && school1Pct >= 70 && school2Pct >= 70) {
+        return { allowed: true, reason: '', showPaywall: false };
+      }
+      return {
+        allowed: false,
+        reason: `Formation score or school progress below threshold. Score: ${totalScore}/100 (need 60), School 1: ${school1Pct}% (need 70%), School 2: ${school2Pct}% (need 70%).`,
+        showPaywall: false,
+      };
+    }
+    if (tier === 'elite') {
+      if (totalScore >= 70) {
+        return { allowed: true, reason: '', showPaywall: false };
+      }
+      return {
+        allowed: false,
+        reason: `Elite — increase formation score to 70+ for full matching. Current: ${totalScore}/100.`,
+        showPaywall: false,
+      };
+    }
+  }
+
+  // ── MV HOUSE ─────────────────────────────────────────────────────
+  if (feature === 'mv_house') {
+    if (tierLevel < _FA_TIER_ORDER.indexOf('elite')) {
+      return {
+        allowed: false,
+        reason: 'MV House is an Elite feature. Upgrade to Elite to access your wardrobe system.',
+        showPaywall: true,
+      };
+    }
+    // Elite: require expression score ≥ 20 (anti-game: must have actual MV engagement)
+    if (expression < 20) {
+      return {
+        allowed: false,
+        reason: `Expression score too low to access MV House (${expression}/100 — need 20). Engage with the community and wardrobe system to build your expression score.`,
+        showPaywall: false,
+      };
+    }
+    return { allowed: true, reason: '', showPaywall: false };
+  }
+
+  // ── SCHOOL 2 ─────────────────────────────────────────────────────
+  if (feature === 'school2') {
+    if (tierLevel < _FA_TIER_ORDER.indexOf('premium')) {
+      return {
+        allowed: false,
+        reason: 'School 2 requires a Premium subscription.',
+        showPaywall: true,
+      };
+    }
+    return { allowed: true, reason: '', showPaywall: false };
+  }
+
+  // ── BOARDS ───────────────────────────────────────────────────────
+  if (feature === 'boards') {
+    if (tierLevel < _FA_TIER_ORDER.indexOf('foundation')) {
+      return {
+        allowed: false,
+        reason: 'Discussion boards require a Foundation subscription or higher.',
+        showPaywall: true,
+      };
+    }
+    return { allowed: true, reason: '', showPaywall: false };
+  }
+
+  // Unknown feature — default locked
+  return { allowed: false, reason: 'Feature not recognised.', showPaywall: false };
+}
+
+// ==================================================================
 // EXPORTS
 // ==================================================================
 
@@ -622,6 +751,7 @@ if (typeof window !== 'undefined') {
     canAccessCourse,
     canAccessModule,
     canAccessBoard,
+    canAccessFeature,
     
     // Progression
     getUserProgress,
@@ -646,6 +776,7 @@ if (typeof module !== 'undefined' && module.exports) {
     canAccessCourse,
     canAccessModule,
     canAccessBoard,
+    canAccessFeature,
     getUserProgress,
     completeModule,
     getNextModule,

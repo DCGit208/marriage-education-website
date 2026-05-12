@@ -29,8 +29,11 @@ const DRIP_DAYS_PER_WEEK = 7; // 1 module every 7 calendar days
 // FULL = no drip gate (used for elite bypassing drip)
 const COURSE_TIER_MAP = {
   // Free preview
-  'the-teleios-blueprint-full-human-maturity': { minTier: 'free',        freeWeeks: [1] },
-  'sex-by-design-for-dummies':                { minTier: 'free',        freeWeeks: [1] },
+  // Both short and full Firestore doc IDs supported
+  'the-teleios-blueprint-full-human-maturity':          { minTier: 'free', freeWeeks: [1] },
+  'course-1-the-teleios-blueprint-full-human-maturity': { minTier: 'free', freeWeeks: [1] },
+  'sex-by-design-for-dummies':                          { minTier: 'free', freeWeeks: [1] },
+  'course-14-sex-by-design-for-dummies':                { minTier: 'free', freeWeeks: [1] }, // legacy alias
   // Foundation dripped
   'foundation-school':                        { minTier: 'foundation',  drip: true },
   // School 1 — Teleios (Foundation dripped, Premium full drip)
@@ -42,6 +45,71 @@ const COURSE_TIER_MAP = {
   // School 4 — Civilization (Elite only)
   'school-4-civilization-leadership':         { minTier: 'elite',       drip: false },
 };
+
+// ── SCHOOL 1 PROGRESSION SEQUENCE ──────────────────────────────
+// Foundation tier: completion-triggered unlock (drip-paced within each course)
+// Premium/Elite: all School 1 unlocked immediately
+const SCHOOL_1_SEQUENCE = [
+  'course-1-the-teleios-blueprint-full-human-maturity',
+  'course-2-the-anthropology-of-wholeness-becoming-fully-human',
+  'course-3-identity-mastery-understanding-image-likeness-human-design',
+  'course-4-the-four-faculties-training',
+  'course-5-anthropocentric-development-how-humans-grow',
+  'course-6-the-personal-development-masterclass',
+  'course-7-the-science-of-self-command',
+  'course-8-the-heart-of-relationship-level-1',
+  'course-9-relationship-relatednesses-level-2',
+  'course-10-relationship-mastery-intensive-level-3',
+  'course-11-the-perfect-self-program-practicing-from-perfection',
+  'course-12-emotional-literacy-for-couples-singles',
+  'course-13-temperament-intelligence-for-marriage',
+];
+
+/**
+ * Check if a Foundation user can access a specific School 1 course.
+ * Course 1 (Teleios Blueprint) is always accessible at Foundation.
+ * Courses 2-13 require the previous course to be completed.
+ * Premium/Elite users bypass the progression gate entirely.
+ *
+ * @param {string}   courseId        - Firestore course document ID
+ * @param {string}   userTier        - User's current tier
+ * @param {string[]} unlockedCourses - From users/{uid}.progress.unlockedCourses
+ * @param {string[]} completedCourses - From users/{uid}.progress.completedCourses
+ */
+function canAccessSchool1Course(courseId, userTier, unlockedCourses = [], completedCourses = []) {
+  const tierLevel = TIER_HIERARCHY[userTier] ?? 0;
+
+  // Premium/Elite: no progression gate
+  if (tierLevel >= TIER_HIERARCHY['premium']) return { canAccess: true, accessType: 'FULL' };
+
+  // Free: only Week 1 of Course 1 via free preview (handled by canAccessCourse)
+  if (tierLevel < TIER_HIERARCHY['foundation']) {
+    return { canAccess: false, requiredTier: 'foundation', reason: tierUpgradeReason('foundation') };
+  }
+
+  // Foundation: Course 1 is always accessible
+  if (courseId === SCHOOL_1_SEQUENCE[0]) return { canAccess: true, accessType: 'DRIP' };
+
+  // Foundation: Courses 2-13 — check if explicitly unlocked via progression
+  if (unlockedCourses.includes(courseId) || completedCourses.includes(courseId)) {
+    return { canAccess: true, accessType: 'DRIP' };
+  }
+
+  // Not yet unlocked — find which course they need to complete first
+  const idx      = SCHOOL_1_SEQUENCE.indexOf(courseId);
+  const prevId   = idx > 0 ? SCHOOL_1_SEQUENCE[idx - 1] : null;
+  const prevNo   = idx;   // idx is 0-based, course numbers are 1-based → prev is idx
+
+  return {
+    canAccess: false,
+    progressionLocked: true,
+    requiredCourseId: prevId,
+    requiredCourseNo: prevNo,
+    reason: prevId
+      ? `Complete Course ${prevNo} first to unlock this one`
+      : 'Complete the previous course to unlock',
+  };
+}
 
 // MV House boards — Elite only
 const MV_HOUSE_BOARDS = [
@@ -105,22 +173,31 @@ function getDripGate(module, userTier, subscription) {
  * @param {string} userTier
  * @returns {{ canAccess: boolean, requiredTier?: string, reason?: string }}
  */
-function canAccessCourse(courseId, userTier) {
+function canAccessCourse(courseId, userTier, unlockedCourses = [], completedCourses = [], courseAccessLevel = null) {
   const tier      = userTier || 'free';
   const tierLevel = TIER_HIERARCHY[tier] ?? 0;
 
   // Teleios Blueprint & SBD Dummies: free gets week 1 preview
   if (courseId === 'the-teleios-blueprint-full-human-maturity' ||
-      courseId === 'sex-by-design-for-dummies') {
+      courseId === 'course-1-the-teleios-blueprint-full-human-maturity' ||
+      courseId === 'sex-by-design-for-dummies' ||
+      courseId === 'course-14-sex-by-design-for-dummies') {
     if (tierLevel >= TIER_HIERARCHY['foundation']) return { canAccess: true, accessType: 'DRIP' };
     return { canAccess: true, accessType: 'PREVIEW', freeWeeks: [1] };
   }
 
+  // School 1 courses 2-13: progression-gated for Foundation, free for Premium+
+  if (SCHOOL_1_SEQUENCE.includes(courseId)) {
+    return canAccessSchool1Course(courseId, tier, unlockedCourses, completedCourses);
+  }
+
   const rule = COURSE_TIER_MAP[courseId];
   if (!rule) {
-    // Unknown course — default: Foundation+
-    if (tierLevel >= TIER_HIERARCHY['foundation']) return { canAccess: true, accessType: 'DRIP' };
-    return { canAccess: false, requiredTier: 'foundation', reason: 'Upgrade to Foundation to access this course' };
+    // Unknown course — use Firestore accessLevel if supplied, otherwise deny
+    const fallbackTier = courseAccessLevel || 'premium';
+    const fallbackLevel = TIER_HIERARCHY[fallbackTier] ?? TIER_HIERARCHY['premium'];
+    if (tierLevel >= fallbackLevel) return { canAccess: true, accessType: 'DRIP' };
+    return { canAccess: false, requiredTier: fallbackTier, reason: tierUpgradeReason(fallbackTier) };
   }
 
   const minLevel = TIER_HIERARCHY[rule.minTier] ?? 0;
@@ -392,6 +469,7 @@ window.TierAccess = {
   canAccessCourse,
   canAccessModule,
   canAccessBoard,
+  canAccessSchool1Course,
   getDripGate,
   showUpgradeModal,
   showDripWallModal,
@@ -399,4 +477,5 @@ window.TierAccess = {
   TIER_HIERARCHY,
   MV_HOUSE_BOARDS,
   DRIP_DAYS_PER_WEEK,
+  SCHOOL_1_SEQUENCE,
 };

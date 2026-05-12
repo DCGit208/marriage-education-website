@@ -199,7 +199,10 @@ async function loadContinueJourney(uid) {
       `;
       return;
     }
-    
+    if (currentCourseId === "teleios-week-1") {
+  continueJourneyCard.innerHTML = "";
+  return;
+}
     // Fetch current course
     const courseDoc = await db.collection('courses').doc(currentCourseId).get();
     if (!courseDoc.exists) {
@@ -229,33 +232,72 @@ async function loadContinueJourney(uid) {
     }
     
     // Format last activity time
-    const lastActivityText = lastActivity 
-      ? formatTimestamp(lastActivity) 
-      : 'Not started';
+const lastActivityText = completedModules.length > 0
+  ? (lastActivity ? formatTimestamp(lastActivity) : 'In progress')
+  : 'Not started';
     
     // Render journey card
-    continueJourneyCard.innerHTML = `
-      <div class="journey-content">
-        <div class="progress-ring-small">
-          <svg width="60" height="60">
-            <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
-            <circle class="progress-ring-progress" cx="30" cy="30" r="26" 
-              style="stroke-dasharray: ${163.36 * (progressPercent / 100)}, 163.36;" />
-          </svg>
-          <div class="progress-text-small">${progressPercent}%</div>
+continueJourneyCard.innerHTML = `
+  <div class="journey-content">
+
+    <div class="journey-left">
+
+      <div class="progress-ring-small">
+        <svg width="72" height="72">
+
+          <circle
+            class="progress-ring-bg"
+            cx="36"
+            cy="36"
+            r="30"
+          />
+
+          <circle
+            class="progress-ring-progress"
+            cx="36"
+            cy="36"
+            r="30"
+            style="
+              stroke-dasharray:
+              ${188.4 * (progressPercent / 100)},
+              188.4;
+            "
+          />
+
+        </svg>
+
+        <div class="progress-text-small">
+          ${progressPercent}%
         </div>
-        
-        <div class="journey-details">
-          <h4 class="journey-course-title">${escapeHtml(course.title)}</h4>
-          <p class="journey-module-name">${escapeHtml(moduleName)}</p>
-          <p class="journey-timestamp">Last activity: ${lastActivityText}</p>
-        </div>
-        
-        <button class="btn-continue" onclick="window.location.href='/lesson.html?moduleId=${currentModuleId || ''}'">  
-          Continue &rarr;
-        </button>
       </div>
-    `;
+
+      <div class="journey-details">
+
+        <h4 class="journey-course-title">
+          ${escapeHtml(course.title)}
+        </h4>
+
+        <p class="journey-module-name">
+          ${escapeHtml(moduleName)}
+        </p>
+
+        <p class="journey-timestamp">
+          Last activity: ${lastActivityText}
+        </p>
+
+      </div>
+
+    </div>
+
+    <button
+      class="btn-continue"
+      onclick="window.location.href='/lesson.html?moduleId=${currentModuleId || ''}'"
+    >
+      Continue →
+    </button>
+
+  </div>
+`;
   } catch (error) {
     console.error('Error loading Continue Journey:', error);
     continueJourneyCard.innerHTML = `
@@ -654,3 +696,11 @@ window.addEventListener('offline', () => {
   if (loadingOverlay) showLoading(false);
   alert('You are offline. Please check your internet connection.');
 });
+// Force-remove Teleios from dashboard
+setTimeout(() => {
+  document.querySelectorAll(".journey-content").forEach(card => {
+    if (card.innerText.includes("Teleios")) {
+      card.remove();
+    }
+  });
+}, 500);

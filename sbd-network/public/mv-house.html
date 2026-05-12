@@ -1,7 +1,9 @@
 <!DOCTYPE html>
+<!-- TEMPLATE: Edit in src/pages/mv-house.html — run: node build.js -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
@@ -10,7 +12,7 @@
     <title>MV House | SBD Network</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
 
     <style>
         :root {
@@ -41,7 +43,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 16px 20px;
+            padding: 16px 20px; /* badge gets its own margin-right */
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -161,19 +163,30 @@
             .wardrobe-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
+        /* Card entrance animation */
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
         .look-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.22s ease;
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
             position: relative;
+            opacity: 0; /* hidden until stagger fires */
+        }
+        .look-card.card-visible {
+            animation: cardReveal 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
         .look-card:hover {
             border-color: var(--border-gold);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(198,169,107,0.12);
+            box-shadow:
+                inset 0 0 0 1px rgba(198,169,107,0.35),
+                0 12px 32px rgba(198,169,107,0.15);
         }
         .look-card-image {
             width: 100%;
@@ -191,12 +204,12 @@
             object-fit: cover;
         }
         .look-card-body {
-            padding: 0.6rem 0.7rem;
+            padding: 0.65rem 0.75rem 0.5rem;
         }
         .look-card-caption {
             font-size: 0.72rem;
-            color: var(--text);
-            line-height: 1.4;
+            color: #D4C9B8;
+            line-height: 1.45;
             margin-bottom: 0.35rem;
             overflow: hidden;
             display: -webkit-box;
@@ -204,8 +217,10 @@
             -webkit-line-clamp: 2;
         }
         .look-card-meta {
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             color: var(--text-sec);
+            font-style: italic;
+            opacity: 0.72;
         }
         .look-card-remove {
             position: absolute;
@@ -263,6 +278,14 @@
             font-size: 2.5rem;
             margin-bottom: 0.75rem;
             opacity: 0.4;
+        }
+        .mv-empty-doctrine {
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--gold);
+            opacity: 0.75;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.02em;
         }
         .mv-empty p {
             font-size: 0.85rem;
@@ -482,6 +505,143 @@
             color: rgba(198,169,107,0.75);
         }
 
+        /* ── EXPRESSION GUIDANCE (collapsed by default) ─────── */
+        .mvg-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            background: none;
+            border: none;
+            border-top: 1px solid var(--border);
+            color: var(--gold);
+            font-family: 'Georgia', serif;
+            font-size: 0.62rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.45rem 0.7rem;
+            cursor: pointer;
+            text-align: left;
+            transition: color 0.18s;
+            opacity: 0.7;
+        }
+        .mvg-toggle-btn:hover { opacity: 1; }
+        .mvg-toggle-btn .mvg-arrow {
+            margin-left: auto;
+            font-size: 0.55rem;
+            transition: transform 0.25s;
+        }
+        .mvg-toggle-btn.open .mvg-arrow { transform: rotate(180deg); }
+
+        .mv-guidance-card {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s ease, padding 0.25s ease;
+            padding: 0 0.7rem;
+            border-top: none;
+        }
+        .mv-guidance-card.open {
+            max-height: 900px;
+            padding: 0.6rem 0.7rem 0.5rem;
+            border-top: 1px solid var(--border-gold);
+        }
+        .mvg-context {
+            font-size: 0.62rem;
+            color: var(--gold);
+            letter-spacing: 0.04em;
+            font-style: italic;
+            margin-bottom: 0.6rem;
+        }
+        /* A3 rows — left gold accent bar, no full-width divider */
+        .mvg-a3-row {
+            margin-bottom: 0.6rem;
+            padding-bottom: 0;
+            padding-left: 0.65rem;
+            border-left: 2px solid rgba(198,169,107,0.32);
+            border-bottom: none;
+        }
+        .mvg-a3-row:last-of-type { margin-bottom: 0; }
+        .mvg-a3-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        .mvg-a3-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+        }
+        .mvg-a3-dots {
+            display: flex;
+            gap: 3px;
+        }
+        .a3-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 1px solid rgba(198,169,107,0.3);
+            transition: background 0.2s;
+        }
+        .a3-dot.filled { background: var(--gold); border-color: var(--gold); }
+        .mvg-a3-value {
+            font-size: 0.62rem;
+            color: var(--text-sec);
+            line-height: 1.55;
+            margin: 0;
+        }
+        .mvg-warning {
+            margin-top: 0.4rem;
+            font-size: 0.6rem;
+            font-style: italic;
+            color: rgba(255,120,100,0.8);
+            border-top: 1px solid rgba(255,120,100,0.15);
+            padding-top: 0.35rem;
+        }
+
+        /* ── A3 FACE RATINGS (on card body) ─────────────────── */
+        .a3-face-ratings {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+            margin-bottom: 2px;
+        }
+        .a3-face-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .a3-face-lbl {
+            font-size: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--gold);
+            opacity: 0.65;
+            min-width: 8px;
+        }
+        .a3-face-sep { color: var(--border); font-size: 0.6rem; }
+
+        /* ── CAPTION "...see more" (Facebook style) ─────────── */
+        .cap-ellipsis { color: var(--text-sec); }
+        .cap-see-more {
+            background: none;
+            border: none;
+            color: var(--text-sec);
+            font-size: inherit;
+            font-family: inherit;
+            font-style: inherit;
+            line-height: inherit;
+            cursor: pointer;
+            padding: 0;
+            display: inline;
+        }
+        .cap-see-more:hover { color: var(--gold); }
+
         /* ── MODALS (shared base) ────────────────────────────── */
         .mvh-modal-overlay {
             display: none;
@@ -665,13 +825,13 @@
         /* ── BOTTOM NAV ─────────────────────────────────────── */
     </style>
 </head>
-<body class="bottom-nav-page">
+<body data-page="" class="bottom-nav-page">
 
     <!-- Top Bar -->
     <div class="mv-topbar">
         <a href="/boards.html" class="mv-back">←</a>
-        <span class="mv-topbar-title">MV House</span>
         <span class="mv-topbar-badge" id="tierBadge">Elite</span>
+        <span class="mv-topbar-title">MV House</span>
     </div>
 
     <!-- Gate wall for non-Elite users (hidden by default, shown by JS) -->
@@ -837,71 +997,75 @@
         </div>
     </div>
 
-    <!-- HAMBURGER -->
+
+        <!-- HAMBURGER -->
     <div id="menuBtn" class="menu-btn">☰</div>
     <div id="menuOverlay" class="menu-overlay"></div>
     <div id="sideMenu" class="side-menu">
       <div class="menu-links">
         <div class="ham-section">
-          <div class="ham-section-label">💘 Relationship</div>
-          <a href="/dating.html">💘 Dating</a>
-          <a href="/dm.html">✉️ Messages</a>
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">👗 Expression</div>
-          <a href="/mv-house.html">👗 MV House</a>
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">📚 Resources</div>
-          <a href="/resources.html">📖 Resources Library</a>
-          <a href="/certificates.html">🏅 Certifications</a>
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
         </div>
         <div class="ham-section">
-          <div class="ham-section-label">⚙️ System</div>
-          <a href="/profile.html">⚙️ Settings</a>
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
           <div id="adminSection" style="display:none;">
-            <a href="/admin.html">🔑 Admin Panel</a>
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
           </div>
+          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
         </div>
-        <div class="ham-section">
-          <div class="ham-section-label">👤 Account</div>
-          <a href="/profile.html">👤 Profile</a>
-          <button id="logoutMenuBtn">🚪 Logout</button>
-        </div>
-        <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
+        <div id="versionPill"></div>
       </div>
     </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Main navigation">
-        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
-            <span class="bn-icon">🏠</span>
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
             <span class="bn-label">Home</span>
         </a>
-        <a href="/learn.html" class="bn-tab" aria-label="Learn">
-            <span class="bn-icon">📚</span>
+        <a href="/learn.html" class="bn-tab" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
             <span class="bn-label">Learn</span>
         </a>
-        <a href="/boards.html" class="bn-tab" aria-label="Boards">
-            <span class="bn-icon">💬</span>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
             <span class="bn-label">Boards</span>
         </a>
-        <a href="/shop.html" class="bn-tab" aria-label="Shop">
-            <span class="bn-icon">🛒</span>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
             <span class="bn-label">Shop</span>
         </a>
-        <a href="/profile.html" class="bn-tab" aria-label="Profile">
-            <span class="bn-icon">👤</span>
-            <span class="bn-label">Profile</span>
+        <a href="/profile.html" class="bn-tab" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
         </a>
     </nav>
+    <script defer src="/js/ham-nav.js?v=1778611896316"></script>
+
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=76"></script>
-    <script src="/js/formation-access.js?v=249"></script>
-    <script src="/js/mv-house.js?v=256"></script>
-    <script src="/js/ham-nav.js?v=1"></script>
+    <script src="/js/firebase.js?v=1778611896316"></script>
+    <script src="/js/formation-access.js?v=1778611896316"></script>
+    <script src="/js/mv-house.js?v=1778611896316"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="description" content="A system of formation">
     <meta name="theme-color" content="#0D0D0D">
@@ -15,585 +16,14 @@
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="css/home-premium.css?v=34">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
+    <link rel="stylesheet" href="css/home-premium.css?v=1778611896316">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/slider.css?v=1778611896316">
+<link rel="stylesheet" href="/css/menu.css?v=1778611896316">
+<link rel="stylesheet" href="/css/onboarding-ui.css?v=1778611896316">
+    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1778611896316">
     
-    <!-- Hamburger Menu Styles -->
-    <style>
-    .menu-btn {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 999999;
-      font-size: 22px;
-      color: white;
-      cursor: pointer;
-      background: rgba(0,0,0,0.6);
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.2s ease;
-      pointer-events: auto;
-    }
-    
-    .menu-btn:hover {
-      background: rgba(0,0,0,0.5);
-      border-color: rgba(255,255,255,0.2);
-    }
-
-    /* Bell button — mirrors .menu-btn but anchored top-right */
-    #dashboardBellBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 999999;
-      font-size: 20px;
-      color: white;
-      cursor: pointer;
-      background: rgba(0,0,0,0.6);
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.2s ease;
-      pointer-events: auto;
-      padding: 0;
-    }
-    #dashboardBellBtn:hover {
-      background: rgba(0,0,0,0.5);
-      border-color: rgba(255,255,255,0.2);
-    }
-
-    #onboardingAuthBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000000;
-      min-width: 86px;
-      height: 44px;
-      padding: 0 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0, 0, 0, 0.66);
-      color: rgba(255,255,255,0.94);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #onboardingAuthBtn:hover {
-      background: rgba(0, 0, 0, 0.52);
-      border-color: rgba(255,255,255,0.28);
-    }
-
-    body.auth-guest #dashboardBellBtn {
-      display: none;
-    }
-
-    body.auth-user #dashboardBellBtn {
-      display: flex;
-      right: 114px;
-    }
-
-    .signup-prompt-sheet {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: calc(82px + env(safe-area-inset-bottom));
-      z-index: 1000001;
-      border-radius: 16px;
-      padding: 16px;
-      background: rgba(12, 12, 12, 0.94);
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 22px 44px rgba(0,0,0,0.4);
-      transform: translateY(18px);
-      opacity: 0;
-      pointer-events: none;
-      transition: transform 0.22s ease, opacity 0.22s ease;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .signup-prompt-sheet.open {
-      transform: translateY(0);
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .signup-prompt-title {
-      margin: 0 0 4px;
-      font-size: 1rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.95);
-    }
-
-    .signup-prompt-subtitle {
-      margin: 0 0 12px;
-      font-size: 0.88rem;
-      color: rgba(255,255,255,0.72);
-    }
-
-    .signup-prompt-actions {
-      display: grid;
-      gap: 8px;
-    }
-
-    .signup-prompt-btn {
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.95);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: left;
-    }
-
-    .signup-prompt-btn:hover {
-      background: rgba(255,255,255,0.12);
-      border-color: rgba(255,255,255,0.24);
-    }
-
-    .signup-prompt-close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.9);
-      cursor: pointer;
-    }
-
-    .signup-prompt-footer {
-      margin-top: 10px;
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.58);
-    }
-
-    .signup-prompt-footer a {
-      color: #9fe6ff;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    
-    .menu-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 9997;
-      display: none;
-    }
-    
-    .side-menu {
-      position: fixed;
-      top: 0;
-      left: -280px;
-      width: 260px;
-      height: 100vh;
-      background: #0a0a0a;
-      z-index: 9998;
-      padding: 60px 20px 20px 20px;
-      transition: left 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .menu-links {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    
-    .side-menu a,
-    .side-menu button {
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      padding: 12px 16px;
-      font-size: 15px;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-      font-family: 'Inter', sans-serif;
-    }
-    
-    .side-menu a:hover,
-    .side-menu button:hover {
-      background: rgba(255,255,255,0.05);
-      color: white;
-    }
-    
-    .side-menu hr {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      margin: 12px 0;
-    }
-    
-    #logoutMenuBtn {
-      color: rgba(255,100,100,0.8);
-      margin-top: 8px;
-    }
-    
-    #logoutMenuBtn:hover {
-      color: rgb(255,100,100);
-      background: rgba(255,100,100,0.1);
-    }
-
-    #logoutMenuBtn.is-login {
-      color: rgba(198,169,107,0.9);
-    }
-    #logoutMenuBtn.is-login:hover {
-      color: rgb(198,169,107);
-      background: rgba(198,169,107,0.1);
-    }
-
-    /* ── Pull-to-Refresh Indicator ─────────────────────────── */
-    #ptr-indicator {
-      position: fixed;
-      top: -70px;
-      left: 50%;
-      transform: translateX(-50%) translateY(0px);
-      z-index: 9999998;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      padding: 10px 22px;
-      background: rgba(15, 15, 15, 0.78);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: rgba(255, 255, 255, 0.88);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      opacity: 0;
-      pointer-events: none;
-      will-change: transform, opacity;
-    }
-    #ptr-indicator .ptr-icon { font-size: 16px; transition: transform 0.25s ease; }
-    #ptr-indicator .ptr-spinner {
-      display: none;
-      width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-top-color: rgba(255,255,255,0.9);
-      border-radius: 50%;
-      animation: ptr-spin 0.7s linear infinite;
-    }
-    @keyframes ptr-spin { to { transform: rotate(360deg); } }
-    #ptr-indicator.ptr-releasing .ptr-icon { transform: rotate(180deg); }
-    #ptr-indicator.ptr-refreshing .ptr-icon { display: none; }
-    #ptr-indicator.ptr-refreshing .ptr-spinner { display: block; }
-    </style>
-    <style>
-    /* Slider Consistency & Layout Fixes */
-    .slider-container {
-      overflow: hidden;
-    }
-    .slider-track {
-      display: flex;
-      will-change: transform;
-    }
-    .slide-card {
-      min-width: 100%;
-      height: 100vh;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-    .card-content {
-      overflow: visible;
-    }
-    .intro-text,
-    .card-content,
-    .slide-card .intro-text {
-      overflow: visible !important;
-    }
-    </style>
-    <style>
-    /* Slide 7: MV House Identity Experience */
-    .mv-preview {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .mv-identity-card {
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .mv-identity-title {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .mv-identity-desc {
-      font-size: 12px;
-      color: rgba(255,255,255,0.65);
-    }
-
-    .mv-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-
-    .mv-item {
-      height: 95px;
-      border-radius: 10px;
-      /* background-size: cover; */
-      /* background-position: center; */
-      position: relative;
-      overflow: hidden;
-      transform: scale(1);
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-      background-color: #111;
-    }
-
-    .mv-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 20%;
-      display: block;
-    }
-
-    .mv-grid-male .mv-img {
-      object-position: center 25%;
-    }
-
-    .mv-grid-female .mv-img {
-      object-position: center 15%;
-    }
-
-    .mv-grid-male .mv-item:nth-child(1) .mv-img { object-position: center 22%; }
-    .mv-grid-male .mv-item:nth-child(2) .mv-img { object-position: center 28%; }
-    .mv-grid-male .mv-item:nth-child(3) .mv-img { object-position: center 20%; }
-
-    .mv-grid-female .mv-item:nth-child(1) .mv-img { object-position: center 12%; }
-    .mv-grid-female .mv-item:nth-child(2) .mv-img { object-position: center 18%; }
-    .mv-grid-female .mv-item:nth-child(3) .mv-img { object-position: center 14%; }
-
-    .mv-item::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
-    }
-
-    .mv-item:hover {
-      transform: scale(1.05);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
-    }
-
-    .mv-label {
-      position: absolute;
-      bottom: 6px;
-      left: 8px;
-      right: 8px;
-      font-size: 10.5px;
-      font-weight: 500;
-      color: rgba(255,255,255,0.9);
-      z-index: 2;
-      line-height: 1.2;
-    }
-
-    .mv-grid-male .mv-item::after {
-      background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-    }
-
-    .mv-grid-female .mv-item::after {
-      background: linear-gradient(to top, rgba(0,0,0,0.55), transparent);
-    }
-    </style>
-    <style>
-    /* Slide 7 Video Background Optimization */
-    .slide-card[data-card="mv-house"] .card-bg video {
-      filter: saturate(1.1) contrast(1.05);
-      transform: scale(1.05);
-    }
-    </style>
-    <style>
-    /* Membership Card Selection (decision-trigger) */
-    .membership-card {
-      cursor: pointer;
-    }
-    .membership-card.selected {
-      outline: 2px solid rgba(198,163,132,0.9);
-      box-shadow: 0 0 0 2px rgba(198,163,132,0.25), 0 12px 28px rgba(0,0,0,0.4);
-      transform: translateY(-1px);
-    }
-
-    /* Slide 6: Live Boards Preview */
-    .boards-preview {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .board-post {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      background: rgba(255,255,255,0.04);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .board-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: linear-gradient(135deg,#C6A384,#6b4e35);
-      flex-shrink: 0;
-    }
-
-    .board-post-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .board-post-user {
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.85);
-    }
-
-    .board-post-text {
-      font-size: 13px;
-      line-height: 1.35;
-      color: rgba(255,255,255,0.7);
-    }
-
-    .board-post-meta {
-      font-size: 11px;
-      color: rgba(255,255,255,0.45);
-    }
-
-    /* Slide 6 Advanced Realism */
-    .boards-top-ui {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      opacity: 0.85;
-    }
-
-    .boards-search {
-      padding: 8px 12px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.06);
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
-    }
-
-    .boards-filters {
-      display: flex;
-      gap: 6px;
-    }
-
-    .boards-chip {
-      padding: 4px 10px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      font-size: 11px;
-      color: rgba(255,255,255,0.6);
-    }
-
-    .boards-chip.active {
-      background: rgba(0,200,255,0.2);
-      color: #7fe7ff;
-    }
-
-    .boards-stories {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .story-bubble {
-      width: 48px;
-      height: 64px;
-      border-radius: 12px;
-      background: linear-gradient(135deg,#1c2b3a,#0d1b2a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      color: rgba(255,255,255,0.7);
-    }
-
-    .board-post-card {
-      margin-top: 12px;
-      border-radius: 12px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .board-post-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px;
-    }
-
-    .board-post-name {
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .board-post-time {
-      font-size: 10px;
-      color: rgba(255,255,255,0.5);
-    }
-
-    .board-post-image {
-      width: 100%;
-      height: 140px;
-      object-fit: cover;
-    }
-
-    .board-post-actions {
-      display: flex;
-      gap: 10px;
-      padding: 8px 10px 10px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.6);
-    }
-    </style>
 
     <!-- Firebase SDK -->
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -602,42 +32,44 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App scripts -->
-    <script defer src="/js/firebase.js?v=75"></script>
-    <script defer src="/js/auth-guard.js?v=2"></script>
-    <script defer src="/js/sw-update-checker.js?v=97"></script>
-    <script defer src="/js/notifications.js?v=60"></script>
-    <script defer src="/js/dm-badge.js?v=53"></script>
-    <script defer src="/js/ptr.js?v=53"></script>
-    <script defer src="/js/dashboard.js?v=67"></script>
-    <script defer src="/js/transitions.js?v=53"></script>
-    <script defer src="/js/swipe-back.js?v=53"></script>
-    <script defer src="/js/install-prompt.js?v=53"></script>
+    <script defer src="/js/firebase.js?v=1778611896316"></script>
+    <script defer src="/js/auth-guard.js?v=1778611896316"></script>
+    <script defer src="/js/sw-update-checker.js?v=1778611896316"></script>
+    <script defer src="/js/notifications.js?v=1778611896316"></script>
+    <script defer src="/js/dm-badge.js?v=1778611896316"></script>
+    <script defer src="/js/ptr.js?v=1778611896316"></script>
+    <script defer src="/js/dashboard.js?v=1778611896316"></script>
+    <script defer src="/js/dashboard-marketing-ui.js?v=1778611896316"></script>
+    <script defer src="/js/dashboard-slider.js?v=1778611896316"></script>
+    <script defer src="/js/transitions.js?v=1778611896316"></script>
+    <script defer src="/js/swipe-back.js?v=1778611896316"></script>
+    <script defer src="/js/install-prompt.js?v=1778611896316"></script>
 
 </head>
-<body class="home-cinematic bottom-nav-page auth-guest">
+<body class="home-cinematic bottom-nav-page auth-guest dashboard-page">
 
     <!-- Pull-to-Refresh Indicator -->
-    <div id="ptr-indicator" aria-live="polite" role="status">
+    <div id="ptr-indicator" class="ptr-hidden" aria-live="polite" role="status">
       <div class="ptr-icon">↓</div>
       <div class="ptr-spinner"></div>
       <span class="ptr-label">Pull to refresh</span>
     </div>
     
     <!-- HAMBURGER MENU -->
-    <div id="menuBtn" class="menu-btn">☰</div>
+    <div id="menuBtn" class="menu-btn flex-center transition-fast">☰</div>
 
     <!-- NOTIFICATION BELL -->
     <button id="dashboardBellBtn" class="notif-bell-btn" aria-label="Notifications" title="Notifications">
-      🔔<span class="notif-badge" style="display:none;"></span>
+      🔔<span class="notif-badge notif-hidden"></span>
     </button>
 
     <!-- FLOATING AUTH BUTTON -->
-    <button id="onboardingAuthBtn" aria-label="Sign up or open profile">Sign up</button>
+    <button id="onboardingAuthBtn" class="flex-center transition-fast" aria-label="Sign up or open profile">Sign up</button>
     
     <div id="menuOverlay" class="menu-overlay"></div>
     
     <div id="sideMenu" class="side-menu">
-      <div class="menu-links">
+      <div class="menu-links flex-col">
 
         <div class="ham-section">
           <div class="ham-section-label">💘 Relationship</div>
@@ -659,7 +91,7 @@
         <div class="ham-section">
           <div class="ham-section-label">⚙️ System</div>
           <a href="/profile.html"><span class="menu-icon">⚙️</span> Settings</a>
-          <div id="adminSection" style="display:none;">
+          <div id="adminSection" class="hidden-admin-section">
             <a href="/admin.html"><span class="menu-icon">🔑</span> Admin Panel</a>
           </div>
         </div>
@@ -674,20 +106,41 @@
       </div>
     </div>
     
-    <!-- CINEMATIC CARD SLIDER -->
-    <div class="slider-container">
-        <div class="slider-track" id="sliderTrack">
-            
+    <main class="dashboard-main">
+      <!-- CINEMATIC CARD SLIDER -->
+      <div class="slider-container">
+          <div class="slider-track" id="sliderTrack">
+            <!-- SLIDE 0: CONTINUE JOURNEY -->
+<div class="slide-card progress-slide" data-card="continue-journey">
+  
+<div class="card-bg bg-dashboard-main"
+style="background-image:url('/assets/background/dashboard-main.jpg');">
+</div>
+  <div class="card-overlay"></div>
+
+  <div class="card-content progress-slide-content">
+
+    <div class="section-label">CONTINUE JOURNEY</div>
+
+    <div id="continueJourneyCard">
+      <!-- injected by dashboard.js -->
+    </div>
+
+  </div>
+</div>
             <!-- INTRO SLIDE 1 -->
             <div class="slide-card intro-slide" data-card="intro-1" data-type="intro">
-                <div class="intro-bg" style="background-image: url('/assets/images/hands-chiaroscuro.png');"></div>
-                <div class="intro-content">
+<div
+  class="intro-bg"
+  style="background-image:url('/assets/background/slide1.jpg');">
+</div>                <div class="intro-content flex-center">
                     <p class="intro-text" data-words="You were not designed to struggle through relationships.">
                         <span class="word">You</span>
                         <span class="word">were</span>
                         <span class="word">not</span>
                         <span class="word">designed</span>
                         <span class="word">to</span>
+                        <br class="intro-linebreak" aria-hidden="true" />
                         <span class="word">struggle</span>
                         <span class="word">through</span>
                         <span class="word">relationships.</span>
@@ -697,14 +150,16 @@
             
             <!-- INTRO SLIDE 2 -->
             <div class="slide-card intro-slide" data-card="intro-2" data-type="intro">
-                <div class="intro-bg" style="background-image: url('/assets/images/hands-chiaroscuro.png');"></div>
-                <div class="intro-content">
+<div class="intro-bg bg-cover-center"
+style="background-image:url('/assets/background/slide-2.jpg');">
+</div>                <div class="intro-content flex-center">
                     <p class="intro-text" data-words="Relationships were never meant to feel this hard.">
                         <span class="word">Relationships</span>
                         <span class="word">were</span>
                         <span class="word">never</span>
                         <span class="word">meant</span>
                         <span class="word">to</span>
+                        <br class="intro-linebreak" aria-hidden="true" />
                         <span class="word">feel</span>
                         <span class="word">this</span>
                         <span class="word">hard.</span>
@@ -714,12 +169,14 @@
             
             <!-- INTRO SLIDE 3 -->
             <div class="slide-card intro-slide" data-card="intro-3" data-type="intro">
-                <div class="intro-bg" style="background-image: url('/assets/images/hands-chiaroscuro.png');"></div>
-                <div class="intro-content">
+<div class="intro-bg bg-cover-center"
+style="background-image:url('/assets/background/slide-3.jpg');">
+</div>                <div class="intro-content flex-center">
                     <p class="intro-text" data-words="What feels complicated is often just undefined.">
                         <span class="word">What</span>
                         <span class="word">feels</span>
                         <span class="word">complicated</span>
+                        <br class="intro-linebreak" aria-hidden="true" />
                         <span class="word">is</span>
                         <span class="word">often</span>
                         <span class="word">just</span>
@@ -730,8 +187,9 @@
             
             <!-- INTRO SLIDE 4 - POWER LINE -->
             <div class="slide-card intro-slide power-slide" data-card="intro-4" data-type="intro">
-                <div class="intro-bg power-bg" style="background-image: url('/assets/images/hands-chiaroscuro.png');"></div>
-                <div class="intro-content power-content">
+<div class="intro-bg power-bg bg-cover-center"
+style="background-image:url('/assets/background/slide-4.jpg');">
+</div>                <div class="intro-content power-content">
                     <p class="intro-text power-text" data-words="Clarity changes everything.">
                         <span class="word">Clarity</span>
                         <span class="word">changes</span>
@@ -742,71 +200,70 @@
             </div>
             
             <!-- CARD 5: MEMBERSHIP -->
-            <div class="slide-card membership-slide" data-card="tiers" style="position:relative;">
+            <div class="slide-card membership-slide" data-card="tiers">
                 <!-- Dark background layer (matches slider system) -->
-                <div class="card-bg" style="background: linear-gradient(180deg, #0a0a0a, #1a1a1a); position:absolute; inset:0; z-index:0;"></div>
-                <div class="card-overlay" style="position:absolute; inset:0; z-index:1; pointer-events:none;"></div>
+                <div class="card-bg bg-dark-panel card-fill"></div>
+                <div class="card-overlay overlay-layer overlay-no-pointer"></div>
 
-                <div class="card-content membership-container" style="position:relative; z-index:2; opacity:1; height:100%; overflow:hidden; padding:36px 20px 120px; display:flex; flex-direction:column; justify-content:flex-start;">
+                <div class="card-content membership-container membership-layout">
                     <div class="membership-label">MEMBERSHIP</div>
                     <h2 class="membership-title">Choose Your Level of Access</h2>
-                    <div style="height:8px;"></div>
-                    
-                    <div class="membership-cards" style="display:flex; flex-direction:column; gap:8px;">
+<div class="spacer spacer-8"></div>                    
+                    <div class="membership-cards flex-col gap-8">
                         <!-- EXPLORE (FREE) -->
-                        <div class="membership-card" data-tier="free" style="margin-top:4px; opacity:0.88;">
-                            <div class="membership-card-header">
+                        <div class="membership-card mt-4 opacity-88" data-tier="free">
+                            <div class="membership-card-header mb-2">
                                 <div class="membership-tier-name">Explore</div>
                                 <div class="membership-tier-price">Free</div>
                             </div>
-                            <div class="membership-card-features" style="gap:6px; font-size:13px;">
+                            <div class="membership-card-features membership-features-compact">
                                 <div class="membership-feature">✓ Access to Foundation School (intro lessons)</div>
                                 <div class="membership-feature">✓ Preview selected courses</div>
                             </div>
                         </div>
                         
                         <!-- FOUNDATION ($9) -->
-                        <div class="membership-card" data-tier="foundation" style="opacity:0.88;">
-                            <div class="membership-card-header">
+                        <div class="membership-card opacity-88" data-tier="foundation">
+                            <div class="membership-card-header mb-2">
                                 <div class="membership-tier-name">Foundation</div>
                                 <div class="membership-tier-price">$9<span>/mo</span></div>
                             </div>
-                            <div class="membership-card-features" style="gap:6px; font-size:13px;">
+                            <div class="membership-card-features membership-features-compact">
                                 <div class="membership-feature">✓ Access to core courses in School 1 & 2</div>
                                 <div class="membership-feature">✓ Structured learning path</div>
                             </div>
                         </div>
                         
                         <!-- PREMIUM ($20) - FEATURED -->
-                        <div class="membership-card membership-card-featured" data-tier="premium" style="padding:16px 14px; opacity:0.96; border:1px solid rgba(255,255,255,0.12);">
-                            <div class="membership-card-header" style="margin-bottom:2px;">
+                        <div class="membership-card membership-card-featured membership-premium-card" data-tier="premium">
+                            <div class="membership-card-header mb-2">
                                 <div class="membership-tier-name">
                                     Premium
                                     <span class="membership-badge">POPULAR</span>
                                 </div>
                                 <div class="membership-tier-price">$20<span>/mo</span></div>
                             </div>
-                            <div class="membership-card-features" style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:6px 10px; margin-top:-4px;">
-                                <div class="membership-feature" style="grid-column: span 2;">✓ Everything in Foundation</div>
-                                <div class="membership-feature" style="grid-column: span 2;">✓ Full access to School 1 & 2 courses</div>
-                                <div class="membership-feature" style="white-space:nowrap; font-size:12.5px;">✓ Certificates and progress boards</div>
+                            <div class="membership-card-features membership-features-grid">
+                                <div class="membership-feature membership-feature-span">✓ Everything in Foundation</div>
+                                <div class="membership-feature membership-feature-span">✓ Full access to School 1 & 2 courses</div>
+                                <div class="membership-feature membership-feature-nowrap">✓ Certificates and progress boards</div>
                                 <div class="membership-feature">✓ Priority support</div>
                             </div>
                         </div>
                         
                         <!-- ELITE ($50) -->
-                        <div class="membership-card membership-card-featured" data-tier="elite" style="border:1px solid rgba(198,163,132,0.7); background:linear-gradient(180deg, rgba(198,163,132,0.16), rgba(0,0,0,0.55)); box-shadow:0 8px 24px rgba(198,163,132,0.18), 0 0 0 1px rgba(198,163,132,0.15) inset; padding:10px 12px 8px 12px; margin-top:8px; margin-bottom:6px;">
-                            <div class="membership-card-header" style="margin-bottom:2px;">
+                        <div class="membership-card membership-card-featured membership-elite-card" data-tier="elite">
+                            <div class="membership-card-header mb-2">
                                 <div class="membership-tier-name">Elite</div>
                                 <div class="membership-tier-price">$50<span>/mo</span></div>
                             </div>
-                            <div class="membership-card-features" style="display:flex; flex-direction:column; gap:5px; font-size:13px; line-height:1.28; margin-top:-6px;">
-                                <div class="membership-feature" style="opacity:0.85;">✓ Everything in Explore, Foundation & Premium</div>
-                                <div class="membership-feature" style="opacity:0.9;">✓ Access to 44 Courses (across 4 Schools)</div>
-                                <div class="membership-feature" style="font-weight:600; color:#E8D2B0;">✓ Advanced Muliebrity & Virility Training School</div>
-                                <div class="membership-feature" style="opacity:0.9;">✓ Powered by Advanced Muliebrity & Virility Media Boards</div>
-                                <div class="membership-feature" style="font-weight:600; color:#E8D2B0;">✓ Teaching Sexuality Like Never Before</div>
-                                <div class="membership-feature" style="font-weight:600;">✓ Full MV Fashion House Access</div>
+                            <div class="membership-card-features membership-features-elite flex-col">
+                                <div class="membership-feature opacity-85">✓ Everything in Explore, Foundation & Premium</div>
+                                <div class="membership-feature opacity-90">✓ Access to 44 Courses (across 4 Schools)</div>
+                                <div class="membership-feature font-semibold text-gold">✓ Advanced Muliebrity & Virility Training School</div>
+                                <div class="membership-feature opacity-90">✓ Powered by Advanced Muliebrity & Virility Media Boards</div>
+                                <div class="membership-feature font-semibold text-gold">✓ Teaching Sexuality Like Never Before</div>
+                                <div class="membership-feature font-semibold">✓ Full MV Fashion House Access</div>
                             </div>
                         </div>
                     </div>
@@ -815,8 +272,9 @@
             
             <!-- CARD 6: DISCUSSION BOARDS (LIVE PREVIEW) -->
             <div class="slide-card" data-card="boards">
-                <div class="card-bg" style="background: linear-gradient(180deg,#0a0a0a,#141414);"></div>
-                <div class="card-overlay"></div>
+<div class="card-bg bg-dark-boards"
+style="background-image:url('/assets/background/boards-bg.jpg');">
+</div>                <div class="card-overlay"></div>
 
                 <div class="card-content">
                     <div class="section-label">COMMUNITY</div>
@@ -859,7 +317,7 @@
                           <div class="board-post-time">2h ago</div>
                         </div>
                       </div>
-                      <div class="board-post-text" style="padding:0 10px 8px;">
+                      <div class="board-post-text board-post-text-padded">
                         This framework is changing how I understand relationships completely.
                       </div>
                       <div class="board-post-actions">❤️ 18  💬 5</div>
@@ -869,12 +327,20 @@
             
             <!-- CARD 7: MV HOUSE (IDENTITY EXPERIENCE) -->
             <div class="slide-card" data-card="mv-house">
-                <div class="card-bg" style="position:absolute; inset:0; overflow:hidden;">
-                    <video autoplay muted loop playsinline preload="metadata"
-                        style="width:100%; height:100%; object-fit:cover; opacity:0.55;">
-                  <source src="/assets/background/slide%207.mov" type="video/quicktime">
+                <div class="card-bg video-bg-wrap">
+                    <video
+                      muted
+                      loop
+                      playsinline
+                      preload="none"
+                      class="video-bg"
+                      poster="/assets/background/mv-house-video-poster.jpg"
+                      aria-label="MV House motion background"
+                    >
+                      <source src="/assets/background/slide-7-mv-bg.mp4" type="video/mp4" />
+                      <source src="/assets/background/slide%207.mov" type="video/quicktime" />
                     </video>
-                    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85));"></div>
+                    <div class="video-overlay-dark"></div>
                 </div>
                 <div class="card-overlay"></div>
 
@@ -931,8 +397,9 @@
             
             <!-- CARD 5: THE SHOP -->
             <div class="slide-card" data-card="shop">
-                <div class="card-bg" style="background-image: url('https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1200&q=90');"></div>
-                <div class="card-overlay"></div>
+<div class="intro-bg bg-cover-center"
+style="background-image:url('/assets/background/shop-bg.jpg');">
+</div>                <div class="card-overlay"></div>
                 <div class="card-content">
                     <div class="section-label">RESOURCES</div>
                     <h2 class="card-title">The Shop</h2>
@@ -972,22 +439,29 @@
             </div>
             
             <!-- CARD 6: GROWTH PROFILE -->
-            <div class="slide-card" data-card="progress">
-                <div class="card-bg" style="background-image: url('https://images.unsplash.com/photo-1465146633011-14f8e0781093?w=1200&q=90');"></div>
-                <div class="card-overlay"></div>
+<div class="slide-card" data-card="progress">
+
+<div class="intro-bg bg-cover-center"
+style="background-image:url('/assets/background/progress-bg.jpg');">
+</div>
+
+    <div class="card-overlay"></div>
                 <div class="card-content">
                     <div class="section-label">YOUR JOURNEY</div>
                     <h2 class="card-title">Growth Profile</h2>
                     
                     <svg class="growth-chart" width="200" height="100" viewBox="0 0 200 100">
-                        <polyline points="20,80 50,60 80,55 110,40 140,35 170,25" 
-                                  fill="none" stroke="#C6A384" stroke-width="2"/>
-                        <circle cx="20" cy="80" r="4" fill="#C6A384"/>
-                        <circle cx="50" cy="60" r="4" fill="#C6A384"/>
-                        <circle cx="80" cy="55" r="4" fill="#C6A384"/>
-                        <circle cx="110" cy="40" r="4" fill="#C6A384"/>
-                        <circle cx="140" cy="35" r="4" fill="#C6A384"/>
-                        <circle cx="170" cy="25" r="4" fill="#C6A384"/>
+                        <polyline
+  class="growth-line"
+  points="20,80 50,60 80,55 110,40 140,35 170,25"
+/>
+
+<circle class="growth-point" cx="20" cy="80" r="4"/>
+<circle class="growth-point" cx="50" cy="60" r="4"/>
+<circle class="growth-point" cx="80" cy="55" r="4"/>
+<circle class="growth-point" cx="110" cy="40" r="4"/>
+<circle class="growth-point" cx="140" cy="35" r="4"/>
+<circle class="growth-point" cx="170" cy="25" r="4"/>
                     </svg>
                     
                     <div class="stats-grid">
@@ -1025,36 +499,29 @@
         </div>
         
         <!-- PAGINATION DOTS (9 slides: 4 intro + 5 main) -->
-        <div class="slider-pagination">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-            <span class="dot" data-index="2"></span>
-            <span class="dot" data-index="3"></span>
-            <span class="dot" data-index="4"></span>
-            <span class="dot" data-index="5"></span>
-            <span class="dot" data-index="6"></span>
-            <span class="dot" data-index="7"></span>
-            <span class="dot" data-index="8"></span>
-        </div>
+        <div class="slider-pagination" id="sliderPagination"></div>
     </div>
 
-    <!-- Continue Journey Card -->
-    <div id="continueJourneyCard" style="margin:0 16px 16px;"></div>
+  
 
     <!-- What's New Modal -->
-    <div id="whatsNewModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);align-items:flex-end;">
-      <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column;">
-        <div style="padding:20px 20px 14px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px;">
-          <span id="whatsNewEmoji" style="font-size:1.8rem;flex-shrink:0;">🚀</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;">What's New</div>
-            <div id="whatsNewTitle" style="font-size:1rem;font-weight:700;color:var(--text-primary);line-height:1.3;"></div>
+    <div id="whatsNewModal" class="whats-new-modal">
+      <div class="whats-new-sheet flex-col">
+        <div class="whats-new-header flex-between gap-12">
+          <span id="whatsNewEmoji" class="whats-new-emoji">🚀</span>
+
+          <div class="whats-new-title-wrap">
+            <div class="whats-new-kicker">What's New</div>
+            <div id="whatsNewTitle" class="whats-new-title"></div>
           </div>
-          <button id="whatsNewClose" type="button" style="background:rgba(255,255,255,0.08);border:none;color:var(--text-secondary);font-size:1rem;width:34px;height:34px;border-radius:50%;cursor:pointer;flex-shrink:0;" aria-label="Close">✕</button>
+
+          <button id="whatsNewClose" type="button" class="whats-new-close" aria-label="Close">✕</button>
         </div>
-        <ul id="whatsNewList" style="flex:1;overflow-y:auto;padding:14px 20px;margin:0;list-style:none;display:flex;flex-direction:column;gap:12px;"></ul>
-        <div style="padding:14px 20px 32px;">
-          <button id="whatsNewDone" type="button" class="btn btn-primary" style="width:100%;padding:14px;">Got it 👍</button>
+
+        <ul id="whatsNewList" class="whats-new-list flex-col"></ul>
+
+        <div class="whats-new-footer">
+          <button id="whatsNewDone" type="button" class="btn btn-primary whats-new-done-btn">Got it 👍</button>
         </div>
       </div>
     </div>
@@ -1096,405 +563,10 @@
       <p class="signup-prompt-footer">Already have an account? <a href="/auth?next=/learn&src=slide9-signin">Sign in</a></p>
     </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("INIT START");
-
-  try {
-    // =========================
-    // SAFE ELEMENT FETCH
-    // =========================
-    const track = document.getElementById("sliderTrack");
-    const slides = document.querySelectorAll(".slide-card");
-    const menuBtn = document.getElementById("menuBtn");
-    const menuOverlay = document.getElementById("menuOverlay");
-    const sideMenu = document.getElementById("sideMenu");
-
-    // =========================
-    // HAMBURGER FIX
-    // =========================
-    function openMenu() {
-      if (sideMenu) sideMenu.style.left = "0";
-      if (menuOverlay) menuOverlay.style.display = "block";
-    }
-
-    function closeMenu() {
-      if (sideMenu) sideMenu.style.left = "-280px";
-      if (menuOverlay) menuOverlay.style.display = "none";
-    }
-
-    if (menuBtn) menuBtn.addEventListener("click", function () {
-      const isOpen = sideMenu && sideMenu.style.left === "0px";
-      isOpen ? closeMenu() : openMenu();
-    });
-    if (menuOverlay) menuOverlay.addEventListener("click", closeMenu);
-
-    // =========================
-    // SLIDER ENGINE (RESET)
-    // =========================
-    let current = 0;
-    const total = slides.length;
-
-    function goTo(index) {
-      if (!track) return;
-      current = index;
-      track.style.transform = "translateX(-" + (index * window.innerWidth) + "px)";
-      if (typeof window.onSlideChange === "function") {
-        window.onSlideChange(index);
-      }
-      scheduleNextSlide();
-    }
-
-    function next() {
-      let n = current + 1;
-      if (n >= total) n = 0;
-      goTo(n);
-    }
-
-    // =========================
-    // SINGLE TIMER SYSTEM
-    // =========================
-    let sliderTimer = null;
-
-    function scheduleNextSlide() {
-      if (sliderTimer) clearTimeout(sliderTimer);
-      sliderTimer = setTimeout(function() {
-        let n = current + 1;
-        if (n >= total) n = 0;
-        goTo(n);
-      }, 6000);
-    }
-
-    function stopAutoSlide() {
-      if (sliderTimer) {
-        clearTimeout(sliderTimer);
-        sliderTimer = null;
-      }
-    }
-
-    // alias for swipe handlers
-    function startAuto() { scheduleNextSlide(); }
-
-    // =========================
-    // TEXT ANIMATION FIX
-    // =========================
-    function animateText(slide) {
-      if (!slide) return;
-      const words = slide.querySelectorAll(".word");
-      words.forEach(function (w, i) {
-        w.style.opacity = "0";
-        w.style.transform = "translateY(10px)";
-        setTimeout(function () {
-          w.style.transition = "all 0.5s ease";
-          w.style.opacity = "1";
-          w.style.transform = "translateY(0)";
-        }, i * 100);
-      });
-    }
-
-    // =========================
-    // SWIPE SUPPORT
-    // =========================
-    var touchStartX = 0;
-    if (track) {
-      track.addEventListener("touchstart", function (e) {
-        touchStartX = e.touches[0].clientX;
-        stopAutoSlide();
-      }, { passive: true });
-
-      track.addEventListener("touchend", function (e) {
-        var diff = touchStartX - e.changedTouches[0].clientX;
-        if (diff > 50 && current < total - 1) goTo(current + 1);
-        else if (diff < -50 && current > 0) goTo(current - 1);
-        startAuto();
-      });
-    }
-
-    // =========================
-    // RESIZE FIX (CRITICAL)
-    // =========================
-    window.addEventListener("resize", function () {
-      if (track) {
-        track.style.transition = "none";
-        track.style.transform = "translateX(-" + (current * window.innerWidth) + "px)";
-      }
-    });
-
-    // =========================
-    // INIT
-    // =========================
-    if (track && slides.length > 0) {
-      track.style.transition = "transform 0.6s ease";
-      goTo(0);
-    }
-
-    // Expose for dot/external navigation
-    window.goToSlide = goTo;
-
-    console.log("INIT SUCCESS — slides:", total);
-
-  } catch (err) {
-    console.error("CRITICAL JS ERROR:", err);
-  }
-});
-</script>
-
-<script>
-// ===============================
-// SAFE UI LAYER (NON-DESTRUCTIVE)
-// ===============================
-
-let isAuthenticated = false;
-let hasShownSignupPrompt = false;
-
-function buildAuthUrl(source, tier) {
-  const url = new URL('/auth', window.location.origin);
-  url.searchParams.set('next', '/learn');
-  if (source) url.searchParams.set('src', source);
-  if (tier) url.searchParams.set('tier', tier);
-  return `${url.pathname}${url.search}`;
-}
-
-function routeTierIntent(tier, source) {
-  if (!tier) return;
-  sessionStorage.setItem('selectedTier', tier);
-
-  if (!isAuthenticated) {
-    window.location.href = buildAuthUrl(source || 'slide5', tier);
-    return;
-  }
-
-  const target = new URL('/learn', window.location.origin);
-  target.searchParams.set('tier', tier);
-  if (source) target.searchParams.set('src', source);
-  window.location.href = `${target.pathname}${target.search}`;
-}
-
-function maybeShowSignupPrompt(index) {
-  if (index !== 8 || isAuthenticated || hasShownSignupPrompt) return;
-  if (localStorage.getItem('sbd-slide9-signup-prompt-seen') === '1') {
-    hasShownSignupPrompt = true;
-    return;
-  }
-
-  const sheet = document.getElementById('signupPromptSheet');
-  if (!sheet) return;
-
-  hasShownSignupPrompt = true;
-  localStorage.setItem('sbd-slide9-signup-prompt-seen', '1');
-  sheet.classList.add('open');
-}
-
-// Pagination dots
-function updatePagination(index) {
-  const dots = document.querySelectorAll(".dot");
-  dots.forEach(dot => dot.classList.remove("active"));
-  if (dots[index]) dots[index].classList.add("active");
-}
-
-// Intro animation (slides 1–4)
-function animateIntroSlide(slide) {
-  if (!slide) return;
-
-  const words = slide.querySelectorAll(".word");
-  if (!words.length) return;
-
-  // RESET
-  words.forEach(w => {
-    w.style.opacity = "0";
-    w.style.transform = "translateY(20px)";
-  });
-
-  // STEP 1: INITIAL PAUSE (critical)
-  setTimeout(() => {
-
-    let delay = 0;
-
-    words.forEach((w, i) => {
-
-      setTimeout(() => {
-        w.style.transition = "all 0.7s ease";
-        w.style.opacity = "1";
-        w.style.transform = "translateY(0)";
-      }, delay);
-
-      // KEY FIX: real readable pacing
-      delay += 420;
-
-    });
-
-  }, 900); // silence before start
-}
-
-// Slide 5 tier cards reveal
-function animateTierSlide(slide) {
-  if (!slide) return;
-
-  const cards = slide.querySelectorAll(".membership-card");
-  if (!cards.length) return;
-
-  // RESET (force invisible)
-  cards.forEach(card => {
-    card.style.transition = "none";
-    card.style.opacity = "0";
-    card.style.transform = "translateY(80px) scale(0.9)";
-  });
-
-  // FORCE REPAINT
-  void slide.offsetHeight;
-
-  // STEP 1: anticipation delay
-  setTimeout(() => {
-
-    // STEP 2: staggered entry
-    cards.forEach((card, i) => {
-      setTimeout(() => {
-        card.style.transition = "all 0.9s cubic-bezier(0.22,1,0.36,1)";
-        card.style.opacity = "1";
-        card.style.transform = "translateY(0) scale(1)";
-      }, i * 180);
-    });
-
-  }, 600);
-
-  // STEP 3: subtle depth shift (alive feel)
-  setTimeout(() => {
-    cards.forEach((card, i) => {
-      card.style.transition = "transform 3s ease";
-      card.style.transform = "translateY(-6px)";
-      setTimeout(() => {
-        card.style.transform = "translateY(0)";
-      }, 2000);
-    });
-  }, 1600);
-}
-
-// MV House animation (slide 7 → index 6)
-function animateMVSlide(slide) {
-  if (!slide) return;
-  const items = slide.querySelectorAll(".mv-item");
-  if (!items.length) return;
-
-  items.forEach((item, i) => {
-    item.style.opacity = "0";
-    item.style.transform = "translateY(20px)";
-
-    setTimeout(() => {
-      item.style.transition = "all 0.5s ease";
-      item.style.opacity = "1";
-      item.style.transform = "translateY(0)";
-    }, i * 120);
-  });
-}
-
-// MASTER CONTROLLER (CONNECTED TO SLIDER)
-window.onSlideChange = function(index) {
-  const slides = document.querySelectorAll(".slide-card");
-  const currentSlide = slides[index];
-
-  updatePagination(index);
-
-  // Intro slides (0–3)
-  if (index <= 3) {
-    animateIntroSlide(currentSlide);
-  }
-
-  // Slide 5 — Tier/membership cards (index 4)
-  if (index === 4) {
-    animateTierSlide(currentSlide);
-  }
-
-  // MV House (slide 7 → index 6)
-  if (index === 6) {
-    animateMVSlide(currentSlide);
-  }
-
-  // Slide 9 (index 8): non-blocking soft capture
-  maybeShowSignupPrompt(index);
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  const authBtn = document.getElementById('onboardingAuthBtn');
-  const bellBtn = document.getElementById('dashboardBellBtn');
-  const tierCards = document.querySelectorAll('[data-card="tiers"] .membership-card');
-  const promptSheet = document.getElementById('signupPromptSheet');
-  const promptClose = document.getElementById('signupPromptClose');
-  const promptButtons = document.querySelectorAll('[data-signup-source]');
-
-  tierCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const selectedTier = (card.dataset.tier || '').toLowerCase();
-      tierCards.forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-
-      setTimeout(() => {
-        routeTierIntent(selectedTier, 'slide5');
-      }, 120);
-    });
-  });
-
-  if (promptClose && promptSheet) {
-    promptClose.addEventListener('click', () => {
-      promptSheet.classList.remove('open');
-    });
-  }
-
-  promptButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const source = btn.getAttribute('data-signup-source') || 'slide9';
-      window.location.href = buildAuthUrl(source, 'foundation');
-    });
-  });
-
-  if (authBtn) {
-    authBtn.addEventListener('click', () => {
-      if (isAuthenticated) {
-        window.location.href = '/profile';
-        return;
-      }
-      window.location.href = buildAuthUrl('fab');
-    });
-  }
-
-  function applyAuthUi(user) {
-    isAuthenticated = !!user;
-    document.body.classList.toggle('auth-user', isAuthenticated);
-    document.body.classList.toggle('auth-guest', !isAuthenticated);
-
-    if (authBtn) {
-      authBtn.textContent = isAuthenticated ? 'Profile' : 'Sign up';
-      authBtn.setAttribute('aria-label', isAuthenticated ? 'Open profile' : 'Sign up or sign in');
-    }
-
-    if (bellBtn) {
-      bellBtn.style.display = isAuthenticated ? 'flex' : 'none';
-    }
-
-    if (isAuthenticated && promptSheet) {
-      promptSheet.classList.remove('open');
-    }
-  }
-
-  window.addEventListener('sbd-auth-state', (event) => {
-    applyAuthUi(event.detail && event.detail.user ? event.detail.user : null);
-  });
-
-  (function waitForAuthObserver() {
-    if (typeof auth === 'undefined' || !auth.onAuthStateChanged) {
-      setTimeout(waitForAuthObserver, 120);
-      return;
-    }
-    auth.onAuthStateChanged((user) => {
-      applyAuthUi(user);
-    });
-  }());
-});
-</script>
-
-  <script defer src="/js/offline.js?v=53"></script>
+  <script defer src="/js/offline.js?v=1778611896316"></script>
 
   <!-- Notification Panel -->
-  <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+  <div id="notifOverlay" class="notif-overlay notif-hidden"></div>
   <div id="notifPanel" class="notif-panel">
       <div class="notif-panel-header">
           <h3>Notifications</h3>

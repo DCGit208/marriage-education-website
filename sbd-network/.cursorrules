@@ -1,0 +1,25 @@
+# SBD Network - Canonical AI Rules & Guidelines
+
+## 🏗️ PROJECT CONTEXT & TECH STACK
+- Location: /Users/achugustave/Documents/Marriageducation/sbd-network
+- Frontend: HTML5, Mobile-first responsive CSS3, Vanilla JavaScript (ES6+).
+- Backend: Firebase SDK 9.22.0 (Auth, Firestore, Storage, Hosting, Cloud Functions).
+- Design System: Dark theme, card-based layouts, Cyan accent color (#00bcd4).
+
+## 💎 SUBSCRIPTION TIERS & ACCESS SYSTEM
+- Free ($0): Teleios Week 1 only, Resource library, Community read-only.
+- Foundation ($9/mo): Full Teleios Blueprint (6 weeks), SBD For Dummies (13 weeks), School 1 progressive unlock.
+- Premium ($20/mo): Full School 1 (13 courses) + School 2 (15 courses), Certificates.
+- Elite ($50/mo): All 4 Schools (44 courses total), MV House access, Advanced boards, Mastery certification.
+
+## 🎓 SCHOOL FIRESTORE TRACKING IDs
+- School 1: school-1-teleios
+- School 2: school-2-sexual-literacy
+- School 3: school-3-marriage-systems (Elite Only)
+- School 4: school-4-civilization-leadership (Elite Only)
+
+## 🔐 ABSOLUTE DEVELOPMENT RULES
+1. CODE STYLE: Write clean modular Vanilla JS. Never add framework boilerplate (React/Vue) or heavy external libraries unless explicitly asked.
+2. BACKEND/DATABASE: Always write Firestore queries matching Firebase SDK 9 v2 configuration syntax. Never mix old v8 namespaced patterns.
+3. SECURITY FIRST: When suggesting updates to data endpoints, remind the user to crosscheck security configurations in `firestore.rules`. Ensure any group/board check evaluates the `requiredTier` string correctly.
+4. STYLING ARCHITECTURE: Restrict interface enhancements to CSS grids, flexbox layouts, and the default dark theme parameters with the cyan element mapping (#00bcd4).

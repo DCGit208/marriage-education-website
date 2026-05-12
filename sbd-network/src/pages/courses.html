@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/courses.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="My Learning - SBD Network">
+    <meta name="theme-color" content="#000000">
+    <title>My Learning - SBD Network</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+    <link rel="stylesheet" href="/css/paywall.css?v=41">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    
+    <style>
+        .courses-page {
+            padding-bottom: 80px;
+        }
+        
+
+        
+        .learning-section {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        
+        .learning-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .section-link {
+            font-size: 0.9rem;
+            color: var(--accent-primary, #00bcd4);
+            text-decoration: none;
+        }
+        
+        .continue-card {
+            background: linear-gradient(135deg, var(--accent-primary, #00bcd4) 0%, #0097a7 100%);
+            border-radius: 16px;
+            padding: 24px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .continue-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .continue-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0 0 8px 0;
+        }
+        
+        .continue-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        
+        .continue-progress {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0 0 16px 0;
+        }
+        
+        .continue-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .continue-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .course-card {
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .course-card:hover:not(.locked) {
+            border-color: var(--accent-primary, #00bcd4);
+            transform: translateX(4px);
+        }
+        
+        .course-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .course-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+        
+        .course-info {
+            flex: 1;
+        }
+        
+        .course-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            color: var(--text-primary, #fff);
+        }
+        
+        .course-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0;
+        }
+        
+        .course-progress {
+            flex-shrink: 0;
+            text-align: right;
+        }
+        
+        .progress-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-primary, #00bcd4) var(--progress, 0%),
+                var(--bg-tertiary, #2a2a2a) 0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bg-secondary, #1a1a1a);
+        }
+        
+        .progress-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+        }
+        
+        .lock-badge {
+            background: rgba(255,255,255,0.07);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary, #aaa);
+        }
+        
+        .start-btn {
+            background: var(--accent-primary, #00bcd4);
+            color: #000;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 7px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            letter-spacing: 0.03em;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary, #aaa);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* ─── Course Week Sheet ─────────────────────────────────── */
+        .course-sheet-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 950;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .course-sheet-backdrop.active { opacity: 1; }
+
+        .course-sheet-panel {
+            display: none;
+            position: fixed; left: 0; right: 0; bottom: 0;
+            background: var(--bg-primary, #0a0a0a);
+            border-radius: 20px 20px 0 0;
+            z-index: 951;
+            max-height: 78vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            /* Clear bottom nav bar + safe area */
+            padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        }
+        .course-sheet-panel.active { transform: translateY(0); }
+
+        .course-sheet-handle {
+            width: 36px; height: 4px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 2px;
+            margin: 12px auto 0;
+        }
+        .course-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        .course-sheet-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary, #fff);
+        }
+        .sheet-close-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-primary, #fff);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .sheet-loading {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary, #aaa);
+            font-size: 0.9rem;
+        }
+        .week-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .week-row:active { background: rgba(255,255,255,0.05); }
+        .week-row.locked { opacity: 0.5; cursor: default; }
+
+        .week-num-pill {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--bg-secondary, #1a1a1a);
+            border: 1px solid var(--border-color, #333);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary, #aaa);
+            flex-shrink: 0;
+            letter-spacing: 0.04em;
+        }
+        .week-row.current .week-num-pill {
+            background: var(--accent-primary, #00bcd4);
+            border-color: var(--accent-primary, #00bcd4);
+            color: #000;
+        }
+        .week-row.completed .week-num-pill {
+            background: rgba(0,200,100,0.12);
+            border-color: rgba(0,200,100,0.3);
+            color: #00c864;
+        }
+        .week-row-info { flex: 1; min-width: 0; }
+        .week-row-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+            margin: 0 0 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .week-row-meta {
+            font-size: 0.78rem;
+            color: var(--text-secondary, #aaa);
+            margin: 0;
+        }
+        .week-row-arrow {
+            font-size: 1rem;
+            color: var(--text-secondary, #aaa);
+            flex-shrink: 0;
+        }
+        .week-row.current .week-row-arrow { color: var(--accent-primary, #00bcd4); }
+    </style>
+</head>
+<body data-page="learn" class="courses-page bottom-nav-page has-header">
+    
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <button class="back-btn btn btn-icon" aria-label="Back">←</button>
+            <h1 class="page-title">My Learning</h1>
+        </div>
+        <div class="header-right">
+            <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+                🔔<span class="notif-badge" style="display:none;"></span>
+            </button>
+        </div>
+    </header>
+    
+
+    
+    <!-- Main Content -->
+    <main class="courses-main">
+        
+        <!-- Continue Learning Section -->
+        <section class="learning-section" id="continueSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Continue Learning</h2>
+            </div>
+            
+            <div id="continueCard" class="continue-card" onclick="continueModule()">
+                <p class="continue-label">Current Module</p>
+                <h3 class="continue-title" id="currentModuleTitle">Loading...</h3>
+                <p class="continue-progress" id="currentModuleProgress">Module 1 of 12</p>
+                <button class="continue-btn">Continue →</button>
+            </div>
+        </section>
+        
+        <!-- Active Courses Section -->
+        <section class="learning-section">
+            <div class="section-header">
+                <h2 class="section-title">Active Courses</h2>
+            </div>
+            
+            <div id="activeCoursesContainer"></div>
+        </section>
+        
+        <!-- Coming Up Next (progression-locked: same tier, finish prev course) -->
+        <section class="learning-section" id="progressionSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Coming Up Next 🔓</h2>
+            </div>
+            <div id="progressionCoursesContainer"></div>
+        </section>
+
+        <!-- Upgrade to Unlock (tier-locked: need higher plan) -->
+        <section class="learning-section" id="upgradeSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Upgrade to Unlock 🔒</h2>
+                <a href="/upgrade.html" class="section-link">See Plans →</a>
+            </div>
+            <div id="upgradeCoursesContainer"></div>
+        </section>
+        
+        <!-- Completed Courses Section -->
+        <section class="learning-section" id="completedSection" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Completed Courses</h2>
+            </div>
+            
+            <div id="completedCoursesContainer"></div>
+        </section>
+        
+    </main>
+
+    <!-- Course Week Selection Sheet -->
+    <div id="courseSheetBackdrop" class="course-sheet-backdrop" onclick="closeCourseSheet()"></div>
+    <div id="courseSheetPanel" class="course-sheet-panel">
+        <div class="course-sheet-handle"></div>
+        <div class="course-sheet-header">
+            <h2 class="course-sheet-title" id="sheetCourseTitle">Loading…</h2>
+            <button class="sheet-close-btn" onclick="closeCourseSheet()">✕</button>
+        </div>
+        <div id="sheetWeekList">
+            <div class="sheet-loading">Loading weeks…</div>
+        </div>
+    </div>
+    
+    <!-- Firebase SDKs -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script defer src="/js/firebase.js?v=75"></script>
+    <script defer src="/js/tier-access.js?v=106"></script>
+    <script defer src="/js/formation-access.js?v=105"></script>
+    <script defer src="/js/sw-update-checker.js?v=98"></script>
+    <script defer src="/js/notifications.js?v=52"></script>
+    <script defer src="/js/transitions.js?v=52"></script>
+    <script defer src="/js/courses.js?v=107"></script>
+    
+
+    <!-- NAV_INJECT -->
+</body>
+</html>

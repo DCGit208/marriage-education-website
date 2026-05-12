@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/profile.html — run: node build.js -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="cache-bust" content="v208-1775115331">
+  <meta name="theme-color" content="#000000">
+  <title>My Profile - SBD Network</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/profile.css?v=40">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body data-page="profile" class="profile-page bottom-nav-page has-header">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="backBtn" class="btn btn-icon" aria-label="Back">←</button>
+      <span class="page-title">My Profile</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
+        🔔<span class="notif-badge" style="display:none;"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="profile-main">
+
+    <!-- Avatar section -->
+    <section class="profile-avatar-section">
+      <div class="avatar-wrapper" id="avatarWrapper">
+        <div class="avatar-circle" id="avatarCircle">
+          <span class="avatar-initials" id="avatarInitials"></span>
+          <img class="avatar-img" id="avatarImg" src="" alt="Profile photo" style="display:none;">
+        </div>
+        <label class="avatar-edit-btn" for="avatarInput" aria-label="Change photo">📷</label>
+        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+      </div>
+      <div id="avatarUploadProgress" class="upload-progress" style="display:none;">
+        <div class="upload-bar"><div class="upload-fill" id="avatarFill"></div></div>
+        <span class="upload-label">Uploading…</span>
+      </div>
+    </section>
+
+    <!-- Name edit section -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Display Name</h3>
+      <div class="profile-field-row">
+        <input type="text" id="nameInput" class="profile-input" placeholder="Your name" maxlength="60" autocomplete="off">
+        <button id="saveNameBtn" class="btn btn-primary profile-save-btn">Save</button>
+      </div>
+      <p class="profile-hint">This name appears on all your posts and comments.</p>
+    </section>
+
+    <!-- Email (read-only) -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Email</h3>
+      <p id="profileEmail" class="profile-static-value"></p>
+    </section>
+
+    <!-- Analytics Link -->
+    <section class="profile-section">
+      <a href="/analytics.html" class="btn btn-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span>📊</span>
+        <span>View Your Analytics</span>
+      </a>
+    </section>
+
+    <!-- SBD Ambassador Earnings (shown only if user is an ambassador) -->
+    <section class="profile-section profile-card" id="sbdEarningsSection" style="display:none;border:1px solid rgba(198,169,107,0.25);background:rgba(198,169,107,0.05);">
+      <h3 class="profile-section-title" style="display:flex;align-items:center;gap:8px;"><span>💰</span> SBD Ambassador Earnings</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--gold,#C6A96B);" id="sbdEarnSignups">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Signups</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--gold,#C6A96B);" id="sbdEarnSubscribers">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Subscribers</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.2rem;font-weight:700;color:#4caf50;" id="sbdEarnPending">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Pending (FCFA)</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.2rem;font-weight:700;color:var(--text-secondary,#bbb);" id="sbdEarnTotal">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Total Earned (FCFA)</div>
+        </div>
+      </div>
+      <div id="sbdEarnOverride" style="display:none;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:4px;">
+        <div style="font-size:0.78rem;color:var(--gold,#C6A96B);font-weight:600;margin-bottom:6px;">Senior Ambassador Override</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:#4caf50;" id="sbdEarnOverridePending">—</div>
+            <div style="font-size:0.72rem;color:var(--text-muted,#888);margin-top:2px;">Override Pending (FCFA)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:var(--text-secondary,#bbb);" id="sbdEarnOverrideTotal">—</div>
+            <div style="font-size:0.72rem;color:var(--text-muted,#888);margin-top:2px;">Override Total (FCFA)</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:12px;">500 FCFA per subscriber · 10% of 5,000 FCFA revenue base · Paid upon request.</p>
+      <p id="sbdEarnCode" style="font-size:0.75rem;color:var(--gold,#C6A96B);margin-top:4px;font-weight:600;"></p>
+    </section>
+
+    <!-- Groups (read-only) -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">My Groups</h3>
+      <div id="profileGroupsList" class="profile-groups-list">
+        <span class="profile-hint">Loading…</span>
+      </div>
+    </section>
+
+    <!-- Notification Settings -->
+    <section class="profile-section profile-card">
+      <h3 class="profile-section-title">Notification Settings</h3>
+      <p class="profile-hint" style="margin-bottom:16px;">Choose what updates you want to receive</p>
+      
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Push Notifications</div>
+          <div class="notif-setting-desc">Get push notifications on this device</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pushNotifToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Reactions</div>
+          <div class="notif-setting-desc">When someone reacts to your posts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="reactionsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Comments</div>
+          <div class="notif-setting-desc">When someone comments on your posts</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="commentsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Mentions</div>
+          <div class="notif-setting-desc">When someone mentions you</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="mentionsNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">New Posts in My Boards</div>
+          <div class="notif-setting-desc">When someone posts in boards you're in</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="newPostsNotifToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="notif-setting-row">
+        <div class="notif-setting-info">
+          <div class="notif-setting-label">Direct Messages</div>
+          <div class="notif-setting-desc">When you receive a new message</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dmNotifToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Account actions -->
+    <section class="profile-section">
+      <button id="logoutBtn" class="btn btn-secondary profile-logout-btn">Log out</button>
+    </section>
+
+    <!-- Dating Eligibility -->
+    <section class="profile-card profile-section" id="datingEligibilitySection" style="border:1px solid rgba(201,107,138,0.25);background:rgba(201,107,138,0.05);">
+      <h3 class="profile-section-title" style="display:flex;align-items:center;gap:8px;">
+        <span>💒</span> Covenant Matching
+      </h3>
+      <div id="datingEligibilityContent" style="font-size:0.85rem;color:var(--text-muted,#888);margin-bottom:12px;">
+        Loading your formation eligibility…
+      </div>
+      <a href="/dating.html" style="display:inline-block;padding:10px 20px;background:rgba(201,107,138,0.15);border:1px solid rgba(201,107,138,0.4);border-radius:8px;color:#C96B8A;font-size:0.85rem;text-decoration:none;font-weight:600;">
+        Check My Eligibility →
+      </a>
+    </section>
+
+    <!-- My Collections -->
+    <section class="profile-card profile-section" id="myCollectionsSection">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h3 class="profile-section-title" style="margin-bottom:0;">My Collections</h3>
+        <button id="createCollectionBtn" class="btn btn-primary" type="button" style="font-size:0.78rem;padding:6px 12px;">+ New</button>
+      </div>
+      <div id="myCollectionsList" class="profile-groups-list"><span class="profile-hint">No collections yet.</span></div>
+    </section>
+
+    <!-- Collection Viewer bottom sheet -->
+    <div id="colViewModal" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.75);align-items:flex-end;">
+      <div style="background:var(--bg-secondary,#1a1a2e);width:100%;max-width:640px;margin:0 auto;border-radius:20px 20px 0 0;max-height:92vh;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px;">
+          <h3 id="colViewTitle" style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;"></h3>
+          <button id="colViewClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;">✕</button>
+        </div>
+        <div id="colViewGrid" style="overflow-y:auto;padding:8px 12px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <section class="profile-section profile-card" style="border-color:#7f0000;">
+      <h3 class="profile-section-title" style="color:#ff4444">Danger Zone</h3>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Permanently deletes your account, all your posts, and all uploaded media. This cannot be undone.</p>
+      <button id="deleteAccountBtn" class="btn btn-danger" style="width:100%;background:#7f0000;font-weight:700">🗑 Delete My Account</button>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="appToast" class="app-toast"></div>
+
+  <!-- Loading -->
+  <div id="loadingOverlay" class="loading-overlay"><div class="spinner"></div></div>
+
+  <!-- Notification Panel -->
+  <div id="notifOverlay" class="notif-overlay" style="display:none;"></div>
+  <div id="notifPanel" class="notif-panel">
+    <div class="notif-panel-header">
+      <h3>Notifications</h3>
+      <button id="notifPanelClose" class="btn btn-icon" aria-label="Close">✕</button>
+    </div>
+    <ul id="notifList" class="notif-list"></ul>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script defer src="/js/firebase.js?v=75&t=1775115331"></script>
+  <script defer src="/js/formation-access.js?v=104"></script>
+  <script defer src="/js/sw-update-checker.js?v=98"></script>
+  <script defer src="/js/upload.js?v=74"></script>
+  <script defer src="/js/notifications.js?v=74"></script>
+  <script defer src="/js/dm-badge.js?v=40"></script>
+  <script defer src="/js/profile.js?v=74"></script>
+  <script defer src="/js/transitions.js?v=40"></script>
+  <script defer src="/js/swipe-back.js?v=40"></script>
+  <script defer src="/js/install-prompt.js?v=40"></script>
+
+  <!-- Dating Eligibility Widget -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('datingEligibilityContent');
+      if (!el) return;
+      // Wait for firebase.js to init (runs deferred, so auth is ready)
+      function checkEligibility() {
+        if (typeof auth === 'undefined' || typeof db === 'undefined') {
+          setTimeout(checkEligibility, 200);
+          return;
+        }
+        auth.onAuthStateChanged(function(user) {
+          if (!user) return;
+          db.collection('users').doc(user.uid).get().then(function(snap) {
+            if (!snap.exists) return;
+            var data = snap.data();
+            var tier = data.tier || data.subscription && data.subscription.tier || 'free';
+            var fs   = data.formationScore || {};
+            var score = fs.totalScore || 0;
+            var s1    = fs.school1Pct || 0;
+            var s2    = fs.school2Pct || 0;
+
+            var msg = '';
+            var color = '#888';
+            if (tier === 'free' || tier === 'foundation') {
+              msg = 'Upgrade to Premium and reach a formation score of 60+ to qualify.';
+            } else if (tier === 'premium') {
+              if (score >= 60 && s1 >= 70 && s2 >= 70) {
+                msg = 'Qualified for Limited Access — 3 curated profiles available. Upgrade to Elite for messaging.';
+                color = '#C96B8A';
+              } else {
+                msg = 'Formation score: ' + score + '/100. Need \u226560 + School 1 \u226570% + School 2 \u226570%.';
+              }
+            } else if (tier === 'elite') {
+              if (score >= 70) {
+                msg = 'Full access active — formation score ' + score + '/100.';
+                color = '#C6A96B';
+              } else {
+                msg = 'Elite — increase formation score to 70+ for full matching. Current: ' + score + '/100.';
+                color = '#C96B8A';
+              }
+            }
+            el.textContent = msg;
+            el.style.color = color;
+          });
+        });
+      }
+      checkEligibility();
+    });
+  </script>
+
+
+    <!-- NAV_INJECT -->
+</body>
+</html>

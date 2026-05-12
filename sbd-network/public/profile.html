@@ -1,7 +1,9 @@
 <!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/profile.html — run: node build.js -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -12,11 +14,11 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
   <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/profile.css?v=40">
-  <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+  <link rel="stylesheet" href="/css/profile.css?v=1778611896316">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
-<body class="profile-page bottom-nav-page">
+<body data-page="profile" class="profile-page bottom-nav-page has-header">
 
   <!-- Header -->
   <header class="app-header">
@@ -71,6 +73,44 @@
         <span>📊</span>
         <span>View Your Analytics</span>
       </a>
+    </section>
+
+    <!-- SBD Ambassador Earnings (shown only if user is an ambassador) -->
+    <section class="profile-section profile-card" id="sbdEarningsSection" style="display:none;border:1px solid rgba(198,169,107,0.25);background:rgba(198,169,107,0.05);">
+      <h3 class="profile-section-title" style="display:flex;align-items:center;gap:8px;"><span>💰</span> SBD Ambassador Earnings</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--gold,#C6A96B);" id="sbdEarnSignups">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Signups</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--gold,#C6A96B);" id="sbdEarnSubscribers">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Subscribers</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.2rem;font-weight:700;color:#4caf50;" id="sbdEarnPending">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Pending (FCFA)</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:1.2rem;font-weight:700;color:var(--text-secondary,#bbb);" id="sbdEarnTotal">—</div>
+          <div style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:2px;">Total Earned (FCFA)</div>
+        </div>
+      </div>
+      <div id="sbdEarnOverride" style="display:none;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:4px;">
+        <div style="font-size:0.78rem;color:var(--gold,#C6A96B);font-weight:600;margin-bottom:6px;">Senior Ambassador Override</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:#4caf50;" id="sbdEarnOverridePending">—</div>
+            <div style="font-size:0.72rem;color:var(--text-muted,#888);margin-top:2px;">Override Pending (FCFA)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:var(--text-secondary,#bbb);" id="sbdEarnOverrideTotal">—</div>
+            <div style="font-size:0.72rem;color:var(--text-muted,#888);margin-top:2px;">Override Total (FCFA)</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:12px;">500 FCFA per subscriber · 10% of 5,000 FCFA revenue base · Paid upon request.</p>
+      <p id="sbdEarnCode" style="font-size:0.75rem;color:var(--gold,#C6A96B);margin-top:4px;font-weight:600;"></p>
     </section>
 
     <!-- Groups (read-only) -->
@@ -223,16 +263,16 @@
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
   <!-- App Scripts -->
-  <script defer src="/js/firebase.js?v=75&t=1775115331"></script>
-  <script defer src="/js/formation-access.js?v=104"></script>
-  <script defer src="/js/sw-update-checker.js?v=97"></script>
-  <script defer src="/js/upload.js?v=74"></script>
-  <script defer src="/js/notifications.js?v=74"></script>
-  <script defer src="/js/dm-badge.js?v=40"></script>
-  <script defer src="/js/profile.js?v=74"></script>
-  <script defer src="/js/transitions.js?v=40"></script>
-  <script defer src="/js/swipe-back.js?v=40"></script>
-  <script defer src="/js/install-prompt.js?v=40"></script>
+  <script defer src="/js/firebase.js?v=1778611896316&t=1775115331"></script>
+  <script defer src="/js/formation-access.js?v=1778611896316"></script>
+  <script defer src="/js/sw-update-checker.js?v=1778611896316"></script>
+  <script defer src="/js/upload.js?v=1778611896316"></script>
+  <script defer src="/js/notifications.js?v=1778611896316"></script>
+  <script defer src="/js/dm-badge.js?v=1778611896316"></script>
+  <script defer src="/js/profile.js?v=1778611896316"></script>
+  <script defer src="/js/transitions.js?v=1778611896316"></script>
+  <script defer src="/js/swipe-back.js?v=1778611896316"></script>
+  <script defer src="/js/install-prompt.js?v=1778611896316"></script>
 
   <!-- Dating Eligibility Widget -->
   <script>
@@ -285,65 +325,68 @@
     });
   </script>
 
-  <!-- HAMBURGER -->
-  <div id="menuBtn" class="menu-btn">☰</div>
-  <div id="menuOverlay" class="menu-overlay"></div>
-  <div id="sideMenu" class="side-menu">
-    <div class="menu-links">
-      <div class="ham-section">
-        <div class="ham-section-label">💘 Relationship</div>
-        <a href="/dating.html">💘 Dating</a>
-        <a href="/dm.html">✉️ Messages</a>
-      </div>
-      <div class="ham-section">
-        <div class="ham-section-label">👗 Expression</div>
-        <a href="/mv-house.html">👗 MV House</a>
-      </div>
-      <div class="ham-section">
-        <div class="ham-section-label">📚 Resources</div>
-        <a href="/resources.html">📖 Resources Library</a>
-        <a href="/certificates.html">🏅 Certifications</a>
-      </div>
-      <div class="ham-section">
-        <div class="ham-section-label">⚙️ System</div>
-        <a href="/profile.html">⚙️ Settings</a>
-        <div id="adminSection" style="display:none;">
-          <a href="/admin.html">🔑 Admin Panel</a>
-        </div>
-      </div>
-      <div class="ham-section">
-        <div class="ham-section-label">👤 Account</div>
-        <a href="/profile.html">👤 Profile</a>
-        <button id="logoutMenuBtn">🚪 Logout</button>
-      </div>
-      <div style="padding: 16px 0 4px; font-size: 0.72rem; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.05em;" id="versionPill"></div>
-    </div>
-  </div>
 
-  <!-- Bottom Navigation -->
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <a href="/dashboard.html" class="bn-tab" aria-label="Home">
-      <span class="bn-icon">🏠</span>
-      <span class="bn-label">Home</span>
-    </a>
-    <a href="/learn.html" class="bn-tab" aria-label="Learn">
-      <span class="bn-icon">📚</span>
-      <span class="bn-label">Learn</span>
-    </a>
-    <a href="/boards.html" class="bn-tab" aria-label="Boards">
-      <span class="bn-icon">💬</span>
-      <span class="bn-label">Boards</span>
-    </a>
-    <a href="/shop.html" class="bn-tab" aria-label="Shop">
-      <span class="bn-icon">🛒</span>
-      <span class="bn-label">Shop</span>
-    </a>
-    <a href="/profile.html" class="bn-tab active" aria-label="Profile">
-      <span class="bn-icon">👤</span>
-      <span class="bn-label">Profile</span>
-    </a>
-  </nav>
-  <script defer src="/js/offline.js?v=52"></script>
-  <script defer src="/js/ham-nav.js?v=1"></script>
+        <!-- HAMBURGER -->
+    <div id="menuBtn" class="menu-btn">☰</div>
+    <div id="menuOverlay" class="menu-overlay"></div>
+    <div id="sideMenu" class="side-menu">
+      <div class="menu-links">
+        <div class="ham-section">
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
+          <div id="adminSection" style="display:none;">
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
+          </div>
+          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+        </div>
+        <div id="versionPill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab active" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
+        </a>
+    </nav>
+    <script defer src="/js/ham-nav.js?v=1778611896316"></script>
+
 </body>
 </html>
