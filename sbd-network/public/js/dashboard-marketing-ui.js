@@ -148,9 +148,8 @@
   function ensureMvVideoUnlockControl(slide) {
     if (!slide || slide.dataset.card !== 'mv-house') return;
     if (prefersReducedMotion()) return;
-    const host = slide.querySelector('.card-content');
     const video = slide.querySelector('video.video-bg');
-    if (!host || !video || host.querySelector('.mv-motion-unlock-btn')) return;
+    if (!video || slide.querySelector('.mv-motion-unlock-btn')) return;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'mv-motion-unlock-btn';
@@ -160,7 +159,7 @@
       ev.stopPropagation();
       playMvHouseVideo(slide);
     });
-    host.appendChild(btn);
+    slide.appendChild(btn);
   }
 
   function detachMvHouseVideoEndListeners(slide, video) {
@@ -170,6 +169,10 @@
       video.removeEventListener('timeupdate', slide._mvOnTimeUpdate);
       video.removeEventListener('loadedmetadata', slide._mvOnLoadedMeta);
       video.removeEventListener('error', slide._mvOnError);
+    }
+    if (slide._mvOnLoadedData) {
+      video.removeEventListener('loadeddata', slide._mvOnLoadedData);
+      slide._mvOnLoadedData = null;
     }
     slide._mvOnEnded = null;
     slide._mvOnTimeUpdate = null;
@@ -221,6 +224,11 @@
       video.muted = true;
       video.defaultMuted = true;
       video.setAttribute('muted', '');
+      try {
+        video.volume = 0;
+      } catch (eVol) {
+        /* ignore */
+      }
       video.playsInline = true;
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
@@ -458,10 +466,20 @@
       video.addEventListener('loadedmetadata', slide._mvOnLoadedMeta);
       video.addEventListener('error', slide._mvOnError);
 
+      slide._mvOnLoadedData = function () {
+        if (slide._mvRevealPhaseDone) return;
+        playMvHouseVideo(slide);
+      };
+      video.addEventListener('loadeddata', slide._mvOnLoadedData);
+
       try {
-        video.currentTime = 0;
-      } catch (e) {
-        /* ignore */
+        video.currentTime = 0.001;
+      } catch (eSeek) {
+        try {
+          video.currentTime = 0;
+        } catch (eSeek2) {
+          /* ignore */
+        }
       }
 
       if (video.readyState >= 1) {
@@ -470,6 +488,15 @@
     }
 
     slide.classList.add('mv-slide-phase-bg');
+
+    /* Safari / PWA: first user gesture on the slide counts as activation for play() */
+    slide.addEventListener(
+      'pointerdown',
+      function sbdMvGesturePlay() {
+        playMvHouseVideo(slide);
+      },
+      { capture: true, once: true }
+    );
 
     playMvHouseVideo(slide);
 
