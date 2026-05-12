@@ -135,6 +135,34 @@
     );
   }
 
+  function removeMvVideoUnlockControl(slide) {
+    if (!slide) return;
+    if (slide._mvPlayCheckT) {
+      clearTimeout(slide._mvPlayCheckT);
+      slide._mvPlayCheckT = null;
+    }
+    const btn = slide.querySelector('.mv-motion-unlock-btn');
+    if (btn) btn.remove();
+  }
+
+  function ensureMvVideoUnlockControl(slide) {
+    if (!slide || slide.dataset.card !== 'mv-house') return;
+    if (prefersReducedMotion()) return;
+    const host = slide.querySelector('.card-content');
+    const video = slide.querySelector('video.video-bg');
+    if (!host || !video || host.querySelector('.mv-motion-unlock-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mv-motion-unlock-btn';
+    btn.textContent = 'Tap to play motion';
+    btn.setAttribute('aria-label', 'Play background video');
+    btn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      playMvHouseVideo(slide);
+    });
+    host.appendChild(btn);
+  }
+
   function detachMvHouseVideoEndListeners(slide, video) {
     if (!video) return;
     if (slide._mvOnEnded) {
@@ -161,6 +189,7 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
+    removeMvVideoUnlockControl(slide);
     slide._mvRevealPhaseDone = false;
     slide.classList.remove('mv-slide-phase-bg', 'mv-slide-reveal-done');
     const video = slide.querySelector('video.video-bg');
@@ -199,7 +228,7 @@
       /* ignore */
     }
 
-    /* HAVE_METADATA+ is enough; preload=metadata in HTML helps iOS start decode */
+    /* Preload=auto on the MV <video> (dashboard.html) helps iOS/PWA buffer before play() */
     if (video.readyState === 0) {
       try {
         video.load();
@@ -208,16 +237,53 @@
       }
     }
 
+    function armCanPlayRetry() {
+      const retry = function () {
+        video.removeEventListener('canplay', retry);
+        const p2 = video.play();
+        if (p2 && typeof p2.then === 'function') {
+          p2
+            .then(function () {
+              removeMvVideoUnlockControl(slide);
+            })
+            .catch(function () {
+              ensureMvVideoUnlockControl(slide);
+            });
+        }
+      };
+      video.addEventListener('canplay', retry, { once: true });
+    }
+
     function attemptPlay() {
       const p = video.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(function () {
-          const retry = function () {
-            video.removeEventListener('canplay', retry);
-            video.play().catch(function () {});
-          };
-          video.addEventListener('canplay', retry, { once: true });
+      if (p && typeof p.then === 'function') {
+        p.then(function () {
+          removeMvVideoUnlockControl(slide);
+        }).catch(function () {
+          ensureMvVideoUnlockControl(slide);
+          armCanPlayRetry();
         });
+      } else {
+        ensureMvVideoUnlockControl(slide);
+        armCanPlayRetry();
+      }
+
+      if (slide._mvPlayCheckT) {
+        clearTimeout(slide._mvPlayCheckT);
+        slide._mvPlayCheckT = null;
+      }
+      if (!prefersReducedMotion()) {
+        slide._mvPlayCheckT = setTimeout(function () {
+          slide._mvPlayCheckT = null;
+          if (!slide.isConnected || slide.dataset.card !== 'mv-house') return;
+          try {
+            if (video.paused && !video.ended) {
+              ensureMvVideoUnlockControl(slide);
+            }
+          } catch (e) {
+            /* ignore */
+          }
+        }, 520);
       }
     }
 
@@ -281,13 +347,25 @@
         /* ignore */
       }
       const p = video.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(function () {
+      if (p && typeof p.then === 'function') {
+        p.then(function () {
+          removeMvVideoUnlockControl(slide);
+        }).catch(function () {
+          ensureMvVideoUnlockControl(slide);
           video.addEventListener(
             'canplay',
             function once() {
               video.removeEventListener('canplay', once);
-              video.play().catch(function () {});
+              const p2 = video.play();
+              if (p2 && typeof p2.then === 'function') {
+                p2
+                  .then(function () {
+                    removeMvVideoUnlockControl(slide);
+                  })
+                  .catch(function () {
+                    ensureMvVideoUnlockControl(slide);
+                  });
+              }
             },
             { once: true }
           );
@@ -317,6 +395,7 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
+    removeMvVideoUnlockControl(slide);
     slide._mvRevealPhaseDone = false;
 
     const video = slide.querySelector('video.video-bg');

@@ -22,6 +22,22 @@
   --sbd-line-body: 1.45;
   /* Header offset matches styles.css `.dashboard-page { padding-top: 60px }` */
   --sbd-dash-header-offset: 60px;
+  /* Fallback first: invalid min(100dvh,100svh) drops the whole declaration in some engines */
+  --sbd-viewport-inner-h: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .dashboard-page {
+    --sbd-viewport-inner-h: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  @supports (height: 100dvh) {
+    .dashboard-page {
+      --sbd-viewport-inner-h: min(100dvh, 100svh);
+    }
+  }
 }
 
 /* ── Shell: main fills viewport under header; slider fills main (no 100dvh double-book) ─ */
@@ -31,8 +47,8 @@
   flex-direction: column;
   align-items: stretch;
   min-height: 0;
-  height: calc(min(100dvh, 100svh) - var(--sbd-dash-header-offset));
-  max-height: calc(min(100dvh, 100svh) - var(--sbd-dash-header-offset));
+  height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+  max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
 }
 
 /* ── Viewport shell: one logical screen, no phantom scroll ───────── */
@@ -288,6 +304,28 @@
   }
 }
 
+/* Phone / small tablet: remove global .dashboard-main side padding so the stage is full-bleed in Safari + PWA */
+@media (max-width: 899px) {
+  .dashboard-page .dashboard-main {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    /* Must keep clearance for fixed .bottom-nav — never zero this (see bottom-nav.css) */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-top: 12px;
+  }
+
+  .dashboard-page .slider-container {
+    max-width: none;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    Desktop / tablet: centered stage — proportional “aperture”
    ═══════════════════════════════════════════════════════════════════ */
@@ -305,7 +343,11 @@
     max-width: none;
     width: 100%;
     margin: 0;
-    padding: 20px 24px 0;
+    /* No padding shorthand: a trailing 0 would wipe bottom-nav clearance on .bottom-nav-page */
+    padding-top: 20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
 
     display: flex;
@@ -313,8 +355,8 @@
     align-items: center;
     justify-content: flex-start;
     min-height: 0;
-    height: calc(min(100dvh, 100svh) - var(--sbd-dash-header-offset));
-    max-height: calc(min(100dvh, 100svh) - var(--sbd-dash-header-offset));
+    height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+    max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
   }
 
   .dashboard-page .slider-container {
@@ -1031,6 +1073,7 @@
 
 /* MV home: one headline row — ELITE | title | subtitle; then mv-preview */
 .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
+  position: relative;
   display: grid !important;
   grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr);
   grid-template-rows: auto minmax(0, 1fr);
@@ -1042,6 +1085,32 @@
   overflow-y: hidden !important;
   padding-top: calc(22px + env(safe-area-inset-top, 0px)) !important;
   padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* iOS / PWA: autoplay can be blocked until a tap — unlock control from dashboard-marketing-ui.js */
+.dashboard-page .mv-motion-unlock-btn {
+  position: absolute;
+  left: 50%;
+  bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 40;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: clamp(11px, 3.1cqw, 13px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(12, 10, 14, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  max-width: calc(100% - 28px);
+  white-space: nowrap;
 }
 
 .dashboard-page .slide-card[data-card="mv-house"] .premium-badge,
@@ -1146,19 +1215,85 @@
   filter: saturate(1.07) contrast(1.04);
 }
 
-/* iPhone / narrow portrait: keep both wardrobe rows above bottom nav + browser chrome */
+/* iPhone / narrow portrait: full-width rhythm, readable type, subtitle on its own row */
 @media (max-width: 520px) {
+  .dashboard-page {
+    --sbd-pad-x: clamp(8px, 3.2vw, 16px);
+  }
+
   .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
     padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
     padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
-    row-gap: 4px !important;
+    row-gap: 6px !important;
+
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .premium-badge {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    font-size: clamp(0.6rem, 2.85cqw, 0.72rem) !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .card-title {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: clamp(1.12rem, 5.4cqw, 1.42rem) !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .card-subtitle {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    font-size: clamp(0.72rem, 3.35cqw, 0.88rem) !important;
+    line-height: 1.28 !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: unset !important;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-preview {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
     gap: clamp(2px, 1cqw, 5px) !important;
   }
 
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title {
+    font-size: clamp(0.68rem, 3.15cqw, 0.82rem) !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-desc {
+    font-size: clamp(0.62rem, 2.85cqw, 0.76rem) !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: unset !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-desc {
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: unset !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-label {
+    font-size: clamp(0.62rem, 2.9cqw, 0.74rem) !important;
+    left: 3px !important;
+    right: 3px !important;
+  }
+
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
-    max-height: min(28cqw, 20dvh, 128px) !important;
+    max-height: min(30cqw, 22dvh, 142px) !important;
   }
 }
