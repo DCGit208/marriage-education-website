@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1778618361921';
+const CACHE_VERSION = 'sbd-network-v1778618665077';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
