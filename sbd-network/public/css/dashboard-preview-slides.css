@@ -423,6 +423,11 @@
   opacity: 0.4;
 }
 
+/* Let taps reach the video layer during lead-in (Safari / PWA gesture unlock) */
+.dashboard-page .slide-card[data-card="mv-house"].mv-slide-phase-bg > .card-overlay {
+  pointer-events: none;
+}
+
 .dashboard-page [data-card="mv-house"].mv-slide-reveal-done .video-overlay-dark {
   opacity: 1;
 }
@@ -1104,13 +1109,14 @@
   padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* iOS / PWA: autoplay can be blocked until a tap — unlock control from dashboard-marketing-ui.js */
-.dashboard-page .mv-motion-unlock-btn {
+/* iOS / PWA: unlock button is direct child of slide (not .card-content — lead-in uses pointer-events:none there) */
+.dashboard-page .slide-card[data-card="mv-house"] > .mv-motion-unlock-btn {
   position: absolute;
   left: 50%;
   bottom: calc(58px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  z-index: 40;
+  z-index: 50;
+  pointer-events: auto;
   -webkit-appearance: none;
   appearance: none;
   margin: 0;
