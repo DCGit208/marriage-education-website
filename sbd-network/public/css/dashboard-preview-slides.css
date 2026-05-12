@@ -1,11 +1,93 @@
 /**
- * Dashboard home — slides, typography, and per-slide layout (UX/UI + responsive).
- * Viewport + flex shell: dashboard-shell.css (loaded after this file on dashboard.html).
+ * Dashboard home — cinematic slider system (UX/UI + responsive).
  * - Scoped to .dashboard-page only (PWA home / dashboard.html).
+ * - Viewport: dvh + safe-area; desktop “stage” (bounded column, widens on large screens).
  * - Container queries: typography & density track slide width, not only 100vw.
  * - Intro 1–4: fluid rem+cqw type + container bump; not cqw-only clamp floor.
  * - Boards + MV: one-screen previews; media uses aspect-ratio (no “strip” crop).
  */
+
+/* ── Design tokens (scoped) ─────────────────────────────────────── */
+.dashboard-page {
+  --sbd-stage-max: min(520px, 96vw);
+  --sbd-stage-radius: 24px;
+  --sbd-stage-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(198, 163, 132, 0.1);
+  --sbd-pad-x: clamp(12px, 4.2vw, 22px);
+  --sbd-pad-top: clamp(64px, calc(10dvh + 36px), 100px);
+  --sbd-pad-bottom: clamp(92px, calc(12dvh + 48px), 128px);
+  --sbd-line-kicker: 1.35;
+  --sbd-line-title: 1.12;
+  --sbd-line-body: 1.45;
+  /* Header offset matches styles.css `.dashboard-page { padding-top: 60px }` */
+  --sbd-dash-header-offset: 60px;
+  /* Fallback first: invalid min(100dvh,100svh) drops the whole declaration in some engines */
+  --sbd-viewport-inner-h: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .dashboard-page {
+    --sbd-viewport-inner-h: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  @supports (height: 100dvh) {
+    .dashboard-page {
+      --sbd-viewport-inner-h: min(100dvh, 100svh);
+    }
+  }
+}
+
+/* ── Shell: main fills viewport under header; slider fills main (no 100dvh double-book) ─ */
+.dashboard-page .dashboard-main {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+  max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+}
+
+/* ── Viewport shell: one logical screen, no phantom scroll ───────── */
+.dashboard-page .slider-container {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Overrides home-premium / slider fixed viewport height on dashboard only */
+  height: auto !important;
+  max-height: none !important;
+}
+
+.dashboard-page .slider-track {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/* Mobile / narrow: full-bleed stage — height from track, not raw dvh */
+.dashboard-page .slide-card {
+  container-type: inline-size;
+  container-name: sbd-slide;
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Non-intro slides: column flex so .card-content can shrink (fit-by-default) */
+.dashboard-page .slide-card:not(.intro-slide) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 
 /* ── Default content rhythm (all slides with .card-content) ─────── */
 .dashboard-page .slide-card > .card-content {
@@ -222,8 +304,87 @@
   }
 }
 
-/* Desktop presentation (shell geometry lives in dashboard-shell.css) */
+/* Phone / small tablet: remove global .dashboard-main side padding so the stage is full-bleed in Safari + PWA */
+@media (max-width: 899px) {
+  .dashboard-page .dashboard-main {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    /* Must keep clearance for fixed .bottom-nav — never zero this (see bottom-nav.css) */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-top: 12px;
+  }
+
+  .dashboard-page .slider-container {
+    max-width: none;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Desktop / tablet: centered stage — proportional “aperture”
+   ═══════════════════════════════════════════════════════════════════ */
+
 @media (min-width: 900px) {
+  .dashboard-page {
+    /* dvh (not cqh): .dashboard-page is not a size container — cqh would be ambiguous */
+    --sbd-pad-top: clamp(52px, 7dvh, 84px);
+    --sbd-pad-bottom: clamp(72px, 9dvh, 108px);
+    /* Wider than old “phone-frame” so MacBook Chrome uses the display */
+    --sbd-stage-max: min(720px, 92vw);
+  }
+
+  .dashboard-page .dashboard-main {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    /* No padding shorthand: a trailing 0 would wipe bottom-nav clearance on .bottom-nav-page */
+    padding-top: 20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 0;
+    height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+    max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+  }
+
+  .dashboard-page .slider-container {
+    width: 100%;
+    max-width: var(--sbd-stage-max);
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    max-height: min(860px, 100%) !important;
+    margin-inline: auto;
+
+    border-radius: var(--sbd-stage-radius);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: var(--sbd-stage-shadow);
+  }
+
+  .dashboard-page .slider-track {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-page .slide-card {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+  }
+
   .dashboard-page .slider-pagination {
     bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
   }
@@ -234,6 +395,13 @@
 
   .dashboard-page [data-card="mv-house"] .mv-item {
     border-radius: 12px !important;
+  }
+}
+
+/* Large desktop: use more horizontal real estate */
+@media (min-width: 1200px) {
+  .dashboard-page {
+    --sbd-stage-max: min(860px, 88vw);
   }
 }
 

@@ -54,8 +54,7 @@ body.home-cinematic{
    SLIDER SYSTEM
    ============================================ */
 
-/* Slider shell: not on dashboard — body.dashboard-page uses dashboard-shell.css */
-body:not(.dashboard-page) .slider-container{
+.slider-container{
   position:relative;
 
   width:100%;
@@ -69,7 +68,7 @@ body:not(.dashboard-page) .slider-container{
   -webkit-overflow-scrolling:touch;
 }
 
-body:not(.dashboard-page) .slider-track{
+.slider-track{
   display:flex;
 
   width:100%;
@@ -90,7 +89,7 @@ body:not(.dashboard-page) .slider-track{
   backface-visibility:hidden;
 }
 
-body:not(.dashboard-page) .slide-card{
+.slide-card{
   position:relative;
 
   flex:0 0 100%;
