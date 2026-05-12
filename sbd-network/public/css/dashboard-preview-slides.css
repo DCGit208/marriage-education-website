@@ -1,7 +1,7 @@
 /**
  * Dashboard home — cinematic slider system (UX/UI + responsive).
  * - Scoped to .dashboard-page only (PWA home / dashboard.html).
- * - Viewport: dvh + safe-area; desktop “stage” (proportional phone-frame).
+ * - Viewport: dvh + safe-area; desktop “stage” (bounded column, widens on large screens).
  * - Container queries: typography & density track slide width, not only 100vw.
  * - Intro 1–4: fluid rem+cqw type + container bump; not cqw-only clamp floor.
  * - Boards + MV: one-screen previews; media uses aspect-ratio (no “strip” crop).
@@ -9,7 +9,7 @@
 
 /* ── Design tokens (scoped) ─────────────────────────────────────── */
 .dashboard-page {
-  --sbd-stage-max: 420px;
+  --sbd-stage-max: min(520px, 96vw);
   --sbd-stage-radius: 24px;
   --sbd-stage-shadow:
     0 32px 100px rgba(0, 0, 0, 0.55),
@@ -297,6 +297,8 @@
     /* dvh (not cqh): .dashboard-page is not a size container — cqh would be ambiguous */
     --sbd-pad-top: clamp(52px, 7dvh, 84px);
     --sbd-pad-bottom: clamp(72px, 9dvh, 108px);
+    /* Wider than old “phone-frame” so MacBook Chrome uses the display */
+    --sbd-stage-max: min(720px, 92vw);
   }
 
   .dashboard-page .dashboard-main {
@@ -354,10 +356,10 @@
   }
 }
 
-/* Large desktop: slightly wider stage for air */
+/* Large desktop: use more horizontal real estate */
 @media (min-width: 1200px) {
   .dashboard-page {
-    --sbd-stage-max: 460px;
+    --sbd-stage-max: min(860px, 88vw);
   }
 }
 
@@ -427,6 +429,12 @@
   max-height: 100%;
   object-fit: cover;
   object-position: center top;
+}
+
+/* Dashboard: motion must read above poster (home-premium dims .video-bg globally) */
+.dashboard-page .slide-card[data-card="mv-house"] .video-bg {
+  opacity: 0.88 !important;
+  filter: brightness(0.96) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1118,13 +1126,13 @@
   object-position: center 26% !important;
 }
 
-@media (min-height: 700px) {
+@media (min-height: 700px) and (min-width: 521px) {
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
     max-height: min(64cqw, 46dvh, 278px) !important;
   }
 }
 
-@media (min-height: 820px) {
+@media (min-height: 820px) and (min-width: 521px) {
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
     max-height: min(66cqw, 48dvh, 296px) !important;
   }
@@ -1136,4 +1144,21 @@
 
 .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-female .mv-img {
   filter: saturate(1.07) contrast(1.04);
+}
+
+/* iPhone / narrow portrait: keep both wardrobe rows above bottom nav + browser chrome */
+@media (max-width: 520px) {
+  .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
+    padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
+    row-gap: 4px !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-preview {
+    gap: clamp(2px, 1cqw, 5px) !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
+    max-height: min(28cqw, 20dvh, 128px) !important;
+  }
 }
