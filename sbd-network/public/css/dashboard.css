@@ -522,20 +522,20 @@
    SLIDER FOUNDATION
 ======================================== */
 
-.slider-container {
+body:not(.dashboard-page) .slider-container {
   position: relative;
   width: 100%;
   overflow: hidden;
 }
 
-.slider-track {
+body:not(.dashboard-page) .slider-track {
   display: flex;
   width: 100%;
   height: 100%;
   will-change: transform;
 }
 
-.slide-card {
+body:not(.dashboard-page) .slide-card {
   position: relative;
   min-width: 100%;
   width: 100%;

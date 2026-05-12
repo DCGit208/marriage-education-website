@@ -1,0 +1,170 @@
+/**
+ * dashboard-shell.css — single owner for dashboard.html viewport + flex chain.
+ * Load LAST after dashboard-preview-slides.css so structure wins over legacy sheets.
+ * Chrome / Safari / iOS PWA: no duplicate 100vh/dvh fights with home-premium or slider.css.
+ */
+
+/* ── Design tokens (dashboard route only) ───────────────────────── */
+.dashboard-page {
+  --sbd-stage-max: min(520px, 96vw);
+  --sbd-stage-radius: 24px;
+  --sbd-stage-shadow:
+    0 32px 100px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(198, 163, 132, 0.1);
+  --sbd-pad-x: clamp(12px, 4.2vw, 22px);
+  --sbd-pad-top: clamp(64px, calc(10dvh + 36px), 100px);
+  --sbd-pad-bottom: clamp(92px, calc(12dvh + 48px), 128px);
+  --sbd-line-kicker: 1.35;
+  --sbd-line-title: 1.12;
+  --sbd-line-body: 1.45;
+  --sbd-dash-header-offset: 60px;
+  --sbd-viewport-inner-h: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .dashboard-page {
+    --sbd-viewport-inner-h: 100dvh;
+  }
+}
+
+@supports (height: 100svh) {
+  @supports (height: 100dvh) {
+    .dashboard-page {
+      --sbd-viewport-inner-h: min(100dvh, 100svh);
+    }
+  }
+}
+
+/* iOS Safari: fill when dynamic toolbar changes (pairs with viewport-fit=cover) */
+@supports (-webkit-touch-callout: none) {
+  html:has(body.dashboard-page) {
+    height: -webkit-fill-available;
+  }
+}
+
+/* ── Main column: fixed band under header; flex child fills remainder ─ */
+.dashboard-page .dashboard-main {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+  max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+}
+
+/* ── Slider: flex-grow inside main (not raw 100dvh — avoids double booking) ─ */
+.dashboard-page .slider-container {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+}
+
+.dashboard-page .slider-track {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.dashboard-page .slide-card {
+  container-type: inline-size;
+  container-name: sbd-slide;
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+}
+
+.dashboard-page .slide-card:not(.intro-slide) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Phone / small tablet: full-bleed main; keep bottom-nav clearance */
+@media (max-width: 899px) {
+  .dashboard-page .dashboard-main {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-top: 12px;
+  }
+
+  .dashboard-page .slider-container {
+    max-width: none;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+/* Desktop: centered stage */
+@media (min-width: 900px) {
+  .dashboard-page {
+    --sbd-pad-top: clamp(52px, 7dvh, 84px);
+    --sbd-pad-bottom: clamp(72px, 9dvh, 108px);
+    --sbd-stage-max: min(720px, 92vw);
+  }
+
+  .dashboard-page .dashboard-main {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding-top: 20px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 0;
+    height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+    max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+  }
+
+  .dashboard-page .slider-container {
+    width: 100%;
+    max-width: var(--sbd-stage-max);
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-height: min(860px, 100%);
+    margin-inline: auto;
+
+    border-radius: var(--sbd-stage-radius);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: var(--sbd-stage-shadow);
+  }
+
+  .dashboard-page .slider-track {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .dashboard-page .slide-card {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-page {
+    --sbd-stage-max: min(860px, 88vw);
+  }
+}
