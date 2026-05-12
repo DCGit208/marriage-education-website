@@ -4,7 +4,8 @@
 
 /* Dashboard Main Container */
 .dashboard-main {
-  padding: 0 20px 100px 20px;
+  padding: 0 20px;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -460,4 +461,159 @@
   .identity-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+/* =========================================================
+   DASHBOARD SAFETY LAYER
+========================================================= */
+
+.dashboard-page {
+  overflow-x: hidden;
+  background: #000;
+}
+
+/* ========================================
+   PTR FIX
+======================================== */
+
+#ptr-indicator.ptr-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#ptr-indicator {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9996;
+}
+
+/* ========================================
+   TOP BUTTON SEPARATION
+======================================== */
+
+#menuBtn {
+  left: 16px;
+  top: 16px;
+}
+
+#dashboardBellBtn {
+  position: fixed;
+  top: 16px;
+  right: 118px;
+  z-index: 10020;
+}
+
+#onboardingAuthBtn {
+  top: 16px;
+  right: 16px;
+}
+
+/* ========================================
+   SLIDER FOUNDATION
+======================================== */
+
+.slider-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.slider-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.slide-card {
+  position: relative;
+  min-width: 100%;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   BACKGROUND FIX
+======================================== */
+
+.card-bg,
+.intro-bg,
+.video-bg-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.card-bg,
+.intro-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.video-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========================================
+   CONTENT SAFETY
+======================================== */
+
+.card-content,
+.intro-content {
+  position: relative;
+  z-index: 2;
+}
+
+.card-content {
+  padding:
+    calc(92px + env(safe-area-inset-top))
+    20px
+    calc(120px + env(safe-area-inset-bottom));
+}
+
+/* ========================================
+   INTRO TEXT FIX
+======================================== */
+
+.intro-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.intro-text {
+  max-width: 720px;
+}
+
+/* ========================================
+   MEMBERSHIP FIX
+======================================== */
+
+.membership-cards {
+  width: 100%;
+}
+
+.membership-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ========================================
+   IMAGE SAFETY
+======================================== */
+
+img {
+  max-width: 100%;
 }

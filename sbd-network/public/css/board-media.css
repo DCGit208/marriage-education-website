@@ -1193,7 +1193,7 @@
 /* Close button — shared by lightbox + video overlay */
 .lightbox-close {
   position: fixed;
-  top: 16px;
+  top: max(16px, env(safe-area-inset-top, 16px));
   right: 16px;
   z-index: 1010;
   width: 40px;
@@ -1262,47 +1262,96 @@
   z-index: 1000;
   background: rgba(0,0,0,0.96);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 
-/* Position counter badge: top-left, mirroring close button top-right */
-.video-overlay-counter {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 1010;
-  background: rgba(0,0,0,0.55);
-  color: rgba(255,255,255,0.9);
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 5px 10px;
+/* ── Top bar: always-visible close button ── */
+.video-overlay-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(12px, env(safe-area-inset-top, 12px)) 16px 12px;
+  background: rgba(0,0,0,0.6);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.video-overlay-close-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.35);
   border-radius: 20px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  padding: 8px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  min-height: 40px;
+  min-width: 88px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.video-overlay-close-btn:active {
+  background: rgba(255,255,255,0.32);
+}
+
+/* Counter badge inside topbar */
+.video-overlay-counter {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.9);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
   letter-spacing: 0.03em;
-  pointer-events: none;
   display: none;
 }
 
+/* ── Video content area ── */
 .video-overlay-inner {
+  flex: 1;
   width: 100%;
   max-width: 900px;
-  padding: 60px 16px 20px;
+  align-self: center;
+  padding: 16px 16px 8px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  overflow: hidden;
 }
 
 .video-overlay-inner video {
   width: 100%;
-  max-height: 80vh;
+  max-height: 75vh;
   border-radius: 8px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+}
+
+/* ── Bottom dismiss strip ── */
+.video-overlay-dismiss {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 14px 16px max(14px, env(safe-area-inset-bottom, 14px));
+  color: rgba(255,255,255,0.5);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.video-overlay-dismiss:active {
+  color: rgba(255,255,255,0.9);
 }
 
 /* ── Header tweaks for board page ─────────────────────────────── */

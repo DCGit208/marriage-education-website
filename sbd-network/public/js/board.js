@@ -75,6 +75,7 @@ const videoOverlay        = document.getElementById('videoOverlay');
 const overlayVideo        = document.getElementById('overlayVideo');
 const videoCaption        = document.getElementById('videoCaption');
 const videoOverlayClose   = document.getElementById('videoOverlayClose');
+const videoOverlayDismiss = document.getElementById('videoOverlayDismiss');
 const videoOverlayCounter = document.getElementById('videoOverlayCounter');
 const videoOverlayPrev    = document.getElementById('videoOverlayPrev');
 const videoOverlayNext    = document.getElementById('videoOverlayNext');
@@ -179,7 +180,11 @@ auth.onAuthStateChanged(async (user) => {
     if (_boardMeta.exists) {
       const _BO   = { free: 0, foundation: 1, premium: 2, elite: 3 };
       const bTier = _boardMeta.data().requiredTier || 'free';
-      const uTier = currentUserData.tier || 'free';
+      const _sub = currentUserData.subscription;
+      const _now = Date.now();
+      const _subActive = _sub?.status === 'active' && (_sub.endDate?.toMillis?.() ?? 0) > _now;
+      const _subTier = _subActive ? (_sub.tier || '') : '';
+      const uTier = currentUserData.role === 'admin' ? 'elite' : (_subTier || currentUserData.tier || 'free');
       if ((_BO[uTier] ?? 0) < (_BO[bTier] ?? 0)) {
         const _cap = s => s.charAt(0).toUpperCase() + s.slice(1);
         if (boardTitle)    boardTitle.textContent    = _boardMeta.data().title || 'Board';
@@ -1211,6 +1216,7 @@ function closeVideoOverlay() {
 }
 
 videoOverlayClose.addEventListener('click', closeVideoOverlay);
+videoOverlayDismiss && videoOverlayDismiss.addEventListener('click', closeVideoOverlay);
 videoOverlay.addEventListener('click', e => { if (e.target === videoOverlay) closeVideoOverlay(); });
 if (videoOverlayPrev) {
   videoOverlayPrev.addEventListener('click', () => {
@@ -1223,7 +1229,7 @@ if (videoOverlayNext) {
   });
 }
 
-// ── Swipe gesture for video overlay (left = next, right = prev) ──
+// ── Swipe gestures for video overlay: left/right = prev/next, down = close ──
 (function() {
   let _sx = 0, _sy = 0;
   videoOverlay.addEventListener('touchstart', e => {
@@ -1233,13 +1239,31 @@ if (videoOverlayNext) {
   videoOverlay.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - _sx;
     const dy = e.changedTouches[0].clientY - _sy;
-    // Require predominantly horizontal swipe (dx > dy) with >44px threshold
+    // Swipe DOWN (≥70px, more vertical than horizontal) → close
+    if (dy > 70 && Math.abs(dy) > Math.abs(dx)) {
+      closeVideoOverlay(); return;
+    }
+    // Horizontal swipe (>44px, more horizontal than vertical) → prev/next
     if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy)) return;
     if (dx < 0 && overlayVideoIndex < overlayVideoList.length - 1) {
       overlayVideoIndex++; showOverlayVideoSlide();
     } else if (dx > 0 && overlayVideoIndex > 0) {
       overlayVideoIndex--; showOverlayVideoSlide();
     }
+  }, { passive: true });
+})();
+
+// ── Swipe DOWN on lightbox (images) to close ──
+(function() {
+  let _sx = 0, _sy = 0;
+  lightbox.addEventListener('touchstart', e => {
+    _sx = e.touches[0].clientX;
+    _sy = e.touches[0].clientY;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - _sx;
+    const dy = e.changedTouches[0].clientY - _sy;
+    if (dy > 70 && Math.abs(dy) > Math.abs(dx)) { closeLightbox(); }
   }, { passive: true });
 })();
 
@@ -2093,10 +2117,9 @@ function openContextMenu(post, card) {
   const applyExpressionBtn = document.getElementById('ctxApplyExpression');
   if (applyExpressionBtn) {
     const boardName = currentBoardData?.title || currentBoardData?.name || '';
-    console.log('[Apply Expression] Board name:', boardName);
-    console.log('[Apply Expression] Full board data:', currentBoardData);
-    const isExpressionBoard = /muliebrity|virility|corporate|casual|official|fashion|style/i.test(boardName);
-    console.log('[Apply Expression] Is expression board:', isExpressionBoard, 'Has media:', hasMedia);
+    // Check by board ID first (covers mv-house-general etc.), then fallback to name regex
+    const isExpressionBoard = MV_HOUSE_BOARD_IDS.includes(boardId) ||
+      /muliebrity|virility|corporate|casual|official|fashion|style|general/i.test(boardName);
     applyExpressionBtn.style.display = (isExpressionBoard && hasMedia) ? '' : 'none';
   }
 
@@ -2208,78 +2231,82 @@ document.getElementById('ctxApplyExpression').addEventListener('click', async ()
   closeContextMenu();
   if (!post) return;
 
-  // Determine expression context based on board
-  const boardName = currentBoardData?.title || currentBoardData?.name || '';
-  let context = 'corporate'; // default
-  const nameLower = boardName.toLowerCase();
-  
-  if (nameLower.includes('corporate')) context = 'corporate';
-  else if (nameLower.includes('casual')) {
-    if (nameLower.includes('night')) context = 'casual-night';
-    else if (nameLower.includes('home')) context = 'casual-home';
-    else if (nameLower.includes('day')) context = 'casual-day';
-    else context = 'casual-day'; // default casual
-  }
-  else if (nameLower.includes('official')) context = 'official';
+  // Show note modal first, then apply on confirm
+  const modal   = document.getElementById('applyExprModal');
+  const noteTA  = document.getElementById('applyExprNote');
+  const counter = document.getElementById('applyExprCount');
+  const saveBtn = document.getElementById('applyExprSave');
+  const skipBtn = document.getElementById('applyExprSkip');
+  const closeBtn = document.getElementById('applyExprClose');
 
-  try {
-    // Get media from post
-    let mediaUrl = null;
-    if (post.allMedia && post.allMedia.length > 0) {
-      mediaUrl = post.allMedia[0].url;
-    } else if (post.imageUrl) {
-      mediaUrl = post.imageUrl;
-    } else if (post.videoUrl) {
-      mediaUrl = post.videoUrl;
+  noteTA.value = '';
+  counter.textContent = '0';
+  modal.style.display = 'flex';
+
+  noteTA.oninput = () => { counter.textContent = noteTA.value.length; };
+
+  function closeModal() { modal.style.display = 'none'; }
+
+  closeBtn.onclick = closeModal;
+
+  async function doApply(userNote) {
+    closeModal();
+
+    // Determine expression context based on board
+    const boardName = currentBoardData?.title || currentBoardData?.name || '';
+    let context = 'corporate';
+    const nameLower = boardName.toLowerCase();
+
+    if (nameLower.includes('corporate')) context = 'corporate';
+    else if (nameLower.includes('casual')) {
+      if (nameLower.includes('night')) context = 'casual-night';
+      else if (nameLower.includes('home')) context = 'casual-home';
+      else if (nameLower.includes('day')) context = 'casual-day';
+      else context = 'casual-day';
     }
+    else if (nameLower.includes('official')) context = 'official';
+    else if (nameLower.includes('private')) context = 'private';
 
-    // Create look object
-    const look = {
-      postId: post.id,
-      boardId: boardId,
-      boardName: boardName,
-      mediaUrl: mediaUrl,
-      content: post.content || '',
-      expressionType: context,
-      savedAt: firebase.firestore.Timestamp.now(),
-      status: 'saved'
-    };
+    try {
+      let mediaUrl = null;
+      if (post.allMedia && post.allMedia.length > 0) {
+        mediaUrl = post.allMedia[0].url;
+      } else if (post.imageUrl) {
+        mediaUrl = post.imageUrl;
+      } else if (post.videoUrl) {
+        mediaUrl = post.videoUrl;
+      }
 
-    // Get existing wardrobe or create new
-    const wardrobeRef = db.collection('users')
-      .doc(currentUserId)
-      .collection('wardrobes')
-      .doc(context);
+      // Save to NEW flat path: wardrobes/{uid}/items/{postId}
+      // Matches saveToWardrobe() so MV House PATH 1 picks it up reliably.
+      const itemData = {
+        postId:    post.id,
+        boardId:   boardId,
+        boardName: boardName,
+        mediaUrl:  mediaUrl,
+        caption:   (post.content || '').slice(0, 200),
+        category:  context,
+        note:      userNote,
+        savedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      };
 
-    const wardrobeDoc = await wardrobeRef.get();
-    let looks = [];
-    let completeness = 0;
+      await db.collection('wardrobes')
+        .doc(currentUserId)
+        .collection('items')
+        .doc(post.id)
+        .set(itemData, { merge: true });
 
-    if (wardrobeDoc.exists) {
-      looks = wardrobeDoc.data().looks || [];
-      completeness = wardrobeDoc.data().completeness || 0;
+      const contextName = context.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      showToast(`✓ Applied to ${contextName} Wardrobe`);
+
+    } catch (err) {
+      console.error('Failed to apply expression:', err);
+      showToast('Failed to save expression');
     }
-
-    // Add new look
-    looks.push(look);
-
-    // Calculate completeness (simple: 10 looks = 100%)
-    completeness = Math.min(looks.length / 10, 1.0);
-
-    // Update wardrobe
-    await wardrobeRef.set({
-      looks: looks,
-      completeness: completeness,
-      updatedAt: firebase.firestore.Timestamp.now()
-    }, { merge: true });
-
-    const contextName = context.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    showToast(`✓ Applied to ${contextName} Wardrobe`);
-
-  } catch (err) {
-    console.error('Failed to apply expression:', err);
-    showToast('Failed to save expression');
   }
+
+  saveBtn.onclick = () => doApply(noteTA.value.trim());
+  skipBtn.onclick = () => doApply('');
 });
 
 
@@ -2578,6 +2605,15 @@ async function submitRepost(originalPost, targetBoardId, userThoughts) {
     console.log('[Repost] Submitting repost data:', repostData);
 
     await db.collection('posts').add(repostData);
+    await db.collection('boards').doc(targetBoardId).update({
+      lastActivityAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastPostAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastPostPreview: (userThoughts || fullPostData.content || '📎 Repost').slice(0, 80),
+      postsCount: firebase.firestore.FieldValue.increment(1),
+      activity24h: firebase.firestore.FieldValue.increment(1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+    refreshBoardRankScoreNonBlocking(targetBoardId);
     
     showToast('Reposted successfully!');
     
@@ -2592,6 +2628,45 @@ async function submitRepost(originalPost, targetBoardId, userThoughts) {
   } finally {
     showLoading(false);
   }
+}
+
+function computeBoardRank(board) {
+  const now = Date.now();
+  const lastActivity = board.lastActivityAt?.toMillis?.() || 0;
+  const hoursSince = (now - lastActivity) / (1000 * 60 * 60);
+
+  const engagement =
+    Math.log1p(board.postsCount || 0) * 3 +
+    Math.log1p(board.commentsCount || 0) * 2 +
+    Math.log1p(board.likesCount || 0);
+
+  const activityBoost = (board.activity24h || 0) * 4;
+  const userBoost = (board.activeUsers24h || 0) * 5;
+  const decay = hoursSince * 1.5;
+
+  return engagement + activityBoost + userBoost - decay;
+}
+
+function refreshBoardRankScoreNonBlocking(boardId) {
+  (async () => {
+    try {
+      const boardRef = db.collection('boards').doc(boardId);
+      const snap = await boardRef.get();
+      if (!snap.exists) return;
+      const data = snap.data() || {};
+      const rank = computeBoardRank({
+        postsCount: data.postsCount ?? data.postCount ?? 0,
+        commentsCount: data.commentsCount ?? 0,
+        likesCount: data.likesCount ?? 0,
+        activity24h: data.activity24h ?? 0,
+        activeUsers24h: data.activeUsers24h ?? 0,
+        lastActivityAt: data.lastActivityAt || data.lastPostAt || data.createdAt || null,
+      });
+      await boardRef.update({ rankScore: rank });
+    } catch (e) {
+      console.warn('[BoardRank] repost rank refresh skipped:', e);
+    }
+  })();
 }
 
 // ── Share via DM ──────────────────────────────────────────────────

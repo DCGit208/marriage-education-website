@@ -20,16 +20,12 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // ── Configure Firestore Settings ───────────────────────────────
-// Safari (including iOS Safari used by PWAs) often has issues with WebSocket connections.
-// Enable long polling for Safari to ensure reliable Firestore connectivity.
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-if (isSafari) {
-  console.log('Safari detected — enabling Firestore long polling');
-  db.settings({
-    experimentalForceLongPolling: true,
-    merge: true
-  });
-}
+// autoDetectLongPolling handles Safari/iOS PWA WebSocket issues automatically.
+// ForceLongPolling conflicts with autoDetect when the SDK has autoDetect as default.
+db.settings({
+  experimentalAutoDetectLongPolling: true,
+  merge: true
+});
 
 // ── Session persistence (Remember Me) ───────────────────────────
 // Default to LOCAL so auth survives browser restarts.
@@ -130,7 +126,7 @@ console.log('Firebase initialized successfully');
 // Must be registered here (loaded on every page) so it is always
 // installed before _initPush tries to use it for FCM tokens.
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+  navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' })
     .then(reg => {
       console.log('[SW] Registered, scope:', reg.scope);
       // Check for an update every time the app loads

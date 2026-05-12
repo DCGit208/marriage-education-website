@@ -43,46 +43,14 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v249';
+const CACHE_VERSION = 'sbd-network-v1778611896325';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
-// Assets to cache immediately
+// NOTE: JS/CSS files in this project use ?v=TIMESTAMP versioned URLs.
+// Precaching bare paths (/js/foo.js) would never match those versioned URLs
+// (cache lookup is exact URL match). Only precache unversioned assets.
 const PRECACHE_URLS = [
-  '/',
-  '/auth.html',
-  '/index.html',
-  '/dashboard.html',
-  '/boards.html',
-  '/group.html',
-  '/board.html',
-  '/admin.html',
-  '/member.html',
-  '/explore.html',
-  '/search.html',
-  '/css/styles.css',
-  '/js/firebase.js',
-  '/js/sw-update-checker.js',
-  '/js/auth.js',
-  '/js/dashboard.js',
-  '/js/boards.js',
-  '/js/group.js',
-  '/js/board.js',
-  '/js/posts.js',
-  '/js/mentions.js',
-  '/js/image-editor.js',
-  '/js/upload.js',
-  '/js/admin.js',
-  '/js/member.js',
-  '/js/explore.js',
-  '/js/search.js',
-  '/js/notifications.js',
-  '/js/ptr.js',
-  '/js/offline.js',
-  '/js/transitions.js',
-  '/js/swipe-back.js',
-  '/js/install-prompt.js',
-  '/css/bottom-nav.css',
   '/manifest.json',
   '/changelog.json',
 ];
@@ -145,59 +113,40 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // JS and CSS — Cache first, refresh in background (stale-while-revalidate).
-  // Scripts carry version query strings; the SW cache is busted on each deploy via CACHE_VERSION.
+  // JS and CSS — Network-first with HTTP-cache bypass.
+  // ?v=TIMESTAMP URLs change every deploy, so new URLs are always fetched fresh.
+  // Falls back to SW cache only when offline.
   if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            // Clone BEFORE returning — body can only be consumed once
-            const toCache = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, toCache));
-          }
-          return response;
-        });
-        return cached || fetchPromise;
-      })
+      fetch(new Request(request, { cache: 'no-store' })).then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, toCache));
+        }
+        return response;
+      }).catch(() => caches.match(request))
     );
     return;
   }
 
-  // For HTML pages — stale-while-revalidate: serve cache instantly, update in background.
-  // This gives users an immediate response (skeleton → content) on every visit.
-  // EXCEPTION: Auth and dashboard pages should always be fresh from network.
-  // They change often, and stale HTML here causes redirect and asset-path bugs.
-  if (request.headers.get('Accept').includes('text/html')) {
-    const pathname = url.pathname;
-    
-    // Skip cache for auth and dashboard pages — always fetch from network
-    if (
-      pathname === '/auth' ||
-      pathname === '/auth.html' ||
-      pathname === '/index' ||
-      pathname === '/index.html' ||
-      pathname === '/dashboard' ||
-      pathname === '/dashboard.html'
-    ) {
-      event.respondWith(fetch(request));
-      return;
-    }
-    
+  // HTML — Network-first, bypass all caches.
+  // Cache successful responses so we can fall back if the network returns
+  // a 503/500 or is unreachable on the next visit.
+  const isHtml = request.headers.get('accept')?.includes('text/html') || url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '';
+  if (isHtml) {
     event.respondWith(
-      caches.open(RUNTIME_CACHE).then(cache =>
-        cache.match(request).then(cached => {
-          // Always kick off a background refresh regardless of cache hit
-          const networkFetch = fetch(request).then(response => {
-            if (response && response.status === 200) {
-              cache.put(request, response.clone());
-            }
+      fetch(new Request(request, { cache: 'no-store' }))
+        .then(response => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            // Store a fresh copy so offline / 503 fallback works
+            const toCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, toCache));
             return response;
-          }).catch(() => null);
-          // Return cached page immediately if available, otherwise wait for network
-          return cached || networkFetch;
+          }
+          // Non-200 from server (e.g. 503) — try cached version first
+          return caches.match(request).then(cached => cached || response);
         })
-      )
+        .catch(() => caches.match(request))
     );
     return;
   }
@@ -224,7 +173,15 @@ self.addEventListener('fetch', (event) => {
           return response;
         });
       })
+      .catch(() => fetch(request).catch(() => new Response('', { status: 503 })))
   );
+});
+
+// Allow pages to trigger an immediate SW swap without waiting for idle.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Background sync for offline posts (future enhancement)

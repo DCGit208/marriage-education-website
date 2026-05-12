@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/what-is.html — run: node build.js -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="What SBD Network Is — A structured formation system for sexual intelligence and identity development.">
+  <meta name="theme-color" content="#000000">
+  <title>What This System Is — SBD Network</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+
+  <style>
+    /* ── Page Layout ─────────────────────────────────────────── */
+    .wis-page {
+      padding-bottom: 80px;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Gated Banner ────────────────────────────────────────── */
+    #gatedBanner {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 800;
+      background: #1a0a00;
+      border-bottom: 1px solid #C6A96B55;
+      padding: 14px 20px;
+      text-align: center;
+    }
+    #gatedBanner p {
+      color: #C6A96B;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    #gatedBanner .banner-cta {
+      display: inline-block;
+      background: #C6A96B;
+      color: #000;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 8px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Sections ────────────────────────────────────────────── */
+    .wis-section {
+      padding: 60px 24px;
+      border-bottom: 1px solid #1a1a1a;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .wis-section:last-of-type { border-bottom: none; }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .wis-hero {
+      padding: 80px 24px 60px;
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .wis-hero h1 {
+      font-size: clamp(1.9rem, 6vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+    .wis-hero p {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* ── Typography ──────────────────────────────────────────── */
+    .wis-section h2 {
+      font-size: clamp(1.3rem, 4.5vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--text-primary);
+      margin-bottom: 18px;
+    }
+    .wis-section p {
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+    .wis-section p:last-child { margin-bottom: 0; }
+    .wis-highlight {
+      color: #C6A96B;
+      font-weight: 600;
+      font-size: 1rem;
+      line-height: 1.65;
+      margin: 16px 0 0;
+    }
+    .wis-big {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ── Comparison Cards ────────────────────────────────────── */
+    .wis-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 28px 0;
+    }
+    @media (max-width: 480px) {
+      .wis-compare { grid-template-columns: 1fr; }
+    }
+    .compare-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px 16px;
+    }
+    .compare-card.them { border-color: #333; }
+    .compare-card.us   { border-color: #C6A96B44; background: #0f0d09; }
+    .compare-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .compare-card.us h3 { color: #C6A96B; }
+    .compare-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px;
+    }
+    .compare-card ul li {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      padding: 5px 0;
+      border-bottom: 1px solid #1e1e1e;
+      line-height: 1.5;
+    }
+    .compare-card ul li:last-child { border-bottom: none; }
+    .compare-result {
+      font-size: 0.82rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .compare-card.us .compare-result { color: #C6A96B; font-style: normal; font-weight: 600; }
+
+    /* ── Tier List ───────────────────────────────────────────── */
+    .wis-tier-list {
+      list-style: none;
+      padding: 0;
+      margin: 24px 0;
+    }
+    .wis-tier-list li {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      margin-bottom: 10px;
+    }
+    .wis-tier-list li:last-child { margin-bottom: 0; }
+    .tier-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .tier-name.foundation { color: #9ca3af; }
+    .tier-name.premium    { color: #C6A96B; }
+    .tier-name.elite      { color: #ffffff; }
+    .tier-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .tier-price {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── MV House Bullets ────────────────────────────────────── */
+    .wis-list {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0;
+    }
+    .wis-list li {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      padding: 10px 0 10px 20px;
+      border-bottom: 1px solid #1a1a1a;
+      position: relative;
+      line-height: 1.5;
+    }
+    .wis-list li:last-child { border-bottom: none; }
+    .wis-list li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: #C6A96B;
+      font-size: 0.85rem;
+    }
+
+    /* ── Proof Stat ──────────────────────────────────────────── */
+    .wis-proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 24px 0;
+    }
+    .proof-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 18px 10px;
+      text-align: center;
+    }
+    .proof-stat .stat-number {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #C6A96B;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .proof-stat .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      line-height: 1.4;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .wis-cta-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .btn-primary-wis {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: #C6A96B;
+      color: #000;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-align: center;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary-wis:hover  { background: #d4b87a; }
+    .btn-primary-wis:active { transform: scale(0.98); }
+    .btn-secondary-wis {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary-wis:hover { border-color: #C6A96B88; color: var(--text-primary); }
+
+    /* ── Inline Participation Nudge ──────────────────────────── */
+    #participationNudge {
+      display: none;
+      background: #0f0d09;
+      border: 1px solid #C6A96B33;
+      border-radius: 10px;
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #C6A96B;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin: 24px 0 0;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Pulse on primary CTA after 8s ──────────────────────── */
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(198,169,107,0.5); }
+      50%       { box-shadow: 0 0 0 10px rgba(198,169,107,0); }
+    }
+    .cta-pulse { animation: ctaPulse 1.4s ease-in-out 3; }
+
+    /* ── Conditional Upgrade Bar ─────────────────────────────── */
+    #upgradeBar {
+      display: none;
+      position: fixed;
+      bottom: 64px; /* above bottom nav */
+      left: 0; right: 0;
+      z-index: 850;
+      padding: 14px 20px;
+      background: rgba(10,10,10,0.96);
+      border-top: 1px solid #C6A96B44;
+      backdrop-filter: blur(16px);
+      text-align: center;
+    }
+    #upgradeBar p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    #upgradeBar a {
+      display: inline-block;
+      background: #C6A96B;
+      color: #000;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 9px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Section accent rule ─────────────────────────────────── */
+    .wis-rule {
+      width: 36px;
+      height: 2px;
+      background: #C6A96B;
+      margin-bottom: 22px;
+      border: none;
+    }
+  </style>
+</head>
+
+<body data-page="none" class="wis-page bottom-nav-page">
+
+  <!-- ── Gated Banner (shown when ?from=lock) ──────────────── -->
+  <div id="gatedBanner">
+    <p>You attempted to access a restricted area.<br>Understand the system before proceeding.</p>
+    <a href="#enterSystem" class="banner-cta">Continue Into System</a>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 1 — HERO (DISRUPTION)                              -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <div class="wis-hero" id="enterSystem">
+    <h1>This Is Not A Content Platform</h1>
+    <p>
+      Most platforms train you to watch.<br>
+      This system trains you to operate.
+    </p>
+    <a href="/shop.html" class="btn-primary-wis" id="heroCTA">Enter The System</a>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 2 — POLARIZATION                                   -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>This System Is Not For Everyone</h2>
+    <p>
+      If you are here to scroll, you will not stay.<br>
+      If you are here to apply, you will progress.
+    </p>
+    <p class="wis-highlight">
+      This system rewards execution — not attention.
+    </p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 3 — DEEP REFRAME                                   -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>The Real Difference Is Not Content — It Is Control</h2>
+    <p>
+      Most platforms show you sexuality.<br>
+      SBD Network trains you to understand and operate in it.
+    </p>
+    <p>
+      Seeing something is not the same as understanding it.<br>
+      Understanding it is not the same as controlling it.
+    </p>
+    <p class="wis-highlight">
+      Most people consume sexuality.<br>
+      Few people understand it.<br>
+      Almost none can operate in it.
+    </p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 4 — COMPARISON                                     -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <div class="wis-compare">
+      <div class="compare-card them">
+        <h3>Content Platforms</h3>
+        <ul>
+          <li>Show sexual expression</li>
+          <li>Train passive consumption</li>
+          <li>No structure</li>
+          <li>No progression</li>
+        </ul>
+        <div class="compare-result">You watch. Nothing changes.</div>
+      </div>
+      <div class="compare-card us">
+        <h3>SBD Network</h3>
+        <ul>
+          <li>Structured formation system</li>
+          <li>Identity-based progression</li>
+          <li>Real-world application</li>
+          <li>Behavioral transformation</li>
+        </ul>
+        <div class="compare-result">You change. Your environment responds.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 5 — TRUST BRIDGE                                   -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>This Is Already In Motion</h2>
+    <p>
+      Users are already progressing through structured formation.<br>
+      This is not an idea. It is a system in use.
+    </p>
+    <div class="wis-proof-grid">
+      <div class="proof-stat">
+        <div class="stat-number" id="statMembers">—</div>
+        <div class="stat-label">Members In Formation</div>
+      </div>
+      <div class="proof-stat">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Structured Schools</div>
+      </div>
+      <div class="proof-stat">
+        <div class="stat-number">44</div>
+        <div class="stat-label">Courses</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 6 — SYSTEM + PRICE                                 -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>How The System Works</h2>
+    <p>You do not unlock access randomly. You progress by formation.</p>
+    <ul class="wis-tier-list">
+      <li>
+        <span class="tier-name foundation">Foundation</span>
+        <span class="tier-desc">Core formation system — Teleios Blueprint + SBD Courseware</span>
+        <span class="tier-price">$9 / month</span>
+      </li>
+      <li>
+        <span class="tier-name premium">Premium</span>
+        <span class="tier-desc">Deeper frameworks, expanded schools, more parallel learning lanes</span>
+        <span class="tier-price">Unlock after Foundation</span>
+      </li>
+      <li>
+        <span class="tier-name elite">Elite</span>
+        <span class="tier-desc">All 44 courses + MV House + applied expression — full system access</span>
+        <span class="tier-price">Full access, all lanes concurrent</span>
+      </li>
+    </ul>
+    <p class="wis-highlight">
+      You do not unlock features by clicking.<br>
+      You unlock them by becoming.
+    </p>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 7 — MV HOUSE                                       -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>What Transformation Looks Like</h2>
+    <p>
+      This system does not end in knowledge.<br>
+      It ends in visible expression.
+    </p>
+    <ul class="wis-list">
+      <li>How you think</li>
+      <li>How you present</li>
+      <li>How you express sexuality</li>
+    </ul>
+    <p class="wis-highlight">
+      MV House is where formation becomes visible.
+    </p>
+    <div class="wis-cta-group">
+      <a href="/mv-house.html" class="btn-secondary-wis">Explore MV House</a>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 8 — FINAL GAP                                      -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <hr class="wis-rule">
+    <h2>You Will Either Stay Passive — Or Change</h2>
+    <p>
+      Most people never move beyond consumption.<br>
+      They repeat patterns without understanding them.
+    </p>
+    <p class="wis-highlight">
+      This system removes that option.
+    </p>
+
+    <!-- Behavioral nudge — shown after 20s by JS -->
+    <div id="participationNudge">This system requires participation.</div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- STEP 9 — FINAL CTA                                      -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <section class="wis-section">
+    <h2>Enter The System</h2>
+    <p class="wis-big">
+      This is not a platform you browse.<br>
+      It is a system you enter.
+    </p>
+    <div class="wis-cta-group">
+      <a href="/shop.html" class="btn-primary-wis" id="finalCTA">Start Formation — $9/month</a>
+      <a href="/learn.html" class="btn-secondary-wis">View System Structure</a>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ -->
+  <!-- CONDITIONAL UPGRADE BAR (injected by JS)                -->
+  <!-- ════════════════════════════════════════════════════════ -->
+  <div id="upgradeBar">
+    <p id="upgradeBarText"></p>
+    <a href="/shop.html" id="upgradeBarLink">—</a>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <script src="/js/firebase.js?v=75"></script>
+
+  <script>
+  (function () {
+    // ── Gated banner ──────────────────────────────────────────
+    if (new URLSearchParams(window.location.search).get('from') === 'lock') {
+      document.getElementById('gatedBanner').style.display = 'block';
+    }
+
+    // ── Behavioral hooks ──────────────────────────────────────
+    // After 8s: pulse primary CTAs
+    setTimeout(function () {
+      document.querySelectorAll('.btn-primary-wis').forEach(function (btn) {
+        btn.classList.add('cta-pulse');
+      });
+    }, 8000);
+
+    // After 20s: show inline participation nudge
+    setTimeout(function () {
+      var nudge = document.getElementById('participationNudge');
+      if (nudge) nudge.style.display = 'block';
+    }, 20000);
+
+    // ── Member count (live from Firestore) ────────────────────
+    // ── Conditional upgrade bar + CTA text ───────────────────
+    function onAuthReady(user) {
+      if (!user) {
+        // Not signed in — show "Start at $9"
+        showUpgradeBar('Access begins at $9/month — Foundation Tier', 'Start Formation — $9/month', '/shop.html');
+        return;
+      }
+
+      var db = firebase.firestore();
+
+      // Live member count
+      db.collection('users').where('subscription.status', '==', 'active').get().then(function (snap) {
+        var el = document.getElementById('statMembers');
+        if (el) el.textContent = snap.size > 0 ? snap.size + '+' : '—';
+      }).catch(function () {});
+
+      // User tier → conditional CTA
+      db.collection('users').doc(user.uid).get().then(function (doc) {
+        if (!doc.exists) return;
+        var data = doc.data();
+        var sub  = data.subscription || {};
+        var tier = sub.status === 'active' ? (sub.tier || 'free') : 'free';
+        if (data.role === 'admin') tier = 'elite';
+
+        if (tier === 'free' || tier === 'foundation' && sub.status !== 'active') {
+          showUpgradeBar('Access begins at $9/month — Foundation Tier', 'Start Formation — $9/month', '/shop.html');
+          // Also update final CTA
+          var fc = document.getElementById('finalCTA');
+          if (fc) { fc.textContent = 'Start Formation — $9/month'; fc.href = '/shop.html'; }
+        } else if (tier === 'foundation') {
+          showUpgradeBar('You are in Foundation. Unlock deeper levels.', 'Upgrade to Premium', '/shop.html?upgrade=premium');
+          var fc = document.getElementById('finalCTA');
+          if (fc) { fc.textContent = 'Unlock Premium'; fc.href = '/shop.html?upgrade=premium'; }
+        } else if (tier === 'premium') {
+          showUpgradeBar('You are in Premium. Enter Elite for full access.', 'Enter Elite', '/shop.html?upgrade=elite');
+          var fc = document.getElementById('finalCTA');
+          if (fc) { fc.textContent = 'Enter Elite'; fc.href = '/shop.html?upgrade=elite'; }
+        }
+        // Elite: no upgrade bar needed
+      }).catch(function () {});
+    }
+
+    function showUpgradeBar(text, linkText, href) {
+      var bar  = document.getElementById('upgradeBar');
+      var p    = document.getElementById('upgradeBarText');
+      var link = document.getElementById('upgradeBarLink');
+      if (!bar) return;
+      p.textContent    = text;
+      link.textContent = linkText;
+      link.href        = href;
+      bar.style.display = 'block';
+    }
+
+    // Wait for firebase.js to initialise
+    var checkInterval = setInterval(function () {
+      if (typeof firebase !== 'undefined' && firebase.apps.length) {
+        clearInterval(checkInterval);
+        firebase.auth().onAuthStateChanged(onAuthReady);
+      }
+    }, 100);
+  })();
+  </script>
+
+  <!-- NAV_INJECT -->
+</body>
+</html>

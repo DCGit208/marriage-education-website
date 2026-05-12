@@ -1,5 +1,6 @@
 // ================================================================
 // DIRECT MESSAGES - Supports 1:1 and group conversations
+// ================================================================
 // Firestore schema:
 //   conversations/{id}  { participantIds:[uid,...],   // 2 for 1:1, 3+ for groups
 //                         participantNames:{uid:name},
@@ -44,10 +45,12 @@ let _isOtherTyping    = false;
 const inboxView        = document.getElementById('inboxView');
 const chatView         = document.getElementById('chatView');
 const conversationList = document.getElementById('conversationList');
-const chatMessages     = document.getElementById('chatMessages');
-const chatInput        = document.getElementById('chatInput');
-const chatSendBtn      = document.getElementById('chatSendBtn');
-const dmPageTitle      = document.getElementById('dmPageTitle');
+const chatMessages     = document.getElementById('messagesContainer');
+const chatInput        = document.getElementById('messageInput');
+const chatSendBtn      = document.getElementById('sendBtn');
+const dmPageTitle      = document.getElementById('dmPageTitle'); // inbox title
+const chatTitle        = document.getElementById('chatTitle');    // chat header title
+const chatBackBtn      = document.getElementById('chatBackBtn');
 const replyBanner      = document.getElementById('replyBanner');
 const replyBannerText  = document.getElementById('replyBannerText');
 const replyCancelBtn   = document.getElementById('replyCancelBtn');
@@ -55,6 +58,29 @@ const editBanner       = document.getElementById('editBanner');
 const editCancelBtn    = document.getElementById('editCancelBtn');
 const attachBtn        = document.getElementById('attachBtn');
 const attachInput      = document.getElementById('attachInput');
+
+// ── State machine (single source of truth for all UI) ────────────
+const ChatState = {
+  mode: 'inbox',    // 'inbox' | 'dm' | 'group'
+  activeChatId: null,
+  keyboardOpen: false,
+};
+
+function renderChatUI() {
+  const isChat = ChatState.mode !== 'inbox';
+  chatView.style.display = isChat ? 'flex' : 'none';
+  inboxView.classList.toggle('hidden', isChat);
+  document.body.classList.toggle('in-chat', isChat);
+}
+
+
+function handleBack() {
+  if (ChatState.mode === 'dm' || ChatState.mode === 'group') {
+    closeChat();
+  } else {
+    window.location.href = 'dashboard.html';
+  }
+}
 
 // ── Auth guard ───────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
@@ -71,7 +97,7 @@ auth.onAuthStateChanged(async (user) => {
 
     const groups = currentUserData.groups || [];
     if (!groups.length && !currentIsAdmin) {
-      document.getElementById('noGroupDmMessage').style.display = 'block';
+      document.getElementById('noGroupDmMessage').classList.add('visible');
     }
 
     loadInbox();
@@ -87,24 +113,9 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 // ── Inbox ─────────────────────────────────────────────────────────
-function loadInbox() {
-  if (_convUnsub) { _convUnsub(); _convUnsub = null; }
-
-  _convUnsub = db.collection('conversations')
-    .where('participantIds', 'array-contains', currentUserId)
-    .onSnapshot(snap => {
-      const docs = snap.docs.slice().sort((a, b) => {
-        const ta = a.data().lastMessageAt?.seconds || 0;
-        const tb = b.data().lastMessageAt?.seconds || 0;
-        return tb - ta;
-      });
-
-      conversationList.innerHTML = '';
-      if (docs.length === 0) {
-        document.getElementById('noConvsMessage').style.display = 'block';
-      } else {
-        document.getElementById('noConvsMessage').style.display = 'none';
-      }
+function _renderInboxFromDocs(docs) {
+  conversationList.innerHTML = '';
+  document.getElementById('noConvsMessage').classList.toggle('visible', docs.length === 0);
 
       docs.forEach(doc => {
         const d = doc.data();
@@ -199,7 +210,32 @@ function loadInbox() {
           });
         }).catch(() => {});
       }
-    }, err => console.error('Inbox error:', err));
+}
+
+function loadInbox() {
+  if (_convUnsub) { _convUnsub(); _convUnsub = null; }
+
+  _convUnsub = db.collection('conversations')
+    .where('participantIds', 'array-contains', currentUserId)
+    .orderBy('lastMessageAt', 'desc')
+    .onSnapshot(
+      snap => _renderInboxFromDocs(snap.docs),
+      err => {
+        // Composite index may not exist yet — fall back to client-side sort
+        console.warn('Ordered inbox failed (index may be missing):', err.message);
+        if (_convUnsub) { _convUnsub(); _convUnsub = null; }
+        _convUnsub = db.collection('conversations')
+          .where('participantIds', 'array-contains', currentUserId)
+          .onSnapshot(
+            snap => _renderInboxFromDocs(
+              snap.docs.slice().sort((a, b) =>
+                (b.data().lastMessageAt?.seconds || 0) - (a.data().lastMessageAt?.seconds || 0)
+              )
+            ),
+            fallbackErr => console.error('Inbox error:', fallbackErr)
+          );
+      }
+    );
 }
 
 // ── Chat view ─────────────────────────────────────────────────────
@@ -212,16 +248,10 @@ async function openChat(convId, otherId, otherName, otherPhoto) {
   if (_chatUnsub) { _chatUnsub(); _chatUnsub = null; }
   clearReply();
 
-  inboxView.style.display = 'none';
-  chatView.style.display  = 'flex';
-  document.body.classList.add('in-chat');
-  // Hide bottom nav and extend dm-main to full height so input bar owns the bottom
-  const _nav  = document.querySelector('.bottom-nav');
-  const _main = document.querySelector('.dm-main');
-  if (_nav)  _nav.style.display  = 'none';
-  if (_main) _main.style.bottom  = '0';
-  dmPageTitle.textContent = otherName;
-  document.getElementById('backBtn').onclick = () => closeChat();
+  ChatState.mode = 'dm';
+  ChatState.activeChatId = convId;
+  renderChatUI();
+  chatTitle.textContent = otherName;
 
   _chatOldestDoc  = null;
   _chatAllLoaded  = false;
@@ -249,16 +279,20 @@ async function openChat(convId, otherId, otherName, otherPhoto) {
       if (!snap.empty && !_chatOldestDoc) {
         _chatOldestDoc = snap.docs[0];
       }
-      const wasAtBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 80;
+      const isFirstRender = !chatMessages.querySelector('.chat-bubble');
+      const wasAtBottom   = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 80;
       const prevScrollHeight = chatMessages.scrollHeight;
-
-      // Preserve "load older" button if it exists
-      const loaderBtn = chatMessages.querySelector('.load-older-btn');
 
       chatMessages.innerHTML = '';
 
-      // Re-insert the "load older" button at top
-      if (!_chatAllLoaded) {
+      // Spacer pushes messages to the bottom when there are few (like iMessage/WhatsApp).
+      // It shrinks to 0 once messages overflow, so scroll still works normally.
+      const spacer = document.createElement('div');
+      spacer.className = 'msg-spacer';
+      chatMessages.appendChild(spacer);
+
+      // Only show "Load older" button if we hit the 50-message limit (older msgs may exist)
+      if (!_chatAllLoaded && snap.docs.length >= 50) {
         const olderBtn = document.createElement('button');
         olderBtn.className = 'load-older-btn';
         olderBtn.textContent = 'Load older messages';
@@ -284,11 +318,12 @@ async function openChat(convId, otherId, otherName, otherPhoto) {
       _updateReadTicks(snap);
       _showTypingBubble(_isOtherTyping);
 
-      if (wasAtBottom || !loaderBtn) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+      // Use requestAnimationFrame so iOS has reflowed the DOM before we set scrollTop
+      if (isFirstRender || wasAtBottom) {
+        requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
       } else {
-        // Keep scroll position after new messages arrive at bottom
-        chatMessages.scrollTop += chatMessages.scrollHeight - prevScrollHeight;
+        const scrollDelta = chatMessages.scrollHeight - prevScrollHeight;
+        requestAnimationFrame(() => { chatMessages.scrollTop += scrollDelta; });
       }
       _markRead(convId);
     }, err => console.error('Chat listener error:', err));
@@ -427,16 +462,10 @@ function closeChat() {
   activeIsGroup = false;
   activeParticipants = [];
   clearReply();
-  chatView.style.display  = 'none';
-  inboxView.style.display = 'block';
-  document.body.classList.remove('in-chat');
-  // Restore bottom nav and dm-main to inbox layout
-  const _nav  = document.querySelector('.bottom-nav');
-  const _main = document.querySelector('.dm-main');
-  if (_nav)  _nav.style.display  = '';
-  if (_main) _main.style.bottom  = '';
-  dmPageTitle.textContent = 'Messages';
-  document.getElementById('backBtn').onclick = null;
+  ChatState.mode = 'inbox';
+  ChatState.activeChatId = null;
+  renderChatUI();
+  chatTitle.textContent = '';
 }
 
 // ── Open group chat ───────────────────────────────────────────────
@@ -463,17 +492,12 @@ async function openGroupChat(convId, convData) {
   clearEdit();
 
   // UI setup
-  inboxView.style.display = 'none';
-  chatView.style.display  = 'block';
-  document.body.classList.add('in-chat');
-  const _nav  = document.querySelector('.bottom-nav');
-  const _main = document.querySelector('.dm-main');
-  if (_nav)  _nav.style.display  = 'none';
-  if (_main) _main.style.bottom  = 'env(safe-area-inset-bottom, 0px)';
+  ChatState.mode = 'group';
+  ChatState.activeChatId = convId;
+  renderChatUI();
 
   const groupName = convData.groupName || _generateGroupName(convData.participantIds, convData.participantNames);
-  dmPageTitle.textContent = groupName;
-  document.getElementById('backBtn').onclick = closeChat;
+  chatTitle.textContent = groupName;
 
   chatMessages.innerHTML = '';
 
@@ -514,12 +538,19 @@ async function openGroupChat(convId, convData) {
       if (!snap.empty && !_chatOldestDoc) {
         _chatOldestDoc = snap.docs[0];
       }
-      const wasAtBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 80;
+      const isFirstRender = !chatMessages.querySelector('.chat-bubble');
+      const wasAtBottom   = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 80;
       const prevScrollHeight = chatMessages.scrollHeight;
 
       chatMessages.innerHTML = '';
 
-      if (!_chatAllLoaded) {
+      // Spacer to push messages to bottom (like iMessage/WhatsApp)
+      const spacer = document.createElement('div');
+      spacer.className = 'msg-spacer';
+      chatMessages.appendChild(spacer);
+
+      // Only show "Load older" if we loaded the full 50-message page
+      if (!_chatAllLoaded && snap.docs.length >= 50) {
         const olderBtn = document.createElement('button');
         olderBtn.className = 'load-older-btn';
         olderBtn.textContent = 'Load older messages';
@@ -557,10 +588,11 @@ async function openGroupChat(convId, convData) {
         _showTypingBubble(_isOtherTyping);
       }
 
-      if (wasAtBottom) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+      if (isFirstRender || wasAtBottom) {
+        requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
       } else {
-        chatMessages.scrollTop += chatMessages.scrollHeight - prevScrollHeight;
+        const scrollDelta = chatMessages.scrollHeight - prevScrollHeight;
+        requestAnimationFrame(() => { chatMessages.scrollTop += scrollDelta; });
       }
       _markRead(convId);
     }, err => console.error('Group chat listener error:', err));
@@ -796,8 +828,6 @@ function _setEdit(messageId, currentText) {
   _editingMessageId = messageId;
   if (editBanner) editBanner.style.display = 'flex';
   chatInput.value = currentText;
-  chatInput.style.height = 'auto';
-  chatInput.style.height = chatInput.scrollHeight + 'px';
   chatInput.focus();
   // Move cursor to end
   chatInput.selectionStart = chatInput.selectionEnd = chatInput.value.length;
@@ -807,7 +837,6 @@ function clearEdit() {
   _editingMessageId = null;
   if (editBanner) editBanner.style.display = 'none';
   chatInput.value = '';
-  chatInput.style.height = 'auto';
 }
 
 editCancelBtn && editCancelBtn.addEventListener('click', clearEdit);
@@ -1027,7 +1056,6 @@ async function sendMessage() {
 
   // ── Normal send ───────────────────────────────────────────────────
   chatInput.value = '';
-  chatInput.style.height = 'auto';
   clearTimeout(_typingTimeout);
   _clearTyping();
   const reply = _replyTo;
@@ -1096,9 +1124,17 @@ chatSendBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
+chatInput.addEventListener('focus', () => {
+  setTimeout(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 300);
+});
+chatInput.addEventListener('blur', () => {
+  setTimeout(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 100);
+});
 chatInput.addEventListener('input', () => {
-  chatInput.style.height = 'auto';
-  chatInput.style.height = chatInput.scrollHeight + 'px';
   // Typing indicator
   if (activeConvId) {
     clearTimeout(_typingTimeout);
@@ -1139,7 +1175,7 @@ function _showTypingBubble(show) {
         </div>
       </div>`;
     chatMessages.appendChild(el);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
   }
 }
 
@@ -1193,14 +1229,18 @@ async function _triggerDmPush(convId, recipientId, body) {
 
     const senderName = currentUserData.name || 'Someone';
     const idToken = await user.getIdToken();
-    await fetch('https://sbd-upload-signer.sbdnetwork.workers.dev/notify-dm', {
+    await fetch('https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${idToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        fcmToken: token,
+        senderId: user.uid,
+        recipientId,
+        message: body,
+        recipientToken: token,
+        senderName,
         title:    `💬 ${senderName}`,
         body:     body.slice(0, 100),
         url:      `/dm.html`,
@@ -1566,11 +1606,9 @@ async function startConversation(otherUser) {
   openChat(docRef.id, otherUser.id, otherUser.name, otherUser.photoUrl);
 }
 
-// ── Back button default (inbox → dashboard) ──────────────────────
-document.getElementById('backBtn').addEventListener('click', () => {
-  if (activeConvId) return;
-  window.location.href = 'dashboard.html';
-});
+// ── Back buttons — both inbox back (global header) and chat back (chatHeader) ──
+document.getElementById('backBtn').addEventListener('click', handleBack);
+if (chatBackBtn) chatBackBtn.addEventListener('click', handleBack);
 
 // ── Helpers ───────────────────────────────────────────────────────
 function avatarHtml(name, photoUrl, cls) {
@@ -1584,10 +1622,12 @@ function avatarHtml(name, photoUrl, cls) {
 function timeAgo(ts) {
   if (!ts) return '';
   const d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts.seconds * 1000);
+  const now = new Date();
   const s = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (s < 60)    return 'just now';
-  if (s < 3600)  return Math.floor(s / 60) + 'm ago';
-  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  const sameDay = d.toDateString() === now.toDateString();
+  // Today → exact time like WhatsApp (e.g. "9:10 PM")
+  if (sameDay) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (s < 172800) return 'Yesterday';
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
@@ -1738,34 +1778,38 @@ async function _loadOlderMessagesGroup(convId) {
   }
 }
 
-// ── iOS / Android keyboard: keep input bar above keyboard ────────────
-// visualViewport shrinks when the soft keyboard opens. Adjust dm-main
-// bottom so the input bar is never hidden behind the keyboard.
-(function _initKeyboardAdjust() {
+// Keyboard fix: spacing-only — no position:fixed, no transform, no 100vh.
+// Adjusts paddingBottom on inputBar and messages when keyboard appears.
+function setupKeyboardFix() {
   if (!window.visualViewport) return;
-  const dmMain = document.querySelector('.dm-main');
-  if (!dmMain) return;
 
-  const adjust = () => {
-    const vv = window.visualViewport;
-    // keyboardH = pixels the soft keyboard occupies (0 when closed)
-    const keyboardH = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height));
-    if (keyboardH > 10) {
-      // Keyboard open: push dm-main up above the keyboard.
-      dmMain.style.bottom = keyboardH + 'px';
+  const inputBar = document.getElementById('chatInputBar');
+  const messages = chatMessages;
+  const vv = window.visualViewport;
+
+  function update() {
+    const keyboardHeight = window.innerHeight - vv.height;
+
+    if (keyboardHeight > 80) {
+      inputBar.style.paddingBottom = 'calc(' + keyboardHeight + 'px + env(safe-area-inset-bottom))';
+      messages.style.paddingBottom = (keyboardHeight + 20) + 'px';
     } else {
-      // Keyboard closed: remove the inline style — let CSS handle it.
-      // In-chat: CSS rule gives env(safe-area-inset-bottom, 0px).
-      // Inbox: CSS rule gives calc(60px + env(safe-area-inset-bottom)).
-      dmMain.style.bottom = '';
+      inputBar.style.paddingBottom = 'calc(10px + env(safe-area-inset-bottom))';
+      messages.style.paddingBottom = '10px';
     }
-    // Scroll chat to bottom so latest message stays visible
-    if (chatMessages && activeConvId) {
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-  };
 
-  window.visualViewport.addEventListener('resize', adjust);
-  window.visualViewport.addEventListener('scroll', adjust);
-}());
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  vv.addEventListener('resize', update);
+}
+
+setupKeyboardFix();
+
+// Prevent background scroll bleed-through when chat is open
+document.addEventListener('touchmove', (e) => {
+  if (!document.body.classList.contains('in-chat')) return;
+  if (e.target.closest('#messagesContainer')) return;
+  e.preventDefault();
+}, { passive: false });
 

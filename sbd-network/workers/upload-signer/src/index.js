@@ -231,49 +231,99 @@ export default {
     // ── POST /notify-dm ──────────────────────────────────────────
     // Sends a push notification directly to a single FCM token (DM recipient).
     if (pathname === '/notify-dm') {
-      const accessToken = await getAccessToken(env);
-      if (!accessToken) return respond({ error: 'Push not configured' }, 503);
+      let dmBody;
+      try {
+        dmBody = await request.json();
+      } catch (e) {
+        return respond({ error: 'Invalid JSON' }, 400);
+      }
 
-      const { fcmToken, title, body, url, convId } = await request.json().catch(() => ({}));
-      if (!fcmToken || !title) return respond({ error: 'Missing fcmToken or title' }, 400);
+      const {
+        senderId,
+        recipientId,
+        message,
+        fcmToken,
+        title,
+        body,
+        url,
+        convId,
+      } = dmBody || {};
 
-      const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`;
-      const msg = {
-        message: {
-          token: fcmToken,
-          notification: { title, body: body || '' },
-          data: {
-            title,
-            body:   body   || '',
-            url:    url    || '/dm.html',
-            convId: convId || '',
-          },
-          webpush: {
-            notification: {
-              icon:     'https://marriage-education.web.app/assets/icons/icon-192.png',
-              badge:    'https://marriage-education.web.app/assets/icons/icon-72.png',
-              tag:      `dm-${convId || 'msg'}`,
-              renotify: true,
-            },
-            fcm_options: {
-              link: `https://marriage-education.web.app${url || '/dm.html'}`,
-            },
-          },
-          android: { priority: 'high' },
-        },
-      };
+      if (!senderId || !recipientId || !message) {
+        return respond({ error: 'Missing senderId, recipientId, or message' }, 400);
+      }
 
       try {
-        const r    = await fetch(fcmEndpoint, {
-          method:  'POST',
-          headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body:    JSON.stringify(msg),
-        });
-        const data = await r.json().catch(() => ({}));
-        if (data.error) return respond({ ok: false, error: data.error }, 500);
-        return respond({ ok: true });
-      } catch (e) {
-        return respond({ ok: false, error: String(e) }, 500);
+        const accessToken = await getAccessToken(env);
+        if (!accessToken) {
+          console.error('DM PUSH ERROR:', 'Push not configured');
+          return respond({ success: true, pushSent: false, reason: 'push_not_configured' });
+        }
+
+        let token = fcmToken || null;
+        if (!token) {
+          const userRes = await fetch(
+            `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${recipientId}?mask.fieldPaths=fcmToken`,
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+          );
+          const userData = await userRes.json().catch(() => ({}));
+          token = userData.fields?.fcmToken?.stringValue || null;
+        }
+
+        if (!token) {
+          return respond({ success: true, pushSent: false, reason: 'missing_recipient_token' });
+        }
+
+        const pushTitle = title || '💬 New message';
+        const pushBody = (body || String(message)).slice(0, 100);
+        const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`;
+        const msg = {
+          message: {
+            token,
+            notification: { title: pushTitle, body: pushBody },
+            data: {
+              title: pushTitle,
+              body: pushBody,
+              url: url || '/dm.html',
+              convId: convId || '',
+              senderId: String(senderId),
+              recipientId: String(recipientId),
+              message: String(message).slice(0, 300),
+            },
+            webpush: {
+              notification: {
+                icon: 'https://marriage-education.web.app/assets/icons/icon-192.png',
+                badge: 'https://marriage-education.web.app/assets/icons/icon-72.png',
+                tag: `dm-${convId || 'msg'}`,
+                renotify: true,
+              },
+              fcm_options: {
+                link: `https://marriage-education.web.app${url || '/dm.html'}`,
+              },
+            },
+            android: { priority: 'high' },
+          },
+        };
+
+        try {
+          const r = await fetch(fcmEndpoint, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(msg),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (data.error) {
+            console.error('DM PUSH ERROR:', data.error);
+            return respond({ success: true, pushSent: false });
+          }
+          return respond({ success: true, pushSent: true });
+        } catch (error) {
+          console.error('DM PUSH ERROR:', error);
+          return respond({ success: true, pushSent: false });
+        }
+      } catch (error) {
+        console.error('DM PUSH ERROR:', error);
+        return respond({ success: true, pushSent: false });
       }
     }
 

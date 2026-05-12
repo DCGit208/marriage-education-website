@@ -1,0 +1,486 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: #000;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ========================================
+   ROOT TOKENS
+======================================== */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --transition-fast: 0.2s ease;
+  --transition-base: 0.3s ease;
+  --transition-slider: 0.55s ease;
+  --transition-slow: 0.5s ease;
+  --transition-smooth: 0.7s ease;
+  --transition-dramatic: 0.9s cubic-bezier(0.22,1,0.36,1);
+
+  --overlay-dark-soft:
+    linear-gradient(
+      rgba(0,0,0,0.42),
+      rgba(0,0,0,0.78)
+    );
+
+  --overlay-dark-heavy:
+    linear-gradient(
+      rgba(0,0,0,0.58),
+      rgba(0,0,0,0.88)
+    );
+}
+
+/* ========================================
+   GLOBAL HELPERS
+======================================== */
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transition-fast {
+  transition: all var(--transition-fast);
+}
+
+.transition-base {
+  transition: all var(--transition-base);
+}
+
+.transition-disabled {
+  transition: none !important;
+}
+
+.hidden-admin-section,
+.notif-hidden {
+  display: none !important;
+}
+
+/* ========================================
+   SLIDER CORE
+======================================== */
+
+.slider-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.slider-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  transition: transform var(--transition-slider);
+  transform: translate3d(0,0,0);
+}
+
+.slide-card {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ========================================
+   BACKGROUNDS
+======================================== */
+
+.slide-card .intro-bg,
+.slide-card .card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+.bg-cover-center {
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+.bg-dashboard-main {
+  background:
+    var(--overlay-dark-soft),
+    url('/assets/images/hands-chiaroscuro.png');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-dark-panel {
+  background:
+    linear-gradient(
+      180deg,
+      #0b0b0b,
+      #181818
+    );
+}
+
+.bg-dark-boards {
+  background:
+    linear-gradient(
+      180deg,
+      #0b0b0b,
+      #151515
+    );
+}
+
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      rgba(0,0,0,0.15),
+      rgba(0,0,0,0.62)
+    );
+}
+
+/* ========================================
+   CONTENT LAYER
+======================================== */
+
+.intro-content,
+.card-content {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 1100px;
+
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.card-content {
+  padding:
+    90px
+    24px
+    130px;
+
+  overflow-y: auto;
+}
+
+/* ========================================
+   INTRO SLIDES
+======================================== */
+
+.intro-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 0 24px;
+}
+
+.intro-text {
+  width: 100%;
+  max-width: 760px;
+
+  margin: 0 auto;
+
+  color: #fff;
+
+  font-size: clamp(32px, 5vw, 64px);
+  line-height: 1.12;
+  font-weight: 300;
+
+  overflow-wrap: break-word;
+}
+
+.word {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* ========================================
+   MEMBERSHIP
+======================================== */
+
+.membership-layout {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  padding-top: 70px;
+}
+
+.membership-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.membership-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 14px;
+
+  border-radius: 18px;
+
+  background: rgba(20,20,20,0.82);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+}
+
+.membership-premium-card {
+  border:
+    1px solid rgba(255,255,255,0.16);
+}
+
+.membership-elite-card {
+  border:
+    1px solid rgba(198,163,132,0.65);
+
+  background:
+    linear-gradient(
+      rgba(198,163,132,0.16),
+      rgba(0,0,0,0.58)
+    );
+}
+
+.membership-features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.membership-feature {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.9);
+}
+
+.membership-feature-nowrap {
+  white-space: normal;
+}
+
+.text-gold {
+  color: #E8D2B0;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+/* ========================================
+   VIDEO
+======================================== */
+
+.video-bg-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.video-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+}
+
+.video-overlay-dark {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-dark-heavy);
+}
+
+/* ========================================
+   PAGINATION
+======================================== */
+
+.slider-pagination {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-pagination .dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: rgba(255,255,255,0.28);
+
+  transition: all 0.25s ease;
+}
+
+.slider-pagination .dot.active {
+  width: 22px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+/* ========================================
+   WHAT'S NEW
+======================================== */
+
+.whats-new-modal {
+  display: none;
+}
+
+.whats-new-sheet {
+  background: #111;
+  color: #fff;
+}
+
+/* ========================================
+   ANIMATION STATES
+======================================== */
+
+.intro-word-hidden {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.intro-word-visible {
+  opacity: 1;
+  transform: translateY(0);
+
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.tier-card-hidden {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.tier-card-visible {
+  opacity: 1;
+  transform: translateY(0);
+
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.mv-item-hidden {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.mv-item-visible {
+  opacity: 1;
+  transform: translateY(0);
+
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+/* ========================================
+   MISC FIXES
+======================================== */
+
+.board-post-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.mv-img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+.ptr-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .slider-container,
+  .slide-card {
+    height: 100svh;
+  }
+
+  .card-content {
+    padding:
+      88px
+      18px
+      120px;
+  }
+
+  .intro-text {
+    font-size: clamp(28px, 8vw, 48px);
+    line-height: 1.15;
+  }
+
+  .membership-layout {
+    padding-top: 60px;
+  }
+
+  .membership-card {
+    padding: 12px;
+  }
+
+  .membership-feature {
+    font-size: 12.5px;
+  }
+
+  .slider-pagination {
+    bottom: 18px;
+  }
+
+}

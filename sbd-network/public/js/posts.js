@@ -4,6 +4,80 @@
 
 const _NOTIF_TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
+function computeBoardRank(board) {
+  const now = Date.now();
+  const lastActivity = board.lastActivityAt?.toMillis?.() || 0;
+  const hoursSince = (now - lastActivity) / (1000 * 60 * 60);
+
+  const engagement =
+    Math.log1p(board.postsCount || 0) * 3 +
+    Math.log1p(board.commentsCount || 0) * 2 +
+    Math.log1p(board.likesCount || 0);
+
+  const activityBoost = (board.activity24h || 0) * 4;
+  const userBoost = (board.activeUsers24h || 0) * 5;
+  const decay = hoursSince * 1.5;
+
+  return engagement + activityBoost + userBoost - decay;
+}
+
+function _normalizeBoardMetrics(board) {
+  return {
+    postsCount: board.postsCount ?? board.postCount ?? 0,
+    commentsCount: board.commentsCount ?? 0,
+    likesCount: board.likesCount ?? 0,
+    activity24h: board.activity24h ?? 0,
+    activeUsers24h: board.activeUsers24h ?? 0,
+    lastActivityAt: board.lastActivityAt || board.lastPostAt || board.createdAt || null,
+  };
+}
+
+async function _ensureBoardRankingFields(boardRef, boardData) {
+  const update = {};
+  if (boardData.postsCount === undefined) update.postsCount = boardData.postCount ?? 0;
+  if (boardData.commentsCount === undefined) update.commentsCount = 0;
+  if (boardData.likesCount === undefined) update.likesCount = 0;
+  if (boardData.activity24h === undefined) update.activity24h = 0;
+  if (boardData.activeUsers24h === undefined) update.activeUsers24h = 0;
+  if (boardData.lastActivityAt === undefined && (boardData.lastPostAt || boardData.createdAt)) {
+    update.lastActivityAt = boardData.lastPostAt || boardData.createdAt;
+  }
+  if (boardData.rankScore === undefined) update.rankScore = 0;
+  if (boardData.updatedAt === undefined) update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  if (Object.keys(update).length) {
+    await boardRef.update(update);
+  }
+}
+
+function _recomputeBoardRankNonBlocking(boardId) {
+  (async () => {
+    try {
+      const boardRef = db.collection('boards').doc(boardId);
+      const snap = await boardRef.get();
+      if (!snap.exists) return;
+
+      const data = snap.data() || {};
+      await _ensureBoardRankingFields(boardRef, data);
+
+      const merged = { ...data, ..._normalizeBoardMetrics(data) };
+      const rank = computeBoardRank(merged);
+      await boardRef.update({ rankScore: rank });
+    } catch (e) {
+      console.warn('[BoardRank] recompute skipped:', e);
+    }
+  })();
+}
+
+function _buildBoardActivityUpdate(previewText, at = null) {
+  const activityAt = at || firebase.firestore.FieldValue.serverTimestamp();
+  return {
+    lastActivityAt:  activityAt,
+    lastPostAt:      activityAt,
+    lastPostPreview: previewText || '📎 Media',
+  };
+}
+
 // Create a new post
 async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, boardName, thumbUrl, allVideos, allThumbs, groupId, linkPreview = null, allMedia = null, poll = null, scheduledAt = null) {
   const user = getCurrentUser();
@@ -49,9 +123,11 @@ async function createPost(boardId, content, imageUrl, videoUrl, allPhotos, board
 
     // Stamp board with last activity time so group page can sort by recency
     db.collection('boards').doc(boardId).update({
-      lastPostAt:      postData.timestamp,
-      lastPostPreview: content ? content.slice(0, 80) : '📎 Media',
-    }).catch(() => {});
+      ..._buildBoardActivityUpdate(content ? content.slice(0, 80) : '📎 Media', postData.timestamp),
+      postsCount: firebase.firestore.FieldValue.increment(1),
+      activity24h: firebase.firestore.FieldValue.increment(1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {}).finally(() => _recomputeBoardRankNonBlocking(boardId));
 
     console.log('Post created:', postRef.id);
 
@@ -180,10 +256,13 @@ async function addComment(postId, text, replyTo = null) {
 
     // Bump board's last activity so group page sorts by most recent comment too
     if (postDoc.exists && postDoc.data().boardId) {
-      db.collection('boards').doc(postDoc.data().boardId).update({
-        lastPostAt:      firebase.firestore.Timestamp.fromDate(new Date()),
-        lastPostPreview: `💬 ${commentData.authorName}: ${text.slice(0, 60)}`,
-      }).catch(() => {});
+      const activityBoardId = postDoc.data().boardId;
+      db.collection('boards').doc(activityBoardId).update({
+        ..._buildBoardActivityUpdate(`💬 ${commentData.authorName}: ${text.slice(0, 60)}`),
+        commentsCount: firebase.firestore.FieldValue.increment(1),
+        activity24h: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {}).finally(() => _recomputeBoardRankNonBlocking(activityBoardId));
     }
 
     // Notify all group members about the new comment (fire-and-forget)
@@ -557,6 +636,13 @@ async function reactToPost(postId, emoji, userId) {
       : firebase.firestore.FieldValue.arrayUnion(userId),
   });
 
+  if (postData.boardId) {
+    db.collection('boards').doc(postData.boardId).update({
+      likesCount: firebase.firestore.FieldValue.increment(already ? -1 : 1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {}).finally(() => _recomputeBoardRankNonBlocking(postData.boardId));
+  }
+
   // Notify post author when someone reacts (not on removal, not self-reaction)
   if (!already && postData.authorId && postData.authorId !== userId) {
     const reactorDoc = await db.collection('users').doc(userId).get();
@@ -589,15 +675,22 @@ async function reactToComment(commentId, emoji, userId) {
   });
 
   // Notify comment author when someone reacts (not on removal, not self-reaction)
+  let boardId = null;
+  if (commentData.postId) {
+    const pDoc = await db.collection('posts').doc(commentData.postId).get();
+    if (pDoc.exists) boardId = pDoc.data().boardId || null;
+  }
+
+  if (boardId) {
+    db.collection('boards').doc(boardId).update({
+      likesCount: firebase.firestore.FieldValue.increment(already ? -1 : 1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {}).finally(() => _recomputeBoardRankNonBlocking(boardId));
+  }
+
   if (!already && commentData.authorId && commentData.authorId !== userId) {
     const reactorDoc = await db.collection('users').doc(userId).get();
     const reactorName = reactorDoc.exists ? (reactorDoc.data().name || 'Someone') : 'Someone';
-    // Need boardId — fetch from the post
-    let boardId = null;
-    if (commentData.postId) {
-      const pDoc = await db.collection('posts').doc(commentData.postId).get();
-      if (pDoc.exists) boardId = pDoc.data().boardId || null;
-    }
     db.collection('notifications').add({
       userId:    commentData.authorId,
       type:      'new_reaction',
@@ -664,9 +757,11 @@ async function forwardPost(post, targetBoardIds, forwardMessage = '', selectedMe
       reactions:            {},
     }).then(() => {
       db.collection('boards').doc(targetBoardId).update({
-        lastPostAt:      now,
-        lastPostPreview: preview,
-      }).catch(() => {});
+        ..._buildBoardActivityUpdate(preview, now),
+        postsCount: firebase.firestore.FieldValue.increment(1),
+        activity24h: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {}).finally(() => _recomputeBoardRankNonBlocking(targetBoardId));
     })
   ));
 }

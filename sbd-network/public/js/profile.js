@@ -63,6 +63,9 @@ auth.onAuthStateChanged(async (user) => {
     // Load collections
     await loadMyCollections(user.uid);
 
+    // Load ambassador SBD earnings (non-blocking)
+    loadAmbassadorEarnings(user).catch(() => {});
+
   } catch (err) {
     console.error('Profile load error:', err);
   } finally {
@@ -436,3 +439,41 @@ auth.onAuthStateChanged((user) => {
     loadNotificationSettings(user.uid);
   }
 });
+
+// ── SBD Ambassador Earnings ───────────────────────────────────────
+async function loadAmbassadorEarnings(user) {
+  const section = document.getElementById('sbdEarningsSection');
+  if (!section) return;
+  try {
+    // Match by sbdUid first, fall back to email
+    let ambData = null;
+    const byUid = await db.collection('ambassadors').where('sbdUid', '==', user.uid).limit(1).get();
+    if (!byUid.empty) {
+      ambData = byUid.docs[0].data();
+    } else {
+      const byEmail = await db.collection('ambassadors').where('email', '==', (user.email || '').toLowerCase()).limit(1).get();
+      if (!byEmail.empty) ambData = byEmail.docs[0].data();
+    }
+    if (!ambData) return; // not an ambassador — keep section hidden
+
+    const refs = ambData.sbdReferrals || {};
+    section.style.display = '';
+    document.getElementById('sbdEarnSignups').textContent     = refs.signups     || 0;
+    document.getElementById('sbdEarnSubscribers').textContent = refs.subscribers || 0;
+    document.getElementById('sbdEarnPending').textContent     = ((refs.commissionPending || 0)).toLocaleString() + ' FCFA';
+    document.getElementById('sbdEarnTotal').textContent       = ((refs.commissionEarned  || 0)).toLocaleString() + ' FCFA';
+
+    const overridePending = refs.overrideCommissionPending || 0;
+    const overrideTotal   = refs.overrideCommissionEarned  || 0;
+    if (overridePending > 0 || overrideTotal > 0) {
+      document.getElementById('sbdEarnOverride').style.display         = '';
+      document.getElementById('sbdEarnOverridePending').textContent    = overridePending.toLocaleString() + ' FCFA';
+      document.getElementById('sbdEarnOverrideTotal').textContent      = overrideTotal.toLocaleString()   + ' FCFA';
+    }
+
+    const codeEl = document.getElementById('sbdEarnCode');
+    if (ambData.sbdReferralCode) codeEl.textContent = 'Referral code: ' + ambData.sbdReferralCode;
+  } catch (err) {
+    console.error('[Profile] Ambassador earnings load failed:', err);
+  }
+}

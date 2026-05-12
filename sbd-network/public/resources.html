@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>Resources | SBD Network</title>
@@ -9,7 +10,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=40">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
 
     <style>
         /* ——— RESOURCES PAGE — CINEMATIC DARK DESIGN SYSTEM ——— */
@@ -300,29 +301,35 @@
 
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
-        <a href="/learn" class="nav-item">
-            <div class="nav-icon">📖</div>
-            <div class="nav-label">Learn</div>
+        <a href="/learn" class="bn-tab">
+            <div class="bn-icon">📖</div>
+            <div class="bn-label">Learn</div>
         </a>
-        <a href="/boards" class="nav-item">
-            <div class="nav-icon">💬</div>
-            <div class="nav-label">Boards</div>
+        <a href="/boards" class="bn-tab">
+            <div class="bn-icon">💬</div>
+            <div class="bn-label">Boards</div>
         </a>
-        <a href="/resources" class="nav-item active">
-            <div class="nav-icon">🗂</div>
-            <div class="nav-label">Resources</div>
+        <a href="/resources" class="bn-tab active">
+            <div class="bn-icon">🗂</div>
+            <div class="bn-label">Resources</div>
         </a>
-        <a href="/shop" class="nav-item">
-            <div class="nav-icon">🛒</div>
-            <div class="nav-label">Shop</div>
+        <a href="/shop" class="bn-tab">
+            <div class="bn-icon">🛒</div>
+            <div class="bn-label">Shop</div>
         </a>
-        <a href="/profile" class="nav-item">
-            <div class="nav-icon">👤</div>
-            <div class="nav-label">Profile</div>
+        <a href="/profile" class="bn-tab">
+            <div class="bn-icon">👤</div>
+            <div class="bn-label">Profile</div>
         </a>
     </nav>
 
-    <script src="/js/firebase-config.js?v=75"></script>
+    <!-- Firebase SDK (compat) -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+
+    <script src="/js/firebase.js?v=1778611896316"></script>
 
 </body>
 </html>

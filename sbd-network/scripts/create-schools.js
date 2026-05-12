@@ -61,7 +61,7 @@ const schools = [
     name: 'Marriage Systems School',
     order: 3,
     description: 'Covenant governance, communication, and household management. Build a marriage that works structurally.',
-    unlockTier: 'premium',
+    unlockTier: 'elite',
     unlockRequirements: ['completed-course-sex-by-design'], // Must complete SBD
     totalCourses: 8,
     portfolioValue: 1900, // $297+$249+$349+$199+$179+$199+$149+$279
@@ -74,7 +74,7 @@ const schools = [
     name: 'Civilization Leadership School',
     order: 4,
     description: 'Marriage builds nations. Family systems architecture and generational stability for cultural impact.',
-    unlockTier: 'premium',
+    unlockTier: 'elite',
     unlockRequirements: ['completed-school-3'], // Must complete Marriage Systems
     totalCourses: 8,
     portfolioValue: 2450, // $299+$249+$279+$299+$249+$199+$697+$179

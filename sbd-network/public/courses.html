@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="My Learning - SBD Network">
     <meta name="theme-color" content="#000000">
@@ -11,7 +12,8 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
+    <link rel="stylesheet" href="/css/paywall.css?v=1778611896316">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
     <style>
@@ -196,31 +198,6 @@
             white-space: nowrap;
             letter-spacing: 0.03em;
         }
-
-        /* School grouping headers — shown when multiple schools are visible (Premium / Elite) */
-        .school-group {
-            margin-bottom: 8px;
-        }
-        .school-group-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted, #888);
-            padding: 14px 0 6px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            margin-top: 4px;
-        }
-        .school-group:first-child .school-group-header {
-            border-top: none;
-            padding-top: 4px;
-        }
-        .school-group-icon {
-            font-size: 1rem;
-        }
         
         .empty-state {
             text-align: center;
@@ -353,175 +330,6 @@
             flex-shrink: 0;
         }
         .week-row.current .week-row-arrow { color: var(--accent-primary, #00bcd4); }
-
-        /* ── Formation Roadmap — Elite ──────────────────────────── */
-        .formation-arc-banner {
-            background: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(0,188,212,0.05));
-            border: 1px solid rgba(255,193,7,0.2);
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin-bottom: 20px;
-        }
-        .formation-arc-title {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #ffc107;
-            margin: 0 0 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-        .formation-arc-sub {
-            font-size: 0.78rem;
-            color: var(--text-secondary, #aaa);
-            margin: 0 0 12px;
-        }
-        .formation-arc-schools {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .arc-school {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: var(--text-primary, #fff);
-            background: rgba(255,255,255,0.06);
-            padding: 3px 9px;
-            border-radius: 20px;
-        }
-        .arc-arrow { font-size: 0.65rem; color: #555; }
-
-        /* ── Featured Entry Card — SBD Dummies ──────────────────── */
-        .featured-entry-card {
-            background: linear-gradient(135deg, rgba(0,188,212,0.1), rgba(0,150,136,0.06));
-            border: 1px solid rgba(0,188,212,0.28);
-            border-radius: 16px;
-            padding: 18px 20px;
-            margin-bottom: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .featured-entry-card:hover {
-            border-color: rgba(0,188,212,0.55);
-            transform: translateY(-2px);
-        }
-        .fec-badge {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #00bcd4;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 8px;
-        }
-        .fec-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-primary, #fff);
-            margin: 0 0 5px;
-        }
-        .fec-sub {
-            font-size: 0.8rem;
-            color: var(--text-secondary, #aaa);
-            margin: 0 0 14px;
-        }
-        .fec-cta {
-            background: #00bcd4;
-            color: #000;
-            border: none;
-            font-weight: 700;
-            font-size: 0.88rem;
-            padding: 9px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .fec-progress {
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 5px;
-        }
-        .fec-progress-bar {
-            height: 100%;
-            background: #00bcd4;
-            border-radius: 2px;
-        }
-        .fec-progress-label { font-size: 0.73rem; color: #00bcd4; margin: 0; }
-
-        /* ── Roadmap School Sections ─────────────────────────────── */
-        .roadmap-school-section {
-            margin-bottom: 10px;
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 14px;
-            overflow: hidden;
-        }
-        .roadmap-school-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 13px 16px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.03);
-            transition: background 0.15s;
-            user-select: none;
-        }
-        .roadmap-school-header:active { background: rgba(255,255,255,0.07); }
-        .roadmap-school-icon { font-size: 1.15rem; }
-        .roadmap-school-name {
-            flex: 1;
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--text-primary, #fff);
-        }
-        .roadmap-school-count { font-size: 0.73rem; color: var(--text-muted, #888); }
-        .roadmap-school-chevron { font-size: 0.68rem; color: var(--text-muted, #888); }
-        .roadmap-school-courses { padding: 0 8px 8px; }
-        .roadmap-school-courses.collapsed { display: none; }
-
-        /* ── Featured Course Card (Course 1 / Start Here) ────────── */
-        .course-card--featured {
-            border-color: rgba(255,193,7,0.28);
-            background: rgba(255,193,7,0.03);
-        }
-        .course-card--featured:hover { border-color: rgba(255,193,7,0.55) !important; }
-        .start-here-badge {
-            display: inline-block;
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            background: rgba(255,193,7,0.14);
-            color: #ffc107;
-            padding: 2px 6px;
-            border-radius: 8px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-
-        /* ── Guided Path Intro Cards (Foundation / Premium) ─────── */
-        .path-intro-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 12px;
-            padding: 13px 15px;
-            margin-bottom: 16px;
-        }
-        .path-intro-icon { font-size: 1.5rem; flex-shrink: 0; }
-        .path-intro-text { flex: 1; }
-        .path-intro-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text-primary, #fff);
-            margin: 0 0 3px;
-        }
-        .path-intro-sub {
-            font-size: 0.77rem;
-            color: var(--text-secondary, #aaa);
-            margin: 0;
-        }
     </style>
 </head>
 <body data-page="learn" class="courses-page bottom-nav-page has-header">
@@ -615,13 +423,13 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
     
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=75"></script>
-    <script defer src="/js/tier-access.js?v=106"></script>
-    <script defer src="/js/formation-access.js?v=105"></script>
-    <script defer src="/js/sw-update-checker.js?v=98"></script>
-    <script defer src="/js/notifications.js?v=52"></script>
-    <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/courses.js?v=111"></script>
+    <script defer src="/js/firebase.js?v=1778611896316"></script>
+    <script defer src="/js/tier-access.js?v=1778611896316"></script>
+    <script defer src="/js/formation-access.js?v=1778611896316"></script>
+    <script defer src="/js/sw-update-checker.js?v=1778611896316"></script>
+    <script defer src="/js/notifications.js?v=1778611896316"></script>
+    <script defer src="/js/transitions.js?v=1778611896316"></script>
+    <script defer src="/js/courses.js?v=1778611896316"></script>
     
 
         <!-- HAMBURGER -->
@@ -644,6 +452,10 @@
           <div class="ham-section-label">Lifestyle</div>
           <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
           <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
         </div>
         <div class="ham-section">
           <div class="ham-section-label">Account</div>
@@ -680,7 +492,7 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/ham-nav.js?v=2"></script>
+    <script defer src="/js/ham-nav.js?v=1778611896316"></script>
 
 </body>
 </html>

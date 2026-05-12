@@ -3,16 +3,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Formation — SBD Network">
     <meta name="theme-color" content="#0D0D0D">
     <title>Formation - SBD Network</title>
 
+        <style>
+            /* Critical first-paint nav pinning: prevents top flash before CSS loads */
+            .bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 900;
+            }
+            .learn-page-v2 {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+        </style>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+        <link rel="preload" href="/css/bottom-nav.css?v=1778611896316" as="style">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/learn-v2.css?v=6">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1776738023427">
+    <link rel="stylesheet" href="/css/learn-v2.css?v=1778611896316">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778611896316">
 </head>
 <body data-page="learn" class="learn-page-v2 bottom-nav-page">
 
@@ -27,10 +43,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- App Scripts -->
-    <script src="/js/firebase.js?v=75"></script>
-    <script src="/js/upgrade-tracker.js?v=248"></script>
-    <script src="/js/tier-access.js?v=106"></script>
-    <script src="/js/learn-v2.js?v=12"></script>
+    <script src="/js/firebase.js?v=1778611896316"></script>
+    <script src="/js/upgrade-tracker.js?v=1778611896316"></script>
+    <script src="/js/tier-access.js?v=1778611896316"></script>
+    <script src="/js/learn-v2.js?v=1778611896316"></script>
 
 
         <!-- HAMBURGER -->
@@ -40,7 +56,7 @@
       <div class="menu-links">
         <div class="ham-section">
           <div class="ham-section-label">Formation</div>
-          <a id="hamLearnLink" href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
           <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
           <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
@@ -53,6 +69,10 @@
           <div class="ham-section-label">Lifestyle</div>
           <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
           <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
         </div>
         <div class="ham-section">
           <div class="ham-section-label">Account</div>
@@ -72,7 +92,7 @@
             <span class="bn-icon">⌂</span>
             <span class="bn-label">Home</span>
         </a>
-        <a id="learnNavTab" href="/learn.html" class="bn-tab active" data-tab="learn" aria-label="Learn">
+        <a href="/learn.html" class="bn-tab active" data-tab="learn" aria-label="Learn">
             <span class="bn-icon">◎</span>
             <span class="bn-label">Learn</span>
         </a>
@@ -89,19 +109,7 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/ham-nav.js?v=2"></script>
-    <script defer>
-      // Keep ?tier= param on all Learn links so tapping Learn while viewing a tier stays in place
-      (function() {
-        const tier = new URLSearchParams(location.search).get('tier');
-        if (!tier) return;
-        const encoded = encodeURIComponent(tier);
-        const tab = document.getElementById('learnNavTab');
-        if (tab) tab.href = '/learn?tier=' + encoded;
-        const ham = document.getElementById('hamLearnLink');
-        if (ham) ham.href = '/learn?tier=' + encoded;
-      })();
-    </script>
+    <script defer src="/js/ham-nav.js?v=1778611896316"></script>
 
 
 </body>

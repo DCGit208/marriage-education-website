@@ -74,6 +74,7 @@ tabBtns.forEach(btn => {
     if (tabName === 'users') loadUsers();
     if (tabName === 'content') loadContent();
     if (tabName === 'analytics') loadAnalytics();
+    if (tabName === 'sales') loadSbdSales();
   });
 });
 
@@ -388,7 +389,21 @@ document.getElementById('createBoardForm')?.addEventListener('submit', async (e)
   try {
     showLoading(true);
     const requiredTier = document.getElementById('boardRequiredTier').value || 'free';
-    const data = { groupId, title, description, requiredTier, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const data = {
+      groupId,
+      title,
+      description,
+      requiredTier,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastActivityAt: firebase.firestore.FieldValue.serverTimestamp(),
+      postsCount: 0,
+      commentsCount: 0,
+      likesCount: 0,
+      activity24h: 0,
+      activeUsers24h: 0,
+      rankScore: 0,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
     if (coverFile) {
       data.coverUrl = await uploadImage(coverFile, getCurrentUser()?.uid);
     }
@@ -441,7 +456,8 @@ async function loadUsers() {
 async function handleManageUser(userId) {
   currentManagingUserId = userId;
   const u = allUsers.find(x => x.id === userId);
-  if (!u) return;
+  if (!u) { console.error('handleManageUser: user not found in allUsers. userId=', userId, 'allUsers=', allUsers.map(x => x.id)); alert('User data not found. Try refreshing the page.'); return; }
+  try {
 
   document.getElementById('manageUserTitle').textContent = 'Manage User';
   document.getElementById('manageUserName').textContent = `${u.name || u.email} — ${u.email}`;
@@ -499,6 +515,10 @@ async function handleManageUser(userId) {
   });
 
   openModal(manageUserModal);
+  } catch (err) {
+    console.error('handleManageUser error:', err);
+    alert('Error opening manage panel: ' + err.message);
+  }
 }
 
 async function handleToggleRole(userId, newRole) {
@@ -881,4 +901,89 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-console.log('Admin module v49 loaded');
+// ================================================================
+// SBD SALES
+// ================================================================
+async function loadSbdSales() {
+  const summaryEl = document.getElementById('salesSummary');
+  const listEl    = document.getElementById('salesList');
+  if (!summaryEl || !listEl) return;
+  listEl.innerHTML = '<div class="loading-text">Loading SBD sales…</div>';
+  try {
+    const snap = await db.collection('sbd_sales').orderBy('createdAt', 'desc').limit(200).get();
+    if (snap.empty) {
+      summaryEl.innerHTML = '';
+      listEl.innerHTML = '<p class="empty-state">No SBD sales recorded yet.</p>';
+      return;
+    }
+
+    // Aggregate by ambassador
+    const byAmb = {};
+    let totalRevenue = 0, totalCommission = 0, totalOverride = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      const code = d.ambassadorCode || 'unknown';
+      if (!byAmb[code]) byAmb[code] = { name: d.ambassadorName || code, sales: 0, commissionEarned: 0, commissionPending: 0, tiers: {} };
+      byAmb[code].sales++;
+      byAmb[code].commissionEarned  += d.ambassadorCommission || 0;
+      byAmb[code].commissionPending += (d.status === 'pending') ? (d.ambassadorCommission || 0) : 0;
+      const tier = d.tier || 'foundation';
+      byAmb[code].tiers[tier] = (byAmb[code].tiers[tier] || 0) + 1;
+      totalRevenue    += d.revenueBaseFCFA || 0;
+      totalCommission += d.ambassadorCommission || 0;
+      totalOverride   += d.seniorAmbassadorCommission || 0;
+    });
+
+    // Summary cards
+    summaryEl.innerHTML = [
+      { label: 'Total Sales',             val: snap.size,                            color: 'var(--gold,#C6A96B)' },
+      { label: 'Revenue Base (FCFA)',      val: totalRevenue.toLocaleString(),        color: 'var(--gold,#C6A96B)' },
+      { label: 'Commission Due (FCFA)',    val: totalCommission.toLocaleString(),     color: '#4caf50' },
+      { label: 'Senior Override (FCFA)',   val: totalOverride.toLocaleString(),       color: '#C6A96B' },
+    ].map(c => `
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:${c.color};">${c.val}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted,#888);margin-top:2px;">${c.label}</div>
+      </div>`).join('');
+
+    // Per-ambassador table
+    const rows = Object.entries(byAmb).sort((a, b) => b[1].sales - a[1].sales);
+    listEl.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="text-align:left;border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-muted,#888);">
+            <th style="padding:8px 6px;">Ambassador</th>
+            <th style="padding:8px 6px;text-align:center;">Sales</th>
+            <th style="padding:8px 6px;text-align:center;">Tiers</th>
+            <th style="padding:8px 6px;text-align:right;">Earned (FCFA)</th>
+            <th style="padding:8px 6px;text-align:right;">Pending (FCFA)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(([code, a]) => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td style="padding:8px 6px;">
+                <div style="font-weight:600;color:var(--text-primary);">${escapeHtml(a.name)}</div>
+                <div style="font-size:11px;color:var(--text-muted,#888);">${escapeHtml(code)}</div>
+              </td>
+              <td style="padding:8px 6px;text-align:center;font-weight:700;color:var(--gold,#C6A96B);">${a.sales}</td>
+              <td style="padding:8px 6px;text-align:center;font-size:11px;color:var(--text-secondary);">${
+                Object.entries(a.tiers).map(([t, n]) => `${t}:${n}`).join(', ')
+              }</td>
+              <td style="padding:8px 6px;text-align:right;color:var(--text-primary);">${a.commissionEarned.toLocaleString()}</td>
+              <td style="padding:8px 6px;text-align:right;color:#4caf50;font-weight:600;">${a.commissionPending.toLocaleString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch (err) {
+    console.error('[Admin] loadSbdSales error:', err);
+    listEl.innerHTML = '<p class="empty-state" style="color:#f44;">Failed to load SBD sales.</p>';
+  }
+}
+
+if (document.getElementById('refreshSalesBtn')) {
+  document.getElementById('refreshSalesBtn').addEventListener('click', loadSbdSales);
+}
+
+console.log('Admin module v51 loaded');

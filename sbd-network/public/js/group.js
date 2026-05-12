@@ -118,10 +118,16 @@ async function loadBoards() {
     noBoardsMessage.style.display = 'none';
     // skeleton cards already pre-rendered in HTML — no loading text needed
 
-    // Query boards belonging to this group
-    const boardsSnapshot = await db.collection('boards')
-      .where('groupId', '==', groupId)
-      .get();
+    // One-time legacy migration: ensure boards in this group have activity and ranking fields
+    await backfillGroupBoardsLastActivity(groupId);
+
+    // Rank-first ordering with safe fallback to lastActivityAt
+    let boardsSnapshot;
+    try {
+      boardsSnapshot = await db.collection('boards').orderBy('rankScore', 'desc').get();
+    } catch (_) {
+      boardsSnapshot = await db.collection('boards').orderBy('lastActivityAt', 'desc').get();
+    }
     
     boardsContainer.innerHTML = '';
     
@@ -129,14 +135,10 @@ async function loadBoards() {
       noBoardsMessage.style.display = 'block';
       return;
     }
-    
-    // Sort by most recent post activity (Telegram-style)
-    const boards = boardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    boards.sort((a, b) => {
-      const ta = a.lastPostAt?.seconds || 0;
-      const tb = b.lastPostAt?.seconds || 0;
-      return tb - ta;
-    });
+
+    const boards = boardsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(board => board.groupId === groupId);
 
     // Render boards
     boards.forEach(board => {
@@ -160,8 +162,9 @@ function createBoardCard(boardId, board) {
     ? `<img class="board-cover-img" src="${escapeHtml(board.coverUrl)}" alt="${escapeHtml(board.title)}" loading="lazy">`
     : `<div class="board-cover-placeholder">${escapeHtml(board.title.charAt(0))}</div>`;
 
-  const lastActivity = board.lastPostAt
-    ? formatTimestamp(board.lastPostAt)
+  const lastActivityAt = board.lastActivityAt || board.lastPostAt || board.createdAt;
+  const lastActivity = lastActivityAt
+    ? formatTimestamp(lastActivityAt)
     : null;
   const preview = board.lastPostPreview
     ? escapeHtml(board.lastPostPreview)
@@ -182,6 +185,92 @@ function createBoardCard(boardId, board) {
   `;
 
   return card;
+}
+
+async function backfillGroupBoardsLastActivity(groupId) {
+  try {
+    const boardsSnap = await db.collection('boards').where('groupId', '==', groupId).get();
+    if (boardsSnap.empty) return;
+
+    const missing = boardsSnap.docs.filter(d => {
+      const data = d.data() || {};
+      return (
+        !data.lastActivityAt ||
+        data.postsCount === undefined ||
+        data.commentsCount === undefined ||
+        data.likesCount === undefined ||
+        data.activity24h === undefined ||
+        data.activeUsers24h === undefined ||
+        data.rankScore === undefined ||
+        !data.updatedAt
+      );
+    });
+    if (!missing.length) return;
+
+    const batch = db.batch();
+    for (const doc of missing) {
+      const boardId = doc.id;
+      const data = doc.data() || {};
+      let activityAt = data.lastPostAt || data.createdAt || null;
+
+      if (!activityAt) {
+        const latestPostSnap = await db.collection('posts')
+          .where('boardId', '==', boardId)
+          .orderBy('timestamp', 'desc')
+          .limit(1)
+          .get();
+        if (!latestPostSnap.empty) {
+          activityAt = latestPostSnap.docs[0].data().timestamp || null;
+        }
+      }
+
+      const merged = {
+        ...data,
+        postsCount: data.postsCount ?? data.postCount ?? 0,
+        commentsCount: data.commentsCount ?? 0,
+        likesCount: data.likesCount ?? 0,
+        activity24h: data.activity24h ?? 0,
+        activeUsers24h: data.activeUsers24h ?? 0,
+        lastActivityAt: activityAt || data.lastActivityAt || null,
+      };
+
+      const update = {};
+      if (!data.lastActivityAt && merged.lastActivityAt) update.lastActivityAt = merged.lastActivityAt;
+      if (data.postsCount === undefined) update.postsCount = merged.postsCount;
+      if (data.commentsCount === undefined) update.commentsCount = merged.commentsCount;
+      if (data.likesCount === undefined) update.likesCount = merged.likesCount;
+      if (data.activity24h === undefined) update.activity24h = merged.activity24h;
+      if (data.activeUsers24h === undefined) update.activeUsers24h = merged.activeUsers24h;
+      if (data.rankScore === undefined) update.rankScore = computeBoardRank(merged);
+      if (!data.updatedAt) update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+      if (Object.keys(update).length) {
+        batch.update(doc.ref, update);
+      }
+    }
+
+    await batch.commit();
+  } catch (err) {
+    console.warn('backfillGroupBoardsLastActivity skipped:', err);
+  }
+}
+
+function computeBoardRank(board) {
+  const now = Date.now();
+  const lastActivity = board.lastActivityAt?.toMillis?.() || 0;
+  const hoursSince = (now - lastActivity) / (1000 * 60 * 60);
+
+  const engagement =
+    Math.log1p(board.postsCount || 0) * 3 +
+    Math.log1p(board.commentsCount || 0) * 2 +
+    Math.log1p(board.likesCount || 0);
+
+  const activityBoost = (board.activity24h || 0) * 4;
+  const userBoost = (board.activeUsers24h || 0) * 5;
+
+  const decay = hoursSince * 1.5;
+
+  return engagement + activityBoost + userBoost - decay;
 }
 
 // Back button
@@ -265,7 +354,7 @@ async function loadRecentActivity() {
         window.location.href = `board.html?boardId=${encodeURIComponent(post.boardId)}`;
       });
       const timestamp = post.timestamp ? formatTimestamp(post.timestamp) : 'Just now';
-      const preview   = post.content
+      const preview = post.content
         ? post.content.substring(0, 100) + (post.content.length > 100 ? '…' : '')
         : (post.allVideos?.length ? '📹 Video' : post.imageUrl ? '🖼 Photo' : '');
       item.innerHTML = `
@@ -280,8 +369,9 @@ async function loadRecentActivity() {
     });
   } catch (err) {
     console.error('loadRecentActivity error:', err);
-    if (recentActivityContainer)
+    if (recentActivityContainer) {
       recentActivityContainer.innerHTML = '<div class="error-text">Could not load recent discussions.</div>';
+    }
   }
 }
 

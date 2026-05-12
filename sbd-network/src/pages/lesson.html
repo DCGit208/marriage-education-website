@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/lesson.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Lesson | SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+
+    <style>
+        :root {
+            --bg:       #0D0D0D;
+            --surface:  #151515;
+            --gold:     #C6A96B;
+            --gold-dim: rgba(198,169,107,0.15);
+            --text:     #EAE3D2;
+            --text-sec: #A8A29E;
+            --border:   rgba(255,255,255,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* ——— TOP BAR ——— */
+        .lesson-topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 76px 16px 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 10;
+        }
+        .lesson-back {
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .lesson-topbar-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sec);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ——— HERO ——— */
+        .lesson-hero {
+            padding: 36px 24px 28px;
+            border-bottom: 1px solid var(--border);
+        }
+        .lesson-meta {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+        .lesson-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.25;
+            margin-bottom: 10px;
+        }
+        .lesson-subtitle {
+            font-size: 15px;
+            color: var(--text-sec);
+            line-height: 1.5;
+        }
+
+        /* ——— CONTENT BODY ——— */
+        .lesson-body {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 32px 24px 48px;
+        }
+
+        /* Markdown rendering */
+        .lesson-body h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gold);
+            margin: 36px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .lesson-body h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 24px 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .lesson-body p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+        .lesson-body blockquote {
+            border-left: 3px solid var(--gold);
+            margin: 20px 0;
+            padding: 12px 20px;
+            background: var(--gold-dim);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: var(--text-sec);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .lesson-body blockquote strong {
+            color: var(--text);
+            font-style: normal;
+        }
+        .lesson-body ul, .lesson-body ol {
+            margin: 12px 0 20px 20px;
+        }
+        .lesson-body li {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .lesson-body strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+        .lesson-body em {
+            color: var(--text-sec);
+        }
+        .lesson-body hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 32px 0;
+        }
+
+        /* Key concept callout */
+        .key-concept {
+            background: var(--surface);
+            border: 1px solid rgba(198,169,107,0.3);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 20px 0;
+        }
+        .key-concept-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        /* ——— LOADING / ERROR ——— */
+        .lesson-loading {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-sec);
+            font-size: 15px;
+        }
+
+        /* ——— UPGRADE WALL ——— */
+        .lesson-upgrade-wall {
+            margin: 32px 24px;
+            background: var(--surface);
+            border: 1px solid rgba(198,169,107,0.3);
+            border-radius: 16px;
+            padding: 36px 28px;
+            text-align: center;
+        }
+        .lesson-upgrade-wall h3 {
+            font-size: 20px;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        .lesson-upgrade-wall p {
+            font-size: 14px;
+            color: var(--text-sec);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .btn-upgrade {
+            display: inline-block;
+            background: var(--gold);
+            color: #0D0D0D;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 13px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .btn-upgrade:hover { opacity: 0.88; }
+
+        /* ——— FREE LIMIT NOTICE ——— */
+        .free-limit-notice {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 32px 0;
+            color: var(--text-sec);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .free-limit-notice a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ——— PART BREADCRUMB ——— */
+        .part-breadcrumb {
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .part-breadcrumb-back {
+            font-size: 12px;
+            color: var(--text-sec);
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        .part-breadcrumb-back:hover { color: var(--gold); }
+        .part-breadcrumb-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--text-sec);
+        }
+
+        /* ——— PARTS INDEX ——— */
+        .parts-index {
+            padding-bottom: 32px;
+        }
+        .parts-index-intro {
+            font-size: 13px;
+            color: var(--text-sec);
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .parts-track-group {
+            margin-top: 24px;
+        }
+        .parts-track-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0;
+            display: block;
+        }
+        .part-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .part-row:hover:not(.part-row--locked) .part-row-title { color: var(--gold); }
+        .part-row--locked {
+            opacity: 0.38;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .part-status {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-sec);
+        }
+        .part-status--done {
+            background: rgba(198,169,107,0.18);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .part-status--available {
+            border-color: rgba(198,169,107,0.45);
+            color: var(--gold);
+        }
+        .part-info { flex: 1; min-width: 0; }
+        .part-row-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+            margin-bottom: 3px;
+            transition: color 0.2s;
+        }
+        .part-track-badge {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .part-track-badge--teleios {
+            background: rgba(198,169,107,0.12);
+            color: var(--gold);
+        }
+        .part-track-badge--advocacy {
+            background: rgba(100,160,255,0.1);
+            color: #7ab4ff;
+        }
+        .part-row-arrow {
+            color: var(--gold);
+            font-size: 14px;
+            opacity: 0.55;
+            flex-shrink: 0;
+        }
+        .part-row--done .part-row-arrow { opacity: 0.3; }
+
+        /* ——— COMPLETE BUTTON ——— */
+        .part-complete-section {
+            margin-top: 40px;
+            padding-top: 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .btn-complete {
+            background: var(--gold);
+            color: #0D0D0D;
+            border: none;
+            padding: 15px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.25s ease;
+        }
+        .btn-complete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(198,169,107,0.35);
+        }
+        .btn-complete:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-back-index {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-sec);
+            padding: 11px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-back-index:hover { border-color: var(--gold); color: var(--gold); }
+        .completion-done-note {
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* ——— LEGACY WEEK FOOTER (weeks 2-6, plain content) ——— */
+        .legacy-week-footer {
+            margin-top: 48px;
+            padding: 28px 0 40px;
+            border-top: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            text-align: center;
+        }
+
+        /* ——— WEEK DONE BANNER (parts index, all complete) ——— */
+        .week-done-banner {
+            margin: 0 0 20px;
+            background: linear-gradient(135deg, rgba(198,169,107,0.15) 0%, rgba(198,169,107,0.05) 100%);
+            border: 1px solid rgba(198,169,107,0.4);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .week-done-banner--locked {
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .week-done-banner-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+        .week-done-banner-sub {
+            font-size: 0.8rem;
+            color: var(--text-sec);
+            margin-bottom: 14px;
+        }
+        .week-done-next-btn {
+            display: inline-block;
+            background: var(--gold);
+            color: #000;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 10px 22px;
+            border-radius: 30px;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+        }
+        .week-done-next-btn--upgrade {
+            background: rgba(198,169,107,0.15);
+            color: var(--gold);
+            border: 1px solid rgba(198,169,107,0.5);
+        }
+
+        /* ——— WEEK COMPLETE ——— */
+        .week-complete-block {
+            text-align: center;
+            padding: 48px 24px 32px;
+        }
+        .week-complete-icon { font-size: 2.8rem; margin-bottom: 16px; }
+        .week-complete-block h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        .week-complete-block p {
+            font-size: 14px;
+            color: var(--text-sec);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .week-complete-links { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+        /* ——— NEXT WEEK LOCKED CARD ——— */
+        .next-week-locked {
+            margin: 8px 0 0;
+            background: var(--surface);
+            border: 1px solid rgba(198,169,107,0.35);
+            border-radius: 16px;
+            overflow: hidden;
+            text-align: left;
+        }
+        .next-week-locked-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .next-week-locked-eyebrow {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 6px;
+        }
+        .next-week-locked-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .next-week-locked-sub {
+            font-size: 13px;
+            color: var(--text-sec);
+            line-height: 1.5;
+        }
+        .next-week-parts-preview {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .next-week-part-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 13px;
+            color: var(--text-sec);
+        }
+        .next-week-part-item:last-child { border-bottom: none; }
+        .next-week-part-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+            color: var(--text-sec);
+        }
+        .next-week-cta-row {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .next-week-price-note {
+            font-size: 12px;
+            color: var(--text-sec);
+            text-align: center;
+        }
+        .next-week-price-note strong { color: var(--gold); }
+        .week-complete-discuss-link {
+            display: block;
+            text-align: center;
+            font-size: 13px;
+            color: var(--gold);
+            text-decoration: none;
+            margin-top: 18px;
+            opacity: 0.85;
+        }
+        .week-complete-discuss-link:hover { opacity: 1; text-decoration: underline; }
+    </style>
+</head>
+<body data-page="learn" class="bottom-nav-page">
+
+    <!-- TOP BAR -->
+    <div class="lesson-topbar">
+        <a href="/learn.html" class="lesson-back" id="lessonBackBtn">←</a>
+        <div class="lesson-topbar-title" id="topbarTitle">Loading…</div>
+    </div>
+
+    <!-- HERO -->
+    <div class="lesson-hero">
+        <div class="lesson-meta" id="lessonMeta">Teleios Blueprint · Week 1 · Free</div>
+        <h1 class="lesson-title" id="lessonTitle">Loading…</h1>
+        <p class="lesson-subtitle" id="lessonSubtitle"></p>
+    </div>
+
+    <!-- PART INDEX NAV (shown inside part view) -->
+    <div class="part-breadcrumb" id="partBreadcrumb" style="display:none"></div>
+
+    <!-- LESSON CONTENT -->
+    <div class="lesson-body" id="lessonBody">
+        <div class="lesson-loading">Loading lesson content…</div>
+    </div>
+
+    <!-- UPGRADE WALL (shown for locked parts) -->
+    <div class="lesson-upgrade-wall" id="upgradeWall" style="display:none">
+        <h3>Continue Your Formation</h3>
+        <p>You've seen the foundation. The full Teleios Blueprint — all 6 weeks — is available at Foundation tier.</p>
+        <a href="/payment?tier=foundation" class="btn-upgrade">Unlock Foundation — $9/mo →</a>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase.js?v=75"></script>
+    <script src="/js/upgrade-tracker.js?v=248"></script>
+
+    <script>
+        const params   = new URLSearchParams(location.search);
+        const moduleId = params.get('moduleId') || 'teleios-week-1';
+        const partId   = params.get('part'); // null = show parts index
+
+        const TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
+
+        let _lessonUser    = null;
+        let userTier       = 'free';
+        let currentMod     = null;
+        let completedParts = [];
+        let _uData         = null; // full user doc, set on auth
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/auth?next=' + encodeURIComponent(location.pathname + location.search);
+                return;
+            }
+            _lessonUser = user;
+
+            // ── Load user tier ──────────────────────────────────
+            let uData = null;
+            try {
+                const uDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                if (uDoc.exists) {
+                    uData   = uDoc.data();
+                    _uData  = uData;
+                    const sub    = uData.subscription || {};
+                    const now    = Date.now();
+                    const subEnd = sub.endDate?.toMillis ? sub.endDate.toMillis() : 0;
+                    const active = sub.status === 'active' && subEnd > now ? sub.tier : '';
+                    userTier = uData.role === 'admin' ? 'elite' : (active || 'free');
+                }
+            } catch (e) { console.error('tier load', e); }
+            // ── Load module ─────────────────────────────────────
+            try {
+                const mDoc = await firebase.firestore().collection('modules').doc(moduleId).get();
+                if (!mDoc.exists) { showError('Module not found.'); return; }
+                currentMod = mDoc.data();
+            } catch (e) { showError('Failed to load content. Please refresh.'); return; }
+
+            // ── Module-level tier check ──────────────────────────
+            const requiredTier = currentMod.requiredTier || currentMod.accessLevel || 'free';
+            if (TIER_ORDER[userTier] < TIER_ORDER[requiredTier]) {
+                showUpgradeWall(requiredTier, currentMod.title);
+                return;
+            }
+
+            // ── Drip gate check (v245) ───────────────────────────
+            // Elite & admin bypass drip entirely — instant access
+            if (userTier !== 'elite' && uData?.role !== 'admin') {
+                const sub        = uData?.subscription || {};
+                const dripStartMs = sub.dripStartDate?.toMillis ? sub.dripStartDate.toMillis() : null;
+                const weekNum     = currentMod.week || currentMod.weekNumber || null;
+
+                if (dripStartMs && weekNum && weekNum > 1) {
+                    const DRIP_MS      = 7 * 24 * 60 * 60 * 1000; // 7 days per week
+                    const weeksElapsed = Math.floor((Date.now() - dripStartMs) / DRIP_MS) + 1;
+
+                    if (weekNum > weeksElapsed) {
+                        const unlockMs    = dripStartMs + (weekNum - 1) * DRIP_MS;
+                        const unlockDate  = new Date(unlockMs);
+                        const daysLeft    = Math.ceil((unlockMs - Date.now()) / (24 * 60 * 60 * 1000));
+                        const unlockLabel = daysLeft <= 1
+                            ? 'Unlocks tomorrow'
+                            : daysLeft <= 7
+                                ? `Unlocks in ${daysLeft} days`
+                                : `Unlocks ${unlockDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
+                        showDripWall(weekNum, unlockLabel, unlockDate, currentMod.title);
+                        return;
+                    }
+                }
+            }
+
+            // ── Load progress ───────────────────────────────────
+            if (uData) {
+                const prog = uData.progress || {};
+                completedParts = (prog[moduleId] || {}).completedParts || [];
+            }
+
+            // ── Save current position (enables resume on next open) ──
+            if (_lessonUser && currentMod.courseId) {
+                firebase.firestore().collection('users').doc(_lessonUser.uid).update({
+                    'progress.currentModuleId': moduleId,
+                    'progress.currentCourseId': currentMod.courseId,
+                }).catch(e => console.warn('[lesson] save position:', e));
+            }
+
+            // ── Route ───────────────────────────────────────────
+            const hasParts = Array.isArray(currentMod.parts) && currentMod.parts.length > 0;
+            if (hasParts) {
+                partId ? renderPart(partId) : renderPartsIndex();
+            } else {
+                renderLegacyContent();
+            }
+        });
+
+        // ── PARTS INDEX ─────────────────────────────────────────
+        async function renderPartsIndex() {
+            const parts   = currentMod.parts;
+            const weekNum = currentMod.week || 1;
+            const allDone = parts.length > 0 && parts.every(p => completedParts.includes(p.id));
+
+            document.getElementById('lessonBackBtn').href      = '/courses.html';
+            document.getElementById('topbarTitle').textContent = currentMod.title || 'Lesson';
+            document.getElementById('lessonMeta').textContent  = allDone
+                ? 'Week ' + weekNum + ' of 6 · Complete ✓'
+                : 'Week ' + weekNum + ' of 6 · ' + parts.length + ' parts';
+            document.getElementById('lessonTitle').textContent    = currentMod.title || 'Week ' + weekNum;
+            document.getElementById('lessonSubtitle').textContent = allDone
+                ? 'All parts complete. Ready for the next week.'
+                : 'Complete each part in sequence to finish this week.';
+
+            const teleiosParts  = parts.filter(p => p.track === 'teleios');
+            const advocacyParts = parts.filter(p => p.track === 'advocacy');
+
+            function partRow(p) {
+                const idx         = parts.findIndex(x => x.id === p.id);
+                const prev        = parts[idx - 1];
+                const isDone      = completedParts.includes(p.id);
+                const isAvailable = idx === 0 || completedParts.includes(prev.id);
+                const isLocked    = !isDone && !isAvailable;
+
+                const badgeClass  = p.track === 'teleios' ? 'part-track-badge--teleios' : 'part-track-badge--advocacy';
+                const badgeLabel  = p.track === 'teleios' ? '📚 Teleios' : '🎯 Advocacy';
+
+                let statusHtml;
+                if (isDone)           statusHtml = `<div class="part-status part-status--done">✓</div>`;
+                else if (isAvailable) statusHtml = `<div class="part-status part-status--available">${p.order}</div>`;
+                else                  statusHtml = `<div class="part-status">🔒</div>`;
+
+                const href = `/lesson.html?moduleId=${moduleId}&part=${p.id}`;
+                return `
+                    <a class="part-row${isDone ? ' part-row--done' : ''}${isLocked ? ' part-row--locked' : ''}"
+                       href="${isLocked ? '#' : escHtml(href)}">
+                        ${statusHtml}
+                        <div class="part-info">
+                            <div class="part-row-title">${escHtml(p.title)}</div>
+                            <span class="part-track-badge ${badgeClass}">${badgeLabel}</span>
+                        </div>
+                        ${!isLocked ? '<span class="part-row-arrow">→</span>' : ''}
+                    </a>`;
+            }
+
+            // Build next-week banner when all parts are done
+            let completionBannerHtml = '';
+            if (allDone && currentMod.courseId) {
+                try {
+                    if (weekNum >= 6) {
+                        completionBannerHtml = `
+                        <div class="week-done-banner">
+                            <div class="week-done-banner-title">🏆 Week ${weekNum} Complete — All 6 Weeks Done!</div>
+                            <a href="/courses.html" class="week-done-next-btn">Explore More Courses →</a>
+                        </div>`;
+                    } else {
+                        const snap = await firebase.firestore().collection('modules')
+                            .where('courseId', '==', currentMod.courseId)
+                            .where('week', '==', weekNum + 1)
+                            .limit(1).get();
+                        if (!snap.empty) {
+                            const nextId   = snap.docs[0].id;
+                            const nextData = snap.docs[0].data();
+                            const nextTitle  = nextData.title || 'Week ' + (weekNum + 1);
+                            const reqTier    = nextData.requiredTier || nextData.accessLevel || 'free';
+                            const canNext    = (TIER_ORDER[userTier] ?? 0) >= (TIER_ORDER[reqTier] ?? 0);
+                            completionBannerHtml = canNext ? `
+                            <div class="week-done-banner">
+                                <div class="week-done-banner-title">🏆 Week ${weekNum} Complete!</div>
+                                <div class="week-done-banner-sub">Up next: ${escHtml(nextTitle)}</div>
+                                <a href="/lesson.html?moduleId=${nextId}" class="week-done-next-btn">Start Week ${weekNum + 1} →</a>
+                            </div>` : `
+                            <div class="week-done-banner week-done-banner--locked">
+                                <div class="week-done-banner-title">🏆 Week ${weekNum} Complete!</div>
+                                <div class="week-done-banner-sub">Week ${weekNum + 1} requires ${nextData.requiredTier || 'Foundation'} access.</div>
+                                <a href="/payment?tier=${reqTier}" class="week-done-next-btn week-done-next-btn--upgrade">Unlock Week ${weekNum + 1} →</a>
+                            </div>`;
+                        }
+                    }
+                } catch (e) { console.warn('[lesson] completion banner:', e); }
+            }
+
+            document.getElementById('lessonBody').innerHTML =
+                completionBannerHtml + `
+                <div class="parts-index">
+                    <p class="parts-index-intro">This week has two tracks. Complete each part in sequence — finish a part to unlock the next.</p>
+                    <div class="parts-track-group">
+                        <span class="parts-track-label">📚 Teleios Track — Personal Formation</span>
+                        ${teleiosParts.map(p => partRow(p)).join('')}
+                    </div>
+                    <div class="parts-track-group">
+                        <span class="parts-track-label">🎯 Advocacy Track — Deployment Training</span>
+                        ${advocacyParts.map(p => partRow(p)).join('')}
+                    </div>
+                </div>`;
+        }
+
+        // ── SINGLE PART VIEW ────────────────────────────────────
+        function renderPart(pid) {
+            const parts   = currentMod.parts;
+            const idx     = parts.findIndex(p => p.id === pid);
+            if (idx === -1) { showError('Part not found.'); return; }
+
+            const part    = parts[idx];
+            const prev    = parts[idx - 1];
+            const isAvail = idx === 0 || completedParts.includes(prev.id);
+
+            // Guard: direct URL access to locked part
+            if (!isAvail) {
+                document.getElementById('lessonBackBtn').href = `/lesson.html?moduleId=${moduleId}`;
+                document.getElementById('topbarTitle').textContent = 'Locked';
+                document.getElementById('lessonTitle').textContent = '🔒 ' + escHtml(part.title);
+                document.getElementById('lessonBody').innerHTML = `
+                    <div style="text-align:center;padding:3rem 1.5rem">
+                        <p style="font-size:1.5rem;margin-bottom:1rem">🔒</p>
+                        <p style="color:var(--text-sec);font-size:14px">Complete &ldquo;${escHtml(prev.title)}&rdquo; first to unlock this part.</p>
+                        <br>
+                        <button class="btn-back-index" onclick="history.back()">← Back</button>
+                    </div>`;
+                return;
+            }
+
+            const isDone   = completedParts.includes(pid);
+            const isLast   = idx === parts.length - 1;
+            const nextPart = !isLast ? parts[idx + 1] : null;
+            const track    = part.track === 'teleios' ? '📚 Teleios Track' : '🎯 Advocacy Track';
+
+            // Hero
+            document.getElementById('lessonBackBtn').href = `/lesson.html?moduleId=${moduleId}`;
+            document.getElementById('topbarTitle').textContent = currentMod.title || 'Lesson';
+            document.getElementById('lessonMeta').textContent  =
+                'Week ' + (currentMod.week || 1) + ' · Part ' + part.order + ' of ' + parts.length;
+            document.getElementById('lessonTitle').textContent    = part.title;
+            document.getElementById('lessonSubtitle').textContent = track;
+
+            // Breadcrumb
+            const bc = document.getElementById('partBreadcrumb');
+            bc.style.display = 'flex';
+            bc.innerHTML = `
+                <a class="part-breadcrumb-back" href="/lesson.html?moduleId=${moduleId}">← All parts</a>
+                <span class="part-breadcrumb-label">Part ${part.order} / ${parts.length}</span>
+                <span style="width:60px"></span>`;
+
+            // Content
+            const body = document.getElementById('lessonBody');
+            body.innerHTML = renderMarkdown(part.content || '');
+
+            // Completion footer
+            const footer = document.createElement('div');
+            footer.className = 'part-complete-section';
+
+            const weekNum = currentMod.week || 1;
+            if (isDone) {
+                footer.innerHTML = `
+                    <p class="completion-done-note">✅ Part complete</p>
+                    ${nextPart
+                        ? `<button class="btn-complete" onclick="nav('${nextPart.id}')">Next: ${escHtml(nextPart.title)} →</button>`
+                        : `<button class="btn-complete" onclick="showWeekComplete()">Week ${weekNum} Complete — What's Next? →</button>`
+                    }
+                    <button class="btn-back-index" onclick="nav(null)">← Back to all parts</button>`;
+            } else {
+                const btnLabel = isLast ? `✅ Complete Week ${weekNum}` : 'Mark Complete &amp; Continue →';
+                footer.innerHTML = `
+                    <button class="btn-complete" id="markBtn" onclick="markComplete('${pid}')">${btnLabel}</button>
+                    <button class="btn-back-index" onclick="nav(null)">← Back to all parts</button>`;
+            }
+            body.appendChild(footer);
+        }
+
+        // ── MARK COMPLETE ───────────────────────────────────────
+        async function markComplete(pid) {
+            const btn = document.getElementById('markBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+            const parts   = currentMod.parts;
+            const idx     = parts.findIndex(p => p.id === pid);
+            const isLast  = idx === parts.length - 1;
+            const isFirst = completedParts.length === 0;
+
+            const update = {
+                [`progress.${moduleId}.completedParts`]: firebase.firestore.FieldValue.arrayUnion(pid),
+                [`progress.${moduleId}.updatedAt`]:      firebase.firestore.FieldValue.serverTimestamp(),
+            };
+            if (isFirst)  update[`progress.${moduleId}.startedAt`]   = firebase.firestore.FieldValue.serverTimestamp();
+            if (isLast) {
+                update[`progress.${moduleId}.completedAt`]  = firebase.firestore.FieldValue.serverTimestamp();
+                update['progress.completedModules']          = firebase.firestore.FieldValue.arrayUnion(moduleId);
+            }
+
+            try {
+                await firebase.firestore().collection('users').doc(_lessonUser.uid).update(update);
+                completedParts = [...completedParts, pid];
+            } catch (e) {
+                console.error('markComplete:', e);
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Mark Complete &amp; Continue →'; }
+                return;
+            }
+
+            if (isLast) {
+                showWeekComplete();
+            } else {
+                window.location.href = `/lesson.html?moduleId=${moduleId}&part=${parts[idx + 1].id}`;
+            }
+        }
+
+        function nav(pid) {
+            window.location.href = pid
+                ? `/lesson.html?moduleId=${moduleId}&part=${pid}`
+                : `/lesson.html?moduleId=${moduleId}`;
+        }
+
+        // ── WEEK COMPLETE ───────────────────────────────────────
+        async function showWeekComplete() {
+            const weekNum  = currentMod.week || 1;
+            const courseId = currentMod.courseId || null;
+            const totalModules = currentMod.totalModules || 6;
+
+            document.getElementById('partBreadcrumb').style.display = 'none';
+            document.getElementById('lessonMeta').textContent     = `Week ${weekNum} of ${totalModules} · Complete`;
+            document.getElementById('lessonTitle').textContent    = `Week ${weekNum} Complete!`;
+
+            let nextWeekBlock  = '';
+            let nextModuleId   = null;
+            let isCourseEnd    = false;
+
+            // ── Look for next week module within this course ──────────────
+            if (courseId) {
+                try {
+                    const snap = await firebase.firestore().collection('modules')
+                        .where('courseId', '==', courseId)
+                        .where('week', '==', weekNum + 1)
+                        .limit(1)
+                        .get();
+                    if (!snap.empty) {
+                        nextModuleId = snap.docs[0].id;
+                        const nextMod      = snap.docs[0].data();
+                        const nextTitle    = nextMod.title || `Week ${weekNum + 1}`;
+                        const nextRequired = nextMod.requiredTier || nextMod.accessLevel || 'free';
+                        const canNext      = TIER_ORDER[userTier] >= TIER_ORDER[nextRequired];
+
+                        if (canNext) {
+                            nextWeekBlock = `
+                <div class="week-complete-links">
+                    <a href="/lesson.html?moduleId=${nextModuleId}" class="btn-upgrade">Start Week ${weekNum + 1} →</a>
+                </div>`;
+                        } else {
+                            nextWeekBlock = `
+                <div class="next-week-locked">
+                    <div class="next-week-locked-header">
+                        <div class="next-week-locked-eyebrow">🔒 Week ${weekNum + 1} · ${capitalize(nextRequired)} Required</div>
+                        <div class="next-week-locked-title">${escHtml(nextTitle)}</div>
+                    </div>
+                    <div class="next-week-cta-row">
+                        <a href="/payment?tier=${nextRequired}" class="btn-upgrade">Unlock ${capitalize(nextRequired)} — Continue Week ${weekNum + 1} →</a>
+                        <p class="next-week-price-note">${capitalize(nextRequired)} tier · Cancel anytime</p>
+                    </div>
+                </div>`;
+                        }
+                    } else {
+                        isCourseEnd = true;
+                    }
+                } catch (e) { console.warn('[lesson] next week lookup:', e); }
+            }
+
+            // ── Course complete: write completion + unlock next School 1 course ──
+            if (isCourseEnd && _lessonUser && courseId) {
+                try {
+                    const SCHOOL_1 = [
+                        'course-1-the-teleios-blueprint-full-human-maturity',
+                        'course-2-the-anthropology-of-wholeness-becoming-fully-human',
+                        'course-3-identity-mastery-understanding-image-likeness-human-design',
+                        'course-4-the-four-faculties-training',
+                        'course-5-anthropocentric-development-how-humans-grow',
+                        'course-6-the-personal-development-masterclass',
+                        'course-7-the-science-of-self-command',
+                        'course-8-the-heart-of-relationship-level-1',
+                        'course-9-relationship-relatednesses-level-2',
+                        'course-10-relationship-mastery-intensive-level-3',
+                        'course-11-the-perfect-self-program-practicing-from-perfection',
+                        'course-12-emotional-literacy-for-couples-singles',
+                        'course-13-temperament-intelligence-for-marriage',
+                    ];
+                    const idx      = SCHOOL_1.indexOf(courseId);
+                    const nextCourseId = idx >= 0 && idx < SCHOOL_1.length - 1 ? SCHOOL_1[idx + 1] : null;
+
+                    const completionUpdate = {
+                        'progress.completedCourses': firebase.firestore.FieldValue.arrayUnion(courseId),
+                        [`progress.${courseId}.completedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
+                    };
+                    // Only Foundation users need the explicit unlock written;
+                    // Premium/Elite have full access already.
+                    const TIER_ORD = { free: 0, foundation: 1, premium: 2, elite: 3 };
+                    if (nextCourseId && (TIER_ORD[userTier] ?? 0) < (TIER_ORD['premium'] ?? 0)) {
+                        completionUpdate['progress.unlockedCourses'] =
+                            firebase.firestore.FieldValue.arrayUnion(nextCourseId);
+                    }
+                    await firebase.firestore().collection('users').doc(_lessonUser.uid).update(completionUpdate);
+                    console.log('[lesson] Course complete. Unlocked:', nextCourseId || 'n/a (end of school)');
+
+                    // Show next course CTA if unlocked
+                    if (nextCourseId) {
+                        const nextCourseSnap = await firebase.firestore().collection('courses').doc(nextCourseId).get();
+                        const nextCourseTitle = nextCourseSnap.exists ? nextCourseSnap.data().title : 'Next Course';
+                        nextWeekBlock = `
+                <div class="week-complete-links course-unlocked-banner">
+                    <div style="font-size:13px;color:var(--gold,#c6a96b);margin-bottom:8px">🎓 Course Complete — Next course unlocked!</div>
+                    <a href="/courses.html" class="btn-upgrade">Start ${escHtml(nextCourseTitle)} →</a>
+                </div>`;
+                    } else {
+                        nextWeekBlock = `
+                <div class="week-complete-links">
+                    <a href="/courses.html" class="btn-upgrade">View All Courses →</a>
+                </div>`;
+                    }
+                } catch (e) { console.warn('[lesson] course completion write:', e); }
+            }
+
+            document.getElementById('lessonSubtitle').textContent = isCourseEnd
+                ? 'Course complete. Well done.'
+                : `Formation continues in Week ${weekNum + 1}.`;
+
+            const discussBlock = `<a href="/board.html?id=board-teleios-weekly" class="week-complete-discuss-link">💬 Share your Week ${weekNum} reflection in Teleios Formation Circle →</a>`;
+
+            document.getElementById('lessonBody').innerHTML = `
+                <div class="week-complete-block">
+                    <div class="week-complete-icon">🏆</div>
+                    <h2>Week ${weekNum} Complete!</h2>
+                    <p>${isCourseEnd
+                        ? `You've finished all ${totalModules} weeks. Your course is done.`
+                        : `You've finished both tracks for Week ${weekNum}. Your formation path continues.`}</p>
+                    ${nextWeekBlock}
+                    ${discussBlock}
+                    <a href="/learn.html" style="display:block;font-size:13px;color:var(--text-sec);text-decoration:none;margin-top:20px;text-align:center">← Back to Formation Hub</a>
+                </div>`;
+
+            // Advance saved position to next week's module (within course only)
+            if (_lessonUser && nextModuleId) {
+                firebase.firestore().collection('users').doc(_lessonUser.uid).update({
+                    'progress.currentModuleId': nextModuleId,
+                }).catch(e => console.warn('[lesson] advance position:', e));
+            }
+        }
+
+        // ── LEGACY (plain-content weeks: 2-6) ─────────────────────
+        async function renderLegacyContent() {
+            const mod      = currentMod;
+            const weekNum  = mod.week || 1;
+            const completedMods = (_uData?.progress?.completedModules) || [];
+            const isDone   = completedMods.includes(moduleId);
+
+            document.getElementById('lessonBackBtn').href         = '/courses.html';
+            document.getElementById('topbarTitle').textContent    = 'Week ' + weekNum + ' of 6';
+            document.getElementById('lessonMeta').textContent     = mod.title || 'Lesson';
+            document.getElementById('lessonTitle').textContent    = mod.title || 'Lesson';
+            document.getElementById('lessonSubtitle').textContent = '';
+
+            const contentHtml = renderMarkdown(mod.content || '_Content coming soon._');
+
+            const footerHtml = isDone
+                ? `<div class="legacy-week-footer">
+                       <p class="completion-done-note">✅ Week ${weekNum} complete</p>
+                       <button class="btn-complete" onclick="showWeekComplete()">What's Next? →</button>
+                       <a href="/courses.html" class="btn-back-index">← Back to course</a>
+                   </div>`
+                : `<div class="legacy-week-footer">
+                       <button class="btn-complete" id="markWeekBtn" onclick="markWeekComplete()">✅ Complete Week ${weekNum} &amp; Continue →</button>
+                       <a href="/courses.html" class="btn-back-index">← Back to course</a>
+                   </div>`;
+
+            document.getElementById('lessonBody').innerHTML = contentHtml + footerHtml;
+        }
+
+        async function markWeekComplete() {
+            const btn = document.getElementById('markWeekBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+            try {
+                await firebase.firestore().collection('users').doc(_lessonUser.uid).update({
+                    'progress.completedModules': firebase.firestore.FieldValue.arrayUnion(moduleId),
+                    [`progress.${moduleId}.completedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            } catch (e) {
+                console.error('markWeekComplete:', e);
+                if (btn) { btn.disabled = false; btn.textContent = `✅ Complete Week ${currentMod.week || ''} & Continue →`; }
+                return;
+            }
+
+            showWeekComplete();
+        }
+
+        // ── DRIP WALL (time-locked, subscriber is current) ──────
+        function showDripWall(weekNum, unlockLabel, unlockDate, courseTitle) {
+            document.getElementById('partBreadcrumb').style.display = 'none';
+            document.getElementById('lessonMeta').textContent  = 'Drip-Locked — Active Subscriber';
+            document.getElementById('lessonTitle').textContent = `⏳ Week ${weekNum} — Not Yet`;
+            document.getElementById('lessonSubtitle').textContent = courseTitle || '';
+            document.getElementById('upgradeWall').style.display = 'none';
+
+            // Format date for display
+            const dateStr = unlockDate
+                ? unlockDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                : '';
+
+            document.getElementById('lessonBody').innerHTML = `
+                <div class="lesson-upgrade-wall" style="display:block">
+                    <div style="font-size:2.5rem;margin-bottom:16px">⏳</div>
+                    <h3 style="margin-bottom:12px">Week ${weekNum} — ${unlockLabel}</h3>
+                    <p style="margin-bottom: 8px">Your formation is on schedule. Each week drips to give you time to live the content — not just read it.</p>
+                    ${dateStr ? `<p style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:20px">📅 ${dateStr}</p>` : ''}
+                    <p style="font-size:13px;color:var(--text-sec);line-height:1.7;margin-bottom:24px">
+                        Use this time to re-read the previous week, apply the principles, and share your reflection in the community boards.
+                    </p>
+                    <a href="/boards.html" class="btn-upgrade" style="display:inline-block;margin-bottom:12px">💬 Visit Community Boards →</a><br>
+                    <a href="/learn.html" style="font-size:13px;color:var(--text-sec);text-decoration:none">← Back to Formation Hub</a>
+                </div>`;
+        }
+
+        // ── UPGRADE WALL ────────────────────────────────────────
+        function showUpgradeWall(tier, title) {
+            document.getElementById('lessonBody').innerHTML = '';
+            document.getElementById('upgradeWall').style.display = 'block';
+            document.getElementById('upgradeWall').querySelector('p').textContent =
+                `This content requires ${capitalize(tier)} tier. Unlock it to access this week and all future weeks.`;
+            document.getElementById('upgradeWall').querySelector('a').href = '/payment?tier=' + tier;
+            document.getElementById('topbarTitle').textContent = 'Locked';
+            document.getElementById('lessonTitle').textContent = '🔒 ' + (title || 'Locked');
+            // Track lock hit for upgrade nudge system (v248)
+            if (window.UpgradeTracker) window.UpgradeTracker.trackLockHit(tier, 'lesson');
+        }
+
+        function showError(msg) {
+            document.getElementById('lessonBody').innerHTML =
+                `<p style="color:var(--text-sec);padding:1.5rem;text-align:center">${escHtml(msg)}</p>`;
+        }
+
+        // ── MARKDOWN RENDERER ───────────────────────────────────
+        function renderMarkdown(md) {
+            // Strip inline "Next: Week N..." navigation text — the UI footer handles navigation
+            md = md.replace(/^\*{0,2}Next:\*{0,2}[^\n]*→[^\n]*/gm, '').trim();
+            return md
+                .replace(/^---$/gm, '<hr>')
+                .replace(/^> (.+)$/gm, (_, t) => `<blockquote>${inlineFormat(t)}</blockquote>`)
+                .replace(/^## (.+)$/gm, (_, t) => `<h2>${t}</h2>`)
+                .replace(/^### (.+)$/gm, (_, t) => `<h3>${t}</h3>`)
+                .replace(/^# (.+)$/gm,  (_, t) => `<h2>${t}</h2>`)
+                .replace(/^- (.+)$/gm,  (_, t) => `<li>${inlineFormat(t)}</li>`)
+                .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+                .replace(/^(?!<[a-z])(.+)$/gm, (_, t) => t.trim() ? `<p>${inlineFormat(t)}</p>` : '')
+                .replace(/\n{3,}/g, '\n\n');
+        }
+        function inlineFormat(t) {
+            return t
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+                .replace(/`(.+?)`/g,       '<code>$1</code>');
+        }
+        function escHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+    </script>
+
+
+    <!-- NAV_INJECT -->
+
+</body>
+</html>

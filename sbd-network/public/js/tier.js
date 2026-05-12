@@ -31,7 +31,11 @@ async function loadUserData() {
     
     if (userDoc.exists) {
       const userData = userDoc.data();
-      userTier = userData.tier || 'free';
+      const sub = userData.subscription;
+      const now = Date.now();
+      const subActive = sub?.status === 'active' && (sub.endDate?.toMillis?.() ?? 0) > now;
+      const subTier = subActive ? (sub.tier || '') : '';
+      userTier = userData.role === 'admin' ? 'elite' : (subTier || userData.tier || 'free');
       userProgress = userData.progress || {};
       enrolledCourses = userData.enrolledCourses || [];
     }

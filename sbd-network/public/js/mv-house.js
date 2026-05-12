@@ -1,5 +1,5 @@
 /**
- * MV HOUSE — Wardrobe System v256
+ * MV HOUSE — Wardrobe System v257
  * ================================
  * Features:
  *  1. Tab count badges per category
@@ -10,7 +10,7 @@
  *  6. Background migration of legacy saves → new path
  */
 
-const CATEGORIES = ['corporate', 'casual-day', 'casual-night', 'casual-home', 'official'];
+const CATEGORIES = ['corporate', 'casual-day', 'casual-night', 'casual-home', 'official', 'private'];
 const CATEGORY_LABELS = {
   'corporate':    '💼 Corporate',
   'casual-day':   '☀️ Casual Day',
@@ -24,7 +24,75 @@ const CATEGORY_ICONS = {
   'casual-night': '🌙',
   'casual-home':  '🏡',
   'official':     '👑',
+  'private':      '🔥',
 };
+
+// ─── A3 EXPRESSION GUIDANCE — DEFAULT BANK ───────────────────────
+// Real data is loaded from Firestore mv_guidance/{category}.
+// This serves as fallback if Firestore is unavailable.
+const GUIDANCE_DEFAULTS = {
+  'corporate': {
+    context:  'Corporate — Structured Authority',
+    attitude: 'Carry sexual authority beneath composure. Your movement must communicate that you are fully present in your body — controlled, not suppressed. Maneuverability here is precision: every gesture deliberate, every posture governed.',
+    attire:   'Structure must frame nakedness, not bury it. Blazers, fitted lines, defined necklines — the dressing scores high on formal nakedness genre. Clothing must outline what it covers.',
+    allure:   'The undeniable impact is controlled attraction. Your spouse sees authority on the outside and nakedness underneath — the combination creates irresistible intrigue.',
+    warning:  'If your structure kills your nakedness, you become invisible.',
+  },
+  'casual-day': {
+    context:  'Casual Day — Effortless Expression',
+    attitude: 'Your body speaks naturally. Carry yourself with open, unhurried sexuality. Maneuverability is ease — clothes that move with you, not against you. Casual does not mean asexual.',
+    attire:   'Light fabrics, soft fits, natural skin presence. Rates high on relaxed nakedness genre — the body is present, not hidden. Movement reveals and breathes.',
+    allure:   'Effortless pull. Your spouse is drawn without effort on your part — the relaxed expression creates approachability combined with unmistakable sexuality.',
+    warning:  'If your casual kills your sexuality, you are practising asexuality.',
+  },
+  'casual-night': {
+    context:  'Casual Night — Sexual Invitation',
+    attitude: 'You are fully active in your sexuality. Movement must invite — cuts, silhouette, and revelation are handled with intention. You control what is seen and when.',
+    attire:   'High nakedness genre score. Cuts, openings, and silhouette create "seeing without fully seeing". The dressing is a stage — it performs before you speak.',
+    allure:   'The pull is undeniable and directional. Your spouse is activated — not passively attracted but magnetically drawn into engagement with you.',
+    warning:  'If you go out at night dressed asexually, you are misaligned with your purpose.',
+  },
+  'casual-home': {
+    context:  'Home — Intimate Nakedness Stewardship',
+    attitude: 'At home your sexuality is never on pause. Carry softness and availability — maneuverability means immediate transition into full nakedness is always possible.',
+    attire:   'Minimal dressing. Maximum nakedness genre rating. Comfort that does not obstruct — your attire must serve intimate access, not delay it.',
+    allure:   'Direct and constant. The everyday presence of your nakedness at home is the most powerful allure in marriage — it builds a continuous atmosphere of intimacy.',
+    warning:  'If your home dressing is asexual, your marriage becomes structurally weak.',
+  },
+  'official': {
+    context:  'Official — Elevated Nakedness Under Refinement',
+    attitude: 'Refined posture, deliberate movement. You carry authority and nakedness simultaneously — neither cancels the other. Maneuverability is precision and grace.',
+    attire:   'Elegance with deliberate revelation points. Nakedness genre is present beneath elevated structure — it is refined, not removed. Precision in fit is non-negotiable.',
+    allure:   'Your spouse sees the whole picture: elevated on the outside, sexually present beneath. The impact is deep and sustained — sophistication combined with nakedness.',
+    warning:  'If elegance removes sexuality, it becomes decoration, not expression.',
+  },
+  'private': {
+    context:  'Private — Full Sexual Expression',
+    attitude: 'Nothing is held back. Your attitude is completely sexually active — you inhabit your nakedness fully. Maneuverability means immediate, unrestricted access to every part of you.',
+    attire:   'Maximum nakedness genre score. Dressing exists only to serve the expression of nakedness — it enhances, frames, or reveals. Nothing obstructs.',
+    allure:   'Total impact. Your spouse is fully activated — every element of the encounter is designed to serve complete sexual engagement. This is the peak of the A3 system.',
+    warning:  'If your dressing blocks access to your nakedness, it is working against you.',
+  },
+};
+
+// Live guidance loaded from Firestore (overrides defaults per category)
+let GUIDANCE = { ...GUIDANCE_DEFAULTS };
+
+async function loadFirestoreGuidance() {
+  try {
+    const snap = await firebase.firestore().collection('mv_guidance').get();
+    snap.docs.forEach(doc => {
+      if (GUIDANCE_DEFAULTS[doc.id] !== undefined || doc.data().context) {
+        GUIDANCE[doc.id] = { ...GUIDANCE_DEFAULTS[doc.id], ...doc.data() };
+      }
+    });
+    console.log(`[MV House] Loaded ${snap.size} guidance docs from Firestore`);
+  } catch (err) {
+    console.warn('[MV House] Could not load Firestore guidance — using defaults:', err.message);
+  }
+}
+
+const DEFAULT_NOTE_PLACEHOLDER = 'When to wear it, how it makes you feel, what occasions it suits. How does your nakedness stay present?';
 const TARGET_LOOKS = 10; // looks needed for 100% completeness
 
 let currentUid      = null;
@@ -59,9 +127,29 @@ async function init() {
       return;
     }
 
+    // Elite: expression score gate — must have ≥20 to prevent zero-engagement access
+    if (currentUserData?.role !== 'admin') {
+      const v2 = currentUserData?.formationProfile_v2 || {};
+      const expression = v2.expression || 0;
+      if (expression < 20) {
+        const gateEl = document.getElementById('mvGate');
+        if (gateEl) {
+          // Swap gate message to reflect formation gate rather than tier gate
+          const gateTitle = gateEl.querySelector('h2, h3, .gate-title');
+          const gateMsg   = gateEl.querySelector('p, .gate-msg');
+          if (gateTitle) gateTitle.textContent = 'Build Your Expression Score';
+          if (gateMsg)   gateMsg.textContent   = `Expression score: ${expression}/100 — need 20 to unlock MV House. Engage with the community and wardrobe system to build your score.`;
+        }
+        document.getElementById('mvGate').style.display = 'block';
+        document.getElementById('mvLoading').style.display = 'none';
+        return;
+      }
+    }
+
     document.getElementById('mvGate').style.display = 'none';
     document.getElementById('mvContent').style.display = 'block';
 
+    await loadFirestoreGuidance();
     await loadWardrobeItems();
   } catch (err) {
     console.error('[MV House] init error:', err);
@@ -189,6 +277,11 @@ function renderGrid(tab) {
     : allItems.filter(i => (i.category || '').toLowerCase() === tab);
   if (items.length === 0) { grid.innerHTML = buildEmptyState(tab); return; }
   grid.innerHTML = items.map(item => buildLookCard(item)).join('');
+  // Stagger entrance — reveal each card with a 55ms column-offset delay
+  const cards = grid.querySelectorAll('.look-card');
+  cards.forEach((card, i) => {
+    setTimeout(() => card.classList.add('card-visible'), i * 55);
+  });
 }
 
 // ─── CARD BUILDER ─────────────────────────────────────────────────
@@ -212,8 +305,44 @@ function buildMediaHtml(item) {
   return `<div class="look-card-image"><img src="${escHtml(item.mediaUrl)}" alt="" loading="lazy"></div>`;
 }
 
+function buildA3Dots(rating) {
+  // rating 1-5, dots filled up to rating
+  const r = Math.min(5, Math.max(0, rating || 0));
+  return Array.from({length: 5}, (_, i) =>
+    `<span class="a3-dot${i < r ? ' filled' : ''}"></span>`
+  ).join('');
+}
+
+function buildGuidanceCard(item) {
+  const g = GUIDANCE[item.category];
+  if (!g) return '';
+  const safeId = escHtml(item.id);
+  const ratings = item.a3Ratings || {};
+  return `
+    <button class="mvg-toggle-btn" onclick="event.stopPropagation(); toggleGuidance('${safeId}', this)" aria-expanded="false">
+      ✦ A3 Expression Guide
+      <span class="mvg-arrow">▼</span>
+    </button>
+    <div class="mv-guidance-card" id="guidance-${safeId}" onclick="event.stopPropagation()">
+      <div class="mvg-context">${escHtml(g.context)}</div>
+      <div class="mvg-a3-row">
+        <div class="mvg-a3-header"><span class="mvg-a3-label">Attitude</span><span class="mvg-a3-dots">${buildA3Dots(ratings.attitude)}</span></div>
+        <p class="mvg-a3-value">${escHtml(g.attitude)}</p>
+      </div>
+      <div class="mvg-a3-row">
+        <div class="mvg-a3-header"><span class="mvg-a3-label">Attire</span><span class="mvg-a3-dots">${buildA3Dots(ratings.attire)}</span></div>
+        <p class="mvg-a3-value">${escHtml(g.attire)}</p>
+      </div>
+      <div class="mvg-a3-row">
+        <div class="mvg-a3-header"><span class="mvg-a3-label">Allure</span><span class="mvg-a3-dots">${buildA3Dots(ratings.allure)}</span></div>
+        <p class="mvg-a3-value">${escHtml(g.allure)}</p>
+      </div>
+      <div class="mvg-warning">${escHtml(g.warning)}</div>
+    </div>`;
+}
+
 function buildLookCard(item) {
-  const mediaHtml = buildMediaHtml(item);
+  const mediaHtml    = buildMediaHtml(item);
   let savedDate = '';
   if (item.savedAt) {
     try {
@@ -221,22 +350,53 @@ function buildLookCard(item) {
       savedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch (_) {}
   }
-  const safeId   = escHtml(item.id);
-  const note     = item.note || '';
-  const noteHtml = `<div class="look-note${note ? ' has-note' : ''}" id="note-${safeId}">${escHtml(note) || ''}</div>`;
+  const safeId       = escHtml(item.id);
+  const note         = item.note || '';
+  const noteHtml     = `<div class="look-note${note ? ' has-note' : ''}" id="note-${safeId}">${escHtml(note) || ''}</div>`;
+  const guidanceHtml = buildGuidanceCard(item);
+
+  // Caption — Facebook-style inline "...see more" when long
+  const rawCaption = item.caption || item.content || 'MV House Look';
+  const CAP_LIMIT  = 110;
+  let captionHtml;
+  if (rawCaption.length <= CAP_LIMIT) {
+    captionHtml = `<p class="look-card-caption">${escHtml(rawCaption)}</p>`;
+  } else {
+    // Trim to last word boundary so we don't cut mid-word
+    const cut = rawCaption.slice(0, CAP_LIMIT).replace(/\s+\S*$/, '');
+    captionHtml = `<p class="look-card-caption" id="cap-${safeId}">
+      <span class="cap-short">${escHtml(cut)}<span class="cap-ellipsis">... </span><button class="cap-see-more" onclick="event.stopPropagation(); toggleCaption('${safeId}')">see more</button></span>
+      <span class="cap-full" hidden>${escHtml(rawCaption)} <button class="cap-see-more cap-see-less" onclick="event.stopPropagation(); toggleCaption('${safeId}')">see less</button></span>
+    </p>`;
+  }
+
+  // A3 dots on card face (from saved ratings)
+  const ratings = item.a3Ratings || {};
+  const hasFaceRatings = ratings.attitude || ratings.attire || ratings.allure;
+  const faceRatingsHtml = hasFaceRatings ? `
+    <div class="a3-face-ratings" onclick="event.stopPropagation()">
+      <span class="a3-face-item"><span class="a3-face-lbl">A</span>${buildA3Dots(ratings.attitude)}</span>
+      <span class="a3-face-sep">·</span>
+      <span class="a3-face-item"><span class="a3-face-lbl">T</span>${buildA3Dots(ratings.attire)}</span>
+      <span class="a3-face-sep">·</span>
+      <span class="a3-face-item"><span class="a3-face-lbl">L</span>${buildA3Dots(ratings.allure)}</span>
+    </div>` : '';
 
   return `
     <div class="look-card" onclick="openLook('${safeId}')">
       ${mediaHtml}
       <div class="look-card-body">
-        <p class="look-card-caption">${escHtml(item.caption || item.content || 'MV House Look')}</p>
+        ${captionHtml}
+        ${faceRatingsHtml}
         ${savedDate ? `<p class="look-card-meta">Saved ${savedDate} · ${CATEGORY_ICONS[item.category] || ''} ${item.category || ''}</p>` : ''}
       </div>
       ${noteHtml}
+      ${guidanceHtml}
       <div class="look-card-actions" onclick="event.stopPropagation()">
         <button class="lca-btn" onclick="openNotesModal('${safeId}')">✏️ Note</button>
         <button class="lca-btn" onclick="openRecatModal('${safeId}')">📂 Move</button>
         <button class="lca-btn share" onclick="openShareModal('${safeId}')">💬 Share</button>
+        <button class="lca-btn lca-expand" onclick="expandExpression('${safeId}')">⊕ Expand</button>
         <button class="lca-btn" onclick="removeLook(event,'${safeId}')" style="color:#ff5a5a;">✕</button>
       </div>
     </div>`;
@@ -245,30 +405,63 @@ function buildLookCard(item) {
 function buildEmptyState(tab) {
   const boardLink = `/boards.html`;
   const label     = CATEGORY_LABELS[tab] || 'MV House boards';
+  const g         = GUIDANCE[tab];
+  const doctrineHtml = g
+    ? `<p class="mv-empty-doctrine">${escHtml(g.context)}</p>`
+    : '';
   return `
     <div class="mv-empty" style="grid-column:1/-1;">
       <div class="mv-empty-icon">👗</div>
-      <p>No looks saved yet.</p>
+      ${doctrineHtml}
+      <p>This category is waiting for your first look.</p>
       <p>Browse <a href="${boardLink}">${label}</a> and tap <strong>Save to Wardrobe</strong> on any post.</p>
     </div>`;
 }
+
+// Category → canonical boardId fallback (used when item has no boardId stored)
+const CATEGORY_BOARD_MAP = {
+  'corporate':    'mv-house-corporate',
+  'casual-day':   'mv-house-casual-day',
+  'casual-night': 'mv-house-casual-night',
+  'casual-home':  'mv-house-casual-home',
+  'official':     'mv-house-official',
+  'saved':        'mv-house-general',
+};
 
 // ─── LOOK NAVIGATION ──────────────────────────────────────────────
 
 async function openLook(itemId) {
   const item = allItems.find(i => i.id === itemId);
   if (!item) return;
-  let postId  = item.postId  || null;
+
+  // For new-path items: item.id === doc.id === postId, so this covers both
+  let postId  = item.postId  || (item._source !== 'legacy' ? item.id : null);
   let boardId = item.boardId || null;
-  if (postId) {
+
+  // If boardId missing, try to pull it from the post document
+  if (postId && !boardId) {
     try {
       const snap = await firebase.firestore().collection('posts').doc(postId).get();
-      if (snap.exists && snap.data().boardId) boardId = snap.data().boardId;
-    } catch (_) {}
+      if (snap.exists && snap.data().boardId) {
+        boardId = snap.data().boardId;
+      }
+    } catch (err) {
+      console.warn('[MV House] openLook: could not fetch post boardId:', err.message);
+    }
   }
-  if (boardId && postId) { window.location.href = `/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`; }
-  else if (boardId)      { window.location.href = `/board.html?boardId=${encodeURIComponent(boardId)}`; }
-  else                   { window.location.href = '/boards.html'; }
+
+  // Last resort: derive boardId from the saved category
+  if (!boardId && item.category) {
+    boardId = CATEGORY_BOARD_MAP[item.category] || null;
+  }
+
+  if (boardId && postId) {
+    window.location.href = `/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
+  } else if (boardId) {
+    window.location.href = `/board.html?boardId=${encodeURIComponent(boardId)}`;
+  } else {
+    window.location.href = '/boards.html';
+  }
 }
 
 // ─── REMOVE ───────────────────────────────────────────────────────
@@ -300,6 +493,76 @@ async function removeLook(evt, itemId) {
     console.error('[MV House] remove error:', err);
     alert('Could not remove look. Try again.');
   }
+}
+
+// ─── FEATURE: EXPAND EXPRESSION ──────────────────────────────────
+
+function expandExpression(itemId) {
+  const item = allItems.find(i => i.id === itemId);
+  if (!item || !item.category) return;
+  const tabBtn = document.querySelector(`.mv-tab[data-tab="${item.category}"]`);
+  if (tabBtn) {
+    switchTab(item.category, tabBtn);
+    tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ─── FEATURE: GUIDANCE TOGGLE ────────────────────────────────────
+
+function toggleGuidance(itemId, btn) {
+  const card = document.getElementById(`guidance-${itemId}`);
+  if (!card) return;
+  const isOpen = card.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen);
+}
+
+// ─── FEATURE: CAPTION REVEAL ─────────────────────────────────────
+
+function toggleCaption(itemId) {
+  const p     = document.getElementById(`cap-${itemId}`);
+  if (!p) return;
+  const short = p.querySelector('.cap-short');
+  const full  = p.querySelector('.cap-full');
+  const expanded = !full.hidden;
+  short.hidden = !expanded;
+  full.hidden  = expanded;
+}
+
+
+
+function searchExpression(query) {
+  const q = (query || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('mvSearchClear');
+  if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+  if (!q) {
+    const activeTab = document.querySelector('.mv-tab.active');
+    switchTab(currentTab, activeTab);
+    return;
+  }
+  const results = allItems.filter(item => {
+    const haystack = [item.note, item.caption, item.content, item.boardName, item.category]
+      .filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(q);
+  });
+  // Show results in the saved panel reused as search results container
+  document.querySelectorAll('.mv-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.mv-tab').forEach(t => t.classList.remove('active'));
+  // Use whichever panel is first as the results container
+  const panels = ['saved','corporate','casual-day','casual-night','casual-home','official','private'];
+  let panel, grid;
+  for (const id of panels) {
+    panel = document.getElementById(`panel-${id}`);
+    grid  = document.getElementById(`grid-${id}`);
+    if (panel && grid) break;
+  }
+  if (!panel || !grid) return;
+  panel.style.display = 'block';
+  const label = panel.querySelector('.mv-section-label');
+  if (label) label.textContent = `🔍 Results for "${query}"`;
+  grid.innerHTML = results.length
+    ? results.map(buildLookCard).join('')
+    : `<div class="mv-empty" style="grid-column:1/-1;"><div class="mv-empty-icon">🔍</div><p>No looks found for "${escHtml(query)}"</p><p>Try: "corporate", "night", "home"</p></div>`;
 }
 
 // ─── FEATURE 2: RE-CATEGORIZE ─────────────────────────────────────
@@ -363,6 +626,12 @@ function openNotesModal(itemId) {
   ta.value    = item.note || '';
   count.textContent = `${ta.value.length} / 400`;
   ta.oninput  = () => { count.textContent = `${ta.value.length} / 400`; };
+
+  // Dynamic placeholder + subtitle based on wardrobe category
+  const guidance = GUIDANCE[item.category];
+  ta.placeholder = guidance ? guidance.notePlaceholder : DEFAULT_NOTE_PLACEHOLDER;
+  const subtitle = document.getElementById('notesSubtitle');
+  if (subtitle) subtitle.textContent = guidance ? guidance.context : 'When to wear it, how it makes you feel, what occasions it suits.';
 
   document.getElementById('notesSaveBtn').onclick = () => saveNote(ta.value.trim());
   openModal('notesModal');

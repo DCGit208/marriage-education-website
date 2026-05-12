@@ -10,6 +10,12 @@
   box-sizing: border-box;
 }
 
+/* Prevent images/video/iframes from blowing past the viewport width */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
 html {
   /* Prevent any element from creating a horizontal scrollbar at the page level */
   overflow-x: hidden;
@@ -48,13 +54,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  /* Grow header to clear iPhone notch / Dynamic Island */
+  height: calc(60px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   z-index: 1000;
   box-shadow: var(--shadow);
 }
@@ -362,7 +371,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100%;
+  min-height: -webkit-fill-available;
   padding: 20px;
   background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
 }
@@ -509,7 +519,7 @@ body {
 .board-page,
 .admin-page {
   padding-top: 60px;
-  min-height: 100vh;
+  min-height: 100%;
 }
 
 .dashboard-main,
@@ -3121,3 +3131,150 @@ body.bulk-select-mode .select-mode-header {
 .fwd-send-btn:hover { opacity: 0.9; }
 .fwd-send-btn:active { transform: scale(0.97); }
 .fwd-send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+/* ========================================
+   GLOBAL LAYOUT UTILITIES
+======================================== */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transition-fast {
+  transition: all 0.2s ease;
+}
+
+.gap-8 {
+  gap: 8px;
+}
+
+.gap-12 {
+  gap: 12px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+
+.hidden-admin-section {
+  display: none;
+}
+/* ================================================================
+   ONBOARDING / AUTH UI GLOBALS
+   ================================================================ */
+
+/* Prevent onboarding overlays from creating horizontal scroll */
+body.auth-guest,
+body.auth-user {
+  overflow-x: hidden;
+}
+
+/* Shared smooth interaction feel */
+.transition-fast {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.16s ease,
+    opacity 0.2s ease;
+}
+
+/* Shared flex utilities */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Notification hidden utility */
+.notif-hidden {
+  display: none !important;
+}
+
+/* Prevent fixed overlays from jittering on iOS */
+.menu-btn,
+.notif-bell-btn,
+#onboardingAuthBtn,
+.signup-prompt-sheet,
+.side-menu,
+.menu-overlay {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Better tap responsiveness */
+button,
+a,
+.menu-btn,
+.membership-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent accidental text selection during swipes */
+.slider-container,
+.slider-track,
+.slide-card {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Tier card selected state */
+.membership-card.selected {
+  border-color: rgba(255,255,255,0.45);
+  transform: scale(0.985);
+}
+
+/* Hidden admin section utility */
+.hidden-admin-section {
+  display: none;
+}
+
+/* Safe z-index hierarchy */
+.menu-btn {
+  z-index: 10020;
+}
+
+.notif-bell-btn {
+  z-index: 10015;
+}
+
+#onboardingAuthBtn {
+  z-index: 10010;
+}
+
+/* iOS safe-area support */
+@supports (padding: max(0px)) {
+
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+}

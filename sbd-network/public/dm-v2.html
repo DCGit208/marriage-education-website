@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="build-version" content="1778611896316">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1, minimum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="cache-bust" content="dmv2-20260502-3">
+  <title>SBD Network - DM V2 (Test)</title>
+  <link rel="stylesheet" href="css/dm-v2.css?v=1778611896316-3">
+</head>
+<body>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const flushed = params.get('dmv2flushed') === '1';
+      if (flushed) return;
+
+      async function flushCachesAndWorkers() {
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((r) => r.unregister()));
+          }
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+        } catch (_) {}
+
+        params.set('dmv2flushed', '1');
+        params.set('v', '20260502-3');
+        const query = params.toString();
+        const next = window.location.pathname + (query ? '?' + query : '');
+        window.location.replace(next);
+      }
+
+      flushCachesAndWorkers();
+    })();
+  </script>
+  <div class="chat-root">
+    <div class="chat-header">
+      <button id="backBtn" class="chat-btn" type="button">Back</button>
+      <div class="chat-title">Conversation | build 20260502-3</div>
+    </div>
+
+    <div class="chat-body" id="chatBody"></div>
+
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type message..." autocomplete="off" />
+      <button id="sendBtn" class="chat-btn" type="button">Send</button>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js?v=1778611896316-3"></script>
+  <script src="js/dm-v2.js?v=1778611896316-3" defer></script>
+</body>
+</html>

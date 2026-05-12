@@ -69,12 +69,13 @@ function parseDuration(duration) {
 }
 
 function getAccessLevel(schoolNo, price) {
-  // Foundation tier: School 1 courses $249 or less
-  // Premium tier: School 1 advanced courses (>$249) + all other schools
-  if (schoolNo === 1 && price <= 249) {
-    return 'foundation';
-  }
-  return 'premium';
+  // Per SBD-ACADEMY-LEARNING-SYSTEM.md (canonical spec):
+  //   Foundation: School 1 — ALL 13 courses (progressive unlock)
+  //   Premium:    School 2 — all 15 courses
+  //   Elite:      Schools 3 & 4 — all 16 courses
+  if (schoolNo === 1) return 'foundation';
+  if (schoolNo === 2) return 'premium';
+  return 'elite'; // Schools 3 & 4
 }
 
 function generateDescription(course) {

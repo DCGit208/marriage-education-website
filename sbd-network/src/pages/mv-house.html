@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit in src/pages/mv-house.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>MV House | SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
+
+    <style>
+        :root {
+            --bg:       #0D0D0D;
+            --surface:  #151515;
+            --surface2: #1C1C1C;
+            --gold:     #C6A96B;
+            --gold-dim: rgba(198,169,107,0.14);
+            --gold-glow:rgba(198,169,107,0.25);
+            --text:     #EAE3D2;
+            --text-sec: #A8A29E;
+            --border:   rgba(255,255,255,0.08);
+            --border-gold: rgba(198,169,107,0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* ── TOP BAR ────────────────────────────────────────── */
+        .mv-topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px; /* badge gets its own margin-right */
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 20;
+        }
+        .mv-back {
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .mv-topbar-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: var(--text);
+            flex: 1;
+        }
+        .mv-topbar-badge {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+            background: var(--gold-dim);
+            color: var(--gold);
+            border: 1px solid var(--border-gold);
+        }
+
+        /* ── HERO BANNER ────────────────────────────────────── */
+        .mv-hero {
+            padding: 2rem 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        .mv-hero-emblem {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            line-height: 1;
+        }
+        .mv-hero-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+        .mv-hero-title span {
+            color: var(--gold);
+        }
+        .mv-hero-sub {
+            font-size: 0.85rem;
+            color: var(--text-sec);
+            line-height: 1.6;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        /* ── CATEGORY TABS ──────────────────────────────────── */
+        .mv-tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            border-bottom: 1px solid var(--border);
+        }
+        .mv-tabs::-webkit-scrollbar { display: none; }
+        .mv-tab {
+            flex-shrink: 0;
+            padding: 0.45rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-sec);
+            font-size: 0.78rem;
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .mv-tab.active {
+            background: var(--gold-dim);
+            border-color: var(--border-gold);
+            color: var(--gold);
+        }
+        .mv-tab:hover:not(.active) {
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text);
+        }
+
+        /* ── MAIN CONTENT ───────────────────────────────────── */
+        .mv-section {
+            padding: 1.5rem 1.25rem;
+        }
+        .mv-section-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            margin-bottom: 1rem;
+        }
+
+        /* ── WARDROBE GRID ──────────────────────────────────── */
+        .wardrobe-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        @media (min-width: 480px) {
+            .wardrobe-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* Card entrance animation */
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .look-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+            position: relative;
+            opacity: 0; /* hidden until stagger fires */
+        }
+        .look-card.card-visible {
+            animation: cardReveal 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .look-card:hover {
+            border-color: var(--border-gold);
+            transform: translateY(-2px);
+            box-shadow:
+                inset 0 0 0 1px rgba(198,169,107,0.35),
+                0 12px 32px rgba(198,169,107,0.15);
+        }
+        .look-card-image {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            overflow: hidden;
+        }
+        .look-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .look-card-body {
+            padding: 0.65rem 0.75rem 0.5rem;
+        }
+        .look-card-caption {
+            font-size: 0.72rem;
+            color: #D4C9B8;
+            line-height: 1.45;
+            margin-bottom: 0.35rem;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+        .look-card-meta {
+            font-size: 0.6rem;
+            color: var(--text-sec);
+            font-style: italic;
+            opacity: 0.72;
+        }
+        .look-card-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: #ff5a5a;
+            font-size: 0.7rem;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .look-card:hover .look-card-remove { opacity: 1; }
+
+        /* ── VIDEO CARDS ─────────────────────────────────────── */
+        .look-card-image video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .look-card-video-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .look-card-video-badge {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            border-radius: 4px;
+            padding: 2px 6px;
+            pointer-events: none;
+        }
+
+        /* ── EMPTY STATE ──────────────────────────────────────  */
+        .mv-empty {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-sec);
+        }
+        .mv-empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.4;
+        }
+        .mv-empty-doctrine {
+            font-size: 0.85rem;
+            font-style: italic;
+            color: var(--gold);
+            opacity: 0.75;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.02em;
+        }
+        .mv-empty p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .mv-empty a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* ── CTA STRIP ──────────────────────────────────────── */
+        .mv-cta-strip {
+            margin: 1.5rem 1.25rem 0;
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            background: var(--gold-dim);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .mv-cta-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        .mv-cta-body {
+            flex: 1;
+        }
+        .mv-cta-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+        .mv-cta-sub {
+            font-size: 0.72rem;
+            color: var(--text-sec);
+            line-height: 1.5;
+        }
+        .mv-cta-btn {
+            flex-shrink: 0;
+            background: var(--gold);
+            color: #0D0D0D;
+            border: none;
+            padding: 0.55rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Georgia', serif;
+        }
+        .mv-cta-btn:hover {
+            background: #D4B87A;
+        }
+
+        /* ── STYLING CTA ────────────────────────────────────── */
+        .mv-style-cta {
+            margin: 1rem 1.25rem 0;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* ── GATE WALL ─────────────────────────────────────── */
+        .mv-gate {
+            display: none;
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+        .mv-gate-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
+        .mv-gate-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .mv-gate-sub {
+            font-size: 0.85rem;
+            color: var(--text-sec);
+            line-height: 1.7;
+            max-width: 340px;
+            margin: 0 auto 2rem;
+        }
+        .mv-gate-feats {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .mv-gate-feats li {
+            font-size: 0.82rem;
+            color: var(--text-sec);
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .mv-gate-feats li span:first-child { font-size: 1rem; flex-shrink: 0; }
+        .mv-upgrade-btn {
+            display: inline-block;
+            background: var(--gold);
+            color: #0D0D0D;
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'Georgia', serif;
+            padding: 0.85rem 2.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mv-upgrade-btn:hover { background: #D4B87A; }
+
+        /* ── LOADING ────────────────────────────────────────── */
+        .mv-loading {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-sec);
+            font-size: 0.85rem;
+        }
+
+        /* ── TAB COUNT BADGE ────────────────────────────────── */
+        .mv-tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(198,169,107,0.18);
+            color: var(--gold);
+            font-size: 0.6rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            padding: 0 5px;
+            margin-left: 5px;
+            vertical-align: middle;
+            transition: background 0.2s;
+        }
+        .mv-tab.active .mv-tab-count {
+            background: rgba(198,169,107,0.35);
+        }
+
+        /* ── COMPLETENESS BAR ───────────────────────────────── */
+        .mv-completeness-wrap {
+            padding: 0 1.25rem 0.75rem;
+        }
+        .mv-completeness-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.68rem;
+            color: var(--text-sec);
+        }
+        .mv-completeness-row strong {
+            color: var(--gold);
+        }
+        .mv-completeness-track {
+            height: 4px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .mv-completeness-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold) 0%, #e8c97a 100%);
+            border-radius: 2px;
+            transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* ── LOOK CARD ACTIONS (LONG PRESS / SHARE) ─────────── */
+        .look-card-actions {
+            display: flex;
+            gap: 4px;
+            padding: 0 0.5rem 0.5rem;
+        }
+        .lca-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-sec);
+            font-size: 0.6rem;
+            font-family: 'Georgia', serif;
+            border-radius: 6px;
+            padding: 0.3rem 0.4rem;
+            cursor: pointer;
+            transition: all 0.18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+        .lca-btn:hover { border-color: var(--border-gold); color: var(--gold); }
+        .lca-btn.share { color: #5dabf4; border-color: rgba(93,171,244,0.25); }
+        .lca-btn.share:hover { background: rgba(93,171,244,0.08); }
+
+        /* ── STYLE NOTES (inline) ───────────────────────────── */
+        .look-note {
+            font-size: 0.65rem;
+            color: var(--text-sec);
+            font-style: italic;
+            line-height: 1.4;
+            padding: 0 0.7rem 0.5rem;
+            border-top: 1px solid transparent;
+        }
+        .look-note.has-note {
+            border-color: var(--border);
+            padding-top: 0.4rem;
+            color: rgba(198,169,107,0.75);
+        }
+
+        /* ── EXPRESSION GUIDANCE (collapsed by default) ─────── */
+        .mvg-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            background: none;
+            border: none;
+            border-top: 1px solid var(--border);
+            color: var(--gold);
+            font-family: 'Georgia', serif;
+            font-size: 0.62rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.45rem 0.7rem;
+            cursor: pointer;
+            text-align: left;
+            transition: color 0.18s;
+            opacity: 0.7;
+        }
+        .mvg-toggle-btn:hover { opacity: 1; }
+        .mvg-toggle-btn .mvg-arrow {
+            margin-left: auto;
+            font-size: 0.55rem;
+            transition: transform 0.25s;
+        }
+        .mvg-toggle-btn.open .mvg-arrow { transform: rotate(180deg); }
+
+        .mv-guidance-card {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s ease, padding 0.25s ease;
+            padding: 0 0.7rem;
+            border-top: none;
+        }
+        .mv-guidance-card.open {
+            max-height: 900px;
+            padding: 0.6rem 0.7rem 0.5rem;
+            border-top: 1px solid var(--border-gold);
+        }
+        .mvg-context {
+            font-size: 0.62rem;
+            color: var(--gold);
+            letter-spacing: 0.04em;
+            font-style: italic;
+            margin-bottom: 0.6rem;
+        }
+        /* A3 rows — left gold accent bar, no full-width divider */
+        .mvg-a3-row {
+            margin-bottom: 0.6rem;
+            padding-bottom: 0;
+            padding-left: 0.65rem;
+            border-left: 2px solid rgba(198,169,107,0.32);
+            border-bottom: none;
+        }
+        .mvg-a3-row:last-of-type { margin-bottom: 0; }
+        .mvg-a3-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        .mvg-a3-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+        }
+        .mvg-a3-dots {
+            display: flex;
+            gap: 3px;
+        }
+        .a3-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 1px solid rgba(198,169,107,0.3);
+            transition: background 0.2s;
+        }
+        .a3-dot.filled { background: var(--gold); border-color: var(--gold); }
+        .mvg-a3-value {
+            font-size: 0.62rem;
+            color: var(--text-sec);
+            line-height: 1.55;
+            margin: 0;
+        }
+        .mvg-warning {
+            margin-top: 0.4rem;
+            font-size: 0.6rem;
+            font-style: italic;
+            color: rgba(255,120,100,0.8);
+            border-top: 1px solid rgba(255,120,100,0.15);
+            padding-top: 0.35rem;
+        }
+
+        /* ── A3 FACE RATINGS (on card body) ─────────────────── */
+        .a3-face-ratings {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+            margin-bottom: 2px;
+        }
+        .a3-face-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .a3-face-lbl {
+            font-size: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--gold);
+            opacity: 0.65;
+            min-width: 8px;
+        }
+        .a3-face-sep { color: var(--border); font-size: 0.6rem; }
+
+        /* ── CAPTION "...see more" (Facebook style) ─────────── */
+        .cap-ellipsis { color: var(--text-sec); }
+        .cap-see-more {
+            background: none;
+            border: none;
+            color: var(--text-sec);
+            font-size: inherit;
+            font-family: inherit;
+            font-style: inherit;
+            line-height: inherit;
+            cursor: pointer;
+            padding: 0;
+            display: inline;
+        }
+        .cap-see-more:hover { color: var(--gold); }
+
+        /* ── MODALS (shared base) ────────────────────────────── */
+        .mvh-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .mvh-modal-overlay.open {
+            display: flex;
+        }
+        .mvh-modal {
+            background: var(--surface);
+            border-radius: 20px 20px 0 0;
+            padding: 1.5rem 1.5rem 2.5rem;
+            width: 100%;
+            max-width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            animation: slideUp 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .mvh-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        .mvh-modal-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .mvh-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-sec);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        /* ── RE-CATEGORIZE MODAL ─────────────────────────────── */
+        .recat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+        }
+        .recat-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.85rem 0.75rem;
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .recat-btn:hover, .recat-btn.active {
+            border-color: var(--border-gold);
+            background: var(--gold-dim);
+            color: var(--gold);
+        }
+        .recat-btn .recat-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+        /* ── NOTES MODAL ─────────────────────────────────────── */
+        .mvh-textarea {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem;
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            resize: none;
+            min-height: 120px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .mvh-textarea:focus { border-color: var(--border-gold); }
+        .mvh-textarea::placeholder { color: var(--text-sec); }
+        .mvh-save-btn {
+            margin-top: 1rem;
+            width: 100%;
+            background: var(--gold);
+            color: #0D0D0D;
+            border: none;
+            border-radius: 10px;
+            padding: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mvh-save-btn:hover { background: #D4B87A; }
+
+        /* ── SHARE DM MODAL ─────────────────────────────────── */
+        .mvh-dm-search {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            font-size: 0.85rem;
+            outline: none;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .mvh-dm-search:focus { border-color: var(--border-gold); }
+        .mvh-dm-list { max-height: 50vh; overflow-y: auto; }
+        .mvh-dm-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .mvh-dm-row:hover { background: rgba(255,255,255,0.03); }
+        .mvh-dm-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(198,169,107,0.12);
+            border: 1px solid var(--border-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--gold);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .mvh-dm-avatar img { width:100%; height:100%; object-fit:cover; }
+        .mvh-dm-name { font-size: 0.875rem; color: var(--text); }
+
+        /* ── TOAST ──────────────────────────────────────────── */
+        .mvh-toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(30,30,30,0.95);
+            border: 1px solid var(--border-gold);
+            color: var(--gold);
+            font-size: 0.8rem;
+            font-family: 'Georgia', serif;
+            padding: 0.6rem 1.25rem;
+            border-radius: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 300;
+            white-space: nowrap;
+        }
+        .mvh-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── BOTTOM NAV ─────────────────────────────────────── */
+    </style>
+</head>
+<body data-page="" class="bottom-nav-page">
+
+    <!-- Top Bar -->
+    <div class="mv-topbar">
+        <a href="/boards.html" class="mv-back">←</a>
+        <span class="mv-topbar-badge" id="tierBadge">Elite</span>
+        <span class="mv-topbar-title">MV House</span>
+    </div>
+
+    <!-- Gate wall for non-Elite users (hidden by default, shown by JS) -->
+    <div class="mv-gate" id="mvGate">
+        <div class="mv-gate-icon">🏠</div>
+        <h2 class="mv-gate-title">MV House is Elite</h2>
+        <p class="mv-gate-sub">
+            MV House is where identity meets expression. Curate your Muliebrity or Virility wardrobe —
+            Corporate, Casual, Official — across every context of your life.
+        </p>
+        <ul class="mv-gate-feats">
+            <li><span>💼</span><span>Corporate Expression wardrobe</span></li>
+            <li><span>☀️</span><span>Casual Day + Night wardrobes</span></li>
+            <li><span>🏡</span><span>Casual @Home wardrobe</span></li>
+            <li><span>👑</span><span>Official Expression wardrobe</span></li>
+            <li><span>🛍</span><span>Save looks from boards, purchase with 1 tap</span></li>
+            <li><span>✂️</span><span>Request custom styling consultation</span></li>
+        </ul>
+        <a class="mv-upgrade-btn" href="/payment?tier=elite">Unlock MV House — Elite $50/mo →</a>
+    </div>
+
+    <!-- Main content (hidden until tier confirmed) -->
+    <div id="mvContent" style="display:none;">
+
+        <!-- Hero -->
+        <div class="mv-hero">
+            <div class="mv-hero-emblem">🏠</div>
+            <h1 class="mv-hero-title">Muliebrity &amp; <span>Virility</span> House</h1>
+            <p class="mv-hero-sub">
+                Your identity made visible. Save looks from MV House boards, curate your wardrobe,
+                and purchase with one tap.
+            </p>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="mv-tabs">
+            <button class="mv-tab active" onclick="switchTab('saved', this)" data-tab="saved">
+                My Saved Looks<span class="mv-tab-count" id="cnt-saved"></span>
+            </button>
+            <button class="mv-tab" onclick="switchTab('corporate', this)" data-tab="corporate">
+                💼 Corporate<span class="mv-tab-count" id="cnt-corporate"></span>
+            </button>
+            <button class="mv-tab" onclick="switchTab('casual-day', this)" data-tab="casual-day">
+                ☀️ Casual Day<span class="mv-tab-count" id="cnt-casual-day"></span>
+            </button>
+            <button class="mv-tab" onclick="switchTab('casual-night', this)" data-tab="casual-night">
+                🌙 Casual Night<span class="mv-tab-count" id="cnt-casual-night"></span>
+            </button>
+            <button class="mv-tab" onclick="switchTab('casual-home', this)" data-tab="casual-home">
+                🏡 Home<span class="mv-tab-count" id="cnt-casual-home"></span>
+            </button>
+            <button class="mv-tab" onclick="switchTab('official', this)" data-tab="official">
+                👑 Official<span class="mv-tab-count" id="cnt-official"></span>
+            </button>
+        </div>
+
+        <!-- Loading state -->
+        <div class="mv-loading" id="mvLoading">Loading your wardrobe…</div>
+
+        <!-- Completeness bar (shown per-category tab) -->
+        <div class="mv-completeness-wrap" id="completenessWrap" style="display:none;">
+            <div class="mv-completeness-row">
+                <span id="completenessLabel">Wardrobe</span>
+                <strong id="completenessPercent">0%</strong>
+            </div>
+            <div class="mv-completeness-track">
+                <div class="mv-completeness-fill" id="completenessFill" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- Saved Looks panel -->
+        <div class="mv-section" id="panel-saved" style="display:none;">
+            <p class="mv-section-label">All Saved Looks</p>
+            <div class="wardrobe-grid" id="grid-saved"></div>
+        </div>
+
+        <!-- Category panels -->
+        <div class="mv-section" id="panel-corporate" style="display:none;">
+            <p class="mv-section-label">💼 Corporate Expression</p>
+            <div class="wardrobe-grid" id="grid-corporate"></div>
+        </div>
+        <div class="mv-section" id="panel-casual-day" style="display:none;">
+            <p class="mv-section-label">☀️ Casual Day Expression</p>
+            <div class="wardrobe-grid" id="grid-casual-day"></div>
+        </div>
+        <div class="mv-section" id="panel-casual-night" style="display:none;">
+            <p class="mv-section-label">🌙 Casual Night Expression</p>
+            <div class="wardrobe-grid" id="grid-casual-night"></div>
+        </div>
+        <div class="mv-section" id="panel-casual-home" style="display:none;">
+            <p class="mv-section-label">🏡 Casual @Home Expression</p>
+            <div class="wardrobe-grid" id="grid-casual-home"></div>
+        </div>
+        <div class="mv-section" id="panel-official" style="display:none;">
+            <p class="mv-section-label">👑 Official Expression</p>
+            <div class="wardrobe-grid" id="grid-official"></div>
+        </div>
+
+        <!-- Purchase CTA strip -->
+        <div class="mv-cta-strip">
+            <span class="mv-cta-icon">🛍</span>
+            <div class="mv-cta-body">
+                <p class="mv-cta-title">Complete Your Wardrobe</p>
+                <p class="mv-cta-sub">Purchase all saved looks in one order. Estimated: 80,000 FCFA / order</p>
+            </div>
+            <button class="mv-cta-btn" onclick="purchaseWardrobe()">Order Now</button>
+        </div>
+
+        <!-- Custom Styling CTA -->
+        <div class="mv-style-cta">
+            <span class="mv-cta-icon">✂️</span>
+            <div class="mv-cta-body">
+                <p class="mv-cta-title">Request Custom Styling</p>
+                <p class="mv-cta-sub">Work with our Muliebrity/Virility consultants to curate your complete expression</p>
+            </div>
+            <button class="mv-cta-btn" style="background:transparent; color: var(--gold); border: 1px solid var(--border-gold);"
+                    onclick="requestStyling()">Book Now</button>
+        </div>
+
+    </div><!-- /mvContent -->
+
+    <!-- ── TOAST ─────────────────────────────── -->
+    <div class="mvh-toast" id="mvhToast"></div>
+
+    <!-- ── RE-CATEGORIZE MODAL ───────────────── -->
+    <div class="mvh-modal-overlay" id="recatModal">
+        <div class="mvh-modal">
+            <div class="mvh-modal-header">
+                <span class="mvh-modal-title">Move to…</span>
+                <button class="mvh-modal-close" onclick="closeModal('recatModal')">✕</button>
+            </div>
+            <div class="recat-grid" id="recatGrid"></div>
+        </div>
+    </div>
+
+    <!-- ── STYLE NOTES MODAL ─────────────────── -->
+    <div class="mvh-modal-overlay" id="notesModal">
+        <div class="mvh-modal">
+            <div class="mvh-modal-header">
+                <span class="mvh-modal-title">✏️ My Style Note</span>
+                <button class="mvh-modal-close" onclick="closeModal('notesModal')">✕</button>
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-sec);margin-bottom:0.85rem;line-height:1.5;">
+                When to wear it, how it makes you feel, what occasions it suits.
+            </p>
+            <textarea class="mvh-textarea" id="notesTextarea" placeholder="e.g. Wear this for client meetings. Pairs with the grey blazer…" maxlength="400"></textarea>
+            <div style="text-align:right;font-size:0.65rem;color:var(--text-sec);margin-top:4px;" id="notesCharCount">0 / 400</div>
+            <button class="mvh-save-btn" id="notesSaveBtn">Save Note</button>
+        </div>
+    </div>
+
+    <!-- ── SHARE TO DM MODAL ──────────────────── -->
+    <div class="mvh-modal-overlay" id="shareDmModal">
+        <div class="mvh-modal">
+            <div class="mvh-modal-header">
+                <span class="mvh-modal-title">💬 Share Look via DM</span>
+                <button class="mvh-modal-close" onclick="closeModal('shareDmModal')">✕</button>
+            </div>
+            <input class="mvh-dm-search" type="text" id="dmSearchInput" placeholder="Search members…">
+            <div class="mvh-dm-list" id="dmUserList">
+                <div style="padding:1rem;color:var(--text-sec);font-size:0.82rem;">Loading members…</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- NAV_INJECT -->
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="/js/firebase.js?v=76"></script>
+    <script src="/js/formation-access.js?v=249"></script>
+    <script src="/js/mv-house.js?v=263"></script>
+</body>
+</html>

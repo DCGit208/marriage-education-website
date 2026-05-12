@@ -2,13 +2,19 @@
    BOTTOM NAVIGATION BAR + SKELETON LOADING + OFFLINE BANNER
    ================================================================ */
 
+/* ── App shell safe-area bottom padding ─────────────────────────── */
+.app-shell {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* ── Bottom Nav ─────────────────────────────────────────────────── */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  bottom: 0;
+  /* Expand to include iPhone home-indicator zone; icons stay in top 60px */
+  height: calc(60px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   
   /* Premium glassmorphism effect */
@@ -24,12 +30,6 @@
     0 -4px 24px rgba(0, 0, 0, 0.5),
     0 -1px 0 rgba(198, 163, 132, 0.05);
   
-  /* GPU layer — prevents nav from jumping during iOS scroll/keyboard */
-  will-change: transform;
-  transform: translateZ(0);
-  
-  /* Smooth slide when hidden in chat view */
-  transition: transform 0.25s ease;
 }
 
 .bn-tab {
@@ -55,14 +55,15 @@
 
 .bn-icon {
   position: relative;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; /* consistent Safari + PWA */
 }
 
 .bn-label {
-  font-size: 0.58rem;
+  font-size: 0.7rem;  /* was 0.58rem — meets Apple HIG 10pt minimum */
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -95,15 +96,13 @@
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
 }
 
-/* DM page inbox: dm-main sits above the bottom nav */
-.bottom-nav-page .dm-main {
-  bottom: calc(60px + env(safe-area-inset-bottom));
+/* ── Fixed header clearance — all pages with .has-header ────────── */
+/* Clears the 60px fixed app-header + iPhone notch/Dynamic Island   */
+.has-header {
+  padding-top: calc(60px + env(safe-area-inset-top));
 }
-/* Chat view: dm-main extends to full height (nav is hidden via JS display:none).
-   input bar handles its own safe-area bottom padding. */
-.dm-page.in-chat .dm-main {
-  bottom: 0;
-}
+
+/* DM page: dm-main and chatView are flex children of app-content — no bottom offset needed */
 
 /* FAB: sit above bottom nav */
 .bottom-nav-page .fab {
@@ -248,10 +247,19 @@
 }
 
 /* ── Hamburger / Side-Menu (shared across all pages) ────────────── */
+/*
+   GLOBAL RULE: Hamburger is ALWAYS top-right so it can NEVER
+   overlap back buttons (which are always top-left).
+
+   EXCEPTION: The cinematic home dashboard has notification bell +
+   Profile on the right, so its hamburger stays top-left. It has
+   no back button, so there is no collision there.
+*/
 .menu-btn {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: 12px;
+  right: 16px;
+  left: auto;           /* prevent any inherited left value */
   z-index: 999999;
   font-size: 22px;
   color: white;
@@ -269,6 +277,39 @@
 }
 .menu-btn:hover { background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.2); }
 
+/* Dashboard home exception — hamburger top-left (no back button conflict) */
+.home-cinematic .menu-btn {
+  right: auto;
+  left: 20px;
+  top: 20px;
+}
+
+/* On pages with app-header: hamburger is already top-right, but the
+   notification bell in header-right lives at a right-edge that would
+   collide. Pull the header-right away from the right edge by 56px. */
+.has-header .app-header {
+  padding-right: 60px;
+}
+/* Reset the old (broken) left-side integration attempt */
+.has-header .app-header .header-left {
+  padding-left: 0;
+}
+.has-header .menu-btn {
+  /* Inherit the global top-right rule — remove all old overrides */
+  top: 12px;
+  right: 16px;
+  left: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 999999;
+}
+.has-header .menu-btn:hover {
+  background: rgba(0,0,0,0.5);
+}
+
 .menu-overlay {
   position: fixed;
   inset: 0;
@@ -280,74 +321,113 @@
 .side-menu {
   position: fixed;
   top: 0;
-  left: -280px;
-  width: 260px;
+  left: -300px;
+  width: 280px;
   height: 100vh;
-  background: #0a0a0a;
+  background: #0f0f10;
   z-index: 9998;
-  padding: 60px 0 32px;
+  padding: 96px 16px 32px;
   transition: left 0.3s ease;
   overflow-y: auto;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  border-right: 1px solid rgba(255,255,255,0.06);
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 .side-menu.open { left: 0; }
 
 .menu-links {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  gap: 12px;
 }
 
-/* Section headers */
+/* Section structure */
 .ham-section {
-  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.ham-section + .ham-section {
-  border-top: 1px solid rgba(255,255,255,0.06);
+.ham-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
+
+/* Section labels */
 .ham-section-label {
-  font-size: 9px;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
-  padding: 10px 20px 2px;
+  color: rgba(255,255,255,0.3);
+  padding: 0 4px 8px;
 }
 
-/* Links inside side-menu */
+/* Links & buttons inside side-menu */
 .side-menu a,
-.side-menu button {
-  display: block;
+.side-menu button#logoutMenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-family: 'Inter', sans-serif;
   color: rgba(255,255,255,0.82);
   text-decoration: none;
-  padding: 10px 20px;
-  font-size: 15px;
-  background: none;
+  background: transparent;
   border: none;
   text-align: left;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  border-radius: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s ease, color 0.2s ease;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 .side-menu a:hover,
-.side-menu button:hover {
-  background: rgba(255,255,255,0.05);
-  color: white;
+.side-menu button#logoutMenuBtn:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+.side-menu a.active {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
 }
 
+/* Icon alignment — geometric symbols, monochrome */
+.side-menu a .menu-icon,
+.side-menu button .menu-icon {
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+  opacity: 0.55;
+}
+
+/* Logout specific */
 #logoutMenuBtn {
-  color: rgba(255,100,100,0.8);
-  margin-top: 2px;
+  color: rgba(255,100,100,0.8) !important;
 }
 #logoutMenuBtn:hover {
   color: rgb(255,100,100) !important;
-  background: rgba(255,100,100,0.1) !important;
+  background: rgba(255,100,100,0.08) !important;
+}
+
+/* Version pill */
+#versionPill {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.25);
+  text-align: center;
+  letter-spacing: 0.05em;
 }
 
 /* ── Page Transition Animations ─────────────────────────────────── */
@@ -363,3 +443,14 @@
 .page-enter     { animation: pageSlideIn  0.28s cubic-bezier(0.4, 0, 0.2, 1) both; }
 .page-exit      { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 .page-exit-back { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* ── MV House topbar: force badge between back arrow and title ───── */
+/* Uses order so it works regardless of which cached HTML version loads */
+.mv-topbar .mv-back        { order: 1; }
+.mv-topbar .mv-topbar-badge { order: 2; flex-shrink: 0; }
+.mv-topbar .mv-topbar-title { order: 3; flex: 1; }
+
+/* ── Dating topbar badge: keep it away from hamburger ────────────── */
+.dt-topbar .dt-back         { order: 1; }
+.dt-topbar .dt-topbar-badge { order: 2; flex-shrink: 0; margin-right: auto; }
+.dt-topbar .dt-topbar-title { order: 3; }

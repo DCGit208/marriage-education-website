@@ -128,15 +128,20 @@ async function updateSchoolAccess() {
 // ==================================================================
 
 async function openSchool(schoolId) {
-  const canAccess = await FormationAccess.canAccessSchool(currentUserId, schoolId);
-  
-  if (!canAccess) {
-    // Show paywall
+  const SCHOOL_MIN_TIER = {
+    'school-1-teleios':              'foundation',
+    'school-2-sexual-literacy':      'premium',
+    'school-3-marriage-systems':     'elite',
+    'school-4-civilization-leadership': 'elite',
+  };
+  const TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
+  const required = SCHOOL_MIN_TIER[schoolId] || 'premium';
+
+  if ((TIER_ORDER[userTier] ?? 0) < (TIER_ORDER[required] ?? 99)) {
     showPaywall(schoolId);
     return;
   }
-  
-  // Redirect to courses page for this school
+
   window.location.href = `/courses.html?school=${schoolId}`;
 }
 
