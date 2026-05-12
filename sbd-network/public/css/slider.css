@@ -84,7 +84,8 @@ body {
    SLIDER CORE
 ======================================== */
 
-.slider-container {
+/* Dashboard home uses dashboard-shell.css; avoid duplicate viewport heights */
+body:not(.dashboard-page) .slider-container {
   position: relative;
   width: 100%;
   height: 100vh;
@@ -92,7 +93,7 @@ body {
   background: #000;
 }
 
-.slider-track {
+body:not(.dashboard-page) .slider-track {
   display: flex;
   width: 100%;
   height: 100%;
@@ -101,7 +102,7 @@ body {
   transform: translate3d(0,0,0);
 }
 
-.slide-card {
+body:not(.dashboard-page) .slide-card {
   position: relative;
   flex: 0 0 100%;
   width: 100%;
@@ -450,8 +451,8 @@ body {
 
 @media (max-width: 768px) {
 
-  .slider-container,
-  .slide-card {
+  body:not(.dashboard-page) .slider-container,
+  body:not(.dashboard-page) .slide-card {
     height: 100svh;
   }
 
