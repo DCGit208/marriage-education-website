@@ -138,8 +138,20 @@ auth.onAuthStateChanged(async (user) => {
             if (entry) showWhatsNew(entry);
           }).catch(() => {});
       }
+    } else {
+      // Signed in but no Firestore profile yet — still show Continue Journey empty state
+      currentUserData = { progress: {}, ownedCourses: [] };
+      const displayName = user.displayName || user.email || 'Member';
+      if (userNameDisplay) userNameDisplay.textContent = displayName;
+      await Promise.allSettled([
+        loadContinueJourney(user.uid).catch((e) => console.error('Continue Journey failed:', e)),
+        loadIdentityStatus(user.uid).catch((e) => console.error('Identity Status failed:', e)),
+        loadThisWeeksWork(user.uid).catch((e) => console.error('Week Work failed:', e)),
+        loadActiveDiscussions(user.uid).catch((e) => console.error('Discussions failed:', e)),
+      ]);
+      setupNextAction();
     }
-    
+
   } catch (error) {
     console.error('Error loading dashboard:', error);
     
@@ -180,7 +192,11 @@ async function loadContinueJourney(uid) {
       console.warn('continueJourneyCard element not found');
       return;
     }
-    
+
+    if (!currentUserData) {
+      currentUserData = { progress: {} };
+    }
+
     // Get user progress data
     const progress = currentUserData.progress || {};
     const currentCourseId = progress.currentCourseId;
@@ -199,10 +215,6 @@ async function loadContinueJourney(uid) {
       `;
       return;
     }
-    if (currentCourseId === "teleios-week-1") {
-  continueJourneyCard.innerHTML = "";
-  return;
-}
     // Fetch current course
     const courseDoc = await db.collection('courses').doc(currentCourseId).get();
     if (!courseDoc.exists) {
@@ -225,16 +237,14 @@ async function loadContinueJourney(uid) {
     const totalModules = course.moduleCount || 1;
     const progressPercent = Math.round((completedModules.length / totalModules) * 100);
 
-    // Only show the card if the user has made actual progress
-    if (completedModules.length === 0) {
-      continueJourneyCard.innerHTML = '';
-      return;
-    }
-    
-    // Format last activity time
-const lastActivityText = completedModules.length > 0
-  ? (lastActivity ? formatTimestamp(lastActivity) : 'In progress')
-  : 'Not started';
+    const lastActivityText =
+      completedModules.length > 0
+        ? lastActivity
+          ? formatTimestamp(lastActivity)
+          : 'In progress'
+        : 'Not started';
+
+    const continueLabel = completedModules.length === 0 ? 'Start →' : 'Continue →';
     
     // Render journey card
 continueJourneyCard.innerHTML = `
@@ -293,7 +303,7 @@ continueJourneyCard.innerHTML = `
       class="btn-continue"
       onclick="window.location.href='/lesson.html?moduleId=${currentModuleId || ''}'"
     >
-      Continue →
+      ${continueLabel}
     </button>
 
   </div>

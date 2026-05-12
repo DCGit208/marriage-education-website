@@ -186,7 +186,20 @@
   function playMvHouseVideo(slide) {
     const video = slide && slide.querySelector('video.video-bg');
     if (!video) return;
-    /* Only reset when empty; HAVE_METADATA+ is enough for duration/ended without reloading */
+
+    /* iOS / PWA: inline muted playback + explicit flags (autoplay policy) */
+    try {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.setAttribute('muted', '');
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+    } catch (e) {
+      /* ignore */
+    }
+
+    /* HAVE_METADATA+ is enough; preload=metadata in HTML helps iOS start decode */
     if (video.readyState === 0) {
       try {
         video.load();
@@ -194,12 +207,21 @@
         /* ignore */
       }
     }
-    const p = video.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(function () {
-        /* decode / policy */
-      });
+
+    function attemptPlay() {
+      const p = video.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function () {
+          const retry = function () {
+            video.removeEventListener('canplay', retry);
+            video.play().catch(function () {});
+          };
+          video.addEventListener('canplay', retry, { once: true });
+        });
+      }
     }
+
+    attemptPlay();
   }
 
   function bumpMvHouseSliderTimer() {
@@ -246,6 +268,12 @@
 
     if (video) {
       try {
+        video.muted = true;
+        video.playsInline = true;
+      } catch (e) {
+        /* ignore */
+      }
+      try {
         if (video.ended || (isFinite(video.duration) && video.currentTime >= video.duration - 0.05)) {
           video.currentTime = 0;
         }
@@ -255,7 +283,14 @@
       const p = video.play();
       if (p && typeof p.catch === 'function') {
         p.catch(function () {
-          /* decode / policy */
+          video.addEventListener(
+            'canplay',
+            function once() {
+              video.removeEventListener('canplay', once);
+              video.play().catch(function () {});
+            },
+            { once: true }
+          );
         });
       }
     }
