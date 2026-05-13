@@ -1364,7 +1364,34 @@
 .board-page .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Narrow phones: keep the right cluster from sliding under the hamburger.
+   .has-header .app-header already reserves 60px on the right for the menu
+   button; tighten the action buttons so Logout + bell fit cleanly beside it. */
+@media (max-width: 480px) {
+  .board-page .header-right { gap: 4px; }
+  .board-page #logoutBtn,
+  .board-page .header-right .btn-sm {
+    padding: 5px 9px;
+    font-size: 12px;
+  }
+  .board-page .notif-bell-btn { padding: 4px 6px; font-size: 1.05rem; }
+  .board-page .post-count-badge { font-size: 11px; }
+  /* Two-line title is OK now that the header reserves safe-area height */
+  .board-page .header-left { min-width: 0; flex: 1 1 auto; }
+  .board-page .page-title {
+    font-size: 15px;
+    line-height: 1.15;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
 }
 
 /* ── FAB position ─────────────────────────────────────────────── */

@@ -257,7 +257,7 @@
 */
 .menu-btn {
   position: fixed;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   right: 16px;
   left: auto;           /* prevent any inherited left value */
   z-index: 999999;
@@ -281,7 +281,7 @@
 .home-cinematic .menu-btn {
   right: auto;
   left: 20px;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
 }
 
 /* On pages with app-header: hamburger is already top-right, but the
@@ -296,7 +296,7 @@
 }
 .has-header .menu-btn {
   /* Inherit the global top-right rule — remove all old overrides */
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   right: 16px;
   left: auto;
   width: 44px;
