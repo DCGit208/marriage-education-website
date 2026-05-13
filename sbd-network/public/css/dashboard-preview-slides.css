@@ -40,6 +40,25 @@
   }
 }
 
+/* Installed PWA / iOS home screen: stable viewport height (fewer chrome jumps than raw dvh alone) */
+@media (display-mode: standalone) {
+  .dashboard-page {
+    --sbd-viewport-inner-h: 100vh;
+  }
+
+  @supports (height: 100dvh) {
+    .dashboard-page {
+      --sbd-viewport-inner-h: 100dvh;
+    }
+  }
+
+  @supports (height: 100svh) {
+    .dashboard-page {
+      --sbd-viewport-inner-h: 100svh;
+    }
+  }
+}
+
 /* ── Shell: main fills viewport under header; slider fills main (no 100dvh double-book) ─ */
 .dashboard-page .dashboard-main {
   box-sizing: border-box;
@@ -49,6 +68,21 @@
   min-height: 0;
   height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
   max-height: calc(var(--sbd-viewport-inner-h) - var(--sbd-dash-header-offset));
+}
+
+/* Floating chrome clears notch after body safe-area removed on dashboard */
+.dashboard-page #menuBtn {
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+}
+
+.dashboard-page #dashboardBellBtn {
+  top: calc(12px + env(safe-area-inset-top, 0px));
+}
+
+.dashboard-page #onboardingAuthBtn {
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
 }
 
 /* ── Viewport shell: one logical screen, no phantom scroll ───────── */
@@ -423,6 +457,11 @@
   opacity: 0.4;
 }
 
+/* Lead-in: taps reach video (iOS PWA user-gesture + play()) */
+.dashboard-page .slide-card[data-card="mv-house"].mv-slide-phase-bg > .card-overlay {
+  pointer-events: none;
+}
+
 .dashboard-page [data-card="mv-house"].mv-slide-reveal-done .video-overlay-dark {
   opacity: 1;
 }
@@ -502,18 +541,20 @@
   gap: 6px;
 }
 
-/* Dashboard PWA home: boards — in-slide scroll + tighter chrome so feed fits */
+/* Dashboard PWA home: boards — scroll column + room above bottom nav / pagination */
 .dashboard-page .slide-card[data-card="boards"] > .card-content {
   overflow-x: hidden !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   gap: 4px !important;
   min-height: 0;
+  flex: 1 1 auto;
   max-height: 100%;
+  scroll-padding-bottom: 20px;
   padding:
     calc(38px + env(safe-area-inset-top, 0px))
     var(--sbd-pad-x, 12px)
-    calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    calc(96px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Boards: pseudo “spacer” steals flex height and clips posts — disable on dashboard */
@@ -912,6 +953,17 @@
   letter-spacing: 0.02em;
 }
 
+/* Full post copy on dashboard (no 2-line ellipsis); avoid flex clipping on Chrome */
+.dashboard-page .slide-card[data-card="boards"] .board-post-text,
+.dashboard-page .slide-card[data-card="boards"] .board-post-text-padded {
+  display: block !important;
+  -webkit-box-orient: unset !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  overflow: visible !important;
+  max-height: none !important;
+}
+
 .dashboard-page .slide-card[data-card="boards"] .section-label {
   margin-bottom: 0 !important;
 }
@@ -939,6 +991,7 @@
 
 .dashboard-page .slide-card[data-card="boards"] .board-post-card {
   margin-bottom: 4px !important;
+  overflow: visible !important;
 }
 
 .dashboard-page .slide-card[data-card="boards"] .boards-search {
