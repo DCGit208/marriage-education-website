@@ -483,7 +483,13 @@
 }
 
 .dashboard-page [data-card="mv-house"].mv-slide-reveal-done .video-overlay-dark {
-  opacity: 1;
+  /* Legible text but keep motion/poster visible — full opacity + dark gradient read as “no video” on phones */
+  opacity: 0.52;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.34) 0%,
+    rgba(0, 0, 0, 0.74) 100%
+  ) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -495,7 +501,12 @@
   }
 
   .dashboard-page [data-card="mv-house"] .video-overlay-dark {
-    opacity: 1 !important;
+    opacity: 0.55 !important;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.38) 0%,
+      rgba(0, 0, 0, 0.78) 100%
+    ) !important;
     transition: none !important;
   }
 }
@@ -528,10 +539,10 @@
   object-position: center top;
 }
 
-/* Dashboard: motion must read above poster (home-premium dims .video-bg globally) */
+/* Dashboard MV: brighter than global .video-bg dim — poster + motion must read on small screens */
 .dashboard-page .slide-card[data-card="mv-house"] .video-bg {
-  opacity: 0.88 !important;
-  filter: brightness(0.96) !important;
+  opacity: 1 !important;
+  filter: brightness(0.94) contrast(1.03) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1356,9 +1367,18 @@
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-label {
-    font-size: clamp(0.62rem, 2.9cqw, 0.74rem) !important;
+    font-size: clamp(0.58rem, 2.75cqw, 0.72rem) !important;
     left: 3px !important;
     right: 3px !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: unset !important;
+    line-height: 1.18 !important;
+    max-height: 2.55em;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
