@@ -37,6 +37,12 @@ body{
   padding-bottom:env(safe-area-inset-bottom);
 }
 
+/* Dashboard (PWA home): edge-to-edge stage — avoid double safe-area with .dashboard-main / nav */
+body.home-cinematic.dashboard-page {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 body.home-cinematic{
   font-family:var(--font-primary);
   background:var(--bg-primary);

@@ -165,6 +165,7 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
+    detachMvHouseGestureUnlock(slide);
     slide._mvRevealPhaseDone = false;
     slide.classList.remove('mv-slide-phase-bg', 'mv-slide-reveal-done');
     const video = slide.querySelector('video.video-bg');
@@ -244,6 +245,32 @@
     attemptPlay();
   }
 
+  function tryPlayMvHouseSlide() {
+    const slide = document.querySelector('.slide-card[data-card="mv-house"]');
+    if (!slide || !slide.isConnected) return;
+    playMvHouseVideo(slide);
+  }
+
+  /** iOS / PWA: first touch anywhere satisfies user-gesture for muted play() if autoplay was deferred. */
+  function armMvGlobalPlaybackUnlock() {
+    if (document.body.dataset.sbdMvGlobalUnlock === '1') return;
+    document.body.dataset.sbdMvGlobalUnlock = '1';
+    const once = function () {
+      document.removeEventListener('touchstart', once, true);
+      document.removeEventListener('pointerdown', once, true);
+      tryPlayMvHouseSlide();
+    };
+    document.addEventListener('touchstart', once, { capture: true, passive: true });
+    document.addEventListener('pointerdown', once, { capture: true, passive: true });
+  }
+
+  function detachMvHouseGestureUnlock(slide) {
+    if (!slide || !slide._mvGestureUnlockAttached) return;
+    slide.removeEventListener('touchstart', slide._mvGestureUnlockAttached, true);
+    slide.removeEventListener('pointerdown', slide._mvGestureUnlockAttached, true);
+    slide._mvGestureUnlockAttached = null;
+  }
+
   function bumpMvHouseSliderTimer() {
     if (typeof window.__sbdRescheduleAutoSlide === 'function') {
       window.__sbdRescheduleAutoSlide();
@@ -269,6 +296,8 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
+
+    detachMvHouseGestureUnlock(slide);
 
     if (video) {
       if (slide._mvVideoLoopOrig !== undefined) {
@@ -342,6 +371,7 @@
       clearTimeout(slide._mvSafetyT);
       slide._mvSafetyT = null;
     }
+    detachMvHouseGestureUnlock(slide);
     slide._mvRevealPhaseDone = false;
 
     const video = slide.querySelector('video.video-bg');
@@ -427,6 +457,17 @@
 
     slide.classList.add('mv-slide-phase-bg');
 
+    if (!prefersReducedMotion()) {
+      detachMvHouseGestureUnlock(slide);
+      const g = function () {
+        detachMvHouseGestureUnlock(slide);
+        playMvHouseVideo(slide);
+      };
+      slide._mvGestureUnlockAttached = g;
+      slide.addEventListener('touchstart', g, { capture: true, passive: true });
+      slide.addEventListener('pointerdown', g, { capture: true, passive: true });
+    }
+
     playMvHouseVideo(slide);
 
     slide._mvRevealT1 = setTimeout(function () {
@@ -473,6 +514,8 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    armMvGlobalPlaybackUnlock();
+
     const authBtn = document.getElementById('onboardingAuthBtn');
     const bellBtn = document.getElementById('dashboardBellBtn');
     const tierCards = document.querySelectorAll('[data-card="tiers"] .membership-card');
