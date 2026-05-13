@@ -196,9 +196,11 @@
     });
   }
 
-  function playMvHouseVideo(slide) {
+  function playMvHouseVideo(slide, opts) {
     const video = slide && slide.querySelector('video.video-bg');
     if (!video) return;
+
+    const fromUserGesture = !!(opts && opts.fromUserGesture);
 
     /* iOS / PWA: inline muted playback + explicit flags (autoplay policy) */
     try {
@@ -244,8 +246,13 @@
       }
     }
 
-    /* iOS: play() after the next paint — avoids races when the slide just became visible */
-    if (isLikelyIOSWebKit()) {
+    /* iOS: when triggered from a user gesture (touch unlock) we MUST call
+       play() synchronously — the gesture context is lost across rAF and
+       Safari will reject the play() with NotAllowedError. Only defer to
+       the next paint when this is an autoplay/visibility-driven call. */
+    if (fromUserGesture) {
+      attemptPlay();
+    } else if (isLikelyIOSWebKit()) {
       requestAnimationFrame(function () {
         requestAnimationFrame(attemptPlay);
       });
@@ -254,25 +261,45 @@
     }
   }
 
-  function tryPlayMvHouseSlide() {
+  function tryPlayMvHouseSlide(opts) {
     const slide = document.querySelector('.slide-card[data-card="mv-house"]');
     if (!slide || !slide.isConnected) return;
-    playMvHouseVideo(slide);
+    playMvHouseVideo(slide, opts);
   }
 
-  /** iOS / PWA: first touch anywhere satisfies user-gesture for muted play() if autoplay was deferred. */
+  /** iOS / PWA: first touch anywhere satisfies user-gesture for muted play()
+      if autoplay was deferred. Re-arms after the MV video stops/ends so that
+      a later tap can still resurrect playback (Safari pauses background videos
+      aggressively in standalone mode). */
   function armMvGlobalPlaybackUnlock() {
     if (document.body.dataset.sbdMvGlobalUnlock === '1') return;
     document.body.dataset.sbdMvGlobalUnlock = '1';
-    const once = function () {
-      document.removeEventListener('touchstart', once, true);
-      document.removeEventListener('touchend', once, true);
-      document.removeEventListener('pointerdown', once, true);
-      tryPlayMvHouseSlide();
-    };
-    document.addEventListener('touchstart', once, { capture: true, passive: true });
-    document.addEventListener('touchend', once, { capture: true, passive: true });
-    document.addEventListener('pointerdown', once, { capture: true, passive: true });
+
+    function unlock() {
+      /* Synchronously inside the gesture: prime ALL background videos on the page,
+         not only the MV one. Cheap and idempotent. */
+      const all = document.querySelectorAll('video.video-bg');
+      all.forEach(function (v) {
+        try {
+          v.muted = true;
+          v.defaultMuted = true;
+          v.playsInline = true;
+          v.setAttribute('muted', '');
+          v.setAttribute('playsinline', '');
+          v.setAttribute('webkit-playsinline', '');
+          const p = v.play();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        } catch (e) {
+          /* ignore */
+        }
+      });
+      tryPlayMvHouseSlide({ fromUserGesture: true });
+    }
+
+    document.addEventListener('touchstart', unlock, { capture: true, passive: true });
+    document.addEventListener('touchend', unlock, { capture: true, passive: true });
+    document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    document.addEventListener('click', unlock, { capture: true, passive: true });
   }
 
   function detachMvHouseGestureUnlock(slide) {
