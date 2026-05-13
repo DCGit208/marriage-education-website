@@ -1252,10 +1252,10 @@
 
   overflow-x: hidden !important;
   overflow-y: hidden !important;
-  /* Distribute rails + tiles across the row so leftover height doesn't pool
-     into a dead black band below the second tile row */
-  justify-content: space-between !important;
-  gap: clamp(5px, 1.65cqw, 10px) !important;
+  /* Tile grids carry flex:1 to absorb leftover height; identity cards stay
+     at intrinsic height. flex-start lets the tile grids grow naturally. */
+  justify-content: flex-start !important;
+  gap: clamp(6px, 1.8cqw, 12px) !important;
 }
 
 .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male {
@@ -1313,15 +1313,16 @@
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
-    padding-top: 10px !important;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px)) !important;
     padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
     padding-left: max(var(--sbd-pad-x, 12px), 48px) !important;
     padding-right: max(var(--sbd-pad-x, 12px), 88px) !important;
-    row-gap: 6px !important;
+    row-gap: 8px !important;
 
     grid-template-columns: auto minmax(0, 1fr) !important;
-    /* Min row height so wardrobe tiles are not crushed into a “postage stamp” */
-    grid-template-rows: auto auto minmax(min(42svh, 320px), 1fr) !important;
+    /* Row 3 (.mv-preview) fills all leftover so tiles can be tall, premium
+       portraits — not postage stamps with a black band underneath. */
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .premium-badge {
@@ -1350,83 +1351,135 @@
     text-overflow: unset !important;
   }
 
+  /* Vertical rhythm: identity cards intrinsic, tile grids absorb leftover */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-preview {
     grid-column: 1 / -1 !important;
     grid-row: 3 !important;
-    gap: clamp(2px, 1cqw, 5px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    height: 100% !important;
+    min-height: 0 !important;
   }
 
+  /* Identity rail — title above, description below, NO ellipsis. Premium
+     glass band that reads like a section header, not a tag. */
   .dashboard-page [data-card="mv-house"] .mv-identity-card {
+    display: flex !important;
     flex-flow: column nowrap !important;
-    align-items: stretch !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    flex: 0 0 auto !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.10) 0%,
+      rgba(255, 255, 255, 0.03) 100%
+    ) !important;
+    border: 1px solid rgba(232, 210, 176, 0.32) !important;
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 6px 22px rgba(0, 0, 0, 0.42) !important;
   }
 
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title {
-    font-size: clamp(0.74rem, 3.45cqw, 0.92rem) !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
-    max-width: none !important;
-    line-height: 1.22 !important;
-  }
-
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title,
   .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-title {
+    font-size: clamp(0.92rem, 4.2cqw, 1.08rem) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.015em !important;
+    color: #faf4ee !important;
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: unset !important;
     max-width: none !important;
-    flex: 1 1 auto !important;
-  }
-
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-desc {
-    font-size: clamp(0.62rem, 2.85cqw, 0.76rem) !important;
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: unset !important;
-  }
-
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-desc {
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: unset !important;
-  }
-
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-label {
-    font-size: clamp(0.58rem, 2.75cqw, 0.72rem) !important;
-    left: 3px !important;
-    right: 3px !important;
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-overflow: unset !important;
     line-height: 1.18 !important;
-    max-height: 2.55em;
+    flex: 0 0 auto !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   }
 
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-desc,
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-desc {
+    font-size: clamp(0.7rem, 3.1cqw, 0.82rem) !important;
+    line-height: 1.32 !important;
+    color: rgba(255, 250, 244, 0.82) !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Tile grids own the leftover height — equally split between male/female */
+  .dashboard-page [data-card="mv-house"] .mv-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: 1fr !important;
+    gap: 8px !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  /* Each tile fills its grid cell completely — premium portrait card */
+  .dashboard-page [data-card="mv-house"] .mv-item {
+    position: relative !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 10px 28px rgba(0, 0, 0, 0.46) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  }
+
+  /* Image fills the cell — drop the aspect-ratio cap so tiles can be tall */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
-    /* Let tiles actually fill row 3 — old cap was ~190px on a 414px phone
-       which made tiles look like postage stamps with a dead band below */
-    max-height: min(72vw, 54svh, 360px) !important;
-    height: auto;
-    width: 100%;
-    object-fit: cover;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center 22% !important;
+    display: block !important;
   }
 
-  /* Tile is a flex/grid child — let it grow to its image so the row
-     truly fills, instead of capping at the image's small intrinsic size */
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-item {
-    height: 100%;
-    min-height: 0;
+  /* Premium label — wrapping allowed, soft gradient, sits at bottom edge */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-label {
+    position: absolute !important;
+    left: 6px !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    padding: 5px 8px !important;
+    font-size: clamp(0.62rem, 2.85cqw, 0.74rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.18 !important;
+    color: #fff !important;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.42) 0%,
+      rgba(0, 0, 0, 0.78) 100%
+    ) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: unset !important;
+    max-height: 2.7em;
   }
 }
