@@ -92,11 +92,10 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  /* flex-basis 0% + min-height 0: WebKit needs a definite flex height so % heights
+     on .slider-track / .slide-card resolve — avoids “dots in the middle” + black void */
+  flex: 1 1 0%;
   min-height: 0;
-  /* Overrides home-premium / slider fixed viewport height on dashboard only */
-  height: auto !important;
-  max-height: none !important;
 }
 
 .dashboard-page .slider-track {
@@ -340,15 +339,28 @@
 
 /* Phone / small tablet: remove global .dashboard-main side padding so the stage is full-bleed in Safari + PWA */
 @media (max-width: 899px) {
+  /* Single top inset: avoid stacking 60px page padding + thin main padding so MV titles sit under fixed chrome */
+  .dashboard-page {
+    padding-top: 0 !important;
+    --sbd-dash-header-offset: calc(56px + env(safe-area-inset-top, 0px));
+  }
+
   .dashboard-page .dashboard-main {
     max-width: none;
     width: 100%;
     margin: 0;
     padding-left: 0;
     padding-right: 0;
+    box-sizing: border-box;
+    /* Clear hamburger / bell / auth — same basis as --sbd-dash-header-offset */
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
     /* Must keep clearance for fixed .bottom-nav — never zero this (see bottom-nav.css) */
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    padding-top: 12px;
+    height: 100vh;
+    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
   }
 
   .dashboard-page .slider-container {
@@ -357,6 +369,16 @@
     border-radius: 0;
     border: none;
     box-shadow: none;
+  }
+
+  /* Pagination anchored to viewport so it stays above bottom nav even if flex math wobbles */
+  .dashboard-page .slider-pagination {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: calc(72px + max(10px, env(safe-area-inset-bottom, 0px)));
+    z-index: 40;
   }
 }
 
@@ -393,10 +415,8 @@
   .dashboard-page .slider-container {
     width: 100%;
     max-width: none;
-    flex: 1 1 auto;
+    flex: 1 1 0%;
     min-height: 0;
-    height: auto !important;
-    max-height: none !important;
     margin-inline: 0;
 
     border-radius: 0;
@@ -492,6 +512,8 @@
 .slide-card[data-card="mv-house"] .video-bg-wrap {
   overflow: hidden;
   contain: paint;
+  z-index: 0;
+  min-height: 100%;
 
   background: #070605;
 }
@@ -1266,8 +1288,10 @@
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
-    padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: 10px !important;
     padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: max(var(--sbd-pad-x, 12px), 48px) !important;
+    padding-right: max(var(--sbd-pad-x, 12px), 88px) !important;
     row-gap: 6px !important;
 
     grid-template-columns: auto minmax(0, 1fr) !important;
