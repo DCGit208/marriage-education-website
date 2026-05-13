@@ -100,7 +100,7 @@
 
 .dashboard-page .slider-track {
   box-sizing: border-box;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   height: 100%;
 }
@@ -339,28 +339,33 @@
 
 /* Phone / small tablet: remove global .dashboard-main side padding so the stage is full-bleed in Safari + PWA */
 @media (max-width: 899px) {
-  /* Single top inset: avoid stacking 60px page padding + thin main padding so MV titles sit under fixed chrome */
-  .dashboard-page {
-    padding-top: 0 !important;
-    --sbd-dash-header-offset: calc(56px + env(safe-area-inset-top, 0px));
+  /* iOS PWA: body flex + main flex-1 fixes collapsed slider when 100dvh ≠ visible viewport */
+  body.home-cinematic.dashboard-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: -webkit-fill-available;
   }
 
-  .dashboard-page .dashboard-main {
+  body.home-cinematic.dashboard-page > main.dashboard-main {
+    flex: 1 1 auto;
+    min-height: 0;
     max-width: none;
     width: 100%;
     margin: 0;
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box;
-    /* Clear hamburger / bell / auth — same basis as --sbd-dash-header-offset */
     padding-top: calc(56px + env(safe-area-inset-top, 0px));
-    /* Must keep clearance for fixed .bottom-nav — never zero this (see bottom-nav.css) */
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    height: 100vh;
-    max-height: 100vh;
-    height: 100dvh;
-    max-height: 100dvh;
-    min-height: 0;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .dashboard-page {
+    padding-top: 0 !important;
+    --sbd-dash-header-offset: calc(56px + env(safe-area-inset-top, 0px));
   }
 
   .dashboard-page .slider-container {
@@ -369,16 +374,6 @@
     border-radius: 0;
     border: none;
     box-shadow: none;
-  }
-
-  /* Pagination anchored to viewport so it stays above bottom nav even if flex math wobbles */
-  .dashboard-page .slider-pagination {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    bottom: calc(72px + max(10px, env(safe-area-inset-bottom, 0px)));
-    z-index: 40;
   }
 }
 
@@ -1306,7 +1301,8 @@
     row-gap: 6px !important;
 
     grid-template-columns: auto minmax(0, 1fr) !important;
-    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    /* Min row height so wardrobe tiles are not crushed into a “postage stamp” */
+    grid-template-rows: auto auto minmax(min(42svh, 320px), 1fr) !important;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .premium-badge {
@@ -1341,8 +1337,26 @@
     gap: clamp(2px, 1cqw, 5px) !important;
   }
 
+  .dashboard-page [data-card="mv-house"] .mv-identity-card {
+    flex-flow: column nowrap !important;
+    align-items: stretch !important;
+  }
+
   .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title {
-    font-size: clamp(0.68rem, 3.15cqw, 0.82rem) !important;
+    font-size: clamp(0.74rem, 3.45cqw, 0.92rem) !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+    line-height: 1.22 !important;
+  }
+
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: none !important;
+    flex: 1 1 auto !important;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-desc {
@@ -1382,6 +1396,6 @@
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
-    max-height: min(30cqw, 22dvh, 142px) !important;
+    max-height: min(46vw, 36svh, 240px) !important;
   }
 }
