@@ -465,6 +465,16 @@
 }
 
 .dashboard-page [data-card="mv-house"] .video-overlay-dark {
+  /* Default state: medium overlay so video/poster reads through immediately.
+     home-premium.css ships a heavy near-black gradient at opacity:1; on the
+     dashboard MV slide we don't want pitch black before JS adds the phase
+     classes. */
+  opacity: 0.55;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.32) 0%,
+    rgba(0, 0, 0, 0.62) 100%
+  ) !important;
   transition: opacity 0.5s ease;
 }
 
@@ -521,7 +531,14 @@
   z-index: 0;
   min-height: 100%;
 
-  background: #070605;
+  /* Hard fallback: if the video never paints (slow network / iOS PWA blocked
+     autoplay / SW miss), the poster image still fills the wrap so the slide
+     is NOT pitch black behind the content. */
+  background-color: #070605;
+  background-image: url('/assets/background/mv-house-video-poster.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
 }
 
 .slide-card[data-card="mv-house"] .video-bg {
@@ -1235,7 +1252,9 @@
 
   overflow-x: hidden !important;
   overflow-y: hidden !important;
-  justify-content: flex-start !important;
+  /* Distribute rails + tiles across the row so leftover height doesn't pool
+     into a dead black band below the second tile row */
+  justify-content: space-between !important;
   gap: clamp(5px, 1.65cqw, 10px) !important;
 }
 
@@ -1396,6 +1415,18 @@
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
-    max-height: min(46vw, 36svh, 240px) !important;
+    /* Let tiles actually fill row 3 — old cap was ~190px on a 414px phone
+       which made tiles look like postage stamps with a dead band below */
+    max-height: min(72vw, 54svh, 360px) !important;
+    height: auto;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  /* Tile is a flex/grid child — let it grow to its image so the row
+     truly fills, instead of capping at the image's small intrinsic size */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-item {
+    height: 100%;
+    min-height: 0;
   }
 }
