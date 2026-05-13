@@ -135,6 +135,14 @@
     );
   }
 
+  /** WebKit iOS / iPadOS — different scheduling + Range behavior than desktop Chrome */
+  function isLikelyIOSWebKit() {
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    if (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1) return true;
+    return false;
+  }
+
   function detachMvHouseVideoEndListeners(slide, video) {
     if (!video) return;
     if (slide._mvOnEnded) {
@@ -209,14 +217,8 @@
       /* ignore */
     }
 
-    /* Preload=auto on the MV <video> (dashboard.html) helps iOS/PWA buffer before play() */
-    if (video.readyState === 0) {
-      try {
-        video.load();
-      } catch (e) {
-        /* ignore */
-      }
-    }
+    /* Never call video.load() here: it resets the media element and routinely breaks
+       muted inline play() on iOS Safari / home-screen PWA (especially after SW/cache). */
 
     function armCanPlayRetry() {
       const retry = function () {
@@ -242,7 +244,14 @@
       }
     }
 
-    attemptPlay();
+    /* iOS: play() after the next paint — avoids races when the slide just became visible */
+    if (isLikelyIOSWebKit()) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(attemptPlay);
+      });
+    } else {
+      attemptPlay();
+    }
   }
 
   function tryPlayMvHouseSlide() {
@@ -257,16 +266,19 @@
     document.body.dataset.sbdMvGlobalUnlock = '1';
     const once = function () {
       document.removeEventListener('touchstart', once, true);
+      document.removeEventListener('touchend', once, true);
       document.removeEventListener('pointerdown', once, true);
       tryPlayMvHouseSlide();
     };
     document.addEventListener('touchstart', once, { capture: true, passive: true });
+    document.addEventListener('touchend', once, { capture: true, passive: true });
     document.addEventListener('pointerdown', once, { capture: true, passive: true });
   }
 
   function detachMvHouseGestureUnlock(slide) {
     if (!slide || !slide._mvGestureUnlockAttached) return;
     slide.removeEventListener('touchstart', slide._mvGestureUnlockAttached, true);
+    slide.removeEventListener('touchend', slide._mvGestureUnlockAttached, true);
     slide.removeEventListener('pointerdown', slide._mvGestureUnlockAttached, true);
     slide._mvGestureUnlockAttached = null;
   }
@@ -329,23 +341,33 @@
       } catch (e) {
         /* ignore */
       }
-      const p = video.play();
-      if (p && typeof p.then === 'function') {
-        p.catch(function () {
-          video.addEventListener(
-            'canplay',
-            function once() {
-              video.removeEventListener('canplay', once);
-              const p2 = video.play();
-              if (p2 && typeof p2.catch === 'function') {
-                p2.catch(function () {
-                  /* ignore */
-                });
-              }
-            },
-            { once: true }
-          );
+      function finishAttemptPlay() {
+        const p = video.play();
+        if (p && typeof p.then === 'function') {
+          p.catch(function () {
+            video.addEventListener(
+              'canplay',
+              function onceCp() {
+                video.removeEventListener('canplay', onceCp);
+                const p2 = video.play();
+                if (p2 && typeof p2.catch === 'function') {
+                  p2.catch(function () {
+                    /* ignore */
+                  });
+                }
+              },
+              { once: true }
+            );
+          });
+        }
+      }
+
+      if (isLikelyIOSWebKit()) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(finishAttemptPlay);
         });
+      } else {
+        finishAttemptPlay();
       }
     }
 
@@ -465,6 +487,7 @@
       };
       slide._mvGestureUnlockAttached = g;
       slide.addEventListener('touchstart', g, { capture: true, passive: true });
+      slide.addEventListener('touchend', g, { capture: true, passive: true });
       slide.addEventListener('pointerdown', g, { capture: true, passive: true });
     }
 
@@ -515,6 +538,22 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     armMvGlobalPlaybackUnlock();
+
+    function resumeMvVideoIfPaused() {
+      if (document.visibilityState !== 'visible') return;
+      const slide = document.querySelector('.slide-card[data-card="mv-house"]');
+      if (!slide || !slide.isConnected) return;
+      const v = slide.querySelector('video.video-bg');
+      if (!v || v.error) return;
+      if (v.paused && !v.ended) {
+        playMvHouseVideo(slide);
+      }
+    }
+
+    document.addEventListener('visibilitychange', resumeMvVideoIfPaused);
+    window.addEventListener('pageshow', function (ev) {
+      if (ev.persisted) resumeMvVideoIfPaused();
+    });
 
     const authBtn = document.getElementById('onboardingAuthBtn');
     const bellBtn = document.getElementById('dashboardBellBtn');

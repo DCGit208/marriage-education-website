@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1778665777649';
+const CACHE_VERSION = 'sbd-network-v1778667458752';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
@@ -147,6 +147,17 @@ self.addEventListener('fetch', (event) => {
           return caches.match(request).then(cached => cached || response);
         })
         .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Video/audio: always hit the network — never cache-first.
+  // Safari (especially iOS) uses byte-range requests for <video>. The Cache API match
+  // is URL-only; serving one stored 200 body for subsequent Range requests breaks
+  // decoding (black / paused / "doesn't play") in Safari and installed PWAs.
+  if (/\.(mp4|webm|m4v|ogg|ogv)(\?|#|$)/i.test(url.pathname)) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store', mode: 'same-origin' }).catch(() => new Response('', { status: 503 }))
     );
     return;
   }
