@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1778722100227">
+  <meta name="build-version" content="1778794198150">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="description" content="A system of formation">
     <meta name="theme-color" content="#0D0D0D">
@@ -18,13 +18,13 @@
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="css/home-premium.css?v=1778722100227">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778722100227">
+    <link rel="stylesheet" href="css/home-premium.css?v=1778794198150">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778794198150">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/slider.css?v=1778722100227">
-<link rel="stylesheet" href="/css/menu.css?v=1778722100227">
-<link rel="stylesheet" href="/css/onboarding-ui.css?v=1778722100227">
-    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1778722100227">
+    <link rel="stylesheet" href="/css/slider.css?v=1778794198150">
+<link rel="stylesheet" href="/css/menu.css?v=1778794198150">
+<link rel="stylesheet" href="/css/onboarding-ui.css?v=1778794198150">
+    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1778794198150">
     
 
     <!-- Firebase SDK -->
@@ -34,18 +34,18 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App scripts -->
-    <script defer src="/js/firebase.js?v=1778722100227"></script>
-    <script defer src="/js/auth-guard.js?v=1778722100227"></script>
-    <script defer src="/js/sw-update-checker.js?v=1778722100227"></script>
-    <script defer src="/js/notifications.js?v=1778722100227"></script>
-    <script defer src="/js/dm-badge.js?v=1778722100227"></script>
-    <script defer src="/js/ptr.js?v=1778722100227"></script>
-    <script defer src="/js/dashboard.js?v=1778722100227"></script>
-    <script defer src="/js/dashboard-marketing-ui.js?v=1778722100227"></script>
-    <script defer src="/js/dashboard-slider.js?v=1778722100227"></script>
-    <script defer src="/js/transitions.js?v=1778722100227"></script>
-    <script defer src="/js/swipe-back.js?v=1778722100227"></script>
-    <script defer src="/js/install-prompt.js?v=1778722100227"></script>
+    <script defer src="/js/firebase.js?v=1778794198150"></script>
+    <script defer src="/js/auth-guard.js?v=1778794198150"></script>
+    <script defer src="/js/sw-update-checker.js?v=1778794198150"></script>
+    <script defer src="/js/notifications.js?v=1778794198150"></script>
+    <script defer src="/js/dm-badge.js?v=1778794198150"></script>
+    <script defer src="/js/ptr.js?v=1778794198150"></script>
+    <script defer src="/js/dashboard.js?v=1778794198150"></script>
+    <script defer src="/js/dashboard-marketing-ui.js?v=1778794198150"></script>
+    <script defer src="/js/dashboard-slider.js?v=1778794198150"></script>
+    <script defer src="/js/transitions.js?v=1778794198150"></script>
+    <script defer src="/js/swipe-back.js?v=1778794198150"></script>
+    <script defer src="/js/install-prompt.js?v=1778794198150"></script>
 
 </head>
 <body class="home-cinematic bottom-nav-page auth-guest dashboard-page">
@@ -277,59 +277,87 @@ style="background-image:url('/assets/background/slide-4.jpg');">
 style="background-image:url('/assets/background/boards-bg.jpg');">
 </div>                <div class="card-overlay"></div>
 
-                <div class="card-content">
-                    <div class="section-label">COMMUNITY</div>
-                    <h2 class="card-title"><span class="ct-word">Discussion</span><span class="ct-word">Boards</span></h2>
-                    <p class="card-subtitle">Real conversations. Real growth.</p>
-
-                    <div class="boards-vitality" aria-label="Community activity">
-                      <span class="bv-stat"><span class="bv-num">12</span> active boards</span>
-                      <span class="bv-dot" aria-hidden="true">·</span>
-                      <span class="bv-stat"><span class="bv-num">876</span> conversations</span>
-                      <span class="bv-dot" aria-hidden="true">·</span>
-                      <span class="bv-stat"><span class="bv-num">28</span> stories today</span>
+                <div class="card-content" data-bb-board>
+                    <!-- IDENTITY: kicker + live indicator + display title + stat line -->
+                    <div class="bb-id">
+                      <div class="bb-kicker">
+                        <span>Discussion Boards</span>
+                        <span class="bb-live" aria-label="Live now">
+                          <span class="bb-live-dot" aria-hidden="true"></span>
+                          <span>Live</span>
+                        </span>
+                      </div>
+                      <h2 class="bb-title">The Salon Floor</h2>
+                      <p class="bb-stats">
+                        <span class="bb-stats-cell"><b>12</b>&nbsp;boards</span>
+                        <span class="bb-stats-dot" aria-hidden="true">·</span>
+                        <span class="bb-stats-cell"><b>876</b>&nbsp;conversations</span>
+                        <span class="bb-stats-dot" aria-hidden="true">·</span>
+                        <span class="bb-stats-cell"><b>28</b>&nbsp;stories&nbsp;today</span>
+                      </p>
                     </div>
 
-                    <div class="boards-top-ui">
-                      <div class="boards-search">Search posts...</div>
-                      <div class="boards-filters">
-                        <div class="boards-chip active">All</div>
-                        <div class="boards-chip">Images</div>
-                        <div class="boards-chip">Videos</div>
-                      </div>
+                    <!-- FILTER CHIPS — active state in gold -->
+                    <div class="bb-filters" role="tablist" aria-label="Filter posts">
+                      <button type="button" class="bb-chip bb-chip-on" role="tab" aria-selected="true">All</button>
+                      <button type="button" class="bb-chip" role="tab">Images</button>
+                      <button type="button" class="bb-chip" role="tab">Videos</button>
+                      <button type="button" class="bb-chip" role="tab">Text</button>
                     </div>
 
-                    <div class="boards-stories">
-                      <div class="story-bubble">+</div>
-                      <div class="story-bubble">A</div>
-                      <div class="story-bubble">A</div>
-                      <div class="story-bubble">A</div>
+                    <!-- STORY RAIL — gold-ringed portraits -->
+                    <div class="bb-stories" aria-label="Stories">
+                      <span class="bb-story bb-story-add" aria-label="Add your story">
+                        <span class="bb-story-plus" aria-hidden="true">+</span>
+                      </span>
+                      <span class="bb-story">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                      </span>
+                      <span class="bb-story">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                      </span>
+                      <span class="bb-story">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                      </span>
+                      <span class="bb-story">
+                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                      </span>
+                      <span class="bb-story">
+                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                      </span>
                     </div>
 
-                    <article class="board-post-card board-post-hero">
-                      <div class="board-post-header">
-                        <div class="board-avatar"></div>
-                        <div>
-                          <div class="board-post-name">Administration</div>
-                          <div class="board-post-time">Just now</div>
-                        </div>
-                      </div>
-                      <img class="board-post-image" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80" alt="" />
-                      <div class="board-post-actions">❤️ 24  🔥 12  💬 8</div>
-                    </article>
+                    <!-- HERO POST — the centerpiece -->
+                    <article class="bb-post" aria-label="Featured post">
+                      <header class="bb-post-head">
+                        <span class="bb-post-avatar">
+                          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80&auto=format&fit=crop" alt="" loading="lazy" />
+                        </span>
+                        <span class="bb-post-meta">
+                          <span class="bb-post-name">Administration</span>
+                          <span class="bb-post-sub">Muliebrity Casual&nbsp;&middot;&nbsp;12&nbsp;min&nbsp;ago</span>
+                        </span>
+                        <span class="bb-post-pin" aria-label="Pinned">&#9733;</span>
+                      </header>
 
-                    <article class="board-post-card board-post-quote">
-                      <div class="board-post-header">
-                        <div class="board-avatar"></div>
-                        <div>
-                          <div class="board-post-name">Angela T.</div>
-                          <div class="board-post-time">2h ago</div>
-                        </div>
-                      </div>
-                      <blockquote class="board-post-text board-post-text-padded">
-                        This framework is changing how I understand relationships completely.
-                      </blockquote>
-                      <div class="board-post-actions">❤️ 18  💬 5</div>
+                      <figure class="bb-post-figure">
+                        <img class="bb-post-img" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=900&q=85&auto=format&fit=crop" alt="" loading="lazy" />
+                        <span class="bb-post-badge">FEATURED</span>
+                      </figure>
+
+                      <p class="bb-post-cap">
+                        We discussed identity tonight &mdash; what it means to be revealed through tension.
+                      </p>
+
+                      <footer class="bb-post-acts">
+                        <span class="bb-act"><b>24</b><span class="bb-act-icon" aria-hidden="true">&hearts;</span></span>
+                        <span class="bb-act-sep" aria-hidden="true">&middot;</span>
+                        <span class="bb-act"><b>12</b><span class="bb-act-icon bb-act-icon-flame" aria-hidden="true">&#9733;</span></span>
+                        <span class="bb-act-sep" aria-hidden="true">&middot;</span>
+                        <span class="bb-act"><b>8</b><span class="bb-act-icon" aria-hidden="true">&#8617;</span></span>
+                        <span class="bb-act-grow" aria-hidden="true"></span>
+                        <a class="bb-post-read" href="boards.html">Read&nbsp;&rarr;</a>
+                      </footer>
                     </article>
                 </div>
             </div>
@@ -576,7 +604,7 @@ style="background-image:url('/assets/background/progress-bg.jpg');">
       <p class="signup-prompt-footer">Already have an account? <a href="/auth?next=/learn&src=slide9-signin">Sign in</a></p>
     </div>
 
-  <script defer src="/js/offline.js?v=1778722100227"></script>
+  <script defer src="/js/offline.js?v=1778794198150"></script>
 
   <!-- Notification Panel -->
   <div id="notifOverlay" class="notif-overlay notif-hidden"></div>
