@@ -50,6 +50,13 @@
         "headers": [{ "key": "Cache-Control", "value": "max-age=31536000, immutable" }]
       },
       {
+        "source": "**/*.@(mp4|webm|m4v|ogg|ogv|mp3|m4a|wav)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" },
+          { "key": "Accept-Ranges", "value": "bytes" }
+        ]
+      },
+      {
         "source": "/service-worker.js",
         "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" }]
       },
