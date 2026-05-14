@@ -1626,8 +1626,12 @@
    Applies at every viewport width — clamp() handles type scaling. */
 
   /* ── Slide frame ───────────────────────────────────────────────── */
+  /* main.dashboard-main already supplies calc(56px + safe-area-inset-top)
+     of top padding, so the slide-card already starts well below the
+     floating ☰ / Profile chrome. Do NOT add safe-area-inset-top here or
+     it gets double-counted — that was the ~1cm "pushed-down" gap. */
   .dashboard-page .slide-card[data-card="boards"] > .card-content[data-bb-board] {
-    padding: calc(42px + env(safe-area-inset-top, 0px)) 18px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 14px 18px 12px !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
@@ -1893,7 +1897,11 @@
     max-height: min(38cqw, 24dvh, 200px) !important;
     overflow: hidden !important;
     position: relative !important;
-    background: #0a0908 !important;
+    /* Tasteful placeholder gradient — looks intentional before the
+       photograph loads (and harmless once it covers the figure). */
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(232, 210, 176, 0.08) 0%, transparent 55%),
+      linear-gradient(135deg, #1a1612 0%, #0a0908 55%, #1a1612 100%) !important;
   }
   .dashboard-page [data-bb-board] .bb-post-img {
     width: 100% !important;
