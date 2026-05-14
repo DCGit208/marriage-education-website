@@ -1270,14 +1270,12 @@
   margin-top: clamp(2px, 0.65cqw, 5px) !important;
 }
 
+/* Wide-screen MV identity card chrome only — narrow (<=520px) overrides
+   below switch this to a stacked column with no ellipsis. Layout
+   properties live in the lower-specificity rule at line ~1072 so the
+   narrow override can win without an arms race. */
 .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-card {
   flex-shrink: 0 !important;
-  margin: 0 !important;
-  padding: clamp(2px, 0.75cqw, 5px) clamp(5px, 1.4cqw, 8px) !important;
-  display: flex !important;
-  flex-flow: row nowrap !important;
-  align-items: center !important;
-  gap: clamp(4px, 1.1cqw, 8px) !important;
 }
 
 /* Wardrobe tiles — prioritize image height after compact identity rails */
@@ -1364,15 +1362,19 @@
   }
 
   /* Identity rail — title above, description below, NO ellipsis. Premium
-     glass band that reads like a section header, not a tag. */
-  .dashboard-page [data-card="mv-house"] .mv-identity-card {
+     glass band that reads like a section header, not a tag.
+     Specificity raised to match the .slide-card[data-card] rules above
+     (0,4,0) so this override actually wins instead of losing the !important
+     specificity battle. */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-card,
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card {
     display: flex !important;
     flex-flow: column nowrap !important;
     align-items: flex-start !important;
-    gap: 3px !important;
+    gap: 4px !important;
     flex: 0 0 auto !important;
-    padding: 8px 12px !important;
-    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
     background: linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.10) 0%,
@@ -1384,6 +1386,17 @@
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
       0 6px 22px rgba(0, 0, 0, 0.42) !important;
+  }
+
+  /* Feminine rail keeps its warmer gold-tinted gradient */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card {
+    background: linear-gradient(
+      135deg,
+      rgba(232, 210, 176, 0.22) 0%,
+      rgba(255, 190, 200, 0.08) 38%,
+      rgba(12, 10, 14, 0.85) 100%
+    ) !important;
+    border-color: rgba(232, 210, 176, 0.5) !important;
   }
 
   .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title,
@@ -1417,8 +1430,9 @@
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
-  /* Tile grids own the leftover height — equally split between male/female */
-  .dashboard-page [data-card="mv-house"] .mv-grid {
+  /* Tile grids own the leftover height — equally split between male/female.
+     Specificity (0,4,0) so it beats the base .slide-card[data-card] rules. */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     grid-template-rows: 1fr !important;
@@ -1429,7 +1443,7 @@
   }
 
   /* Each tile fills its grid cell completely — premium portrait card */
-  .dashboard-page [data-card="mv-house"] .mv-item {
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-item {
     position: relative !important;
     height: 100% !important;
     min-height: 0 !important;
