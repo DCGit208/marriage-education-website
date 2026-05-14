@@ -151,11 +151,28 @@ body {
 }
 
 .bg-dark-boards {
-  background:
+  /* Editorial salon backdrop:
+     - top: deep ink, near-black
+     - mid: warm aubergine wash (the "salon light")
+     - bottom: faint gold radial glow at center, like an unseen candle */
+  background-color: #0a0908;
+  background-image:
+    radial-gradient(
+      ellipse at 50% 92%,
+      rgba(232, 210, 176, 0.16) 0%,
+      rgba(198, 163, 132, 0.08) 22%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(72, 32, 48, 0.42) 0%,
+      transparent 60%
+    ),
     linear-gradient(
       180deg,
-      #0b0b0b,
-      #151515
+      #0b0a09 0%,
+      #14110f 48%,
+      #0c0a09 100%
     );
 }
 

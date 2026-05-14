@@ -1604,85 +1604,98 @@
 /* ═══════════════════════════════════════════════════════════════════
    DISCUSSION BOARDS — FORMIDABLE NARROW LAYOUT (the salon)
    ═══════════════════════════════════════════════════════════════════
-   Same editorial language as MV House:
-   - Centered kicker → display-serif title → italic Cormorant subtitle
-   - Gold hairlines as section dividers (no card chrome)
-   - Live "vitality ticker" — typography-only stats showing community pulse
-   - Story portraits: thin gold ring, refined avatars
-   - Hero post: full-bleed photo, gradient overlay with author + reactions
-   - Quote post: italic blockquote-style with attribution + reactions
+   Same editorial language as MV House but on a strict baseline grid:
+   - 8px vertical rhythm across every section
+   - Disciplined 20px side gutters (the magazine margin)
+   - Centered kicker → 2-line display-serif title → italic Cormorant subtitle
+   - Gold hairlines as section dividers
+   - Live "vitality ticker" — typography-only community pulse
+   - Story portraits: thin gold ring, refined avatars (centered)
+   - Hero post: tight chrome, properly framed photo
+   - Quote post: italic blockquote on a gold rule
    The photograph and the typography are the chrome. */
 @media (max-width: 520px) {
-  /* ── Slide content frame: editorial breathing room ───────────── */
+  /* ── Slide content frame: disciplined editorial gutters ──────── */
   .dashboard-page .slide-card[data-card="boards"] > .card-content {
-    padding-top: calc(58px + env(safe-area-inset-top, 0px)) !important;
-    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-top: calc(46px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
     gap: 0 !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ── COMMUNITY kicker — centered gold caps pill ──────────────── */
+  /* ── COMMUNITY kicker — small gold caps pill, centered ───────── */
   .dashboard-page .slide-card[data-card="boards"] .section-label {
     align-self: center !important;
-    margin: 0 auto 0 auto !important;
-    padding: 4px 14px !important;
+    margin: 0 auto !important;
+    padding: 3px 12px !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-weight: 600 !important;
-    font-size: 0.6rem !important;
+    font-size: 0.56rem !important;
     letter-spacing: 0.28em !important;
     text-transform: uppercase !important;
     color: rgba(232, 210, 176, 0.95) !important;
     background: linear-gradient(
       135deg,
-      rgba(232, 210, 176, 0.16) 0%,
-      rgba(198, 163, 132, 0.06) 100%
+      rgba(232, 210, 176, 0.14) 0%,
+      rgba(198, 163, 132, 0.04) 100%
     ) !important;
-    border: 1px solid rgba(232, 210, 176, 0.45) !important;
+    border: 1px solid rgba(232, 210, 176, 0.42) !important;
     border-radius: 999px !important;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-                0 6px 18px rgba(0, 0, 0, 0.35) !important;
+                0 4px 14px rgba(0, 0, 0, 0.32) !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     width: fit-content !important;
+    line-height: 1.4 !important;
   }
 
-  /* ── DISCUSSION BOARDS — display serif, letter-spaced ────────── */
+  /* ── DISCUSSION / BOARDS — 2-line magazine cover ─────────────── */
   .dashboard-page .slide-card[data-card="boards"] .card-title {
     align-self: center !important;
     text-align: center !important;
     font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
     font-weight: 300 !important;
-    font-size: clamp(1.7rem, 7.8cqw, 2.2rem) !important;
-    letter-spacing: 0.18em !important;
+    font-size: clamp(1.55rem, 7.6cqw, 1.95rem) !important;
+    letter-spacing: 0.16em !important;
     text-transform: uppercase !important;
-    line-height: 1 !important;
+    line-height: 0.94 !important;
     color: #faf4ee !important;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6) !important;
-    margin: 14px 0 4px 0 !important;
-    padding-left: 0.18em !important;
-    white-space: nowrap !important;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.62) !important;
+    margin: 10px 0 4px 0 !important;
+    padding: 0 !important;
+    white-space: normal !important;
     overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 
-  /* ── Subtitle — italic Cormorant + gold hairline rule beneath ── */
+  .dashboard-page .slide-card[data-card="boards"] .card-title .ct-word {
+    display: block !important;
+    /* Optical fix for trailing tracking on caps */
+    padding-left: 0.16em !important;
+  }
+
+  /* ── Subtitle — italic Cormorant, gold hairline beneath ──────── */
   .dashboard-page .slide-card[data-card="boards"] .card-subtitle {
     align-self: center !important;
     text-align: center !important;
     font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
     font-style: italic !important;
     font-weight: 300 !important;
-    font-size: clamp(0.92rem, 3.9cqw, 1.05rem) !important;
+    font-size: clamp(0.88rem, 3.7cqw, 1rem) !important;
     letter-spacing: 0.015em !important;
-    line-height: 1.28 !important;
+    line-height: 1.25 !important;
     color: rgba(255, 250, 244, 0.94) !important;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.65) !important;
-    max-width: 340px !important;
-    margin: 0 auto 10px auto !important;
-    padding-bottom: 12px !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6) !important;
+    max-width: 320px !important;
+    margin: 6px auto 0 auto !important;
+    padding: 0 0 10px 0 !important;
     background-image: linear-gradient(
       90deg,
       transparent 0%,
@@ -1690,13 +1703,13 @@
       rgba(232, 210, 176, 0.55) 70%,
       transparent 100%
     ) !important;
-    background-size: 60% 1px !important;
+    background-size: 56% 1px !important;
     background-position: center bottom !important;
     background-repeat: no-repeat !important;
     opacity: 1 !important;
   }
 
-  /* ── Vitality ticker — typography-only community pulse ───────── */
+  /* ── Vitality ticker — masthead-style typography pulse ───────── */
   .dashboard-page .slide-card[data-card="boards"] .boards-vitality {
     display: flex !important;
     flex-flow: row nowrap !important;
@@ -1704,16 +1717,16 @@
     align-items: baseline !important;
     gap: 6px !important;
     width: 100% !important;
-    margin: 8px 0 14px 0 !important;
+    margin: 10px 0 12px 0 !important;
     padding: 0 4px !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-weight: 500 !important;
-    font-size: 0.62rem !important;
-    letter-spacing: 0.08em !important;
+    font-size: 0.58rem !important;
+    letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
-    color: rgba(255, 250, 244, 0.74) !important;
+    color: rgba(255, 250, 244, 0.7) !important;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55) !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
   }
 
   .dashboard-page .slide-card[data-card="boards"] .boards-vitality .bv-stat {
@@ -1724,7 +1737,7 @@
     font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-weight: 400 !important;
     font-style: italic !important;
-    font-size: 1.12rem !important;
+    font-size: 1rem !important;
     letter-spacing: 0 !important;
     color: rgba(232, 210, 176, 1) !important;
     text-transform: none !important;
@@ -1737,56 +1750,25 @@
     line-height: 1 !important;
   }
 
-  /* ── Hide the literal search bar — utility, not preview ──────── */
-  .dashboard-page .slide-card[data-card="boards"] .boards-search {
+  /* ── Hide search bar AND filter chips on narrow ──────────────── */
+  /* Both are utility UI that don't add narrative value to a preview;
+     the vitality ticker already conveys "this is interactive content". */
+  .dashboard-page .slide-card[data-card="boards"] .boards-top-ui,
+  .dashboard-page .slide-card[data-card="boards"] .boards-search,
+  .dashboard-page .slide-card[data-card="boards"] .boards-filters {
     display: none !important;
   }
 
-  /* ── Filter chips — restyle as caps typography, not pill chips ── */
-  .dashboard-page .slide-card[data-card="boards"] .boards-top-ui {
-    margin: 0 0 12px 0 !important;
-  }
-
-  .dashboard-page .slide-card[data-card="boards"] .boards-filters {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 18px !important;
-    padding-top: 0 !important;
-    border-top: 1px solid rgba(232, 210, 176, 0.18) !important;
-    padding: 8px 0 0 0 !important;
-  }
-
-  .dashboard-page .slide-card[data-card="boards"] .boards-chip {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    font-weight: 600 !important;
-    font-size: 0.56rem !important;
-    letter-spacing: 0.22em !important;
-    text-transform: uppercase !important;
-    color: rgba(255, 250, 244, 0.55) !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
-  }
-
-  .dashboard-page .slide-card[data-card="boards"] .boards-chip.active {
-    color: rgba(232, 210, 176, 1) !important;
-    border-bottom: 1px solid rgba(232, 210, 176, 0.7) !important;
-    padding-bottom: 2px !important;
-    box-shadow: none !important;
-  }
-
-  /* ── Stories — refined gold-ring portraits ───────────────────── */
+  /* ── Stories — gold-ring portraits, centered, modest size ────── */
   .dashboard-page .slide-card[data-card="boards"] .boards-stories {
     display: flex !important;
     gap: 10px !important;
-    margin: 0 0 14px 0 !important;
+    margin: 0 0 12px 0 !important;
     padding: 0 !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
-    justify-content: flex-start !important;
+    justify-content: center !important;
   }
 
   .dashboard-page .slide-card[data-card="boards"] .boards-stories::-webkit-scrollbar {
@@ -1794,11 +1776,11 @@
   }
 
   .dashboard-page .slide-card[data-card="boards"] .story-bubble {
-    width: 46px !important;
-    height: 46px !important;
-    flex: 0 0 46px !important;
+    width: 38px !important;
+    height: 38px !important;
+    flex: 0 0 38px !important;
     border-radius: 50% !important;
-    border: 1.5px solid rgba(232, 210, 176, 0.55) !important;
+    border: 1.5px solid rgba(232, 210, 176, 0.5) !important;
     background: linear-gradient(
       145deg,
       rgba(255, 255, 255, 0.10) 0%,
@@ -1807,67 +1789,71 @@
     color: rgba(255, 250, 244, 0.92) !important;
     font-family: 'Inter', -apple-system, sans-serif !important;
     font-weight: 600 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.78rem !important;
     letter-spacing: 0.04em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     box-shadow:
       0 0 0 2px rgba(0, 0, 0, 0.4) inset,
-      0 6px 18px rgba(0, 0, 0, 0.5) !important;
+      0 4px 14px rgba(0, 0, 0, 0.45) !important;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55) !important;
   }
 
-  /* First bubble (the "+" / Add Story) — accent ring */
+  /* First bubble (Add Story "+") — brighter accent */
   .dashboard-page .slide-card[data-card="boards"] .story-bubble:first-child {
     background: linear-gradient(
       145deg,
-      rgba(232, 210, 176, 0.18) 0%,
+      rgba(232, 210, 176, 0.2) 0%,
       rgba(0, 0, 0, 0.4) 100%
     ) !important;
     border-color: rgba(232, 210, 176, 0.85) !important;
     color: rgba(232, 210, 176, 1) !important;
     font-weight: 300 !important;
-    font-size: 1.4rem !important;
+    font-size: 1.2rem !important;
+    line-height: 1 !important;
   }
 
-  /* ── Post cards — full bleed, magazine chrome ────────────────── */
+  /* ── Post cards — disciplined chrome, tight rhythm ───────────── */
   .dashboard-page .slide-card[data-card="boards"] .board-post-card {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     max-width: none !important;
-    margin: 0 0 14px 0 !important;
+    margin: 0 0 10px 0 !important;
     padding: 0 !important;
     background: linear-gradient(
       165deg,
-      rgba(255, 255, 255, 0.06) 0%,
-      rgba(0, 0, 0, 0.18) 100%
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(0, 0, 0, 0.22) 100%
     ) !important;
-    border: 1px solid rgba(232, 210, 176, 0.18) !important;
+    border: 1px solid rgba(232, 210, 176, 0.16) !important;
     border-radius: 6px !important;
     overflow: hidden !important;
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.05) inset,
-      0 10px 28px rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+      0 8px 22px rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .dashboard-page .slide-card[data-card="boards"] .board-post-card:last-child {
     margin-bottom: 0 !important;
   }
 
-  /* Post header — caps Inter author name, italic Cormorant timestamp */
+  /* Compact post header (40px tall) */
   .dashboard-page .slide-card[data-card="boards"] .board-post-header {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    padding: 10px 12px !important;
-    border-bottom: 1px solid rgba(232, 210, 176, 0.1) !important;
+    gap: 9px !important;
+    padding: 7px 11px !important;
+    border-bottom: 1px solid rgba(232, 210, 176, 0.08) !important;
   }
 
   .dashboard-page .slide-card[data-card="boards"] .board-avatar {
-    width: 30px !important;
-    height: 30px !important;
-    flex: 0 0 30px !important;
+    width: 26px !important;
+    height: 26px !important;
+    flex: 0 0 26px !important;
     border-radius: 50% !important;
     background: linear-gradient(
       145deg,
@@ -1875,15 +1861,15 @@
       rgba(120, 80, 60, 0.6) 100%
     ) !important;
     box-shadow:
-      0 0 0 1.5px rgba(232, 210, 176, 0.55),
-      0 0 0 3px rgba(0, 0, 0, 0.45) !important;
+      0 0 0 1.5px rgba(232, 210, 176, 0.5),
+      0 0 0 3px rgba(0, 0, 0, 0.4) !important;
   }
 
   .dashboard-page .slide-card[data-card="boards"] .board-post-name {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-weight: 600 !important;
-    font-size: 0.66rem !important;
-    letter-spacing: 0.2em !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.18em !important;
     text-transform: uppercase !important;
     color: rgba(232, 210, 176, 0.95) !important;
     line-height: 1 !important;
@@ -1894,24 +1880,24 @@
     font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-style: italic !important;
     font-weight: 400 !important;
-    font-size: 0.78rem !important;
+    font-size: 0.74rem !important;
     color: rgba(255, 250, 244, 0.6) !important;
     line-height: 1 !important;
     letter-spacing: 0.01em !important;
   }
 
-  /* Hero photo post — full-bleed image, no padding above */
+  /* Hero photo — landscape framing, full face visible */
   .dashboard-page .slide-card[data-card="boards"] .board-post-image {
     width: 100% !important;
     height: auto !important;
-    aspect-ratio: 16 / 11 !important;
-    max-height: min(50cqw, 36dvh, 230px) !important;
+    aspect-ratio: 16 / 9 !important;
+    max-height: min(38cqw, 22dvh, 170px) !important;
     object-fit: cover !important;
-    object-position: center 28% !important;
+    object-position: center 38% !important;
     display: block !important;
   }
 
-  /* Quote post — italic blockquote-style text */
+  /* Quote post — italic blockquote on a gold rule */
   .dashboard-page .slide-card[data-card="boards"] .board-post-quote .board-post-text,
   .dashboard-page .slide-card[data-card="boards"] .board-post-quote .board-post-text-padded,
   .dashboard-page .slide-card[data-card="boards"] blockquote.board-post-text,
@@ -1919,28 +1905,27 @@
     font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
     font-style: italic !important;
     font-weight: 400 !important;
-    font-size: 1.05rem !important;
-    line-height: 1.42 !important;
+    font-size: 0.98rem !important;
+    line-height: 1.36 !important;
     color: rgba(255, 250, 244, 0.95) !important;
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45) !important;
-    padding: 14px 16px 4px 16px !important;
-    margin: 0 !important;
+    padding: 10px 14px 6px 14px !important;
+    margin: 0 12px !important;
     quotes: '\201C' '\201D' !important;
     position: relative !important;
     border-left: 2px solid rgba(232, 210, 176, 0.55) !important;
-    margin-left: 12px !important;
   }
 
-  /* Reactions — caps Inter, gold dot separators */
+  /* Reactions — caps Inter, thin separators, compact */
   .dashboard-page .slide-card[data-card="boards"] .board-post-actions {
     display: flex !important;
     align-items: center !important;
-    gap: 14px !important;
-    padding: 10px 14px 12px 14px !important;
-    border-top: 1px solid rgba(232, 210, 176, 0.08) !important;
+    gap: 12px !important;
+    padding: 7px 11px 9px 11px !important;
+    border-top: 1px solid rgba(232, 210, 176, 0.07) !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-weight: 500 !important;
-    font-size: 0.7rem !important;
+    font-size: 0.66rem !important;
     letter-spacing: 0.06em !important;
     color: rgba(255, 250, 244, 0.78) !important;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
