@@ -1304,158 +1304,257 @@
   filter: saturate(1.07) contrast(1.04);
 }
 
-/* iPhone / narrow portrait: full-width rhythm, readable type, subtitle on its own row */
+/* ═══════════════════════════════════════════════════════════════════
+   MV HOUSE — FORMIDABLE NARROW LAYOUT (editorial portrait dossier)
+   ═══════════════════════════════════════════════════════════════════
+   Design language: luxury fashion magazine.
+   - Centered kicker → display-serif title → italic subtitle
+   - Gold hairlines as section dividers (no glass-card chrome)
+   - Section name in small caps Inter (gold for masculine, rose-gold for
+     feminine). Description in italic Cormorant Garamond, single line.
+   - Tiles full-bleed; the photograph IS the chrome. Single bottom
+     gradient with laser-thin small-caps label.
+   - Generous breathing room; negative space as luxury signal. */
 @media (max-width: 520px) {
   .dashboard-page {
     --sbd-pad-x: clamp(8px, 3.2vw, 16px);
+    --mv-gold: rgba(232, 210, 176, 1);
+    --mv-gold-soft: rgba(232, 210, 176, 0.55);
+    --mv-rose: rgba(232, 188, 188, 1);
+    --mv-rose-soft: rgba(232, 188, 188, 0.55);
   }
 
+  /* Slide content: centered editorial frame.
+     Top padding clears the floating ☰ / 🔔 / Profile chrome above.
+     Single column — every element centers under the title. */
   .dashboard-page .slide-card[data-card="mv-house"] > .card-content {
-    padding-top: calc(8px + env(safe-area-inset-top, 0px)) !important;
-    padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
-    padding-left: max(var(--sbd-pad-x, 12px), 48px) !important;
-    padding-right: max(var(--sbd-pad-x, 12px), 88px) !important;
-    row-gap: 8px !important;
+    padding-top: calc(58px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    row-gap: 0 !important;
 
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    /* Row 3 (.mv-preview) fills all leftover so tiles can be tall, premium
-       portraits — not postage stamps with a black band underneath. */
-    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto minmax(0, 1fr) !important;
   }
 
+  /* ── ELITE kicker — centered above title ─────────────────────── */
   .dashboard-page .slide-card[data-card="mv-house"] .premium-badge {
     grid-column: 1 !important;
     grid-row: 1 !important;
-    font-size: clamp(0.6rem, 2.85cqw, 0.72rem) !important;
+    justify-self: center !important;
+    align-self: center !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    padding: 4px 14px !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.6rem !important;
+    letter-spacing: 0.28em !important;
+    text-transform: uppercase !important;
+    color: rgba(232, 210, 176, 0.95) !important;
+    background: linear-gradient(
+      135deg,
+      rgba(232, 210, 176, 0.16) 0%,
+      rgba(198, 163, 132, 0.06) 100%
+    ) !important;
+    border: 1px solid rgba(232, 210, 176, 0.45) !important;
+    border-radius: 999px !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+                0 6px 18px rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
+  /* ── M V  H O U S E — display serif, letter-spaced, centered ───── */
   .dashboard-page .slide-card[data-card="mv-house"] .card-title {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    font-size: clamp(1.12rem, 5.4cqw, 1.42rem) !important;
-  }
-
-  .dashboard-page .slide-card[data-card="mv-house"] .card-subtitle {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 !important;
     grid-row: 2 !important;
-    font-size: clamp(0.72rem, 3.35cqw, 0.88rem) !important;
-    line-height: 1.28 !important;
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
+    justify-self: center !important;
+    text-align: center !important;
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+    font-weight: 300 !important;
+    font-size: clamp(2rem, 9.5cqw, 2.6rem) !important;
+    letter-spacing: 0.2em !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+    color: #faf4ee !important;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6) !important;
+    margin: 14px 0 4px 0 !important;
+    /* Optical fix: caps + letter-spacing leaves a trailing gap on the right */
+    padding-left: 0.2em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
     text-overflow: unset !important;
   }
 
-  /* Vertical rhythm: identity cards intrinsic, tile grids absorb leftover */
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-preview {
-    grid-column: 1 / -1 !important;
+  /* ── Subtitle — italic Cormorant, hairline beneath ────────────── */
+  .dashboard-page .slide-card[data-card="mv-house"] .card-subtitle {
+    grid-column: 1 !important;
     grid-row: 3 !important;
+    justify-self: center !important;
+    text-align: center !important;
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+    font-style: italic !important;
+    font-weight: 300 !important;
+    font-size: clamp(0.92rem, 3.9cqw, 1.05rem) !important;
+    letter-spacing: 0.015em !important;
+    line-height: 1.28 !important;
+    color: rgba(255, 250, 244, 0.94) !important;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.65) !important;
+    max-width: 320px !important;
+    margin: 0 auto 18px auto !important;
+    padding-bottom: 14px !important;
+    /* Decorative gold hairline beneath subtitle — separates header from rails */
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--mv-gold-soft) 30%,
+      var(--mv-gold-soft) 70%,
+      transparent 100%
+    ) !important;
+    background-size: 60% 1px !important;
+    background-position: center bottom !important;
+    background-repeat: no-repeat !important;
+    white-space: normal !important;
+    display: block !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  /* ── .mv-preview — flex column, eats leftover height ──────────── */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-preview {
+    grid-column: 1 !important;
+    grid-row: 4 !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
-    gap: 10px !important;
+    gap: 6px !important;
     height: 100% !important;
     min-height: 0 !important;
   }
 
-  /* Identity rail — title above, description below, NO ellipsis. Premium
-     glass band that reads like a section header, not a tag.
-     Specificity raised to match the .slide-card[data-card] rules above
-     (0,4,0) so this override actually wins instead of losing the !important
-     specificity battle. */
+  /* ── Identity rail — typography only, no card chrome ──────────── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-card,
   .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card {
     display: flex !important;
     flex-flow: column nowrap !important;
     align-items: flex-start !important;
-    gap: 4px !important;
+    gap: 2px !important;
     flex: 0 0 auto !important;
-    padding: 10px 14px !important;
-    border-radius: 14px !important;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.10) 0%,
-      rgba(255, 255, 255, 0.03) 100%
-    ) !important;
-    border: 1px solid rgba(232, 210, 176, 0.32) !important;
-    backdrop-filter: blur(14px) saturate(1.1);
-    -webkit-backdrop-filter: blur(14px) saturate(1.1);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 6px 22px rgba(0, 0, 0, 0.42) !important;
+    margin: 0 !important;
+    padding: 8px 0 4px 0 !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Hairline rule above each rail — gold for masc, rose for fem */
+    border-top: 1px solid var(--mv-gold-soft) !important;
   }
 
-  /* Feminine rail keeps its warmer gold-tinted gradient */
+  /* Feminine rail — rose-gold hairline */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card {
-    background: linear-gradient(
-      135deg,
-      rgba(232, 210, 176, 0.22) 0%,
-      rgba(255, 190, 200, 0.08) 38%,
-      rgba(12, 10, 14, 0.85) 100%
-    ) !important;
-    border-color: rgba(232, 210, 176, 0.5) !important;
+    border-top-color: var(--mv-rose-soft) !important;
+    margin-top: 4px !important;
   }
 
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title,
-  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-title {
-    font-size: clamp(0.92rem, 4.2cqw, 1.08rem) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.015em !important;
-    color: #faf4ee !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
-    max-width: none !important;
-    line-height: 1.18 !important;
+  /* ── Section name — small caps Inter, gold ────────────────────── */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-title {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.66rem !important;
+    letter-spacing: 0.24em !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+    color: var(--mv-gold) !important;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55) !important;
     flex: 0 0 auto !important;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+    max-width: none !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-title {
+    color: var(--mv-rose) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.66rem !important;
+    letter-spacing: 0.24em !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55) !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* ── Section description — italic Cormorant, single elegant line ── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-identity-desc,
   .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male + .mv-identity-card .mv-identity-desc {
-    font-size: clamp(0.7rem, 3.1cqw, 0.82rem) !important;
-    line-height: 1.32 !important;
+    font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+    font-style: italic !important;
+    font-weight: 400 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.22 !important;
     color: rgba(255, 250, 244, 0.82) !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6) !important;
+    flex: 0 0 auto !important;
+    margin: 4px 0 0 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
     display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     -webkit-line-clamp: unset !important;
     line-clamp: unset !important;
-    flex: 0 0 auto !important;
-    max-width: none !important;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
-  /* Tile grids own the leftover height — equally split between male/female.
-     Specificity (0,4,0) so it beats the base .slide-card[data-card] rules. */
+  /* ── Tile grid — full bleed, equal share of leftover height ───── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-grid {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     grid-template-rows: 1fr !important;
-    gap: 8px !important;
+    gap: 6px !important;
     flex: 1 1 0 !important;
     min-height: 0 !important;
     height: auto !important;
+    margin-top: 6px !important;
   }
 
-  /* Each tile fills its grid cell completely — premium portrait card */
+  /* ── Tile — full-bleed photo, minimal chrome ──────────────────── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-item {
     position: relative !important;
     height: 100% !important;
     min-height: 0 !important;
-    border-radius: 14px !important;
+    border-radius: 4px !important;
     overflow: hidden !important;
+    border: none !important;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 10px 28px rgba(0, 0, 0, 0.46) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 8px 22px rgba(0, 0, 0, 0.55) !important;
   }
 
-  /* Image fills the cell — drop the aspect-ratio cap so tiles can be tall */
+  /* Subtle gold bottom-edge tint for masculine, rose for feminine */
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-male .mv-item {
+    box-shadow:
+      0 0 0 1px rgba(232, 210, 176, 0.18) inset,
+      0 8px 22px rgba(0, 0, 0, 0.55) !important;
+  }
+  .dashboard-page .slide-card[data-card="mv-house"] .mv-grid-female .mv-item {
+    box-shadow:
+      0 0 0 1px rgba(232, 188, 188, 0.22) inset,
+      0 8px 22px rgba(0, 0, 0, 0.55) !important;
+  }
+
+  /* ── Image — full bleed ───────────────────────────────────────── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-img {
     width: 100% !important;
     height: 100% !important;
@@ -1466,34 +1565,38 @@
     display: block !important;
   }
 
-  /* Premium label — wrapping allowed, soft gradient, sits at bottom edge */
+  /* ── Label — gradient overlay only, single line, laser-thin caps ── */
   .dashboard-page .slide-card[data-card="mv-house"] .mv-label {
     position: absolute !important;
-    left: 6px !important;
-    right: 6px !important;
-    bottom: 6px !important;
-    padding: 5px 8px !important;
-    font-size: clamp(0.62rem, 2.85cqw, 0.74rem) !important;
-    font-weight: 700 !important;
-    line-height: 1.18 !important;
-    color: #fff !important;
+    inset: auto 0 0 0 !important;
+    padding: 28px 4px 8px 4px !important;
     background: linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.42) 0%,
-      rgba(0, 0, 0, 0.78) 100%
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.0) 35%,
+      rgba(0, 0, 0, 0.85) 100%
     ) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 8px !important;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-    white-space: normal !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
+    border: none !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.55rem !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: #fff !important;
+    text-align: center !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95) !important;
+
+    white-space: nowrap !important;
     overflow: hidden !important;
-    text-overflow: unset !important;
-    max-height: 2.7em;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+    max-height: none !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
   }
 }
