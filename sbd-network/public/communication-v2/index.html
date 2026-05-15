@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#08080a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Communication Engine V2 — SBD Network</title>
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css">
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="/js/firebase.js"></script>
+  <script defer src="/js/auth-guard.js"></script>
+  <script defer src="/communication-v2/communication-v2.js"></script>
+</head>
+<body class="ce2-body-root">
+  <div id="ce2App" class="ce2-shell" aria-label="Communication Engine V2">
+    <header class="ce2-header" role="banner">
+      <a class="ce2-back" href="/dashboard.html" aria-label="Back to home">←</a>
+      <div class="ce2-header-text">
+        <h1 class="ce2-title">Communication V2</h1>
+        <p class="ce2-sub">Formation-gated · isolated test shell</p>
+      </div>
+      <span class="ce2-pill" id="ce2TierPill">…</span>
+    </header>
+
+    <div class="ce2-workspace">
+      <aside class="ce2-sidebar" id="ce2Sidebar">
+        <div class="ce2-sidebar-scroll">
+          <section class="ce2-section">
+            <h2 class="ce2-section-title">Formation groups</h2>
+            <p class="ce2-hint">Tier-qualified circles (no global directory).</p>
+            <ul class="ce2-list" id="ce2GroupList"></ul>
+            <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2JoinDemo">Join selected group</button>
+          </section>
+          <section class="ce2-section">
+            <h2 class="ce2-section-title">Direct (CE2)</h2>
+            <ul class="ce2-list" id="ce2ThreadList"></ul>
+          </section>
+          <section class="ce2-section">
+            <h2 class="ce2-section-title">Discovery</h2>
+            <p class="ce2-hint">Mentors &amp; same-tier — filtered queries only.</p>
+            <div class="ce2-tabs" role="tablist">
+              <button type="button" class="ce2-tab is-active" data-discovery="mentors">Mentors</button>
+              <button type="button" class="ce2-tab" data-discovery="peers">Same tier</button>
+            </div>
+            <ul class="ce2-list" id="ce2DiscoveryList"></ul>
+          </section>
+        </div>
+      </aside>
+
+      <main class="ce2-main">
+        <div class="ce2-main-header">
+          <h2 class="ce2-thread-title" id="ce2ThreadTitle">Select a thread</h2>
+          <p class="ce2-thread-meta" id="ce2ThreadMeta"></p>
+        </div>
+        <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite">
+          <!-- message rows -->
+        </div>
+        <footer class="ce2-composer" role="form" aria-label="Compose message">
+          <label class="ce2-sr-only" for="ce2ClassSelect">Classification</label>
+          <select id="ce2ClassSelect" class="ce2-select" title="Message classification">
+            <option value="public">public</option>
+            <option value="foundation">foundation</option>
+            <option value="premium">premium</option>
+            <option value="elite">elite</option>
+            <option value="mentor">mentor</option>
+          </select>
+          <label class="ce2-sr-only" for="ce2Shareable">Shareable</label>
+          <label class="ce2-check"><input type="checkbox" id="ce2Shareable" checked> shareable</label>
+          <label class="ce2-sr-only" for="ce2Input">Message</label>
+          <textarea id="ce2Input" class="ce2-input" rows="1" placeholder="Write in covenant…" maxlength="8000"></textarea>
+          <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn">Send</button>
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
