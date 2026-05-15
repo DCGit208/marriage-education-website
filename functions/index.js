@@ -483,10 +483,43 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           console.error('[SBD] Webhook missing uid or productId:', session.metadata);
           return res.json({ received: true, action: 'sbd-missing-metadata' });
         }
-        await unlockSbdContent(uid, productId, session);
+        const tgMeta = await unlockSbdContent(uid, productId, session);
         const prodName = SBD_CATALOG_SERVER[productId]?.name || productId;
-        const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : '';
-        await sendTelegram(`✅ SBD NETWORK PAYMENT\n\n📦 ${prodName}\n💵 ${amt}\n👤 ${session.customer_details?.email || uid}`);
+        const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
+        const payer    = session.customer_details?.email || uid;
+
+        let payMsg =
+          '✅ SBD NETWORK PAYMENT\n\n' +
+          `📦 ${prodName}\n` +
+          `💵 ${amt}\n` +
+          `👤 ${payer}\n` +
+          `🆔 ${uid}\n`;
+
+        if (tgMeta) {
+          if (tgMeta.referredBy) {
+            payMsg += `🔗 Referral ref: ${tgMeta.referredBy}\n`;
+          } else {
+            payMsg += '🔗 Referral ref: (none — direct/organic)\n';
+          }
+          if (tgMeta.referrerAmbassadorCode) {
+            payMsg += '👥 Referrer: ' + tgMeta.referrerAmbassadorCode;
+            if (tgMeta.referrerFullName) payMsg += ` (${tgMeta.referrerFullName})`;
+            payMsg += '\n';
+          }
+          if (tgMeta.referralCredited) {
+            payMsg += `✅ Referral commission recorded: ${tgMeta.ambassadorCommissionFCFA || 0} FCFA (tier ${tgMeta.tierKeyed || '—'})`;
+            if (tgMeta.seniorAmbassadorCode) {
+              payMsg += `\n👑 Senior override: ${tgMeta.seniorAmbassadorCode} (+${tgMeta.seniorCommissionFCFA || 0} FCFA)`;
+            }
+            payMsg += '\n';
+          } else if (tgMeta.referralSkipReason) {
+            payMsg += `ℹ️ Referral payout: not applied (${tgMeta.referralSkipReason})\n`;
+          }
+        }
+
+        payMsg += '\n👉 Admin: https://marriageducation.com/admin-dashboard.html';
+
+        await sendTelegram(payMsg, false);
         return res.json({ received: true, action: 'sbd' });
       }
       // ────────────────────────────────────────────────────────────────
@@ -3179,9 +3212,29 @@ const SBD_TIER_GROUPS = {
 
 async function unlockSbdContent(uid, productId, session) {
   const rule = SBD_UNLOCK_RULES[productId];
-  if (!rule) { console.warn(`[SBD] No unlock rule for: ${productId}`); return; }
+  if (!rule) {
+    console.warn(`[SBD] No unlock rule for: ${productId}`);
+    return null;
+  }
 
   const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const userData = userSnap.exists ? userSnap.data() : {};
+
+  const tgMeta = {
+    referredBy: userData.referredBy || null,
+    signupApp: userData.signupApp || null,
+    referralCredited: false,
+    referralSkipReason: rule.tier ? null : 'non_tier_product',
+    referrerAmbassadorCode: null,
+    referrerFullName: null,
+    seniorAmbassadorCode: null,
+    ambassadorCommissionFCFA: null,
+    seniorCommissionFCFA: null,
+    tierKeyed: rule.tier || null,
+    productId,
+    productName: SBD_CATALOG_SERVER[productId]?.name || productId,
+  };
 
   if (rule.tier) {
     // Recurring subscriptions: endDate = 2099 (Stripe manages billing cancellation).
@@ -3191,28 +3244,29 @@ async function unlockSbdContent(uid, productId, session) {
       ? new Date('2099-12-31')
       : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
 
-    // Drip resume logic: if user had a saved drip position (from prior cancel),
-    // offset the dripStartDate backward so their drip continues from where they left off.
-    const userSnap = await userRef.get();
-
     // ── Ambassador commission credit (first subscription only, no double-count on upgrades) ──
     // Direct Ambassador:  10% of revenueBaseFCFA = 500 FCFA
     // Senior Ambassador:   5% of revenueBaseFCFA = 250 FCFA (override on recruits' sales)
     try {
-      const userData = userSnap.exists ? userSnap.data() : {};
       const wasAlreadySubscribed = userData.subscription?.status === 'active';
       const referralCode = userData.referredBy || null;
-      if (referralCode && !wasAlreadySubscribed) {
+
+      if (!referralCode) {
+        tgMeta.referralSkipReason = 'no_referral_code';
+      } else if (wasAlreadySubscribed) {
+        tgMeta.referralSkipReason = 'already_subscribed';
+      } else {
         const ambSnap = await db.collection('ambassadors')
           .where('sbdReferralCode', '==', referralCode).limit(1).get();
-        if (!ambSnap.empty) {
+        if (ambSnap.empty) {
+          tgMeta.referralSkipReason = 'no_matching_ambassador';
+        } else {
           const ambDoc  = ambSnap.docs[0];
           const ambData = ambDoc.data();
-          const tierKey        = rule.tier; // 'foundation', 'premium', or 'elite'
+          const tierKey        = rule.tier;
           const revenueBase    = SBD_CATALOG_SERVER[productId]?.revenueBaseFCFA || 5000;
-          const ambCommission  = Math.round(revenueBase * 0.10); // 500 FCFA
+          const ambCommission  = Math.round(revenueBase * 0.10);
 
-          // ── Credit direct ambassador ──
           await ambDoc.ref.update({
             'sbdReferrals.subscribers':         admin.firestore.FieldValue.increment(1),
             [`sbdReferrals.${tierKey}`]:         admin.firestore.FieldValue.increment(1),
@@ -3221,14 +3275,13 @@ async function unlockSbdContent(uid, productId, session) {
           });
           console.log(`[SBD] Ambassador ${ambData.ambassadorCode} +${ambCommission} FCFA commission (tier=${tierKey})`);
 
-          // ── Senior Ambassador override (5%) ──
           let seniorCode       = null;
           let seniorCommission = 0;
           const uplineCode = ambData.regional_director || null;
           if (uplineCode && uplineCode.startsWith('AMB-')) {
             const seniorSnap = await db.collection('ambassadors').doc(uplineCode).get();
             if (seniorSnap.exists) {
-              seniorCommission = Math.round(revenueBase * 0.05); // 250 FCFA
+              seniorCommission = Math.round(revenueBase * 0.05);
               seniorCode       = uplineCode;
               await seniorSnap.ref.update({
                 'sbdReferrals.overrideCommissionPending': admin.firestore.FieldValue.increment(seniorCommission),
@@ -3239,7 +3292,6 @@ async function unlockSbdContent(uid, productId, session) {
             }
           }
 
-          // ── Audit record in sbd_sales ──
           await db.collection('sbd_sales').add({
             ambassadorCode:          ambData.ambassadorCode || null,
             ambassadorName:          ambData.fullName || '',
@@ -3254,12 +3306,22 @@ async function unlockSbdContent(uid, productId, session) {
             status:                  'pending',
             createdAt:               admin.firestore.FieldValue.serverTimestamp(),
           });
+
+          tgMeta.referralCredited = true;
+          tgMeta.referralSkipReason = null;
+          tgMeta.referrerAmbassadorCode = ambData.ambassadorCode || ambData.code || null;
+          tgMeta.referrerFullName = ambData.fullName || ambData.name || null;
+          tgMeta.seniorAmbassadorCode = seniorCode;
+          tgMeta.ambassadorCommissionFCFA = ambCommission;
+          tgMeta.seniorCommissionFCFA = seniorCode ? seniorCommission : null;
+          tgMeta.tierKeyed = tierKey;
         }
       }
     } catch (refErr) {
       console.error('[SBD] Ambassador commission credit failed (non-critical):', refErr.message);
+      tgMeta.referralSkipReason = 'credit_error';
     }
-    // ────────────────────────────────────────────────────────────────────────────────────────
+
     const existingDripWeeks = userSnap.exists
       ? (userSnap.data()?.subscription?.dripWeeksUnlocked || 0)
       : 0;
@@ -3329,7 +3391,43 @@ async function unlockSbdContent(uid, productId, session) {
   });
 
   console.log(`[SBD] Unlocked: uid=${uid} product=${productId}`);
+  return tgMeta;
 }
+
+/**
+ * Telegram: new SBD PWA self-serve signup (users doc created from PWA auth).
+ * Gated on signupApp === 'sbd-network' so ambassador provisioning and other user writes stay silent.
+ */
+exports.onSbdPwaUserSignupNotify = functions.firestore
+  .document('users/{userId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data() || {};
+    if (data.signupApp !== 'sbd-network') {
+      return null;
+    }
+    const uid = context.params.userId;
+    const name = data.name || data.displayName || '—';
+    const email = data.email || '—';
+    const ref = data.referredBy || '';
+    const refLine = ref
+      ? `🔗 Referral ref: ${ref}`
+      : '🔗 Referral ref: (none — direct signup)';
+
+    const msg =
+      '📱 SBD PWA — NEW SIGNUP\n\n' +
+      `👤 ${name}\n` +
+      `📧 ${email}\n` +
+      `🆔 ${uid}\n` +
+      `${refLine}\n\n` +
+      '👉 Admin: https://marriageducation.com/admin-dashboard.html';
+
+    try {
+      await sendTelegram(msg, false);
+    } catch (e) {
+      console.warn('[SBD] PWA signup Telegram failed:', e.message);
+    }
+    return null;
+  });
 
 /**
  * Create SBD Network Stripe Checkout Session
@@ -3441,12 +3539,15 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
     
     const finalCurrency = (currency || productInfo.currency || 'usd').toLowerCase();
     
+    // Map FCFA to XOF (Stripe-supported CFA Franc)
+    const stripeCurrency = finalCurrency === 'fcfa' ? 'xof' : finalCurrency;
+    
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
-          currency: finalCurrency,
+          currency: stripeCurrency,
           product_data: {
             name: finalName,
           },
@@ -3459,6 +3560,7 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
       cancel_url: `https://marriageducation.com/payment.html?cancelled=true`,
       metadata: {
         product_id: product_id,
+        app: product_id.startsWith('sbd-') ? 'sbd' : 'marriage',
       }
     });
     
