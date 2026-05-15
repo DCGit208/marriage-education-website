@@ -243,6 +243,22 @@
       ]
     },
     {
+      "collectionGroup": "ce2_conversations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "participantIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "lastMessageAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "communicationGroups",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "requiredTier", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "modules",
       "queryScope": "COLLECTION",
       "fields": [

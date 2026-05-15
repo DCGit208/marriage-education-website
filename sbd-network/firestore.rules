@@ -2,6 +2,72 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ════════════════════════════════════════════════════════════
+    // Communication Engine V2 (CE2) — isolated from legacy /conversations
+    // ════════════════════════════════════════════════════════════
+    function ce2UserDataOrNull(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data
+        : null;
+    }
+    function ce2IsAdmin(ud) {
+      return ud != null && ud.role == 'admin';
+    }
+    // Numeric rank: foundation/free → 0, premium → 1, elite → 2; admin acts as elite+
+    function ce2TierRank(ud) {
+      return ud != null && ce2IsAdmin(ud) ? 3
+        : ud != null && ud.tier == 'elite' ? 2
+        : ud != null && ud.tier == 'premium' ? 1
+        : 0;
+    }
+    function ce2RequiredTierRank(t) {
+      return t == 'elite' ? 2
+        : t == 'premium' ? 1
+        : 0;
+    }
+    function ce2FormationLevel(ud) {
+      return ud != null && ud.formationLevel is int ? ud.formationLevel : 0;
+    }
+    function ce2IsMentor(ud) {
+      return ud != null && ud.mentor == true;
+    }
+    // Lower → higher DM: blocked unless receiver is mentor (or admin involved handled by rank)
+    function ce2CanOpenDirectBetween(senderUid, receiverUid) {
+      let s = ce2UserDataOrNull(senderUid);
+      let r = ce2UserDataOrNull(receiverUid);
+      return s != null && r != null
+        && (ce2TierRank(s) >= ce2TierRank(r) || ce2IsMentor(r) || ce2IsAdmin(s));
+    }
+    function ce2GroupFormationMin(gdata) {
+      return gdata != null && gdata.formationMinLevel is int ? gdata.formationMinLevel : 0;
+    }
+    function ce2UserMeetsGroupFormation(ud, gdata) {
+      return ce2FormationLevel(ud) >= ce2GroupFormationMin(gdata);
+    }
+    function ce2UserMeetsGroupTier(ud, gdata) {
+      return ce2TierRank(ud) >= ce2RequiredTierRank(gdata.requiredTier);
+    }
+    function ce2IsGroupMember(groupId, uid) {
+      return exists(/databases/$(database)/documents/communicationGroups/$(groupId)/members/$(uid));
+    }
+    function ce2DirectOtherUid(participants, selfUid) {
+      return participants[0] == selfUid ? participants[1] : participants[0];
+    }
+    // Classification visibility (read): user effective rank must clear bar; mentor label only for mentors
+    function ce2ClassRank(c) {
+      return c == 'public' ? 0
+        : c == 'foundation' ? 0
+        : c == 'premium' ? 1
+        : c == 'elite' ? 2
+        : c == 'mentor' ? 4
+        : 99;
+    }
+    function ce2CanReadMessageClassification(ud, classification) {
+      return classification == 'public'
+        || (classification == 'mentor' && (ce2IsMentor(ud) || ce2IsAdmin(ud)))
+        || (classification != 'mentor' && ce2TierRank(ud) >= ce2ClassRank(classification));
+    }
+
     // ============================================================
     // MARRIAGE EDUCATION SITE COLLECTIONS (marriageducation.com)
     // ============================================================
@@ -519,6 +585,123 @@ service cloud.firestore {
       allow delete: if request.auth != null &&
         resource.data.blockedBy == request.auth.uid;
       allow update: if false;
+    }
+
+    // ── Communication Engine V2 (isolated; legacy /conversations untouched) ──
+    match /communicationGroups/{groupId} {
+      allow read: if request.auth != null && (
+        ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data) ||
+        ce2IsGroupMember(groupId, request.auth.uid) ||
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+      );
+      allow create: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.keys().hasAll([
+          'name', 'requiredTier', 'mentorLed', 'allowCrossTier', 'createdBy'
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.requiredTier is string;
+      allow update: if request.auth != null && (
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+        (
+          ce2IsGroupMember(groupId, request.auth.uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageAt', 'lastPreview'])
+        )
+      );
+      allow delete: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
+
+      match /members/{memberId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == memberId ||
+          ce2IsGroupMember(groupId, request.auth.uid) ||
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+        );
+        allow create: if request.auth != null &&
+          request.auth.uid == memberId &&
+          request.resource.data.keys().hasOnly(['joinedAt']) &&
+          request.resource.data.joinedAt is timestamp &&
+          ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), get(/databases/$(database)/documents/communicationGroups/$(groupId)).data) &&
+          ce2UserMeetsGroupFormation(ce2UserDataOrNull(request.auth.uid), get(/databases/$(database)/documents/communicationGroups/$(groupId)).data)
+          ;
+        allow delete: if request.auth != null && (
+          request.auth.uid == memberId ||
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+        );
+        allow update: if false;
+      }
+
+      match /ce2_messages/{messageId} {
+        allow read: if request.auth != null &&
+          ce2IsGroupMember(groupId, request.auth.uid) &&
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification);
+        allow create: if request.auth != null &&
+          ce2IsGroupMember(groupId, request.auth.uid) &&
+          request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.keys().hasAll([
+            'conversationId', 'senderId', 'tier', 'classification', 'shareable', 'content', 'createdAt'
+          ]) &&
+          request.resource.data.conversationId == groupId &&
+          request.resource.data.tier is string &&
+          request.resource.data.classification is string &&
+          request.resource.data.shareable is bool &&
+          request.resource.data.content is string &&
+          request.resource.data.content.size() <= 8000 &&
+          request.resource.data.createdAt is timestamp &&
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
+        allow update: if request.auth != null &&
+          ce2IsGroupMember(groupId, request.auth.uid) &&
+          resource.data.senderId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']);
+        allow delete: if false;
+      }
+    }
+
+    match /ce2_conversations/{convId} {
+      allow read: if request.auth != null &&
+        request.auth.uid in resource.data.participantIds;
+      allow create: if request.auth != null &&
+        request.resource.data.participantIds is list &&
+        request.resource.data.participantIds.size() == 2 &&
+        request.auth.uid in request.resource.data.participantIds &&
+        request.resource.data.keys().hasAll(['participantIds', 'type', 'createdAt']) &&
+        request.resource.data.type == 'direct' &&
+        request.resource.data.createdAt is timestamp &&
+        ce2CanOpenDirectBetween(
+          request.auth.uid,
+          ce2DirectOtherUid(request.resource.data.participantIds, request.auth.uid)
+        );
+      allow update: if request.auth != null &&
+        request.auth.uid in resource.data.participantIds &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageAt', 'lastPreview']);
+      allow delete: if false;
+
+      match /ce2_messages/{messageId} {
+        allow read: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification);
+        allow create: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
+          request.auth.uid == request.resource.data.senderId &&
+          request.resource.data.keys().hasAll([
+            'conversationId', 'senderId', 'receiverId', 'tier', 'classification', 'shareable', 'content', 'createdAt'
+          ]) &&
+          request.resource.data.conversationId == convId &&
+          request.resource.data.receiverId is string &&
+          request.resource.data.tier is string &&
+          request.resource.data.classification is string &&
+          request.resource.data.shareable is bool &&
+          request.resource.data.content is string &&
+          request.resource.data.content.size() <= 8000 &&
+          request.resource.data.createdAt is timestamp &&
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
+        allow update: if request.auth != null &&
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
+          resource.data.senderId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']);
+        allow delete: if false;
+      }
     }
 
     // Admin Settings — scoring weights, scoring thresholds, flags
