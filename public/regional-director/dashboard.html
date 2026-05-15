@@ -302,7 +302,20 @@
 
         .social-btn.whatsapp { background: #25D366; }
         .social-btn.facebook { background: #1877F2; }
+        .social-btn.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .social-btn.twitter { background: #1DA1F2; }
+
+        .deployment-link-box {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .deployment-link-box h3 {
+            margin-bottom: 15px;
+        }
 
         @media (max-width: 768px) {
             .header {
@@ -526,7 +539,33 @@
             </div>
 
             <div class="section">
-                <h2><i class="fas fa-link"></i> Recruitment Tools</h2>
+                <h2><i class="fas fa-link"></i> Your Unique Referral Link</h2>
+                <p style="color:#666; margin-bottom:18px;">Primary deployment link for books and offers. Your <strong>ref</strong> code tracks personal sales; your <strong>rd</strong> code keeps network attribution on your Regional Director record.</p>
+                <div class="deployment-link-box">
+                    <h3>📚 Primary Deployment Link</h3>
+                    <p style="opacity:0.95; margin-bottom:12px;">Share this link for book purchases and general access deployment.</p>
+                    <div class="link-input-group">
+                        <input type="text" id="primaryReferralLink" readonly>
+                        <button type="button" class="copy-btn" onclick="copyPrimaryReferralLink(event)">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                    <div class="social-share-buttons" style="margin-top:16px;">
+                        <button type="button" class="social-btn whatsapp" onclick="sharePrimaryWhatsApp()">
+                            <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                        </button>
+                        <button type="button" class="social-btn facebook" onclick="sharePrimaryFacebook()">
+                            <i class="fab fa-facebook"></i> Share on Facebook
+                        </button>
+                        <button type="button" class="social-btn instagram" onclick="sharePrimaryInstagram()">
+                            <i class="fab fa-instagram"></i> Copy for Instagram
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="fas fa-user-plus"></i> Recruitment Tools</h2>
                 
                 <div class="recruitment-link-box">
                     <h3>🎯 Your Personal Recruitment Link</h3>
@@ -540,14 +579,14 @@
                     </div>
 
                     <div class="social-share-buttons">
-                        <button class="social-btn whatsapp" onclick="shareWhatsApp()">
+                        <button class="social-btn whatsapp" onclick="shareRecruitmentWhatsApp()">
                             <i class="fab fa-whatsapp"></i> Share on WhatsApp
                         </button>
-                        <button class="social-btn facebook" onclick="shareFacebook()">
+                        <button class="social-btn facebook" onclick="shareRecruitmentFacebook()">
                             <i class="fab fa-facebook"></i> Share on Facebook
                         </button>
-                        <button class="social-btn twitter" onclick="shareTwitter()">
-                            <i class="fab fa-twitter"></i> Share on Twitter
+                        <button class="social-btn instagram" onclick="shareRecruitmentInstagram()">
+                            <i class="fab fa-instagram"></i> Copy for Instagram
                         </button>
                     </div>
                 </div>
@@ -555,12 +594,12 @@
 
             <div class="section">
                 <h2><i class="fas fa-boxes-stacked"></i> Multi-Product Deployment Links</h2>
-                <p style="color:#666; margin-bottom:18px;">These are your direct deployment links for books, schools, courses, premium offers, corporate offers, community growth, and ambassador recruitment. They use your linked ambassador identity for direct attribution and keep RD recruitment separate.</p>
+                <p style="color:#666; margin-bottom:18px;">Each link includes your <strong>ref</strong> code (personal sales) and <strong>rd</strong> code (network attribution) so deployed access and products can be traced to your dashboard.</p>
                 <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;"></div>
             </div>
 
             <div class="section" id="sbdReferralSection" style="display:none;">
-                <h2><i class="fas fa-mobile-alt"></i> SBD Network Subscription Referrals</h2>
+                <h2><i class="fas fa-mobile-alt"></i> SBD Network App — Your Referrals</h2>
                 <p style="color:#666; margin-bottom:18px;">This remains a separate subscription-referral system. It is displayed here for RD visibility without changing the existing SBD Network attribution logic.</p>
                 <div style="background:#0D0D0D;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #C6A96B33;">
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -570,12 +609,17 @@
                         </button>
                     </div>
                 </div>
-                <div class="stats-grid" style="margin-bottom:0;">
+                <div class="stats-grid" style="margin-bottom:16px;">
                     <div class="stat-card"><div class="stat-value" id="sbdSignupsCount">0</div><div class="stat-label">SBD Signups</div></div>
                     <div class="stat-card"><div class="stat-value" id="sbdSubscribersCount">0</div><div class="stat-label">SBD Subscribers</div></div>
                     <div class="stat-card"><div class="stat-value" id="sbdFoundationCount">0</div><div class="stat-label">Foundation Subs</div></div>
                     <div class="stat-card"><div class="stat-value" id="sbdPremiumCount">0</div><div class="stat-label">Premium Subs</div></div>
                     <div class="stat-card"><div class="stat-value" id="sbdEliteCount">0</div><div class="stat-label">Elite Subs</div></div>
+                </div>
+                <div style="text-align:center;margin-top:8px;">
+                    <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
+                        <i class="fas fa-external-link-alt"></i> Open My SBD Network App
+                    </a>
                 </div>
             </div>
 
@@ -659,6 +703,7 @@
     <!-- Firebase SDKs - Must load in this order -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/rd-referral-tools.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <script>
@@ -739,100 +784,13 @@
             tierBadge.textContent = tier;
             tierBadge.className = 'tier-badge tier-' + tier.toLowerCase().replace(' rd', '').replace(' ', '-');
             
-            // Set recruitment link
-            const recruitmentLink = `https://marriageducation.com/ambassador-register.html?rd=${rdData.code}`;
-            document.getElementById('recruitmentLink').value = recruitmentLink;
-            loadPortfolioReferralLinks(rdData.ambassador_code || rdData.code);
-            loadSBDReferralPanel();
+            if (typeof RdReferralTools !== 'undefined') {
+                RdReferralTools.bindReferralUI(rdData);
+            }
             renderNetworkPortfolio();
             
             // Update milestone progress
             updateMilestones(rdData.downline_count || 0);
-        }
-
-        function getPortfolioLinks(code) {
-            const safeCode = encodeURIComponent(code || '');
-            return [
-                { key: 'books', label: 'Books', icon: '📚', url: `https://marriageducation.com/sbd-campaign.html?ref=${safeCode}&category=books` },
-                { key: 'schools', label: 'Schools', icon: '🎓', url: `https://marriageducation.com/schools.html?ref=${safeCode}&category=schools` },
-                { key: 'courses', label: 'Courses', icon: '📖', url: `https://marriageducation.com/courses.html?ref=${safeCode}&category=courses` },
-                { key: 'premium', label: 'Premium', icon: '💼', url: `https://marriageducation.com/payment.html?ref=${safeCode}&category=premium` },
-                { key: 'corporate', label: 'Corporate', icon: '🏢', url: `https://marriageducation.com/corporate.html?ref=${safeCode}&category=corporate` },
-                { key: 'community', label: 'Community', icon: '🤝', url: `https://marriageducation.com/resources.html?ref=${safeCode}&category=community` },
-                { key: 'recruitment', label: 'Recruitment', icon: '👥', url: `https://marriageducation.com/ambassador-register.html?ref=${safeCode}&category=recruitment` }
-            ];
-        }
-
-        function loadPortfolioReferralLinks(code) {
-            const container = document.getElementById('portfolioReferralLinks');
-            if (!container) return;
-
-            container.innerHTML = getPortfolioLinks(code).map((item) => `
-                <div style="background:white;border:1px solid #ecf0f1;border-radius:12px;padding:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:0.75rem;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;">
-                        <div style="font-weight:700;color:#333;">${item.icon} ${item.label}</div>
-                        <span style="font-size:0.75rem;background:#eef2ff;color:#4f46e5;padding:4px 10px;border-radius:999px;">${item.key}</span>
-                    </div>
-                    <div style="font-family:monospace;font-size:0.78rem;color:#636e72;word-break:break-all;background:#f8f9fa;border-radius:8px;padding:0.75rem;">${item.url}</div>
-                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        <button class="copy-btn" onclick="copyPortfolioReferralLink('${item.key}')" style="flex:1;min-width:110px;">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                        <a class="copy-btn" href="${item.url}" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;">
-                            <i class="fas fa-arrow-up-right-from-square"></i> Open
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function copyPortfolioReferralLink(categoryKey) {
-            const sellerCode = rdData?.ambassador_code || rdData?.code || '';
-            const link = getPortfolioLinks(sellerCode).find((item) => item.key === categoryKey);
-            if (!link) return;
-
-            navigator.clipboard.writeText(link.url)
-                .then(() => alert(`✅ ${link.label} referral link copied!`))
-                .catch(() => {
-                    const input = document.createElement('textarea');
-                    input.value = link.url;
-                    document.body.appendChild(input);
-                    input.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(input);
-                    alert(`✅ ${link.label} referral link copied!`);
-                });
-        }
-
-        function loadSBDReferralPanel() {
-            const section = document.getElementById('sbdReferralSection');
-            if (!section || !rdData?.sbdReferralCode) return;
-
-            document.getElementById('sbdReferralLink').textContent = `https://sbd-network.web.app/auth?ref=${rdData.sbdReferralCode}`;
-            const referrals = rdData.sbdReferrals || {};
-            document.getElementById('sbdSignupsCount').textContent = referrals.signups || 0;
-            document.getElementById('sbdSubscribersCount').textContent = referrals.subscribers || 0;
-            document.getElementById('sbdFoundationCount').textContent = referrals.foundation || 0;
-            document.getElementById('sbdPremiumCount').textContent = referrals.premium || 0;
-            document.getElementById('sbdEliteCount').textContent = referrals.elite || 0;
-            section.style.display = 'block';
-        }
-
-        function copySBDReferralLink() {
-            const el = document.getElementById('sbdReferralLink');
-            if (!el) return;
-
-            navigator.clipboard.writeText(el.textContent.trim())
-                .then(() => alert('✅ SBD referral link copied!'))
-                .catch(() => {
-                    const input = document.createElement('textarea');
-                    input.value = el.textContent.trim();
-                    document.body.appendChild(input);
-                    input.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(input);
-                    alert('✅ SBD referral link copied!');
-                });
         }
 
         function renderNetworkPortfolio() {
@@ -957,38 +915,6 @@
             } catch (error) {
                 console.error('Team loading error:', error);
             }
-        }
-
-        function copyRecruitmentLink() {
-            const input = document.getElementById('recruitmentLink');
-            input.select();
-            document.execCommand('copy');
-            
-            const btn = event.target.closest('.copy-btn');
-            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            btn.classList.add('copied');
-            
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link';
-                btn.classList.remove('copied');
-            }, 2000);
-        }
-
-        function shareWhatsApp() {
-            const link = document.getElementById('recruitmentLink').value;
-            const text = `Join my ambassador team and earn up to 90,000 FCFA! Register here: ${link}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-        }
-
-        function shareFacebook() {
-            const link = document.getElementById('recruitmentLink').value;
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
-        }
-
-        function shareTwitter() {
-            const link = document.getElementById('recruitmentLink').value;
-            const text = `Join my ambassador team and start earning!`;
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`, '_blank');
         }
 
         function logout() {
