@@ -361,6 +361,20 @@
                 <button type="button" onclick="sharePrimaryInstagram()" style="padding:10px 16px;background:#E1306C;color:#fff;border:none;border-radius:8px;cursor:pointer;">Instagram caption</button>
             </div>
 
+            <h3 style="margin:1rem 0 0.5rem;color:#667eea;">👥 Recruitment Link</h3>
+            <div class="link-input-group" style="display:flex;gap:10px;margin-bottom:12px;">
+                <input type="text" id="recruitmentLink" readonly style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                <button type="button" onclick="copyRecruitmentLink(event)" style="padding:12px 20px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;">Copy</button>
+            </div>
+            <div class="social-share-buttons" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+                <button type="button" onclick="shareRecruitmentWhatsApp()" style="padding:10px 16px;background:#25D366;color:#fff;border:none;border-radius:8px;cursor:pointer;">WhatsApp</button>
+                <button type="button" onclick="shareRecruitmentFacebook()" style="padding:10px 16px;background:#1877F2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Facebook</button>
+                <button type="button" onclick="shareRecruitmentInstagram()" style="padding:10px 16px;background:#E1306C;color:#fff;border:none;border-radius:8px;cursor:pointer;">Instagram caption</button>
+            </div>
+
+            <h3 style="margin:1rem 0 0.5rem;color:#667eea;">📦 Multi-Product Deployment Links</h3>
+            <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:24px;"></div>
+
             <div id="sbdReferralSection" style="display:none;margin-bottom:24px;padding:16px;background:#f8f9ff;border-radius:12px;border:2px solid #667eea;">
                 <h3 style="margin:0 0 8px;color:#667eea;">📱 SBD Network (PWA) — referral link</h3>
                 <p style="color:#666;font-size:0.9rem;margin-bottom:12px;">Share this full URL for <strong>sbd-network.web.app</strong>. It opens sign-up with your <code>ref</code> so referrals count toward you.</p>
@@ -388,20 +402,6 @@
                     <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
                 </div>
             </div>
-
-            <h3 style="margin:1rem 0 0.5rem;color:#667eea;">👥 Recruitment Link</h3>
-            <div class="link-input-group" style="display:flex;gap:10px;margin-bottom:12px;">
-                <input type="text" id="recruitmentLink" readonly style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
-                <button type="button" onclick="copyRecruitmentLink(event)" style="padding:12px 20px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;">Copy</button>
-            </div>
-            <div class="social-share-buttons" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
-                <button type="button" onclick="shareRecruitmentWhatsApp()" style="padding:10px 16px;background:#25D366;color:#fff;border:none;border-radius:8px;cursor:pointer;">WhatsApp</button>
-                <button type="button" onclick="shareRecruitmentFacebook()" style="padding:10px 16px;background:#1877F2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Facebook</button>
-                <button type="button" onclick="shareRecruitmentInstagram()" style="padding:10px 16px;background:#E1306C;color:#fff;border:none;border-radius:8px;cursor:pointer;">Instagram caption</button>
-            </div>
-
-            <h3 style="margin:1rem 0 0.5rem;color:#667eea;">📦 Multi-Product Deployment Links</h3>
-            <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:24px;"></div>
         </div>
 
         <!-- Income Tracker -->
