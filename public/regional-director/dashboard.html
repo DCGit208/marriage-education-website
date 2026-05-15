@@ -564,6 +564,44 @@
                 </div>
             </div>
 
+            <div class="section" id="sbdReferralSection" style="display:none;">
+                <h2><i class="fas fa-mobile-alt"></i> SBD Network (PWA) — referral link</h2>
+                <p style="color:#666; margin-bottom:18px;">This is your <strong>installable web app</strong> at <strong>sbd-network.web.app</strong>. The link below sends people to sign-up with your <code>ref</code> so attribution matches the main Marriage Education / SBD pipeline.</p>
+
+                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
+                    <p style="color:#666; margin-bottom:12px;"><strong>No ambassador code on file.</strong> We build your PWA referral URL from your Marriage Education <strong>AMB-…</strong> code (becomes <strong>SBD-…</strong>). Make sure your RD profile includes <code>ambassador_code</code> or <code>existingAmbCode</code>, or use the RD dashboard that loads from your ambassador login.</p>
+                    <div style="text-align:center;margin-top:8px;">
+                        <a href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
+                            <i class="fas fa-external-link-alt"></i> Open SBD Network App
+                        </a>
+                    </div>
+                </div>
+
+                <div id="sbdReferralProvisionedWrap" style="display:none;">
+                <p id="sbdDerivedCodeNote" style="display:none;font-size:0.9rem;color:#854d0e;background:#fffbeb;padding:10px 14px;border-radius:8px;border:1px solid #fcd34d;margin-bottom:14px;"></p>
+                <p style="font-weight:700;margin-bottom:10px;color:#2d3436;"><i class="fas fa-share-alt"></i> Your PWA referral URL (share exactly this)</p>
+                <div class="link-input-group" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px;">
+                    <input type="text" id="sbdReferralLinkInput" readonly placeholder="https://sbd-network.web.app/auth?ref=…" style="flex:1;min-width:240px;padding:12px 14px;border:1px solid #334;border-radius:8px;font-family:monospace;font-size:0.85rem;background:#1a1a1a;color:#EAE3D2;">
+                    <button type="button" class="copy-btn" onclick="copySBDReferralLink()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div id="sbdReferralLink" style="display:none;" aria-hidden="true"></div>
+                <div class="stats-grid" style="margin-bottom:16px;">
+                    <div class="stat-card"><div class="stat-value" id="sbdSignupsCount">0</div><div class="stat-label">SBD Signups</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sbdSubscribersCount">0</div><div class="stat-label">SBD Subscribers</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sbdFoundationCount">0</div><div class="stat-label">Foundation Subs</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sbdPremiumCount">0</div><div class="stat-label">Premium Subs</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sbdEliteCount">0</div><div class="stat-label">Elite Subs</div></div>
+                </div>
+                <div style="text-align:center;margin-top:8px;">
+                    <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
+                        <i class="fas fa-external-link-alt"></i> Open My SBD Network App
+                    </a>
+                </div>
+                </div>
+            </div>
+
             <div class="section">
                 <h2><i class="fas fa-user-plus"></i> Recruitment Tools</h2>
                 
@@ -596,44 +634,6 @@
                 <h2><i class="fas fa-boxes-stacked"></i> Multi-Product Deployment Links</h2>
                 <p style="color:#666; margin-bottom:18px;">Each link includes your <strong>ref</strong> code (personal sales) and <strong>rd</strong> code (network attribution) so deployed access and products can be traced to your dashboard.</p>
                 <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;"></div>
-            </div>
-
-            <div class="section" id="sbdReferralSection" style="display:none;">
-                <h2><i class="fas fa-mobile-alt"></i> SBD Network App — Your Referrals</h2>
-                <p style="color:#666; margin-bottom:18px;">Separate subscription app from Marriage Education. When your ambassador account has SBD access provisioned, your referral link and counts mirror the ambassador dashboard.</p>
-
-                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
-                    <p style="color:#666; margin-bottom:12px;"><strong>Not provisioned yet.</strong> Your app referral link and stats (signups, subscribers, Foundation / Premium / Elite) will appear here once SBD Network access is enabled on your linked ambassador record.</p>
-                    <p style="color:#666; margin-bottom:18px;">You can still open the app below; sharing a referral link requires provisioning.</p>
-                    <div style="text-align:center;margin-top:8px;">
-                        <a href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
-                            <i class="fas fa-external-link-alt"></i> Open SBD Network App
-                        </a>
-                    </div>
-                </div>
-
-                <div id="sbdReferralProvisionedWrap" style="display:none;">
-                <div style="background:#0D0D0D;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #C6A96B33;">
-                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                        <div id="sbdReferralLink" style="flex:1;background:#1a1a1a;color:#EAE3D2;padding:10px 14px;border-radius:8px;font-family:monospace;font-size:0.82rem;word-break:break-all;min-width:0;border:1px solid #333;">Loading…</div>
-                        <button class="copy-btn" onclick="copySBDReferralLink()">
-                            <i class="fas fa-copy"></i> Copy Link
-                        </button>
-                    </div>
-                </div>
-                <div class="stats-grid" style="margin-bottom:16px;">
-                    <div class="stat-card"><div class="stat-value" id="sbdSignupsCount">0</div><div class="stat-label">SBD Signups</div></div>
-                    <div class="stat-card"><div class="stat-value" id="sbdSubscribersCount">0</div><div class="stat-label">SBD Subscribers</div></div>
-                    <div class="stat-card"><div class="stat-value" id="sbdFoundationCount">0</div><div class="stat-label">Foundation Subs</div></div>
-                    <div class="stat-card"><div class="stat-value" id="sbdPremiumCount">0</div><div class="stat-label">Premium Subs</div></div>
-                    <div class="stat-card"><div class="stat-value" id="sbdEliteCount">0</div><div class="stat-label">Elite Subs</div></div>
-                </div>
-                <div style="text-align:center;margin-top:8px;">
-                    <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
-                        <i class="fas fa-external-link-alt"></i> Open My SBD Network App
-                    </a>
-                </div>
-                </div>
             </div>
 
             <div class="section">

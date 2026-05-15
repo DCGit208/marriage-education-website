@@ -29,6 +29,39 @@
     return c;
   }
 
+  /** Marriage Education ambassador code used for SBD (AMB- → SBD- in Cloud Functions). */
+  function ambCodeForSbd(data) {
+    if (!data) return '';
+    const a = (data.ambassador_code || '').toString().trim();
+    if (a.indexOf('AMB-') === 0) return a;
+    const ex = (data.existingAmbCode || '').toString().trim();
+    if (ex.indexOf('AMB-') === 0) return ex;
+    const c = (data.code || '').toString().trim();
+    if (c.indexOf('AMB-') === 0) return c;
+    return '';
+  }
+
+  function deriveSbdCodeFromAmbassadorCode(ambCode) {
+    if (!ambCode || ambCode.indexOf('AMB-') !== 0) return '';
+    return ambCode.replace(/^AMB-/, 'SBD-');
+  }
+
+  /**
+   * Prefer Firestore sbdReferralCode; else derive SBD- from linked AMB- (same as provision pipeline).
+   */
+  function resolveSbdReferralCodeForPanel(data) {
+    if (!data) return '';
+    const direct = getSbdReferralCodeFromData(data);
+    if (direct) return direct;
+    return deriveSbdCodeFromAmbassadorCode(ambCodeForSbd(data));
+  }
+
+  function getSbdPwaReferralUrl(sbdCode) {
+    const c = (sbdCode || '').toString().trim();
+    if (!c) return '';
+    return 'https://sbd-network.web.app/auth?ref=' + encodeURIComponent(c);
+  }
+
   /**
    * regional_directors docs often omit SBD fields; they live on ambassadors/{ambassador_code}.
    */
@@ -41,12 +74,10 @@
       var snap = await db.collection('ambassadors').doc(ambCode).get();
       if (!snap.exists) return data;
       var a = snap.data();
-      var sbdCode = getSbdReferralCodeFromData(a);
-      var referrals = a.sbdReferrals;
-      if (!sbdCode && !referrals) return data;
+      var sbdCode = getSbdReferralCodeFromData(a) || deriveSbdCodeFromAmbassadorCode(ambCode);
       var out = Object.assign({}, data);
       if (sbdCode) out.sbdReferralCode = sbdCode;
-      if (referrals) out.sbdReferrals = referrals;
+      if (a.sbdReferrals) out.sbdReferrals = a.sbdReferrals;
       return out;
     } catch (e) {
       console.warn('[RdReferralTools] mergeAmbassadorSbdIntoRdData failed:', e);
@@ -170,11 +201,14 @@
     if (!section || !rdData) return;
     const prov = document.getElementById('sbdReferralProvisionedWrap');
     const unprov = document.getElementById('sbdReferralUnprovisionedWrap');
-    const sbdCode = getSbdReferralCodeFromData(rdData);
+    const noteEl = document.getElementById('sbdDerivedCodeNote');
+    const explicitSbd = getSbdReferralCodeFromData(rdData);
+    const sbdCode = resolveSbdReferralCodeForPanel(rdData);
 
     section.style.display = 'block';
 
     if (!sbdCode) {
+      if (noteEl) noteEl.style.display = 'none';
       if (prov) prov.style.display = 'none';
       if (unprov) {
         unprov.style.display = 'block';
@@ -186,9 +220,20 @@
 
     if (unprov) unprov.style.display = 'none';
     if (prov) prov.style.display = 'block';
+    if (noteEl) {
+      if (!explicitSbd && sbdCode) {
+        noteEl.textContent = 'Referral code derived from your Marriage Education ambassador code (AMB- → SBD-). Subscriber stats fill in from your Firestore record when SBD activity exists.';
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.style.display = 'none';
+      }
+    }
 
+    const url = getSbdPwaReferralUrl(sbdCode);
     const linkEl = document.getElementById('sbdReferralLink');
-    if (linkEl) linkEl.textContent = 'https://sbd-network.web.app/auth?ref=' + sbdCode;
+    if (linkEl) linkEl.textContent = url;
+    const inputEl = document.getElementById('sbdReferralLinkInput');
+    if (inputEl) inputEl.value = url;
     const referrals = rdData.sbdReferrals || {};
     function setCount(id, val) {
       const el = document.getElementById(id);
@@ -226,8 +271,11 @@
   }
 
   function copySBDReferralLink() {
-    const el = document.getElementById('sbdReferralLink');
-    if (el) copyText(el.textContent.trim(), '\u2705 SBD referral link copied!');
+    const input = document.getElementById('sbdReferralLinkInput');
+    const url = (input && input.value) ? input.value.trim() : '';
+    const fromDiv = document.getElementById('sbdReferralLink');
+    const text = url || (fromDiv && fromDiv.textContent ? fromDiv.textContent.trim() : '');
+    if (text) copyText(text, '\u2705 SBD Network PWA referral link copied!');
   }
 
   function sharePrimaryWhatsApp() {
