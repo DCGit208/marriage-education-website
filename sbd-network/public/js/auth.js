@@ -204,6 +204,7 @@ if (signupForm) {
         uid: user.uid,
         name: name,
         email: email,
+        signupApp: 'sbd-network',
         tier: 'free',
         subscription: {
           tier: 'free',
