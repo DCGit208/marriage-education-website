@@ -47,12 +47,15 @@
   }
 
   /**
-   * Prefer Firestore sbdReferralCode; else derive SBD- from linked AMB- (same as provision pipeline).
+   * Prefer Firestore sbdReferralCode; else RD- → SBD- (same pairing as senior→RD promotion);
+   * else AMB- → SBD-.
    */
   function resolveSbdReferralCodeForPanel(data) {
     if (!data) return '';
     const direct = getSbdReferralCodeFromData(data);
     if (direct) return direct;
+    const rd = (data.rd_code || data.rdCode || data.code || '').toString().trim();
+    if (rd.indexOf('RD-') === 0) return rd.replace(/^RD-/, 'SBD-');
     return deriveSbdCodeFromAmbassadorCode(ambCodeForSbd(data));
   }
 
@@ -68,7 +71,11 @@
   async function mergeAmbassadorSbdIntoRdData(db, data) {
     if (!db || !data) return data;
     if (getSbdReferralCodeFromData(data)) return data;
-    const ambCode = (data.ambassador_code || data.existingAmbCode || '').toString().trim();
+    var ambCode = (data.ambassador_code || data.existingAmbCode || '').toString().trim();
+    if (!ambCode) {
+      var rc = (data.code || '').toString().trim();
+      if (rc.indexOf('RD-') === 0) ambCode = rc.replace(/^RD-/, 'AMB-');
+    }
     if (!ambCode) return data;
     try {
       var snap = await db.collection('ambassadors').doc(ambCode).get();
@@ -199,39 +206,19 @@
   function loadSBDReferralPanel() {
     const section = document.getElementById('sbdReferralSection');
     if (!section || !rdData) return;
-    const prov = document.getElementById('sbdReferralProvisionedWrap');
-    const unprov = document.getElementById('sbdReferralUnprovisionedWrap');
-    const noteEl = document.getElementById('sbdDerivedCodeNote');
-    const explicitSbd = getSbdReferralCodeFromData(rdData);
     const sbdCode = resolveSbdReferralCodeForPanel(rdData);
-
-    section.style.display = 'block';
-
     if (!sbdCode) {
-      if (noteEl) noteEl.style.display = 'none';
-      if (prov) prov.style.display = 'none';
-      if (unprov) {
-        unprov.style.display = 'block';
-      } else {
-        section.style.display = 'none';
-      }
+      section.style.display = 'none';
       return;
     }
-
-    if (unprov) unprov.style.display = 'none';
-    if (prov) prov.style.display = 'block';
-    if (noteEl) {
-      if (!explicitSbd && sbdCode) {
-        noteEl.textContent = 'Referral code derived from your Marriage Education ambassador code (AMB- → SBD-). Subscriber stats fill in from your Firestore record when SBD activity exists.';
-        noteEl.style.display = 'block';
-      } else {
-        noteEl.style.display = 'none';
-      }
-    }
+    section.style.display = 'block';
 
     const url = getSbdPwaReferralUrl(sbdCode);
     const linkEl = document.getElementById('sbdReferralLink');
-    if (linkEl) linkEl.textContent = url;
+    if (linkEl) {
+      linkEl.textContent = url;
+      linkEl.style.display = '';
+    }
     const inputEl = document.getElementById('sbdReferralLinkInput');
     if (inputEl) inputEl.value = url;
     const referrals = rdData.sbdReferrals || {};
@@ -271,11 +258,11 @@
   }
 
   function copySBDReferralLink() {
-    const input = document.getElementById('sbdReferralLinkInput');
-    const url = (input && input.value) ? input.value.trim() : '';
-    const fromDiv = document.getElementById('sbdReferralLink');
-    const text = url || (fromDiv && fromDiv.textContent ? fromDiv.textContent.trim() : '');
-    if (text) copyText(text, '\u2705 SBD Network PWA referral link copied!');
+    var el = document.getElementById('sbdReferralLink');
+    var input = document.getElementById('sbdReferralLinkInput');
+    var text = (el && el.textContent) ? el.textContent.trim() : '';
+    if (!text && input && input.value) text = input.value.trim();
+    if (text) copyText(text, '\u2705 SBD referral link copied!');
   }
 
   function sharePrimaryWhatsApp() {
