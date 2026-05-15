@@ -7,6 +7,13 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
 
+function telegramFromEnv() {
+  const bot_token = process.env.TELEGRAM_BOT_TOKEN;
+  const chat_id = process.env.TELEGRAM_CHAT_ID;
+  if (!bot_token || !chat_id) return null;
+  return { bot_token: bot_token.trim(), chat_id: String(chat_id).trim() };
+}
+
 // Initialize Firebase Admin
 const serviceAccount = require('./serviceAccountKey.json');
 
@@ -183,9 +190,14 @@ async function generateDownloadURL(ambassadorCode) {
  * Send Telegram notification
  */
 async function sendTelegramNotification(ambassador, bookUrl) {
-  const TELEGRAM_BOT_TOKEN = '7957827035:AAGmf51iBJlDvXHngjGxRJRtXJXqB3FGEys';
-  const TELEGRAM_CHAT_ID = '-4526163929';
-  
+  const tg = telegramFromEnv();
+  if (!tg) {
+    console.log(
+      '   ⚠️ Telegram skipped: export TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to enable.'
+    );
+    return;
+  }
+
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
   
   const message = 
@@ -200,10 +212,9 @@ async function sendTelegramNotification(ambassador, bookUrl) {
     `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
   
   try {
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: 'HTML'
+    await axios.post(`https://api.telegram.org/bot${tg.bot_token}/sendMessage`, {
+      chat_id: tg.chat_id,
+      text: message
     });
     console.log(`   ✅ Telegram notification sent`);
   } catch (error) {
