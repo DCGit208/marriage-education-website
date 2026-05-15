@@ -29,7 +29,7 @@
         /* Header */
         .header {
             background: white;
-            border-radius: 20px;
+            border-radius: 20px; 
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -361,6 +361,34 @@
                 <button type="button" onclick="sharePrimaryInstagram()" style="padding:10px 16px;background:#E1306C;color:#fff;border:none;border-radius:8px;cursor:pointer;">Instagram caption</button>
             </div>
 
+            <div id="sbdReferralSection" style="display:none;margin-bottom:24px;padding:16px;background:#f8f9ff;border-radius:12px;border:2px solid #667eea;">
+                <h3 style="margin:0 0 8px;color:#667eea;">📱 SBD Network (PWA) — referral link</h3>
+                <p style="color:#666;font-size:0.9rem;margin-bottom:12px;">Share this full URL for <strong>sbd-network.web.app</strong>. It opens sign-up with your <code>ref</code> so referrals count toward you.</p>
+
+                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
+                    <p style="color:#666;margin-bottom:12px;"><strong>No AMB- code found.</strong> Log in with your Marriage Education ambassador code, or ensure your profile has <code>ambassador_code</code> so we can build <code>https://sbd-network.web.app/auth?ref=SBD-…</code>.</p>
+                    <a href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
+                </div>
+
+                <div id="sbdReferralProvisionedWrap" style="display:none;">
+                    <p id="sbdDerivedCodeNote" style="display:none;font-size:0.85rem;color:#854d0e;background:#fffbeb;padding:8px 12px;border-radius:8px;border:1px solid #fcd34d;margin-bottom:10px;"></p>
+                    <p style="font-weight:700;margin-bottom:8px;color:#2d3436;">Your PWA referral URL (copy and share)</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+                        <input type="text" id="sbdReferralLinkInput" readonly placeholder="https://sbd-network.web.app/auth?ref=…" style="flex:1;min-width:200px;padding:12px;border:1px solid #334;border-radius:8px;font-family:monospace;font-size:0.82rem;background:#1a1a1a;color:#EAE3D2;">
+                        <button type="button" onclick="copySBDReferralLink()" style="padding:12px 16px;background:#C6A96B;color:#000;border:none;border-radius:8px;cursor:pointer;">Copy</button>
+                    </div>
+                    <div id="sbdReferralLink" style="display:none;" aria-hidden="true"></div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:12px;">
+                        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div id="sbdSignupsCount" style="font-size:1.25rem;font-weight:700;">0</div><div style="font-size:0.75rem;color:#666;">Signups</div></div>
+                        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div id="sbdSubscribersCount" style="font-size:1.25rem;font-weight:700;">0</div><div style="font-size:0.75rem;color:#666;">Subs</div></div>
+                        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div id="sbdFoundationCount" style="font-size:1.25rem;font-weight:700;">0</div><div style="font-size:0.75rem;color:#666;">Foundation</div></div>
+                        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div id="sbdPremiumCount" style="font-size:1.25rem;font-weight:700;">0</div><div style="font-size:0.75rem;color:#666;">Premium</div></div>
+                        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div id="sbdEliteCount" style="font-size:1.25rem;font-weight:700;">0</div><div style="font-size:0.75rem;color:#666;">Elite</div></div>
+                    </div>
+                    <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
+                </div>
+            </div>
+
             <h3 style="margin:1rem 0 0.5rem;color:#667eea;">👥 Recruitment Link</h3>
             <div class="link-input-group" style="display:flex;gap:10px;margin-bottom:12px;">
                 <input type="text" id="recruitmentLink" readonly style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
@@ -374,33 +402,6 @@
 
             <h3 style="margin:1rem 0 0.5rem;color:#667eea;">📦 Multi-Product Deployment Links</h3>
             <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:24px;"></div>
-
-            <div id="sbdReferralSection" style="display:none;margin-bottom:24px;">
-                <h3 style="margin:1rem 0 0.5rem;color:#667eea;">📱 SBD Network App</h3>
-                <p style="color:#666;font-size:0.9rem;margin-bottom:12px;">Your app referral link and subscriber counts appear here when SBD access is provisioned on your ambassador account.</p>
-
-                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
-                    <p style="color:#666;margin-bottom:12px;"><strong>Not provisioned yet.</strong> Stats (signups, subscribers, Foundation / Premium / Elite) and your shareable link will show after SBD Network is enabled.</p>
-                    <a href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
-                </div>
-
-                <div id="sbdReferralProvisionedWrap" style="display:none;">
-                <div style="background:#0D0D0D;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #C6A96B33;">
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                        <div id="sbdReferralLink" style="flex:1;background:#1a1a1a;color:#EAE3D2;padding:10px;border-radius:8px;font-family:monospace;font-size:0.82rem;word-break:break-all;">Loading…</div>
-                        <button type="button" onclick="copySBDReferralLink()" style="padding:10px 16px;background:#C6A96B;color:#000;border:none;border-radius:8px;cursor:pointer;">Copy</button>
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px;">
-                    <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdSignupsCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Signups</div></div>
-                    <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdSubscribersCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Subscribers</div></div>
-                    <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdFoundationCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Foundation</div></div>
-                    <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdPremiumCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Premium</div></div>
-                    <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdEliteCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Elite</div></div>
-                </div>
-                <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
-                </div>
-            </div>
         </div>
 
         <!-- Income Tracker -->
