@@ -600,7 +600,19 @@
 
             <div class="section" id="sbdReferralSection" style="display:none;">
                 <h2><i class="fas fa-mobile-alt"></i> SBD Network App — Your Referrals</h2>
-                <p style="color:#666; margin-bottom:18px;">This remains a separate subscription-referral system. It is displayed here for RD visibility without changing the existing SBD Network attribution logic.</p>
+                <p style="color:#666; margin-bottom:18px;">Separate subscription app from Marriage Education. When your ambassador account has SBD access provisioned, your referral link and counts mirror the ambassador dashboard.</p>
+
+                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
+                    <p style="color:#666; margin-bottom:12px;"><strong>Not provisioned yet.</strong> Your app referral link and stats (signups, subscribers, Foundation / Premium / Elite) will appear here once SBD Network access is enabled on your linked ambassador record.</p>
+                    <p style="color:#666; margin-bottom:18px;">You can still open the app below; sharing a referral link requires provisioning.</p>
+                    <div style="text-align:center;margin-top:8px;">
+                        <a href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
+                            <i class="fas fa-external-link-alt"></i> Open SBD Network App
+                        </a>
+                    </div>
+                </div>
+
+                <div id="sbdReferralProvisionedWrap" style="display:none;">
                 <div style="background:#0D0D0D;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #C6A96B33;">
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <div id="sbdReferralLink" style="flex:1;background:#1a1a1a;color:#EAE3D2;padding:10px 14px;border-radius:8px;font-family:monospace;font-size:0.82rem;word-break:break-all;min-width:0;border:1px solid #333;">Loading…</div>
@@ -620,6 +632,7 @@
                     <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" class="copy-btn" style="display:inline-flex;align-items:center;gap:0.5rem;text-decoration:none;">
                         <i class="fas fa-external-link-alt"></i> Open My SBD Network App
                     </a>
+                </div>
                 </div>
             </div>
 
@@ -754,7 +767,11 @@
 
                 rdData = rdDoc.data();
                 console.log('RD data loaded:', rdData);
-                
+                if (typeof RdReferralTools !== 'undefined' && RdReferralTools.mergeAmbassadorSbdIntoRdData) {
+                    rdData = await RdReferralTools.mergeAmbassadorSbdIntoRdData(db, rdData);
+                }
+                if (!rdData.code) rdData.code = rdCode;
+
                 updateDashboard();
                 await loadLeaderboardRank();
                 await loadTeam();

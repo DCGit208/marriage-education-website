@@ -29,7 +29,7 @@
         /* Header */
         .header {
             background: white;
-            border-radius: 20px;
+            border-radius: 20px; 
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -377,6 +377,14 @@
 
             <div id="sbdReferralSection" style="display:none;margin-bottom:24px;">
                 <h3 style="margin:1rem 0 0.5rem;color:#667eea;">📱 SBD Network App</h3>
+                <p style="color:#666;font-size:0.9rem;margin-bottom:12px;">Your app referral link and subscriber counts appear here when SBD access is provisioned on your ambassador account.</p>
+
+                <div id="sbdReferralUnprovisionedWrap" style="display:none;">
+                    <p style="color:#666;margin-bottom:12px;"><strong>Not provisioned yet.</strong> Stats (signups, subscribers, Foundation / Premium / Elite) and your shareable link will show after SBD Network is enabled.</p>
+                    <a href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
+                </div>
+
+                <div id="sbdReferralProvisionedWrap" style="display:none;">
                 <div style="background:#0D0D0D;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #C6A96B33;">
                     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                         <div id="sbdReferralLink" style="flex:1;background:#1a1a1a;color:#EAE3D2;padding:10px;border-radius:8px;font-family:monospace;font-size:0.82rem;word-break:break-all;">Loading…</div>
@@ -391,6 +399,7 @@
                     <div style="text-align:center;padding:12px;background:#f8f9fa;border-radius:8px;"><div id="sbdEliteCount" style="font-size:1.5rem;font-weight:700;">0</div><div style="font-size:0.8rem;color:#666;">Elite</div></div>
                 </div>
                 <a id="sbdLoginLink" href="https://sbd-network.web.app" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;">Open SBD Network App</a>
+                </div>
             </div>
         </div>
 
@@ -534,7 +543,10 @@
                     return;
                 }
                 
-                const rdData = rdDoc.data();
+                let rdData = rdDoc.data();
+                if (typeof RdReferralTools !== 'undefined' && RdReferralTools.mergeAmbassadorSbdIntoRdData) {
+                    rdData = await RdReferralTools.mergeAmbassadorSbdIntoRdData(db, rdData);
+                }
                 
                 // Check if promoted to Executive
                 if (rdData.ambassador_type === 'executive') {
