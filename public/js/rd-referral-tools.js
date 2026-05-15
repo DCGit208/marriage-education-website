@@ -13,7 +13,45 @@
 
   function getRdCode() {
     if (!rdData) return '';
-    return rdData.code || '';
+    const rd = (rdData.rd_code || rdData.rdCode || '').toString().trim();
+    if (rd) return rd;
+    const code = (rdData.code || '').toString().trim();
+    if (code.indexOf('RD-') === 0) return code;
+    const amb = (rdData.ambassador_code || '').toString().trim();
+    if (amb.indexOf('AMB-') === 0) return amb.replace(/^AMB-/, 'RD-');
+    if (code.indexOf('AMB-') === 0) return code.replace(/^AMB-/, 'RD-');
+    return code;
+  }
+
+  function getSbdReferralCodeFromData(data) {
+    if (!data) return '';
+    const c = (data.sbdReferralCode || data.sbd_referral_code || '').toString().trim();
+    return c;
+  }
+
+  /**
+   * regional_directors docs often omit SBD fields; they live on ambassadors/{ambassador_code}.
+   */
+  async function mergeAmbassadorSbdIntoRdData(db, data) {
+    if (!db || !data) return data;
+    if (getSbdReferralCodeFromData(data)) return data;
+    const ambCode = (data.ambassador_code || data.existingAmbCode || '').toString().trim();
+    if (!ambCode) return data;
+    try {
+      var snap = await db.collection('ambassadors').doc(ambCode).get();
+      if (!snap.exists) return data;
+      var a = snap.data();
+      var sbdCode = getSbdReferralCodeFromData(a);
+      var referrals = a.sbdReferrals;
+      if (!sbdCode && !referrals) return data;
+      var out = Object.assign({}, data);
+      if (sbdCode) out.sbdReferralCode = sbdCode;
+      if (referrals) out.sbdReferrals = referrals;
+      return out;
+    } catch (e) {
+      console.warn('[RdReferralTools] mergeAmbassadorSbdIntoRdData failed:', e);
+      return data;
+    }
   }
 
   function getPrimaryReferralLink() {
@@ -130,11 +168,25 @@
   function loadSBDReferralPanel() {
     const section = document.getElementById('sbdReferralSection');
     if (!section || !rdData) return;
-    const sbdCode = rdData.sbdReferralCode;
+    const prov = document.getElementById('sbdReferralProvisionedWrap');
+    const unprov = document.getElementById('sbdReferralUnprovisionedWrap');
+    const sbdCode = getSbdReferralCodeFromData(rdData);
+
+    section.style.display = 'block';
+
     if (!sbdCode) {
-      section.style.display = 'none';
+      if (prov) prov.style.display = 'none';
+      if (unprov) {
+        unprov.style.display = 'block';
+      } else {
+        section.style.display = 'none';
+      }
       return;
     }
+
+    if (unprov) unprov.style.display = 'none';
+    if (prov) prov.style.display = 'block';
+
     const linkEl = document.getElementById('sbdReferralLink');
     if (linkEl) linkEl.textContent = 'https://sbd-network.web.app/auth?ref=' + sbdCode;
     const referrals = rdData.sbdReferrals || {};
@@ -149,7 +201,6 @@
     setCount('sbdEliteCount', referrals.elite || 0);
     const login = document.getElementById('sbdLoginLink');
     if (login) login.href = 'https://sbd-network.web.app';
-    section.style.display = 'block';
   }
 
   function bindReferralUI(data) {
@@ -215,6 +266,7 @@
 
   global.RdReferralTools = {
     bindReferralUI: bindReferralUI,
+    mergeAmbassadorSbdIntoRdData: mergeAmbassadorSbdIntoRdData,
     getPortfolioLinks: getPortfolioLinks,
     getPrimaryReferralLink: getPrimaryReferralLink,
     getRecruitmentLink: getRecruitmentLink
