@@ -54,7 +54,7 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) {
     document.body.classList.add('auth-guest');
     document.body.classList.remove('auth-user');
-    if (adminPanelBtn) adminPanelBtn.style.display = 'none';
+    if (adminPanelBtn) adminPanelBtn.classList.add('hidden-admin-section');
     // Switch menu button to Login
     if (logoutBtn) {
       logoutBtn.textContent = '🔑 Login';
@@ -110,7 +110,8 @@ auth.onAuthStateChanged(async (user) => {
       
       // Show admin section if user is admin
       if (currentUserData.role === 'admin' && adminPanelBtn) {
-        adminPanelBtn.style.display = 'block';
+        // Must remove class: slider.css uses .hidden-admin-section { display:none !important }
+        adminPanelBtn.classList.remove('hidden-admin-section');
       }
       
       // Load all dashboard sections (don't block on individual errors)
