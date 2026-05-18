@@ -36,6 +36,7 @@
             <button class="tab-btn" data-tab="analytics">Analytics</button>
             <button class="tab-btn" data-tab="match">&#128145; Match</button>
             <button class="tab-btn" data-tab="sales">&#128176; SBD Sales</button>
+            <button class="tab-btn" data-tab="ce2">&#9993; Messages V2</button>
         </div>
         
         <!-- Groups Tab -->
@@ -196,6 +197,22 @@
             <div id="salesSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:12px;"></div>
             <div id="salesList" class="admin-list"></div>
         </section>
+
+        <section id="ce2Tab" class="admin-tab">
+            <div class="admin-section-header">
+                <h3>Messages V2 — formation groups</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button id="createCe2GroupBtn" class="btn btn-primary">+ Create CE2 Group</button>
+                    <button id="ce2QuickSetupBtn" class="btn btn-secondary">Quick test setup</button>
+                    <a href="/communication-v2/" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open beta app</a>
+                </div>
+            </div>
+            <p class="small-text" style="padding:0 12px 12px;color:var(--text-secondary);max-width:640px;">
+                These are <strong>not</strong> the same as community Groups (boards). CE2 groups power the gated messenger beta.
+                After creating a group, open the beta, select it, tap <strong>Join selected group</strong>, then send.
+            </p>
+            <div id="ce2GroupsList" class="admin-list"></div>
+        </section>
                 
     </main>
     
@@ -223,6 +240,40 @@
                         <option value="premium">Premium ($20/mo)</option>
                         <option value="elite" selected>Elite ($50/mo)</option>
                     </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create CE2 Group Modal (Messages V2 beta) -->
+    <div id="createCe2GroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create CE2 formation group</h3>
+                <button class="btn btn-icon close-modal">×</button>
+            </div>
+            <form id="createCe2GroupForm">
+                <div class="form-group">
+                    <label for="ce2GroupName">Group name</label>
+                    <input type="text" id="ce2GroupName" required placeholder="e.g. Foundation Circle">
+                </div>
+                <div class="form-group">
+                    <label for="ce2GroupRequiredTier">Minimum tier to join</label>
+                    <select id="ce2GroupRequiredTier">
+                        <option value="foundation" selected>Foundation</option>
+                        <option value="premium">Premium</option>
+                        <option value="elite">Elite</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="ce2GroupMentorLed"> Mentor-led group</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="ce2GroupAllowCrossTier"> Allow cross-tier (policy exception)</label>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary close-modal">Cancel</button>
@@ -384,6 +435,16 @@
                     </div>
                 </div>
 
+                <!-- Messages V2 -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Messages V2 (beta)</h4>
+                    <label class="checkbox-label" style="display:block;margin-bottom:8px;">
+                        <input type="checkbox" id="manageUserMentor">
+                        <span>Mentor — appears in CE2 Discovery for lower tiers</span>
+                    </label>
+                    <button type="button" id="saveUserMentorBtn" class="btn btn-sm btn-primary">Save mentor flag</button>
+                </div>
+
                 <!-- Role -->
                 <div class="admin-manage-section">
                     <h4 class="admin-manage-label">Role</h4>
@@ -475,7 +536,7 @@
     <script defer src="/js/firebase.js?v=1778871579265"></script>
     <script defer src="/js/sw-update-checker.js?v=1778871579265"></script>
     <script defer src="/js/upload.js?v=1778871579265"></script>
-    <script defer src="/js/admin.js?v=1778871579265"></script>
+    <script defer src="/js/admin.js?v=1778880000001"></script>
     <script defer src="/js/admin-formation.js?v=1778871579265"></script>
 </body>
 </html>

@@ -594,7 +594,12 @@ service cloud.firestore {
 
     // ── Communication Engine V2 (isolated; legacy /conversations untouched) ──
     match /communicationGroups/{groupId} {
-      allow read: if request.auth != null && (
+      // list: admin may load all in panel; others only docs their tier can discover
+      allow list: if request.auth != null && (
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+        ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data)
+      );
+      allow get: if request.auth != null && (
         ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data) ||
         ce2IsGroupMember(groupId, request.auth.uid) ||
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
@@ -669,7 +674,9 @@ service cloud.firestore {
     }
 
     match /ce2_conversations/{convId} {
-      allow read: if request.auth != null &&
+      allow list: if request.auth != null &&
+        request.auth.uid in resource.data.participantIds;
+      allow get: if request.auth != null &&
         request.auth.uid in resource.data.participantIds;
       allow create: if request.auth != null &&
         request.resource.data.participantIds is list &&

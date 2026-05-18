@@ -75,6 +75,7 @@ tabBtns.forEach(btn => {
     if (tabName === 'content') loadContent();
     if (tabName === 'analytics') loadAnalytics();
     if (tabName === 'sales') loadSbdSales();
+    if (tabName === 'ce2') loadCe2Groups();
   });
 });
 
@@ -475,6 +476,26 @@ async function handleManageUser(userId) {
   // Role
   const role = u.role || 'member';
   document.getElementById('manageUserRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+  var mentorCb = document.getElementById('manageUserMentor');
+  var saveMentorBtn = document.getElementById('saveUserMentorBtn');
+  if (mentorCb) mentorCb.checked = !!u.mentor;
+  if (saveMentorBtn) {
+    saveMentorBtn.onclick = async function () {
+      try {
+        showLoading(true);
+        await db.collection('users').doc(userId).set({ mentor: !!mentorCb.checked }, { merge: true });
+        alert('Mentor flag saved.');
+        closeAllModals();
+        await loadUsers();
+      } catch (err) {
+        console.error('saveMentor:', err);
+        alert('Error: ' + (err.message || err));
+      } finally {
+        showLoading(false);
+      }
+    };
+  }
   const toggleBtn = document.getElementById('toggleRoleBtn');
   if (role === 'admin') {
     toggleBtn.textContent = 'Demote to Member';
@@ -986,4 +1007,134 @@ if (document.getElementById('refreshSalesBtn')) {
   document.getElementById('refreshSalesBtn').addEventListener('click', loadSbdSales);
 }
 
-console.log('Admin module v51 loaded');
+// ================================================================
+// COMMUNICATION ENGINE V2 (beta) — communicationGroups collection
+// ================================================================
+
+const ce2GroupsList = document.getElementById('ce2GroupsList');
+const createCe2GroupBtn = document.getElementById('createCe2GroupBtn');
+const createCe2GroupModal = document.getElementById('createCe2GroupModal');
+
+async function loadCe2Groups() {
+  if (!ce2GroupsList) return;
+  try {
+    ce2GroupsList.innerHTML = '<div class="loading-text">Loading CE2 groups...</div>';
+    const snap = await db.collection('communicationGroups').limit(50).get();
+    ce2GroupsList.innerHTML = '';
+    if (snap.empty) {
+      ce2GroupsList.innerHTML =
+        '<p class="empty-state">No CE2 groups yet. Click <strong>+ Create CE2 Group</strong>, then test in the beta app.</p>';
+      return;
+    }
+    snap.forEach(function (doc) {
+      const g = doc.data();
+      const card = document.createElement('div');
+      card.className = 'admin-card';
+      card.innerHTML =
+        '<h4>' + escapeHtml(g.name || 'Unnamed') + '</h4>' +
+        '<p class="small-text">Tier: <strong>' + escapeHtml(g.requiredTier || 'foundation') + '</strong>' +
+        (g.mentorLed ? ' · mentor-led' : '') +
+        (g.allowCrossTier ? ' · cross-tier' : '') + '</p>' +
+        '<p class="small-text">ID: ' + escapeHtml(doc.id) + '</p>';
+      ce2GroupsList.appendChild(card);
+    });
+  } catch (err) {
+    console.error('loadCe2Groups:', err);
+    ce2GroupsList.innerHTML = '<div class="error-text">Error loading CE2 groups: ' + escapeHtml(err.message || String(err)) + '</div>';
+  }
+}
+
+if (createCe2GroupBtn) {
+  createCe2GroupBtn.addEventListener('click', function () {
+    openModal(createCe2GroupModal);
+  });
+}
+
+document.getElementById('createCe2GroupForm')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const name = document.getElementById('ce2GroupName').value.trim();
+  const requiredTier = document.getElementById('ce2GroupRequiredTier').value;
+  const mentorLed = document.getElementById('ce2GroupMentorLed').checked;
+  const allowCrossTier = document.getElementById('ce2GroupAllowCrossTier').checked;
+  if (!name) return;
+  try {
+    showLoading(true);
+    const uid = auth.currentUser && auth.currentUser.uid;
+    await db.collection('communicationGroups').add({
+      name: name,
+      requiredTier: requiredTier,
+      mentorLed: mentorLed,
+      allowCrossTier: allowCrossTier,
+      createdBy: uid || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('createCe2GroupForm').reset();
+    closeAllModals();
+    await loadCe2Groups();
+    alert('CE2 group created. Open Messages V2 beta, select it, tap Join, then send a test message.');
+  } catch (err) {
+    console.error('createCe2Group:', err);
+    alert('Error creating CE2 group: ' + (err.message || err));
+  } finally {
+    showLoading(false);
+  }
+});
+
+const ce2QuickSetupBtn = document.getElementById('ce2QuickSetupBtn');
+
+async function runCe2QuickTestSetup() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert('You must be signed in.');
+    return;
+  }
+  if (!confirm(
+    'Create a Foundation test group, mark your account as mentor, and join the group?\n\n' +
+      'Then open Messages V2 beta to send a test message.'
+  )) {
+    return;
+  }
+  try {
+    showLoading(true);
+    const uid = user.uid;
+    const groupRef = await db.collection('communicationGroups').add({
+      name: 'Quick Test Circle',
+      requiredTier: 'foundation',
+      mentorLed: true,
+      allowCrossTier: false,
+      createdBy: uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection('users').doc(uid).set(
+      {
+        mentor: true,
+        formationLevel: 0,
+        communicationLevel: 0,
+      },
+      { merge: true }
+    );
+    await groupRef.collection('members').doc(uid).set({
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    closeAllModals();
+    await loadCe2Groups();
+    alert(
+      'Quick setup done.\n\n' +
+        '1. Open Messages V2 beta\n' +
+        '2. Select "Quick Test Circle" (already joined)\n' +
+        '3. Or use Discovery → Mentors → your account\n' +
+        '4. Send a test message'
+    );
+  } catch (err) {
+    console.error('runCe2QuickTestSetup:', err);
+    alert('Quick setup failed: ' + (err.message || err));
+  } finally {
+    showLoading(false);
+  }
+}
+
+if (ce2QuickSetupBtn) {
+  ce2QuickSetupBtn.addEventListener('click', runCe2QuickTestSetup);
+}
+
+console.log('Admin module v53 loaded');
