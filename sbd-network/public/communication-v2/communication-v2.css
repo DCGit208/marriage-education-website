@@ -173,8 +173,14 @@ body.ce2-body-root {
 
 .ce2-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+.ce2-tabs-discovery .ce2-tab {
+  flex: 1 1 calc(33% - 6px);
+  min-width: 72px;
 }
 
 .ce2-tab {
