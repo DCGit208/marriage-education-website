@@ -62,10 +62,15 @@ service cloud.firestore {
         : c == 'mentor' ? 4
         : 99;
     }
+    function ce2MessageClassification(classification) {
+      return classification is string ? classification : 'public';
+    }
     function ce2CanReadMessageClassification(ud, classification) {
-      return classification == 'public'
-        || (classification == 'mentor' && (ce2IsMentor(ud) || ce2IsAdmin(ud)))
-        || (classification != 'mentor' && ce2TierRank(ud) >= ce2ClassRank(classification));
+      let c = ce2MessageClassification(classification);
+      return ce2IsAdmin(ud)
+        || c == 'public'
+        || (c == 'mentor' && ce2IsMentor(ud))
+        || (c != 'mentor' && ce2TierRank(ud) >= ce2ClassRank(c));
     }
 
     // ============================================================
@@ -634,8 +639,13 @@ service cloud.firestore {
 
       match /ce2_messages/{messageId} {
         allow read: if request.auth != null &&
-          ce2IsGroupMember(groupId, request.auth.uid) &&
-          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification);
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            (
+              ce2IsGroupMember(groupId, request.auth.uid) &&
+              ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification)
+            )
+          );
         allow create: if request.auth != null &&
           ce2IsGroupMember(groupId, request.auth.uid) &&
           request.resource.data.senderId == request.auth.uid &&
