@@ -36,7 +36,11 @@ service cloud.firestore {
       let s = ce2UserDataOrNull(senderUid);
       let r = ce2UserDataOrNull(receiverUid);
       return s != null && r != null
-        && (ce2TierRank(s) >= ce2TierRank(r) || ce2IsMentor(r) || ce2IsAdmin(s));
+        && (
+          ce2IsAdmin(s) || ce2IsAdmin(r) ||
+          ce2TierRank(s) >= ce2TierRank(r) ||
+          ce2IsMentor(r)
+        );
     }
     function ce2GroupFormationMin(gdata) {
       return gdata != null && gdata.formationMinLevel is int ? gdata.formationMinLevel : 0;
@@ -692,15 +696,17 @@ service cloud.firestore {
     match /ce2_conversations/{convId} {
       allow list: if request.auth != null &&
         request.auth.uid in resource.data.participantIds;
-      allow get: if request.auth != null &&
-        request.auth.uid in resource.data.participantIds;
+      // Allow get when doc missing (before first message) or when user is a participant
+      allow get: if request.auth != null && (
+        !exists(/databases/$(database)/documents/ce2_conversations/$(convId)) ||
+        request.auth.uid in resource.data.participantIds
+      );
       allow create: if request.auth != null &&
         request.resource.data.participantIds is list &&
         request.resource.data.participantIds.size() == 2 &&
         request.auth.uid in request.resource.data.participantIds &&
-        request.resource.data.keys().hasAll(['participantIds', 'type', 'createdAt']) &&
         request.resource.data.type == 'direct' &&
-        ce2IsRequestTime(request.resource.data.createdAt) &&
+        request.resource.data.createdAt is timestamp &&
         ce2CanOpenDirectBetween(
           request.auth.uid,
           ce2DirectOtherUid(request.resource.data.participantIds, request.auth.uid)
