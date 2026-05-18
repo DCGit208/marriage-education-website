@@ -679,9 +679,11 @@ service cloud.firestore {
 
       match /ce2_messages/{messageId} {
         allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
           request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
           ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification);
         allow create: if request.auth != null &&
+          exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
           request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
           request.auth.uid == request.resource.data.senderId &&
           request.resource.data.keys().hasAll([
@@ -697,6 +699,7 @@ service cloud.firestore {
           request.resource.data.createdAt is timestamp &&
           ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
         allow update: if request.auth != null &&
+          exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
           request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
           resource.data.senderId == request.auth.uid &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']);

@@ -135,8 +135,7 @@
           li.addEventListener('click', function () {
             CommunicationState.selectedGroupId = g.id;
             CommunicationState.selectedDiscoveryUid = null;
-            openGroupThread(g.id, g.name);
-            render();
+            selectGroupOnly(g.id, g.name);
           });
           gList.appendChild(li);
         });
@@ -163,7 +162,7 @@
             '<div class="ce2-li-name">' + escapeHtml(t.label) + '</div>' +
             '<div class="ce2-li-meta">' + escapeHtml(t.sub) + '</div>';
           li.addEventListener('click', function () {
-            openDirectThread(t.id, t.otherUid, t.label);
+            openDirectThread(t.id, t.otherUid, t.label).catch(handleCe2Error);
           });
           tList.appendChild(li);
         });
@@ -200,8 +199,7 @@
               return;
             }
             CommunicationState.error = null;
-            openDirectThread(directConvId(CommunicationState.me.uid, x.uid), x.uid, x.name);
-            render();
+            openDirectThread(directConvId(CommunicationState.me.uid, x.uid), x.uid, x.name).catch(handleCe2Error);
           });
           dList.appendChild(li);
         });
@@ -213,11 +211,15 @@
     const ac = CommunicationState.activeConversation;
     if (title) title.textContent = ac ? ac.title : 'Select a thread';
     if (meta) {
-      meta.textContent = ac
-        ? ac.type + (ac.sub ? ' — ' + ac.sub : '')
-        : CommunicationState.loading
-          ? 'Loading…'
-          : CommunicationState.error || '';
+      if (ac && ac.needsJoin) {
+        meta.textContent = 'Tap “Join selected group” to read and send messages.';
+      } else {
+        meta.textContent = ac
+          ? ac.type + (ac.sub ? ' — ' + ac.sub : '')
+          : CommunicationState.loading
+            ? 'Loading…'
+            : CommunicationState.error || '';
+      }
     }
 
     const scroll = el('ce2MessageScroll');
@@ -290,6 +292,14 @@
     }
   }
 
+  function handleCe2Error(err) {
+    console.error(err);
+    CommunicationState.error =
+      (err && err.message) ||
+      'Request failed — check tier, group membership, or Firestore rules.';
+    render();
+  }
+
   function stopMessagesWatch() {
     if (messagesUnsub) {
       messagesUnsub();
@@ -297,20 +307,60 @@
     }
   }
 
-  function openDirectThread(convId, otherUid, label) {
+  async function isGroupMember(groupId) {
+    var me = CommunicationState.me;
+    if (!me || !groupId) return false;
+    var snap = await db
+      .collection('communicationGroups')
+      .doc(groupId)
+      .collection('members')
+      .doc(me.uid)
+      .get();
+    return snap.exists;
+  }
+
+  function selectGroupOnly(groupId, name) {
     stopMessagesWatch();
+    CommunicationState.messages = [];
+    CommunicationState.activeGroup = groupId;
+    CommunicationState.activeConversation = {
+      type: 'group',
+      id: groupId,
+      title: name || 'Group',
+      sub: 'communicationGroups/' + groupId,
+      needsJoin: true,
+    };
+    isGroupMember(groupId).then(function (joined) {
+      if (joined) {
+        openGroupThread(groupId, name).catch(handleCe2Error);
+      } else {
+        render();
+      }
+    }).catch(handleCe2Error);
+  }
+
+  async function openDirectThread(convId, otherUid, label) {
+    stopMessagesWatch();
+    CommunicationState.activeGroup = null;
+
+    if (!CommunicationState.me || !otherUid) {
+      throw new Error('Not signed in or invalid recipient.');
+    }
+
+    var readyId = await ensureDirectConv(otherUid);
     CommunicationState.activeConversation = {
       type: 'direct',
-      id: convId,
+      id: readyId,
       otherUid: otherUid,
       title: label ? 'DM · ' + label : 'Direct',
-      sub: convId,
+      sub: readyId,
+      needsJoin: false,
     };
-    CommunicationState.activeGroup = null;
+    CommunicationState.error = null;
 
     messagesUnsub = db
       .collection('ce2_conversations')
-      .doc(convId)
+      .doc(readyId)
       .collection('ce2_messages')
       .orderBy('createdAt', 'asc')
       .limit(150)
@@ -322,23 +372,38 @@
           render();
         },
         function (err) {
-          console.error(err);
-          CommunicationState.error = err.message || 'Message stream error';
-          render();
+          handleCe2Error(err);
         }
       );
     render();
   }
 
-  function openGroupThread(groupId, name) {
+  async function openGroupThread(groupId, name) {
     stopMessagesWatch();
+    CommunicationState.activeGroup = groupId;
+
+    var joined = await isGroupMember(groupId);
+    if (!joined) {
+      CommunicationState.messages = [];
+      CommunicationState.activeConversation = {
+        type: 'group',
+        id: groupId,
+        title: name || 'Group',
+        sub: 'communicationGroups/' + groupId,
+        needsJoin: true,
+      };
+      render();
+      return;
+    }
+
     CommunicationState.activeConversation = {
       type: 'group',
       id: groupId,
       title: name || 'Group',
       sub: 'communicationGroups/' + groupId,
+      needsJoin: false,
     };
-    CommunicationState.activeGroup = groupId;
+    CommunicationState.error = null;
 
     messagesUnsub = db
       .collection('communicationGroups')
@@ -354,9 +419,7 @@
           render();
         },
         function (err) {
-          console.error(err);
-          CommunicationState.error = err.message || 'Message stream error';
-          render();
+          handleCe2Error(err);
         }
       );
     render();
@@ -368,22 +431,36 @@
     if (rank >= 0) allowedTiers.push('foundation');
     if (rank >= 1) allowedTiers.push('premium');
     if (rank >= 2) allowedTiers.push('elite');
-    const snap = await db
-      .collection('communicationGroups')
-      .where('requiredTier', 'in', allowedTiers)
-      .orderBy('name')
-      .limit(40)
-      .get();
-    CommunicationState.visibleGroups = snap.docs.map(function (d) {
-      const x = d.data();
-      return {
-        id: d.id,
-        name: x.name || 'Group',
-        requiredTier: normalizeTier(x.requiredTier),
-        mentorLed: !!x.mentorLed,
-        allowCrossTier: !!x.allowCrossTier,
-      };
-    });
+    if (!allowedTiers.length) allowedTiers.push('foundation');
+
+    try {
+      const snap = await db
+        .collection('communicationGroups')
+        .where('requiredTier', 'in', allowedTiers)
+        .limit(40)
+        .get();
+      CommunicationState.visibleGroups = snap.docs
+        .map(function (d) {
+          const x = d.data();
+          return {
+            id: d.id,
+            name: x.name || 'Group',
+            requiredTier: normalizeTier(x.requiredTier),
+            mentorLed: !!x.mentorLed,
+            allowCrossTier: !!x.allowCrossTier,
+          };
+        })
+        .sort(function (a, b) {
+          return (a.name || '').localeCompare(b.name || '');
+        });
+    } catch (err) {
+      console.warn('loadGroupsForUser', err);
+      CommunicationState.visibleGroups = [];
+      if (err && err.code === 'failed-precondition') {
+        CommunicationState.error =
+          'Formation groups index is still building. Refresh in a minute.';
+      }
+    }
   }
 
   async function loadThreads(uid) {
@@ -485,6 +562,12 @@
     var ac = CommunicationState.activeConversation;
     if (!me || !ac) return;
 
+    if (ac.type === 'group' && ac.needsJoin) {
+      CommunicationState.error = 'Join this group before sending messages.';
+      render();
+      return;
+    }
+
     var text = (el('ce2Input') && el('ce2Input').value || '').trim();
     if (!text) return;
 
@@ -550,9 +633,7 @@
       await loadThreads(me.uid);
       render();
     } catch (err) {
-      console.error(err);
-      CommunicationState.error = err.message || 'Send failed (check rules / membership).';
-      render();
+      handleCe2Error(err);
     }
   }
 
@@ -572,10 +653,13 @@
         .doc(me.uid)
         .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
       CommunicationState.error = null;
-      openGroupThread(gid, (CommunicationState.visibleGroups.find(function (g) { return g.id === gid; }) || {}).name || 'Group');
+      var gname =
+        (CommunicationState.visibleGroups.find(function (g) {
+          return g.id === gid;
+        }) || {}).name || 'Group';
+      await openGroupThread(gid, gname);
     } catch (err) {
-      console.error(err);
-      CommunicationState.error = err.message || 'Join failed (tier / formation gate).';
+      handleCe2Error(err);
     }
     render();
   }
@@ -631,8 +715,7 @@
       if (!user) return;
       stopMessagesWatch();
       boot(user).catch(function (err) {
-        console.error(err);
-        CommunicationState.error = err.message || 'Init error';
+        handleCe2Error(err);
         CommunicationState.loading = false;
         render();
       });
