@@ -661,7 +661,7 @@
       classification: classification,
       shareable: shareable,
       content: text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.Timestamp.now(),
     };
 
     try {
@@ -715,12 +715,18 @@
   async function joinGroupById(gid, gname) {
     var me = CommunicationState.me;
     if (!gid || !me) throw new Error('Select a group first.');
-    await db
+    var memberRef = db
       .collection('communicationGroups')
       .doc(gid)
       .collection('members')
-      .doc(me.uid)
-      .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      .doc(me.uid);
+    var memberSnap = await memberRef.get();
+    var joinedAt = firebase.firestore.Timestamp.now();
+    if (!memberSnap.exists) {
+      await memberRef.set({ joinedAt: joinedAt });
+    } else {
+      await memberRef.update({ joinedAt: joinedAt });
+    }
     CommunicationState.selectedGroupId = gid;
     await openGroupThread(gid, gname || 'Group');
     CommunicationState.error = null;

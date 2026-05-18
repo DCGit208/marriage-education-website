@@ -633,20 +633,26 @@ service cloud.firestore {
         );
         allow create: if request.auth != null &&
           request.auth.uid == memberId &&
-          request.resource.data.keys().hasOnly(['joinedAt']) &&
-          ce2IsRequestTime(request.resource.data.joinedAt) &&
           (
             ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            (
-              ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), get(/databases/$(database)/documents/communicationGroups/$(groupId)).data) &&
-              ce2UserMeetsGroupFormation(ce2UserDataOrNull(request.auth.uid), get(/databases/$(database)/documents/communicationGroups/$(groupId)).data)
+            ce2UserMeetsGroupTier(
+              ce2UserDataOrNull(request.auth.uid),
+              get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
+            )
+          );
+        allow update: if request.auth != null &&
+          request.auth.uid == memberId &&
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            ce2UserMeetsGroupTier(
+              ce2UserDataOrNull(request.auth.uid),
+              get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
             )
           );
         allow delete: if request.auth != null && (
           request.auth.uid == memberId ||
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
         );
-        allow update: if false;
       }
 
       match /ce2_messages/{messageId} {
@@ -673,7 +679,7 @@ service cloud.firestore {
           request.resource.data.shareable is bool &&
           request.resource.data.content is string &&
           request.resource.data.content.size() <= 8000 &&
-          ce2IsRequestTime(request.resource.data.createdAt) &&
+          request.resource.data.createdAt is timestamp &&
           ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
         allow update: if request.auth != null &&
           ce2IsGroupMember(groupId, request.auth.uid) &&
@@ -723,7 +729,7 @@ service cloud.firestore {
           request.resource.data.shareable is bool &&
           request.resource.data.content is string &&
           request.resource.data.content.size() <= 8000 &&
-          ce2IsRequestTime(request.resource.data.createdAt) &&
+          request.resource.data.createdAt is timestamp &&
           ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
         allow update: if request.auth != null &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
