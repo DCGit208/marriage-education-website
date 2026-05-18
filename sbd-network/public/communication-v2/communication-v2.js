@@ -7,6 +7,8 @@
 
   /** @type {firebase.firestore.Unsubscribe | null} */
   let messagesUnsub = null;
+  var ce2BootedUid = null;
+  var ce2UiWired = false;
 
   const CommunicationState = {
     me: null,
@@ -95,6 +97,18 @@
     return 'd_' + s[0] + '_' + s[1];
   }
 
+  /** Classifications this user may query (aligns with Firestore read rules). */
+  function allowedClassifications(u) {
+    if (!u) return ['public', 'foundation'];
+    if (u.isAdmin || u.mentor) {
+      return ['public', 'foundation', 'premium', 'elite', 'mentor'];
+    }
+    var list = ['public', 'foundation'];
+    if (tierRank(u) >= 1) list.push('premium');
+    if (tierRank(u) >= 2) list.push('elite');
+    return list;
+  }
+
   function el(id) {
     return document.getElementById(id);
   }
@@ -132,11 +146,8 @@
             escapeHtml(g.requiredTier) +
             (g.mentorLed ? ' · mentor-led' : '') +
             '</div>';
-          li.addEventListener('click', function () {
-            CommunicationState.selectedGroupId = g.id;
-            CommunicationState.selectedDiscoveryUid = null;
-            selectGroupOnly(g.id, g.name);
-          });
+          li.dataset.action = 'select-group';
+          li.dataset.groupName = g.name || 'Group';
           gList.appendChild(li);
         });
       }
@@ -161,9 +172,10 @@
           li.innerHTML =
             '<div class="ce2-li-name">' + escapeHtml(t.label) + '</div>' +
             '<div class="ce2-li-meta">' + escapeHtml(t.sub) + '</div>';
-          li.addEventListener('click', function () {
-            openDirectThread(t.id, t.otherUid, t.label).catch(handleCe2Error);
-          });
+          li.dataset.action = 'open-thread';
+          li.dataset.convId = t.id;
+          li.dataset.otherUid = t.otherUid || '';
+          li.dataset.label = t.label || 'Direct';
           tList.appendChild(li);
         });
       }
@@ -190,17 +202,11 @@
             escapeHtml(x.tier) +
             (x.mentor ? ' · mentor' : '') +
             '</div>';
-          li.addEventListener('click', function () {
-            CommunicationState.selectedDiscoveryUid = x.uid;
-            if (!CommunicationState.me) return;
-            if (!canCommunicate(CommunicationState.me, x)) {
-              CommunicationState.error = 'Policy: lower tier cannot open thread upward (unless they are a mentor).';
-              render();
-              return;
-            }
-            CommunicationState.error = null;
-            openDirectThread(directConvId(CommunicationState.me.uid, x.uid), x.uid, x.name).catch(handleCe2Error);
-          });
+          li.dataset.action = 'open-discovery';
+          li.dataset.peerUid = x.uid;
+          li.dataset.peerName = x.name || 'Member';
+          li.dataset.peerTier = x.tier || '';
+          li.dataset.peerMentor = x.mentor ? '1' : '0';
           dList.appendChild(li);
         });
       }
@@ -307,6 +313,46 @@
     }
   }
 
+  function buildMessagesQuery(messagesCol) {
+    var me = CommunicationState.me;
+    var classes = allowedClassifications(me);
+    return messagesCol
+      .where('classification', 'in', classes)
+      .orderBy('classification')
+      .orderBy('createdAt', 'asc')
+      .limit(200);
+  }
+
+  function attachMessagesListener(messagesCol) {
+    var query = buildMessagesQuery(messagesCol);
+    messagesUnsub = query.onSnapshot(
+      function (snap) {
+        CommunicationState.messages = snap.docs.map(function (d) {
+          return Object.assign({ id: d.id }, d.data());
+        });
+        render();
+      },
+      function (err) {
+        if (err && err.code === 'failed-precondition') {
+          messagesUnsub = messagesCol
+            .orderBy('createdAt', 'asc')
+            .limit(200)
+            .onSnapshot(
+              function (snap) {
+                CommunicationState.messages = snap.docs.map(function (d) {
+                  return Object.assign({ id: d.id }, d.data());
+                });
+                render();
+              },
+              handleCe2Error
+            );
+          return;
+        }
+        handleCe2Error(err);
+      }
+    );
+  }
+
   async function isGroupMember(groupId) {
     var me = CommunicationState.me;
     if (!me || !groupId) return false;
@@ -358,23 +404,9 @@
     };
     CommunicationState.error = null;
 
-    messagesUnsub = db
-      .collection('ce2_conversations')
-      .doc(readyId)
-      .collection('ce2_messages')
-      .orderBy('createdAt', 'asc')
-      .limit(150)
-      .onSnapshot(
-        function (snap) {
-          CommunicationState.messages = snap.docs.map(function (d) {
-            return Object.assign({ id: d.id }, d.data());
-          });
-          render();
-        },
-        function (err) {
-          handleCe2Error(err);
-        }
-      );
+    attachMessagesListener(
+      db.collection('ce2_conversations').doc(readyId).collection('ce2_messages')
+    );
     render();
   }
 
@@ -405,23 +437,9 @@
     };
     CommunicationState.error = null;
 
-    messagesUnsub = db
-      .collection('communicationGroups')
-      .doc(groupId)
-      .collection('ce2_messages')
-      .orderBy('createdAt', 'asc')
-      .limit(200)
-      .onSnapshot(
-        function (snap) {
-          CommunicationState.messages = snap.docs.map(function (d) {
-            return Object.assign({ id: d.id }, d.data());
-          });
-          render();
-        },
-        function (err) {
-          handleCe2Error(err);
-        }
-      );
+    attachMessagesListener(
+      db.collection('communicationGroups').doc(groupId).collection('ce2_messages')
+    );
     render();
   }
 
@@ -434,11 +452,16 @@
     if (!allowedTiers.length) allowedTiers.push('foundation');
 
     try {
-      const snap = await db
-        .collection('communicationGroups')
-        .where('requiredTier', 'in', allowedTiers)
-        .limit(40)
-        .get();
+      var snap;
+      if (u.isAdmin) {
+        snap = await db.collection('communicationGroups').limit(40).get();
+      } else {
+        snap = await db
+          .collection('communicationGroups')
+          .where('requiredTier', 'in', allowedTiers)
+          .limit(40)
+          .get();
+      }
       CommunicationState.visibleGroups = snap.docs
         .map(function (d) {
           const x = d.data();
@@ -519,6 +542,7 @@
 
   async function loadDiscovery(u) {
     CommunicationState.visibleUsers = [];
+    try {
     if (CommunicationState.discoveryMode === 'mentors') {
       const q = await db.collection('users').where('mentor', '==', true).limit(25).get();
       q.forEach(function (doc) {
@@ -537,6 +561,9 @@
       if (doc.id === u.uid) return;
       CommunicationState.visibleUsers.push(normalizeCe2User(doc.id, doc.data()));
     });
+    } catch (err) {
+      console.warn('loadDiscovery', err);
+    }
   }
 
   async function ensureDirectConv(otherUid) {
@@ -664,7 +691,51 @@
     render();
   }
 
+  function wireCe2DelegatedClick() {
+    if (ce2UiWired) return;
+    var sidebar = el('ce2Sidebar');
+    if (!sidebar) return;
+    ce2UiWired = true;
+    sidebar.addEventListener('click', function (e) {
+      var li = e.target.closest('.ce2-li[data-action]');
+      if (!li || !CommunicationState.me) return;
+      var action = li.dataset.action;
+      if (action === 'select-group') {
+        CommunicationState.selectedGroupId = li.dataset.groupId;
+        CommunicationState.selectedDiscoveryUid = null;
+        selectGroupOnly(li.dataset.groupId, li.dataset.groupName || 'Group');
+        render();
+        return;
+      }
+      if (action === 'open-thread') {
+        openDirectThread(li.dataset.convId, li.dataset.otherUid, li.dataset.label).catch(handleCe2Error);
+        return;
+      }
+      if (action === 'open-discovery') {
+        var peer = normalizeCe2User(li.dataset.peerUid, {
+          name: li.dataset.peerName,
+          tier: li.dataset.peerTier,
+          mentor: li.dataset.peerMentor === '1',
+        });
+        CommunicationState.selectedDiscoveryUid = peer.uid;
+        if (!canCommunicate(CommunicationState.me, peer)) {
+          CommunicationState.error =
+            'Policy: lower tier cannot open thread upward (unless they are a mentor).';
+          render();
+          return;
+        }
+        CommunicationState.error = null;
+        openDirectThread(
+          directConvId(CommunicationState.me.uid, peer.uid),
+          peer.uid,
+          peer.name
+        ).catch(handleCe2Error);
+      }
+    });
+  }
+
   function wireUi() {
+    wireCe2DelegatedClick();
     document.querySelectorAll('.ce2-tab').forEach(function (btn) {
       btn.addEventListener('click', function () {
         document.querySelectorAll('.ce2-tab').forEach(function (b) {
@@ -712,7 +783,12 @@
     }
 
     auth.onAuthStateChanged(function (user) {
-      if (!user) return;
+      if (!user) {
+        ce2BootedUid = null;
+        return;
+      }
+      if (ce2BootedUid === user.uid) return;
+      ce2BootedUid = user.uid;
       stopMessagesWatch();
       boot(user).catch(function (err) {
         handleCe2Error(err);
