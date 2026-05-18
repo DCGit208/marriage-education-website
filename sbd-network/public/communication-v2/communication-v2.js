@@ -23,6 +23,7 @@
     selectedDiscoveryUid: null,
     loading: true,
     error: null,
+    statusMessage: null,
   };
 
   function normalizeTier(raw) {
@@ -114,6 +115,15 @@
   }
 
   function render() {
+    if (CommunicationState.error) {
+      showAlert(CommunicationState.error, 'err');
+    } else if (CommunicationState.statusMessage) {
+      showAlert(CommunicationState.statusMessage, 'ok');
+    } else {
+      showAlert('', '');
+    }
+    updateComposerState();
+
     const pill = el('ce2TierPill');
     const u = CommunicationState.me;
     if (pill && u) {
@@ -130,8 +140,7 @@
       gList.innerHTML = '';
       if (!CommunicationState.visibleGroups.length) {
         gList.innerHTML =
-          '<li class="ce2-placeholder">No groups visible at your tier yet. ' +
-          'Admins create <code>communicationGroups</code> documents in Firestore.</li>';
+          '<li class="ce2-placeholder">No formation groups yet. As admin: open <strong>Admin Panel → Messages V2</strong> and create a CE2 group, then refresh this page.</li>';
       } else {
         CommunicationState.visibleGroups.forEach(function (g) {
           const li = document.createElement('li');
@@ -186,8 +195,7 @@
       dList.innerHTML = '';
       if (!CommunicationState.visibleUsers.length) {
         dList.innerHTML =
-          '<li class="ce2-placeholder">No matches (or missing Firestore fields). ' +
-          'Try mentors with <code>mentor: true</code> on user docs.</li>';
+          '<li class="ce2-placeholder">No mentors listed. In <strong>Admin Panel → Users → Manage</strong>, enable <strong>Mentor</strong> on at least one account (e.g. yours for testing).</li>';
       } else {
         CommunicationState.visibleUsers.forEach(function (x) {
           const li = document.createElement('li');
@@ -298,12 +306,38 @@
     }
   }
 
+  function showAlert(message, kind) {
+    var banner = el('ce2Alert');
+    if (!banner) return;
+    if (!message) {
+      banner.className = 'ce2-alert ce2-alert-hidden';
+      banner.textContent = '';
+      return;
+    }
+    banner.className = 'ce2-alert' + (kind === 'ok' ? ' ce2-alert-ok' : '');
+    banner.textContent = message;
+  }
+
   function handleCe2Error(err) {
     console.error(err);
     CommunicationState.error =
       (err && err.message) ||
       'Request failed — check tier, group membership, or Firestore rules.';
+    showAlert(CommunicationState.error, 'err');
     render();
+  }
+
+  function updateComposerState() {
+    var sendBtn = el('ce2SendBtn');
+    var ac = CommunicationState.activeConversation;
+    if (!sendBtn) return;
+    var blocked =
+      !ac ||
+      (ac.type === 'group' && ac.needsJoin);
+    sendBtn.disabled = blocked;
+    sendBtn.title = blocked
+      ? 'Select a thread and join the group first (tap Join selected group).'
+      : 'Send message';
   }
 
   function stopMessagesWatch() {
@@ -546,9 +580,9 @@
     if (CommunicationState.discoveryMode === 'mentors') {
       const q = await db.collection('users').where('mentor', '==', true).limit(25).get();
       q.forEach(function (doc) {
-        if (doc.id === u.uid) return;
+        if (doc.id === u.uid && !u.mentor) return;
         var nu = normalizeCe2User(doc.id, doc.data());
-        if (!canCommunicate(u, nu)) return;
+        if (!canCommunicate(u, nu) && doc.id !== u.uid) return;
         CommunicationState.visibleUsers.push(nu);
       });
       return;
@@ -587,12 +621,24 @@
   async function sendMessage() {
     var me = CommunicationState.me;
     var ac = CommunicationState.activeConversation;
-    if (!me || !ac) return;
-
-    if (ac.type === 'group' && ac.needsJoin) {
-      CommunicationState.error = 'Join this group before sending messages.';
+    if (!me || !ac) {
+      CommunicationState.error = 'Select a thread first: pick someone under Discovery, or create & join a formation group.';
       render();
       return;
+    }
+
+    if (ac.type === 'group' && ac.needsJoin) {
+      try {
+        var gnameJoin =
+          (CommunicationState.visibleGroups.find(function (g) {
+            return g.id === ac.id;
+          }) || {}).name || ac.title;
+        await joinGroupById(ac.id, gnameJoin);
+        ac = CommunicationState.activeConversation;
+      } catch (joinErr) {
+        handleCe2Error(joinErr);
+        return;
+      }
     }
 
     var text = (el('ce2Input') && el('ce2Input').value || '').trim();
@@ -657,11 +703,28 @@
 
       el('ce2Input').value = '';
       CommunicationState.error = null;
-      await loadThreads(me.uid);
+      CommunicationState.statusMessage = 'Message sent.';
+      await loadThreads(me.uid).catch(function () {});
       render();
     } catch (err) {
       handleCe2Error(err);
+      return;
     }
+  }
+
+  async function joinGroupById(gid, gname) {
+    var me = CommunicationState.me;
+    if (!gid || !me) throw new Error('Select a group first.');
+    await db
+      .collection('communicationGroups')
+      .doc(gid)
+      .collection('members')
+      .doc(me.uid)
+      .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    CommunicationState.selectedGroupId = gid;
+    await openGroupThread(gid, gname || 'Group');
+    CommunicationState.error = null;
+    CommunicationState.statusMessage = 'Joined group — you can send messages now.';
   }
 
   async function joinSelectedGroup() {
@@ -673,18 +736,11 @@
       return;
     }
     try {
-      await db
-        .collection('communicationGroups')
-        .doc(gid)
-        .collection('members')
-        .doc(me.uid)
-        .set({ joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
-      CommunicationState.error = null;
       var gname =
         (CommunicationState.visibleGroups.find(function (g) {
           return g.id === gid;
         }) || {}).name || 'Group';
-      await openGroupThread(gid, gname);
+      await joinGroupById(gid, gname);
     } catch (err) {
       handleCe2Error(err);
     }
