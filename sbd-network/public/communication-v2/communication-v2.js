@@ -79,6 +79,7 @@
   /** Policy mirror of Firestore helpers (UX hints; enforcement is server-side). */
   function canCommunicate(sender, receiver) {
     if (!sender || !receiver) return false;
+    if (sender.isAdmin || receiver.isAdmin) return true;
     const sr = tierRank(sender);
     const rr = tierRank(receiver);
     if (sr >= rr) return true;
@@ -367,7 +368,7 @@
         render();
       },
       function (err) {
-        if (err && err.code === 'failed-precondition') {
+        if (err && (err.code === 'failed-precondition' || err.code === 'permission-denied')) {
           messagesUnsub = messagesCol
             .orderBy('createdAt', 'asc')
             .limit(200)
@@ -607,13 +608,18 @@
     var snap = await ref.get();
     if (!snap.exists) {
       var sorted = [me.uid, otherUid].sort();
-      await ref.set({
-        participantIds: sorted,
-        type: 'direct',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastPreview: '',
-      });
+      var now = firebase.firestore.Timestamp.now();
+      try {
+        await ref.create({
+          participantIds: sorted,
+          type: 'direct',
+          createdAt: now,
+          lastMessageAt: now,
+          lastPreview: '',
+        });
+      } catch (err) {
+        if (err && err.code !== 'already-exists') throw err;
+      }
     }
     return convId;
   }
@@ -680,7 +686,7 @@
           .collection('ce2_conversations')
           .doc(convId)
           .update({
-            lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastMessageAt: firebase.firestore.Timestamp.now(),
             lastPreview: text.slice(0, 140),
           });
       } else if (ac.type === 'group') {
