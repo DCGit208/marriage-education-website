@@ -76,6 +76,46 @@
     return 99;
   }
 
+  /** Tiers a user may discover below their own (higher → lower messaging policy). */
+  function lowerTierQueriesForUser(u) {
+    var rank = tierRank(u);
+    if (rank >= 3) return ['foundation', 'free', 'premium', 'elite'];
+    if (rank >= 2) return ['foundation', 'free', 'premium'];
+    if (rank >= 1) return ['foundation', 'free'];
+    return [];
+  }
+
+  function discoveryEmptyMessage(mode, u) {
+    if (mode === 'mentors') {
+      return 'No mentors listed. In Admin Panel → Users → Manage, enable Mentor on at least one account.';
+    }
+    if (mode === 'lower') {
+      if (!lowerTierQueriesForUser(u).length) {
+        return 'Foundation tier cannot discover lower tiers — only same tier and mentors.';
+      }
+      return 'No members found below your tier. They must have tier foundation or premium in their profile.';
+    }
+    return 'No members at your tier (' + (u.isAdmin ? 'admin' : u.tier) + ') besides you.';
+  }
+
+  function updateDiscoveryTabs(u) {
+    var lowerBtn = document.querySelector('.ce2-tab-lower');
+    var hint = el('ce2DiscoveryHint');
+    var canSeeLower = lowerTierQueriesForUser(u).length > 0;
+    if (lowerBtn) lowerBtn.hidden = !canSeeLower;
+    if (hint) {
+      hint.textContent = canSeeLower
+        ? 'Mentors, same tier, or lower tiers — filtered queries only.'
+        : 'Mentors and same tier — filtered queries only.';
+    }
+    if (!canSeeLower && CommunicationState.discoveryMode === 'lower') {
+      CommunicationState.discoveryMode = 'peers';
+      document.querySelectorAll('.ce2-tab').forEach(function (b) {
+        b.classList.toggle('is-active', b.getAttribute('data-discovery') === 'peers');
+      });
+    }
+  }
+
   /** Policy mirror of Firestore helpers (UX hints; enforcement is server-side). */
   function canCommunicate(sender, receiver) {
     if (!sender || !receiver) return false;
@@ -124,6 +164,7 @@
       showAlert('', '');
     }
     updateComposerState();
+    if (CommunicationState.me) updateDiscoveryTabs(CommunicationState.me);
 
     const pill = el('ce2TierPill');
     const u = CommunicationState.me;
@@ -196,7 +237,9 @@
       dList.innerHTML = '';
       if (!CommunicationState.visibleUsers.length) {
         dList.innerHTML =
-          '<li class="ce2-placeholder">No mentors listed. In <strong>Admin Panel → Users → Manage</strong>, enable <strong>Mentor</strong> on at least one account (e.g. yours for testing).</li>';
+          '<li class="ce2-placeholder">' +
+          escapeHtml(discoveryEmptyMessage(CommunicationState.discoveryMode, u || CommunicationState.me || {})) +
+          '</li>';
       } else {
         CommunicationState.visibleUsers.forEach(function (x) {
           const li = document.createElement('li');
@@ -589,12 +632,31 @@
       return;
     }
 
+    if (CommunicationState.discoveryMode === 'lower') {
+      var lowerTiers = lowerTierQueriesForUser(u);
+      if (!lowerTiers.length) return;
+      var qLower = await db.collection('users').where('tier', 'in', lowerTiers).limit(50).get();
+      qLower.forEach(function (doc) {
+        if (doc.id === u.uid) return;
+        var nu = normalizeCe2User(doc.id, doc.data());
+        if (!canCommunicate(u, nu)) return;
+        if (tierRank(nu) >= tierRank(u) && !nu.mentor) return;
+        CommunicationState.visibleUsers.push(nu);
+      });
+      CommunicationState.visibleUsers.sort(function (a, b) {
+        return tierRank(a) - tierRank(b) || (a.name || '').localeCompare(b.name || '');
+      });
+      return;
+    }
+
     var t = u.tier;
     var tierQueries = t === 'foundation' ? ['foundation', 'free'] : [t];
     var q2 = await db.collection('users').where('tier', 'in', tierQueries).limit(40).get();
     q2.forEach(function (doc) {
       if (doc.id === u.uid) return;
-      CommunicationState.visibleUsers.push(normalizeCe2User(doc.id, doc.data()));
+      var nu = normalizeCe2User(doc.id, doc.data());
+      if (!canCommunicate(u, nu)) return;
+      CommunicationState.visibleUsers.push(nu);
     });
     } catch (err) {
       console.warn('loadDiscovery', err);
