@@ -146,3 +146,11 @@ firebase deploy --only hosting:sbd-network
 | v58 | Header **B** (`position: fixed` body + composer) |
 | v59 | Header **A**; gap remained (formula over-lift) |
 | **v60** | Header **A** + gap **closed** ← **current stable** |
+
+---
+
+## Related planned work
+
+- `CE2-ROADMAP.md` — index of all CE2 plans
+- `PHASE-UI-COMPOSURE-REFINEMENT.md` — visual/structural pass (CSS-first; must not modify v60 keyboard paths)
+- `PHASE-1-AUDIO-MESSAGING.md` — voice / PTT implementation brief (audio modules must not modify v60 keyboard paths)
