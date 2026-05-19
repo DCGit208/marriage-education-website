@@ -1,5 +1,6 @@
 /* Communication Engine V2 — page does not scroll; only message panel scrolls */
 /* STABLE_ROLLBACK: ce2-keyboard-v60 — see ROLLBACK-KEYBOARD-v60.md + KEYBOARD-STABLE.lock */
+/* UI-1: header + search composure — PHASE-UI-COMPOSURE-REFINEMENT.md (keyboard paths untouched) */
 *,
 *::before,
 *::after {
@@ -39,6 +40,10 @@ body.ce2-body-root.ce2-kb-active {
 
 /* Header = flex child (never position:fixed). Keyboard: body vv counter + composer transform. */
 .ce2-shell {
+  --ce2-chrome-pad-y: 8px;
+  --ce2-chrome-pad-x: 12px;
+  --ce2-meta-opacity: 0.38;
+  --ce2-border-subtle: rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -94,9 +99,10 @@ body.ce2-body-root.ce2-kb-active {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: calc(12px + env(safe-area-inset-top, 0)) 14px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  padding: calc(var(--ce2-chrome-pad-y) + env(safe-area-inset-top, 0)) var(--ce2-chrome-pad-x)
+    var(--ce2-chrome-pad-y);
+  border-bottom: 1px solid var(--ce2-border-subtle);
   background: #08080a;
 }
 
@@ -123,9 +129,17 @@ body.ce2-body-root.ce2-kb-active {
 }
 
 .ce2-sub {
-  margin: 2px 0 0;
-  font-size: 0.72rem;
-  opacity: 0.55;
+  margin: 1px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  opacity: 0.5;
+}
+
+/* UI-1: more room for thread on mobile */
+@media (max-width: 719px) {
+  .ce2-shell.ce2-thread-open .ce2-sub {
+    display: none;
+  }
 }
 
 .ce2-pill {
@@ -421,16 +435,16 @@ body.ce2-body-root.ce2-kb-active {
   z-index: 10;
   background: #08080a;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  gap: 8px;
+  padding: var(--ce2-chrome-pad-y) var(--ce2-chrome-pad-x);
+  border-bottom: 1px solid var(--ce2-border-subtle);
 }
 
 .ce2-back-thread {
   flex-shrink: 0;
-  margin-top: 2px;
-  padding: 8px 10px;
+  margin-top: 0;
+  padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid rgba(201, 184, 146, 0.35);
   background: rgba(201, 184, 146, 0.12);
@@ -447,13 +461,43 @@ body.ce2-body-root.ce2-kb-active {
 
 .ce2-thread-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .ce2-thread-meta {
-  margin: 6px 0 0;
-  font-size: 0.72rem;
-  opacity: 0.5;
+  margin: 2px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  opacity: var(--ce2-meta-opacity);
+}
+
+.ce2-thread-search-toggle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 184, 146, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a89f8c;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-thread-search-toggle.is-active {
+  border-color: rgba(201, 184, 146, 0.45);
+  background: rgba(201, 184, 146, 0.12);
+  color: #c9b892;
+}
+
+.ce2-thread-search-toggle[hidden] {
+  display: none !important;
 }
 
 .ce2-messages {
@@ -1388,31 +1432,40 @@ body.ce2-msg-menu-open {
 }
 
 .ce2-thread-search {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0e0e12;
+  gap: 6px;
+  padding: 6px var(--ce2-chrome-pad-x);
+  border-bottom: 1px solid var(--ce2-border-subtle);
+  background: #0a0a0e;
+}
+
+.ce2-thread-search[hidden] {
+  display: none !important;
 }
 
 .ce2-thread-search-input {
   flex: 1;
-  border: 1px solid rgba(201, 184, 146, 0.25);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  min-width: 0;
+  border: 1px solid rgba(201, 184, 146, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
   color: inherit;
-  padding: 8px 12px;
+  padding: 6px 10px;
   font: inherit;
+  font-size: 0.85rem;
 }
 
 .ce2-thread-search-close {
+  flex-shrink: 0;
   border: none;
   background: transparent;
-  color: #c9b892;
-  font-size: 1.4rem;
+  color: #a89f8c;
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 6px;
 }
 
 .ce2-pinned-banner {

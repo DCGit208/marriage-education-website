@@ -1154,6 +1154,22 @@
     var backList = el('ce2BackToList');
     if (backList) backList.hidden = !threadOpen;
 
+    var searchToggle = el('ce2ThreadSearchToggle');
+    var searchBar = el('ce2ThreadSearch');
+    if (searchToggle) {
+      searchToggle.hidden = !threadOpen;
+      if (!threadOpen && searchBar) {
+        searchBar.hidden = true;
+        searchToggle.setAttribute('aria-expanded', 'false');
+        searchToggle.classList.remove('is-active');
+        CommunicationState.threadSearchQuery = '';
+      } else if (searchBar) {
+        var searchOpen = !searchBar.hidden;
+        searchToggle.setAttribute('aria-expanded', searchOpen ? 'true' : 'false');
+        searchToggle.classList.toggle('is-active', searchOpen);
+      }
+    }
+
     const title = el('ce2ThreadTitle');
     const meta = el('ce2ThreadMeta');
     if (title) title.textContent = ac ? ac.title : 'Select a conversation';
