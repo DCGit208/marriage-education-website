@@ -1,0 +1,23 @@
+{
+  "rollbackId": "ce2-keyboard-stable-v60",
+  "version": "v60",
+  "verified": {
+    "header": "A",
+    "composerGap": "closed",
+    "date": "2026-05"
+  },
+  "artifacts": {
+    "js": "communication-v2.js?v=60",
+    "css": "communication-v2.css?v=43",
+    "build": "1779251000000",
+    "serviceWorker": "sbd-network-v1779251000000"
+  },
+  "doc": "ROLLBACK-KEYBOARD-v60.md",
+  "supersedes": "ce2-keyboard-stable-v59",
+  "frozenFunctions": [
+    "applyViewportPanCounter",
+    "applyComposerKeyboardLift",
+    "measureComposerKeyboardLift",
+    "applyComposerKeyboardInset"
+  ]
+}

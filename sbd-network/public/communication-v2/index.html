@@ -1,81 +1,207 @@
 <!DOCTYPE html>
+<!-- STABLE_ROLLBACK: ce2-keyboard-v60 — header A + gap closed — see ROLLBACK-KEYBOARD-v60.md -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="build-version" content="1779251000000">
+  <meta name="ce2-keyboard-stable" content="ce2-keyboard-stable-v60">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no, interactive-widget=overlays-content">
   <meta name="theme-color" content="#08080a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Communication Engine V2 — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Messages — SBD Network</title>
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=43">
+  <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
   <script defer src="/js/firebase.js"></script>
-  <script defer src="/js/auth-guard.js"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=8"></script>
+  <script defer src="/js/upload.js?v=2"></script>
+  <script defer src="/communication-v2/ce2-governance.js?v=4"></script>
+  <script defer src="/communication-v2/ce2-moderation.js?v=2"></script>
+  <script defer src="/communication-v2/ce2-links.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-attachments.js?v=4"></script>
+  <script defer src="/communication-v2/ce2-share.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-presence.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-receipts.js?v=2"></script>
+  <script defer src="/communication-v2/ce2-reply.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=15"></script>
+  <script defer src="/communication-v2/ce2-offline-queue.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-pwa.js?v=3"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=60"></script>
 </head>
 <body class="ce2-body-root">
-  <div id="ce2App" class="ce2-shell" aria-label="Communication Engine V2">
+  <script>
+    (function () {
+      document.body.style.pointerEvents = '';
+      document.body.style.opacity = '';
+      document.body.classList.remove('ham-drawer-open', 'ce2-msg-menu-open');
+    })();
+  </script>
+  <div id="ce2App" class="ce2-shell" aria-label="SBD Messages">
     <header class="ce2-header" role="banner">
       <a class="ce2-back" href="/dashboard.html" aria-label="Back to home">←</a>
       <div class="ce2-header-text">
-        <h1 class="ce2-title">Communication V2</h1>
-        <p class="ce2-sub">Formation-gated · isolated test shell</p>
+        <h1 class="ce2-title">Messages</h1>
+        <p class="ce2-sub">Formation-gated · covenant-safe</p>
       </div>
       <span class="ce2-pill" id="ce2TierPill">…</span>
     </header>
 
     <div id="ce2Alert" class="ce2-alert ce2-alert-hidden" role="alert"></div>
-    <div class="ce2-workspace">
+
+    <div class="ce2-workspace" id="ce2Workspace">
       <aside class="ce2-sidebar" id="ce2Sidebar">
+        <nav class="ce2-hub-nav" role="tablist" aria-label="Communication lists">
+          <button type="button" class="ce2-hub-tab is-active" role="tab" data-hub="groups" aria-selected="true">Groups</button>
+          <button type="button" class="ce2-hub-tab" role="tab" data-hub="direct" aria-selected="false">Direct</button>
+          <button type="button" class="ce2-hub-tab" role="tab" data-hub="discover" aria-selected="false">Discover</button>
+          <button type="button" class="ce2-hub-tab" role="tab" data-hub="saved" aria-selected="false">Starred</button>
+        </nav>
         <div class="ce2-sidebar-scroll">
-          <section class="ce2-section">
+          <section class="ce2-section" data-hub-panel="groups">
             <h2 class="ce2-section-title">Formation groups</h2>
             <p class="ce2-hint">Tier-qualified circles (no global directory).</p>
-            <ul class="ce2-list" id="ce2GroupList"></ul>
+            <ul class="ce2-list ce2-panel-scroll" id="ce2GroupList"></ul>
             <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2JoinDemo">Join selected group</button>
           </section>
-          <section class="ce2-section">
-            <h2 class="ce2-section-title">Direct (CE2)</h2>
-            <ul class="ce2-list" id="ce2ThreadList"></ul>
+          <section class="ce2-section" data-hub-panel="direct">
+            <h2 class="ce2-section-title">Direct messages</h2>
+            <ul class="ce2-list ce2-panel-scroll" id="ce2ThreadList"></ul>
           </section>
-          <section class="ce2-section">
+          <section class="ce2-section" data-hub-panel="saved">
+            <h2 class="ce2-section-title">Starred messages</h2>
+            <p class="ce2-hint">Saved from any thread — tap to open.</p>
+            <ul class="ce2-list ce2-panel-scroll" id="ce2SavedList"></ul>
+          </section>
+          <section class="ce2-section" data-hub-panel="discover">
             <h2 class="ce2-section-title">Discovery</h2>
             <p class="ce2-hint" id="ce2DiscoveryHint">Mentors, same tier, or lower tiers (if your tier allows).</p>
-            <div class="ce2-tabs" role="tablist">
+            <div class="ce2-tabs ce2-tabs-discovery" role="tablist" aria-label="Discovery filters">
               <button type="button" class="ce2-tab is-active" data-discovery="mentors">Mentors</button>
               <button type="button" class="ce2-tab" data-discovery="peers">Same tier</button>
               <button type="button" class="ce2-tab ce2-tab-lower" data-discovery="lower" hidden>Lower tiers</button>
+              <button type="button" class="ce2-tab ce2-tab-mentees" data-discovery="mentees" hidden>Mentees</button>
             </div>
-            <ul class="ce2-list" id="ce2DiscoveryList"></ul>
+            <ul class="ce2-list ce2-panel-scroll" id="ce2DiscoveryList"></ul>
           </section>
         </div>
       </aside>
 
       <main class="ce2-main">
         <div class="ce2-main-header">
-          <h2 class="ce2-thread-title" id="ce2ThreadTitle">Select a thread</h2>
-          <p class="ce2-thread-meta" id="ce2ThreadMeta"></p>
+          <button type="button" class="ce2-back-thread" id="ce2BackToList" hidden aria-label="Back to contacts">← Contacts</button>
+          <div class="ce2-main-header-text">
+            <h2 class="ce2-thread-title" id="ce2ThreadTitle">Select a conversation</h2>
+            <p class="ce2-thread-meta" id="ce2ThreadMeta"></p>
+          </div>
         </div>
-        <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite">
-          <!-- message rows -->
+        <div id="ce2ThreadSearch" class="ce2-thread-search" hidden>
+          <input type="search" id="ce2ThreadSearchInput" class="ce2-thread-search-input" placeholder="Find in this chat…" aria-label="Find in chat">
+          <button type="button" id="ce2ThreadSearchClose" class="ce2-thread-search-close" aria-label="Close search">×</button>
         </div>
+        <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite"></div>
+        <p id="ce2TypingLine" class="ce2-typing-line" hidden aria-live="polite"></p>
         <footer class="ce2-composer" role="form" aria-label="Compose message">
-          <label class="ce2-sr-only" for="ce2ClassSelect">Classification</label>
-          <select id="ce2ClassSelect" class="ce2-select" title="Message classification">
-            <option value="public">public</option>
-            <option value="foundation">foundation</option>
-            <option value="premium">premium</option>
-            <option value="elite">elite</option>
-            <option value="mentor">mentor</option>
-          </select>
-          <label class="ce2-sr-only" for="ce2Shareable">Shareable</label>
-          <label class="ce2-check"><input type="checkbox" id="ce2Shareable" checked> shareable</label>
-          <label class="ce2-sr-only" for="ce2Input">Message</label>
-          <textarea id="ce2Input" class="ce2-input" rows="1" placeholder="Write in covenant…" maxlength="8000"></textarea>
-          <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn">Send</button>
+          <div id="ce2ReplyBanner" class="ce2-reply-banner" hidden>
+            <span id="ce2ReplyBannerText"></span>
+            <button type="button" id="ce2ReplyCancel" class="ce2-reply-cancel" aria-label="Cancel reply">×</button>
+          </div>
+          <div id="ce2AttachPreview" class="ce2-attach-preview" hidden></div>
+          <div class="ce2-composer-bar">
+            <button type="button" class="ce2-composer-attach" id="ce2AttachBtn" title="Photo or video" aria-label="Attach photo or video">📷</button>
+            <input type="file" id="ce2AttachInput" class="ce2-sr-only" accept="image/*,video/*" multiple tabindex="-1">
+            <button type="button" class="ce2-composer-voice" id="ce2VoiceBtn" title="Hold to record voice" aria-label="Hold to record voice">🎙</button>
+            <button type="button" class="ce2-composer-more" id="ce2ComposerMore" aria-expanded="false" aria-controls="ce2ComposerDrawer" title="Classification and sharing">+</button>
+            <label class="ce2-sr-only" for="ce2Input">Message</label>
+            <textarea id="ce2Input" class="ce2-input" rows="1" placeholder="Message…" maxlength="8000" enterkeyhint="send" autocomplete="off" autocorrect="on"></textarea>
+            <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn" aria-label="Send">Send</button>
+          </div>
+          <div id="ce2ComposerDrawer" class="ce2-composer-drawer" hidden>
+            <label class="ce2-sr-only" for="ce2ClassSelect">Classification</label>
+            <select id="ce2ClassSelect" class="ce2-select" title="Message classification">
+              <option value="public">Public</option>
+              <option value="foundation">Foundation</option>
+              <option value="premium">Premium</option>
+              <option value="elite">Elite</option>
+              <option value="ambassador">Ambassador</option>
+              <option value="senior_ambassador">Senior Ambassador</option>
+              <option value="rd">Regional Director</option>
+              <option value="mentor">Mentor</option>
+            </select>
+            <label class="ce2-check"><input type="checkbox" id="ce2Shareable" checked> Shareable to boards</label>
+            <label class="ce2-sr-only" for="ce2BoardShareUrl">Board post URL</label>
+            <input type="url" id="ce2BoardShareUrl" class="ce2-input ce2-input-inline" placeholder="Paste board post link to share…" autocomplete="off">
+          </div>
         </footer>
       </main>
+    </div>
+  </div>
+
+  <div id="ce2MsgMenu" class="ce2-msg-menu" hidden aria-hidden="true">
+    <button type="button" class="ce2-msg-menu-backdrop" id="ce2MsgMenuBackdrop" aria-label="Close message menu" tabindex="-1"></button>
+    <div class="ce2-msg-menu-panel" id="ce2MsgMenuPanel" role="menu" aria-label="Message actions">
+      <div class="ce2-msg-menu-grab" aria-hidden="true"></div>
+      <ul class="ce2-msg-menu-list" id="ce2MsgMenuList"></ul>
+    </div>
+  </div>
+
+  <div id="ce2MsgInfo" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">Message info</h3>
+      <div id="ce2MsgInfoBody" class="ce2-sheet-body"></div>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2MsgInfoClose">Close</button>
+    </div>
+  </div>
+
+  <div id="ce2ReactSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel ce2-sheet-panel-compact">
+      <h3 class="ce2-sheet-title">React</h3>
+      <div id="ce2ReactRow" class="ce2-react-row"></div>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2ReactClose">Cancel</button>
+    </div>
+  </div>
+
+  <div id="ce2EditSheet" class="ce2-sheet ce2-sheet--edit" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel ce2-sheet-panel-edit">
+      <h3 class="ce2-sheet-title">Edit message</h3>
+      <textarea id="ce2EditInput" class="ce2-input ce2-edit-input" rows="3" maxlength="8000"></textarea>
+      <div class="ce2-sheet-actions">
+        <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2EditCancel">Cancel</button>
+        <button type="button" class="ce2-btn" id="ce2EditSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ce2ForwardSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">Forward to…</h3>
+      <ul id="ce2ForwardList" class="ce2-list ce2-sheet-list"></ul>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2ForwardClose">Cancel</button>
+    </div>
+  </div>
+
+  <div id="ce2TemplateSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">Template reply</h3>
+      <ul id="ce2TemplateList" class="ce2-list ce2-sheet-list"></ul>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2TemplateClose">Cancel</button>
+    </div>
+  </div>
+
+  <div id="ce2MentionSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">@Mention</h3>
+      <ul id="ce2MentionList" class="ce2-list ce2-sheet-list"></ul>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2MentionClose">Cancel</button>
     </div>
   </div>
 </body>
