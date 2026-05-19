@@ -3,14 +3,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="build-version" content="1779251000000">
+  <meta name="build-version" content="1779260000000">
   <meta name="ce2-keyboard-stable" content="ce2-keyboard-stable-v60">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no, interactive-widget=overlays-content">
   <meta name="theme-color" content="#08080a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=43">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=44">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -26,7 +26,7 @@
   <script defer src="/communication-v2/ce2-presence.js?v=1"></script>
   <script defer src="/communication-v2/ce2-receipts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-message-actions.js?v=15"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=16"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=1"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
   <script defer src="/communication-v2/ce2-pwa.js?v=3"></script>
@@ -97,6 +97,7 @@
             <h2 class="ce2-thread-title" id="ce2ThreadTitle">Select a conversation</h2>
             <p class="ce2-thread-meta" id="ce2ThreadMeta"></p>
           </div>
+          <button type="button" class="ce2-thread-search-toggle" id="ce2ThreadSearchToggle" hidden aria-label="Find in chat" aria-expanded="false" title="Find in chat">⌕</button>
         </div>
         <div id="ce2ThreadSearch" class="ce2-thread-search" hidden>
           <input type="search" id="ce2ThreadSearchInput" class="ce2-thread-search-input" placeholder="Find in this chat…" aria-label="Find in chat">
