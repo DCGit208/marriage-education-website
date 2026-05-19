@@ -18,10 +18,15 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 
 ---
 
+## Rollback framework
+
+**Start here:** [`ROLLBACK-FRAMEWORK.md`](./ROLLBACK-FRAMEWORK.md) — layers, tags, revert commands, regression gate.
+
 ## Frozen — do not break without re-test plan
 
 ```
-ce2-keyboard-stable-v60
+ce2-keyboard-stable-v60  (git tag → e2e0e7f1)
+├── ROLLBACK-FRAMEWORK.md
 ├── ROLLBACK-KEYBOARD-v60.md
 ├── KEYBOARD-STABLE.lock
 └── Frozen: applyViewportPanCounter, measureComposerKeyboardLift,
