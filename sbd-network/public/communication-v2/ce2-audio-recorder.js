@@ -17,8 +17,8 @@
   var bound = false;
   var stopPaintFn = null;
 
-  /** Default off until iPhone PWA validated; opt-in: localStorage ce2_lock_record=1 */
-  var LOCK_TO_RECORD = false;
+  /** On for all users (validated iPhone PWA May 2026). Opt-out: localStorage ce2_lock_record=0 */
+  var LOCK_TO_RECORD = true;
 
   function el(id) {
     return document.getElementById(id);
@@ -33,6 +33,11 @@
   }
 
   function isLockEnabled() {
+    try {
+      if (global.localStorage && global.localStorage.getItem('ce2_lock_record') === '0') {
+        return false;
+      }
+    } catch (_) {}
     if (LOCK_TO_RECORD) return true;
     try {
       return global.localStorage && global.localStorage.getItem('ce2_lock_record') === '1';
