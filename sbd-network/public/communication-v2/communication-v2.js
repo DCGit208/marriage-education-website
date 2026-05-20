@@ -27,9 +27,6 @@
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
   var MAX_COMPOSER_ATTACHMENTS = 6;
-  var voiceRecorder = null;
-  var voiceStream = null;
-  var voiceChunks = [];
   /** How long senders can remove their own messages (soft delete). */
   var UNSEND_WINDOW_MS = 60 * 60 * 1000;
 
@@ -67,6 +64,7 @@
     _loadThreadsTimer: null,
     _pendingThreadOnly: false,
     voiceRecording: false,
+    voiceRecordingCancel: false,
     userMsgPrefs: { hidden: {}, saved: {}, blocked: {} },
     savedItems: [],
     threadSearchQuery: '',
@@ -1184,6 +1182,7 @@
     var voiceBtn = el('ce2VoiceBtn');
     if (voiceBtn) {
       voiceBtn.classList.toggle('is-recording', !!CommunicationState.voiceRecording);
+      voiceBtn.classList.toggle('is-cancel-armed', !!CommunicationState.voiceRecordingCancel);
       voiceBtn.disabled = !!(ac && ac.needsJoin);
     }
   }
@@ -3064,94 +3063,26 @@
     });
   }
 
-  function stopVoiceCapture() {
-    CommunicationState.voiceRecording = false;
-    if (voiceRecorder && voiceRecorder.state !== 'inactive') {
-      try {
-        voiceRecorder.stop();
-      } catch (_) {}
-    } else if (voiceStream) {
-      voiceStream.getTracks().forEach(function (t) {
-        t.stop();
-      });
-      voiceStream = null;
-    }
-    requestRender({ threadOnly: true });
-  }
-
-  function startVoiceCapture() {
-    var ac = CommunicationState.activeConversation;
-    if (!ac || ac.needsJoin || CommunicationState.voiceRecording) return;
-    if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') {
-      CommunicationState.error = 'Voice notes are not supported in this browser.';
-      render();
-      return;
-    }
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(function (stream) {
-        voiceStream = stream;
-        voiceChunks = [];
-        var mime = '';
-        if (MediaRecorder.isTypeSupported('audio/webm')) mime = 'audio/webm';
-        else if (MediaRecorder.isTypeSupported('audio/mp4')) mime = 'audio/mp4';
-        voiceRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-        voiceRecorder.ondataavailable = function (e) {
-          if (e.data && e.data.size) voiceChunks.push(e.data);
-        };
-        var recordedMime = mime || voiceRecorder.mimeType || 'audio/webm';
-        voiceRecorder.onstop = function () {
-          if (voiceStream) {
-            voiceStream.getTracks().forEach(function (t) {
-              t.stop();
-            });
-            voiceStream = null;
-          }
-          voiceRecorder = null;
-          CommunicationState.voiceRecording = false;
-          if (!voiceChunks.length) return;
-          var type = recordedMime;
-          var blob = new Blob(voiceChunks, { type: type });
-          voiceChunks = [];
-          var ext = type.indexOf('mp4') >= 0 ? 'm4a' : 'webm';
-          var file = new File([blob], 'voice-' + Date.now() + '.' + ext, { type: type });
-          startComposerUpload(file);
-        };
-        voiceRecorder.start();
-        CommunicationState.voiceRecording = true;
+  function initCe2AudioRecorder() {
+    if (!root.Ce2AudioRecorder) return;
+    root.Ce2AudioRecorder.init({
+      getState: function () {
+        return CommunicationState;
+      },
+      requestRender: requestRender,
+      onFileReady: function (file) {
         CommunicationState.error = null;
-        requestRender({ threadOnly: true });
-      })
-      .catch(function (err) {
-        handleCe2Error(err);
-      });
-  }
-
-  function bindVoiceComposer() {
-    var voiceBtn = el('ce2VoiceBtn');
-    if (!voiceBtn || voiceBtn.dataset.ce2VoiceBound) return;
-    voiceBtn.dataset.ce2VoiceBound = '1';
-
-    function onDown(e) {
-      e.preventDefault();
-      startVoiceCapture();
-    }
-    function onUp(e) {
-      e.preventDefault();
-      stopVoiceCapture();
-    }
-
-    voiceBtn.addEventListener('pointerdown', onDown);
-    voiceBtn.addEventListener('pointerup', onUp);
-    voiceBtn.addEventListener('pointerleave', onUp);
-    voiceBtn.addEventListener('pointercancel', onUp);
+        startComposerUpload(file);
+      },
+      onError: handleCe2Error,
+    });
   }
 
   function wireUi() {
     bindCe2ComposerKeyboard();
     bindCe2EditInput();
     bindCe2ComposerInput();
-    bindVoiceComposer();
+    initCe2AudioRecorder();
     initCe2MessageActions();
     wireCe2DelegatedClick();
     bindHubNav();
@@ -3403,4 +3334,7 @@
       ' (header+gap stable) rollback=' +
       CE2_KEYBOARD_ROLLBACK
   );
+  if (root.Ce2AudioRecorder) {
+    console.log('[CE2] ce2-audio-recorder.js Phase 1A');
+  }
 })();
