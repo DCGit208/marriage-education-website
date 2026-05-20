@@ -1,6 +1,6 @@
 /* Communication Engine V2 — page does not scroll; only message panel scrolls */
 /* STABLE_ROLLBACK: ce2-keyboard-v60 — see ROLLBACK-KEYBOARD-v60.md + KEYBOARD-STABLE.lock */
-/* UI-1: header + search — UI-2: message rhythm — PHASE-UI-COMPOSURE-REFINEMENT.md (keyboard frozen) */
+/* UI-1–3: composure pass — PHASE-UI-COMPOSURE-REFINEMENT.md (keyboard v60 frozen) */
 *,
 *::before,
 *::after {
@@ -46,6 +46,9 @@ body.ce2-body-root.ce2-kb-active {
   --ce2-border-subtle: rgba(255, 255, 255, 0.06);
   --ce2-bubble-radius: 14px;
   --ce2-row-gap: 14px;
+  --ce2-composer-bg: #08080a;
+  --ce2-composer-surface: rgba(255, 255, 255, 0.035);
+  --ce2-composer-control: 40px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -92,10 +95,6 @@ body.ce2-body-root.ce2-kb-active {
   display: none;
 }
 
-.ce2-btn-send:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 
 .ce2-header {
   flex-shrink: 0;
@@ -305,6 +304,7 @@ body.ce2-body-root.ce2-kb-active {
     transform: translate3d(0, calc(-1 * var(--ce2-composer-kb, 0px)), 0);
     will-change: transform;
     padding-bottom: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   body.ce2-composer-kb-active .ce2-thread-open .ce2-messages {
@@ -870,33 +870,37 @@ body.ce2-msg-menu-open {
   display: flex;
   flex-direction: column;
   padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0c0c10;
+  border-top: 1px solid var(--ce2-border-subtle);
+  background: var(--ce2-composer-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .ce2-composer-bar {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px var(--ce2-chrome-pad-x) 8px;
 }
 
 .ce2-composer-more {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-  color: #c9b892;
-  font-size: 1.25rem;
+  width: var(--ce2-composer-control);
+  height: var(--ce2-composer-control);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ce2-composer-surface);
+  color: #a89f8c;
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .ce2-composer-more.is-open {
-  background: rgba(201, 184, 146, 0.2);
-  border-color: rgba(201, 184, 146, 0.45);
+  background: rgba(201, 184, 146, 0.14);
+  border-color: rgba(201, 184, 146, 0.35);
+  color: #c9b892;
 }
 
 .ce2-composer-drawer {
@@ -966,12 +970,13 @@ body.ce2-msg-menu-open {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 10px 6px;
-  padding: 8px 10px;
+  margin: 6px var(--ce2-chrome-pad-x) 0;
+  padding: 7px 10px;
   border-radius: 10px;
-  background: rgba(201, 184, 146, 0.12);
-  border-left: 3px solid #c9b892;
-  font-size: 0.78rem;
+  background: rgba(201, 184, 146, 0.1);
+  border-left: 2px solid rgba(201, 184, 146, 0.45);
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 
 .ce2-reply-cancel {
@@ -1020,26 +1025,31 @@ body.ce2-msg-menu-open {
 .ce2-msg-audio {
   display: block;
   width: min(260px, 100%);
+  min-height: 44px;
   margin-bottom: 6px;
 }
 
 .ce2-composer-attach,
 .ce2-composer-voice {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  font-size: 1rem;
+  width: var(--ce2-composer-control);
+  height: var(--ce2-composer-control);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--ce2-composer-surface);
+  color: #a89f8c;
+  font-size: 0.95rem;
   line-height: 1;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .ce2-composer-voice.is-recording {
-  background: rgba(200, 80, 80, 0.35);
-  border-color: rgba(255, 120, 120, 0.65);
-  animation: ce2-voice-pulse 1s ease-in-out infinite;
+  background: rgba(180, 70, 70, 0.28);
+  border-color: rgba(220, 100, 100, 0.5);
+  color: #f0c8c0;
+  animation: ce2-voice-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes ce2-voice-pulse {
@@ -1048,13 +1058,13 @@ body.ce2-msg-menu-open {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.03);
   }
 }
 
 .ce2-attach-preview {
   position: relative;
-  margin: 6px 10px 0;
+  margin: 6px var(--ce2-chrome-pad-x) 0;
   max-width: min(280px, 92vw);
 }
 
@@ -1230,14 +1240,26 @@ body.ce2-msg-menu-open {
   width: 100%;
   resize: none;
   scroll-margin: 0;
-  min-height: 40px;
+  min-height: 38px;
   max-height: 100px;
-  padding: 10px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ce2-composer-surface);
   color: inherit;
   font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ce2-input::placeholder {
+  color: rgba(242, 240, 236, 0.38);
+}
+
+.ce2-input:focus {
+  outline: none;
+  border-color: rgba(201, 184, 146, 0.28);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .ce2-btn {
@@ -1258,14 +1280,27 @@ body.ce2-msg-menu-open {
 
 .ce2-btn-send {
   flex-shrink: 0;
-  background: linear-gradient(135deg, #b8a06e, #7d6b45);
+  align-self: flex-end;
+  background: linear-gradient(165deg, #a89468 0%, #8a7650 100%);
   color: #0a0907;
   font-weight: 600;
-  border: none;
-  min-width: 64px;
-  height: 40px;
-  border-radius: 20px;
-  padding: 0 16px;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(201, 184, 146, 0.25);
+  min-width: 56px;
+  height: var(--ce2-composer-control);
+  border-radius: 12px;
+  padding: 0 14px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-btn-send:active:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.ce2-btn-send:disabled {
+  opacity: 0.4;
 }
 
 .ce2-composer .ce2-select {
