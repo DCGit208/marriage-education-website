@@ -10,9 +10,11 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 
 | Area | Status | Reference |
 |------|--------|-----------|
-| **Keyboard / header / composer gap** | **Stable (shipped)** | `ROLLBACK-KEYBOARD-v60.md` · tag `ce2-keyboard-stable-v60` · JS **v60** |
-| Core messaging beta | Shipped | `communication-v2.js` + `ce2-*.js` modules |
-| Media upload | Shipped | R2 via `ce2-attachments.js` (`dm_audio`, etc.) |
+| **Keyboard / header / composer gap** | **Stable** | `ce2-keyboard-stable-v60` · `e2e0e7f1` |
+| **UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` · `0ac45906` · CSS **v46** |
+| Core messaging beta | Shipped | `communication-v2.js` v60 + `ce2-*.js` |
+| Media upload | Shipped | R2 · `dm_audio` |
+| **Audio Phase 1** | **Not started** | Preflight: `AUDIO-PHASE-1A-GUARDRAILS.md` |
 
 **Console check:** `[CE2] communication-v2.js v60` · `rollback=ce2-keyboard-stable-v60`
 
@@ -25,22 +27,23 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 ## Frozen — do not break without re-test plan
 
 ```
-ce2-keyboard-stable-v60  (git tag → e2e0e7f1)
-├── ROLLBACK-FRAMEWORK.md
-├── ROLLBACK-KEYBOARD-v60.md
-├── KEYBOARD-STABLE.lock
-└── Frozen: applyViewportPanCounter, measureComposerKeyboardLift,
-    overlays-content, body/composer transform classes
+ce2-keyboard-stable-v60  → e2e0e7f1
+└── ce2-ui-composure-stable  → 0ac45906  (UI-1, UI-2, UI-3)
+    ├── ROLLBACK-FRAMEWORK.md
+    ├── ROLLBACK-KEYBOARD-v60.md
+    ├── ROLLBACK-UI-COMPOSURE.md
+    └── AUDIO-PHASE-1A-GUARDRAILS.md  ← read before audio
 ```
 
 ---
 
-## Planned passes (not started unless noted)
+## Planned passes
 
-| Priority | Document | Scope | Depends on |
-|----------|----------|-------|------------|
-| 1 | [`PHASE-UI-COMPOSURE-REFINEMENT.md`](./PHASE-UI-COMPOSURE-REFINEMENT.md) | Header, search, bubbles, composer **visuals** (UI-1→UI-4) | v60 frozen |
-| 2 | [`PHASE-1-AUDIO-MESSAGING.md`](./PHASE-1-AUDIO-MESSAGING.md) | Voice PTT, playback, retry, waveforms (1A→1D) | v60 frozen |
+| Priority | Document | Scope | Status |
+|----------|----------|-------|--------|
+| UI | [`PHASE-UI-COMPOSURE-REFINEMENT.md`](./PHASE-UI-COMPOSURE-REFINEMENT.md) | UI-1–3 | **Shipped** |
+| UI-4 | Same doc | Optional keyboard trim | Optional |
+| Audio | [`PHASE-1-AUDIO-MESSAGING.md`](./PHASE-1-AUDIO-MESSAGING.md) + [`AUDIO-PHASE-1A-GUARDRAILS.md`](./AUDIO-PHASE-1A-GUARDRAILS.md) | 1A→1D | **Next** |
 | — | [`ROLLBACK-KEYBOARD-v59.md`](./ROLLBACK-KEYBOARD-v59.md) | Historical (header-only) | Superseded by v60 |
 
 ---
@@ -76,8 +79,11 @@ ce2-keyboard-stable-v60  (git tag → e2e0e7f1)
 
 | Tag / commit | Meaning |
 |--------------|---------|
-| `ce2-keyboard-stable-v60` | Recommended tag after keyboard commit on `main` |
-| `e2e0e7f1` | Keyboard v60 commit (May 2026) |
+| `ce2-keyboard-stable-v60` | Keyboard + gap |
+| `ce2-ui-composure-stable` | UI-1–3 (current visual baseline) |
+| `e2e0e7f1` | Keyboard only |
+| `0ac45906` | UI-1–3 tip |
+| `aed23b62` / `21b3920d` / `0ac45906` | UI-1 / UI-2 / UI-3 individually |
 
 ---
 

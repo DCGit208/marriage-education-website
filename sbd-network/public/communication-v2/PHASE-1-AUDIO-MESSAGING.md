@@ -42,6 +42,11 @@ Use this document when requesting implementation — even if work is deferred.
 
 ---
 
+## Preflight (mandatory)
+
+**Read and satisfy:** [`AUDIO-PHASE-1A-GUARDRAILS.md`](./AUDIO-PHASE-1A-GUARDRAILS.md)  
+**Frozen baselines:** `ce2-keyboard-stable-v60` + `ce2-ui-composure-stable`
+
 ## Critical instructions
 
 1. **DO NOT** rebuild Messaging V2.
