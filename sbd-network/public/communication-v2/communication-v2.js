@@ -1334,6 +1334,9 @@
     if (CommunicationState.highlightMessageId) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
     }
+    if (root.Ce2AudioPlayback) {
+      root.Ce2AudioPlayback.syncAll();
+    }
   }
 
   function render(opts) {
@@ -1416,17 +1419,26 @@
       var audioWrap = document.createElement('div');
       audioWrap.className = 'ce2-msg-audio-wrap';
       var playSrc = m.audioUrl || m._localAudioUrl;
-      if (playSrc) {
-        var aud = document.createElement('audio');
-        aud.className = 'ce2-msg-audio';
-        aud.preload = 'metadata';
-        aud.controls =
-          !m._pending || m.uploadState === 'sent' || (!!m.audioUrl && !m.uploadState);
-        if (m.uploadState === 'uploading' || m.uploadState === 'retrying') {
-          aud.controls = false;
+      var canPlayVoice =
+        playSrc && m.uploadState !== 'uploading' && m.uploadState !== 'retrying';
+      if (canPlayVoice) {
+        var playback = root.Ce2AudioPlayback;
+        var voiceMsgId = m.id || m._voiceLocalId;
+        if (playback && voiceMsgId) {
+          playback.attachBubble(audioWrap, {
+            id: voiceMsgId,
+            url: playSrc,
+            durationMs: m.audioDurationMs || m.durationMs || 0,
+            mime: m.audioMime,
+          });
+        } else {
+          var aud = document.createElement('audio');
+          aud.className = 'ce2-msg-audio';
+          aud.preload = 'metadata';
+          aud.controls = true;
+          aud.src = playSrc;
+          audioWrap.appendChild(aud);
         }
-        aud.src = playSrc;
-        audioWrap.appendChild(aud);
       }
       if (m.uploadState === 'uploading' || m.uploadState === 'retrying') {
         var pct = Math.round((m.uploadProgress || 0) * 100);
@@ -1662,6 +1674,9 @@
   }
 
   function stopMessagesWatch() {
+    if (root.Ce2AudioPlayback) {
+      root.Ce2AudioPlayback.stop();
+    }
     stopConvMetaWatch();
     if (messagesUnsub) {
       messagesUnsub();
@@ -3498,6 +3513,15 @@
     });
   }
 
+  function initCe2AudioPlayback() {
+    if (!root.Ce2AudioPlayback) return;
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden' && root.Ce2AudioPlayback) {
+        root.Ce2AudioPlayback.pause();
+      }
+    });
+  }
+
   function initCe2AudioRecorder() {
     if (!root.Ce2AudioRecorder) return;
     root.Ce2AudioRecorder.init({
@@ -3517,6 +3541,7 @@
     bindCe2ComposerKeyboard();
     bindCe2EditInput();
     bindCe2ComposerInput();
+    initCe2AudioPlayback();
     initCe2AudioRecorder();
     bindCe2VoiceUploadActions();
     initCe2MessageActions();
@@ -3784,5 +3809,8 @@
   }
   if (root.Ce2AudioOutbox) {
     console.log('[CE2] ce2-audio-outbox.js Phase 1B');
+  }
+  if (root.Ce2AudioPlayback) {
+    console.log('[CE2] ce2-audio-playback.js Phase 1C');
   }
 })();
