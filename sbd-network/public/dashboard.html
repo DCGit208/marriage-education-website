@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1778871579265">
+  <meta name="build-version" content="1779192662028">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="description" content="A system of formation">
     <meta name="theme-color" content="#0D0D0D">
@@ -30,13 +30,13 @@
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="css/home-premium.css?v=1778871579265">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778871579265">
+    <link rel="stylesheet" href="css/home-premium.css?v=1779192662028">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1779192662028">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/slider.css?v=1778871579265">
-<link rel="stylesheet" href="/css/menu.css?v=1778871579265">
-<link rel="stylesheet" href="/css/onboarding-ui.css?v=1778871579265">
-    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1778871579265">
+    <link rel="stylesheet" href="/css/slider.css?v=1779192662028">
+<link rel="stylesheet" href="/css/ham-drawer.css?v=1779192662028">
+<link rel="stylesheet" href="/css/onboarding-ui.css?v=1779192662028">
+    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1779195800006">
     
 
     <!-- Firebase SDK -->
@@ -46,18 +46,18 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App scripts -->
-    <script defer src="/js/firebase.js?v=1778871579265"></script>
-    <script defer src="/js/auth-guard.js?v=1778871579265"></script>
-    <script defer src="/js/sw-update-checker.js?v=1778871579265"></script>
-    <script defer src="/js/notifications.js?v=1778871579265"></script>
-    <script defer src="/js/dm-badge.js?v=1778871579265"></script>
-    <script defer src="/js/ptr.js?v=1778871579265"></script>
-    <script defer src="/js/dashboard.js?v=1778871579265"></script>
-    <script defer src="/js/dashboard-marketing-ui.js?v=1778871579265"></script>
-    <script defer src="/js/dashboard-slider.js?v=1778871579265"></script>
-    <script defer src="/js/transitions.js?v=1778871579265"></script>
-    <script defer src="/js/swipe-back.js?v=1778871579265"></script>
-    <script defer src="/js/install-prompt.js?v=1778871579265"></script>
+    <script defer src="/js/firebase.js?v=1779192662028"></script>
+    <script defer src="/js/auth-guard.js?v=1779192662028"></script>
+    <script defer src="/js/sw-update-checker.js?v=1779192662028"></script>
+    <script defer src="/js/notifications.js?v=1779192662028"></script>
+    <script defer src="/js/dm-badge.js?v=1779192662028"></script>
+    <script defer src="/js/ptr.js?v=1779192662028"></script>
+    <script defer src="/js/dashboard.js?v=1779192662028"></script>
+    <script defer src="/js/dashboard-marketing-ui.js?v=1779195600004"></script>
+    <script defer src="/js/dashboard-slider.js?v=1779192662028"></script>
+    <script defer src="/js/transitions.js?v=1779192662028"></script>
+    <script defer src="/js/swipe-back.js?v=1779192662028"></script>
+    <script defer src="/js/install-prompt.js?v=1779192662028"></script>
 
 </head>
 <body class="home-cinematic bottom-nav-page auth-guest dashboard-page">
@@ -70,7 +70,7 @@
     </div>
     
     <!-- HAMBURGER MENU -->
-    <div id="menuBtn" class="menu-btn flex-center transition-fast">☰</div>
+    <div id="menuBtn" class="menu-btn flex-center transition-fast" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
 
     <!-- NOTIFICATION BELL -->
     <button id="dashboardBellBtn" class="notif-bell-btn" aria-label="Notifications" title="Notifications">
@@ -80,43 +80,42 @@
     <!-- FLOATING AUTH BUTTON -->
     <button id="onboardingAuthBtn" class="flex-center transition-fast" aria-label="Sign up or open profile">Sign up</button>
     
-    <div id="menuOverlay" class="menu-overlay"></div>
+    <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
     
-    <div id="sideMenu" class="side-menu">
-      <div class="menu-links flex-col">
-
+    <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+      <div class="ham-drawer-head">
+        <span class="ham-drawer-title">Menu</span>
+        <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+      </div>
+      <nav class="menu-links ham-drawer-body" aria-label="Main menu">
         <div class="ham-section">
-          <div class="ham-section-label">💘 Relationship</div>
-          <a href="/dating.html"><span class="menu-icon">💘</span> Dating</a>
-          <a href="/dm.html"><span class="menu-icon">✉️</span> Messages</a>
+          <div class="ham-section-label">Relationship</div>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+          <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
         </div>
-
         <div class="ham-section">
-          <div class="ham-section-label">👗 Expression</div>
-          <a href="/mv-house.html"><span class="menu-icon">👗</span> MV House</a>
+          <div class="ham-section-label">Expression</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
         </div>
-
         <div class="ham-section">
-          <div class="ham-section-label">📚 Resources</div>
-          <a href="/resources.html"><span class="menu-icon">📖</span> Resources Library</a>
-          <a href="/certificates.html"><span class="menu-icon">🏅</span> Certifications</a>
+          <div class="ham-section-label">Resources</div>
+          <a href="/resources.html"><span class="menu-icon">◎</span> Resources Library</a>
+          <a href="/certificates.html"><span class="menu-icon">◈</span> Certifications</a>
         </div>
-
         <div class="ham-section">
-          <div class="ham-section-label">⚙️ System</div>
-          <a href="/profile.html"><span class="menu-icon">⚙️</span> Settings</a>
+          <div class="ham-section-label">System</div>
+          <a href="/profile.html"><span class="menu-icon">◉</span> Settings</a>
           <div id="adminSection" class="hidden-admin-section">
-            <a href="/admin.html"><span class="menu-icon">🔑</span> Admin Panel</a>
-            <a href="/communication-v2/"><span class="menu-icon">✦</span> Messages V2 <span style="opacity:.72;font-size:.82em;">(Beta)</span></a>
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
           </div>
         </div>
-
         <div class="ham-section">
-          <div class="ham-section-label">👤 Account</div>
-          <a href="/profile.html"><span class="menu-icon">👤</span> Profile</a>
-          <button id="logoutMenuBtn"><span class="menu-icon">🚪</span> Logout</button>
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile</a>
+          <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Logout</button>
         </div>
-
+      </nav>
+      <div class="ham-drawer-foot">
         <div id="versionPill"></div>
       </div>
     </div>
@@ -145,10 +144,22 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
 </div>
             <!-- INTRO SLIDE 1 -->
             <div class="slide-card intro-slide" data-card="intro-1" data-type="intro">
-<div
-  class="intro-bg"
-  style="background-image:url('/assets/background/slide1.jpg');">
-</div>                <div class="intro-content flex-center">
+              <div class="intro-bg">
+                <video
+                  class="intro-slide-video"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  webkit-playsinline
+                  preload="metadata"
+                  poster="/assets/background/slide1.jpg"
+                  aria-hidden="true"
+                >
+                  <source src="/assets/background/slide-1.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div class="intro-content flex-center">
                     <p class="intro-text" data-words="You were not designed to struggle through relationships.">
                         <span class="word">You</span>
                         <span class="word">were</span>
@@ -163,11 +174,24 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                 </div>
             </div>
             
-            <!-- INTRO SLIDE 2 -->
+            <!-- INTRO SLIDE 2 — video (rollback: restore static .intro-bg + slide-2.jpg only) -->
             <div class="slide-card intro-slide" data-card="intro-2" data-type="intro">
-<div class="intro-bg bg-cover-center"
-style="background-image:url('/assets/background/slide-2.jpg');">
-</div>                <div class="intro-content flex-center">
+              <div class="intro-bg">
+                <video
+                  class="intro-slide-video"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  webkit-playsinline
+                  preload="metadata"
+                  poster="/assets/background/slide-2.jpg"
+                  aria-hidden="true"
+                >
+                  <source src="/assets/background/slide-2.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div class="intro-content flex-center">
                     <p class="intro-text" data-words="Relationships were never meant to feel this hard.">
                         <span class="word">Relationships</span>
                         <span class="word">were</span>
@@ -182,11 +206,24 @@ style="background-image:url('/assets/background/slide-2.jpg');">
                 </div>
             </div>
             
-            <!-- INTRO SLIDE 3 -->
+            <!-- INTRO SLIDE 3 — video (rollback: restore static .intro-bg + slide-3.jpg only) -->
             <div class="slide-card intro-slide" data-card="intro-3" data-type="intro">
-<div class="intro-bg bg-cover-center"
-style="background-image:url('/assets/background/slide-3.jpg');">
-</div>                <div class="intro-content flex-center">
+              <div class="intro-bg">
+                <video
+                  class="intro-slide-video"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  webkit-playsinline
+                  preload="metadata"
+                  poster="/assets/background/slide-3.jpg"
+                  aria-hidden="true"
+                >
+                  <source src="/assets/background/slide-3.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div class="intro-content flex-center">
                     <p class="intro-text" data-words="What feels complicated is often just undefined.">
                         <span class="word">What</span>
                         <span class="word">feels</span>
@@ -200,11 +237,26 @@ style="background-image:url('/assets/background/slide-3.jpg');">
                 </div>
             </div>
             
-            <!-- INTRO SLIDE 4 - POWER LINE -->
+            <!-- INTRO SLIDE 4 - POWER LINE — video (rollback: restore static power-bg + slide-4.jpg) -->
             <div class="slide-card intro-slide power-slide" data-card="intro-4" data-type="intro">
-<div class="intro-bg power-bg bg-cover-center"
-style="background-image:url('/assets/background/slide-4.jpg');">
-</div>                <div class="intro-content power-content">
+              <div class="intro-bg power-bg">
+                <video
+                  class="intro-slide-video"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  webkit-playsinline
+                  preload="metadata"
+                  poster="/assets/background/slide-4.jpg"
+                  disablepictureinpicture
+                  controlslist="nodownload noplaybackrate"
+                  aria-hidden="true"
+                >
+                  <source src="/assets/background/slide-4.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div class="intro-content power-content">
                     <p class="intro-text power-text" data-words="Clarity changes everything.">
                         <span class="word">Clarity</span>
                         <span class="word">changes</span>
@@ -628,7 +680,7 @@ style="background-image:url('/assets/background/progress-bg.jpg');">
       <p class="signup-prompt-footer">Already have an account? <a href="/auth?next=/learn&src=slide9-signin">Sign in</a></p>
     </div>
 
-  <script defer src="/js/offline.js?v=1778871579265"></script>
+  <script defer src="/js/offline.js?v=1779192662028"></script>
 
   <!-- Notification Panel -->
   <div id="notifOverlay" class="notif-overlay notif-hidden"></div>
@@ -640,5 +692,6 @@ style="background-image:url('/assets/background/progress-bg.jpg');">
       <ul id="notifList" class="notif-list"></ul>
   </div>
 
+    <script defer src="/js/ham-nav.js?v=1779192662028"></script>
 </body>
 </html>

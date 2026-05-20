@@ -90,51 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.updatePagination = updatePagination;
 
-    // =====================================================
-    // MENU
-    // =====================================================
-
-    function openMenu() {
-
-      if (sideMenu) {
-        sideMenu.classList.add("menu-open");
-      }
-
-      if (menuOverlay) {
-        menuOverlay.classList.add("menu-overlay-visible");
-      }
-
-    }
-
-    function closeMenu() {
-
-      if (sideMenu) {
-        sideMenu.classList.remove("menu-open");
-      }
-
-      if (menuOverlay) {
-        menuOverlay.classList.remove("menu-overlay-visible");
-      }
-
-    }
-
-    if (menuBtn) {
-
-      menuBtn.addEventListener("click", function () {
-
-        const isOpen =
-          sideMenu &&
-          sideMenu.classList.contains("menu-open");
-
-        isOpen ? closeMenu() : openMenu();
-
-      });
-
-    }
-
-    if (menuOverlay) {
-      menuOverlay.addEventListener("click", closeMenu);
-    }
+    // Menu: ham-nav.js (ham-drawer)
 
     // =====================================================
     // GO TO SLIDE
