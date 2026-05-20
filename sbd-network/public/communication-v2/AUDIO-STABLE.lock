@@ -1,7 +1,8 @@
 {
   "rollbackId": "ce2-audio-stable-1d",
   "phases": ["1A", "1B", "1C", "1D"],
-  "commit": "0f4e7f53",
+  "commit": "0908a8c9",
+  "audioCodeCommit": "0f4e7f53",
   "stackedOn": ["ce2-keyboard-stable-v60", "ce2-ui-composure-stable"],
   "verified": {
     "deployed": "https://sbd-network.web.app/communication-v2/",
