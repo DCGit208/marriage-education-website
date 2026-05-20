@@ -1052,6 +1052,67 @@ body.ce2-msg-menu-open {
   animation: ce2-voice-pulse 1.2s ease-in-out infinite;
 }
 
+.ce2-composer-voice.is-cancel-armed {
+  background: rgba(90, 90, 95, 0.45);
+  border-color: rgba(140, 140, 150, 0.55);
+  color: #c8c4bc;
+  animation: none;
+}
+
+.ce2-voice-record-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 var(--ce2-chrome-pad-x) 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(180, 70, 70, 0.14);
+  border: 1px solid rgba(220, 100, 100, 0.28);
+  color: #e8d4d0;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.ce2-voice-record-bar[hidden] {
+  display: none !important;
+}
+
+.ce2-voice-record-bar--cancel {
+  background: rgba(90, 90, 95, 0.28);
+  border-color: rgba(140, 140, 150, 0.4);
+  color: #b8b4ac;
+}
+
+.ce2-voice-record-bar--cancel .ce2-voice-record-hint {
+  color: #d4a0a0;
+}
+
+.ce2-voice-record-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e06060;
+  flex-shrink: 0;
+  animation: ce2-voice-pulse 1.2s ease-in-out infinite;
+}
+
+.ce2-voice-record-bar--cancel .ce2-voice-record-dot {
+  background: #888;
+  animation: none;
+}
+
+.ce2-voice-record-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 2.5em;
+}
+
+.ce2-voice-record-hint {
+  margin-left: auto;
+  opacity: 0.85;
+  font-size: 0.78rem;
+}
+
 @keyframes ce2-voice-pulse {
   0%,
   100% {
