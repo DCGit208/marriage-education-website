@@ -29,6 +29,8 @@
   var MAX_COMPOSER_ATTACHMENTS = 6;
   /** How long senders can remove their own messages (soft delete). */
   var UNSEND_WINDOW_MS = 60 * 60 * 1000;
+  /** Prevents duplicate Firestore sends per voice recording (Phase 1B). */
+  var voiceUploadCommitted = Object.create(null);
 
   const CommunicationState = {
     me: null,
@@ -1218,6 +1220,14 @@
       var ma = msgActions();
       if (ma) ma.renderPinnedBanner(scroll, ac);
       CommunicationState.messages.forEach(function (m) {
+        if (
+          m._pending &&
+          m.conversationId &&
+          ac.id &&
+          m.conversationId !== ac.id
+        ) {
+          return;
+        }
         if (ma && ma.isMessageHidden(m, ac)) return;
         const row = document.createElement('div');
         const self = CommunicationState.me && m.senderId === CommunicationState.me.uid;
@@ -1230,6 +1240,7 @@
           'ce2-row' +
           (self ? ' is-self' : '') +
           (m._pending ? ' is-pending' : '') +
+          (m.uploadState === 'failed' ? ' is-voice-failed' : '') +
           (searchHit ? ' is-search-hit' : '') +
           (isHighlight ? ' is-highlighted' : '');
         row.dataset.messageId = m.id || '';
@@ -1281,9 +1292,18 @@
         foot.textContent = '';
         var footMeta = document.createElement('span');
         footMeta.className = 'ce2-msg-foot-meta';
-        footMeta.textContent = m._pending
-          ? 'Sending…'
-          : (rc && status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
+        if (m._voiceLocalId && m.uploadState === 'uploading') {
+          footMeta.textContent =
+            'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
+        } else if (m._voiceLocalId && m.uploadState === 'retrying') {
+          footMeta.textContent = 'Retrying upload…';
+        } else if (m._voiceLocalId && m.uploadState === 'failed') {
+          footMeta.textContent = 'Failed to send';
+        } else {
+          footMeta.textContent = m._pending
+            ? 'Sending…'
+            : (rc && status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
+        }
         if (ma && ma.isMessageSaved(m)) {
           var star = document.createElement('span');
           star.className = 'ce2-msg-star';
@@ -1392,16 +1412,58 @@
       vid.src = m.videoUrl;
       bubble.appendChild(vid);
     }
-    if (m.audioUrl) {
-      var aud = document.createElement('audio');
-      aud.className = 'ce2-msg-audio';
-      aud.controls = true;
-      aud.preload = 'metadata';
-      aud.src = m.audioUrl;
-      bubble.appendChild(aud);
+    if (m.messageType === 'voice' || m.audioUrl || m._localAudioUrl) {
+      var audioWrap = document.createElement('div');
+      audioWrap.className = 'ce2-msg-audio-wrap';
+      var playSrc = m.audioUrl || m._localAudioUrl;
+      if (playSrc) {
+        var aud = document.createElement('audio');
+        aud.className = 'ce2-msg-audio';
+        aud.preload = 'metadata';
+        aud.controls =
+          !m._pending || m.uploadState === 'sent' || (!!m.audioUrl && !m.uploadState);
+        if (m.uploadState === 'uploading' || m.uploadState === 'retrying') {
+          aud.controls = false;
+        }
+        aud.src = playSrc;
+        audioWrap.appendChild(aud);
+      }
+      if (m.uploadState === 'uploading' || m.uploadState === 'retrying') {
+        var pct = Math.round((m.uploadProgress || 0) * 100);
+        var prog = document.createElement('div');
+        prog.className = 'ce2-voice-upload-progress';
+        prog.innerHTML =
+          '<span class="ce2-voice-upload-bar" style="width:' + pct + '%"></span>';
+        audioWrap.appendChild(prog);
+        var uplbl = document.createElement('p');
+        uplbl.className = 'ce2-voice-upload-label';
+        uplbl.textContent =
+          (m.uploadState === 'retrying' ? 'Retrying… ' : 'Uploading… ') + pct + '%';
+        audioWrap.appendChild(uplbl);
+      }
+      if (m.uploadState === 'failed' && m._voiceLocalId) {
+        var actions = document.createElement('div');
+        actions.className = 'ce2-voice-failed-actions';
+        actions.innerHTML =
+          '<button type="button" class="ce2-voice-retry" data-voice-local-id="' +
+          escapeHtml(m._voiceLocalId) +
+          '">Retry</button>' +
+          '<button type="button" class="ce2-voice-discard" data-voice-local-id="' +
+          escapeHtml(m._voiceLocalId) +
+          '">Discard</button>';
+        audioWrap.appendChild(actions);
+      }
+      bubble.appendChild(audioWrap);
     }
     var text = m.content || '';
-    if (text) {
+    if (
+      text &&
+      !(
+        m.messageType === 'voice' &&
+        text === 'Voice message' &&
+        (m.audioUrl || m._localAudioUrl)
+      )
+    ) {
       var para = document.createElement('div');
       para.className = 'ce2-msg-text';
       if (lk && lk.linkifyHtml) {
@@ -2355,7 +2417,380 @@
   }
 
   function startComposerUpload(file) {
+    if (file && file.type && file.type.startsWith('audio/')) {
+      startVoiceNoteUpload(file, {});
+      return;
+    }
     addComposerFiles([file]);
+  }
+
+  function newVoiceLocalId() {
+    return 'voice-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function findPendingVoiceMessage(localId) {
+    return (CommunicationState.pendingMessages || []).find(function (p) {
+      return p._voiceLocalId === localId;
+    });
+  }
+
+  function updatePendingVoiceMessage(localId, patch) {
+    var list = CommunicationState.pendingMessages || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i]._voiceLocalId === localId) {
+        Object.assign(list[i], patch);
+        break;
+      }
+    }
+    CommunicationState.messages = mergeServerAndPending(
+      CommunicationState.lastServerMessages || []
+    );
+  }
+
+  function composerVoiceMeta() {
+    var classEl = el('ce2ClassSelect');
+    var shareEl = el('ce2Shareable');
+    return {
+      classification: classEl ? classEl.value || 'foundation' : 'foundation',
+      shareable: shareEl ? !!shareEl.checked : true,
+      replyTo: CommunicationState.replyTo || null,
+    };
+  }
+
+  function startVoiceNoteUpload(file, meta) {
+    meta = meta || {};
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me || ac.needsJoin || !file) return;
+    if (isMessagingSuspended()) {
+      CommunicationState.error =
+        'Messaging is paused for your account. Contact an administrator if you believe this is an error.';
+      render();
+      return;
+    }
+
+    var localId = meta.localId || newVoiceLocalId();
+    if (voiceUploadCommitted[localId]) return;
+
+    var existing = findPendingVoiceMessage(localId);
+    if (!existing) {
+      var cm = composerVoiceMeta();
+      var blobUrl = URL.createObjectURL(file);
+      pushOptimisticMessage({
+        messageType: 'voice',
+        content: 'Voice message',
+        senderId: me.uid,
+        tier: me.isAdmin ? 'elite' : me.tier,
+        classification: cm.classification,
+        shareable: cm.shareable,
+        replyTo: cm.replyTo,
+        conversationId: ac.id || '',
+        _voiceLocalId: localId,
+        uploadState: meta.retry ? 'retrying' : 'uploading',
+        uploadProgress: 0,
+        _localAudioUrl: blobUrl,
+        durationMs: meta.durationMs || 0,
+        createdAt: firebase.firestore.Timestamp.now(),
+      });
+      if (!meta.retry) clearReply();
+    } else {
+      updatePendingVoiceMessage(localId, {
+        uploadState: meta.retry ? 'retrying' : 'uploading',
+        uploadProgress: 0,
+      });
+    }
+
+    requestRender({ threadOnly: true });
+    runVoiceNoteUpload(localId, file, ac);
+  }
+
+  function persistVoiceOutbox(file, ac, localId, pendingId, meta) {
+    var ob = root.Ce2AudioOutbox;
+    if (!ob) return Promise.resolve();
+    var cm = composerVoiceMeta();
+    meta = meta || {};
+    return ob
+      .init()
+      .then(function () {
+        return ob.putFromFile(file, {
+          localId: localId,
+          conversationId: ac.id || '',
+          convType: ac.type || 'direct',
+          otherUid: ac.otherUid || '',
+          durationMs: meta.durationMs || 0,
+          classification: cm.classification,
+          shareable: cm.shareable,
+          replyTo: cm.replyTo,
+          pendingId: pendingId || '',
+          retryCount: meta.retryCount || 0,
+        });
+      })
+      .catch(function (e) {
+        console.warn('[CE2 audio outbox]', e);
+      });
+  }
+
+  function runVoiceNoteUpload(localId, file, ac) {
+    if (voiceUploadCommitted[localId]) return;
+    var me = CommunicationState.me;
+    if (!me || !ac) return;
+
+    var pending = findPendingVoiceMessage(localId);
+    var pendingId = pending && pending.id;
+
+    if (CommunicationState.offline) {
+      updatePendingVoiceMessage(localId, { uploadState: 'failed' });
+      persistVoiceOutbox(file, ac, localId, pendingId, {
+        durationMs: pending && pending.durationMs,
+      }).then(function () {
+        CommunicationState.statusMessage =
+          'Voice note saved — tap Retry when you are back online.';
+        requestRender({ threadOnly: true });
+      });
+      return;
+    }
+
+    var att = attachments();
+    if (!att || !att.uploadCe2Media) {
+      updatePendingVoiceMessage(localId, { uploadState: 'failed' });
+      handleCe2Error(new Error('Media upload is not available.'));
+      return;
+    }
+
+    var uploadOpts = {
+      onProgress: function (p) {
+        updatePendingVoiceMessage(localId, {
+          uploadState: 'uploading',
+          uploadProgress: p,
+        });
+        requestRender({ threadOnly: true });
+      },
+    };
+
+    att
+      .uploadCe2Media(file, uploadOpts)
+      .then(function (result) {
+        if (voiceUploadCommitted[localId]) return;
+
+        var gSend = gov();
+        var classification =
+          (pending && pending.classification) || composerVoiceMeta().classification;
+        var shareable = pending ? !!pending.shareable : true;
+        if (
+          governanceEnabled() &&
+          gSend &&
+          ac &&
+          typeof ac.securityLevel === 'number'
+        ) {
+          classification = gSend.clampClassification(classification, ac.securityLevel);
+        }
+
+        var now = firebase.firestore.Timestamp.now();
+        var patch = {
+          conversationId: ac.id,
+          senderId: me.uid,
+          tier: me.isAdmin ? 'elite' : me.tier,
+          classification: classification,
+          shareable: shareable,
+          content: 'Voice message',
+          messageType: 'voice',
+          audioUrl: result.url,
+          createdAt: now,
+        };
+        if (pending && pending.replyTo) patch.replyTo = pending.replyTo;
+        if (ac.type === 'direct') {
+          patch.receiverId = ac.otherUid;
+        } else {
+          patch.receiverId = '';
+        }
+
+        voiceUploadCommitted[localId] = true;
+        updatePendingVoiceMessage(localId, { uploadState: 'sent', uploadProgress: 1 });
+
+        return commitCe2Message(ac, patch, me).then(function () {
+          pushConversationMetaAsync(ac, patch, me, now);
+          triggerCe2Push(ac, 'Voice message', me);
+          scheduleLoadThreads(me.uid);
+          if (root.Ce2AudioOutbox) {
+            root.Ce2AudioOutbox.remove(localId).catch(function () {});
+          }
+          if (pending && pending._localAudioUrl) {
+            try {
+              URL.revokeObjectURL(pending._localAudioUrl);
+            } catch (_) {}
+          }
+          removeOptimisticMessage(pendingId);
+          CommunicationState.statusMessage = null;
+          requestRender({ threadOnly: true });
+        });
+      })
+      .catch(function (err) {
+        if (err && err.message === 'Upload cancelled') return;
+        updatePendingVoiceMessage(localId, { uploadState: 'failed' });
+        persistVoiceOutbox(file, ac, localId, pendingId, {
+          durationMs: pending && pending.durationMs,
+        }).then(function () {
+          CommunicationState.statusMessage =
+            'Voice note failed to upload. Tap Retry or Discard.';
+          requestRender({ threadOnly: true });
+        });
+      });
+  }
+
+  function retryVoiceNote(localId) {
+    var ob = root.Ce2AudioOutbox;
+    if (!ob) return;
+    ob.init()
+      .then(function () {
+        return ob.get(localId);
+      })
+      .then(function (entry) {
+        if (!entry) {
+          CommunicationState.error = 'Voice note no longer available to retry.';
+          render();
+          return;
+        }
+        return ob.incrementRetry(localId).then(function () {
+          return entry;
+        });
+      })
+      .then(function (entry) {
+        if (!entry) return;
+        var ac = CommunicationState.activeConversation;
+        if (ac && entry.conversationId && ac.id && ac.id !== entry.conversationId) {
+          CommunicationState.statusMessage =
+            'Open the conversation for this voice note to retry.';
+          render();
+          return;
+        }
+        var file = ob.toFile(entry);
+        startVoiceNoteUpload(file, {
+          localId: localId,
+          retry: true,
+          durationMs: entry.durationMs,
+        });
+      })
+      .catch(function (e) {
+        console.warn('[CE2 retryVoiceNote]', e);
+      });
+  }
+
+  function discardVoiceNote(localId) {
+    var pending = findPendingVoiceMessage(localId);
+    if (pending) {
+      if (pending._localAudioUrl) {
+        try {
+          URL.revokeObjectURL(pending._localAudioUrl);
+        } catch (_) {}
+      }
+      removeOptimisticMessage(pending.id);
+    }
+    var ob = root.Ce2AudioOutbox;
+    if (ob) {
+      ob.init()
+        .then(function () {
+          return ob.remove(localId);
+        })
+        .catch(function () {});
+    }
+    delete voiceUploadCommitted[localId];
+    requestRender({ threadOnly: true });
+  }
+
+  function hydrateVoiceOutboxPending() {
+    var ob = root.Ce2AudioOutbox;
+    var me = CommunicationState.me;
+    if (!ob || !me) return Promise.resolve();
+    return ob
+      .init()
+      .then(function () {
+        return ob.list();
+      })
+      .then(function (items) {
+        (items || []).forEach(function (entry) {
+          if (voiceUploadCommitted[entry.localId]) return;
+          if (findPendingVoiceMessage(entry.localId)) return;
+          var blobUrl = URL.createObjectURL(
+            new Blob([entry.blobBuffer], { type: entry.mime || 'audio/webm' })
+          );
+          pushOptimisticMessage({
+            messageType: 'voice',
+            content: 'Voice message',
+            senderId: me.uid,
+            tier: me.isAdmin ? 'elite' : me.tier,
+            classification: entry.classification || 'foundation',
+            shareable: entry.shareable !== false,
+            replyTo: entry.replyTo || null,
+            conversationId: entry.conversationId || '',
+            _voiceLocalId: entry.localId,
+            uploadState: 'failed',
+            uploadProgress: 0,
+            _localAudioUrl: blobUrl,
+            durationMs: entry.durationMs || 0,
+            createdAt: firebase.firestore.Timestamp.fromMillis(
+              entry.createdAt || Date.now()
+            ),
+          });
+        });
+        requestRender({ throttle: true });
+      })
+      .catch(function (e) {
+        console.warn('[CE2 hydrateVoiceOutbox]', e);
+      });
+  }
+
+  function flushCe2AudioOutbox() {
+    var ob = root.Ce2AudioOutbox;
+    if (!ob || CommunicationState.offline || !CommunicationState.me) return Promise.resolve();
+    return ob
+      .init()
+      .then(function () {
+        return ob.list();
+      })
+      .then(function (items) {
+        if (!items || !items.length) return;
+        var ac = CommunicationState.activeConversation;
+        if (!ac || !ac.id) return;
+        for (var i = 0; i < items.length; i++) {
+          var entry = items[i];
+          if (voiceUploadCommitted[entry.localId]) continue;
+          if (entry.conversationId !== ac.id) continue;
+          var pending = findPendingVoiceMessage(entry.localId);
+          if (!pending || pending.uploadState === 'failed') {
+            var file = ob.toFile(entry);
+            startVoiceNoteUpload(file, {
+              localId: entry.localId,
+              retry: true,
+              durationMs: entry.durationMs,
+            });
+            break;
+          }
+        }
+      })
+      .catch(function (e) {
+        console.warn('[CE2 flushCe2AudioOutbox]', e);
+      });
+  }
+
+  function bindCe2VoiceUploadActions() {
+    var scroll = el('ce2MessageScroll');
+    if (!scroll || scroll.dataset.ce2VoiceActionsBound) return;
+    scroll.dataset.ce2VoiceActionsBound = '1';
+    scroll.addEventListener('click', function (e) {
+      var retryBtn = e.target.closest('.ce2-voice-retry');
+      if (retryBtn) {
+        e.preventDefault();
+        var rid = retryBtn.getAttribute('data-voice-local-id');
+        if (rid) retryVoiceNote(rid);
+        return;
+      }
+      var discardBtn = e.target.closest('.ce2-voice-discard');
+      if (discardBtn) {
+        e.preventDefault();
+        var did = discardBtn.getAttribute('data-voice-local-id');
+        if (did) discardVoiceNote(did);
+      }
+    });
   }
 
   function processAttachQueue(ac) {
@@ -3070,9 +3505,9 @@
         return CommunicationState;
       },
       requestRender: requestRender,
-      onFileReady: function (file) {
+      onFileReady: function (file, meta) {
         CommunicationState.error = null;
-        startComposerUpload(file);
+        startVoiceNoteUpload(file, meta || {});
       },
       onError: handleCe2Error,
     });
@@ -3083,6 +3518,7 @@
     bindCe2EditInput();
     bindCe2ComposerInput();
     initCe2AudioRecorder();
+    bindCe2VoiceUploadActions();
     initCe2MessageActions();
     wireCe2DelegatedClick();
     bindHubNav();
@@ -3295,9 +3731,18 @@
       flushCe2OfflineQueue().catch(function (e) {
         console.warn('flushCe2OfflineQueue', e);
       });
+      hydrateVoiceOutboxPending().catch(function (e) {
+        console.warn('hydrateVoiceOutbox', e);
+      });
     }
     window.addEventListener('online', function () {
+      CommunicationState.offline = false;
       flushCe2OfflineQueue().catch(function () {});
+      hydrateVoiceOutboxPending()
+        .then(function () {
+          return flushCe2AudioOutbox();
+        })
+        .catch(function () {});
     });
   }
 
@@ -3336,5 +3781,8 @@
   );
   if (root.Ce2AudioRecorder) {
     console.log('[CE2] ce2-audio-recorder.js Phase 1A');
+  }
+  if (root.Ce2AudioOutbox) {
+    console.log('[CE2] ce2-audio-outbox.js Phase 1B');
   }
 })();
