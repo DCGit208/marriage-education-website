@@ -1,0 +1,254 @@
+/**
+ * ham-drawer.css — Shared hamburger drawer (dashboard + app pages)
+ * Load after bottom-nav.css; replaces legacy menu.css drawer rules.
+ */
+
+/* ── Open state: lock scroll, hide external toggle ─────────────── */
+body.ham-drawer-open {
+  overflow: hidden;
+}
+
+/* Never block touches site-wide — breaks CE2 and other pages if class sticks */
+body.ham-drawer-open.ce2-body-root,
+body.ce2-body-root {
+  touch-action: manipulation;
+}
+
+body.ham-drawer-open .menu-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.ham-drawer-open .menu-overlay {
+  display: block !important;
+  opacity: 1;
+}
+
+/* ── Overlay ───────────────────────────────────────────────────── */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  display: none;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease;
+}
+
+/* ── Drawer shell ──────────────────────────────────────────────── */
+.side-menu.ham-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9998;
+  width: min(300px, 88vw);
+  max-width: 100%;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #0c0c0e;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  transform: translateX(-105%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.side-menu.ham-drawer.open {
+  transform: translateX(0);
+}
+
+/* Legacy left:-300px pages — ham-drawer uses transform only */
+.side-menu.ham-drawer.open {
+  left: 0;
+}
+
+/* ── Header (close inside drawer — no overlap with ☰) ─────────── */
+.ham-drawer-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-sizing: border-box;
+}
+
+.ham-drawer-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ham-drawer-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ham-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Scrollable body ───────────────────────────────────────────── */
+.ham-drawer-body,
+.side-menu.ham-drawer .menu-links.ham-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.ham-drawer-foot {
+  flex-shrink: 0;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  box-sizing: border-box;
+}
+
+.side-menu.ham-drawer #versionPill {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.28);
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+/* ── Sections ──────────────────────────────────────────────────── */
+.side-menu.ham-drawer .ham-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 0 4px;
+  border-bottom: none;
+}
+
+.side-menu.ham-drawer .ham-section + .ham-section {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.side-menu.ham-drawer .ham-section-label {
+  margin: 0;
+  padding: 0 10px 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Rows ──────────────────────────────────────────────────────── */
+.side-menu.ham-drawer a,
+.side-menu.ham-drawer button#logoutMenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.side-menu.ham-drawer a:hover,
+.side-menu.ham-drawer button#logoutMenuBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.side-menu.ham-drawer a .menu-icon,
+.side-menu.ham-drawer button .menu-icon {
+  flex-shrink: 0;
+  width: 22px;
+  min-width: 22px;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.side-menu.ham-drawer #logoutMenuBtn {
+  color: rgba(255, 120, 120, 0.88) !important;
+}
+
+.side-menu.ham-drawer #logoutMenuBtn:hover {
+  color: #ff8a8a !important;
+  background: rgba(255, 80, 80, 0.1) !important;
+}
+
+.side-menu.ham-drawer #adminSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.side-menu.ham-drawer .hidden-admin-section {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.side-menu.ham-drawer .hidden-admin-section.is-visible {
+  display: flex;
+}
+
+/* Dashboard home: hamburger stays top-left when closed */
+.home-cinematic .menu-btn {
+  right: auto;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  top: calc(14px + env(safe-area-inset-top, 0px));
+}

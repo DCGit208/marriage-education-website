@@ -58,6 +58,39 @@
     sheet.classList.add('open');
   }
 
+  /**
+   * Intro slides approved for video backgrounds (add one id at a time).
+   * Rollback: remove card id here + matching HTML/CSS blocks for that slide.
+   */
+  const INTRO_VIDEO_SLIDES = ['intro-1', 'intro-2', 'intro-3', 'intro-4'];
+
+  function syncIntroSlideVideos(activeSlide) {
+    const activeCard = activeSlide && activeSlide.dataset.card;
+    const reduced = prefersReducedMotion();
+
+    INTRO_VIDEO_SLIDES.forEach(function (cardId) {
+      const slide = document.querySelector('[data-card="' + cardId + '"]');
+      if (!slide) return;
+
+      const video = slide.querySelector('video.intro-slide-video');
+      if (!video) return;
+
+      if (reduced) {
+        video.pause();
+        return;
+      }
+
+      if (activeCard === cardId) {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function () {});
+        }
+      } else {
+        video.pause();
+      }
+    });
+  }
+
   function animateIntroSlide(slide) {
     if (!slide) return;
 
@@ -547,6 +580,8 @@
     });
 
     const currentSlide = slides[index];
+
+    syncIntroSlideVideos(currentSlide);
 
     if (index <= 3) {
       animateIntroSlide(currentSlide);

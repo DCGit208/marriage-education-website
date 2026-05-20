@@ -253,6 +253,179 @@
   }
 }
 
+/* Intro slide 1 — video background (scoped; not .video-bg / MV House) */
+.dashboard-page .slide-card[data-card="intro-1"] > .intro-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  flex: none !important;
+  overflow: hidden;
+  z-index: 0;
+  background-color: #0a0a0a;
+  background-image: url('/assets/background/slide1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dashboard-page .slide-card[data-card="intro-1"] > .intro-bg .intro-slide-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.dashboard-page .slide-card[data-card="intro-1"] > .intro-bg::after {
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page .slide-card[data-card="intro-1"] > .intro-bg .intro-slide-video {
+    display: none;
+  }
+}
+
+/* Intro slide 2 — video background (rollback: delete this block; see INTRO_VIDEO_SLIDES in dashboard-marketing-ui.js) */
+.dashboard-page .slide-card[data-card="intro-2"] > .intro-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  flex: none !important;
+  overflow: hidden;
+  z-index: 0;
+  background-color: #0a0a0a;
+  background-image: url('/assets/background/slide-2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dashboard-page .slide-card[data-card="intro-2"] > .intro-bg .intro-slide-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.dashboard-page .slide-card[data-card="intro-2"] > .intro-bg::after {
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page .slide-card[data-card="intro-2"] > .intro-bg .intro-slide-video {
+    display: none;
+  }
+}
+
+/* Intro slide 3 — video background (rollback: delete this block; remove intro-3 from INTRO_VIDEO_SLIDES) */
+.dashboard-page .slide-card[data-card="intro-3"] > .intro-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  flex: none !important;
+  overflow: hidden;
+  z-index: 0;
+  background-color: #0a0a0a;
+  background-image: url('/assets/background/slide-3.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dashboard-page .slide-card[data-card="intro-3"] > .intro-bg .intro-slide-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.dashboard-page .slide-card[data-card="intro-3"] > .intro-bg::after {
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page .slide-card[data-card="intro-3"] > .intro-bg .intro-slide-video {
+    display: none;
+  }
+}
+
+/* Intro slide 4 — same full-bleed cover as slides 1–3 (power-bg keeps overlay gradient) */
+.dashboard-page .slide-card[data-card="intro-4"] > .intro-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  flex: none !important;
+  overflow: hidden;
+  z-index: 0;
+  background-color: #0a0a0a;
+  background-image: url('/assets/background/slide-4.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dashboard-page .slide-card[data-card="intro-4"] > .intro-bg .intro-slide-video {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  pointer-events: none;
+}
+
+.dashboard-page .slide-card[data-card="intro-4"] > .intro-bg::after {
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page .slide-card[data-card="intro-4"] > .intro-bg .intro-slide-video {
+    display: none;
+  }
+}
+
 .dashboard-page .slide-card .section-label {
   font-size: clamp(0.65rem, 3.2cqw, 0.78rem);
   letter-spacing: 0.14em;
