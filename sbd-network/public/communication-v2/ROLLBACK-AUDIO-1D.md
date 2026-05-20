@@ -11,8 +11,8 @@
 
 | Artifact | Value |
 |----------|--------|
-| Git tag | `ce2-audio-stable-1d` (commit `44d194d6`) |
-| Audio code tip | `0f4e7f53` (1D; includes 1A + 1B + 1C) |
+| Git tag | `ce2-audio-stable-1d` → **`5fe0740e`** (1D + lock on for all users) |
+| Prior tag (lock off) | `ce2-audio-stable-1d-lockoff` → `2396691b` |
 | Rollback ID | `ce2-audio-stable-1d` |
 | Lock file | `AUDIO-STABLE.lock` |
 | Spec | `PHASE-1-AUDIO-MESSAGING.md` |
@@ -25,7 +25,8 @@
 | Modules | `343daa0a` | `ce2-attachments.js` + other `ce2-*.js` tracked in git |
 | 1B | `de3cd161` | `ce2-audio-outbox.js`, upload resilience |
 | 1C | `73b034e9` | `ce2-audio-playback.js`, custom player |
-| 1D | `0f4e7f53` | `ce2-audio-waveform.js`, live/static waveform, lock flag |
+| 1D | `0f4e7f53` | `ce2-audio-waveform.js`, live/static waveform |
+| Lock all users | `5fe0740e` | `LOCK_TO_RECORD = true`, recorder **v4** |
 
 **Keyboard (frozen):** `e2e0e7f1` · `ce2-keyboard-stable-v60`  
 **UI composure (frozen):** `0ac45906` · `ce2-ui-composure-stable`
@@ -41,7 +42,7 @@
 | `ce2-audio-waveform.js` | v1 |
 | `ce2-audio-playback.js` | v2 |
 | `ce2-audio-outbox.js` | v1 |
-| `ce2-audio-recorder.js` | v3 |
+| `ce2-audio-recorder.js` | **v4** (lock on for all users) |
 
 **Console check:**
 
