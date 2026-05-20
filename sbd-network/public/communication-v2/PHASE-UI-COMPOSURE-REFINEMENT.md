@@ -5,7 +5,8 @@ Use this document when requesting a **visual + structural UX** pass — even if 
 
 | Field | Value |
 |-------|--------|
-| **Status** | **UI-1–3 shipped**; UI-4 optional |
+| **Status** | **UI-1–3 shipped** · rollback `ce2-ui-composure-stable` |
+| **Rollback** | `ROLLBACK-UI-COMPOSURE.md` · `UI-COMPOSURE-STABLE.lock` |
 | **Scope** | Composure, spacing, hierarchy, premium feel — **CSS + light UX only** |
 | **Keyboard dependency** | **Frozen** — `ce2-keyboard-stable-v60` (`ROLLBACK-KEYBOARD-v60.md`) |
 | **Audio dependency** | Defer recorder/playback to `PHASE-1-AUDIO-MESSAGING.md` |

@@ -6,15 +6,15 @@ Quick reference for restoring stable CE2 behavior before and during **UI**, **au
 
 ---
 
-## Three layers
+## Layers (current)
 
-| Layer | Status | Rollback |
-|-------|--------|----------|
-| **1 — Keyboard / viewport** | **Stable (v60)** | Git tag `ce2-keyboard-stable-v60` → commit `e2e0e7f1` |
-| **2 — UI composure** | Planned | Revert per-phase CSS commits (`UI-1`, `UI-2`, …) |
-| **3 — Audio** | Planned | Revert audio module commits; see `PHASE-1-AUDIO-MESSAGING.md` |
+| Layer | Status | Tag | Commit |
+|-------|--------|-----|--------|
+| **1 — Keyboard / gap** | **Stable** | `ce2-keyboard-stable-v60` | `e2e0e7f1` |
+| **2 — UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` | `0ac45906` |
+| **3 — Audio** | Not started | — | — |
 
-**Rule:** UI and audio work must **not** break Layer 1 without a full iPhone PWA keyboard re-test.
+**Rule:** Audio must not break layers 1–2 without full iPhone PWA re-test.
 
 ---
 
@@ -23,111 +23,78 @@ Quick reference for restoring stable CE2 behavior before and during **UI**, **au
 | Item | Value |
 |------|--------|
 | Tag | `ce2-keyboard-stable-v60` |
-| Commit | `e2e0e7f1` |
-| Rollback ID | `ce2-keyboard-stable-v60` |
-| Console | `[CE2] communication-v2.js v60` · `rollback=ce2-keyboard-stable-v60` |
-| Detail doc | `ROLLBACK-KEYBOARD-v60.md` |
-| Lock file | `KEYBOARD-STABLE.lock` |
+| Doc | `ROLLBACK-KEYBOARD-v60.md` · `KEYBOARD-STABLE.lock` |
+| Console | `[CE2] communication-v2.js v60` |
 
-### Restore keyboard files + deploy
+### Restore keyboard only
 
 ```bash
-cd marriage-education   # repo root (adjust path)
-
-git checkout ce2-keyboard-stable-v60 -- sbd-network/public/communication-v2/index.html \
+git checkout ce2-keyboard-stable-v60 -- \
+  sbd-network/public/communication-v2/index.html \
   sbd-network/public/communication-v2/communication-v2.css \
   sbd-network/public/communication-v2/communication-v2.js
-
-firebase deploy --only hosting:sbd-network
+cd sbd-network && firebase deploy --only hosting:sbd-network
 ```
 
-On iPhone PWA: force-refresh or reopen app; confirm console **v60**.
+### Frozen functions / CSS
 
-### Frozen (do not change in UI/audio passes)
-
-- `applyViewportPanCounter`, `measureComposerKeyboardLift`, `applyComposerKeyboardInset`
-- Viewport: `interactive-widget=overlays-content`
-- `body.ce2-kb-active` / `body.ce2-composer-kb-active` and `--ce2-vv-offset` / `--ce2-composer-kb`
-- Flex header (no `position: fixed` on `.ce2-header` / shell resize)
+`applyViewportPanCounter`, `measureComposerKeyboardLift`, viewport `overlays-content`, body/composer transform classes.
 
 ---
 
-## Layer 2 — UI composure (planned)
+## Layer 2 — UI composure (frozen)
 
-**Doc:** `PHASE-UI-COMPOSURE-REFINEMENT.md`
+| Item | Value |
+|------|--------|
+| Tag | `ce2-ui-composure-stable` |
+| Doc | `ROLLBACK-UI-COMPOSURE.md` · `UI-COMPOSURE-STABLE.lock` |
+| CSS | `communication-v2.css?v=46` |
 
-### Before starting UI
-
-1. Verify Layer 1 on device (header **A**, gap **C**).
-2. Optional tag: `git tag -a ce2-pre-ui-YYYY-MM-DD main`
-
-### During UI
-
-- One git commit per phase: `UI-1`, `UI-2`, `UI-3`, optional `UI-4`.
-- After each deploy: run [regression gate](#regression-gate-after-every-deploy).
-
-### Revert last UI phase only
+### Restore UI 1–3 (+ files from that commit)
 
 ```bash
-git revert <ui-phase-commit-sha>
+git checkout ce2-ui-composure-stable -- \
+  sbd-network/public/communication-v2/communication-v2.css \
+  sbd-network/public/communication-v2/index.html \
+  sbd-network/public/communication-v2/communication-v2.js \
+  sbd-network/public/communication-v2/ce2-message-actions.js
+cd sbd-network && firebase deploy --only hosting:sbd-network
+```
+
+### Revert single UI phase
+
+```bash
+git revert 21b3920d   # example: UI-2 only
 firebase deploy --only hosting:sbd-network
 ```
 
-### If keyboard regresses
-
-1. Stop UI changes.
-2. Restore Layer 1 (above) — do not stack new keyboard hacks.
-3. Revert the UI commit that touched JS/viewport if any.
-
 ---
 
-## Layer 3 — Audio (planned)
+## Layer 3 — Audio (before starting)
 
-**Doc:** `PHASE-1-AUDIO-MESSAGING.md`
-
-- Revert commits that add `ce2-audio-*.js` or voice changes in `communication-v2.js`.
-- Layer 1 restore still applies if keyboard breaks.
-- Do not deploy full UI + Audio 1A in one release.
+**Preflight:** `AUDIO-PHASE-1A-GUARDRAILS.md`  
+**Spec:** `PHASE-1-AUDIO-MESSAGING.md`
 
 ---
 
 ## Regression gate (after every deploy)
 
-1. Console: **v60** + `rollback=ce2-keyboard-stable-v60`
-2. Thread → focus textarea → header stable, no large composer–keyboard gap
-3. Blur keyboard; hub + send text still work
-4. (Optional) hold mic 3s → send
-
-**Fail →** revert last change or `git checkout ce2-keyboard-stable-v60 --` Layer 1 files.
+1. Console **v60** + keyboard rollback id  
+2. Header **A**, gap **C**  
+3. UI-1–3 visual smoke (header, search, composer, messages)  
+4. Phase-specific test (voice for 1A)
 
 ---
 
-## Hosting / cache
+## Git tags
 
-Rollback requires **git restore + Firebase deploy**:
-
-```bash
-cd sbd-network
-firebase deploy --only hosting:sbd-network
-```
-
-Bump `version.json` / script `?v=` when shipping UI so PWA cache refreshes.
-
----
-
-## Git tags (recommended)
-
-| Tag | Points to | Purpose |
-|-----|-----------|---------|
-| `ce2-keyboard-stable-v60` | `e2e0e7f1` | Keyboard + gap stable |
-| `ce2-pre-ui-*` | commit before first UI | Optional UI baseline |
-| `ce2-ui-1-stable` | after UI-1 verified | Optional per phase |
-
-Create tag:
+| Tag | Purpose |
+|-----|---------|
+| `ce2-keyboard-stable-v60` | Keyboard + gap |
+| `ce2-ui-composure-stable` | UI-1 + UI-2 + UI-3 on top of v60 |
 
 ```bash
-git tag -a ce2-keyboard-stable-v60 e2e0e7f1 -m "CE2 keyboard: header A + gap closed (iPhone PWA)"
-git push origin ce2-keyboard-stable-v60
+git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable
 ```
 
 ---
@@ -136,5 +103,7 @@ git push origin ce2-keyboard-stable-v60
 
 - `CE2-ROADMAP.md`
 - `ROLLBACK-KEYBOARD-v60.md`
+- `ROLLBACK-UI-COMPOSURE.md`
 - `PHASE-UI-COMPOSURE-REFINEMENT.md`
 - `PHASE-1-AUDIO-MESSAGING.md`
+- `AUDIO-PHASE-1A-GUARDRAILS.md`
