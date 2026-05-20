@@ -12,7 +12,7 @@ Quick reference for restoring stable CE2 behavior before and during **UI**, **au
 |-------|--------|-----|--------|
 | **1 — Keyboard / gap** | **Stable** | `ce2-keyboard-stable-v60` | `e2e0e7f1` |
 | **2 — UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` | `0ac45906` |
-| **3 — Audio (1A–1D)** | **Stable** | `ce2-audio-stable-1d` | `0f4e7f53` |
+| **3 — Audio (1A–1D + lock)** | **Stable** | `ce2-audio-stable-1d` | `5fe0740e` |
 
 **Rule:** Changes after this tag must not break layers 1–2 without full iPhone PWA re-test.
 
@@ -114,7 +114,7 @@ cd sbd-network && firebase deploy --only hosting:sbd-network
 | `ce2-audio-stable-1d` | Audio 1A–1D on top of v60 + UI |
 
 ```bash
-git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable ce2-audio-stable-1d
+git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable ce2-audio-stable-1d ce2-audio-stable-1d-lockoff
 ```
 
 ---

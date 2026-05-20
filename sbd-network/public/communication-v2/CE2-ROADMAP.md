@@ -12,7 +12,7 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 |------|--------|-----------|
 | **Keyboard / header / composer gap** | **Stable** | `ce2-keyboard-stable-v60` · `e2e0e7f1` |
 | **UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` · `0ac45906` · CSS **v46** |
-| **Audio Phase 1 (1A–1D)** | **Stable** | `ce2-audio-stable-1d` · `0f4e7f53` · CSS **v50** |
+| **Audio Phase 1 (1A–1D + lock)** | **Stable** | `ce2-audio-stable-1d` · `5fe0740e` · recorder **v4** |
 | Core messaging beta | Shipped | `communication-v2.js` v60 + `ce2-*.js` |
 | Media upload | Shipped | R2 · `dm_audio` |
 
@@ -29,7 +29,7 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 ```
 ce2-keyboard-stable-v60  → e2e0e7f1
 └── ce2-ui-composure-stable  → 0ac45906  (UI-1, UI-2, UI-3)
-    └── ce2-audio-stable-1d  → 0f4e7f53  (Audio 1A–1D)
+    └── ce2-audio-stable-1d  → 5fe0740e  (Audio 1A–1D, lock on)
         ├── ROLLBACK-FRAMEWORK.md
         ├── ROLLBACK-KEYBOARD-v60.md
         ├── ROLLBACK-UI-COMPOSURE.md
@@ -82,7 +82,8 @@ ce2-keyboard-stable-v60  → e2e0e7f1
 |--------------|---------|
 | `ce2-keyboard-stable-v60` | Keyboard + gap |
 | `ce2-ui-composure-stable` | UI-1–3 |
-| `ce2-audio-stable-1d` | Audio 1A–1D (current messaging audio baseline) |
+| `ce2-audio-stable-1d` | Audio 1A–1D + lock on for all users |
+| `ce2-audio-stable-1d-lockoff` | Audio 1A–1D, lock flag off (`2396691b`) |
 | `e2e0e7f1` | Keyboard only |
 | `0ac45906` | UI-1–3 tip |
 | `0f4e7f53` | Audio 1A–1D tip |
