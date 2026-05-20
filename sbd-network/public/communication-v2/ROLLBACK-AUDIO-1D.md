@@ -11,8 +11,8 @@
 
 | Artifact | Value |
 |----------|--------|
-| Git tag | `ce2-audio-stable-1d` |
-| Commit | `0f4e7f53` (1D; includes 1A + 1B + 1C) |
+| Git tag | `ce2-audio-stable-1d` → commit `0908a8c9` (lock + docs) |
+| Audio code tip | `0f4e7f53` (1D; includes 1A + 1B + 1C) |
 | Rollback ID | `ce2-audio-stable-1d` |
 | Lock file | `AUDIO-STABLE.lock` |
 | Spec | `PHASE-1-AUDIO-MESSAGING.md` |
