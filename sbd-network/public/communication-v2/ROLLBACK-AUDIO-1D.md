@@ -11,7 +11,7 @@
 
 | Artifact | Value |
 |----------|--------|
-| Git tag | `ce2-audio-stable-1d` → `git rev-parse ce2-audio-stable-1d^{commit}` |
+| Git tag | `ce2-audio-stable-1d` (commit `44d194d6`) |
 | Audio code tip | `0f4e7f53` (1D; includes 1A + 1B + 1C) |
 | Rollback ID | `ce2-audio-stable-1d` |
 | Lock file | `AUDIO-STABLE.lock` |
@@ -115,12 +115,14 @@ cd sbd-network && firebase deploy --only hosting:sbd-network
 
 ---
 
-## Lock-to-record (1D, opt-in)
+## Lock-to-record (1D)
 
-Default **off**. Enable on device for validation:
+**On for all users** (`LOCK_TO_RECORD = true` in `ce2-audio-recorder.js` v4+).
+
+Opt-out for debugging:
 
 ```javascript
-localStorage.setItem('ce2_lock_record', '1');
+localStorage.setItem('ce2_lock_record', '0');
 location.reload();
 ```
 

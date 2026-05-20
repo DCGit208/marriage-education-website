@@ -17,6 +17,7 @@
     "ce2-audio-waveform": "v1"
   },
   "doc": "ROLLBACK-AUDIO-1D.md",
-  "lockToRecordDefault": false,
-  "lockToRecordFlag": "localStorage ce2_lock_record=1"
+  "lockToRecordDefault": true,
+  "lockToRecordOptOut": "localStorage ce2_lock_record=0",
+  "lockToRecordFlag": "localStorage ce2_lock_record=1 (legacy opt-in, optional)"
 }
