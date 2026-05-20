@@ -151,7 +151,9 @@
 
     resetSession();
 
-    if (deps.onFileReady) deps.onFileReady(file);
+    if (deps.onFileReady) {
+      deps.onFileReady(file, { durationMs: durationMs });
+    }
   }
 
   function startRecorder(stream) {
