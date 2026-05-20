@@ -12,11 +12,11 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 |------|--------|-----------|
 | **Keyboard / header / composer gap** | **Stable** | `ce2-keyboard-stable-v60` · `e2e0e7f1` |
 | **UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` · `0ac45906` · CSS **v46** |
+| **Audio Phase 1 (1A–1D)** | **Stable** | `ce2-audio-stable-1d` · `0f4e7f53` · CSS **v50** |
 | Core messaging beta | Shipped | `communication-v2.js` v60 + `ce2-*.js` |
 | Media upload | Shipped | R2 · `dm_audio` |
-| **Audio Phase 1** | **Not started** | Preflight: `AUDIO-PHASE-1A-GUARDRAILS.md` |
 
-**Console check:** `[CE2] communication-v2.js v60` · `rollback=ce2-keyboard-stable-v60`
+**Console check:** `[CE2] communication-v2.js v60` · `rollback=ce2-keyboard-stable-v60` · `audio rollback=ce2-audio-stable-1d`
 
 ---
 
@@ -29,10 +29,11 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 ```
 ce2-keyboard-stable-v60  → e2e0e7f1
 └── ce2-ui-composure-stable  → 0ac45906  (UI-1, UI-2, UI-3)
-    ├── ROLLBACK-FRAMEWORK.md
-    ├── ROLLBACK-KEYBOARD-v60.md
-    ├── ROLLBACK-UI-COMPOSURE.md
-    └── AUDIO-PHASE-1A-GUARDRAILS.md  ← read before audio
+    └── ce2-audio-stable-1d  → 0f4e7f53  (Audio 1A–1D)
+        ├── ROLLBACK-FRAMEWORK.md
+        ├── ROLLBACK-KEYBOARD-v60.md
+        ├── ROLLBACK-UI-COMPOSURE.md
+        └── ROLLBACK-AUDIO-1D.md
 ```
 
 ---
@@ -43,7 +44,7 @@ ce2-keyboard-stable-v60  → e2e0e7f1
 |----------|----------|-------|--------|
 | UI | [`PHASE-UI-COMPOSURE-REFINEMENT.md`](./PHASE-UI-COMPOSURE-REFINEMENT.md) | UI-1–3 | **Shipped** |
 | UI-4 | Same doc | Optional keyboard trim | Optional |
-| Audio | [`PHASE-1-AUDIO-MESSAGING.md`](./PHASE-1-AUDIO-MESSAGING.md) + [`AUDIO-PHASE-1A-GUARDRAILS.md`](./AUDIO-PHASE-1A-GUARDRAILS.md) | 1A→1D | **Next** |
+| Audio | [`PHASE-1-AUDIO-MESSAGING.md`](./PHASE-1-AUDIO-MESSAGING.md) | 1A→1D | **Shipped** · `ROLLBACK-AUDIO-1D.md` |
 | — | [`ROLLBACK-KEYBOARD-v59.md`](./ROLLBACK-KEYBOARD-v59.md) | Historical (header-only) | Superseded by v60 |
 
 ---
@@ -80,10 +81,12 @@ ce2-keyboard-stable-v60  → e2e0e7f1
 | Tag / commit | Meaning |
 |--------------|---------|
 | `ce2-keyboard-stable-v60` | Keyboard + gap |
-| `ce2-ui-composure-stable` | UI-1–3 (current visual baseline) |
+| `ce2-ui-composure-stable` | UI-1–3 |
+| `ce2-audio-stable-1d` | Audio 1A–1D (current messaging audio baseline) |
 | `e2e0e7f1` | Keyboard only |
 | `0ac45906` | UI-1–3 tip |
-| `aed23b62` / `21b3920d` / `0ac45906` | UI-1 / UI-2 / UI-3 individually |
+| `0f4e7f53` | Audio 1A–1D tip |
+| `4fe1d22c` / `de3cd161` / `73b034e9` / `0f4e7f53` | Audio 1A / 1B / 1C / 1D individually |
 
 ---
 
