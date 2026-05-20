@@ -1,6 +1,6 @@
 /* Communication Engine V2 — page does not scroll; only message panel scrolls */
 /* STABLE_ROLLBACK: ce2-keyboard-v60 — see ROLLBACK-KEYBOARD-v60.md + KEYBOARD-STABLE.lock */
-/* UI-1: header + search composure — PHASE-UI-COMPOSURE-REFINEMENT.md (keyboard paths untouched) */
+/* UI-1: header + search — UI-2: message rhythm — PHASE-UI-COMPOSURE-REFINEMENT.md (keyboard frozen) */
 *,
 *::before,
 *::after {
@@ -44,6 +44,8 @@ body.ce2-body-root.ce2-kb-active {
   --ce2-chrome-pad-x: 12px;
   --ce2-meta-opacity: 0.38;
   --ce2-border-subtle: rgba(255, 255, 255, 0.06);
+  --ce2-bubble-radius: 14px;
+  --ce2-row-gap: 14px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -507,11 +509,11 @@ body.ce2-body-root.ce2-kb-active {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 12px 14px 8px;
+  padding: 10px var(--ce2-chrome-pad-x) 12px;
 }
 
 .ce2-row {
-  margin-bottom: 12px;
+  margin-bottom: var(--ce2-row-gap);
   max-width: min(100%, 22rem);
 }
 
@@ -536,11 +538,12 @@ body.ce2-body-root.ce2-kb-active {
 }
 
 .ce2-bubble {
-  padding: 10px 14px;
-  border-radius: 14px;
+  padding: 9px 12px;
+  border-radius: var(--ce2-bubble-radius);
   background: rgba(255, 255, 255, 0.07);
-  font-size: 0.88rem;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
 }
 
 .ce2-row.is-self .ce2-bubble {
@@ -583,10 +586,10 @@ body.ce2-body-root.ce2-kb-active {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 0.72rem;
-  opacity: 1;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.68rem;
+  opacity: var(--ce2-meta-opacity);
 }
 
 .ce2-row.is-self .ce2-msg-foot {
@@ -594,8 +597,9 @@ body.ce2-body-root.ce2-kb-active {
 }
 
 .ce2-msg-foot-meta {
-  opacity: 0.55;
-  font-size: 0.68rem;
+  opacity: 1;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
 }
 
 /* Long-press / right-click message menu */
@@ -1510,16 +1514,16 @@ body.ce2-msg-menu-open {
 }
 
 .ce2-forward-quote {
-  font-size: 0.75rem;
-  opacity: 0.65;
+  font-size: 0.72rem;
+  opacity: 0.55;
   margin-bottom: 6px;
   padding-left: 8px;
-  border-left: 2px solid rgba(201, 184, 146, 0.4);
+  border-left: 2px solid rgba(201, 184, 146, 0.32);
 }
 
 .ce2-msg-edited {
-  opacity: 0.45;
-  font-size: 0.65rem;
+  opacity: var(--ce2-meta-opacity);
+  font-size: 0.62rem;
 }
 
 .ce2-msg-star {

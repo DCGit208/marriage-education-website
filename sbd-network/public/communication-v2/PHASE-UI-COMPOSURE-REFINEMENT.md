@@ -5,7 +5,7 @@ Use this document when requesting a **visual + structural UX** pass — even if 
 
 | Field | Value |
 |-------|--------|
-| **Status** | **UI-1 shipped** (CSS + search toggle); UI-2+ planned |
+| **Status** | **UI-1 + UI-2 shipped**; UI-3+ planned |
 | **Scope** | Composure, spacing, hierarchy, premium feel — **CSS + light UX only** |
 | **Keyboard dependency** | **Frozen** — `ce2-keyboard-stable-v60` (`ROLLBACK-KEYBOARD-v60.md`) |
 | **Audio dependency** | Defer recorder/playback to `PHASE-1-AUDIO-MESSAGING.md` |
