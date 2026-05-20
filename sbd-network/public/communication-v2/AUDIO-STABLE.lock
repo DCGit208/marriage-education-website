@@ -1,7 +1,7 @@
 {
   "rollbackId": "ce2-audio-stable-1d",
   "phases": ["1A", "1B", "1C", "1D"],
-  "commit": "0908a8c9",
+  "commit": "d95c9d7a",
   "audioCodeCommit": "0f4e7f53",
   "stackedOn": ["ce2-keyboard-stable-v60", "ce2-ui-composure-stable"],
   "verified": {
