@@ -12,9 +12,9 @@ Quick reference for restoring stable CE2 behavior before and during **UI**, **au
 |-------|--------|-----|--------|
 | **1 — Keyboard / gap** | **Stable** | `ce2-keyboard-stable-v60` | `e2e0e7f1` |
 | **2 — UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` | `0ac45906` |
-| **3 — Audio** | Not started | — | — |
+| **3 — Audio (1A–1D)** | **Stable** | `ce2-audio-stable-1d` | `0f4e7f53` |
 
-**Rule:** Audio must not break layers 1–2 without full iPhone PWA re-test.
+**Rule:** Changes after this tag must not break layers 1–2 without full iPhone PWA re-test.
 
 ---
 
@@ -70,10 +70,29 @@ firebase deploy --only hosting:sbd-network
 
 ---
 
-## Layer 3 — Audio (before starting)
+## Layer 3 — Audio (frozen)
 
-**Preflight:** `AUDIO-PHASE-1A-GUARDRAILS.md`  
-**Spec:** `PHASE-1-AUDIO-MESSAGING.md`
+| Item | Value |
+|------|--------|
+| Tag | `ce2-audio-stable-1d` |
+| Doc | `ROLLBACK-AUDIO-1D.md` · `AUDIO-STABLE.lock` |
+| Spec | `PHASE-1-AUDIO-MESSAGING.md` |
+
+### Restore full audio (1A–1D)
+
+```bash
+git checkout ce2-audio-stable-1d -- sbd-network/public/communication-v2/
+cd sbd-network && firebase deploy --only hosting:sbd-network
+```
+
+### Restore pre-audio (keyboard + UI only)
+
+```bash
+git checkout ce2-ui-composure-stable -- sbd-network/public/communication-v2/
+cd sbd-network && firebase deploy --only hosting:sbd-network
+```
+
+**Preflight (historical):** `AUDIO-PHASE-1A-GUARDRAILS.md`
 
 ---
 
@@ -82,7 +101,7 @@ firebase deploy --only hosting:sbd-network
 1. Console **v60** + keyboard rollback id  
 2. Header **A**, gap **C**  
 3. UI-1–3 visual smoke (header, search, composer, messages)  
-4. Phase-specific test (voice for 1A)
+4. Phase-specific test (voice 1A–1D — see `ROLLBACK-AUDIO-1D.md`)
 
 ---
 
@@ -92,9 +111,10 @@ firebase deploy --only hosting:sbd-network
 |-----|---------|
 | `ce2-keyboard-stable-v60` | Keyboard + gap |
 | `ce2-ui-composure-stable` | UI-1 + UI-2 + UI-3 on top of v60 |
+| `ce2-audio-stable-1d` | Audio 1A–1D on top of v60 + UI |
 
 ```bash
-git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable
+git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable ce2-audio-stable-1d
 ```
 
 ---

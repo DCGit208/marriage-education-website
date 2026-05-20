@@ -1,7 +1,7 @@
 /**
  * Communication Engine V2 — isolated shell (legacy /dm + /conversations untouched).
  * State-driven single render pipeline; Firestore rules enforce tier + classification.
- * STABLE_ROLLBACK: ce2-keyboard-v60 — see ROLLBACK-KEYBOARD-v60.md + KEYBOARD-STABLE.lock
+ * STABLE_ROLLBACK: ce2-keyboard-v60 + ce2-audio-stable-1d — see ROLLBACK-KEYBOARD-v60.md, ROLLBACK-AUDIO-1D.md
  */
 (function () {
   'use strict';
@@ -3853,4 +3853,5 @@
   if (root.Ce2AudioWaveform) {
     console.log('[CE2] ce2-audio-waveform.js Phase 1D');
   }
+  console.log('[CE2] audio rollback=ce2-audio-stable-1d');
 })();
