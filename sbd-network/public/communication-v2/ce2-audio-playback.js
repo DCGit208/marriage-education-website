@@ -253,11 +253,17 @@
       '<button type="button" class="ce2-voice-play-btn" aria-label="Play voice message">' +
       '<span class="ce2-voice-play-icon" aria-hidden="true">▶</span></button>' +
       '<div class="ce2-voice-player-body">' +
+      '<div class="ce2-voice-player-wave" aria-hidden="true"></div>' +
       '<div class="ce2-voice-player-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">' +
       '<span class="ce2-voice-player-bar"></span></div>' +
       '<input type="range" class="ce2-voice-player-seek" min="0" max="1000" value="0" step="1" aria-label="Seek voice message">' +
       '</div>' +
       '<span class="ce2-voice-player-time">0:00</span>';
+
+    var waveHost = player.querySelector('.ce2-voice-player-wave');
+    if (waveHost && meta.peaks && meta.peaks.length && global.Ce2AudioWaveform) {
+      global.Ce2AudioWaveform.renderStatic(waveHost, meta.peaks);
+    }
 
     var playBtn = player.querySelector('.ce2-voice-play-btn');
     var seekInput = player.querySelector('.ce2-voice-player-seek');

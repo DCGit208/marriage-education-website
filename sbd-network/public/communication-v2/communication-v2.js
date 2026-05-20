@@ -67,6 +67,7 @@
     _pendingThreadOnly: false,
     voiceRecording: false,
     voiceRecordingCancel: false,
+    voiceRecordingLocked: false,
     userMsgPrefs: { hidden: {}, saved: {}, blocked: {} },
     savedItems: [],
     threadSearchQuery: '',
@@ -1430,6 +1431,7 @@
             url: playSrc,
             durationMs: m.audioDurationMs || m.durationMs || 0,
             mime: m.audioMime,
+            peaks: m.audioWaveformPeaks,
           });
         } else {
           var aud = document.createElement('audio');
@@ -2472,6 +2474,18 @@
     };
   }
 
+  function applyVoiceMetadata(patch, meta, file) {
+    meta = meta || {};
+    if (meta.durationMs) patch.audioDurationMs = meta.durationMs;
+    if (meta.audioWaveformPeaks && meta.audioWaveformPeaks.length) {
+      patch.audioWaveformPeaks = meta.audioWaveformPeaks;
+    }
+    if (meta.audioMime || (file && file.type)) {
+      patch.audioMime = meta.audioMime || file.type;
+    }
+    return patch;
+  }
+
   function startVoiceNoteUpload(file, meta) {
     meta = meta || {};
     var ac = CommunicationState.activeConversation;
@@ -2505,6 +2519,9 @@
         uploadProgress: 0,
         _localAudioUrl: blobUrl,
         durationMs: meta.durationMs || 0,
+        audioDurationMs: meta.durationMs || 0,
+        audioWaveformPeaks: meta.audioWaveformPeaks || null,
+        audioMime: meta.audioMime || file.type || '',
         createdAt: firebase.firestore.Timestamp.now(),
       });
       if (!meta.retry) clearReply();
@@ -2516,7 +2533,7 @@
     }
 
     requestRender({ threadOnly: true });
-    runVoiceNoteUpload(localId, file, ac);
+    runVoiceNoteUpload(localId, file, ac, meta);
   }
 
   function persistVoiceOutbox(file, ac, localId, pendingId, meta) {
@@ -2533,6 +2550,8 @@
           convType: ac.type || 'direct',
           otherUid: ac.otherUid || '',
           durationMs: meta.durationMs || 0,
+          audioWaveformPeaks: meta.audioWaveformPeaks || null,
+          audioMime: meta.audioMime || file.type || '',
           classification: cm.classification,
           shareable: cm.shareable,
           replyTo: cm.replyTo,
@@ -2545,7 +2564,8 @@
       });
   }
 
-  function runVoiceNoteUpload(localId, file, ac) {
+  function runVoiceNoteUpload(localId, file, ac, uploadMeta) {
+    uploadMeta = uploadMeta || {};
     if (voiceUploadCommitted[localId]) return;
     var me = CommunicationState.me;
     if (!me || !ac) return;
@@ -2556,7 +2576,10 @@
     if (CommunicationState.offline) {
       updatePendingVoiceMessage(localId, { uploadState: 'failed' });
       persistVoiceOutbox(file, ac, localId, pendingId, {
-        durationMs: pending && pending.durationMs,
+        durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
+        audioWaveformPeaks:
+          (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
+        audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
       }).then(function () {
         CommunicationState.statusMessage =
           'Voice note saved — tap Retry when you are back online.';
@@ -2618,6 +2641,12 @@
         } else {
           patch.receiverId = '';
         }
+        applyVoiceMetadata(patch, {
+          durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
+          audioWaveformPeaks:
+            (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
+          audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
+        }, file);
 
         voiceUploadCommitted[localId] = true;
         updatePendingVoiceMessage(localId, { uploadState: 'sent', uploadProgress: 1 });
@@ -2643,7 +2672,10 @@
         if (err && err.message === 'Upload cancelled') return;
         updatePendingVoiceMessage(localId, { uploadState: 'failed' });
         persistVoiceOutbox(file, ac, localId, pendingId, {
-          durationMs: pending && pending.durationMs,
+          durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
+          audioWaveformPeaks:
+            (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
+          audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
         }).then(function () {
           CommunicationState.statusMessage =
             'Voice note failed to upload. Tap Retry or Discard.';
@@ -2683,6 +2715,8 @@
           localId: localId,
           retry: true,
           durationMs: entry.durationMs,
+          audioWaveformPeaks: entry.audioWaveformPeaks,
+          audioMime: entry.mime,
         });
       })
       .catch(function (e) {
@@ -2742,6 +2776,9 @@
             uploadProgress: 0,
             _localAudioUrl: blobUrl,
             durationMs: entry.durationMs || 0,
+            audioDurationMs: entry.durationMs || 0,
+            audioWaveformPeaks: entry.audioWaveformPeaks || null,
+            audioMime: entry.mime || '',
             createdAt: firebase.firestore.Timestamp.fromMillis(
               entry.createdAt || Date.now()
             ),
@@ -3812,5 +3849,8 @@
   }
   if (root.Ce2AudioPlayback) {
     console.log('[CE2] ce2-audio-playback.js Phase 1C');
+  }
+  if (root.Ce2AudioWaveform) {
+    console.log('[CE2] ce2-audio-waveform.js Phase 1D');
   }
 })();

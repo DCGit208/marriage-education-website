@@ -79,6 +79,7 @@
         blobBuffer: buf,
         mime: file.type || meta.mime || 'audio/webm',
         durationMs: meta.durationMs || 0,
+        audioWaveformPeaks: meta.audioWaveformPeaks || null,
         createdAt: meta.createdAt || Date.now(),
         retryCount: meta.retryCount || 0,
         classification: meta.classification || 'foundation',

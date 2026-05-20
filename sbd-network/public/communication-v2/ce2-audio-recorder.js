@@ -1,5 +1,5 @@
 /**
- * CE2 Phase 1A — voice recorder (PTT, slide-to-cancel, MediaRecorder hardening).
+ * CE2 Phase 1A–1D — voice recorder (PTT, slide-to-cancel, waveform, optional lock).
  * Does not touch keyboard / viewport (v60 frozen).
  */
 (function (global) {
@@ -9,11 +9,16 @@
   var MIN_DURATION_MS = 500;
   var MAX_DURATION_MS = 5 * 60 * 1000;
   var CANCEL_SLIDE_PX = 52;
+  var LOCK_SLIDE_PX = 56;
 
   var deps = {};
   var session = null;
   var timerId = null;
   var bound = false;
+  var stopPaintFn = null;
+
+  /** Default off until iPhone PWA validated; opt-in: localStorage ce2_lock_record=1 */
+  var LOCK_TO_RECORD = false;
 
   function el(id) {
     return document.getElementById(id);
@@ -27,25 +32,57 @@
     if (deps.requestRender) deps.requestRender(opts || { threadOnly: true });
   }
 
-  function setRecordingUi(active, cancelArmed) {
+  function isLockEnabled() {
+    if (LOCK_TO_RECORD) return true;
+    try {
+      return global.localStorage && global.localStorage.getItem('ce2_lock_record') === '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function setRecordingUi(active, cancelArmed, locked) {
     var st = state();
     if (st) {
       st.voiceRecording = !!active;
       st.voiceRecordingCancel = !!cancelArmed;
+      st.voiceRecordingLocked = !!locked;
     }
     var bar = el('ce2VoiceRecordBar');
     var timerNode = el('ce2VoiceRecordTimer');
+    var hintNode = el('ce2VoiceRecordHint');
+    var stopBtn = el('ce2VoiceRecordStop');
+    var waveCanvas = el('ce2VoiceRecordWave');
     if (bar) {
       bar.hidden = !active;
       bar.classList.toggle('ce2-voice-record-bar--cancel', !!cancelArmed);
+      bar.classList.toggle('ce2-voice-record-bar--locked', !!locked);
     }
     if (timerNode && session) {
       timerNode.textContent = formatDuration(session.durationMs || 0);
     }
+    if (hintNode) {
+      if (!active) {
+        hintNode.textContent = isLockEnabled()
+          ? 'Slide left to cancel · slide up to lock'
+          : 'Slide left to cancel';
+      } else if (locked) {
+        hintNode.textContent = 'Recording locked — tap Stop to send';
+      } else if (cancelArmed) {
+        hintNode.textContent = 'Release to cancel';
+      } else {
+        hintNode.textContent = isLockEnabled()
+          ? 'Release to send · slide up to lock'
+          : 'Release to send';
+      }
+    }
+    if (stopBtn) stopBtn.hidden = !locked;
+    if (waveCanvas) waveCanvas.hidden = !active;
     var voiceBtn = el('ce2VoiceBtn');
     if (voiceBtn) {
       voiceBtn.classList.toggle('is-recording', !!active);
       voiceBtn.classList.toggle('is-cancel-armed', !!cancelArmed);
+      voiceBtn.classList.toggle('is-locked', !!locked);
     }
     requestRender();
   }
@@ -72,6 +109,18 @@
     }
   }
 
+  function stopLivePaint() {
+    if (stopPaintFn) {
+      stopPaintFn();
+      stopPaintFn = null;
+    }
+    var canvas = el('ce2VoiceRecordWave');
+    if (canvas && global.Ce2AudioWaveform) {
+      var ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
   function cleanupStream(stream) {
     if (!stream) return;
     stream.getTracks().forEach(function (t) {
@@ -83,8 +132,9 @@
 
   function resetSession() {
     stopTimer();
+    stopLivePaint();
     session = null;
-    setRecordingUi(false, false);
+    setRecordingUi(false, false, false);
   }
 
   function canStart() {
@@ -130,6 +180,16 @@
     }
 
     stopTimer();
+    stopLivePaint();
+
+    var peaks = [];
+    if (s.waveform) {
+      try {
+        peaks = s.waveform.stop();
+      } catch (_) {}
+      s.waveform = null;
+    }
+
     cleanupStream(s.stream);
     s.recorder = null;
     s.stream = null;
@@ -152,8 +212,33 @@
     resetSession();
 
     if (deps.onFileReady) {
-      deps.onFileReady(file, { durationMs: durationMs });
+      deps.onFileReady(file, {
+        durationMs: durationMs,
+        audioWaveformPeaks: peaks,
+        audioMime: mime,
+      });
     }
+  }
+
+  function startLiveWaveform(stream) {
+    var wf = global.Ce2AudioWaveform;
+    var canvas = el('ce2VoiceRecordWave');
+    if (!wf || !canvas || !stream) return null;
+
+    var analyser = wf.createLiveAnalyser(stream);
+    if (!analyser.start()) return null;
+
+    var rect = canvas.getBoundingClientRect();
+    if (rect.width > 0) {
+      canvas.width = Math.floor(rect.width * (global.devicePixelRatio || 1));
+      canvas.height = Math.floor(28 * (global.devicePixelRatio || 1));
+    }
+
+    stopPaintFn = wf.startLivePaint(canvas, function () {
+      return session && session.waveform === analyser ? analyser : null;
+    });
+
+    return analyser;
   }
 
   function startRecorder(stream) {
@@ -165,6 +250,7 @@
     session.recorder = recorder;
     session.mime = recordedMime;
     session.chunks = [];
+    session.waveform = startLiveWaveform(stream);
 
     recorder.ondataavailable = function (e) {
       if (e.data && e.data.size) session.chunks.push(e.data);
@@ -190,7 +276,7 @@
 
     session.startedAt = Date.now();
     session.durationMs = 0;
-    setRecordingUi(true, false);
+    setRecordingUi(true, false, false);
 
     timerId = setInterval(function () {
       if (!session || !session.recorder) return;
@@ -204,7 +290,7 @@
     }, 200);
   }
 
-  function beginCapture(pointerId, clientX) {
+  function beginCapture(pointerId, clientX, clientY) {
     if (!canStart()) return;
     if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') {
       if (deps.onError) deps.onError(new Error('Voice notes are not supported in this browser.'));
@@ -214,7 +300,9 @@
     session = {
       pointerId: pointerId,
       startX: clientX,
+      startY: clientY,
       cancelArmed: false,
+      locked: false,
       finalized: false,
       uploadDispatched: false,
       shouldSend: false,
@@ -247,15 +335,30 @@
 
   function onPointerMove(e) {
     if (!session || session.finalized || e.pointerId !== session.pointerId) return;
-    var cancel = e.clientX < session.startX - CANCEL_SLIDE_PX;
-    if (cancel !== session.cancelArmed) {
-      session.cancelArmed = cancel;
-      setRecordingUi(true, cancel);
+
+    if (!session.locked) {
+      var cancel = e.clientX < session.startX - CANCEL_SLIDE_PX;
+      if (cancel !== session.cancelArmed) {
+        session.cancelArmed = cancel;
+        setRecordingUi(true, cancel, false);
+      }
+      if (isLockEnabled() && session.startY - e.clientY > LOCK_SLIDE_PX) {
+        session.locked = true;
+        session.cancelArmed = false;
+        try {
+          var voiceBtn = el('ce2VoiceBtn');
+          if (voiceBtn && voiceBtn.releasePointerCapture) {
+            voiceBtn.releasePointerCapture(e.pointerId);
+          }
+        } catch (_) {}
+        setRecordingUi(true, false, true);
+      }
     }
   }
 
   function onPointerEnd(e, send) {
     if (!session || session.finalized || e.pointerId !== session.pointerId) return;
+    if (session.locked) return;
     try {
       if (e.currentTarget && e.currentTarget.releasePointerCapture) {
         e.currentTarget.releasePointerCapture(e.pointerId);
@@ -275,7 +378,7 @@
       try {
         voiceBtn.setPointerCapture(e.pointerId);
       } catch (_) {}
-      beginCapture(e.pointerId, e.clientX);
+      beginCapture(e.pointerId, e.clientX, e.clientY);
     });
 
     voiceBtn.addEventListener('pointermove', function (e) {
@@ -296,9 +399,19 @@
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', function (e) {
       if (!session || session.finalized || e.pointerId !== session.pointerId) return;
+      if (session.locked) return;
       if (e.target && e.target.closest && e.target.closest('#ce2VoiceBtn')) return;
       onPointerEnd(e, true);
     });
+
+    var stopBtn = el('ce2VoiceRecordStop');
+    if (stopBtn) {
+      stopBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!session || session.finalized || !session.locked) return;
+        finishStop(true);
+      });
+    }
   }
 
   function bindVisibility() {
@@ -311,6 +424,7 @@
   }
 
   global.Ce2AudioRecorder = {
+    LOCK_TO_RECORD: LOCK_TO_RECORD,
     init: function (d) {
       deps = d || {};
       if (bound) return;
@@ -319,5 +433,6 @@
       bindVisibility();
     },
     reset: resetSession,
+    isLockEnabled: isLockEnabled,
   };
 })(typeof window !== 'undefined' ? window : global);
