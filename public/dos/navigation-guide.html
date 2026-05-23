@@ -11,10 +11,11 @@
     h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
     .sub { color: #64748b; margin-bottom: 2rem; }
     h2 { font-size: 1.15rem; margin-top: 2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.35rem; }
-    ol { padding-left: 1.25rem; }
+    ol, ul { padding-left: 1.25rem; }
     li { margin-bottom: 0.75rem; }
     li strong { color: #0f766e; }
     .tip { background: #ecfdf5; border-left: 4px solid #10b981; padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.9rem; }
+    .rank-badge { display: inline-block; background: #0f766e; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem; }
     .rank-only { display: none; }
     a { color: #0d9488; }
     .back { display: inline-block; margin-bottom: 1.5rem; font-weight: 600; }
@@ -23,69 +24,78 @@
 <body>
   <div class="wrap">
     <a class="back" href="javascript:history.back()">← Back to dashboard</a>
+    <div class="rank-badge" id="rankBadge">Ambassador</div>
     <h1>Deployment Operations — Navigation Guide</h1>
-    <p class="sub">Sitemap and walkthrough for your DOS dashboard. Replay the interactive tour anytime with <strong>Guide</strong> in the top bar.</p>
+    <p class="sub">Full sitemap for your role. Use <strong>Guide</strong> on the dashboard for the interactive tour.</p>
 
     <div class="tip">
-      <strong>First time?</strong> Use the <strong>Guide</strong> button on your dashboard for a step-by-step highlight tour. This page is the full reference you can bookmark or print.
+      <strong>Where to start training (Formation):</strong> Open <strong>Formation</strong> in the left sidebar to see progress and enroll, or click <strong>Foundation School</strong> in the sidebar footer to open the course viewer (lessons). Top bar <strong>School</strong> goes to the same place.
     </div>
 
-    <h2>Every role — common sections</h2>
-    <ol>
-      <li><strong>Overview</strong> — Daily snapshot: KPIs, monthly target, quick actions, path to Senior (10 recruits).</li>
-      <li><strong>Daily ops</strong> — Log outreach and deployment activity for the day.</li>
-      <li><strong>Field deploy</strong> — Conversation scripts for approach, close, follow-up, objections.</li>
-      <li><strong>Deployment links</strong> — Your referral URL, product links, SBD app panel, social share.</li>
-      <li><strong>Subscribers &amp; pipeline</strong> — Prospects and subscribers by stage; recent deployments.</li>
-      <li><strong>Retention</strong> — At-risk subscribers and follow-up focus.</li>
-      <li><strong>Commissions</strong> — History, recurring view, portfolio earnings by category.</li>
-      <li><strong>Social deploy</strong> — Caption library for WhatsApp, Facebook, Instagram.</li>
-      <li><strong>Reports</strong> — Export summaries for your records.</li>
-      <li><strong>Network</strong> — Ambassadors you recruited.</li>
-      <li><strong>Formation</strong> — Foundation School / CRLA (training is separate from deployment ops).</li>
-      <li><strong>Performance</strong> — Leaderboard, contests, revenue stacks, unit milestones.</li>
-    </ol>
-
-    <h2 class="rank-only" data-ranks="senior regional_director executive">Senior — Team command</h2>
-    <ol class="rank-only" data-ranks="senior regional_director executive">
-      <li><strong>Team command</strong> — Downline ambassadors, team activity, who needs support.</li>
-    </ol>
-
-    <h2 class="rank-only" data-ranks="regional_director executive">Regional Director — Regional command</h2>
-    <ol class="rank-only" data-ranks="regional_director executive">
-      <li><strong>Regional command</strong> — Territory metrics, seniors in region, inactive alerts.</li>
-    </ol>
-
-    <h2 class="rank-only" data-ranks="executive">Executive — Global command</h2>
-    <ol class="rank-only" data-ranks="executive">
-      <li><strong>Global command</strong> — Network-wide aggregates and executive KPIs.</li>
-    </ol>
-
-    <h2>Top bar shortcuts</h2>
+    <h2>Sidebar footer (every role)</h2>
     <ul>
-      <li><strong>Guide</strong> — Replay the interactive walkthrough.</li>
-      <li><strong>Map</strong> — Opens this navigation guide.</li>
-      <li><strong>Copy main link</strong> — Your primary campaign referral URL.</li>
-      <li><strong>Announcements</strong> — Bell icon for admin messages.</li>
-      <li><strong>Logout</strong> — Returns you to your role login page.</li>
+      <li><strong>Foundation School</strong> — Course viewer: Teleios Blueprint, advocacy weeks, CRLA (<code>course-viewer.html?courseId=foundation-school</code>).</li>
+      <li><strong>Resources</strong> — Ambassador tools, downloads, and reference materials.</li>
+      <li><strong>Leaderboard</strong> — Network-wide rankings (also under Performance in the sidebar).</li>
+      <li><strong>Marriage Education home</strong> — Public website homepage.</li>
     </ul>
+
+    <h2>Top bar</h2>
+    <ul>
+      <li><strong>Guide</strong> — Replay the interactive walkthrough (rank-specific).</li>
+      <li><strong>Map</strong> — This page.</li>
+      <li><strong>Copy main link</strong> — Primary referral URL.</li>
+      <li><strong>Home / School / Leaderboard</strong> — Same as footer links.</li>
+      <li><strong>Logout</strong> — Returns to your role login page (Ambassador, Senior, RD, or Executive).</li>
+    </ul>
+
+    <h2>Main sidebar sections (deployment ops)</h2>
+    <ol>
+      <li><strong>Overview</strong> — KPIs, monthly target, quick actions.</li>
+      <li><strong>Daily ops</strong> — Log daily outreach.</li>
+      <li><strong>Field deploy</strong> — Field scripts.</li>
+      <li><strong>Deployment links</strong> — Referral &amp; product URLs, SBD panel.</li>
+      <li><strong>Subscribers &amp; pipeline</strong> — Prospects and subscribers.</li>
+      <li><strong>Retention</strong> — At-risk subscribers.</li>
+      <li><strong>Commissions</strong> — Earnings and history.</li>
+      <li><strong>Social deploy</strong> — Social captions.</li>
+      <li><strong>Reports</strong> — Exports.</li>
+      <li><strong>Network</strong> — Your recruits.</li>
+      <li><strong>Formation</strong> — CRLA progress + link to start school.</li>
+      <li><strong>Performance</strong> — Contests, stacks, milestones.</li>
+    </ol>
+
+    <h2 class="rank-only" data-ranks="senior regional_director executive">Leadership — Team command</h2>
+    <p class="rank-only" data-ranks="senior regional_director executive">Downline ambassadors, activity, and support (Senior, RD, Executive).</p>
+
+    <h2 class="rank-only" data-ranks="regional_director executive">Leadership — Regional command</h2>
+    <p class="rank-only" data-ranks="regional_director executive">Territory metrics and regional seniors (RD, Executive).</p>
+
+    <h2 class="rank-only" data-ranks="executive">Leadership — Global command</h2>
+    <p class="rank-only" data-ranks="executive">Network-wide executive aggregates.</p>
 
     <h2>Suggested daily flow</h2>
     <ol>
-      <li>Open <strong>Overview</strong> — check KPIs and target.</li>
-      <li>Complete <strong>Daily ops</strong> — log today’s outreach.</li>
-      <li>Use <strong>Field deploy</strong> scripts in conversations.</li>
-      <li>Share from <strong>Deployment links</strong> or <strong>Social deploy</strong>.</li>
-      <li>Update <strong>Subscribers</strong> / <strong>Retention</strong> after contacts.</li>
-      <li>Review <strong>Commissions</strong> when sales post.</li>
-      <li>Leaders: check <strong>Team</strong> / <strong>Regional</strong> / <strong>Global</strong> as applicable.</li>
+      <li><strong>Overview</strong> → <strong>Daily ops</strong> → <strong>Field deploy</strong> / <strong>Links</strong>.</li>
+      <li>Check <strong>Subscribers</strong>, <strong>Retention</strong>, <strong>Commissions</strong>.</li>
+      <li>Training (weekly): <strong>Formation</strong> or <strong>Foundation School</strong>.</li>
+      <li class="rank-only" data-ranks="senior regional_director executive">Leaders: <strong>Team command</strong> daily.</li>
+      <li class="rank-only" data-ranks="regional_director executive">RD+: <strong>Regional command</strong>.</li>
+      <li class="rank-only" data-ranks="executive">Executive: <strong>Global command</strong>.</li>
     </ol>
 
-    <p style="margin-top:2rem;font-size:0.85rem;color:#94a3b8">DOS Navigation Guide · Marriage Education</p>
+    <p style="margin-top:2rem;font-size:0.85rem;color:#94a3b8">DOS Navigation Guide v2 · Marriage Education</p>
   </div>
   <script>
     (function () {
       var rank = new URLSearchParams(location.search).get('rank') || 'ambassador';
+      var labels = {
+        ambassador: 'Ambassador',
+        senior: 'Senior Ambassador',
+        regional_director: 'Regional Director',
+        executive: 'Executive Network Director'
+      };
+      document.getElementById('rankBadge').textContent = labels[rank] || labels.ambassador;
       document.querySelectorAll('[data-ranks]').forEach(function (el) {
         var ranks = (el.getAttribute('data-ranks') || '').split(/\s+/);
         if (ranks.indexOf(rank) !== -1) el.style.display = '';
