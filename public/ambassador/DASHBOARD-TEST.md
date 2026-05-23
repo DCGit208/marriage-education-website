@@ -1,37 +1,39 @@
-# DOS dashboards
+# DOS dashboards & login
 
-## Production (live)
+## Production dashboards
 
-| Role | URL |
-|------|-----|
+| Role | Dashboard |
+|------|-----------|
 | Ambassador | https://marriageducation.com/ambassador/dashboard.html |
 | Senior | https://marriageducation.com/ambassador/senior-dashboard.html |
 | RD | https://marriageducation.com/regional-director/rd-dashboard.html |
 | Executive | https://marriageducation.com/executive/dashboard.html |
 
-| Role | Code format | Login URL |
-|------|-------------|-----------|
-| Ambassador / Senior | `AMB-…` | https://marriageducation.com/ambassador-login.html |
-| Regional Director | `RD-…` (Firestore `regional_directors`) | https://marriageducation.com/rd-login.html |
-| Executive | Usually `AMB-…` in `ambassadors` | ambassador-login (routed to executive dashboard) |
+## Separate login pages (required)
 
-Do not use ambassador-login for RD codes — different format, collection, and form.
+Each role has its **own** login screen — do not use “Ambassador Login” for Senior or RD.
 
-Cache bust if needed: `?v=20260523prod`
+| Role | Code | Login URL |
+|------|------|-----------|
+| **Ambassador** | `AMB-…` | https://marriageducation.com/ambassador-login.html |
+| **Senior Ambassador** | `AMB-…` (senior account) | https://marriageducation.com/senior-login.html |
+| **Regional Director** | `RD-…` | https://marriageducation.com/rd-login.html |
+| **Executive** | `AMB-…` (executive account) | https://marriageducation.com/executive-login.html |
 
-**Deploy note:** `marriageducation.com` is served by **FTP** (GitHub Actions on push to `main`), not Firebase. Push to `main` to update `.com`. Firebase (`firebase deploy --only hosting:main,hosting:marriageducation`) updates `*.web.app` only.
+Logout from each DOS dashboard returns you to **that role’s** login page.
 
-## Preview (-test, optional)
+## Deploy
 
-| Role | URL |
-|------|-----|
-| Ambassador | https://marriageducation.web.app/ambassador/dashboard-test.html |
-| Senior | https://marriageducation.web.app/ambassador/senior-dashboard-test.html |
-| RD | https://marriageducation.web.app/regional-director/rd-dashboard-test.html |
-| Executive | https://marriageducation.web.app/executive/dashboard-test.html |
+- **marriageducation.com** → push to `main` (FTP)
+- **\*.web.app** → `firebase deploy --only hosting:main,hosting:marriageducation`
 
-## Parity & rollback
+Cache bust: `?v=20260524b`
 
-See [PRODUCTION-CUTOVER.md](./PRODUCTION-CUTOVER.md).
+## Preview (-test)
 
-Legacy pre-DOS UI: `*-legacy.html` in the same folders.
+| Role | Dashboard test URL |
+|------|-------------------|
+| Ambassador | /ambassador/dashboard-test.html |
+| Senior | /ambassador/senior-dashboard-test.html |
+| RD | /regional-director/rd-dashboard-test.html |
+| Executive | /executive/dashboard-test.html |

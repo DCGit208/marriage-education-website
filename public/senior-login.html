@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Ambassador Login | Marriage Education</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="js/role-login-shell.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            --accent: #d97706;
+            --accent-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .login-header .role-icon { color: #d97706; }
+    </style>
+</head>
+<body data-login-role="senior">
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-star role-icon"></i>
+            <h1>Senior Ambassador Login</h1>
+            <p>Team leadership dashboard · code format <strong>AMB-…</strong></p>
+        </div>
+        <div id="loggedOutNote" class="logged-out-note">You have been logged out. Sign in again with your Senior Ambassador code.</div>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginCode"><i class="fas fa-id-badge"></i> Senior Ambassador Code</label>
+                <input type="text" id="loginCode" required placeholder="AMB-YOURNAME-1234" style="text-transform:uppercase" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
+            </div>
+            <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Login to Senior Dashboard</button>
+        </form>
+        <div class="other-logins">
+            <p>Not a Senior Ambassador?</p>
+            <a href="ambassador-login.html"><i class="fas fa-user"></i> Ambassador Login</a>
+            <a href="rd-login.html"><i class="fas fa-crown"></i> Regional Director Login (RD-…)</a>
+            <a href="executive-login.html"><i class="fas fa-earth-americas"></i> Executive Login</a>
+        </div>
+        <a class="home-link" href="index.html"><i class="fas fa-home"></i> Back to Home</a>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/ambassador-session.js?v=20260524b"></script>
+    <script src="js/ambassador-account-resolve.js?v=20260524b"></script>
+    <script src="js/ambassador-routes.js?v=20260524b"></script>
+    <script src="js/role-login.js?v=20260524b"></script>
+    <script>MERoleLogin.init('senior');</script>
+</body>
+</html>
