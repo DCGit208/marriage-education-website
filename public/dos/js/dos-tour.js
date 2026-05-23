@@ -185,6 +185,25 @@
     document.getElementById('dosTourBackdrop').addEventListener('click', endTour);
   }
 
+  function bindToolbarButtons() {
+    var tourBtn = document.getElementById('dosTourBtn');
+    var mapBtn = document.getElementById('dosGuideDocBtn');
+    if (mapBtn && !mapBtn.getAttribute('data-bound')) {
+      mapBtn.setAttribute('data-bound', '1');
+      if (!mapBtn.getAttribute('href') || mapBtn.getAttribute('href') === '#') {
+        mapBtn.href = guideUrl();
+      }
+    }
+    if (tourBtn && !tourBtn.getAttribute('data-bound')) {
+      tourBtn.setAttribute('data-bound', '1');
+      tourBtn.addEventListener('click', function () {
+        var code = userCode || (global.MEAmbassadorSession && global.MEAmbassadorSession.getCode());
+        startTour(code, true);
+      });
+    }
+    injectGuideButton();
+  }
+
   function injectGuideButton() {
     if (document.getElementById('dosTourBtn')) return;
     var actions = document.querySelector('.dos-topbar-actions');
@@ -197,11 +216,9 @@
     btn.title = 'Dashboard walkthrough';
     btn.innerHTML = '<i class="fa-solid fa-circle-question"></i> Guide';
     btn.addEventListener('click', function () {
-      startTour(userCode, true);
+      var code = userCode || (global.MEAmbassadorSession && global.MEAmbassadorSession.getCode());
+      startTour(code, true);
     });
-    if (logout) actions.insertBefore(btn, logout);
-    else actions.appendChild(btn);
-
     var link = document.createElement('a');
     link.className = 'dos-btn';
     link.id = 'dosGuideDocBtn';
@@ -210,7 +227,13 @@
     link.rel = 'noopener';
     link.title = 'Full navigation guide (opens in new tab)';
     link.innerHTML = '<i class="fa-solid fa-map"></i> Map';
-    actions.insertBefore(link, logout || btn);
+    if (logout) {
+      actions.insertBefore(link, logout);
+      actions.insertBefore(btn, logout);
+    } else {
+      actions.appendChild(btn);
+      actions.appendChild(link);
+    }
   }
 
   function applySection(sectionId) {
@@ -348,17 +371,23 @@
     userCode = code;
     buildSteps();
     ensureDom();
-    injectGuideButton();
+    bindToolbarButtons();
     if (!isDone(code)) {
       setTimeout(function () {
         startTour(code, false);
-      }, 800);
+      }, 1000);
     }
+  }
+
+  function initOnPageLoad() {
+    buildSteps();
+    bindToolbarButtons();
   }
 
   global.DOSTour = {
     TOUR_VERSION: TOUR_VERSION,
     onDashboardReady: onDashboardReady,
+    initOnPageLoad: initOnPageLoad,
     start: function (code) { startTour(code, true); },
     reset: function (code) {
       try {
@@ -366,4 +395,10 @@
       } catch (e) { /* ignore */ }
     }
   };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOnPageLoad);
+  } else {
+    initOnPageLoad();
+  }
 })(typeof window !== 'undefined' ? window : global);
