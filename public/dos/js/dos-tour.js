@@ -1,10 +1,10 @@
 /**
- * DOS dashboard guided tour — first login + replay from topbar.
+ * DOS dashboard guided tour — rank-specific, first login + replay (Guide button).
  */
 (function (global) {
   'use strict';
 
-  var TOUR_VERSION = 'v1';
+  var TOUR_VERSION = 'v2';
   var stepIndex = 0;
   var steps = [];
   var active = false;
@@ -32,86 +32,108 @@
     return document.body.getAttribute('data-dos-rank') || 'ambassador';
   }
 
-  function guideUrl() {
+  function rankTitle() {
     var r = rank();
-    return '/dos/navigation-guide.html?rank=' + encodeURIComponent(r);
+    if (r === 'senior') return 'Senior Ambassador';
+    if (r === 'regional_director') return 'Regional Director';
+    if (r === 'executive') return 'Executive Network Director';
+    return 'Ambassador';
   }
 
-  function baseSteps() {
+  function guideUrl() {
+    return '/dos/navigation-guide.html?rank=' + encodeURIComponent(rank());
+  }
+
+  function welcomeStep() {
+    var r = rank();
+    var body =
+      'This is your ' + rankTitle() + ' Deployment Operations dashboard. ' +
+      'The tour covers every sidebar section, where to start Foundation School, and links to Resources and Leaderboard.';
+    if (r === 'senior') {
+      body += ' You also have Team command for your downline.';
+    } else if (r === 'regional_director') {
+      body += ' You also have Team command and Regional command for your territory.';
+    } else if (r === 'executive') {
+      body += ' You also have Team, Regional, and Global command for the full network.';
+    }
+    return {
+      placement: 'center',
+      title: 'Welcome, ' + rankTitle(),
+      body: body
+    };
+  }
+
+  function sectionStep(sectionId, title, body, target) {
+    return {
+      section: sectionId,
+      target: target || '[data-section="' + sectionId + '"]',
+      placement: 'top',
+      title: title,
+      body: body
+    };
+  }
+
+  function coreSectionSteps() {
+    var r = rank();
+    var networkBody =
+      'Ambassadors you recruited. Ten recruits qualifies for Senior Ambassador (auto-promotion).';
+    if (r === 'senior' || r === 'regional_director' || r === 'executive') {
+      networkBody =
+        'Your personal recruits and network growth. Use Team command for full downline oversight; this section is your own recruitment record.';
+    }
+
     return [
-      {
-        placement: 'center',
-        title: 'Welcome to Deployment Operations',
-        body: 'This dashboard is your command center for deploying Marriage Education access, tracking subscribers, commissions, and team growth. This short tour shows where everything lives.'
-      },
-      {
-        target: '#dosSidebarNav',
-        placement: 'right',
-        title: 'Left sidebar — your map',
-        body: 'Every section of the dashboard is listed here. Tap a item to jump to that area. On mobile, use the bottom icon bar or the Menu button.'
-      },
-      {
-        section: 'overview',
-        target: '#dosOverviewKpis',
-        placement: 'bottom',
-        title: 'Overview — start here each day',
-        body: 'See KPIs, monthly target, and quick actions. Check this first to know where you stand before you deploy in the field.'
-      },
-      {
-        section: 'daily-ops',
-        target: '[data-section="daily-ops"]',
-        placement: 'top',
-        title: 'Daily ops',
-        body: 'Log outreach, contacts, and follow-ups. Consistent daily logging builds your pipeline and retention picture.'
-      },
-      {
-        section: 'field-deploy',
-        target: '[data-section="field-deploy"]',
-        placement: 'top',
-        title: 'Field deploy — scripts',
-        body: 'Copy-ready scripts for in-person and phone conversations. Use these when approaching prospects or following up.'
-      },
-      {
-        section: 'links',
-        target: '#dosCopyPrimary',
-        placement: 'bottom',
-        title: 'Deployment links',
-        body: 'Your main referral link and product-specific links live here. Use Copy main link in the top bar anytime, or open this section for WhatsApp / social sharing.'
-      },
-      {
-        section: 'subscribers',
-        target: '[data-section="subscribers"]',
-        placement: 'top',
-        title: 'Subscribers & pipeline',
-        body: 'Track prospects and subscribers through stages — from contact to active Foundation access.'
-      },
-      {
-        section: 'commissions',
-        target: '[data-section="commissions"]',
-        placement: 'top',
-        title: 'Commissions',
-        body: 'Commission history, recurring estimates, and earnings by product category. Verify payouts against your deployments here.'
-      },
-      {
-        section: 'network',
-        target: '[data-section="network"]',
-        placement: 'top',
-        title: 'Network',
-        body: 'Ambassadors you recruited. Senior rank requires 10 recruits — progress shows here and on Overview.'
-      },
+      sectionStep('overview', 'Overview — start each day (deployment)', 
+        'Check KPIs, monthly target, and quick actions before field work. This is your deployment snapshot — not your training progress.'),
       {
         section: 'formation',
-        target: '[data-section="formation"]',
+        target: '#dosFormationBody',
         placement: 'top',
-        title: 'Formation (separate from ops)',
-        body: 'Marriage Foundation School and CRLA training. Education lives here — deployment operations stay in the other sections.'
+        title: 'Formation — your training track (start here for school)',
+        body: 'Shows Foundation School / CRLA progress. If not enrolled, click Start Foundation School. ' +
+          'For full lessons, also use Foundation School in the sidebar footer (opens the course viewer). Training is separate from deployment ops.'
+      },
+      sectionStep('daily-ops', 'Daily ops',
+        'Log today’s outreach, contacts, and follow-ups. Build the habit: Overview → Daily ops → Field deploy.'),
+      sectionStep('field-deploy', 'Field deploy — scripts',
+        'Ready-made scripts for approach, close, follow-up, and objections. Use in the field or on calls.'),
+      sectionStep('links', 'Deployment links',
+        'Your referral URLs by product plus SBD app panel. Copy main link from the top bar anytime.'),
+      sectionStep('subscribers', 'Subscribers & pipeline',
+        'Prospects and subscribers by stage, plus recent deployments.'),
+      sectionStep('retention', 'Retention',
+        'Subscribers at risk of dropping off — prioritize follow-up here.'),
+      sectionStep('commissions', 'Commissions',
+        'Commission history, recurring estimates, and earnings by product category.'),
+      sectionStep('social-deploy', 'Social deploy',
+        'Caption library for WhatsApp, Facebook, and Instagram — paste and add your link.'),
+      sectionStep('reporting', 'Reports',
+        'Export deployment summaries for your records or leadership.'),
+      sectionStep('network', 'Network', networkBody),
+      sectionStep('performance', 'Performance',
+        'Leaderboard position, contests, revenue stacks, and unit milestones (Bronze → Platinum).')
+    ];
+  }
+
+  function externalLinkSteps() {
+    return [
+      {
+        target: '.dos-sidebar-footer',
+        placement: 'right',
+        title: 'Sidebar footer — courses & site links',
+        body: 'Foundation School opens your course viewer (lessons & CRLA). Resources = ambassador tools and PDFs. Leaderboard = rankings. Marriage Education home = main public site.'
       },
       {
-        section: 'performance',
-        target: '[data-section="performance"]',
-        placement: 'top',
-        title: 'Performance',
-        body: 'Leaderboard, contests, revenue stacks, and unit milestones. Use this to track gamification and recognition.'
+        target: '.dos-topbar-links',
+        placement: 'bottom',
+        title: 'Top bar shortcuts',
+        body: 'Home (public site), School (Foundation School), and Leaderboard — same destinations as the sidebar footer, always visible while you work.'
+      },
+      {
+        target: '#dosTourBtn',
+        placement: 'bottom',
+        title: 'Guide & Map (anytime)',
+        body: 'Guide replays this tour. Map opens the full written navigation guide in a new tab.'
       }
     ];
   }
@@ -120,31 +142,16 @@
     var r = rank();
     var extra = [];
     if (r === 'senior' || r === 'regional_director' || r === 'executive') {
-      extra.push({
-        section: 'team',
-        target: '[data-section="team"]',
-        placement: 'top',
-        title: 'Team command',
-        body: 'Monitor ambassadors on your team — activity, recruits, and who needs a follow-up. Senior leaders use this daily.'
-      });
+      extra.push(sectionStep('team', 'Team command',
+        'Your downline ambassadors: activity, recruits, and who needs support. Check this daily as a Senior+ leader.'));
     }
     if (r === 'regional_director' || r === 'executive') {
-      extra.push({
-        section: 'region',
-        target: '[data-section="region"]',
-        placement: 'top',
-        title: 'Regional command',
-        body: 'Territory-wide metrics: seniors, activity, and regional deployment health.'
-      });
+      extra.push(sectionStep('region', 'Regional command',
+        'Territory view: seniors in your region, regional KPIs, and inactive leaders needing attention.'));
     }
     if (r === 'executive') {
-      extra.push({
-        section: 'global',
-        target: '[data-section="global"]',
-        placement: 'top',
-        title: 'Global command',
-        body: 'Network-wide executive view — aggregate stats across regions and leadership tiers.'
-      });
+      extra.push(sectionStep('global', 'Global command',
+        'Network-wide executive metrics and aggregates across all regions.'));
     }
     return extra;
   }
@@ -152,14 +159,26 @@
   function finalStep() {
     return {
       placement: 'center',
-      title: 'You\'re ready to deploy',
-      body: 'Click Guide anytime in the top bar to replay this tour. For a full written sitemap, open the Navigation Guide.',
+      title: rankTitle() + ' — tour complete',
+      body: 'Daily rhythm: Overview → Daily ops → deploy with Links / Social → check Subscribers & Retention → Commissions. ' +
+        'For training: Formation section or Foundation School in the sidebar. Click Guide to replay; Map for the full sitemap.',
       isFinal: true
     };
   }
 
   function buildSteps() {
-    steps = baseSteps().concat(leadershipSteps()).concat([finalStep()]);
+    steps = [welcomeStep()]
+      .concat([{
+        target: '#dosSidebarNav',
+        placement: 'right',
+        title: 'Main sections (left sidebar)',
+        body: 'Every deployment module is listed here — ops, pipeline, commissions, network, formation, performance' +
+          (rank() !== 'ambassador' ? ', plus leadership sections for your rank.' : '.')
+      }])
+      .concat(externalLinkSteps())
+      .concat(coreSectionSteps())
+      .concat(leadershipSteps())
+      .concat([finalStep()]);
   }
 
   function ensureDom() {
@@ -179,7 +198,6 @@
         '</div>' +
       '</div>';
     document.body.appendChild(root);
-
     document.getElementById('dosTourSkip').addEventListener('click', endTour);
     document.getElementById('dosTourNext').addEventListener('click', nextStep);
     document.getElementById('dosTourBackdrop').addEventListener('click', endTour);
@@ -212,7 +230,7 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'dosTourBtn';
-    btn.className = 'dos-btn';
+    btn.className = 'dos-btn dos-btn-guide';
     btn.title = 'Dashboard walkthrough';
     btn.innerHTML = '<i class="fa-solid fa-circle-question"></i> Guide';
     btn.addEventListener('click', function () {
@@ -220,12 +238,12 @@
       startTour(code, true);
     });
     var link = document.createElement('a');
-    link.className = 'dos-btn';
+    link.className = 'dos-btn dos-btn-guide';
     link.id = 'dosGuideDocBtn';
     link.href = guideUrl();
     link.target = '_blank';
     link.rel = 'noopener';
-    link.title = 'Full navigation guide (opens in new tab)';
+    link.title = 'Full navigation guide';
     link.innerHTML = '<i class="fa-solid fa-map"></i> Map';
     if (logout) {
       actions.insertBefore(link, logout);
@@ -238,11 +256,8 @@
 
   function applySection(sectionId) {
     if (!sectionId) return;
-    if (global.DOSRouter) {
-      global.DOSRouter.setSection(sectionId);
-    } else {
-      location.hash = '#' + sectionId;
-    }
+    if (global.DOSRouter) global.DOSRouter.setSection(sectionId);
+    else location.hash = '#' + sectionId;
   }
 
   function positionPanel(step, targetEl) {
@@ -255,8 +270,6 @@
       panel.classList.add('dos-tour-panel-center');
       panel.style.top = '';
       panel.style.left = '';
-      panel.style.right = '';
-      panel.style.bottom = '';
       return;
     }
 
@@ -271,7 +284,6 @@
     var panelRect = panel.getBoundingClientRect();
     var top = rect.bottom + 12;
     var left = rect.left;
-
     if (step.placement === 'right') {
       top = rect.top;
       left = rect.right + 12;
@@ -282,16 +294,10 @@
       top = rect.top - panelRect.height - 12;
       left = rect.left;
     }
-
-    if (left + panelRect.width > window.innerWidth - 12) {
-      left = window.innerWidth - panelRect.width - 12;
-    }
+    if (left + panelRect.width > window.innerWidth - 12) left = window.innerWidth - panelRect.width - 12;
     if (left < 12) left = 12;
-    if (top + panelRect.height > window.innerHeight - 12) {
-      top = window.innerHeight - panelRect.height - 12;
-    }
+    if (top + panelRect.height > window.innerHeight - 12) top = window.innerHeight - panelRect.height - 12;
     if (top < 12) top = 12;
-
     panel.style.top = top + 'px';
     panel.style.left = left + 'px';
   }
@@ -314,7 +320,7 @@
         document.getElementById('dosTourTitle').textContent = step.title;
         document.getElementById('dosTourBody').textContent = step.body;
         document.getElementById('dosTourProgress').textContent =
-          'Step ' + (stepIndex + 1) + ' of ' + steps.length;
+          'Step ' + (stepIndex + 1) + ' of ' + steps.length + ' · ' + rankTitle();
 
         var nextBtn = document.getElementById('dosTourNext');
         if (step.isFinal) {
@@ -358,7 +364,7 @@
     if (active) return;
     buildSteps();
     ensureDom();
-    injectGuideButton();
+    bindToolbarButtons();
     if (!force && isDone(userCode)) return;
 
     active = true;

@@ -22,11 +22,12 @@ Each role has its **own** login screen — do not use “Ambassador Login” for
 
 Logout from each DOS dashboard returns you to **that role’s** login page.
 
-## Dashboard walkthrough
+## Dashboard walkthrough (rank-specific v2)
 
-- **First login** — interactive tour starts automatically (once per account).
-- **Replay** — click **Guide** in the dashboard top bar.
-- **Full sitemap** — click **Map** or open [navigation-guide.html](../dos/navigation-guide.html).
+- **Per role** — Ambassador, Senior, RD, and Executive each get a tailored tour (e.g. RD includes Regional command; all include Foundation School / Resources / Leaderboard footer links).
+- **First login** — auto-starts once per account (`dos_tour_v2_{code}`).
+- **Replay** — **Guide** in the top bar.
+- **Full sitemap** — **Map** or [navigation-guide.html](../dos/navigation-guide.html?rank=ambassador) (use `?rank=senior`, `regional_director`, `executive` as needed).
 
 ## Deploy
 
