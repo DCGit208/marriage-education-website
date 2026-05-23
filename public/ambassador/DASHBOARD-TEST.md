@@ -9,11 +9,14 @@
 | RD | https://marriageducation.com/regional-director/rd-dashboard.html |
 | Executive | https://marriageducation.com/executive/dashboard.html |
 
-Login: https://marriageducation.com/ambassador-login.html
+| Login | URL |
+|-------|-----|
+| Ambassador / Senior / Executive | https://marriageducation.com/ambassador-login.html |
+| Regional Director | https://marriageducation.com/rd-login.html |
 
 Cache bust if needed: `?v=20260523prod`
 
-**Deploy note:** `marriageducation.com` = Firebase site `marriage-education` (`hosting:main`). Always deploy both targets: `firebase deploy --only hosting:main,hosting:marriageducation`
+**Deploy note:** `marriageducation.com` is served by **FTP** (GitHub Actions on push to `main`), not Firebase. Push to `main` to update `.com`. Firebase (`firebase deploy --only hosting:main,hosting:marriageducation`) updates `*.web.app` only.
 
 ## Preview (-test, optional)
 

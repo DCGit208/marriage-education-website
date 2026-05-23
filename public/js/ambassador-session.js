@@ -78,7 +78,26 @@
       localStorage.removeItem('ambassadorData');
       localStorage.removeItem(SESSION_UNTIL_KEY);
       localStorage.removeItem(SESSION_BACKUP_KEY);
+      /* Legacy RD login (rd-login.html) — clear so logout cannot auto-restore */
+      localStorage.removeItem('rdCode');
+      localStorage.removeItem('rdEmail');
+      localStorage.removeItem('rdName');
+      localStorage.removeItem('rdData');
+      sessionStorage.removeItem('dos_preview_path');
     } catch (e) { /* ignore */ }
+  }
+
+  function performLogout(loginPath) {
+    clearSession();
+    var dest = loginPath || '/ambassador-login.html?logged_out=1';
+    if (global.MEAmbassadorRoutes) {
+      global.MEAmbassadorRoutes.clearPreviewDestination();
+    }
+    return unregisterServiceWorkers().then(function () {
+      global.location.replace(dest);
+    }).catch(function () {
+      global.location.replace(dest);
+    });
   }
 
   function loginUrlForPath(path) {
@@ -99,6 +118,7 @@
     getCode: getCode,
     touchSession: touchSession,
     clearSession: clearSession,
+    performLogout: performLogout,
     loginUrlForPath: loginUrlForPath,
     unregisterServiceWorkers: unregisterServiceWorkers
   };
