@@ -5,224 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regional Director Login | Marriage Education</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="js/role-login-shell.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            --accent: #667eea;
+            --accent-gradient: linear-gradient(135deg, #667eea, #764ba2);
         }
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 450px;
-            width: 100%;
-            padding: 40px;
-        }
-        .logo-section { text-align: center; margin-bottom: 30px; }
-        .logo-section i { font-size: 64px; color: #667eea; margin-bottom: 20px; display: block; }
-        .logo-section h1 { color: #333; font-size: 28px; margin-bottom: 10px; }
-        .logo-section p { color: #666; font-size: 16px; }
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; color: #333; font-weight: 600; margin-bottom: 8px; }
-        .form-group input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-        }
-        .form-group input:focus { outline: none; border-color: #667eea; }
-        .btn-login {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 16px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
-        .links { text-align: center; margin-top: 20px; }
-        .links a { color: #667eea; text-decoration: none; font-weight: 600; display: block; margin: 10px 0; }
-        .error-message, .success-message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .error-message { background: #fee; color: #c33; }
-        .success-message { background: #efe; color: #3c3; }
-        .logged-out-note {
-            background: #f3f4f6;
-            color: #374151;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
+        .login-header .role-icon { color: #667eea; }
     </style>
 </head>
-<body>
+<body data-login-role="regional_director">
     <div class="login-container">
-        <div class="logo-section">
-            <i class="fas fa-crown"></i>
-            <h1>Regional Director</h1>
-            <p>Deployment Operations login</p>
+        <div class="login-header">
+            <i class="fas fa-crown role-icon"></i>
+            <h1>Regional Director Login</h1>
+            <p>Regional command · code format <strong>RD-…</strong> (not AMB-)</p>
         </div>
-
-        <div id="loggedOutNote" class="logged-out-note">You have been logged out. Sign in again with your RD code and email.</div>
+        <div id="loggedOutNote" class="logged-out-note">You have been logged out. Sign in with your RD-… code and email.</div>
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
-
         <form id="loginForm">
             <div class="form-group">
                 <label for="rdCode"><i class="fas fa-id-badge"></i> Regional Director Code</label>
-                <input type="text" id="rdCode" name="rdCode" placeholder="e.g., RD-AYIN-5087" required style="text-transform: uppercase;" autocomplete="username">
+                <input type="text" id="rdCode" required placeholder="RD-YOURNAME-1234" style="text-transform:uppercase" autocomplete="username">
             </div>
             <div class="form-group">
                 <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
-                <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+                <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
             </div>
-            <button type="submit" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Login to RD Dashboard
-            </button>
+            <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Login to RD Dashboard</button>
         </form>
-
-        <div class="links">
-            <a href="rd-register.html"><i class="fas fa-crown"></i> Apply to Become a Regional Director</a>
-            <a href="ambassador-login.html"><i class="fas fa-user"></i> Ambassador / Senior Login</a>
-            <a href="index.html"><i class="fas fa-home"></i> Back to Home</a>
+        <div class="other-logins">
+            <p>Not a Regional Director?</p>
+            <a href="senior-login.html"><i class="fas fa-star"></i> Senior Ambassador Login (AMB-…)</a>
+            <a href="ambassador-login.html"><i class="fas fa-user"></i> Ambassador Login (AMB-…)</a>
+            <a href="executive-login.html"><i class="fas fa-earth-americas"></i> Executive Login</a>
         </div>
+        <a class="home-link" href="rd-register.html">Apply to become a Regional Director</a>
+        <a class="home-link" href="index.html"><i class="fas fa-home"></i> Back to Home</a>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script src="js/ambassador-session.js?v=20260523prod"></script>
-    <script src="js/ambassador-account-resolve.js?v=20260523prod"></script>
-    <script src="js/ambassador-routes.js?v=20260523prod"></script>
-    <script>
-        const errorMsg = document.getElementById('errorMessage');
-        const successMsg = document.getElementById('successMessage');
-        const loggedOutNote = document.getElementById('loggedOutNote');
-
-        function hideMessages() {
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
-        }
-        function showError(message) {
-            errorMsg.textContent = message;
-            errorMsg.style.display = 'block';
-            successMsg.style.display = 'none';
-        }
-        function showSuccess(message) {
-            successMsg.textContent = message;
-            successMsg.style.display = 'block';
-            errorMsg.style.display = 'none';
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const codeParam = urlParams.get('code');
-        if (codeParam) {
-            document.getElementById('rdCode').value = codeParam.toUpperCase();
-        }
-        if (urlParams.get('logged_out') === '1') {
-            loggedOutNote.style.display = 'block';
-            if (typeof MEAmbassadorSession !== 'undefined') {
-                MEAmbassadorSession.clearSession();
-            }
-        } else {
-            (function tryAutoLogin() {
-                const code = localStorage.getItem('ambassadorCode');
-                const data = localStorage.getItem('ambassadorData');
-                if (!code || !data) return;
-                try {
-                    const parsed = JSON.parse(data);
-                    const st = (parsed.status || '').toString().toLowerCase();
-                    const type = (parsed.ambassador_type || '').toString().toLowerCase();
-                    if (['active', 'approved', 'activated', 'confirmed'].includes(st) &&
-                        type === 'regional_director') {
-                        window.location.replace('/regional-director/rd-dashboard.html');
-                    }
-                } catch (e) { /* ignore */ }
-            })();
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const rdCode = document.getElementById('rdCode').value.toUpperCase().trim();
-            const email = document.getElementById('email').value.toLowerCase().trim();
-            const submitBtn = this.querySelector('.btn-login');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            hideMessages();
-
-            try {
-                if (typeof db === 'undefined') {
-                    throw new Error('Database connection failed. Please refresh the page.');
-                }
-                let ambassadorData;
-                let sessionCode = rdCode;
-
-                if (typeof MEAmbassadorAccountResolve !== 'undefined') {
-                    const resolved = await MEAmbassadorAccountResolve.resolveAccount(db, rdCode, email);
-                    if (!resolved) {
-                        throw new Error('RD code not found. Use your RD-… code and registered email.');
-                    }
-                    sessionCode = resolved.id;
-                    ambassadorData = resolved.stats;
-                } else {
-                    const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
-                    if (!rdDoc.exists) {
-                        throw new Error('Regional Director code not found.');
-                    }
-                    ambassadorData = rdDoc.data();
-                    ambassadorData.ambassador_type = 'regional_director';
-                    if (ambassadorData.email && ambassadorData.email.toLowerCase() !== email) {
-                        throw new Error('Email does not match this RD code.');
-                    }
-                }
-
-                const type = (ambassadorData.ambassador_type || '').toString().toLowerCase();
-                if (type !== 'regional_director') {
-                    throw new Error('This code is not a Regional Director account. Use Ambassador Login instead.');
-                }
-
-                const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
-                const accountStatus = (ambassadorData.status || '').toString().toLowerCase();
-                if (!validStatuses.includes(accountStatus)) {
-                    throw new Error('Your account is pending approval. Please wait for admin confirmation.');
-                }
-
-                if (typeof MEAmbassadorSession !== 'undefined') {
-                    MEAmbassadorSession.saveSession(sessionCode, email, ambassadorData);
-                } else {
-                    localStorage.setItem('ambassadorCode', sessionCode);
-                    localStorage.setItem('ambassadorEmail', email);
-                    localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
-                }
-
-                showSuccess('Login successful! Redirecting to your RD dashboard…');
-                setTimeout(function () {
-                    window.location.replace('/regional-director/rd-dashboard.html');
-                }, 600);
-            } catch (error) {
-                console.error('RD login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to RD Dashboard';
-            }
-        });
-    </script>
+    <script src="js/ambassador-session.js?v=20260524b"></script>
+    <script src="js/ambassador-account-resolve.js?v=20260524b"></script>
+    <script src="js/ambassador-routes.js?v=20260524b"></script>
+    <script src="js/role-login.js?v=20260524b"></script>
+    <script>MERoleLogin.init('regional_director');</script>
 </body>
 </html>

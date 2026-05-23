@@ -180,23 +180,24 @@
     <div class="login-container">
         <div class="login-header">
             <h1>Ambassador Login</h1>
-            <p>For <strong>AMB-…</strong> codes (Ambassador &amp; Senior). Regional Directors use <a href="rd-login.html" style="color:#00a085;font-weight:600">RD Login</a>.</p>
+            <p>Marriage Literacy Ambassador · code format <strong>AMB-…</strong> only</p>
         </div>
 
+        <div id="loggedOutNote" class="logged-out-note" style="display:none;background:#f3f4f6;color:#374151;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.875rem">You have been logged out.</div>
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="ambassadorCode">Ambassador Code (AMB-…)</label>
+                <label for="loginCode">Ambassador Code</label>
                 <input 
                     type="text" 
-                    id="ambassadorCode" 
-                    name="ambassadorCode" 
+                    id="loginCode" 
+                    name="loginCode" 
                     placeholder="AMB-YOURNAME-1234"
                     required
                     autocomplete="username"
-                    title="Ambassador codes start with AMB-. RD accounts: use RD Login."
+                    style="text-transform:uppercase"
                 >
             </div>
 
@@ -212,7 +213,7 @@
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                <i class="fas fa-sign-in-alt"></i> Login to Ambassador Dashboard
             </button>
         </form>
 
@@ -233,10 +234,10 @@
         </div>
 
         <div class="alternative-actions" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
-            <p>Regional Director?</p>
-            <a href="rd-login.html">
-                <i class="fas fa-crown"></i> Login with your RD-… code
-            </a>
+            <p>Another role?</p>
+            <a href="senior-login.html"><i class="fas fa-star"></i> Senior Ambassador Login</a>
+            <a href="rd-login.html"><i class="fas fa-crown"></i> Regional Director Login (RD-…)</a>
+            <a href="executive-login.html"><i class="fas fa-earth-americas"></i> Executive Login</a>
         </div>
     </div>
 
@@ -245,182 +246,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script src="js/ambassador-session.js"></script>
-    <script src="js/ambassador-account-resolve.js"></script>
-    <script src="js/ambassador-routes.js"></script>
-
-    <script>
-        const errorMsg = document.getElementById('errorMessage');
-        const successMsg = document.getElementById('successMessage');
-
-        // Login form handler - Firestore-based authentication
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const code = document.getElementById('ambassadorCode').value.toUpperCase();
-            const email = document.getElementById('email').value.toLowerCase();
-            
-            const submitBtn = this.querySelector('.btn-login');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            
-            hideMessages();
-            
-            try {
-                // Check if Firebase is loaded
-                if (typeof db === 'undefined') {
-                    throw new Error('Database connection failed. Please refresh the page.');
-                }
-                
-                let ambassadorData;
-                let sessionCode = code;
-
-                if (typeof MEAmbassadorAccountResolve !== 'undefined') {
-                    const resolved = await MEAmbassadorAccountResolve.resolveAccount(db, code, email);
-                    if (!resolved) {
-                        throw new Error('Code not found. Ambassador codes start with AMB-. Regional Directors must use RD Login with their RD-… code.');
-                    }
-                    sessionCode = resolved.id;
-                    ambassadorData = resolved.stats;
-                } else {
-                    const ambassadorDoc = await db.collection('ambassadors').doc(code).get();
-                    if (!ambassadorDoc.exists) {
-                        throw new Error('Ambassador code not found. Please check your code or register.');
-                    }
-                    ambassadorData = ambassadorDoc.data();
-                    if (!ambassadorData.email) {
-                        throw new Error('Your account is missing email information. Please contact admin.');
-                    }
-                    if (ambassadorData.email.toLowerCase() !== email) {
-                        throw new Error('Email does not match the ambassador code. Please check your credentials.');
-                    }
-                }
-
-                const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
-                const accountStatus = (ambassadorData.status || '').toString().toLowerCase();
-                if (!validStatuses.includes(accountStatus)) {
-                    throw new Error('Your account is pending approval. Please wait for admin confirmation.');
-                }
-
-                if (typeof MEAmbassadorSession !== 'undefined') {
-                    MEAmbassadorSession.saveSession(sessionCode, email, ambassadorData);
-                } else {
-                    localStorage.setItem('ambassadorCode', sessionCode);
-                    localStorage.setItem('ambassadorEmail', email);
-                    localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
-                }
-                code = sessionCode;
-                
-                const welcomeMsg = typeof MEAmbassadorRoutes !== 'undefined'
-                    ? MEAmbassadorRoutes.getWelcomeMessageForType(ambassadorData.ambassador_type)
-                    : '✅ Login successful! Redirecting to dashboard...';
-                showSuccess(welcomeMsg);
-                
-                setTimeout(() => {
-                    if (typeof MEAmbassadorRoutes !== 'undefined') {
-                        const dest = MEAmbassadorRoutes.resolveLoginRedirect(
-                            ambassadorData,
-                            window.location.search
-                        );
-                        window.location.replace(dest);
-                    } else {
-                        window.location.replace('/ambassador/dashboard.html');
-                    }
-                }, 800);
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                showError(error.message || 'Login failed. Please try again.');
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to Dashboard';
-            }
-        });
-
-        // Forgot code handler
-        document.getElementById('forgotCodeLink').addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            const email = prompt('Enter your email address:');
-            
-            if (!email) return;
-            
-            try {
-                // Find ambassador by email
-                const snapshot = await db.collection('ambassadors')
-                    .where('email', '==', email.toLowerCase())
-                    .get();
-                
-                if (snapshot.empty) {
-                    throw new Error('No ambassador found with this email address.');
-                }
-                
-                const ambassador = snapshot.docs[0].data();
-                
-                showSuccess(`✅ Your code is: ${ambassador.code}\n\n(In production, this would be sent via email)`);
-                
-                // TODO: Send email with code using Firebase Functions or email service
-                
-            } catch (error) {
-                console.error('Forgot code error:', error);
-                showError(error.message || 'Could not retrieve code. Please contact support.');
-            }
-        });
-
-        function showError(message) {
-            errorMsg.textContent = message;
-            errorMsg.style.display = 'block';
-            successMsg.style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            successMsg.textContent = message;
-            successMsg.style.display = 'block';
-            errorMsg.style.display = 'none';
-        }
-
-        function hideMessages() {
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
-        }
-
-        // Auto-fill code from URL parameter (if coming from approval email)
-        const urlParams = new URLSearchParams(window.location.search);
-        const codeParam = urlParams.get('code');
-        if (codeParam) {
-            document.getElementById('ambassadorCode').value = codeParam;
-        }
-
-        // Auto-login: if already authenticated, go straight to dashboard (skip after logout)
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('logged_out') === '1') {
-                if (typeof MEAmbassadorSession !== 'undefined') {
-                    MEAmbassadorSession.clearSession();
-                }
-                return;
-            }
-            const code = localStorage.getItem('ambassadorCode');
-            const data = localStorage.getItem('ambassadorData');
-            if (code && data) {
-                try {
-                    const parsed = JSON.parse(data);
-                    const st = (parsed.status || '').toString().toLowerCase();
-                    if (parsed && ['active', 'approved', 'activated', 'confirmed'].includes(st)) {
-                        if (typeof MEAmbassadorRoutes !== 'undefined') {
-                            const dest = MEAmbassadorRoutes.resolveLoginRedirect(
-                                parsed,
-                                window.location.search
-                            );
-                            window.location.replace(dest);
-                        } else {
-                            window.location.replace('/ambassador/dashboard.html');
-                        }
-                    }
-                } catch(e) {}
-            }
-        })();
-    </script>
+    <script src="js/ambassador-session.js?v=20260524b"></script>
+    <script src="js/ambassador-account-resolve.js?v=20260524b"></script>
+    <script src="js/ambassador-routes.js?v=20260524b"></script>
+    <script src="js/role-login.js?v=20260524b"></script>
+    <script>MERoleLogin.init('ambassador');</script>
   
   <!-- Marriage Education Intelligent Assistant -->
   <script src="marriage-chatbot.js"></script>

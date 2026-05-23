@@ -92,18 +92,19 @@
     }
   }
 
-  /**
-   * Login entry URL after logout (or unauthenticated redirect).
-   * RD uses rd-login.html (branded); all roles can also use ambassador-login.html.
-   */
-  function getLoginPathForRank(rank, opts) {
-    var options = opts || {};
+  /** Login page URL per rank (each role has its own branded page). */
+  function getLoginPathForRank(rank) {
     var type = (rank || 'ambassador').toString().toLowerCase();
-    if (type === 'regional_director') {
-      return '/rd-login.html?logged_out=1';
+    if (global.MERoleLogin && global.MERoleLogin.getLoginPathForRole) {
+      if (type === 'senior') return global.MERoleLogin.getLoginPathForRole('senior');
+      if (type === 'regional_director') return global.MERoleLogin.getLoginPathForRole('regional_director');
+      if (type === 'executive') return global.MERoleLogin.getLoginPathForRole('executive');
+      return global.MERoleLogin.getLoginPathForRole('ambassador');
     }
-    var next = options.next || getDashboardPathForType(type === 'executive' ? 'executive' : type === 'senior' ? 'senior' : 'regular');
-    return '/ambassador-login.html?logged_out=1&next=' + encodeURIComponent(next);
+    if (type === 'regional_director') return '/rd-login.html?logged_out=1';
+    if (type === 'senior') return '/senior-login.html?logged_out=1';
+    if (type === 'executive') return '/executive-login.html?logged_out=1';
+    return '/ambassador-login.html?logged_out=1';
   }
 
   function performLogoutForRank(rank) {

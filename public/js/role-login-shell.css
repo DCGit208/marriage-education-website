@@ -1,0 +1,81 @@
+/* Shared layout for role-specific login pages */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.login-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  max-width: 450px;
+  width: 100%;
+  padding: 2.5rem;
+}
+.login-header { text-align: center; margin-bottom: 1.75rem; }
+.login-header .role-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+.login-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; color: #1f2937; }
+.login-header p { color: #6b7280; font-size: 0.95rem; line-height: 1.5; }
+.form-group { margin-bottom: 1.25rem; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
+.form-group input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+.form-group input:focus { outline: none; border-color: var(--accent, #00b894); }
+.btn-login {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  background: var(--accent-gradient, linear-gradient(135deg, #00b894, #00a085));
+}
+.btn-login:disabled { opacity: 0.65; cursor: not-allowed; }
+.error-message, .success-message {
+  padding: 0.875rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: none;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.error-message { background: #fef2f2; color: #991b1b; }
+.error-message a { color: #b91c1c; font-weight: 600; }
+.success-message { background: #ecfdf5; color: #065f46; }
+.logged-out-note {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: none;
+}
+.other-logins {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+.other-logins p { font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; text-align: center; }
+.other-logins a {
+  display: block;
+  text-align: center;
+  color: var(--accent, #00b894);
+  font-weight: 600;
+  text-decoration: none;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+.other-logins a:hover { text-decoration: underline; }
+.home-link { display: block; text-align: center; margin-top: 1rem; color: #9ca3af; font-size: 0.85rem; }
