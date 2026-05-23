@@ -943,6 +943,8 @@
       console.error(err);
       showLoadError('Some sections failed to load. Try refreshing the page.');
     }
+
+    maybeStartDashboardTour(code);
   }
 
   var pipelineCache = [];
@@ -1114,6 +1116,12 @@
     }
 
     bindShareButtons();
+  }
+
+  function maybeStartDashboardTour(code) {
+    if (global.DOSTour && global.DOSTour.onDashboardReady) {
+      global.DOSTour.onDashboardReady(code);
+    }
   }
 
   var sessionKeepAliveId = null;

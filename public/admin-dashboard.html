@@ -720,12 +720,17 @@
         }
 
         .parity-health-card {
-            background: linear-gradient(180deg, #ffffff 0%, #f4f7ff 100%);
+            background: #f8fbff;
+            padding-bottom: 1rem;
         }
 
         .parity-header {
             flex-wrap: wrap;
             gap: 1rem;
+        }
+
+        .parity-header-copy {
+            max-width: 520px;
         }
 
         .parity-actions {
@@ -747,68 +752,100 @@
             padding: 0.4rem 0.85rem;
         }
 
-        .parity-health-grid {
+        .parity-overview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1rem;
             padding: 1.5rem 1.5rem 0;
         }
 
-        .parity-detail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 1rem;
-            padding: 0 1.5rem 1rem;
-        }
-
-        .parity-card {
+        .parity-metric-card {
             background: white;
+            border-radius: 18px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+            padding: 1.35rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .metric-icon {
+            width: 52px;
+            height: 52px;
             border-radius: 14px;
-            padding: 1.1rem 1.3rem;
-            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
             display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
         }
 
-        .parity-main-card {
-            border: 1px solid rgba(99, 102, 241, 0.13);
+        .metric-icon-legacy {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
         }
 
-        .parity-delta-card {
-            border: 1px solid rgba(234, 179, 8, 0.2);
-            background: rgba(255, 249, 196, 0.5);
+        .metric-icon-pending {
+            background: linear-gradient(135deg, #f97316, #fb923c);
         }
 
-        .detail-card {
-            border: 1px solid rgba(148, 163, 184, 0.16);
+        .metric-icon-action {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
         }
 
-        .parity-card-label {
-            font-size: 0.92rem;
-            color: #475569;
-            font-weight: 700;
+        .metric-icon-delta {
+            background: linear-gradient(135deg, #eab308, #facc15);
         }
 
-        .parity-card-value {
-            font-size: 1.9rem;
+        .metric-value {
+            font-size: 2rem;
             font-weight: 800;
             color: #111827;
         }
 
-        .parity-card-note {
-            color: #64748b;
-            font-size: 0.9rem;
-            line-height: 1.4;
+        .metric-label {
+            color: #475569;
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
         }
 
-        .parity-footer {
+        .parity-detail-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1rem 1.5rem 1.25rem;
+        }
+
+        .parity-detail-item {
+            background: white;
+            border-radius: 14px;
+            padding: 1rem 1.15rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            padding: 0 1.5rem 1.25rem;
-            color: #64748b;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .parity-detail-updated {
+            min-width: 220px;
+        }
+
+        .detail-label {
+            color: #475569;
             font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #111827;
+            text-align: right;
+        }
+
+        .parity-detail-item .detail-value {
+            text-align: right;
         }
 
         /* Bulk Action Buttons */
@@ -1420,9 +1457,9 @@
                 <!-- Payment Parity Summary (Legacy vs Unified) -->
                 <div class="table-card parity-health-card">
                     <div class="table-header parity-header">
-                        <div>
+                        <div class="parity-header-copy">
                             <h2>Migration Health Snapshot</h2>
-                            <p class="section-subtitle">Legacy payment queues compared to the new unified payments ledger.</p>
+                            <p class="section-subtitle">Compare legacy payment queues and the new unified payments ledger at a glance.</p>
                         </div>
                         <div class="table-actions parity-actions">
                             <span id="parityStateBadge" class="badge badge-secondary parity-badge">Checking...</span>
@@ -1431,41 +1468,49 @@
                             </button>
                         </div>
                     </div>
-                    <div class="parity-health-grid">
-                        <div class="parity-card parity-main-card">
-                            <div class="parity-card-label">Legacy Queue Total</div>
-                            <div class="parity-card-value" id="legacyActionQueueCount">-</div>
-                            <div class="parity-card-note">Books + bonuses pending</div>
+                    <div class="parity-overview-grid">
+                        <div class="parity-metric-card">
+                            <div class="metric-icon metric-icon-legacy"><i class="fas fa-inbox"></i></div>
+                            <div>
+                                <div class="metric-value" id="legacyActionQueueCount">-</div>
+                                <div class="metric-label">Legacy queue total</div>
+                            </div>
                         </div>
-                        <div class="parity-card parity-main-card">
-                            <div class="parity-card-label">Unified Pending</div>
-                            <div class="parity-card-value" id="unifiedPendingStatusCount">-</div>
-                            <div class="parity-card-note">Payments still pending in unified ledger</div>
+                        <div class="parity-metric-card">
+                            <div class="metric-icon metric-icon-pending"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <div class="metric-value" id="unifiedPendingStatusCount">-</div>
+                                <div class="metric-label">Unified pending</div>
+                            </div>
                         </div>
-                        <div class="parity-card parity-main-card">
-                            <div class="parity-card-label">Action Required</div>
-                            <div class="parity-card-value" id="unifiedActionQueueCount">-</div>
-                            <div class="parity-card-note">Unified records needing review or fulfillment</div>
+                        <div class="parity-metric-card">
+                            <div class="metric-icon metric-icon-action"><i class="fas fa-tasks"></i></div>
+                            <div>
+                                <div class="metric-value" id="unifiedActionQueueCount">-</div>
+                                <div class="metric-label">Action required</div>
+                            </div>
                         </div>
-                        <div class="parity-card parity-delta-card">
-                            <div class="parity-card-label">Queue Delta</div>
-                            <div class="parity-card-value" id="parityDeltaCount">-</div>
-                            <div class="parity-card-note">Unified - legacy difference</div>
-                        </div>
-                    </div>
-                    <div class="parity-detail-grid">
-                        <div class="parity-card detail-card">
-                            <div class="parity-card-label">Legacy Pending (Books)</div>
-                            <div class="parity-card-value" id="legacyPendingCount">-</div>
-                        </div>
-                        <div class="parity-card detail-card">
-                            <div class="parity-card-label">Legacy Pending (Bonuses)</div>
-                            <div class="parity-card-value" id="legacyRDBonusCount">-</div>
+                        <div class="parity-metric-card parity-metric-card-delta">
+                            <div class="metric-icon metric-icon-delta"><i class="fas fa-chart-line"></i></div>
+                            <div>
+                                <div class="metric-value" id="parityDeltaCount">-</div>
+                                <div class="metric-label">Queue delta</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="parity-footer">
-                        <span>Updated:</span>
-                        <span id="parityUpdatedAt">checking...</span>
+                    <div class="parity-detail-row">
+                        <div class="parity-detail-item">
+                            <div class="detail-label">Legacy books</div>
+                            <div class="detail-value" id="legacyPendingCount">-</div>
+                        </div>
+                        <div class="parity-detail-item">
+                            <div class="detail-label">Legacy bonuses</div>
+                            <div class="detail-value" id="legacyRDBonusCount">-</div>
+                        </div>
+                        <div class="parity-detail-item parity-detail-updated">
+                            <div class="detail-label">Updated</div>
+                            <div class="detail-value" id="parityUpdatedAt">checking...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -2438,18 +2483,23 @@
                     const recruiterCode = data.rd_code || data.recruiter_code || 'N/A';
                     const recruiterName = data.rd_name || data.recruiter_name || 'N/A';
                     const recruiterType = data.recruiter_type || (String(recruiterCode).startsWith('RD-') ? 'regional_director' : 'ambassador');
-                    const roleLabel = recruiterType === 'regional_director'
+                    const roleLabel = recruiterType === 'rd_network_override'
+                        ? '<span class="badge" style="background:#9333ea;">RD Override</span>'
+                        : recruiterType === 'regional_director'
                         ? '<span class="badge" style="background:#9333ea;">RD</span>'
                         : (recruiterType === 'senior'
                             ? '<span class="badge" style="background:#6c5ce7;">Senior</span>'
                             : '<span class="badge" style="background:#00b894;">Ambassador</span>');
+                    const viaTeam = data.recruiting_ambassador_code
+                        ? `<br><small style="color:#636e72;">via ${data.recruiting_ambassador_code}</small>`
+                        : '';
                     
                     html += `
                         <tr>
                             <td><strong style="color:var(--primary);">${recruiterCode}</strong></td>
                             <td>${recruiterName}</td>
                             <td>${roleLabel}</td>
-                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span></td>
+                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span>${viaTeam}</td>
                             <td>${data.ambassador_name || 'N/A'}</td>
                             <td><strong style="color:var(--success);font-size:1.1rem;">${(data.amount || 0).toLocaleString()} FCFA</strong></td>
                             <td style="font-size:0.85rem;color:#636e72;">${date}</td>
