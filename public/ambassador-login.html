@@ -384,8 +384,15 @@
             document.getElementById('ambassadorCode').value = codeParam;
         }
 
-        // Auto-login: if already authenticated, go straight to dashboard
+        // Auto-login: if already authenticated, go straight to dashboard (skip after logout)
         (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('logged_out') === '1') {
+                if (typeof MEAmbassadorSession !== 'undefined') {
+                    MEAmbassadorSession.clearSession();
+                }
+                return;
+            }
             const code = localStorage.getItem('ambassadorCode');
             const data = localStorage.getItem('ambassadorData');
             if (code && data) {

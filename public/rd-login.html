@@ -6,12 +6,7 @@
     <title>Regional Director Login | Marriage Education</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -21,7 +16,6 @@
             justify-content: center;
             padding: 20px;
         }
-
         .login-container {
             background: white;
             border-radius: 20px;
@@ -30,55 +24,20 @@
             width: 100%;
             padding: 40px;
         }
-
-        .logo-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo-section i {
-            font-size: 64px;
-            color: #667eea;
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .logo-section h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .logo-section p {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
+        .logo-section { text-align: center; margin-bottom: 30px; }
+        .logo-section i { font-size: 64px; color: #667eea; margin-bottom: 20px; display: block; }
+        .logo-section h1 { color: #333; font-size: 28px; margin-bottom: 10px; }
+        .logo-section p { color: #666; font-size: 16px; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; color: #333; font-weight: 600; margin-bottom: 8px; }
         .form-group input {
             width: 100%;
             padding: 14px;
             border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s;
         }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
+        .form-group input:focus { outline: none; border-color: #667eea; }
         .btn-login {
             width: 100%;
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -89,146 +48,27 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
             margin-bottom: 20px;
         }
-
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-login:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .links a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            display: block;
-            margin: 10px 0;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .error-message {
-            background: #fee;
-            color: #c33;
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .links { text-align: center; margin-top: 20px; }
+        .links a { color: #667eea; text-decoration: none; font-weight: 600; display: block; margin: 10px 0; }
+        .error-message, .success-message {
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: none;
         }
-
-        .success-message {
-            background: #efe;
-            color: #3c3;
+        .error-message { background: #fee; color: #c33; }
+        .success-message { background: #efe; color: #3c3; }
+        .logged-out-note {
+            background: #f3f4f6;
+            color: #374151;
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
+            font-size: 14px;
             display: none;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 30px 0;
-            color: #999;
-            position: relative;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background: #ddd;
-        }
-
-        .divider::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background: #ddd;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .login-container {
-                padding: 30px 25px;
-            }
-
-            .logo-section h1 {
-                font-size: 24px;
-            }
-
-            .logo-section p {
-                font-size: 14px;
-            }
-
-            .logo-section i {
-                font-size: 48px;
-            }
-
-            .form-group input {
-                font-size: 16px; /* Prevents zoom on iOS */
-                padding: 12px;
-            }
-
-            .btn-login {
-                font-size: 16px;
-                padding: 14px;
-            }
-
-            .links a {
-                font-size: 13px;
-                padding: 10px 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 25px 20px;
-            }
-
-            .logo-section h1 {
-                font-size: 20px;
-            }
-
-            .logo-section i {
-                font-size: 40px;
-            }
-
-            .form-group label {
-                font-size: 14px;
-            }
-
-            .links {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .links a {
-                width: 100%;
-                text-align: center;
-            }
         }
     </style>
 </head>
@@ -236,155 +76,153 @@
     <div class="login-container">
         <div class="logo-section">
             <i class="fas fa-crown"></i>
-            <div style="background: #ffc107; color: #333; padding: 6px 12px; border-radius: 6px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 10px;">🔥 FIREBASE TEST</div>
             <h1>Regional Director</h1>
-            <p>Login to Your Dashboard</p>
+            <p>Deployment Operations login</p>
         </div>
 
+        <div id="loggedOutNote" class="logged-out-note">You have been logged out. Sign in again with your RD code and email.</div>
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
 
         <form id="loginForm">
             <div class="form-group">
                 <label for="rdCode"><i class="fas fa-id-badge"></i> Regional Director Code</label>
-                <input type="text" id="rdCode" name="rdCode" placeholder="e.g., RD-JOHN-1234" required style="text-transform: uppercase;">
+                <input type="text" id="rdCode" name="rdCode" placeholder="e.g., RD-AYIN-5087" required style="text-transform: uppercase;" autocomplete="username">
             </div>
-
             <div class="form-group">
                 <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
-                <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
             </div>
-
             <button type="submit" class="btn-login">
-                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                <i class="fas fa-sign-in-alt"></i> Login to RD Dashboard
             </button>
         </form>
 
-        <div class="divider">or</div>
-
         <div class="links">
             <a href="rd-register.html"><i class="fas fa-crown"></i> Apply to Become a Regional Director</a>
-            <a href="ambassador-login.html"><i class="fas fa-user"></i> Ambassador Login</a>
+            <a href="ambassador-login.html"><i class="fas fa-user"></i> Ambassador / Senior Login</a>
             <a href="index.html"><i class="fas fa-home"></i> Back to Home</a>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/ambassador-session.js?v=20260523prod"></script>
+    <script src="js/ambassador-account-resolve.js?v=20260523prod"></script>
+    <script src="js/ambassador-routes.js?v=20260523prod"></script>
     <script>
-        // Initialize Firebase directly
-        const firebaseConfig = {
-            apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
-            authDomain: "marriage-education.firebaseapp.com",
-            projectId: "marriage-education",
-            storageBucket: "marriage-education.firebasestorage.app",
-            messagingSenderId: "730854285800",
-            appId: "1:730854285800:web:2176d278397398fd41045d"
-        };
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        // Firebase Cloud Functions
-        const functions = firebase.functions();
         const errorMsg = document.getElementById('errorMessage');
         const successMsg = document.getElementById('successMessage');
+        const loggedOutNote = document.getElementById('loggedOutNote');
 
         function hideMessages() {
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
         }
-
         function showError(message) {
             errorMsg.textContent = message;
             errorMsg.style.display = 'block';
             successMsg.style.display = 'none';
         }
-
         function showSuccess(message) {
             successMsg.textContent = message;
             successMsg.style.display = 'block';
             errorMsg.style.display = 'none';
         }
 
-        // Auto-fill RD code from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const codeParam = urlParams.get('code');
         if (codeParam) {
             document.getElementById('rdCode').value = codeParam.toUpperCase();
         }
+        if (urlParams.get('logged_out') === '1') {
+            loggedOutNote.style.display = 'block';
+            if (typeof MEAmbassadorSession !== 'undefined') {
+                MEAmbassadorSession.clearSession();
+            }
+        } else {
+            (function tryAutoLogin() {
+                const code = localStorage.getItem('ambassadorCode');
+                const data = localStorage.getItem('ambassadorData');
+                if (!code || !data) return;
+                try {
+                    const parsed = JSON.parse(data);
+                    const st = (parsed.status || '').toString().toLowerCase();
+                    const type = (parsed.ambassador_type || '').toString().toLowerCase();
+                    if (['active', 'approved', 'activated', 'confirmed'].includes(st) &&
+                        type === 'regional_director') {
+                        window.location.replace('/regional-director/rd-dashboard.html');
+                    }
+                } catch (e) { /* ignore */ }
+            })();
+        }
 
-        // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
-            const rdCode = document.getElementById('rdCode').value.toUpperCase();
-            const email = document.getElementById('email').value.toLowerCase();
-            
+            const rdCode = document.getElementById('rdCode').value.toUpperCase().trim();
+            const email = document.getElementById('email').value.toLowerCase().trim();
             const submitBtn = this.querySelector('.btn-login');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            
             hideMessages();
-            
+
             try {
-                // Call Firebase Cloud Function
-                const getRDStats = functions.httpsCallable('getRDStats');
-                const result = await getRDStats({ code: rdCode, email: email });
-                
-                if (!result.data.success || !result.data.rd) {
-                    throw new Error('Invalid Regional Director code or email. Please try again.');
+                if (typeof db === 'undefined') {
+                    throw new Error('Database connection failed. Please refresh the page.');
                 }
-                
-                const rd = result.data.rd;
-                
-                // Check payment status
-                if (rd.status === 'pending_payment') {
-                    throw new Error('Your payment is pending. Please complete payment to activate your account. Check your email for instructions.');
+                let ambassadorData;
+                let sessionCode = rdCode;
+
+                if (typeof MEAmbassadorAccountResolve !== 'undefined') {
+                    const resolved = await MEAmbassadorAccountResolve.resolveAccount(db, rdCode, email);
+                    if (!resolved) {
+                        throw new Error('RD code not found. Use your RD-… code and registered email.');
+                    }
+                    sessionCode = resolved.id;
+                    ambassadorData = resolved.stats;
+                } else {
+                    const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
+                    if (!rdDoc.exists) {
+                        throw new Error('Regional Director code not found.');
+                    }
+                    ambassadorData = rdDoc.data();
+                    ambassadorData.ambassador_type = 'regional_director';
+                    if (ambassadorData.email && ambassadorData.email.toLowerCase() !== email) {
+                        throw new Error('Email does not match this RD code.');
+                    }
                 }
-                
-                // Store RD data in localStorage
-                localStorage.setItem('rdCode', rdCode);
-                localStorage.setItem('rdEmail', email);
-                localStorage.setItem('rdName', rd.name);
-                localStorage.setItem('rdData', JSON.stringify(rd));
-                
-                // Show success
-                showSuccess('✅ Login successful! Redirecting to dashboard...');
-                
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = 'regional-director/dashboard.html';
-                }, 1500);
-                
+
+                const type = (ambassadorData.ambassador_type || '').toString().toLowerCase();
+                if (type !== 'regional_director') {
+                    throw new Error('This code is not a Regional Director account. Use Ambassador Login instead.');
+                }
+
+                const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
+                const accountStatus = (ambassadorData.status || '').toString().toLowerCase();
+                if (!validStatuses.includes(accountStatus)) {
+                    throw new Error('Your account is pending approval. Please wait for admin confirmation.');
+                }
+
+                if (typeof MEAmbassadorSession !== 'undefined') {
+                    MEAmbassadorSession.saveSession(sessionCode, email, ambassadorData);
+                } else {
+                    localStorage.setItem('ambassadorCode', sessionCode);
+                    localStorage.setItem('ambassadorEmail', email);
+                    localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+                }
+
+                showSuccess('Login successful! Redirecting to your RD dashboard…');
+                setTimeout(function () {
+                    window.location.replace('/regional-director/rd-dashboard.html');
+                }, 600);
             } catch (error) {
-                console.error('Login error:', error);
-                
-                let errorMessage = 'Login failed. Please try again.';
-                
-                if (error.code === 'functions/not-found') {
-                    errorMessage = 'Regional Director code not found. Please check your code or apply.';
-                } else if (error.code === 'functions/permission-denied') {
-                    errorMessage = 'Email does not match our records. Please check and try again.';
-                } else if (error.code === 'functions/invalid-argument') {
-                    errorMessage = 'Please provide both RD code and email address.';
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
-                
-                showError(errorMessage);
-                
+                console.error('RD login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to Dashboard';
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to RD Dashboard';
             }
         });
     </script>
-
-  <!-- Marriage Education Chatbot -->
-  <script src="marriage-chatbot.js"></script>
 </body>
 </html>

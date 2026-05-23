@@ -1103,12 +1103,13 @@
     var logout = document.getElementById('dosLogout');
     if (logout) {
       logout.addEventListener('click', function () {
-        localStorage.removeItem('ambassadorCode');
-        localStorage.removeItem('ambassadorEmail');
-        localStorage.removeItem('ambassadorData');
-        if (global.MEAmbassadorRoutes) global.MEAmbassadorRoutes.clearPreviewDestination();
+        var rank = getRank();
+        if (global.MEAmbassadorRoutes && global.MEAmbassadorRoutes.performLogoutForRank) {
+          global.MEAmbassadorRoutes.performLogoutForRank(rank);
+          return;
+        }
         if (global.MEAmbassadorSession) global.MEAmbassadorSession.clearSession();
-        window.location.href = '/ambassador-login.html';
+        window.location.replace('/ambassador-login.html?logged_out=1');
       });
     }
 

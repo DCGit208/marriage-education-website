@@ -92,6 +92,38 @@
     }
   }
 
+  /**
+   * Login entry URL after logout (or unauthenticated redirect).
+   * RD uses rd-login.html (branded); all roles can also use ambassador-login.html.
+   */
+  function getLoginPathForRank(rank, opts) {
+    var options = opts || {};
+    var type = (rank || 'ambassador').toString().toLowerCase();
+    if (type === 'regional_director') {
+      return '/rd-login.html?logged_out=1';
+    }
+    var next = options.next || getDashboardPathForType(type === 'executive' ? 'executive' : type === 'senior' ? 'senior' : 'regular');
+    return '/ambassador-login.html?logged_out=1&next=' + encodeURIComponent(next);
+  }
+
+  function performLogoutForRank(rank) {
+    var loginPath = getLoginPathForRank(rank);
+    if (global.MEAmbassadorSession && global.MEAmbassadorSession.performLogout) {
+      return global.MEAmbassadorSession.performLogout(loginPath);
+    }
+    clearPreviewDestination();
+    try {
+      localStorage.removeItem('ambassadorCode');
+      localStorage.removeItem('ambassadorEmail');
+      localStorage.removeItem('ambassadorData');
+      localStorage.removeItem('rdCode');
+      localStorage.removeItem('rdEmail');
+      localStorage.removeItem('rdName');
+      localStorage.removeItem('rdData');
+    } catch (e) { /* ignore */ }
+    global.location.replace(loginPath);
+  }
+
   global.MEAmbassadorRoutes = {
     PREVIEW_SESSION_KEY: PREVIEW_SESSION_KEY,
     getDashboardPathForType: getDashboardPathForType,
@@ -102,6 +134,8 @@
     clearPreviewDestination: clearPreviewDestination,
     isPreviewDestinationActive: isPreviewDestinationActive,
     getWelcomeMessageForType: getWelcomeMessageForType,
+    getLoginPathForRank: getLoginPathForRank,
+    performLogoutForRank: performLogoutForRank,
     redirectToDashboard: redirectToDashboard
   };
 })(typeof window !== 'undefined' ? window : global);
