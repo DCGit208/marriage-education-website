@@ -9,10 +9,13 @@
 | RD | https://marriageducation.com/regional-director/rd-dashboard.html |
 | Executive | https://marriageducation.com/executive/dashboard.html |
 
-| Login | URL |
-|-------|-----|
-| Ambassador / Senior / Executive | https://marriageducation.com/ambassador-login.html |
-| Regional Director | https://marriageducation.com/rd-login.html |
+| Role | Code format | Login URL |
+|------|-------------|-----------|
+| Ambassador / Senior | `AMB-…` | https://marriageducation.com/ambassador-login.html |
+| Regional Director | `RD-…` (Firestore `regional_directors`) | https://marriageducation.com/rd-login.html |
+| Executive | Usually `AMB-…` in `ambassadors` | ambassador-login (routed to executive dashboard) |
+
+Do not use ambassador-login for RD codes — different format, collection, and form.
 
 Cache bust if needed: `?v=20260523prod`
 

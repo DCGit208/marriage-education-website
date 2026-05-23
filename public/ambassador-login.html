@@ -180,7 +180,7 @@
     <div class="login-container">
         <div class="login-header">
             <h1>Ambassador Login</h1>
-            <p>Access your dashboard and track your earnings</p>
+            <p>For <strong>AMB-…</strong> codes (Ambassador &amp; Senior). Regional Directors use <a href="rd-login.html" style="color:#00a085;font-weight:600">RD Login</a>.</p>
         </div>
 
         <div id="errorMessage" class="error-message"></div>
@@ -188,15 +188,15 @@
 
         <form id="loginForm">
             <div class="form-group">
-                <label for="ambassadorCode">Ambassador Code</label>
+                <label for="ambassadorCode">Ambassador Code (AMB-…)</label>
                 <input 
                     type="text" 
                     id="ambassadorCode" 
                     name="ambassadorCode" 
-                    placeholder="AMB-YOURNAME-XXXX"
+                    placeholder="AMB-YOURNAME-1234"
                     required
-                    pattern="AMB-[A-Z]+-[0-9]{4}"
-                    title="Format: AMB-NAME-1234"
+                    autocomplete="username"
+                    title="Ambassador codes start with AMB-. RD accounts: use RD Login."
                 >
             </div>
 
@@ -229,6 +229,13 @@
             <p>Forgot your code?</p>
             <a href="#" id="forgotCodeLink">
                 <i class="fas fa-envelope"></i> Email Me My Code
+            </a>
+        </div>
+
+        <div class="alternative-actions" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+            <p>Regional Director?</p>
+            <a href="rd-login.html">
+                <i class="fas fa-crown"></i> Login with your RD-… code
             </a>
         </div>
     </div>
@@ -271,7 +278,7 @@
                 if (typeof MEAmbassadorAccountResolve !== 'undefined') {
                     const resolved = await MEAmbassadorAccountResolve.resolveAccount(db, code, email);
                     if (!resolved) {
-                        throw new Error('Code not found. For Regional Directors use your RD-… code and registered email.');
+                        throw new Error('Code not found. Ambassador codes start with AMB-. Regional Directors must use RD Login with their RD-… code.');
                     }
                     sessionCode = resolved.id;
                     ambassadorData = resolved.stats;
