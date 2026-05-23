@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Ambassador Dashboard (Preview) | Marriage Education</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="../dos/dos-theme.css">
+</head>
+<body class="dos-app">
+    <div class="dos-test-banner">
+        <span>PREVIEW — Dashboard v2 · Full DOS (Phase 7)</span>
+        <a href="dashboard.html">Open current live dashboard</a>
+        <span>·</span>
+        <a href="senior-dashboard-test.html">Senior preview</a>
+        <span>·</span>
+        <a href="../regional-director/rd-dashboard-test.html">RD preview</a>
+        <span>·</span>
+        <a href="DASHBOARD-ROADMAP.md" target="_blank" rel="noopener">Full roadmap</a>
+        <span>·</span>
+        <a href="DASHBOARD-TEST.md" target="_blank" rel="noopener">Review notes</a>
+    </div>
+
+    <div class="dos-layout">
+        <aside class="dos-sidebar">
+            <div class="dos-brand">
+                <h1>Deployment Ops</h1>
+                <p>Ambassador · Preview</p>
+            </div>
+            <div class="dos-nav-label">Sections</div>
+            <nav class="dos-nav" id="dosSidebarNav" aria-label="Dashboard sections"></nav>
+            <div class="dos-sidebar-footer">
+                <a href="../course-viewer.html?courseId=foundation-school"><i class="fa-solid fa-graduation-cap"></i> Foundation School</a>
+                <a href="resources.html"><i class="fa-solid fa-folder"></i> Resources</a>
+                <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                <a href="../index.html"><i class="fa-solid fa-house"></i> Marriage Education home</a>
+            </div>
+        </aside>
+
+        <div class="dos-main">
+            <header class="dos-topbar">
+                <div>
+                    <h2 id="dosPageTitle">Overview</h2>
+                    <div class="dos-topbar-meta" id="dosTopbarMeta">Loading…</div>
+                    <div class="dos-phase-pill" id="dosPhasePill">Phase 1 preview</div>
+                    <div style="font-size:13px;margin-top:8px">
+                        <strong id="dosUserName">—</strong>
+                        <span style="color:#a1a1aa"> · </span>
+                        <code id="dosUserCode">—</code>
+                    </div>
+                </div>
+                <div class="dos-topbar-actions">
+                    <div class="dos-topbar-links">
+                        <a href="../index.html"><i class="fa-solid fa-house"></i> Home</a>
+                        <a href="../course-viewer.html?courseId=foundation-school"><i class="fa-solid fa-graduation-cap"></i> School</a>
+                        <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                    </div>
+                    <div class="dos-notif-wrap" id="dosNotifWrap">
+                        <button type="button" class="dos-notif-btn" id="dosNotifBtn" title="Announcements" aria-label="Announcements">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="dos-notif-badge" id="dosNotifBadge"></span>
+                        </button>
+                        <div class="dos-notif-panel" id="dosNotifPanel">
+                            <div class="dos-notif-panel-header">
+                                <span>Announcements</span>
+                                <button type="button" id="dosNotifMarkAll">Mark all read</button>
+                            </div>
+                            <div class="dos-notif-list" id="dosNotifList">
+                                <div class="dos-empty" style="padding:20px">No announcements yet</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="dos-btn dos-btn-primary" id="dosCopyPrimary"><i class="fa-solid fa-copy"></i> Copy main link</button>
+                    <a class="dos-btn" href="resources.html">Resources</a>
+                    <button type="button" class="dos-btn dos-btn-danger" id="dosLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                </div>
+            </header>
+
+            <main class="dos-content">
+                <div id="dosLoadError" class="dos-overview-hint" style="display:none;background:#fef2f2;border-color:#fecaca;color:#991b1b"></div>
+                <!-- Overview -->
+                <section class="dos-section active" data-section="overview">
+                    <div class="dos-overview-hint" id="dosOverviewHint">
+                        Use the <strong>left sidebar</strong> — pipeline, retention, daily ops, field deploy, links, commissions, network, formation, and performance.
+                        This preview reorganizes your live dashboard — it does not replace production until you approve.
+                    </div>
+
+                    <div id="dosAlertsOverview"></div>
+
+                    <div id="dosMonthlyTargetMount"></div>
+
+                    <div class="dos-kpi-grid" id="dosOverviewKpis"></div>
+
+                    <div class="dos-card" id="dosSeniorProgressCard">
+                        <h3><i class="fa-solid fa-arrow-up"></i> Path to Senior Ambassador</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Senior rank requires <strong>10 ambassadors recruited</strong> (system auto-promotion). Unit milestones below are deployment levels only.</p>
+                        <div id="dosSeniorProgress"></div>
+                    </div>
+
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-bolt"></i> Quick actions</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px">
+                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="daily-ops"><i class="fa-solid fa-sun"></i> Daily ops</button>
+                            <button type="button" class="dos-btn" data-dos-nav="field-deploy"><i class="fa-solid fa-map-location-dot"></i> Field scripts</button>
+                            <button type="button" class="dos-btn" data-dos-nav="links"><i class="fa-solid fa-link"></i> Deployment links</button>
+                            <button type="button" class="dos-btn" data-dos-nav="commissions"><i class="fa-solid fa-coins"></i> Commissions</button>
+                            <button type="button" class="dos-btn" data-dos-nav="network"><i class="fa-solid fa-sitemap"></i> Network</button>
+                            <button type="button" class="dos-btn" data-dos-nav="formation"><i class="fa-solid fa-graduation-cap"></i> Formation / CRLA</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Daily ops (Phase 2) -->
+                <section class="dos-section" data-section="daily-ops">
+                    <div id="dosDailyOpsBody"></div>
+                </section>
+
+                <!-- Field deploy (Phase 2) -->
+                <section class="dos-section" data-section="field-deploy">
+                    <div id="dosFieldDeployBody"></div>
+                </section>
+
+                <!-- Deployment links -->
+                <section class="dos-section" data-section="links">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-link"></i> Your unique referral link</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Same campaign URL as your live dashboard (marriageducation.com).</p>
+                        <div class="dos-link-row">
+                            <div class="dos-link-box" id="dosPrimaryLink">Loading…</div>
+                            <button type="button" class="dos-btn dos-btn-primary" id="dosCopyPrimary2"><i class="fa-solid fa-copy"></i> Copy</button>
+                        </div>
+                        <div class="dos-share-row" id="dosShareRow">
+                            <button type="button" class="dos-btn" id="dosShareWhatsApp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                            <button type="button" class="dos-btn" id="dosShareFacebook"><i class="fa-brands fa-facebook"></i> Facebook</button>
+                            <button type="button" class="dos-btn" id="dosShareInstagram"><i class="fa-brands fa-instagram"></i> Instagram caption</button>
+                        </div>
+                    </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-boxes-stacked"></i> Multi-product deployment links</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 16px">Books, schools, courses, premium, corporate, community, and recruitment — each carries your ambassador code.</p>
+                        <div class="dos-portfolio-grid" id="dosPortfolioGrid"></div>
+                    </div>
+                    <div class="dos-card" id="dosSbdSection">
+                        <h3><i class="fa-solid fa-mobile-screen"></i> SBD Network app</h3>
+                        <div id="dosSbdBody">
+                            <p class="dos-sbd-empty">Loading SBD referral panel…</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Subscribers -->
+                <section class="dos-section" data-section="subscribers">
+                    <div id="dosPipelineBody"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-chart-line"></i> Recent product deployments</h3>
+                        <div id="dosRecentSales"></div>
+                    </div>
+                </section>
+
+                <!-- Retention -->
+                <section class="dos-section" data-section="retention">
+                    <div id="dosRetentionBody"></div>
+                </section>
+
+                <!-- Commissions -->
+                <section class="dos-section" data-section="commissions">
+                    <div id="dosRecurringBody"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-table"></i> Multi-product portfolio (earnings by category)</h3>
+                        <div class="dos-table-wrap">
+                            <table class="dos-table">
+                                <thead>
+                                    <tr><th>Category</th><th>Units</th><th>Revenue</th><th>Your earnings</th></tr>
+                                </thead>
+                                <tbody id="dosPortfolioTableBody"></tbody>
+                                <tfoot>
+                                    <tr style="font-weight:700">
+                                        <td>Total</td><td></td>
+                                        <td id="dosPortfolioTotalRev">$0</td>
+                                        <td id="dosPortfolioTotalEarn">$0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-receipt"></i> Commission history</h3>
+                        <div class="dos-table-wrap">
+                            <table class="dos-table">
+                                <thead>
+                                    <tr><th>Date</th><th>Source</th><th>Product</th><th>Commission</th></tr>
+                                </thead>
+                                <tbody id="dosCommissionBody">
+                                    <tr><td colspan="4" class="dos-empty">Loading…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Social deploy (Phase 7) -->
+                <section class="dos-section" data-section="social-deploy">
+                    <div id="dosSocialBody"></div>
+                </section>
+
+                <!-- Reporting (Phase 7) -->
+                <section class="dos-section" data-section="reporting">
+                    <div id="dosReportingBody"></div>
+                </section>
+
+                <!-- Network -->
+                <section class="dos-section" data-section="network">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-sitemap"></i> Network expansion · <span id="dosRecruitCount">0</span> ambassadors recruited</h3>
+                        <p style="font-size:14px;margin:0 0 16px">Recruit <strong>10 ambassadors</strong> to qualify for Senior Ambassador (system auto-promotion).</p>
+                        <div id="dosRecruitList"></div>
+                    </div>
+                </section>
+
+                <!-- Formation -->
+                <section class="dos-section" data-section="formation">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-graduation-cap"></i> Marriage Foundation School · CRLA progress</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 16px">Educational formation is separate from deployment operations. Training lives in Foundation School.</p>
+                        <div id="dosFormationBody"></div>
+                    </div>
+                </section>
+
+                <!-- Performance -->
+                <section class="dos-section" data-section="performance">
+                    <div id="dosContestFullMount"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-ranking-star"></i> Leaderboard position</h3>
+                        <div id="dosLeaderboard"><div class="dos-empty">Loading…</div></div>
+                    </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-bullseye"></i> Deployment unit milestones</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Bronze → Platinum track units deployed. <strong>Senior rank</strong> = 10 recruits (see Network).</p>
+                        <div class="dos-milestone-list" id="dosMilestoneList"></div>
+                    </div>
+                    <div id="dosRevenueStacksMount"></div>
+                    <div id="dosEliteBadgesMount"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <nav class="dos-mobile-nav" id="dosMobileNav" aria-label="Mobile"></nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/money.js"></script>
+    <script src="../js/ambassador-account-resolve.js?v=20260524a"></script>
+    <script src="../js/ambassador-session.js?v=20260524a"></script>
+    <script src="../js/ambassador-routes.js?v=20260524a"></script>
+    <script src="../dos/js/dos-config.js?v=20260524a"></script>
+    <script src="../dos/js/dos-economics.js?v=20260524a"></script>
+    <script src="../dos/js/dos-metrics.js?v=20260524a"></script>
+    <script src="../dos/js/dos-router.js?v=20260524a"></script>
+    <script src="../dos/js/dos-daily-ops.js?v=20260524a"></script>
+    <script src="../dos/js/dos-pipeline.js?v=20260524a"></script>
+    <script src="../dos/js/dos-team.js?v=20260524a"></script>
+    <script src="../dos/js/dos-region.js?v=20260524a"></script>
+    <script src="../dos/js/dos-social.js?v=20260524a"></script>
+    <script src="../dos/js/dos-reporting.js?v=20260524a"></script>
+    <script src="../dos/js/dos-gamification.js?v=20260524a"></script>
+    <script src="../dos/js/dos-executive.js?v=20260524a"></script>
+    <script src="../dos/js/dos-preview-auth.js?v=20260524a"></script>
+    <script src="../dos/js/ambassador-dashboard-v2.js?v=20260524a"></script>
+    <script src="../dos/js/dos-tour.js?v=20260524c"></script>
+</body>
+</html>

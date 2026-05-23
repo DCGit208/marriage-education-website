@@ -22,6 +22,12 @@ Each role has its **own** login screen — do not use “Ambassador Login” for
 
 Logout from each DOS dashboard returns you to **that role’s** login page.
 
+## Dashboard walkthrough
+
+- **First login** — interactive tour starts automatically (once per account).
+- **Replay** — click **Guide** in the dashboard top bar.
+- **Full sitemap** — click **Map** or open [navigation-guide.html](../dos/navigation-guide.html).
+
 ## Deploy
 
 - **marriageducation.com** → push to `main` (FTP)
