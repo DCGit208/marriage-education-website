@@ -2,1996 +2,260 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Senior Ambassador Dashboard | Marriage Education Group</title>
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#00b894">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ME Ambassador">
-    <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 2rem 1rem;
-            padding-top: calc(2rem + env(safe-area-inset-top));
-            padding-left: max(1rem, env(safe-area-inset-left));
-            padding-right: max(1rem, env(safe-area-inset-right));
-            padding-bottom: max(2rem, env(safe-area-inset-bottom));
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior: none;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .user-info h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .user-info p {
-            opacity: 0.9;
-            font-size: 1rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: #00b894;
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
-        }
-
-        .btn-primary:hover {
-            background: #00a085;
-            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .performance-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .perf-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .perf-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .perf-card .icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #667eea;
-        }
-
-        .perf-card .label {
-            color: #636e72;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .perf-card .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3436;
-            margin-bottom: 0.25rem;
-        }
-
-        .perf-card .subvalue {
-            color: #b2bec3;
-            font-size: 0.85rem;
-        }
-
-        .perf-card.highlight {
-            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-            color: white;
-        }
-
-        .perf-card.highlight .icon,
-        .perf-card.highlight .label,
-        .perf-card.highlight .value,
-        .perf-card.highlight .subvalue {
-            color: white;
-        }
-
-        .perf-card.secondary {
-            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
-            color: white;
-        }
-
-        .perf-card.secondary .icon,
-        .perf-card.secondary .label,
-        .perf-card.secondary .value,
-        .perf-card.secondary .subvalue {
-            color: white;
-        }
-
-        /* Team Management Section */
-        .team-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-
-        .team-section h2 {
-            color: #2d3436;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .team-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .team-stat-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 1.5rem;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .team-stat-card .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-
-        .team-stat-card .stat-label {
-            color: #636e72;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .ambassador-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .ambassador-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.25rem;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 1rem;
-            align-items: center;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .ambassador-item:hover {
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .ambassador-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .ambassador-info {
-            display: grid;
-            gap: 0.25rem;
-        }
-
-        .ambassador-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3436;
-        }
-
-        .ambassador-code {
-            font-size: 0.85rem;
-            color: #636e72;
-            font-family: monospace;
-        }
-
-        .ambassador-joined {
-            font-size: 0.8rem;
-            color: #b2bec3;
-        }
-
-        .ambassador-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            text-align: center;
-        }
-
-        .ambassador-stat {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .ambassador-stat-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #00b894;
-        }
-
-        .ambassador-stat-label {
-            font-size: 0.75rem;
-            color: #636e72;
-            text-transform: uppercase;
-        }
-
-        /* Senior Team Milestone Tracker */
-        .milestone-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-            border: 2px solid #e9ecef;
-        }
-        .milestone-card.current {
-            border-color: #00b894;
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.2);
-        }
-        .milestone-card.completed {
-            border-color: #00b894;
-            opacity: 0.85;
-        }
-        .milestone-card.locked {
-            opacity: 0.5;
-        }
-        .milestone-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.75rem;
-        }
-        .milestone-icon { font-size: 2rem; }
-        .milestone-info { flex: 1; }
-        .milestone-name { font-weight: 700; font-size: 1.1rem; color: #2d3436; }
-        .milestone-sub { font-size: 0.85rem; color: #636e72; }
-        .milestone-badge {
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 20px;
-            background: #f8f9fa;
-            color: #636e72;
-            white-space: nowrap;
-        }
-        .milestone-card.current .milestone-badge { background: #00b894; color: white; }
-        .milestone-card.completed .milestone-badge { background: #d4edda; color: #155724; }
-        .milestone-progress {
-            height: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
-            margin-top: 0.75rem;
-            overflow: hidden;
-        }
-        .milestone-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00b894, #00d2a0);
-            border-radius: 5px;
-            transition: width 0.6s ease;
-        }
-        .combo-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .combo-table-header th {
-            background: #f8f9fa;
-            padding: 0.5rem 0.75rem;
-            text-align: left;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: #636e72;
-        }
-        .portfolio-combo-row td {
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid #f1f3f5;
-            color: #2d3436;
-        }
-
-        /* Override Commission Tracking */
-        .override-section {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(253, 203, 110, 0.3);
-        }
-
-        .override-section h2 {
-            color: #2d3436;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .override-breakdown {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .override-item {
-            background: white;
-            border-radius: 10px;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .override-ambassador {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .override-ambassador-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .override-details {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .override-sales {
-            font-size: 0.9rem;
-            color: #636e72;
-        }
-
-        .override-earnings {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #00b894;
-        }
-
-        /* Referral Section */
-        .referral-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-
-        .referral-section h2 {
-            color: #2d3436;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .referral-link-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .referral-link {
-            flex: 1;
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            font-family: monospace;
-            border: 2px solid #e9ecef;
-            min-width: 300px;
-        }
-
-        .share-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .progress-bar {
-            background: rgba(255, 255, 255, 0.3);
-            height: 12px;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #00b894 0%, #00a085 100%);
-            height: 100%;
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-
-        /* Recent Sales */
-        .recent-sales {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-
-        .recent-sales h2 {
-            color: #2d3436;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .sale-item {
-            background: #f8f9fa;
-            padding: 1.25rem;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .sale-item:hover {
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .sale-date {
-            color: #636e72;
-            font-size: 0.9rem;
-        }
-
-        .sale-books {
-            color: #2d3436;
-            font-weight: 600;
-        }
-
-        .sale-commission {
-            color: #00b894;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        /* Ambassador Deep Dive Styles */
-        .ambassador-deep-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .ambassador-deep-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        .ambassador-deep-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .ambassador-deep-details {
-            display: none;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid #f8f9fa;
-        }
-
-        .ambassador-deep-details.expanded {
-            display: block;
-        }
-
-        .sales-category-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-        }
-
-        .sales-transaction-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .live-sale-item {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #00b894;
-            margin-bottom: 0.75rem;
-            transition: all 0.3s ease;
-            animation: slideIn 0.5s ease;
-        }
-
-        .live-sale-item:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transform: translateX(5px);
-        }
-
-        .live-sale-item.new {
-            animation: pulse 1s ease;
-            border-left-color: #ffc107;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
-            }
-            50% {
-                box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .performance-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .team-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .ambassador-item {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .ambassador-stats {
-                justify-content: center;
-            }
-        }
-    </style>
+    <title>Senior Ambassador Dashboard | Marriage Education</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="../dos/dos-theme.css">
 </head>
-<body>
-    <div class="container">
-        <div class="dashboard-header">
-            <div class="header-top">
-                <div class="user-info">
-                    <h1>👋 Welcome, <span id="seniorName">Loading...</span></h1>
-                    <p>Senior Ambassador • <span id="seniorCode">Loading...</span> <span id="credentialBadge"></span></p>
-                </div>
-                <div class="header-actions">
-                    <a href="../course-viewer.html?courseId=foundation-school" class="btn btn-primary">
-                        <i class="fas fa-graduation-cap"></i> Foundation School
-                    </a>
-                    <button class="btn" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </div>
+<body class="dos-app" data-dos-rank="senior">
+<div class="dos-layout">
+        <aside class="dos-sidebar">
+            <div class="dos-brand">
+                <h1>Deployment Ops</h1>
+                <p>Senior Ambassador</p>
             </div>
-        </div>
+            <div class="dos-nav-label">Sections</div>
+            <nav class="dos-nav" id="dosSidebarNav" aria-label="Dashboard sections"></nav>
+            <div class="dos-sidebar-footer">
+                <a href="../course-viewer.html?courseId=foundation-school"><i class="fa-solid fa-graduation-cap"></i> Foundation School</a>
+                <a href="resources.html"><i class="fa-solid fa-folder"></i> Resources</a>
+                <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+                <a href="../index.html"><i class="fa-solid fa-house"></i> Marriage Education home</a>
+            </div>
+        </aside>
 
-        <!-- Performance Cards -->
-        <div class="performance-grid">
-            <div class="perf-card highlight">
-                <div class="icon"><i class="fas fa-users"></i></div>
-                <div class="label">Active Team Members</div>
-                <div class="value" id="teamCount">0</div>
-                <div class="subvalue">Ambassadors mentored</div>
-            </div>
-
-            <div class="perf-card secondary">
-                <div class="icon"><i class="fas fa-percentage"></i></div>
-                <div class="label">Override Commissions</div>
-                <div class="value" id="overrideEarnings">0</div>
-                <div class="subvalue">FCFA • 5% from team sales</div>
-            </div>
-
-            <div class="perf-card">
-                <div class="icon"><i class="fas fa-shopping-bag"></i></div>
-                <div class="label">Personal Units</div>
-                <div class="value" id="personalUnits">0</div>
-                <div class="subvalue">Your direct deployments</div>
-            </div>
-
-            <div class="perf-card">
-                <div class="icon"><i class="fas fa-chart-line"></i></div>
-                <div class="label">Team Units</div>
-                <div class="value" id="teamUnits">0</div>
-                <div class="subvalue">Total team deployments</div>
-            </div>
-
-            <div class="perf-card">
-                <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
-                <div class="label">Total Monthly Earnings</div>
-                <div class="value" id="totalEarnings">0</div>
-                <div class="subvalue">FCFA • Target: 10.8M ($18K USD)</div>
-            </div>
-
-            <div class="perf-card">
-                <div class="icon"><i class="fas fa-star"></i></div>
-                <div class="label">Current Level</div>
-                <div class="value" id="currentLevel">Bronze</div>
-                <div class="subvalue" id="nextMilestone">Senior status</div>
-            </div>
-        </div>
-
-        <!-- Senior Ambassador Designed Income -->
-        <div class="referral-section">
-            <h2><i class="fas fa-bullseye"></i> Senior Ambassador Designed Monthly Income: $18,000 USD</h2>
-            <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
-                <div style="font-size: 0.9rem; opacity: 0.95; margin-bottom: 0.25rem;">🌍 UDHR Article 16.3: "The family is the natural and fundamental group unit of society"</div>
-                <div style="font-size: 1rem; font-weight: 600;">You're serving the world's most important mission - strong marriages build strong nations</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Personal Target</div>
-                        <div style="font-size: 2rem; font-weight: 700;">$3,000</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8;">1.8M FCFA</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">+</div>
-                        <div style="font-size: 2rem; font-weight: 700;">Team Override</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Team Override Target</div>
-                        <div style="font-size: 2rem; font-weight: 700;">$15,000</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8;">9M FCFA (10 ambassadors × $30K × 5%)</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">=</div>
-                        <div style="font-size: 2rem; font-weight: 700;">Total Target</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">MONTHLY GOAL</div>
-                        <div style="font-size: 2.5rem; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">$18,000</div>
-                        <div style="font-size: 0.95rem; opacity: 0.9;">10,800,000 FCFA</div>
+        <div class="dos-main">
+            <header class="dos-topbar">
+                <div>
+                    <h2 id="dosPageTitle">Overview</h2>
+                    <div class="dos-topbar-meta" id="dosTopbarMeta">Loading…</div>
+<div style="font-size:13px;margin-top:8px">
+                        <strong id="dosUserName">—</strong>
+                        <span style="color:#a1a1aa"> · </span>
+                        <code id="dosUserCode">—</code>
                     </div>
                 </div>
-                <div class="progress-bar" style="height: 20px; background: rgba(255,255,255,0.3);">
-                    <div class="progress-fill" id="seniorTargetProgress" style="width: 0%; background: linear-gradient(90deg, #00b894 0%, #00d2a0 100%);"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.9rem;">
-                    <span id="currentMonthlyEarnings">Current: 0 FCFA</span>
-                    <span id="targetPercentage">0% of designed income</span>
-                </div>
-            </div>
-            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #00b894;">
-                <h4 style="color: #2d3436; margin-bottom: 1rem;"><i class="fas fa-calculator"></i> The Guaranteed Math:</h4>
-                <ul style="color: #636e72; line-height: 2;">
-                    <li><strong>Your personal deployment:</strong> $30,000 monthly volume → 10% commission = <strong>$3,000 guaranteed</strong></li>
-                    <li><strong>Each of your 10 ambassadors:</strong> $30,000 monthly volume → 5% override = <strong>$1,500 per ambassador</strong></li>
-                    <li><strong>Team of 10 hitting targets:</strong> 10 × $1,500 = <strong style="color: #00b894; font-size: 1.1rem;">$15,000 override</strong></li>
-                    <li><strong>Your designed monthly income:</strong> $3,000 + $15,000 = <strong style="color: #667eea; font-size: 1.2rem;">$18,000 USD</strong></li>
-                    <li><strong>Annual income (system functioning properly):</strong> $18,000 × 12 = <strong style="color: #e84393; font-size: 1.2rem;">$216,000 USD</strong></li>
-                </ul>
-                <div style="background: white; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 2px solid #00b894;">
-                    <div style="font-weight: 600; color: #2d3436; margin-bottom: 0.5rem;">✅ System Capacity Confirmed:</div>
-                    <div style="color: #636e72; font-size: 0.9rem; line-height: 1.8;">
-                        • <strong>Market Demand:</strong> Families matter more than cars - 8 billion people need this<br>
-                        • <strong>Product Portfolio:</strong> 32 products across 6 categories (books, schools, courses, premium, corporate, community)<br>
-                        • <strong>Technical Infrastructure:</strong> Real-time commission engine, Firebase distributed system, automated tracking<br>
-                        • <strong>Training Foundation:</strong> CRLA certification ensures deployment competency
+                <div class="dos-topbar-actions">
+                    <div class="dos-topbar-links">
+                        <a href="../index.html"><i class="fa-solid fa-house"></i> Home</a>
+                        <a href="../course-viewer.html?courseId=foundation-school"><i class="fa-solid fa-graduation-cap"></i> School</a>
+                        <a href="leaderboard.html"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Path to Regional Director -->
-        <div class="referral-section" style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); border: none;">
-            <h2 style="color: #2d3436;"><i class="fas fa-crown"></i> Regional Director: Generational Wealth Path</h2>
-            <div style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem;">
-                <h3 style="color: #2d3436; margin-bottom: 1rem;">Scale to Network Leadership</h3>
-                <p style="color: #636e72; margin-bottom: 1.5rem;">Build a network of 50 senior ambassadors (500 total ambassadors). The math is simple, the mission is critical, the income is engineered.</p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Network Sales Volume</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;">$15M USD/month</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.25rem;">500 ambassadors × $30K each</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Network at Full Capacity</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;">$750,000/month</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.25rem;">500 ambassadors × $30K × 5%</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Typical Network Performance</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;">$450,000/month</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.25rem;">60% active × $30K × 5%</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); padding: 1.5rem; border-radius: 10px; color: white; text-align: center;">
-                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">Annual (Typical Performance)</div>
-                        <div style="font-size: 1.75rem; font-weight: 700;">$5.4M USD</div>
-                        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.25rem;">324M FCFA/year</div>
-                    </div>
-                </div>
-            </div>
-            <div style="background: white; padding: 1.5rem; border-radius: 8px;">
-                <h4 style="color: #2d3436; margin-bottom: 1rem;">Your Progress to RD:</h4>
-                <div style="margin-bottom: 1rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #636e72;">Recruit Senior Ambassadors</span>
-                        <span style="color: #667eea; font-weight: 600;" id="rdProgressCount">0 / 50</span>
-                    </div>
-                    <div class="progress-bar" style="height: 12px; background: #e9ecef;">
-                        <div class="progress-fill" id="rdProgressBar" style="width: 0%; background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);"></div>
-                    </div>
-                </div>
-                <p style="color: #636e72; font-size: 0.9rem; margin-top: 1rem;"><i class="fas fa-lightbulb" style="color: #ffc107;"></i> <strong>How to build your senior network:</strong> Help your top performers recruit and mentor their own teams. As they promote to senior, they become part of your network.</p>
-            </div>
-        </div>
-
-        <!-- System Reliability & Capacity Indicators -->
-        <div class="referral-section">
-            <h2><i class="fas fa-shield-check"></i> Technical Infrastructure Status</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                <div style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 1.25rem; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Commission Engine</div>
-                    <div style="font-size: 0.85rem; opacity: 0.9;">Real-time processing • Auto-credit</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.25rem; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Product Portfolio</div>
-                    <div style="font-size: 0.85rem; opacity: 0.9;">32 products • 6 categories</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); color: white; padding: 1.25rem; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Training System</div>
-                    <div style="font-size: 0.85rem; opacity: 0.9;">CRLA certification • LMS ready</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white; padding: 1.25rem; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌍</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Global Reach</div>
-                    <div style="font-size: 0.85rem; opacity: 0.9;">8B people need this • Unlimited capacity</div>
-                </div>
-            </div>
-            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #667eea;">
-                <div style="font-weight: 600; color: #2d3436; margin-bottom: 0.75rem;">💡 Why These Numbers Are Engineered (Not Hoped For):</div>
-                <ul style="color: #636e72; line-height: 2; margin-left: 1.5rem;">
-                    <li><strong>Market Reality:</strong> Every human needs marriage literacy - bigger market than transportation, food, or housing</li>
-                    <li><strong>UDHR Foundation:</strong> Article 16.3 recognizes family as fundamental unit - we're serving a universal human right</li>
-                    <li><strong>Technical Capacity:</strong> Firebase scales to billions, commission engine processes in milliseconds, payments automated</li>
-                    <li><strong>Product Depth:</strong> 32 products means multiple deployment paths per customer - books → schools → courses → premium</li>
-                    <li><strong>Training Infrastructure:</strong> Foundation School prepares every ambassador to deploy effectively</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Senior Team Milestone Tracker -->
-        <div class="referral-section" id="seniorMilestoneSection">
-            <h2><i class="fas fa-trophy"></i> Team Growth Milestone Tracker</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">Your senior income grows with your team. Each ambassador you recruit and mentor multiplies your 5% override income — track your team-building journey here.</p>
-            <div id="seniorMilestoneTracker">
-                <div style="text-align: center; padding: 2rem; color: #636e72;"><i class="fas fa-spinner fa-spin"></i> Loading team milestones...</div>
-            </div>
-        </div>
-
-        <!-- Team Management Section -->
-        <div class="team-section">
-            <h2><i class="fas fa-users-cog"></i> Your Team Overview</h2>
-            
-            <div class="team-stats">
-                <div class="team-stat-card">
-                    <div class="stat-value" id="activeAmbassadors">0</div>
-                    <div class="stat-label">Active Ambassadors</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="stat-value" id="teamTotalSales">0</div>
-                    <div class="stat-label">Team Total Units</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="stat-value" id="teamAvgPerformance">0</div>
-                    <div class="stat-label">Avg Units per Member</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="stat-value" id="newRecruits">0</div>
-                    <div class="stat-label">New This Month</div>
-                </div>
-            </div>
-
-            <h3 style="margin-bottom: 1rem; color: #636e72;">Team Members</h3>
-            <div class="ambassador-list" id="ambassadorList">
-                <div style="text-align: center; padding: 2rem; color: #636e72;"><i class="fas fa-spinner fa-spin"></i> Loading team members...</div>
-            </div>
-        </div>
-
-        <!-- Override Commission Breakdown -->
-        <div class="override-section">
-            <h2><i class="fas fa-chart-pie"></i> Override Commission Breakdown (5%)</h2>
-            <div class="override-breakdown" id="overrideBreakdown">
-                <div style="text-align: center; padding: 2rem; color: #636e72;"><i class="fas fa-spinner fa-spin"></i> Loading override data...</div>
-            </div>
-            <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; font-weight: 700;">
-                <div style="font-size: 1.1rem; color: #2d3436;">TOTAL OVERRIDE EARNINGS</div>
-                <div style="font-size: 1.75rem; color: #00b894;" id="totalOverride">0 FCFA</div>
-            </div>
-        </div>
-
-        <!-- Referral Link Section -->
-        <div class="referral-section">
-            <h2><i class="fas fa-user-plus"></i> Recruit New Ambassadors</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">Share your unique senior referral link to recruit ambassadors to your team. You'll earn 5% override on all their sales!</p>
-            <div class="referral-link-container">
-                <div class="referral-link" id="recruitLink">
-                    https://marriage-education.web.app/ambassador-register.html?senior=SEN-XXX-XXX
-                </div>
-                <button class="btn btn-primary" onclick="copyRecruitLink()">
-                    <i class="fas fa-copy"></i> Copy Link
-                </button>
-            </div>
-            <div class="share-buttons">
-                <button class="btn btn-secondary" onclick="shareWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
-                </button>
-                <button class="btn btn-secondary" onclick="shareFacebook()">
-                    <i class="fab fa-facebook"></i> Share on Facebook
-                </button>
-                <button class="btn btn-secondary" onclick="shareEmail()">
-                    <i class="fas fa-envelope"></i> Send via Email
-                </button>
-            </div>
-        </div>
-
-        <!-- Personal Referral Link -->
-        <div class="referral-section">
-            <h2><i class="fas fa-link"></i> Your Personal Deployment Link</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">Use this link for your own direct sales (10% commission + 5% override from your seniors).</p>
-            <div class="referral-link-container">
-                <div class="referral-link" id="referralLink">
-                    https://marriageducation.com/sbd-campaign.html?ref=SEN-XXX-XXX
-                </div>
-                <button class="btn btn-primary" onclick="copyReferralLink()">
-                    <i class="fas fa-copy"></i> Copy Link
-                </button>
-            </div>
-            <div class="share-buttons">
-                <button class="btn btn-secondary" onclick="shareDeploymentWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
-                </button>
-                <button class="btn btn-secondary" onclick="shareDeploymentFacebook()">
-                    <i class="fab fa-facebook"></i> Share on Facebook
-                </button>
-            </div>
-        </div>
-
-        <div class="referral-section">
-            <h2><i class="fas fa-boxes-stacked"></i> Multi-Product Deployment Links</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">Use these category-specific direct deployment links to grow your personal portfolio without interfering with your separate recruitment and SBD subscription referral flows.</p>
-            <div id="portfolioReferralLinks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;"></div>
-        </div>
-
-        <div class="referral-section" id="sbdReferralSection" style="display:none;">
-            <h2><i class="fas fa-mobile-alt"></i> SBD Network Subscription Referrals</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">This section remains separate from the multi-product portfolio. It tracks SBD app signups, subscribers, and subscription commissions tied to your SBD referral code.</p>
-            <div style="background:#0D0D0D;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #C6A96B33;">
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                    <div id="sbdReferralLink" style="flex:1;background:#1a1a1a;color:#EAE3D2;padding:10px 14px;border-radius:8px;font-family:monospace;font-size:0.82rem;word-break:break-all;min-width:0;border:1px solid #333;">Loading…</div>
-                    <button class="btn btn-primary" onclick="copySBDReferralLink()" style="white-space:nowrap;flex-shrink:0;">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">
-                <div style="background:#0D0D0D;border:1px solid #C6A96B33;border-radius:10px;padding:16px;text-align:center;">
-                    <div id="sbdSignupsCount" style="font-size:1.75rem;font-weight:700;color:#C6A96B;">0</div>
-                    <div style="color:#A8A29E;font-size:0.8rem;margin-top:4px;">Signups</div>
-                </div>
-                <div style="background:#0D0D0D;border:1px solid #C6A96B33;border-radius:10px;padding:16px;text-align:center;">
-                    <div id="sbdSubscribersCount" style="font-size:1.75rem;font-weight:700;color:#00b894;">0</div>
-                    <div style="color:#A8A29E;font-size:0.8rem;margin-top:4px;">Subscribers</div>
-                </div>
-                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:16px;text-align:center;">
-                    <div id="sbdFoundationCount" style="font-size:1.5rem;font-weight:700;color:#A8A29E;">0</div>
-                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Foundation</div>
-                </div>
-                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:16px;text-align:center;">
-                    <div id="sbdPremiumCount" style="font-size:1.5rem;font-weight:700;color:#C6A96B;">0</div>
-                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Premium</div>
-                </div>
-                <div style="background:#0D0D0D;border:1px solid #33333388;border-radius:10px;padding:16px;text-align:center;">
-                    <div id="sbdEliteCount" style="font-size:1.5rem;font-weight:700;color:#fff;">0</div>
-                    <div style="color:#666;font-size:0.75rem;margin-top:4px;">Elite</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Foundation School Progress -->
-        <div class="referral-section" id="schoolProgressSection">
-            <h2><i class="fas fa-graduation-cap"></i> Marriage Foundation School - CRLA Progress</h2>
-            <div style="background: linear-gradient(135deg, #f0fdf9 0%, #ffffff 100%); padding: 24px; border-radius: 12px; border: 2px solid #00b894; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div>
-                        <h3 style="color: #00b894; margin-bottom: 8px;">Week <span id="currentWeek">1</span> of 6</h3>
-                        <p style="color: #636e72; margin: 0;">Teleios Blueprint + Advocacy Training</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 2rem; font-weight: 700; color: #00b894;" id="completionPercent">0%</div>
-                        <small style="color: #636e72;">Complete</small>
-                    </div>
-                </div>
-                <div class="progress-bar" style="height: 20px;">
-                    <div class="progress-fill" id="schoolProgress" style="width: 0%"></div>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
-                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
-                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">Modules Completed</div>
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3436;"><span id="completedModules">0</span>/<span id="totalModules">36</span></div>
-                    </div>
-                    <div style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e9ecef;">
-                        <div style="font-size: 0.85rem; color: #636e72; text-transform: uppercase; margin-bottom: 4px;">CRLA Status</div>
-                        <div style="font-size: 1.1rem; font-weight: 600;" id="crlaStatus">
-                            <span style="color: #dc3545;">🔒 Not Started</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="../course-viewer.html?courseId=foundation-school" class="btn btn-primary" style="flex: 1; min-width: 200px; text-align: center;">
-                    <i class="fas fa-play-circle"></i> Continue CRLA Training
-                </a>
-                <a href="../course-viewer.html?courseId=foundation-school" class="btn btn-secondary" style="flex: 1; min-width: 200px; text-align: center;">
-                    <i class="fas fa-list"></i> View Course Outline
-                </a>
-            </div>
-        </div>
-
-        <!-- Team Portfolio Performance -->
-        <div class="recent-sales">
-            <h2><i class="fas fa-chart-pie"></i> Team Portfolio Performance by Category</h2>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem;">
-                <thead>
-                    <tr style="background: #f8f9fa;">
-                        <th style="padding: 1rem; text-align: left; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Category</th>
-                        <th style="padding: 1rem; text-align: center; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Team Units</th>
-                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Team Revenue</th>
-                        <th style="padding: 1rem; text-align: right; font-size: 0.875rem; text-transform: uppercase; color: #636e72;">Your Override</th>
-                    </tr>
-                </thead>
-                <tbody id="teamPortfolioBody"></tbody>
-                <tfoot>
-                    <tr style="background: #f8f9fa; font-weight: 700;">
-                        <td style="padding: 1rem;"><strong>TOTAL</strong></td>
-                        <td style="padding: 1rem; text-align: center; font-family: monospace;" id="teamPortfolioTotalUnits">0</td>
-                        <td style="padding: 1rem; text-align: right; font-family: monospace;" id="teamPortfolioTotalRevenue">0 FCFA</td>
-                        <td style="padding: 1rem; text-align: right; font-family: monospace; color: #00b894;" id="teamPortfolioTotalOverride">0 FCFA</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- Live Team Sales Feed -->
-        <div class="recent-sales">
-            <h2><i class="fas fa-bolt"></i> Live Team Sales Activity (Last 50)</h2>
-            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
-                <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">🔥 Real-Time Sales Feed</div>
-                <div style="font-size: 1.5rem; font-weight: 700;" id="liveSalesCount">0</div>
-                <div style="font-size: 0.85rem; opacity: 0.9;">Team sales today</div>
-            </div>
-            <div id="teamSalesFeed">
-                <!-- Dynamic sales feed will be loaded here -->
-                <div style="text-align: center; padding: 3rem; color: #636e72;">
-                    <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                    <p>No team sales yet. Your team's activity will appear here in real-time!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Individual Ambassador Deep Dive -->
-        <div class="recent-sales">
-            <h2><i class="fas fa-user-chart"></i> Individual Ambassador Performance</h2>
-            <p style="color: #636e72; margin-bottom: 1.5rem;">Click on any ambassador to see their detailed sales breakdown</p>
-            <div id="ambassadorDeepDive">
-                <!-- Expandable ambassador cards with sales details will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Leadership Resources -->
-        <div class="referral-section">
-            <h2><i class="fas fa-book-reader"></i> Senior Ambassador Resources</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    <i class="fas fa-chalkboard-teacher"></i> Mentor Training Guide
-                </a>
-                <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    <i class="fas fa-bullhorn"></i> Recruitment Templates
-                </a>
-                <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    <i class="fas fa-comments"></i> Team Communication
-                </a>
-                <a href="#" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    <i class="fas fa-trophy"></i> Leadership Pathway
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBh_KbSDa_wEzpXrEqP3Aq8m1SibM_8Vgc",
-            authDomain: "marriage-education.firebaseapp.com",
-            projectId: "marriage-education",
-            storageBucket: "marriage-education.appspot.com",
-            messagingSenderId: "502691730547",
-            appId: "1:502691730547:web:2c9a4a1f8e3b9d0a8e9b0c"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Get senior code from URL or localStorage
-        const urlParams = new URLSearchParams(window.location.search);
-        const seniorCode = urlParams.get('code') || localStorage.getItem('ambassadorCode') || localStorage.getItem('seniorCode');
-        const hasSeniorCode = Boolean(seniorCode);
-        
-        // Redirect to login if no code found
-        if (!hasSeniorCode) {
-            console.error('❌ No senior code found - redirecting to login');
-            alert('⚠️ Please log in to access your senior dashboard.');
-            window.location.href = '../ambassador-login.html';
-        }
-        
-        console.log('🔍 Senior Dashboard Loading:');
-        console.log('  URL param code:', urlParams.get('code'));
-        console.log('  localStorage.ambassadorCode:', localStorage.getItem('ambassadorCode'));
-        console.log('  localStorage.seniorCode:', localStorage.getItem('seniorCode'));
-        console.log('  Final seniorCode:', seniorCode);
-
-        if (urlParams.get('code')) {
-            localStorage.setItem('ambassadorCode', seniorCode);
-            localStorage.setItem('seniorCode', seniorCode);
-        }
-
-        // Load senior ambassador data
-        async function loadSeniorData() {
-            try {
-                // Check if promoted to Regional Director
-                const ambassadorRef = doc(db, 'ambassadors', seniorCode);
-                const ambassadorSnap = await getDoc(ambassadorRef);
-                
-                if (ambassadorSnap.exists() && ambassadorSnap.data().ambassador_type === 'regional_director') {
-                    console.log('👑 Regional Director detected - redirecting to RD dashboard...');
-                    const notification = document.createElement('div');
-                    notification.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;padding:20px 30px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:10000;font-size:18px;font-weight:600;text-align:center;';
-                    notification.innerHTML = '👑 Congratulations, Regional Director!<br><small style="font-size:14px;opacity:0.9;">Redirecting to your RD Dashboard...</small>';
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        window.location.href = '/regional-director/rd-dashboard.html';
-                    }, 2000);
-                    return;
-                }
-                
-                // Try senior_ambassadors collection first
-                const seniorRef = doc(db, 'senior_ambassadors', seniorCode);
-                const seniorSnap = await getDoc(seniorRef);
-
-                if (seniorSnap.exists()) {
-                    const data = seniorSnap.data();
-                    console.log('✅ Loaded from senior_ambassadors:', data);
-                    console.log('   Name field:', data.name);
-                    updateDashboard(data);
-                    await loadTeamData(data);
-                } else if (ambassadorSnap.exists()) {
-                    // Fall back to ambassadors collection
-                    const ambassadorData = ambassadorSnap.data();
-                    console.log('✅ Loaded from ambassadors collection:', ambassadorData);
-                    console.log('   Fields available:', Object.keys(ambassadorData));
-                    console.log('   name:', ambassadorData.name);
-                    console.log('   fullName:', ambassadorData.fullName);
-                    console.log('   firstName:', ambassadorData.firstName);
-                    console.log('   lastName:', ambassadorData.lastName);
-                    
-                    // Check if this is actually a senior
-                    if (ambassadorData.ambassador_type !== 'senior') {
-                        console.warn('⚠️ User is not a senior ambassador');
-                        alert('Access denied: This dashboard is for Senior Ambassadors only.');
-                        window.location.href = 'dashboard.html';
-                        return;
-                    }
-
-                    // Convert ambassadors data format to senior dashboard format
-                    const seniorData = {
-                        senior_code: seniorCode,
-                        name: ambassadorData.name || ambassadorData.fullName || `${ambassadorData.firstName || ''} ${ambassadorData.lastName || ''}`.trim() || 'Senior Ambassador',
-                        email: ambassadorData.email,
-                        team_count: ambassadorData.recruits_count || 0,
-                        monthly_team_sales: ambassadorData.monthly_team_sales || 0,
-                        total_override_earnings: ambassadorData.total_override_earnings || 0,
-                        promotion_date: ambassadorData.promotion_date || ambassadorData.createdAt
-                    };
-                    updateDashboard(seniorData);
-                    await loadTeamData(seniorData);
-                } else {
-                    console.error('❌ No data found for senior code:', seniorCode);
-                    console.error('   senior_ambassadors exists?', seniorSnap.exists());
-                    console.error('   ambassadors exists?', ambassadorSnap.exists());
-                    console.error('   This should not happen - data should exist!');
-                    alert('⚠️ ERROR: Cannot find your ambassador data.\n\nSenior code: ' + seniorCode + '\n\nPlease contact support at support@marriageducation.com');
-                    window.location.href = '../ambassador-login.html';
-                    return;
-                }
-            } catch (error) {
-                console.error('Error loading senior data:', error);
-                alert('⚠️ Error loading dashboard data: ' + error.message + '\n\nPlease try again or contact support.');
-                window.location.href = '../ambassador-login.html';
-                return;
-            }
-        }
-
-        function updateDashboard(data) {
-            document.getElementById('seniorName').textContent = data.name || 'Senior Ambassador';
-            document.getElementById('seniorCode').textContent = seniorCode;
-            
-            // Update credential badge
-            const credentialBadge = document.getElementById('credentialBadge');
-            if (data.credentialStatus === 'earned') {
-                credentialBadge.innerHTML = '<span style="background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">✓ CRLA Certified</span>';
-            } else if (data.credentialStatus === 'in-progress') {
-                credentialBadge.innerHTML = '<span style="background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 8px;">📚 CRLA in Progress</span>';
-            }
-
-            // Update performance cards
-            document.getElementById('teamCount').textContent = data.team_count || 0;
-            document.getElementById('overrideEarnings').textContent = (data.override_commission || 0).toLocaleString();
-            document.getElementById('personalUnits').textContent = data.personal_units || 0;
-            document.getElementById('teamUnits').textContent = data.team_units || 0;
-            const totalEarnings = (data.personal_commission || 0) + (data.override_commission || 0);
-            document.getElementById('totalEarnings').textContent = totalEarnings.toLocaleString();
-            
-            // Update target tracker
-            const seniorTarget = 10800000; // 10.8M FCFA = $18K USD
-            const targetPercentage = Math.min(100, Math.round((totalEarnings / seniorTarget) * 100));
-            document.getElementById('seniorTargetProgress').style.width = targetPercentage + '%';
-            document.getElementById('currentMonthlyEarnings').textContent = `Current: ${totalEarnings.toLocaleString()} FCFA`;
-            document.getElementById('targetPercentage').textContent = `${targetPercentage}% of target`;
-            
-            // Update RD progress (seniors recruited)
-            const seniorsRecruited = data.seniors_recruited || 0;
-            const rdProgress = Math.min(100, Math.round((seniorsRecruited / 50) * 100));
-            document.getElementById('rdProgressCount').textContent = `${seniorsRecruited} / 50`;
-            document.getElementById('rdProgressBar').style.width = rdProgress + '%';
-            document.getElementById('currentLevel').textContent = data.level || 'Bronze';
-
-            // Update referral links
-            document.getElementById('recruitLink').textContent = `https://marriage-education.web.app/ambassador-register.html?senior=${seniorCode}`;
-            document.getElementById('referralLink').textContent = `https://marriageducation.com/sbd-campaign.html?ref=${seniorCode}`;
-            loadPortfolioReferralLinks(seniorCode);
-            loadSBDReferralPanel(data, seniorCode);
-
-            // Update Foundation School progress
-            if (data.school_enrollment?.foundation_school) {
-                const school = data.school_enrollment.foundation_school;
-                const teleiusProgress = school.teleios_progress || 0;
-                const advocacyProgress = school.advocacy_progress || 0;
-                const avgProgress = (teleiusProgress + advocacyProgress) / 2;
-                
-                document.getElementById('currentWeek').textContent = Math.floor(avgProgress / 16.67) + 1;
-                document.getElementById('completionPercent').textContent = Math.round(avgProgress) + '%';
-                document.getElementById('schoolProgress').style.width = avgProgress + '%';
-                document.getElementById('completedModules').textContent = Math.floor((avgProgress / 100) * 36);
-                
-                // Update CRLA status
-                const crlaStatus = document.getElementById('crlaStatus');
-                if (avgProgress >= 100) {
-                    crlaStatus.innerHTML = '<span style="color: #00b894;">✅ CRLA Eligible</span>';
-                } else if (avgProgress > 0) {
-                    crlaStatus.innerHTML = '<span style="color: #ffc107;">⏳ In Progress</span>';
-                } else {
-                    crlaStatus.innerHTML = '<span style="color: #dc3545;">🔒 Not Started</span>';
-                }
-            }
-        }
-
-        function loadPortfolioReferralLinks(code) {
-            const container = document.getElementById('portfolioReferralLinks');
-            if (!container) return;
-
-            container.innerHTML = getPortfolioLinks(code).map((item) => `
-                <div style="background:white;border:1px solid #e9ecef;border-radius:12px;padding:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:0.75rem;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;">
-                        <div style="font-weight:700;color:#2d3436;">${item.icon} ${item.label}</div>
-                        <span style="font-size:0.75rem;background:#f1f5f9;color:#475569;padding:4px 10px;border-radius:999px;">${item.key}</span>
-                    </div>
-                    <div style="font-family:monospace;font-size:0.78rem;color:#636e72;word-break:break-all;background:#f8f9fa;border-radius:8px;padding:0.75rem;">${item.url}</div>
-                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        <button class="btn btn-primary" onclick="copyPortfolioReferralLink('${item.key}')" style="flex:1;min-width:110px;">
-                            <i class="fas fa-copy"></i> Copy
+                    <div class="dos-notif-wrap" id="dosNotifWrap">
+                        <button type="button" class="dos-notif-btn" id="dosNotifBtn" title="Announcements" aria-label="Announcements">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="dos-notif-badge" id="dosNotifBadge"></span>
                         </button>
-                        <a class="btn btn-secondary" href="${item.url}" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;justify-content:center;display:inline-flex;align-items:center;gap:0.4rem;">
-                            <i class="fas fa-arrow-up-right-from-square"></i> Open
-                        </a>
+                        <div class="dos-notif-panel" id="dosNotifPanel">
+                            <div class="dos-notif-panel-header">
+                                <span>Announcements</span>
+                                <button type="button" id="dosNotifMarkAll">Mark all read</button>
+                            </div>
+                            <div class="dos-notif-list" id="dosNotifList">
+                                <div class="dos-empty" style="padding:20px">No announcements yet</div>
+                            </div>
+                        </div>
                     </div>
+                    <button type="button" class="dos-btn dos-btn-primary" id="dosCopyPrimary"><i class="fa-solid fa-copy"></i> Copy main link</button>
+                    <a class="dos-btn" href="resources.html">Resources</a>
+                    <button type="button" class="dos-btn dos-btn-danger" id="dosLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                 </div>
-            `).join('');
-        }
+            </header>
 
-        function getPortfolioLinks(code) {
-            const safeCode = encodeURIComponent(code || '');
-            return [
-                { key: 'books', label: 'Books', icon: '📚', url: `https://marriageducation.com/sbd-campaign.html?ref=${safeCode}&category=books` },
-                { key: 'schools', label: 'Schools', icon: '🎓', url: `https://marriageducation.com/schools.html?ref=${safeCode}&category=schools` },
-                { key: 'courses', label: 'Courses', icon: '📖', url: `https://marriageducation.com/courses.html?ref=${safeCode}&category=courses` },
-                { key: 'premium', label: 'Premium', icon: '💼', url: `https://marriageducation.com/payment.html?ref=${safeCode}&category=premium` },
-                { key: 'corporate', label: 'Corporate', icon: '🏢', url: `https://marriageducation.com/corporate.html?ref=${safeCode}&category=corporate` },
-                { key: 'community', label: 'Community', icon: '🤝', url: `https://marriageducation.com/resources.html?ref=${safeCode}&category=community` },
-                { key: 'recruitment', label: 'Recruitment', icon: '👥', url: `https://marriageducation.com/ambassador-register.html?ref=${safeCode}&category=recruitment` }
-            ];
-        }
+            <main class="dos-content">
+                <div id="dosLoadError" class="dos-overview-hint" style="display:none;background:#fef2f2;border-color:#fecaca;color:#991b1b"></div>
+                <!-- Overview -->
+                <section class="dos-section active" data-section="overview">
+                    <div class="dos-overview-hint" id="dosOverviewHint">Senior command center — team oversight plus full deployment operations for your personal code.</div>
 
-        function copyPortfolioReferralLink(categoryKey) {
-            const link = getPortfolioLinks(seniorCode).find((item) => item.key === categoryKey);
-            if (!link) return;
+                    <div id="dosAlertsOverview"></div>
 
-            navigator.clipboard.writeText(link.url)
-                .then(() => alert(`✅ ${link.label} referral link copied!`))
-                .catch(() => {
-                    const ta = document.createElement('textarea');
-                    ta.value = link.url;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                    alert(`✅ ${link.label} referral link copied!`);
-                });
-        }
+                    <div id="dosMonthlyTargetMount"></div>
 
-        function loadSBDReferralPanel(data, code) {
-            const section = document.getElementById('sbdReferralSection');
-            if (!section) return;
+                    <div class="dos-kpi-grid" id="dosOverviewKpis"></div>
 
-            const sbdCode = data.sbdReferralCode || data.sbd_referral_code;
-            if (!sbdCode) return;
-
-            document.getElementById('sbdReferralLink').textContent = `https://sbd-network.web.app/auth?ref=${sbdCode}`;
-
-            const referrals = data.sbdReferrals || {};
-            document.getElementById('sbdSignupsCount').textContent = referrals.signups || 0;
-            document.getElementById('sbdSubscribersCount').textContent = referrals.subscribers || 0;
-            document.getElementById('sbdFoundationCount').textContent = referrals.foundation || 0;
-            document.getElementById('sbdPremiumCount').textContent = referrals.premium || 0;
-            document.getElementById('sbdEliteCount').textContent = referrals.elite || 0;
-
-            section.style.display = 'block';
-        }
-
-        function copySBDReferralLink() {
-            const el = document.getElementById('sbdReferralLink');
-            if (!el) return;
-
-            navigator.clipboard.writeText(el.textContent.trim())
-                .then(() => alert('✅ SBD referral link copied!'))
-                .catch(() => {
-                    const ta = document.createElement('textarea');
-                    ta.value = el.textContent.trim();
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                    alert('✅ SBD referral link copied!');
-                });
-        }
-
-        async function loadTeamData(seniorData) {
-            try {
-                // Query ambassadors linked to this senior via either legacy senior_code
-                // or current recruiter field rdCode (used for AMB-* recruiter codes).
-                const ambassadorsRef = collection(db, 'ambassadors');
-                const [legacySnap, recruiterSnap] = await Promise.all([
-                    getDocs(query(ambassadorsRef, where('senior_code', '==', seniorCode))),
-                    getDocs(query(ambassadorsRef, where('rdCode', '==', seniorCode)))
-                ]);
-
-                const teamMembers = [];
-                let totalTeamUnits = 0;
-                let totalOverride = 0;
-                const seen = new Set();
-
-                [legacySnap, recruiterSnap].forEach((snap) => {
-                    snap.forEach((doc) => {
-                        if (seen.has(doc.id)) return;
-                        seen.add(doc.id);
-
-                        const member = { code: doc.id, ...doc.data() };
-                        teamMembers.push(member);
-                        totalTeamUnits += member.units_deployed || 0;
-
-                        // Calculate 5% override using actual revenue data
-                        const memberRevenue = Object.values(member.revenue_by_category || {}).reduce((s, v) => s + v, 0)
-                            || (member.units_deployed || 0) * 15000;
-                        const override = memberRevenue * 0.05;
-                        totalOverride += override;
-                    });
-                });
-
-                // Update team stats
-                document.getElementById('activeAmbassadors').textContent = teamMembers.length;
-                document.getElementById('teamTotalSales').textContent = totalTeamUnits;
-                document.getElementById('teamAvgPerformance').textContent = teamMembers.length > 0 ? Math.round(totalTeamUnits / teamMembers.length) : 0;
-                document.getElementById('totalOverride').textContent = Math.round(totalOverride).toLocaleString() + ' FCFA';
-
-                // Count new recruits this month
-                const now = new Date();
-                const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                const newRecruits = teamMembers.filter(m => m.joined_date && m.joined_date.startsWith(thisMonth)).length;
-                document.getElementById('newRecruits').textContent = newRecruits;
-
-                // Render ambassador list
-                renderAmbassadorList(teamMembers);
-                renderOverrideBreakdown(teamMembers);
-                renderSeniorMilestoneTracker(teamMembers.length);
-                await loadTeamSalesActivity(teamMembers);
-                renderTeamPortfolio(teamMembers);
-                renderAmbassadorDeepDive(teamMembers);
-
-            } catch (error) {
-                console.error('Error loading team data:', error);
-            }
-        }
-
-        function renderSeniorMilestoneTracker(teamSize) {
-            const MILESTONES = [
-                {
-                    name: 'Team Starter',
-                    sub: 'Bronze Leader',
-                    icon: '🥉',
-                    minTeam: 1,
-                    maxTeam: 2,
-                    scenarios: [
-                        { desc: '1 ambassador × $10K/mo volume', override: '328,000 FCFA/mo' },
-                        { desc: '2 ambassadors × $10K/mo volume each', override: '656,000 FCFA/mo' }
-                    ]
-                },
-                {
-                    name: 'Team Builder',
-                    sub: 'Silver Leader',
-                    icon: '🥈',
-                    minTeam: 3,
-                    maxTeam: 5,
-                    scenarios: [
-                        { desc: '3 ambassadors × $10K/mo volume each', override: '984,000 FCFA/mo' },
-                        { desc: '5 ambassadors × $10K/mo volume each', override: '1,640,000 FCFA/mo' }
-                    ]
-                },
-                {
-                    name: 'Team Grower',
-                    sub: 'Gold Leader',
-                    icon: '🥇',
-                    minTeam: 6,
-                    maxTeam: 8,
-                    scenarios: [
-                        { desc: '6 ambassadors × $10K/mo volume each', override: '1,968,000 FCFA/mo' },
-                        { desc: '8 ambassadors × $10K/mo volume each', override: '2,624,000 FCFA/mo' }
-                    ]
-                },
-                {
-                    name: 'Elite Team of 10',
-                    sub: '✨ Designed Income Unlocked',
-                    icon: '👑',
-                    minTeam: 9,
-                    maxTeam: 10,
-                    scenarios: [
-                        { desc: '10 ambassadors × $10K/mo volume each', override: '3,280,000 FCFA/mo' },
-                        { desc: '10 ambassadors × $30K/mo (full target)', override: '9,840,000 FCFA/mo' }
-                    ]
-                }
-            ];
-
-            // Determine current milestone
-            let currentIdx = 0;
-            for (let i = 0; i < MILESTONES.length; i++) {
-                if (teamSize >= MILESTONES[i].minTeam) currentIdx = i;
-            }
-
-            const container = document.getElementById('seniorMilestoneTracker');
-            container.innerHTML = MILESTONES.map((m, i) => {
-                const isCompleted = i < currentIdx;
-                const isCurrent = i === currentIdx && teamSize >= m.minTeam;
-                const isLocked = teamSize < m.minTeam;
-
-                let progressPct = 0;
-                if (isCurrent) {
-                    const range = (m.maxTeam - m.minTeam) + 1;
-                    progressPct = Math.min(100, Math.round(((teamSize - m.minTeam) + 1) / range * 100));
-                } else if (isCompleted) {
-                    progressPct = 100;
-                }
-
-                return `
-                    <div class="milestone-card ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}">
-                        <div class="milestone-header">
-                            <div class="milestone-icon">${m.icon}</div>
-                            <div class="milestone-info">
-                                <div class="milestone-name">${m.name}</div>
-                                <div class="milestone-sub">${m.sub}</div>
-                            </div>
-                            <div class="milestone-badge">
-                                ${isCompleted ? '✅ Complete' : isCurrent ? '▶ In Progress' : '🔒 Locked'}
-                            </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-bolt"></i> Quick actions</h3>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px">
+                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="team"><i class="fa-solid fa-bolt"></i> Team command</button>
+                            <button type="button" class="dos-btn" data-dos-nav="daily-ops"><i class="fa-solid fa-sun"></i> Daily ops</button>
+                            <button type="button" class="dos-btn" data-dos-nav="field-deploy"><i class="fa-solid fa-map-location-dot"></i> Field scripts</button>
+                            <button type="button" class="dos-btn" data-dos-nav="links"><i class="fa-solid fa-link"></i> Deployment links</button>
+                            <button type="button" class="dos-btn" data-dos-nav="commissions"><i class="fa-solid fa-coins"></i> Commissions</button>
+                            <button type="button" class="dos-btn" data-dos-nav="network"><i class="fa-solid fa-sitemap"></i> Network</button>
+                            <button type="button" class="dos-btn" data-dos-nav="formation"><i class="fa-solid fa-graduation-cap"></i> Formation / CRLA</button>
                         </div>
-                        <div style="font-size: 0.9rem; color: #636e72; margin: 0.5rem 0;">
-                            Team target: <strong>${m.minTeam}${m.maxTeam > m.minTeam ? '–' + m.maxTeam : '+'} active ambassadors</strong>
-                            ${isCurrent ? ` &bull; <span style="color: #00b894; font-weight: 600;">You have ${teamSize}</span>` : ''}
+                    </div>
+                </section>
+
+                <!-- Team command (Phase 4) -->
+                <section class="dos-section" data-section="team">
+                    <div id="dosTeamCommandBody"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-users"></i> Team ambassadors</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Members linked via <code>senior_code</code>, <code>rdCode</code>, or <code>recruitedBy</code>. Mentor inactive ambassadors to restore velocity.</p>
+                        <div id="dosTeamTableBody"></div>
+                    </div>
+                </section>
+
+                <!-- Daily ops (Phase 2) -->
+                <section class="dos-section" data-section="daily-ops">
+                    <div id="dosDailyOpsBody"></div>
+                </section>
+
+                <!-- Field deploy (Phase 2) -->
+                <section class="dos-section" data-section="field-deploy">
+                    <div id="dosFieldDeployBody"></div>
+                </section>
+
+                <!-- Deployment links -->
+                <section class="dos-section" data-section="links">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-link"></i> Your unique referral link</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Same campaign URL as your live dashboard (marriageducation.com).</p>
+                        <div class="dos-link-row">
+                            <div class="dos-link-box" id="dosPrimaryLink">Loading…</div>
+                            <button type="button" class="dos-btn dos-btn-primary" id="dosCopyPrimary2"><i class="fa-solid fa-copy"></i> Copy</button>
                         </div>
-                        ${isCurrent || isCompleted ? `
-                            <div class="milestone-progress">
-                                <div class="milestone-progress-bar" style="width: ${progressPct}%"></div>
-                            </div>
-                            <div style="font-size: 0.8rem; color: #636e72; margin-top: 4px; text-align: right;">${teamSize} / ${m.maxTeam} ambassadors (${progressPct}%)</div>
-                        ` : ''}
-                        <table class="combo-table" style="margin-top: 1rem;">
-                            <thead>
-                                <tr class="combo-table-header">
-                                    <th>Override Scenario</th>
-                                    <th style="text-align: right;">5% Monthly Override</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${m.scenarios.map(s => `
-                                    <tr class="portfolio-combo-row">
-                                        <td>${s.desc}</td>
-                                        <td style="text-align: right; font-weight: 700; color: #00b894;">${s.override}</td>
+                        <div class="dos-share-row" id="dosShareRow">
+                            <button type="button" class="dos-btn" id="dosShareWhatsApp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                            <button type="button" class="dos-btn" id="dosShareFacebook"><i class="fa-brands fa-facebook"></i> Facebook</button>
+                            <button type="button" class="dos-btn" id="dosShareInstagram"><i class="fa-brands fa-instagram"></i> Instagram caption</button>
+                        </div>
+                    </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-boxes-stacked"></i> Multi-product deployment links</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 16px">Books, schools, courses, premium, corporate, community, and recruitment — each carries your ambassador code.</p>
+                        <div class="dos-portfolio-grid" id="dosPortfolioGrid"></div>
+                    </div>
+                    <div class="dos-card" id="dosSbdSection">
+                        <h3><i class="fa-solid fa-mobile-screen"></i> SBD Network app</h3>
+                        <div id="dosSbdBody">
+                            <p class="dos-sbd-empty">Loading SBD referral panel…</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Subscribers -->
+                <section class="dos-section" data-section="subscribers">
+                    <div id="dosPipelineBody"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-chart-line"></i> Recent product deployments</h3>
+                        <div id="dosRecentSales"></div>
+                    </div>
+                </section>
+
+                <!-- Retention -->
+                <section class="dos-section" data-section="retention">
+                    <div id="dosRetentionBody"></div>
+                </section>
+
+                <!-- Commissions -->
+                <section class="dos-section" data-section="commissions">
+                    <div id="dosRecurringBody"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-table"></i> Multi-product portfolio (earnings by category)</h3>
+                        <div class="dos-table-wrap">
+                            <table class="dos-table">
+                                <thead>
+                                    <tr><th>Category</th><th>Units</th><th>Revenue</th><th>Your earnings</th></tr>
+                                </thead>
+                                <tbody id="dosPortfolioTableBody"></tbody>
+                                <tfoot>
+                                    <tr style="font-weight:700">
+                                        <td>Total</td><td></td>
+                                        <td id="dosPortfolioTotalRev">$0</td>
+                                        <td id="dosPortfolioTotalEarn">$0</td>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderAmbassadorList(members) {
-            const listContainer = document.getElementById('ambassadorList');
-            if (members.length === 0) {
-                listContainer.innerHTML = '<div style="text-align: center; padding: 3rem; color: #636e72;"><i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i><p>No team members yet. Share your recruitment link to grow your team!</p></div>';
-                return;
-            }
-
-            listContainer.innerHTML = members.map(member => {
-                const initials = (member.name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase();
-                const unitsDeployed = member.units_deployed || 0;
-                const earned = (unitsDeployed * 15000 * 0.10).toLocaleString();
-                const schoolProgress = member.school_enrollment?.foundation_school ? 
-                    Math.round((member.school_enrollment.foundation_school.teleios_progress + member.school_enrollment.foundation_school.advocacy_progress) / 2) : 0;
-
-                return `
-                    <div class="ambassador-item">
-                        <div class="ambassador-avatar">${initials}</div>
-                        <div class="ambassador-info">
-                            <div class="ambassador-name">${member.name || 'Unknown'}</div>
-                            <div class="ambassador-code">${member.code || member.ambassador_code}</div>
-                            <div class="ambassador-joined">Joined: ${member.joined_date || 'Unknown'}</div>
-                        </div>
-                        <div class="ambassador-stats">
-                            <div class="ambassador-stat">
-                                <div class="ambassador-stat-value">${unitsDeployed}</div>
-                                <div class="ambassador-stat-label">Units</div>
-                            </div>
-                            <div class="ambassador-stat">
-                                <div class="ambassador-stat-value">${(unitsDeployed * 15).toFixed(1)}K</div>
-                                <div class="ambassador-stat-label">Earned</div>
-                            </div>
-                            <div class="ambassador-stat">
-                                <div class="ambassador-stat-value">${schoolProgress}%</div>
-                                <div class="ambassador-stat-label">CRLA</div>
-                            </div>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
-
-        function renderOverrideBreakdown(members) {
-            const breakdownContainer = document.getElementById('overrideBreakdown');
-            if (members.length === 0) {
-                breakdownContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #636e72;"><p>No override commissions yet. Your team sales will appear here!</p></div>';
-                return;
-            }
-
-            breakdownContainer.innerHTML = members.map(member => {
-                const initials = (member.name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase();
-                const units = member.units_deployed || 0;
-                const revenue = Object.values(member.revenue_by_category || {}).reduce((s, v) => s + v, 0)
-                    || units * 15000;
-                const override = revenue * 0.05;
-
-                return `
-                    <div class="override-item">
-                        <div class="override-ambassador">
-                            <div class="override-ambassador-icon">${initials}</div>
-                            <div>
-                                <div style="font-weight: 600; color: #2d3436;">${member.name || 'Unknown'}</div>
-                                <div style="font-size: 0.85rem; color: #636e72;">${member.code || member.ambassador_code}</div>
-                            </div>
-                        </div>
-                        <div class="override-details">
-                            <div class="override-sales">${units} units &rarr; ${Math.round(revenue).toLocaleString()} FCFA team sales</div>
-                            <div class="override-earnings">${Math.round(override).toLocaleString()} FCFA</div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-receipt"></i> Commission history</h3>
+                        <div class="dos-table-wrap">
+                            <table class="dos-table">
+                                <thead>
+                                    <tr><th>Date</th><th>Source</th><th>Product</th><th>Commission</th></tr>
+                                </thead>
+                                <tbody id="dosCommissionBody">
+                                    <tr><td colspan="4" class="dos-empty">Loading…</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
+                </section>
 
-        // Render team portfolio aggregation by category
-        function renderTeamPortfolio(members) {
-            const categories = [
-                { id: 'books', name: 'Books', icon: '📚' },
-                { id: 'schools', name: 'Schools', icon: '🎓' },
-                { id: 'courses', name: 'Courses', icon: '📖' },
-                { id: 'premium', name: 'Premium', icon: '💼' },
-                { id: 'corporate', name: 'Corporate', icon: '🏢' },
-                { id: 'community', name: 'Community', icon: '🤝' }
-            ];
+                <section class="dos-section" data-section="social-deploy">
+                    <div id="dosSocialBody"></div>
+                </section>
+                <section class="dos-section" data-section="reporting">
+                    <div id="dosReportingBody"></div>
+                </section>
 
-            const portfolioData = {};
-            let totalUnits = 0;
-            let totalRevenue = 0;
-            let totalOverride = 0;
-
-            // Aggregate team data by category
-            members.forEach(member => {
-                const deploymentByCategory = member.deployment_by_category || {};
-                const revenueByCategory = member.revenue_by_category || {};
-
-                categories.forEach(cat => {
-                    if (!portfolioData[cat.id]) {
-                        portfolioData[cat.id] = { units: 0, revenue: 0, override: 0 };
-                    }
-                    const units = deploymentByCategory[cat.id] || 0;
-                    const revenue = revenueByCategory[cat.id] || 0;
-                    const override = revenue * 0.05; // 5% senior override
-
-                    portfolioData[cat.id].units += units;
-                    portfolioData[cat.id].revenue += revenue;
-                    portfolioData[cat.id].override += override;
-
-                    totalUnits += units;
-                    totalRevenue += revenue;
-                    totalOverride += override;
-                });
-            });
-
-            // Render table
-            const tbody = document.getElementById('teamPortfolioBody');
-            tbody.innerHTML = categories.map(cat => {
-                const data = portfolioData[cat.id] || { units: 0, revenue: 0, override: 0 };
-                return `
-                    <tr>
-                        <td style="padding: 1rem; border-bottom: 1px solid #e9ecef;"><span style="font-size: 1.5rem; margin-right: 0.5rem;">${cat.icon}</span><span style="font-weight: 600;">${cat.name}</span></td>
-                        <td style="padding: 1rem; text-align: center; border-bottom: 1px solid #e9ecef; font-family: monospace;">${data.units}</td>
-                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace;">${Math.round(data.revenue).toLocaleString()} FCFA</td>
-                        <td style="padding: 1rem; text-align: right; border-bottom: 1px solid #e9ecef; font-family: monospace; font-weight: 700; color: #00b894;">${Math.round(data.override).toLocaleString()} FCFA</td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Update totals
-            document.getElementById('teamPortfolioTotalUnits').textContent = totalUnits;
-            document.getElementById('teamPortfolioTotalRevenue').textContent = Math.round(totalRevenue).toLocaleString() + ' FCFA';
-            document.getElementById('teamPortfolioTotalOverride').textContent = Math.round(totalOverride).toLocaleString() + ' FCFA';
-        }
-
-        // Load and render team sales activity feed
-        async function loadTeamSalesActivity(teamMembers) {
-            try {
-                const salesRef = collection(db, 'sales');
-                const ambassadorCodes = teamMembers.map(m => m.code || m.ambassador_code);
-                
-                if (ambassadorCodes.length === 0) {
-                    document.getElementById('teamSalesFeed').innerHTML = '<div style="text-align: center; padding: 3rem; color: #636e72;"><i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i><p>No team sales yet. Your team\'s activity will appear here in real-time!</p></div>';
-                    return;
-                }
-
-                // Query last 50 sales for team members
-                const q = query(
-                    salesRef,
-                    where('ambassador_code', 'in', ambassadorCodes.slice(0, 10)), // Firestore 'in' limit is 10
-                    orderBy('created_at', 'desc'),
-                    limit(50)
-                );
-                
-                const salesSnap = await getDocs(q);
-                const sales = [];
-                
-                salesSnap.forEach(doc => {
-                    sales.push({ id: doc.id, ...doc.data() });
-                });
-
-                // Count today's sales
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const todaySales = sales.filter(sale => {
-                    const saleDate = sale.created_at?.toDate() || new Date(sale.timestamp);
-                    return saleDate >= today;
-                });
-                
-                document.getElementById('liveSalesCount').textContent = todaySales.length;
-
-                // Render sales feed
-                const feedContainer = document.getElementById('teamSalesFeed');
-                if (sales.length === 0) {
-                    feedContainer.innerHTML = '<div style="text-align: center; padding: 3rem; color: #636e72;"><i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i><p>No team sales yet. Your team\'s activity will appear here in real-time!</p></div>';
-                    return;
-                }
-
-                feedContainer.innerHTML = sales.map(sale => {
-                    const saleDate = sale.created_at?.toDate() || new Date(sale.timestamp);
-                    const timeAgo = getTimeAgo(saleDate);
-                    const override = (sale.commission_amount || 0) * 0.5; // 5% = half of 10%
-                    const ambassador = teamMembers.find(m => (m.code || m.ambassador_code) === sale.ambassador_code);
-                    const ambassadorName = ambassador?.name || 'Unknown';
-
-                    return `
-                        <div class="live-sale-item">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: #2d3436; margin-bottom: 0.25rem;">
-                                        ${sale.product_name || 'Product'}
-                                    </div>
-                                    <div style="font-size: 0.85rem; color: #636e72;">
-                                        <i class="fas fa-user-circle"></i> ${ambassadorName} (${sale.ambassador_code})
-                                    </div>
-                                    <div style="font-size: 0.85rem; color: #636e72; margin-top: 0.25rem;">
-                                        <i class="fas fa-clock"></i> ${timeAgo}
-                                    </div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 1.25rem; font-weight: 700; color: #667eea;">
-                                        ${(sale.product_price || 0).toLocaleString()} FCFA
-                                    </div>
-                                    <div style="font-size: 0.9rem; color: #00b894; font-weight: 600; margin-top: 0.25rem;">
-                                        Your override: ${Math.round(override).toLocaleString()} FCFA
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-            } catch (error) {
-                console.error('Error loading team sales activity:', error);
-                document.getElementById('teamSalesFeed').innerHTML = '<div style="text-align: center; padding: 2rem; color: #dc3545;"><p>Error loading sales activity. Please refresh.</p></div>';
-            }
-        }
-
-        // Render individual ambassador deep dive
-        function renderAmbassadorDeepDive(members) {
-            const container = document.getElementById('ambassadorDeepDive');
-            
-            if (members.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 3rem; color: #636e72;"><i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i><p>No team members yet.</p></div>';
-                return;
-            }
-
-            container.innerHTML = members.map(member => {
-                const initials = (member.name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase();
-                const deploymentByCategory = member.deployment_by_category || {};
-                const revenueByCategory = member.revenue_by_category || {};
-                const totalUnits = member.units_deployed || 0;
-                const totalRevenue = member.commissionEarned || 0;
-
-                const categories = [
-                    { id: 'books', name: 'Books', icon: '📚' },
-                    { id: 'schools', name: 'Schools', icon: '🎓' },
-                    { id: 'courses', name: 'Courses', icon: '📖' },
-                    { id: 'premium', name: 'Premium', icon: '💼' },
-                    { id: 'corporate', name: 'Corporate', icon: '🏢' },
-                    { id: 'community', name: 'Community', icon: '🤝' }
-                ];
-
-                return `
-                    <div class="ambassador-deep-card" onclick="toggleAmbassadorDetails('${member.code || member.ambassador_code}')">
-                        <div class="ambassador-deep-header">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div class="ambassador-avatar">${initials}</div>
-                                <div>
-                                    <div style="font-weight: 600; font-size: 1.1rem; color: #2d3436;">${member.name || 'Unknown'}</div>
-                                    <div style="font-size: 0.9rem; color: #636e72;">${member.code || member.ambassador_code}</div>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 1.5rem; font-weight: 700; color: #667eea;">${totalUnits} units</div>
-                                <div style="font-size: 0.9rem; color: #636e72;">Override: ${Math.round(totalRevenue * 0.5).toLocaleString()} FCFA</div>
-                            </div>
-                        </div>
-                        <div class="ambassador-deep-details" id="details-${member.code || member.ambassador_code}">
-                            <h4 style="margin-bottom: 1rem; color: #2d3436;">Sales Breakdown by Category</h4>
-                            ${categories.map(cat => {
-                                const units = deploymentByCategory[cat.id] || 0;
-                                const revenue = revenueByCategory[cat.id] || 0;
-                                const override = revenue * 0.5; // 5% override (half of their 10%)
-                                
-                                if (units === 0) return '';
-                                
-                                return `
-                                    <div class="sales-category-row">
-                                        <div>
-                                            <span style="font-size: 1.25rem; margin-right: 0.5rem;">${cat.icon}</span>
-                                            <span style="font-weight: 600;">${cat.name}</span>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-weight: 600; color: #2d3436;">${units} units × ${Math.round(revenue / units).toLocaleString()} = ${Math.round(revenue).toLocaleString()} FCFA</div>
-                                            <div style="font-size: 0.85rem; color: #00b894;">Your override: ${Math.round(override).toLocaleString()} FCFA</div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('') || '<div style="text-align: center; color: #636e72; padding: 1rem;">No sales data available</div>'}
-                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #f8f9fa;">
-                                <button class="btn btn-secondary" style="width: 100%;" onclick="viewAmbassadorSales('${member.code || member.ambassador_code}'); event.stopPropagation();">
-                                    <i class="fas fa-list"></i> View All Transactions
-                                </button>
-                            </div>
-                        </div>
+                <!-- Network -->
+                <section class="dos-section" data-section="network">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-sitemap"></i> Your network · <span id="dosRecruitCount">0</span> ambassadors</h3>
+                        <p style="font-size:14px;margin:0 0 16px" id="dosNetworkBlurb">Develop ambassadors under your leadership. RD path: <strong>50 Senior Ambassadors</strong> in network.</p>
+                        <div id="dosRecruitList"></div>
                     </div>
-                `;
-            }).join('');
-        }
+                </section>
 
-        // Toggle ambassador details
-        function toggleAmbassadorDetails(ambassadorCode) {
-            const details = document.getElementById(`details-${ambassadorCode}`);
-            if (details) {
-                details.classList.toggle('expanded');
-            }
-        }
+                <!-- Formation -->
+                <section class="dos-section" data-section="formation">
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-graduation-cap"></i> Marriage Foundation School · CRLA progress</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 16px">Educational formation is separate from deployment operations. Training lives in Foundation School.</p>
+                        <div id="dosFormationBody"></div>
+                    </div>
+                </section>
 
-        // View individual ambassador sales (would open modal or navigate to detail page)
-        function viewAmbassadorSales(ambassadorCode) {
-            alert(`Full transaction history for ${ambassadorCode} would open here.\n\nThis could be:\n- Modal with transaction table\n- Separate detail page\n- Export to CSV option`);
-        }
-
-        // Helper function to format time ago
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-            
-            return date.toLocaleDateString();
-        }
-
-        // Demo data function removed - all data should come from Firestore
-        // If you see this error, your ambassador record is missing from the database
-
-        // Global functions for buttons
-        window.copyRecruitLink = function() {
-            const link = document.getElementById('recruitLink').textContent;
-            navigator.clipboard.writeText(link);
-            alert('Recruitment link copied to clipboard!');
-        };
-
-        window.copyReferralLink = function() {
-            const link = document.getElementById('referralLink').textContent;
-            navigator.clipboard.writeText(link);
-            alert('Deployment link copied to clipboard!');
-        };
-
-        window.shareWhatsApp = function() {
-            const link = document.getElementById('recruitLink').textContent;
-            const message = encodeURIComponent(`🌟 Join my team as a Marriage Literacy Ambassador!\n\nEarn income while helping couples thrive. FREE Foundation School training included!\n\nJoin here: ${link}`);
-            window.open(`https://wa.me/?text=${message}`, '_blank');
-        };
-
-        window.shareFacebook = function() {
-            const link = document.getElementById('recruitLink').textContent;
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
-        };
-
-        window.shareEmail = function() {
-            const link = document.getElementById('recruitLink').textContent;
-            const subject = encodeURIComponent('Join My Ambassador Team!');
-            const body = encodeURIComponent(`Hi!\n\nI'd like to invite you to join my team as a Marriage Literacy Ambassador.\n\nYou'll earn income while helping couples build thriving marriages. Plus, you get FREE access to our comprehensive Foundation School training!\n\nJoin here: ${link}\n\nLet me know if you have any questions!\n\nBest regards`);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
-        };
-
-        window.shareDeploymentWhatsApp = function() {
-            const link = document.getElementById('referralLink').textContent;
-            const message = encodeURIComponent(`📚 Transform your marriage with proven wisdom!\n\nGet instant access to marriage-saving resources through my deployment link:\n\n${link}`);
-            window.open(`https://wa.me/?text=${message}`, '_blank');
-        };
-
-        window.shareDeploymentFacebook = function() {
-            const link = document.getElementById('referralLink').textContent;
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
-        };
-
-        window.logout = function() {
-            localStorage.removeItem('seniorCode');
-            localStorage.removeItem('ambassadorCode');
-            window.location.href = '../index.html';
-        };
-
-        window.toggleAmbassadorDetails = toggleAmbassadorDetails;
-        window.viewAmbassadorSales = viewAmbassadorSales;
-
-        // Initialize dashboard
-        if (hasSeniorCode) {
-            loadSeniorData();
-        }
-    </script>
-
-  <!-- PWA: Service Worker + Install Prompt -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/ambassador-sw-v2.js', { scope: '/ambassador/' })
-          .then(reg => console.log('[PWA] SW registered:', reg.scope))
-          .catch(err => console.warn('[PWA] SW failed:', err));
-      });
-    }
-    let deferredInstallPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'flex';
-    });
-    function installPWA() {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then(() => {
-        deferredInstallPrompt = null;
-        const banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
-      });
-    }
-    function dismissInstallBanner() {
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'none';
-    }
-    window.addEventListener('appinstalled', () => {
-      const banner = document.getElementById('pwa-install-banner');
-      if (banner) banner.style.display = 'none';
-    });
-
-    // Logout function
-    function logout() {
-      localStorage.removeItem('ambassadorCode');
-      localStorage.removeItem('seniorCode');
-      localStorage.removeItem('ambassadorEmail');
-      localStorage.removeItem('ambassadorData');
-      sessionStorage.clear();
-      window.location.href = '../ambassador-login.html';
-    }
-  </script>
-  <div id="pwa-install-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#00b894; color:#fff; padding:14px 20px; align-items:center; justify-content:space-between; gap:12px; z-index:9999; box-shadow:0 -2px 16px rgba(0,0,0,0.18); font-family:Inter,sans-serif;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <img src="/assets/icons/icon-72.png" alt="" style="width:40px;height:40px;border-radius:10px;">
-      <div>
-        <div style="font-weight:700; font-size:0.95rem;">Install Ambassador App</div>
-        <div style="font-size:0.8rem; opacity:0.88;">Quick access to your dashboard &amp; courses</div>
-      </div>
+                <!-- Performance -->
+                <section class="dos-section" data-section="performance">
+                    <div id="dosContestFullMount"></div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-ranking-star"></i> Leaderboard position</h3>
+                        <div id="dosLeaderboard"><div class="dos-empty">Loading…</div></div>
+                    </div>
+                    <div class="dos-card">
+                        <h3><i class="fa-solid fa-bullseye"></i> Deployment unit milestones</h3>
+                        <p style="font-size:13px;color:#71717a;margin:0 0 12px">Bronze → Platinum track units deployed. <strong>RD rank</strong> = 50 seniors in network (see Team command).</p>
+                        <div class="dos-milestone-list" id="dosMilestoneList"></div>
+                    </div>
+                    <div id="dosRevenueStacksMount"></div>
+                    <div id="dosEliteBadgesMount"></div>
+                </section>
+            </main>
+        </div>
     </div>
-    <div style="display:flex; gap:10px; flex-shrink:0;">
-      <button onclick="installPWA()" style="background:#fff; color:#00b894; border:none; border-radius:8px; padding:8px 18px; font-weight:700; font-size:0.9rem; cursor:pointer;">Install</button>
-      <button onclick="dismissInstallBanner()" style="background:transparent; color:#fff; border:2px solid rgba(255,255,255,0.5); border-radius:8px; padding:8px 14px; font-size:0.85rem; cursor:pointer;">Not now</button>
-    </div>
-  </div>
+
+    <nav class="dos-mobile-nav" id="dosMobileNav" aria-label="Mobile"></nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="../js/firebase-config.js"></script>
+    <script src="../js/money.js"></script>
+    <script src="../js/ambassador-account-resolve.js?v=20260523prod"></script>
+    <script src="../js/ambassador-session.js?v=20260523prod"></script>
+    <script src="../js/ambassador-routes.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-config.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-economics.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-metrics.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-router.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-daily-ops.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-pipeline.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-team.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-region.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-social.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-reporting.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-gamification.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-executive.js?v=20260523prod"></script>
+<script src="../dos/js/ambassador-dashboard-v2.js?v=20260523prod"></script>
 </body>
 </html>

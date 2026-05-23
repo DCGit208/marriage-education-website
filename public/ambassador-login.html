@@ -238,6 +238,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/ambassador-session.js"></script>
+    <script src="js/ambassador-account-resolve.js"></script>
+    <script src="js/ambassador-routes.js"></script>
 
     <script>
         const errorMsg = document.getElementById('errorMessage');
@@ -262,40 +265,61 @@
                     throw new Error('Database connection failed. Please refresh the page.');
                 }
                 
-                // Query Firestore for ambassador by code
-                const ambassadorDoc = await db.collection('ambassadors').doc(code).get();
-                
-                if (!ambassadorDoc.exists) {
-                    throw new Error('Ambassador code not found. Please check your code or register.');
+                let ambassadorData;
+                let sessionCode = code;
+
+                if (typeof MEAmbassadorAccountResolve !== 'undefined') {
+                    const resolved = await MEAmbassadorAccountResolve.resolveAccount(db, code, email);
+                    if (!resolved) {
+                        throw new Error('Code not found. For Regional Directors use your RD-… code and registered email.');
+                    }
+                    sessionCode = resolved.id;
+                    ambassadorData = resolved.stats;
+                } else {
+                    const ambassadorDoc = await db.collection('ambassadors').doc(code).get();
+                    if (!ambassadorDoc.exists) {
+                        throw new Error('Ambassador code not found. Please check your code or register.');
+                    }
+                    ambassadorData = ambassadorDoc.data();
+                    if (!ambassadorData.email) {
+                        throw new Error('Your account is missing email information. Please contact admin.');
+                    }
+                    if (ambassadorData.email.toLowerCase() !== email) {
+                        throw new Error('Email does not match the ambassador code. Please check your credentials.');
+                    }
                 }
-                
-                const ambassadorData = ambassadorDoc.data();
-                
-                // Verify email matches
-                if (!ambassadorData.email) {
-                    throw new Error('Your account is missing email information. Please contact admin.');
-                }
-                if (ambassadorData.email.toLowerCase() !== email) {
-                    throw new Error('Email does not match the ambassador code. Please check your credentials.');
-                }
-                
-                // Check if account is active or approved
-                if (ambassadorData.status !== 'active' && ambassadorData.status !== 'approved') {
+
+                const validStatuses = ['active', 'approved', 'activated', 'confirmed'];
+                const accountStatus = (ambassadorData.status || '').toString().toLowerCase();
+                if (!validStatuses.includes(accountStatus)) {
                     throw new Error('Your account is pending approval. Please wait for admin confirmation.');
                 }
+
+                if (typeof MEAmbassadorSession !== 'undefined') {
+                    MEAmbassadorSession.saveSession(sessionCode, email, ambassadorData);
+                } else {
+                    localStorage.setItem('ambassadorCode', sessionCode);
+                    localStorage.setItem('ambassadorEmail', email);
+                    localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+                }
+                code = sessionCode;
                 
-                // Store ambassador info in localStorage
-                localStorage.setItem('ambassadorCode', code);
-                localStorage.setItem('ambassadorEmail', email);
-                localStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+                const welcomeMsg = typeof MEAmbassadorRoutes !== 'undefined'
+                    ? MEAmbassadorRoutes.getWelcomeMessageForType(ambassadorData.ambassador_type)
+                    : '✅ Login successful! Redirecting to dashboard...';
+                showSuccess(welcomeMsg);
                 
-                // Show success
-                showSuccess('✅ Login successful! Redirecting to dashboard...');
-                
-                // Redirect to dashboard (absolute path from public root)
                 setTimeout(() => {
-                    window.location.href = '/ambassador/dashboard.html';
-                }, 1500);
+                    if (typeof MEAmbassadorRoutes !== 'undefined') {
+                        const dest = MEAmbassadorRoutes.resolveLoginRedirect(
+                            ambassadorData,
+                            window.location.search
+                        );
+                        window.location.replace(dest);
+                    } else {
+                        window.location.replace('/ambassador/dashboard.html');
+                    }
+                }, 800);
                 
             } catch (error) {
                 console.error('Login error:', error);
@@ -367,8 +391,17 @@
             if (code && data) {
                 try {
                     const parsed = JSON.parse(data);
-                    if (parsed && (parsed.status === 'active' || parsed.status === 'approved')) {
-                        window.location.replace('/ambassador/dashboard.html');
+                    const st = (parsed.status || '').toString().toLowerCase();
+                    if (parsed && ['active', 'approved', 'activated', 'confirmed'].includes(st)) {
+                        if (typeof MEAmbassadorRoutes !== 'undefined') {
+                            const dest = MEAmbassadorRoutes.resolveLoginRedirect(
+                                parsed,
+                                window.location.search
+                            );
+                            window.location.replace(dest);
+                        } else {
+                            window.location.replace('/ambassador/dashboard.html');
+                        }
                     }
                 } catch(e) {}
             }

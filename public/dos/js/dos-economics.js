@@ -1,0 +1,63 @@
+/**
+ * DOS economics doctrine — single source for UI + metrics (Phase 0).
+ * Ledger remains XAF in Firestore; dashboards display USD via MEMoney.
+ */
+(function (global) {
+  'use strict';
+
+  var XAF_PER_USD = 600;
+
+  var DOCTRINE = {
+    subscriptionMonthlyUsd: 9,
+    ambassadorRecurringPercent: 0.1,
+    seniorOverridePercent: 0.05,
+    rdOverridePercent: 0.05,
+    ambassadorMonthlyTargetUsd: 3000,
+    seniorMonthlyTargetUsd: 18000,
+    rdMonthlyTargetUsd: 750000,
+    dailyTargets: {
+      newSubscribers: 10,
+      conversations: 20,
+      followUps: 10,
+      recruitConversations: 1,
+      socialPosts: 1
+    },
+    promotion: {
+      seniorRecruits: 10,
+      rdSeniors: 50,
+      ambassadorsPerSenior: 10
+    },
+    unitMilestones: [50, 150, 300, 500]
+  };
+
+  function monthlyCommissionUsd(activeSubscribers) {
+    var n = Number(activeSubscribers) || 0;
+    return n * DOCTRINE.subscriptionMonthlyUsd * DOCTRINE.ambassadorRecurringPercent;
+  }
+
+  function xafToUsd(xaf) {
+    if (global.MEMoney && global.MEMoney.toUsd) {
+      return global.MEMoney.toUsd(xaf, { storedAs: 'xaf' });
+    }
+    return (Number(xaf) || 0) / XAF_PER_USD;
+  }
+
+  function formatUsd(usd) {
+    if (global.MEMoney && global.MEMoney.formatUSD) {
+      return global.MEMoney.formatUSD(usd);
+    }
+    return '$' + Math.round(Number(usd) || 0).toLocaleString();
+  }
+
+  function formatStoredXafAsUsd(xaf) {
+    return formatUsd(xafToUsd(xaf));
+  }
+
+  global.DOSEconomics = {
+    DOCTRINE: DOCTRINE,
+    monthlyCommissionUsd: monthlyCommissionUsd,
+    xafToUsd: xafToUsd,
+    formatUsd: formatUsd,
+    formatStoredXafAsUsd: formatStoredXafAsUsd
+  };
+})(typeof window !== 'undefined' ? window : global);
