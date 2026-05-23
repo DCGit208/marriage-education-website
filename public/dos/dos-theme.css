@@ -1029,6 +1029,13 @@ body.dos-app {
   flex-wrap: wrap;
 }
 #dosTourBtn,
-#dosGuideDocBtn {
+#dosGuideDocBtn,
+.dos-btn-guide {
   white-space: nowrap;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+.dos-btn-guide:hover {
+  background: #d1fae5;
 }

@@ -911,6 +911,9 @@
     }
 
     updateTopbar();
+    if (global.DOSTour && global.DOSTour.onDashboardReady) {
+      global.DOSTour.onDashboardReady(code);
+    }
     renderMonthlyTarget(stats);
     if (isExecutivePreview()) {
       await loadPhase6Executive(code, stats);
@@ -943,8 +946,6 @@
       console.error(err);
       showLoadError('Some sections failed to load. Try refreshing the page.');
     }
-
-    maybeStartDashboardTour(code);
   }
 
   var pipelineCache = [];
@@ -1116,12 +1117,6 @@
     }
 
     bindShareButtons();
-  }
-
-  function maybeStartDashboardTour(code) {
-    if (global.DOSTour && global.DOSTour.onDashboardReady) {
-      global.DOSTour.onDashboardReady(code);
-    }
   }
 
   var sessionKeepAliveId = null;
