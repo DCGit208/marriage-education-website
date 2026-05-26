@@ -73,7 +73,11 @@
                 <div id="dosLoadError" class="dos-overview-hint" style="display:none;background:#fef2f2;border-color:#fecaca;color:#991b1b"></div>
                 <!-- Overview -->
                 <section class="dos-section active" data-section="overview">
-                    <div class="dos-overview-hint" id="dosOverviewHint">Regional command — team and territory metrics plus your personal deployment operations.</div>
+                    <div class="dos-overview-hint" id="dosOverviewHint">
+                        <strong>New?</strong> Open <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="role-targets" style="margin:0 4px;padding:4px 10px;font-size:12px">Role &amp; targets</button>
+                        (sidebar #2) for your regional blueprint and PDF — then <strong>Regional command</strong> and Overview daily.
+                        <strong>Guide</strong> / <strong>Map</strong> in the top bar.
+                    </div>
 
                     <div id="dosAlertsOverview"></div>
 
@@ -84,7 +88,8 @@
                     <div class="dos-card">
                         <h3><i class="fa-solid fa-bolt"></i> Quick actions</h3>
                         <div style="display:flex;flex-wrap:wrap;gap:8px">
-                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="region"><i class="fa-solid fa-globe"></i> Regional command</button>
+                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="role-targets"><i class="fa-solid fa-book-open"></i> Role &amp; targets</button>
+                            <button type="button" class="dos-btn" data-dos-nav="region"><i class="fa-solid fa-globe"></i> Regional command</button>
                             <button type="button" class="dos-btn" data-dos-nav="team"><i class="fa-solid fa-bolt"></i> Team command</button>
                             <button type="button" class="dos-btn" data-dos-nav="daily-ops"><i class="fa-solid fa-sun"></i> Daily ops</button>
                             <button type="button" class="dos-btn" data-dos-nav="field-deploy"><i class="fa-solid fa-map-location-dot"></i> Field scripts</button>
@@ -93,6 +98,13 @@
                             <button type="button" class="dos-btn" data-dos-nav="network"><i class="fa-solid fa-sitemap"></i> Network</button>
                             <button type="button" class="dos-btn" data-dos-nav="formation"><i class="fa-solid fa-graduation-cap"></i> Formation / CRLA</button>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Role & targets -->
+                <section class="dos-section" data-section="role-targets">
+                    <div id="dosRoleTargetsMount">
+                        <div class="dos-empty" style="padding:32px">Loading role &amp; targets…</div>
                     </div>
                 </section>
 
@@ -264,10 +276,10 @@
     <script src="../js/ambassador-account-resolve.js?v=20260523prod"></script>
     <script src="../js/ambassador-session.js?v=20260523prod"></script>
     <script src="../js/ambassador-routes.js?v=20260523prod"></script>
-    <script src="../dos/js/dos-config.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-config.js?v=20260528prod"></script>
     <script src="../dos/js/dos-economics.js?v=20260523prod"></script>
     <script src="../dos/js/dos-metrics.js?v=20260523prod"></script>
-    <script src="../dos/js/dos-router.js?v=20260523prod"></script>
+    <script src="../dos/js/dos-router.js?v=20260528prod"></script>
     <script src="../dos/js/dos-daily-ops.js?v=20260523prod"></script>
     <script src="../dos/js/dos-pipeline.js?v=20260523prod"></script>
     <script src="../dos/js/dos-team.js?v=20260523prod"></script>
@@ -276,7 +288,8 @@
     <script src="../dos/js/dos-reporting.js?v=20260523prod"></script>
     <script src="../dos/js/dos-gamification.js?v=20260523prod"></script>
     <script src="../dos/js/dos-executive.js?v=20260523prod"></script>
-<script src="../dos/js/ambassador-dashboard-v2.js?v=20260524d"></script>
-    <script src="../dos/js/dos-tour.js?v=20260524e"></script>
+    <script src="../dos/js/dos-role-charter.js?v=20260528prod"></script>
+    <script src="../dos/js/ambassador-dashboard-v2.js?v=20260528prod"></script>
+    <script src="../dos/js/dos-tour.js?v=20260528prod"></script>
 </body>
 </html>

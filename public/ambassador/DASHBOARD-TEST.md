@@ -125,4 +125,18 @@ Deploy (you run when validated): `git push origin main` + Firebase hosting both 
 | Tour | v4 — Senior Role & targets steps |
 
 Preview: `/ambassador/senior-dashboard-test.html?v=20260527b#role-targets`  
-Production: `/ambassador/senior-dashboard.html?v=20260527prod#role-targets`
+Production: `/ambassador/senior-dashboard.html?v=20260528prod#role-targets`
+
+## Phase 8 — Regional Director Role & targets
+
+| What | Detail |
+|------|--------|
+| Documents | `/documents/sbd-ops/REGIONAL_DIRECTOR.{pdf,html,md}` |
+| Dashboards | `rd-dashboard.html` + `rd-dashboard-test.html` |
+| Charter | `DOSRoleCharter.renderRegionalDirector()` — 50 seniors, 100k/mo model, 5% override |
+| Tour | v5 — RD Role & targets steps |
+
+Preview: `/regional-director/rd-dashboard-test.html?v=20260528b#role-targets`  
+Production: `/regional-director/rd-dashboard.html?v=20260528prod#role-targets`
+
+Deploy when validated: `git push origin main` + Firebase hosting both targets.

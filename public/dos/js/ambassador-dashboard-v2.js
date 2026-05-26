@@ -1135,6 +1135,20 @@
     var mount = document.getElementById('dosRoleTargetsMount');
     if (!mount || !global.DOSRoleCharter) return;
     var r = getRank();
+    if (r === 'regional_director') {
+      if (!global.DOSRoleCharter.renderRegionalDirector) return;
+      var rdOpts = {};
+      var rs = state.regionStats;
+      if (rs) {
+        rdOpts.seniorCount = rs.seniorCount;
+        rdOpts.networkAmbassadors = rs.totalAmbassadors;
+        rdOpts.networkOverrideUsd = rs.networkOverrideUsd;
+        rdOpts.activeSeniors = rs.activeSeniors;
+        rdOpts.inactiveSeniors = rs.inactiveSeniors;
+      }
+      global.DOSRoleCharter.renderRegionalDirector(mount, rdOpts);
+      return;
+    }
     if (r === 'senior') {
       if (!global.DOSRoleCharter.renderSenior) return;
       var opts = {};

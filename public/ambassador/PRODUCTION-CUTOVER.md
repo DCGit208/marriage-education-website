@@ -48,6 +48,7 @@ After deploy, log in on **https://marriageducation.com** (or web.app) and confir
 
 ### Regional Director (`RD-…` in `regional_directors`)
 - [ ] Lands on `rd-dashboard.html`
+- [ ] **Role & targets** — regional blueprint, PDF (`REGIONAL_DIRECTOR.pdf`), live regional progress
 - [ ] Regional command shows seniors / territory stats
 - [ ] Login works with RD code (not only email)
 

@@ -28,8 +28,10 @@
       subscriptionMonthlyUsd: 9,
       ambassadorRecurringPercent: 0.1,
       seniorOverridePercent: 0.05,
+      rdOverridePercent: 0.05,
       ambassadorMonthlyTargetUsd: 3000,
       seniorMonthlyTargetUsd: 18000,
+      rdMonthlyTargetUsd: 750000,
       dailyTargets: { newSubscribers: 10 },
       promotion: { seniorRecruits: 10, rdSeniors: 50, ambassadorsPerSenior: 10 }
     };
@@ -329,9 +331,165 @@
     mountEl.setAttribute('data-charter-built', '1');
   }
 
+    bindSectionLinks(mountEl);
+    mountEl.setAttribute('data-charter-built', '1');
+  }
+
+  function regionalTargetsTable(d) {
+    var ambPerDay = d.dailyTargets.newSubscribers || 10;
+    var rdOverridePct = Math.round((d.rdOverridePercent || 0.05) * 100);
+    var perSub = (d.subscriptionMonthlyUsd || 9) * (d.rdOverridePercent || 0.05);
+    var seniorsTarget = d.promotion.rdSeniors || 50;
+    var ambPerSenior = d.promotion.ambassadorsPerSenior || 10;
+    var totalAmbs = seniorsTarget * ambPerSenior;
+    var subsPerAmb = ambPerDay * 20;
+    var regionalSubs = totalAmbs * subsPerAmb;
+    return (
+      '<div class="dos-table-wrap"><table class="dos-table dos-charter-table">' +
+      '<thead><tr><th>Metric</th><th>Target</th></tr></thead><tbody>' +
+      '<tr><td>Senior Ambassadors (RD)</td><td><strong>' + seniorsTarget + ' active seniors</strong></td></tr>' +
+      '<tr><td>Ambassadors per Senior</td><td><strong>' + ambPerSenior + '</strong></td></tr>' +
+      '<tr><td>Regional ambassadors</td><td><strong>' + totalAmbs.toLocaleString() + '</strong> (at full model)</td></tr>' +
+      '<tr><td>Per Ambassador</td><td><strong>' + ambPerDay + '/day</strong> × 20 days = <strong>' + subsPerAmb + '/month</strong></td></tr>' +
+      '<tr><td>Regional subscribers</td><td><strong>' + regionalSubs.toLocaleString() + '/month</strong> (full model)</td></tr>' +
+      '<tr><td>Product</td><td>Foundation Access · <strong>' + fmtUsd(d.subscriptionMonthlyUsd) + '/mo</strong></td></tr>' +
+      '<tr><td>RD override</td><td><strong>' + rdOverridePct + '%</strong> on regional recurring retained</td></tr>' +
+      '<tr><td>Per retained sub</td><td><strong>' + fmtUsd(perSub) + '/mo</strong></td></tr>' +
+      '</tbody></table></div>'
+    );
+  }
+
+  function renderRegionalDirector(mountEl, options) {
+    if (!mountEl) return;
+    options = options || {};
+    var d = doctrine();
+    var rdOverridePct = Math.round((d.rdOverridePercent || 0.05) * 100);
+    var perSub = (d.subscriptionMonthlyUsd || 9) * (d.rdOverridePercent || 0.05);
+    var seniorsTarget = d.promotion.rdSeniors || 50;
+    var ambPerSenior = d.promotion.ambassadorsPerSenior || 10;
+    var totalAmbs = seniorsTarget * ambPerSenior;
+    var regionalSubsModel = totalAmbs * (d.dailyTargets.newSubscribers || 10) * 20;
+    var blueprintMonthly = regionalSubsModel * perSub;
+    var blueprintDaily = (regionalSubsModel / 20) * perSub;
+
+    var progressHtml = '';
+    if (options.seniorCount != null || options.networkAmbassadors != null) {
+      progressHtml =
+        '<div class="dos-card dos-charter-progress">' +
+        '<h3><i class="fa-solid fa-chart-line"></i> Your regional progress (live)</h3>' +
+        '<div class="dos-charter-stat-row">' +
+        (options.seniorCount != null
+          ? '<div><span class="dos-charter-stat-label">Senior ambassadors</span>' +
+            '<span class="dos-charter-stat-value">' + (Number(options.seniorCount) || 0) +
+            ' / ' + seniorsTarget + '</span></div>'
+          : '') +
+        (options.networkAmbassadors != null
+          ? '<div><span class="dos-charter-stat-label">Network ambassadors</span>' +
+            '<span class="dos-charter-stat-value">' + (Number(options.networkAmbassadors) || 0) + '</span></div>'
+          : '') +
+        (options.networkOverrideUsd != null
+          ? '<div><span class="dos-charter-stat-label">Est. network override</span>' +
+            '<span class="dos-charter-stat-value">' + fmtUsd(options.networkOverrideUsd) + '</span></div>'
+          : '') +
+        (options.activeSeniors != null
+          ? '<div><span class="dos-charter-stat-label">Seniors on track</span>' +
+            '<span class="dos-charter-stat-value">' + (Number(options.activeSeniors) || 0) +
+            (options.inactiveSeniors != null ? ' · ' + options.inactiveSeniors + ' need coaching' : '') +
+            '</span></div>'
+          : '') +
+        '</div></div>';
+    }
+
+    mountEl.innerHTML =
+      '<div class="dos-charter">' +
+      '<div class="dos-card dos-charter-hero">' +
+      '<h3><i class="fa-solid fa-book-open"></i> Regional Director — Role &amp; targets</h3>' +
+      '<p class="dos-charter-lead">You are a <strong>regional educational deployment operator</strong> — scale recurring access through Senior leadership and network duplication.</p>' +
+      '<p class="dos-charter-muted">Oversee <strong>' + seniorsTarget + ' Senior Ambassadors</strong> · <strong>' + totalAmbs.toLocaleString() + ' ambassadors</strong> at full model · <strong>sbd-network.web.app</strong>.</p>' +
+      '<div class="dos-charter-actions">' +
+      '<a class="dos-btn dos-btn-primary" href="' + DOC_BASE + 'REGIONAL_DIRECTOR.pdf" download><i class="fa-solid fa-file-pdf"></i> Download blueprint (PDF)</a>' +
+      '<a class="dos-btn" href="' + DOC_BASE + 'REGIONAL_DIRECTOR.html" target="_blank" rel="noopener"><i class="fa-solid fa-book"></i> Read full charter</a>' +
+      '</div></div>' +
+
+      progressHtml +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-bullseye"></i> Regional targets at a glance</h3>' +
+      regionalTargetsTable(d) +
+      '</div>' +
+
+      '<div class="dos-charter-duo">' +
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-coins"></i> Blueprint regional economics</h3>' +
+      '<p class="dos-charter-muted">Full regional model — recurring retained subscribers across the network.</p>' +
+      '<ul class="dos-charter-list">' +
+      '<li><strong>' + regionalSubsModel.toLocaleString() + '/month</strong> regional subs × ' + fmtUsd(perSub) + ' = <strong>' + fmtUsd(blueprintMonthly) + '/month</strong></li>' +
+      '<li>~<strong>' + Math.round(regionalSubsModel / 20).toLocaleString() + '/day</strong> pace × ' + fmtUsd(perSub) + ' ≈ <strong>' + fmtUsd(blueprintDaily) + '/day</strong></li>' +
+      '<li>Retention compounds regional economics (100k → 200k → 500k+ retained)</li>' +
+      '</ul></div>' +
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-gauge-high"></i> Dashboard deployment target</h3>' +
+      '<p class="dos-charter-muted">Overview monthly target (multi-product portfolio — separate from blueprint recurring above).</p>' +
+      '<p class="dos-charter-stat-value" style="font-size:1.5rem;margin:8px 0">' + fmtUsd(d.rdMonthlyTargetUsd) +
+      '<span style="font-size:14px;font-weight:500;color:#71717a"> / month</span></p>' +
+      '</div></div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-percent"></i> Override &amp; product</h3>' +
+      '<p><strong>' + rdOverridePct + '%</strong> override on <strong>recurring retained</strong> regional Foundation Access (' + fmtUsd(d.subscriptionMonthlyUsd) + '/mo). ' +
+      'Regional command shows senior oversight; Team command supports your direct downline.</p>' +
+      '</div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-sun"></i> Daily regional operations</h3>' +
+      '<div class="dos-charter-rhythm">' +
+      '<div><strong>Network supervision</strong><p>Senior activity, deployment &amp; retention analytics.</p></div>' +
+      '<div><strong>Leadership coordination</strong><p>Reports, resolve issues, execution quality.</p></div>' +
+      '<div><strong>Expansion &amp; retention</strong><p>Church/campus/community growth; renewals &amp; reactivation.</p></div>' +
+      '</div></div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-list-check"></i> Your responsibilities</h3>' +
+      '<ol class="dos-charter-list">' +
+      '<li><strong>Regional expansion</strong> — network, channels, subscriber growth</li>' +
+      '<li><strong>Senior supervision</strong> — 50 seniors, consistency, replace inactive leaders</li>' +
+      '<li><strong>Retention</strong> — renewals, engagement, recurring economics</li>' +
+      '<li><strong>Deployment ops</strong> — daily activity, outreach, regional performance</li>' +
+      '<li><strong>Leadership development</strong> — duplication, discipline, capacity</li>' +
+      '</ol></div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-globe"></i> Regional leadership objective</h3>' +
+      '<p class="dos-charter-lead">Build a <strong>regional recurring educational access infrastructure</strong> — deployment, retention, duplication, stability.</p>' +
+      '<button type="button" class="dos-btn dos-btn-primary" data-dos-nav="region"><i class="fa-solid fa-globe"></i> Open Regional command</button>' +
+      '</div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-map"></i> Where to work in this dashboard</h3>' +
+      '<div class="dos-charter-nav-grid">' +
+      navBtn('region', 'fa-globe', 'Regional command') +
+      navBtn('team', 'fa-bolt', 'Team command') +
+      navBtn('subscribers', 'fa-user-group', 'Subscribers') +
+      navBtn('retention', 'fa-heart-pulse', 'Retention') +
+      navBtn('commissions', 'fa-coins', 'Commissions') +
+      navBtn('network', 'fa-sitemap', 'Network') +
+      navBtn('reporting', 'fa-file-export', 'Reports') +
+      navBtn('formation', 'fa-graduation-cap', 'Formation') +
+      '</div></div>' +
+
+      '<div class="dos-card dos-charter-mandate">' +
+      '<h3><i class="fa-solid fa-flag"></i> Final mandate</h3>' +
+      '<p class="dos-charter-lead">Scale Marriage Foundation Access regionally through recurring subscriber deployment, retention systems, leadership duplication, and disciplined operational expansion.</p>' +
+      '</div></div>';
+
+    bindSectionLinks(mountEl);
+    mountEl.setAttribute('data-charter-built', '1');
+  }
+
   global.DOSRoleCharter = {
     renderAmbassador: renderAmbassador,
     renderSenior: renderSenior,
+    renderRegionalDirector: renderRegionalDirector,
     DOC_BASE: DOC_BASE
   };
 })(typeof window !== 'undefined' ? window : global);
