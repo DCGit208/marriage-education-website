@@ -215,6 +215,31 @@
             font-weight: 600;
         }
 
+        .shop-phase-banner {
+            background: rgba(0, 188, 212, 0.1);
+            border: 1px solid rgba(0, 188, 212, 0.35);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 0 20px 16px;
+            color: var(--text-secondary, #ccc);
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .product-card--soon {
+            opacity: 0.85;
+        }
+
+        .soon-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary, #aaa);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
         .shop-empty {
             grid-column: 1 / -1;
             text-align: center;
@@ -250,8 +275,9 @@
         <section class="shop-section" style="padding-bottom:0">
             <div class="subscription-note">
                 <h3>Books · Courses · Diplomas · Membership</h3>
-                <p>Full marriageducation.com catalog — 93 products. Filter by category or search.</p>
+                <p id="shopCatalogNote">Loading catalog…</p>
             </div>
+            <p id="shopPhaseBanner" class="shop-phase-banner" role="status">Loading rollout phase…</p>
         </section>
 
         <div class="shop-toolbar">
@@ -280,7 +306,7 @@
     <script defer src="/js/sw-update-checker.js?v=98"></script>
     <script defer src="/js/notifications.js?v=52"></script>
     <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/shop.js?v=200"></script>
+    <script defer src="/js/shop.js?v=201"></script>
     
 
     <!-- NAV_INJECT -->

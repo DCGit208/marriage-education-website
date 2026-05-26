@@ -1,6 +1,7 @@
 /**
- * SHOP PAGE — full marriageducation.com catalog
- * Loads /data/shop-catalog.json and renders category-filtered product grid.
+ * SHOP PAGE — phased marriageducation.com catalog
+ * Loads /data/shop-catalog.json; only products with phase <= activePhase are shown.
+ * Checkout is enabled only when stripeReady is true (Stripe + unlock rules live).
  */
 
 let currentUserId = null;
@@ -8,6 +9,8 @@ let shopCurrentUser = null;
 let PRODUCT_CATALOG = {};
 let SHOP_CATEGORIES = [];
 let SHOP_PRODUCTS = [];
+let SHOP_ACTIVE_PHASE = 1;
+let SHOP_PHASES = [];
 let activeCategory = 'all';
 let shopSearchQuery = '';
 
@@ -31,16 +34,20 @@ firebase.auth().onAuthStateChanged(async (user) => {
 });
 
 async function loadShopCatalog() {
-  const res = await fetch('/data/shop-catalog.json?v=2');
+  const res = await fetch('/data/shop-catalog.json?v=3');
   if (!res.ok) throw new Error('Could not load shop catalog');
   const data = await res.json();
+  SHOP_ACTIVE_PHASE = Number(data.activePhase) || 1;
+  SHOP_PHASES = data.phases || [];
   SHOP_CATEGORIES = [{ id: 'all', label: 'All', icon: '◇', sort: 0 }].concat(data.categories || []);
-  SHOP_PRODUCTS = (data.products || []).filter(function (p) { return p.status !== 'inactive'; });
+  SHOP_PRODUCTS = (data.products || []).filter(function (p) {
+    return p.status !== 'inactive' && (p.phase || 1) <= SHOP_ACTIVE_PHASE;
+  });
   PRODUCT_CATALOG = {};
   SHOP_PRODUCTS.forEach(function (p) {
     PRODUCT_CATALOG[p.id] = normalizeCatalogProduct(p);
   });
-  console.log('[Shop] Catalog loaded:', SHOP_PRODUCTS.length, 'products');
+  console.log('[Shop] Catalog loaded: phase', SHOP_ACTIVE_PHASE, '→', SHOP_PRODUCTS.length, 'visible products');
 }
 
 function normalizeCatalogProduct(p) {
@@ -57,6 +64,8 @@ function normalizeCatalogProduct(p) {
     category: p.category,
     icon: p.icon || '📘',
     recurring: !!p.recurring,
+    stripeReady: !!p.stripeReady,
+    phase: p.phase || 1,
     unlocks: p.unlocks || null,
     schoolId: p.schoolId || null,
   };
@@ -80,17 +89,37 @@ function getFilteredProducts() {
 }
 
 function renderShopPage() {
+  renderPhaseBanner();
   renderCategoryFilters();
   renderProductGrid();
   var countEl = document.getElementById('shopProductCount');
   if (countEl) countEl.textContent = getFilteredProducts().length + ' items';
 }
 
+function renderPhaseBanner() {
+  var banner = document.getElementById('shopPhaseBanner');
+  var note = document.getElementById('shopCatalogNote');
+  var phaseInfo = SHOP_PHASES.find(function (ph) { return ph.id === SHOP_ACTIVE_PHASE; });
+  var label = phaseInfo ? phaseInfo.label : ('Phase ' + SHOP_ACTIVE_PHASE);
+  var checkoutReady = SHOP_PRODUCTS.filter(function (p) { return p.stripeReady; }).length;
+  if (banner) {
+    banner.textContent = 'Rollout phase ' + SHOP_ACTIVE_PHASE + ': ' + label +
+      ' — ' + checkoutReady + ' of ' + SHOP_PRODUCTS.length + ' items ready for checkout.';
+  }
+  if (note) {
+    note.textContent = SHOP_PRODUCTS.length + ' products available now. More categories unlock in later phases.';
+  }
+}
+
 function renderCategoryFilters() {
   var bar = document.getElementById('shopCategoryBar');
   if (!bar) return;
   bar.innerHTML = '';
-  SHOP_CATEGORIES.forEach(function (cat) {
+  var visibleCats = {};
+  SHOP_PRODUCTS.forEach(function (p) { visibleCats[p.category] = true; });
+  SHOP_CATEGORIES.filter(function (cat) {
+    return cat.id === 'all' || visibleCats[cat.id];
+  }).forEach(function (cat) {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'shop-cat-btn' + (activeCategory === cat.id ? ' active' : '');
@@ -119,13 +148,21 @@ function renderProductGrid() {
 
 function buildProductCard(p) {
   var card = document.createElement('div');
-  card.className = 'product-card';
-  card.setAttribute('role', 'button');
-  card.tabIndex = 0;
+  var canCheckout = !!p.stripeReady;
+  card.className = 'product-card' + (canCheckout ? '' : ' product-card--soon');
+  if (canCheckout) {
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+  }
   var badge = p.type === 'bundle' ? '<span class="bundle-badge">Bundle</span>' : '';
+  if (!canCheckout) badge += '<span class="soon-badge">Coming soon</span>';
   var savings = p.originalPriceUsd
     ? '<p class="savings-text">Was $' + p.originalPriceUsd + '</p>'
     : '';
+  var btnLabel = canCheckout
+    ? (p.type === 'subscription' ? 'Subscribe' : 'Buy Now')
+    : 'Coming soon';
+  var btnClass = canCheckout ? 'product-btn btn btn-primary' : 'product-btn btn btn-secondary';
   card.innerHTML =
     badge +
     '<div class="product-image">' + escapeShopHtml(p.icon || '📘') + '</div>' +
@@ -133,18 +170,20 @@ function buildProductCard(p) {
     '<p class="product-description">' + escapeShopHtml(p.description || '') + '</p>' +
     savings +
     '<p class="product-price">' + escapeShopHtml(formatPrice(p)) + '</p>' +
-    '<button type="button" class="product-btn btn btn-primary">' +
-    (p.type === 'subscription' ? 'Subscribe' : 'Buy Now') +
+    '<button type="button" class="' + btnClass + '"' + (canCheckout ? '' : ' disabled') + '>' +
+    btnLabel +
     '</button>';
-  function go() { buyProduct(p.id); }
-  card.addEventListener('click', go);
-  card.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
-  });
-  card.querySelector('.product-btn').addEventListener('click', function (e) {
-    e.stopPropagation();
-    go();
-  });
+  if (canCheckout) {
+    function go() { buyProduct(p.id); }
+    card.addEventListener('click', go);
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+    });
+    card.querySelector('.product-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      go();
+    });
+  }
   return card;
 }
 
@@ -163,8 +202,13 @@ document.getElementById('shopSearchInput')?.addEventListener('input', function (
 });
 
 async function buyProduct(productId) {
-  if (!PRODUCT_CATALOG[productId]) {
+  var product = PRODUCT_CATALOG[productId];
+  if (!product) {
     alert('Product not found. Refresh the shop page.');
+    return;
+  }
+  if (!product.stripeReady) {
+    alert('Checkout for this item is not available yet. It will open in a later shop phase.');
     return;
   }
   if (!currentUserId) {
@@ -285,4 +329,4 @@ function showNotification(message, type) {
 
 document.querySelector('.back-btn')?.addEventListener('click', () => window.history.back());
 
-console.log('[Shop] Full catalog shop v2');
+console.log('[Shop] Phased catalog shop v3');
