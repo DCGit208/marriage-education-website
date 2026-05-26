@@ -1,5 +1,6 @@
 /**
- * CHECKOUT PAGE — Stripe Hosted Checkout (full catalog)
+ * CHECKOUT PAGE — Stripe Hosted Checkout (phased catalog)
+ * Only products in the active phase with stripeReady=true can checkout.
  */
 
 let currentUserId = null;
@@ -17,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function isCheckoutAllowed(product, activePhase) {
+  if (!product) return false;
+  if ((product.phase || 1) > activePhase) return false;
+  return !!product.stripeReady;
+}
+
 async function loadCheckoutProduct() {
   const productId = new URLSearchParams(window.location.search).get('product');
   if (!productId) {
@@ -24,11 +31,14 @@ async function loadCheckoutProduct() {
     return;
   }
   try {
-    const res = await fetch('/data/shop-catalog.json?v=2');
+    const res = await fetch('/data/shop-catalog.json?v=3');
     const data = await res.json();
+    const activePhase = Number(data.activePhase) || 1;
     const raw = (data.products || []).find(function (p) { return p.id === productId; });
-    if (!raw) {
-      window.location.href = '/shop.html';
+    if (!raw || !isCheckoutAllowed(raw, activePhase)) {
+      showCheckoutBlocked(raw
+        ? 'This product is not available for checkout yet. Please return to the shop.'
+        : 'Product not found.');
       return;
     }
     checkoutProduct = raw;
@@ -45,10 +55,27 @@ async function loadCheckoutProduct() {
   }
 }
 
+function showCheckoutBlocked(message) {
+  const errEl = document.getElementById('checkout-error');
+  const btn = document.getElementById('pay-button');
+  if (errEl) errEl.textContent = message;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Not available yet';
+  }
+  setTimeout(function () {
+    window.location.href = '/shop.html';
+  }, 3500);
+}
+
 async function startStripeCheckout(productId) {
   const btn = document.getElementById('pay-button');
   const errEl = document.getElementById('checkout-error');
-  if (!productId || !currentUserId) return;
+  if (!productId || !currentUserId || !checkoutProduct) return;
+  if (!checkoutProduct.stripeReady) {
+    if (errEl) errEl.textContent = 'Checkout is not enabled for this product yet.';
+    return;
+  }
   if (errEl) errEl.textContent = '';
   if (btn) {
     btn.disabled = true;
@@ -73,4 +100,4 @@ async function startStripeCheckout(productId) {
   }
 }
 
-console.log('[Checkout] Ready — full catalog v2');
+console.log('[Checkout] Phased catalog checkout v3');
