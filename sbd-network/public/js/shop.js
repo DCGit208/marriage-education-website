@@ -1,281 +1,182 @@
 /**
- * SHOP PAGE — STRIPE PAYMENT INTEGRATION
- * =======================================
- * Handle product purchases, subscriptions, and bundles
- * Phase 1: Revenue Foundation
+ * SHOP PAGE — full marriageducation.com catalog
+ * Loads /data/shop-catalog.json and renders category-filtered product grid.
  */
 
 let currentUserId = null;
 let shopCurrentUser = null;
-
-// Stripe publishable key (REPLACE WITH YOUR KEY)
-// Get from: https://dashboard.stripe.com/test/apikeys
-const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_KEY_HERE';
-
-// ==================================================================
-// INITIALIZATION
-// ==================================================================
+let PRODUCT_CATALOG = {};
+let SHOP_CATEGORIES = [];
+let SHOP_PRODUCTS = [];
+let activeCategory = 'all';
+let shopSearchQuery = '';
 
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = '/auth';
+    window.location.href = '/auth?next=' + encodeURIComponent('/shop.html');
     return;
   }
-  
   currentUserId = user.uid;
   shopCurrentUser = user;
-  
-  // Fetch user data for email
-  const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-  if (userDoc.exists) {
-    shopCurrentUser = { ...user, ...userDoc.data() };
+  try {
+    const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+    if (userDoc.exists) {
+      shopCurrentUser = { ...user, ...userDoc.data() };
+    }
+  } catch (e) {
+    console.warn('[Shop] user doc load failed:', e);
   }
-  
-  console.log('[Shop] User loaded:', currentUserId);
+  await loadShopCatalog();
+  renderShopPage();
 });
 
-// ==================================================================
-// PRODUCT CATALOG
-// ==================================================================
+async function loadShopCatalog() {
+  const res = await fetch('/data/shop-catalog.json?v=2');
+  if (!res.ok) throw new Error('Could not load shop catalog');
+  const data = await res.json();
+  SHOP_CATEGORIES = [{ id: 'all', label: 'All', icon: '◇', sort: 0 }].concat(data.categories || []);
+  SHOP_PRODUCTS = (data.products || []).filter(function (p) { return p.status !== 'inactive'; });
+  PRODUCT_CATALOG = {};
+  SHOP_PRODUCTS.forEach(function (p) {
+    PRODUCT_CATALOG[p.id] = normalizeCatalogProduct(p);
+  });
+  console.log('[Shop] Catalog loaded:', SHOP_PRODUCTS.length, 'products');
+}
 
-const PRODUCT_CATALOG = {
-  // BOOKS
-  'sbd-dummies': {
-    id: 'sbd-dummies',
-    name: 'Sex By Design for Dummies',
-    description: 'Entry-level guide to sexual design and intimacy',
-    price: 27,
+function normalizeCatalogProduct(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description || '',
+    price: p.priceUsd,
+    priceUsd: p.priceUsd,
+    priceSuffix: p.priceSuffix || '',
+    originalPrice: p.originalPriceUsd,
     currency: 'USD',
-    type: 'book',
-    unlocks: {
-      type: 'course',
-      courseIds: ['sbd-dummies-course']
-    },
-    image: '📚'
-  },
-  
-  'teleios-blueprint': {
-    id: 'teleios-blueprint',
-    name: 'Teleios Blueprint',
-    description: 'Foundation of identity, wholeness, and maturity',
-    price: 247,
-    currency: 'USD',
-    type: 'book',
-    unlocks: {
-      type: 'course',
-      courseIds: ['teleios-blueprint']
-    },
-    image: '🎯'
-  },
-  
-  // SUBSCRIPTIONS
-  'foundation-monthly': {
-    id: 'foundation-monthly',
-    name: 'Foundation Tier',
-    description: 'Access beginner courses and Teleios Blueprint',
-    price: 9,
-    currency: 'USD',
-    type: 'subscription',
-    interval: 'monthly',
-    unlocks: {
-      type: 'tier',
-      tier: 'foundation'
-    },
-    features: [
-      'SBD for Dummies course',
-      'Teleios Blueprint (basic)',
-      'Selected beginner courses',
-      'Limited course boards'
-    ],
-    image: '🟢'
-  },
-  
-  'premium-monthly': {
-    id: 'premium-monthly',
-    name: 'Premium Tier',
-    description: 'Full access to core schools and certifications',
-    price: 20,
-    currency: 'USD',
-    type: 'subscription',
-    interval: 'monthly',
-    unlocks: {
-      type: 'tier',
-      tier: 'premium'
-    },
-    features: [
-      'All Foundation features',
-      'Full Teleios School access',
-      'Sexual Literacy courses',
-      'Marriage Systems courses',
-      'All course boards',
-      'Certifications'
-    ],
-    image: '🔵'
-  },
-  
-  'elite-monthly': {
-    id: 'elite-monthly',
-    name: 'Elite Tier',
-    description: 'Advanced boards, coaching access, and exclusive content',
-    price: 50,
-    currency: 'USD',
-    type: 'subscription',
-    interval: 'monthly',
-    unlocks: {
-      type: 'tier',
-      tier: 'elite'
-    },
-    features: [
-      'All Premium features',
-      'Advanced Muliebrity boards',
-      'Advanced Virility boards',
-      'Exclusive media content',
-      'Live session access',
-      'Coaching layer (future)'
-    ],
-    image: '🔴'
-  },
-  
-  // BUNDLES
-  'starter-bundle': {
-    id: 'starter-bundle',
-    name: 'Starter Bundle',
-    description: 'Perfect for beginners — Book + 1 month premium',
-    price: 37,
-    currency: 'USD',
-    type: 'bundle',
-    savings: 10,
-    originalPrice: 47,
-    includes: [
-      { productId: 'sbd-dummies', name: 'SBD for Dummies' },
-      { duration: '1 month', tier: 'premium', name: '1-Month Premium Access' }
-    ],
-    unlocks: {
-      type: 'bundle',
-      products: ['sbd-dummies'],
-      subscription: { tier: 'premium', months: 1 }
-    },
-    image: '🚀'
-  },
-  
-  'teleios-bundle': {
-    id: 'teleios-bundle',
-    name: 'Teleios Bundle',
-    description: 'Blueprint book + 3 months premium + coaching',
-    price: 297,
-    currency: 'USD',
-    type: 'bundle',
-    savings: 50,
-    originalPrice: 347,
-    includes: [
-      { productId: 'teleios-blueprint', name: 'Teleios Blueprint' },
-      { duration: '3 months', tier: 'premium', name: '3-Month Premium' },
-      { name: 'Coaching Session' }
-    ],
-    unlocks: {
-      type: 'bundle',
-      products: ['teleios-blueprint'],
-      subscription: { tier: 'premium', months: 3 }
-    },
-    image: '🎓'
-  },
-  
-  'elite-bundle': {
-    id: 'elite-bundle',
-    name: 'Elite Formation Bundle',
-    description: 'Complete library + 6 months elite access',
-    price: 497,
-    currency: 'USD',
-    type: 'bundle',
-    savings: 77,
-    originalPrice: 574,
-    includes: [
-      { productId: 'sbd-dummies', name: 'SBD for Dummies' },
-      { productId: 'teleios-blueprint', name: 'Teleios Blueprint' },
-      { duration: '6 months', tier: 'elite', name: '6-Month Elite Access' }
-    ],
-    unlocks: {
-      type: 'bundle',
-      products: ['sbd-dummies', 'teleios-blueprint'],
-      subscription: { tier: 'elite', months: 6 }
-    },
-    image: '💎'
+    type: p.type || 'book',
+    category: p.category,
+    icon: p.icon || '📘',
+    recurring: !!p.recurring,
+    unlocks: p.unlocks || null,
+    schoolId: p.schoolId || null,
+  };
+}
+
+function formatPrice(product) {
+  var amount = '$' + (Number(product.priceUsd) % 1 === 0 ? product.priceUsd : product.priceUsd.toFixed(2));
+  return amount + (product.priceSuffix || '');
+}
+
+function getFilteredProducts() {
+  var q = shopSearchQuery.trim().toLowerCase();
+  return SHOP_PRODUCTS.filter(function (p) {
+    if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+    if (!q) return true;
+    return (p.name || '').toLowerCase().indexOf(q) >= 0 ||
+      (p.description || '').toLowerCase().indexOf(q) >= 0;
+  }).sort(function (a, b) {
+    return (a.sortOrder || 999) - (b.sortOrder || 999);
+  });
+}
+
+function renderShopPage() {
+  renderCategoryFilters();
+  renderProductGrid();
+  var countEl = document.getElementById('shopProductCount');
+  if (countEl) countEl.textContent = getFilteredProducts().length + ' items';
+}
+
+function renderCategoryFilters() {
+  var bar = document.getElementById('shopCategoryBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  SHOP_CATEGORIES.forEach(function (cat) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-cat-btn' + (activeCategory === cat.id ? ' active' : '');
+    btn.textContent = (cat.icon ? cat.icon + ' ' : '') + cat.label;
+    btn.addEventListener('click', function () {
+      activeCategory = cat.id;
+      renderShopPage();
+    });
+    bar.appendChild(btn);
+  });
+}
+
+function renderProductGrid() {
+  var grid = document.getElementById('shopProductGrid');
+  if (!grid) return;
+  var products = getFilteredProducts();
+  grid.innerHTML = '';
+  if (products.length === 0) {
+    grid.innerHTML = '<p class="shop-empty">No products match your filter.</p>';
+    return;
   }
-};
+  products.forEach(function (p) {
+    grid.appendChild(buildProductCard(p));
+  });
+}
 
-// ==================================================================
-// STRIPE CHECKOUT
-// ==================================================================
+function buildProductCard(p) {
+  var card = document.createElement('div');
+  card.className = 'product-card';
+  card.setAttribute('role', 'button');
+  card.tabIndex = 0;
+  var badge = p.type === 'bundle' ? '<span class="bundle-badge">Bundle</span>' : '';
+  var savings = p.originalPriceUsd
+    ? '<p class="savings-text">Was $' + p.originalPriceUsd + '</p>'
+    : '';
+  card.innerHTML =
+    badge +
+    '<div class="product-image">' + escapeShopHtml(p.icon || '📘') + '</div>' +
+    '<h3 class="product-name">' + escapeShopHtml(p.name) + '</h3>' +
+    '<p class="product-description">' + escapeShopHtml(p.description || '') + '</p>' +
+    savings +
+    '<p class="product-price">' + escapeShopHtml(formatPrice(p)) + '</p>' +
+    '<button type="button" class="product-btn btn btn-primary">' +
+    (p.type === 'subscription' ? 'Subscribe' : 'Buy Now') +
+    '</button>';
+  function go() { buyProduct(p.id); }
+  card.addEventListener('click', go);
+  card.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+  });
+  card.querySelector('.product-btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    go();
+  });
+  return card;
+}
+
+function escapeShopHtml(text) {
+  if (!text) return '';
+  var d = document.createElement('div');
+  d.textContent = String(text);
+  return d.innerHTML;
+}
+
+document.getElementById('shopSearchInput')?.addEventListener('input', function (e) {
+  shopSearchQuery = e.target.value || '';
+  renderProductGrid();
+  var countEl = document.getElementById('shopProductCount');
+  if (countEl) countEl.textContent = getFilteredProducts().length + ' items';
+});
 
 async function buyProduct(productId) {
-  console.log('[Shop] Purchase initiated:', productId);
-  
-  const product = PRODUCT_CATALOG[productId];
-  if (!product) {
-    console.error('[Shop] Product not found:', productId);
-    showNotification('Product not found', 'error');
+  if (!PRODUCT_CATALOG[productId]) {
+    alert('Product not found. Refresh the shop page.');
     return;
   }
-  
   if (!currentUserId) {
-    showNotification('Please log in to purchase', 'error');
-    window.location.href = '/auth';
+    window.location.href = '/auth?next=' + encodeURIComponent('/shop.html');
     return;
   }
-  
-  // Show loading state
-  showNotification(`Processing ${product.name}...`, 'info');
-  
-  try {
-    // Create checkout session via Cloud Function
-    // NOTE: This requires deploying the webhook function first
-    
-    // For now, redirect to checkout page with product data
-    const checkoutUrl = `/checkout.html?product=${productId}`;
-    window.location.href = checkoutUrl;
-    
-    // TODO: Once Cloud Function is deployed, use this instead:
-    /*
-    const createCheckoutSession = firebase.functions().httpsCallable('createCheckoutSession');
-    const result = await createCheckoutSession({
-      productId: productId,
-      userId: currentUserId,
-      userEmail: shopCurrentUser.email || shopCurrentUser.email,
-      successUrl: `${window.location.origin}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${window.location.origin}/shop.html`
-    });
-    
-    // Redirect to Stripe Checkout
-    const sessionId = result.data.sessionId;
-    const stripe = Stripe(STRIPE_PUBLIC_KEY);
-    await stripe.redirectToCheckout({ sessionId });
-    */
-    
-  } catch (error) {
-    console.error('[Shop] Purchase error:', error);
-    showNotification('Purchase failed. Please try again.', 'error');
-  }
+  window.location.href = '/checkout.html?product=' + encodeURIComponent(productId);
 }
-
-// ==================================================================
-// SUBSCRIPTION MANAGEMENT
-// ==================================================================
 
 async function subscribeToTier(tierId) {
-  console.log('[Shop] Subscription initiated:', tierId);
-  
-  const product = PRODUCT_CATALOG[tierId];
-  if (!product || product.type !== 'subscription') {
-    console.error('[Shop] Invalid subscription:', tierId);
-    return;
-  }
-  
   buyProduct(tierId);
 }
-
-// ==================================================================
-// ORDER CREATION (CALLED AFTER SUCCESSFUL PAYMENT)
-// ==================================================================
 
 async function createOrder(orderData) {
   try {
@@ -286,37 +187,26 @@ async function createOrder(orderData) {
       productName: orderData.productName,
       productType: orderData.productType,
       amount: orderData.amount,
-      currency: orderData.currency,
+      currency: orderData.currency || 'USD',
       paymentMethod: orderData.paymentMethod || 'stripe',
       status: 'completed',
       stripeSessionId: orderData.stripeSessionId || null,
       stripePaymentIntentId: orderData.stripePaymentIntentId || null,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      metadata: orderData.metadata || {}
+      metadata: orderData.metadata || {},
     });
-    
-    console.log('[Shop] Order created:', orderRef.id);
-    
-    // Add to user's purchases
     await firebase.firestore().collection('users').doc(currentUserId).update({
-      purchases: firebase.firestore.FieldValue.arrayUnion(orderRef.id)
+      purchases: firebase.firestore.FieldValue.arrayUnion(orderRef.id),
     });
-    
     return orderRef.id;
-    
   } catch (error) {
     console.error('[Shop] Order creation failed:', error);
     throw error;
   }
 }
 
-// ==================================================================
-// CONTENT UNLOCKING (CALLED AFTER ORDER CREATION)
-// ==================================================================
-
-// Credit ambassador only on a user's FIRST subscription (prevents double-counting on upgrades)
 async function _creditAmbassadorReferral(userRef, tier, wasAlreadySubscribed) {
-  if (wasAlreadySubscribed) return; // upgrade — already counted
+  if (wasAlreadySubscribed) return;
   try {
     const userSnap = await userRef.get();
     const referralCode = userSnap.exists ? userSnap.data().referredBy : null;
@@ -327,117 +217,72 @@ async function _creditAmbassadorReferral(userRef, tier, wasAlreadySubscribed) {
     const tierKey = tier || 'foundation';
     await ambSnap.docs[0].ref.update({
       'sbdReferrals.subscribers': firebase.firestore.FieldValue.increment(1),
-      [`sbdReferrals.${tierKey}`]: firebase.firestore.FieldValue.increment(1)
+      ['sbdReferrals.' + tierKey]: firebase.firestore.FieldValue.increment(1),
     });
-    console.log('[Shop] Ambassador referral credited for tier:', tierKey);
-  } catch (_) {} // non-critical
+  } catch (_) {}
 }
 
 async function unlockContent(productId) {
   const product = PRODUCT_CATALOG[productId];
-  if (!product || !product.unlocks) {
-    console.log('[Shop] No unlocks for product:', productId);
-    return;
-  }
-  
+  if (!product || !product.unlocks) return;
   try {
     const userRef = firebase.firestore().collection('users').doc(currentUserId);
-
-    // Read BEFORE updating so we can detect first-time vs upgrade
     const preSnap = await userRef.get();
     const preData = preSnap.exists ? preSnap.data() : {};
     const wasAlreadySubscribed = preData.subscription?.status === 'active';
-    
+
     if (product.unlocks.type === 'tier') {
-      // Update subscription tier
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1); // 1 month for monthly subscriptions
-      
+      endDate.setMonth(endDate.getMonth() + 1);
       await userRef.update({
+        tier: product.unlocks.tier,
         'subscription.tier': product.unlocks.tier,
         'subscription.status': 'active',
         'subscription.startDate': firebase.firestore.FieldValue.serverTimestamp(),
         'subscription.endDate': firebase.firestore.Timestamp.fromDate(endDate),
-        'subscription.lastPayment': firebase.firestore.FieldValue.serverTimestamp()
+        'subscription.lastPayment': firebase.firestore.FieldValue.serverTimestamp(),
       });
-      
-      console.log('[Shop] Subscription activated:', product.unlocks.tier);
       await _creditAmbassadorReferral(userRef, product.unlocks.tier, wasAlreadySubscribed);
-      
-    } else if (product.unlocks.type === 'course') {
-      // Grant access to specific courses
-      for (const courseId of product.unlocks.courseIds) {
-        await userRef.update({
-          ownedCourses: firebase.firestore.FieldValue.arrayUnion(courseId)
-        });
-      }
-      
-      console.log('[Shop] Courses unlocked:', product.unlocks.courseIds);
-      
+    } else if (product.unlocks.type === 'course' && product.unlocks.courseIds) {
+      await userRef.update({
+        ownedCourses: firebase.firestore.FieldValue.arrayUnion(...product.unlocks.courseIds),
+      });
     } else if (product.unlocks.type === 'bundle') {
-      // Unlock multiple products
       if (product.unlocks.products) {
         for (const prodId of product.unlocks.products) {
-          const subProduct = PRODUCT_CATALOG[prodId];
-          if (subProduct && subProduct.unlocks && subProduct.unlocks.courseIds) {
+          const sub = PRODUCT_CATALOG[prodId];
+          if (sub && sub.unlocks && sub.unlocks.courseIds) {
             await userRef.update({
-              ownedCourses: firebase.firestore.FieldValue.arrayUnion(...subProduct.unlocks.courseIds)
+              ownedCourses: firebase.firestore.FieldValue.arrayUnion(...sub.unlocks.courseIds),
             });
           }
         }
       }
-      
-      // Activate subscription if bundle includes it
       if (product.unlocks.subscription) {
         const endDate = new Date();
         endDate.setMonth(endDate.getMonth() + product.unlocks.subscription.months);
-        
         await userRef.update({
+          tier: product.unlocks.subscription.tier,
           'subscription.tier': product.unlocks.subscription.tier,
           'subscription.status': 'active',
           'subscription.startDate': firebase.firestore.FieldValue.serverTimestamp(),
-          'subscription.endDate': firebase.firestore.Timestamp.fromDate(endDate)
+          'subscription.endDate': firebase.firestore.Timestamp.fromDate(endDate),
         });
-
         await _creditAmbassadorReferral(userRef, product.unlocks.subscription.tier, wasAlreadySubscribed);
       }
-      
-      console.log('[Shop] Bundle unlocked');
     }
-    
-    showNotification('Content unlocked! Check My Journey', 'success');
-    
+    showNotification('Purchase applied! Check My Learning.', 'success');
   } catch (error) {
     console.error('[Shop] Content unlock failed:', error);
     throw error;
   }
 }
 
-// ==================================================================
-// UTILITY FUNCTIONS
-// ==================================================================
-
-function showNotification(message, type = 'info') {
-  // Simple notification (can be enhanced with a toast library)
-  console.log(`[${type.toUpperCase()}]`, message);
-  
-  // Show browser alert for now
-  if (type === 'error') {
-    alert(`❌ ${message}`);
-  } else if (type === 'success') {
-    alert(`✅ ${message}`);
-  } else {
-    // Info notifications can be silent or use a toast
-    console.info(message);
-  }
+function showNotification(message, type) {
+  if (type === 'error') alert('❌ ' + message);
+  else if (type === 'success') alert('✅ ' + message);
 }
 
-// ==================================================================
-// BACK BUTTON
-// ==================================================================
+document.querySelector('.back-btn')?.addEventListener('click', () => window.history.back());
 
-document.querySelector('.back-btn')?.addEventListener('click', () => {
-  window.history.back();
-});
-
-console.log('[Shop] Page loaded');
+console.log('[Shop] Full catalog shop v2');
