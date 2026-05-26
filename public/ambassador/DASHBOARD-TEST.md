@@ -114,3 +114,15 @@ Verify: Replay Guide includes Role & targets; Map lists it; Overview button open
 Local production shell: http://127.0.0.1:9292/ambassador/dashboard.html?v=20260526prod#role-targets
 
 Deploy (you run when validated): `git push origin main` + Firebase hosting both targets.
+
+## Phase 7 — Senior Ambassador Role & targets
+
+| What | Detail |
+|------|--------|
+| Documents | `/documents/sbd-ops/SENIOR_AMBASSADOR.{pdf,html,md}` |
+| Dashboards | `senior-dashboard.html` + `senior-dashboard-test.html` |
+| Charter | `DOSRoleCharter.renderSenior()` — team model, 5% override, live team stats |
+| Tour | v4 — Senior Role & targets steps |
+
+Preview: `/ambassador/senior-dashboard-test.html?v=20260527b#role-targets`  
+Production: `/ambassador/senior-dashboard.html?v=20260527prod#role-targets`

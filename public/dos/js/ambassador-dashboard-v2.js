@@ -1133,8 +1133,25 @@
 
   function refreshRoleCharter() {
     var mount = document.getElementById('dosRoleTargetsMount');
-    if (!mount || !global.DOSRoleCharter || !global.DOSRoleCharter.renderAmbassador) return;
-    if (getRank() !== 'ambassador') return;
+    if (!mount || !global.DOSRoleCharter) return;
+    var r = getRank();
+    if (r === 'senior') {
+      if (!global.DOSRoleCharter.renderSenior) return;
+      var opts = {};
+      var ts = state.teamStats;
+      if (ts) {
+        opts.teamAmbassadors = ts.count;
+        opts.teamSubscribers = ts.teamSubs;
+        opts.teamOverrideUsd = ts.totalOverrideUsd;
+      }
+      if (state.stats) {
+        opts.seniorsRecruited = state.stats.seniors_recruited;
+      }
+      global.DOSRoleCharter.renderSenior(mount, opts);
+      return;
+    }
+    if (r !== 'ambassador') return;
+    if (!global.DOSRoleCharter.renderAmbassador) return;
     var opts = {};
     var m = state.metrics;
     if (m) {
