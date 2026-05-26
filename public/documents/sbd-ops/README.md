@@ -45,7 +45,14 @@ Or edit `AMBASSADOR.md` and re-run the Chrome command after updating `AMBASSADOR
 | `SENIOR_AMBASSADOR.md` | Source markdown |
 | `SENIOR_AMBASSADOR.html` | Read in browser |
 
-## Future (Phase 8+)
+## Regional Director (Phase 8)
 
-- `REGIONAL_DIRECTOR.pdf`
+| File | Purpose |
+|------|---------|
+| `REGIONAL_DIRECTOR.pdf` | Primary download for RDs |
+| `REGIONAL_DIRECTOR.md` | Source markdown |
+| `REGIONAL_DIRECTOR.html` | Read in browser |
+
+## Future (Phase 9)
+
 - `EXECUTIVE_NETWORK_DIRECTOR.pdf`

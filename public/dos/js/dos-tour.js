@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  var TOUR_VERSION = 'v4';
+  var TOUR_VERSION = 'v5';
   var stepIndex = 0;
   var steps = [];
   var active = false;
@@ -54,6 +54,9 @@
     }
     if (r === 'senior' && document.querySelector('[data-section="role-targets"]')) {
       body += ' Senior leaders: start with Role & targets for your team blueprint (10 ambassadors, 5% override, PDF).';
+    }
+    if (r === 'regional_director' && document.querySelector('[data-section="role-targets"]')) {
+      body += ' Regional Directors: start with Role & targets for your regional blueprint (50 seniors, 5% override, PDF).';
     }
     if (r === 'senior') {
       body += ' You also have Team command for your downline.';
@@ -189,6 +192,24 @@
         }
       ];
     }
+    if (r === 'regional_director') {
+      return [
+        {
+          section: 'role-targets',
+          target: '[data-dos-nav="role-targets"]',
+          placement: 'right',
+          title: 'Role & targets — regional blueprint',
+          body: 'Sidebar item #2. RD blueprint: 50 Senior Ambassadors, 500 ambassadors, 100k subs/month model, 5% regional override, and PDF download.'
+        },
+        {
+          section: 'role-targets',
+          target: '#dosRoleTargetsMount',
+          placement: 'top',
+          title: 'Study your RD charter',
+          body: 'Download the PDF for offline study. Use Regional command for senior oversight; buttons link to team, retention, commissions, and reports.'
+        }
+      ];
+    }
     return [];
   }
 
@@ -222,6 +243,10 @@
       body =
         'First time: Role & targets (team blueprint + PDF). Daily: Overview → Team command → support retention & commissions. ' +
         'Personal deployment sections remain available. Guide replays this tour; Map opens the written guide.';
+    } else if (rank() === 'regional_director' && document.querySelector('[data-section="role-targets"]')) {
+      body =
+        'First time: Role & targets (regional blueprint + PDF). Daily: Overview → Regional command → coach seniors & retention. ' +
+        'Team command and personal ops remain available. Guide replays this tour; Map opens the written guide.';
     }
     return {
       placement: 'center',
@@ -242,6 +267,9 @@
       } else if (rank() === 'senior') {
         body =
           'Deployment modules plus Team command at the bottom. Seniors: open Role & targets (2nd item) for your team blueprint — then Overview and Team command daily.';
+      } else if (rank() === 'regional_director') {
+        body =
+          'Deployment modules plus Team and Regional command. RDs: open Role & targets (2nd item) for your regional blueprint — then Overview and Regional command daily.';
       }
     }
     return {
