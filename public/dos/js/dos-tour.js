@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  var TOUR_VERSION = 'v2';
+  var TOUR_VERSION = 'v3';
   var stepIndex = 0;
   var steps = [];
   var active = false;
@@ -49,6 +49,9 @@
     var body =
       'This is your ' + rankTitle() + ' Deployment Operations dashboard. ' +
       'The tour covers every sidebar section, where to start Foundation School, and links to Resources and Leaderboard.';
+    if (r === 'ambassador' && document.querySelector('[data-section="role-targets"]')) {
+      body += ' New ambassadors: open Role & targets first — your operational blueprint, targets, commission, and PDF download.';
+    }
     if (r === 'senior') {
       body += ' You also have Team command for your downline.';
     } else if (r === 'regional_director') {
@@ -82,9 +85,15 @@
         'Your personal recruits and network growth. Use Team command for full downline oversight; this section is your own recruitment record.';
     }
 
+    var overviewBody =
+      'Check KPIs, monthly target, and quick actions before field work. This is your deployment snapshot — not your training progress.';
+    if (r === 'ambassador' && document.querySelector('[data-section="role-targets"]')) {
+      overviewBody =
+        'Your live numbers and quick actions. Read Role & targets first if you have not studied your blueprint yet — then return here each day for KPIs.';
+    }
+
     return [
-      sectionStep('overview', 'Overview — start each day (deployment)', 
-        'Check KPIs, monthly target, and quick actions before field work. This is your deployment snapshot — not your training progress.'),
+      sectionStep('overview', 'Overview — deployment snapshot', overviewBody),
       {
         section: 'formation',
         target: '#dosFormationBody',
@@ -138,6 +147,27 @@
     ];
   }
 
+  function ambassadorRoleTargetsSteps() {
+    if (rank() !== 'ambassador') return [];
+    if (!document.querySelector('[data-section="role-targets"]')) return [];
+    return [
+      {
+        section: 'role-targets',
+        target: '[data-dos-nav="role-targets"]',
+        placement: 'right',
+        title: 'Role & targets — start here',
+        body: 'Sidebar item #2. Your official Ambassador blueprint: role, 10/day & 200/month targets, 10% commission, daily rhythm, Senior promotion (10 recruits), and PDF download.'
+      },
+      {
+        section: 'role-targets',
+        target: '#dosRoleTargetsMount',
+        placement: 'top',
+        title: 'Study your charter',
+        body: 'Scroll this section anytime. Download the PDF to study offline. Use the buttons at the bottom to jump to Daily ops, Network, Commissions, and other work areas.'
+      }
+    ];
+  }
+
   function leadershipSteps() {
     var r = rank();
     var extra = [];
@@ -157,24 +187,42 @@
   }
 
   function finalStep() {
+    var body =
+      'Daily rhythm: Overview → Daily ops → deploy with Links / Social → check Subscribers & Retention → Commissions. ' +
+      'For training: Formation section or Foundation School in the sidebar. Click Guide to replay; Map for the full sitemap.';
+    if (rank() === 'ambassador' && document.querySelector('[data-section="role-targets"]')) {
+      body =
+        'First time: Role & targets (blueprint + PDF). Then daily: Overview → Daily ops → Links / Field deploy → Subscribers & Retention → Commissions. ' +
+        'Training: Formation or Foundation School in the sidebar footer. Guide replays this tour; Map opens the written guide.';
+    }
     return {
       placement: 'center',
       title: rankTitle() + ' — tour complete',
-      body: 'Daily rhythm: Overview → Daily ops → deploy with Links / Social → check Subscribers & Retention → Commissions. ' +
-        'For training: Formation section or Foundation School in the sidebar. Click Guide to replay; Map for the full sitemap.',
+      body: body,
       isFinal: true
+    };
+  }
+
+  function sidebarIntroStep() {
+    var body =
+      'Every deployment module is listed here — ops, pipeline, commissions, network, formation, performance' +
+      (rank() !== 'ambassador' ? ', plus leadership sections for your rank.' : '.');
+    if (rank() === 'ambassador' && document.querySelector('[data-dos-nav="role-targets"]')) {
+      body =
+        'Deployment modules are listed here. New ambassadors: open Role & targets (2nd item) before heavy field work — then Overview, Daily ops, and the rest.';
+    }
+    return {
+      target: '#dosSidebarNav',
+      placement: 'right',
+      title: 'Main sections (left sidebar)',
+      body: body
     };
   }
 
   function buildSteps() {
     steps = [welcomeStep()]
-      .concat([{
-        target: '#dosSidebarNav',
-        placement: 'right',
-        title: 'Main sections (left sidebar)',
-        body: 'Every deployment module is listed here — ops, pipeline, commissions, network, formation, performance' +
-          (rank() !== 'ambassador' ? ', plus leadership sections for your rank.' : '.')
-      }])
+      .concat([sidebarIntroStep()])
+      .concat(ambassadorRoleTargetsSteps())
       .concat(externalLinkSteps())
       .concat(coreSectionSteps())
       .concat(leadershipSteps())

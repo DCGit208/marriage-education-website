@@ -14,7 +14,9 @@
 </head>
 <body class="dos-app" data-dos-rank="ambassador">
     <div class="dos-test-banner">
-        <span>PREVIEW — Dashboard v2 · Full DOS (Phase 7)</span>
+        <span>PREVIEW — Dashboard v2 · Phase 2</span>
+        <a href="dashboard-test.html?v=20260526b#role-targets" style="font-weight:700;text-decoration:underline">→ Role &amp; targets (full charter)</a>
+        <span>·</span>
         <a href="dashboard.html">Open current live dashboard</a>
         <span>·</span>
         <a href="senior-dashboard-test.html">Senior preview</a>
@@ -47,7 +49,7 @@
                 <div>
                     <h2 id="dosPageTitle">Overview</h2>
                     <div class="dos-topbar-meta" id="dosTopbarMeta">Loading…</div>
-                    <div class="dos-phase-pill" id="dosPhasePill">Phase 1 preview</div>
+                    <div class="dos-phase-pill" id="dosPhasePill">Phase 5 preview — tour + Role &amp; targets</div>
                     <div style="font-size:13px;margin-top:8px">
                         <strong id="dosUserName">—</strong>
                         <span style="color:#a1a1aa"> · </span>
@@ -88,8 +90,9 @@
                 <!-- Overview -->
                 <section class="dos-section active" data-section="overview">
                     <div class="dos-overview-hint" id="dosOverviewHint">
-                        Use the <strong>left sidebar</strong> — pipeline, retention, daily ops, field deploy, links, commissions, network, formation, and performance.
-                        This preview reorganizes your live dashboard — it does not replace production until you approve.
+                        <strong>New?</strong> Open <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="role-targets" style="margin:0 4px;padding:4px 10px;font-size:12px">Role &amp; targets</button>
+                        (sidebar #2) for your blueprint and PDF — then return here daily for KPIs.
+                        Use <strong>Guide</strong> in the top bar for a walkthrough; <strong>Map</strong> for the full sitemap.
                     </div>
 
                     <div id="dosAlertsOverview"></div>
@@ -107,13 +110,21 @@
                     <div class="dos-card">
                         <h3><i class="fa-solid fa-bolt"></i> Quick actions</h3>
                         <div style="display:flex;flex-wrap:wrap;gap:8px">
-                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="daily-ops"><i class="fa-solid fa-sun"></i> Daily ops</button>
+                            <button type="button" class="dos-btn dos-btn-primary" data-dos-nav="role-targets"><i class="fa-solid fa-book-open"></i> Role &amp; targets</button>
+                            <button type="button" class="dos-btn" data-dos-nav="daily-ops"><i class="fa-solid fa-sun"></i> Daily ops</button>
                             <button type="button" class="dos-btn" data-dos-nav="field-deploy"><i class="fa-solid fa-map-location-dot"></i> Field scripts</button>
                             <button type="button" class="dos-btn" data-dos-nav="links"><i class="fa-solid fa-link"></i> Deployment links</button>
                             <button type="button" class="dos-btn" data-dos-nav="commissions"><i class="fa-solid fa-coins"></i> Commissions</button>
                             <button type="button" class="dos-btn" data-dos-nav="network"><i class="fa-solid fa-sitemap"></i> Network</button>
                             <button type="button" class="dos-btn" data-dos-nav="formation"><i class="fa-solid fa-graduation-cap"></i> Formation / CRLA</button>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Role & targets (Phase 3 — dos-role-charter.js) -->
+                <section class="dos-section" data-section="role-targets">
+                    <div id="dosRoleTargetsMount">
+                        <div class="dos-empty" style="padding:32px">Loading role &amp; targets…</div>
                     </div>
                 </section>
 
@@ -261,10 +272,10 @@
     <script src="../js/ambassador-account-resolve.js?v=20260524a"></script>
     <script src="../js/ambassador-session.js?v=20260524a"></script>
     <script src="../js/ambassador-routes.js?v=20260524a"></script>
-    <script src="../dos/js/dos-config.js?v=20260524a"></script>
+    <script src="../dos/js/dos-config.js?v=20260526b"></script>
     <script src="../dos/js/dos-economics.js?v=20260524a"></script>
     <script src="../dos/js/dos-metrics.js?v=20260524a"></script>
-    <script src="../dos/js/dos-router.js?v=20260524a"></script>
+    <script src="../dos/js/dos-router.js?v=20260526b"></script>
     <script src="../dos/js/dos-daily-ops.js?v=20260524a"></script>
     <script src="../dos/js/dos-pipeline.js?v=20260524a"></script>
     <script src="../dos/js/dos-team.js?v=20260524a"></script>
@@ -274,7 +285,8 @@
     <script src="../dos/js/dos-gamification.js?v=20260524a"></script>
     <script src="../dos/js/dos-executive.js?v=20260524a"></script>
     <script src="../dos/js/dos-preview-auth.js?v=20260524a"></script>
-    <script src="../dos/js/ambassador-dashboard-v2.js?v=20260524d"></script>
-    <script src="../dos/js/dos-tour.js?v=20260524e"></script>
+    <script src="../dos/js/dos-role-charter.js?v=20260526b"></script>
+    <script src="../dos/js/ambassador-dashboard-v2.js?v=20260526b"></script>
+    <script src="../dos/js/dos-tour.js?v=20260526c"></script>
 </body>
 </html>

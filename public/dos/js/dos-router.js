@@ -45,7 +45,9 @@
     if (!sidebar || sidebar.getAttribute('data-built') === '1') return;
 
     var rank = document.body.getAttribute('data-dos-rank') || 'ambassador';
-    var nav = global.DOSConfig.getNavForRank(rank);
+    var nav = global.DOSConfig.getNavForRank(rank).filter(function (item) {
+      return !!document.querySelector('[data-section="' + item.id + '"]');
+    });
     nav.forEach(function (item) {
       var btn = document.createElement('button');
       btn.type = 'button';
