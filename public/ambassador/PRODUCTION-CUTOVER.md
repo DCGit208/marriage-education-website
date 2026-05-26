@@ -14,11 +14,15 @@
 
 Login (`ambassador-login.html`) routes by role to the production paths above.
 
-**Firebase hosting:** Custom domain `marriageducation.com` uses site **`marriage-education`** (`hosting:main`). Preview site `marriageducation.web.app` uses **`marriageducation`**. Deploy **both** after dashboard changes:
+**Two hosting paths:**
 
-```bash
-firebase deploy --only hosting:main,hosting:marriageducation
-```
+| URL | How it updates |
+|-----|----------------|
+| `marriageducation.com` | Git push to `main` → `.github/workflows/deploy-to-ftp.yml` uploads `public/` to FTP |
+| `marriageducation.web.app` | `firebase deploy --only hosting:marriageducation` |
+| `marriage-education.web.app` | `firebase deploy --only hosting:main` |
+
+After dashboard changes, **push to `main`** (for `.com`) and run Firebase deploy (for `.web.app`).
 
 Preview URLs (`*-test.html`) remain for side-by-side comparison.
 
@@ -27,6 +31,8 @@ Preview URLs (`*-test.html`) remain for side-by-side comparison.
 After deploy, log in on **https://marriageducation.com** (or web.app) and confirm:
 
 ### Ambassador (regular code)
+- [ ] **Role & targets** — sidebar #2; charter loads; PDF download (`/documents/sbd-ops/AMBASSADOR.pdf`)
+- [ ] Guide tour (v3) includes Role & targets; Map guide lists it
 - [ ] Overview KPIs match expectations (sales, recruits, commission totals)
 - [ ] Primary referral link copies correctly
 - [ ] Commission history loads from `sales`
@@ -63,4 +69,10 @@ Then redeploy hosting.
 
 ## Cache
 
-Hard refresh or append `?v=20260523prod` if an old dashboard appears.
+Hard refresh or append `?v=20260526prod` if an old dashboard appears.
+
+## Role & targets (Phase 6 — 2026-05-26)
+
+Production `dashboard.html` now includes **Role & targets** (Phases 1–5): hosted charter PDF, in-dashboard blueprint, tour v3, navigation guide v3.
+
+**Deploy when ready** (not automatic): push `main` for marriageducation.com FTP; `firebase deploy --only hosting:main,hosting:marriageducation` for web.app.

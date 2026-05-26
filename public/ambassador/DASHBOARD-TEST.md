@@ -34,7 +34,7 @@ Logout from each DOS dashboard returns you to **that role’s** login page.
 - **marriageducation.com** → push to `main` (FTP)
 - **\*.web.app** → `firebase deploy --only hosting:main,hosting:marriageducation`
 
-Cache bust: `?v=20260524b`
+Cache bust: `?v=20260526prod` (production), `?v=20260526c` (preview test)
 
 ## Preview (-test)
 
@@ -44,3 +44,73 @@ Cache bust: `?v=20260524b`
 | Senior | /ambassador/senior-dashboard-test.html |
 | RD | /regional-director/rd-dashboard-test.html |
 | Executive | /executive/dashboard-test.html |
+
+## Role charter documents (Phase 1 — static only)
+
+Hosted under `/documents/sbd-ops/` (no dashboard tab yet).
+
+| File | URL (after local server or deploy) |
+|------|-------------------------------------|
+| PDF download | `/documents/sbd-ops/AMBASSADOR.pdf` |
+| Read in browser | `/documents/sbd-ops/AMBASSADOR.html` |
+| Markdown source | `/documents/sbd-ops/AMBASSADOR.md` |
+
+Local check: `python3 -m http.server 8765` from `public/`, then open the paths above.
+
+## Phase 2 — Role & targets tab (preview only)
+
+| What | Where |
+|------|--------|
+| New sidebar item | **Role & targets** (#2, after Overview) on `dashboard-test.html` only |
+| Section | `#role-targets` → `#dosRoleTargetsMount` (placeholder + PDF/HTML links) |
+| Production `dashboard.html` | **Unchanged** — tab hidden until section exists (router filters nav) |
+
+Preview: `/ambassador/dashboard-test.html?v=20260526a#role-targets`
+
+**Phase 6:** Tab is in production `dashboard.html` locally; **marriageducation.com** shows it after you deploy.
+
+Verify: sidebar order, hash routing, other sections still load, live `dashboard.html` has no new tab.
+
+### Can't find the tab?
+
+1. URL must end with **`dashboard-test.html`** (not `dashboard.html`).
+2. Hard refresh: add `?v=20260526b` or Cmd+Shift+R.
+3. Top orange banner: click **→ Role & targets tab (NEW)**.
+4. Overview quick action: **Role & targets** button.
+
+## Phase 3 — Full charter in tab (preview only)
+
+| What | Detail |
+|------|--------|
+| Module | `public/dos/js/dos-role-charter.js` |
+| Content | Role, targets table, blueprint vs dashboard economics, commission, daily rhythm, promotion, dashboard links |
+| Live progress | Recruits, active subscribers, est. recurring (after login loads Firestore) |
+| PDF | Download from tab → `/documents/sbd-ops/AMBASSADOR.pdf` |
+
+Preview: `/ambassador/dashboard-test.html?v=20260526b#role-targets`
+
+## Phase 5 — Tour & navigation (preview)
+
+| What | Detail |
+|------|--------|
+| Tour | `dos-tour.js` v3 — Role & targets steps for Ambassador (sidebar + charter content) |
+| Map | `navigation-guide.html` v3 — Role & targets in sitemap & daily flow |
+| Overview | Hint + button to open Role & targets; Guide / Map called out |
+
+Preview: `/ambassador/dashboard-test.html?v=20260526c` — click **Guide** or wait for auto-tour (v3 runs once per account; new key `dos_tour_v3_{code}`).
+
+Verify: Replay Guide includes Role & targets; Map lists it; Overview button opens the tab.
+
+## Phase 6 — Production Ambassador dashboard
+
+**Status:** Code in `dashboard.html` (not deployed until you push / Firebase).
+
+| File | Change |
+|------|--------|
+| `dashboard.html` | Role & targets section + scripts (`?v=20260526prod`) |
+| `dos-config.js`, `dos-router.js`, `dos-role-charter.js`, `ambassador-dashboard-v2.js`, `dos-tour.js` | Shared modules (already updated in Phases 2–5) |
+| `documents/sbd-ops/` | PDF + HTML charter (Phase 1) |
+
+Local production shell: http://127.0.0.1:9292/ambassador/dashboard.html?v=20260526prod#role-targets
+
+Deploy (you run when validated): `git push origin main` + Firebase hosting both targets.

@@ -7,6 +7,7 @@
 
   var AMBASSADOR_NAV = [
     { id: 'overview', label: 'Overview', icon: 'fa-solid fa-gauge-high' },
+    { id: 'role-targets', label: 'Role & targets', icon: 'fa-solid fa-book-open' },
     { id: 'daily-ops', label: 'Daily ops', icon: 'fa-solid fa-sun' },
     { id: 'field-deploy', label: 'Field deploy', icon: 'fa-solid fa-map-location-dot' },
     { id: 'links', label: 'Deployment links', icon: 'fa-solid fa-link' },

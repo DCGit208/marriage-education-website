@@ -946,6 +946,8 @@
       console.error(err);
       showLoadError('Some sections failed to load. Try refreshing the page.');
     }
+
+    refreshRoleCharter();
   }
 
   var pipelineCache = [];
@@ -1129,10 +1131,40 @@
     }, 45000);
   }
 
+  function refreshRoleCharter() {
+    var mount = document.getElementById('dosRoleTargetsMount');
+    if (!mount || !global.DOSRoleCharter || !global.DOSRoleCharter.renderAmbassador) return;
+    if (getRank() !== 'ambassador') return;
+    var opts = {};
+    var m = state.metrics;
+    if (m) {
+      opts.recruits = m.network && m.network.recruits != null ? m.network.recruits : null;
+      opts.activeSubscribers = m.subscribers && m.subscribers.active != null ? m.subscribers.active : null;
+      opts.recurringCommissionUsd = m.commissions && m.commissions.estimatedMrrUsd != null
+        ? m.commissions.estimatedMrrUsd : null;
+    } else if (state.stats) {
+      opts.recruits = state.stats.recruits_count;
+      var sbd = state.stats.sbdReferrals || {};
+      opts.activeSubscribers = Number(sbd.subscribers) || 0;
+      if (global.DOSEconomics) {
+        opts.recurringCommissionUsd = global.DOSEconomics.monthlyCommissionUsd(opts.activeSubscribers);
+      }
+    }
+    global.DOSRoleCharter.renderAmbassador(mount, opts);
+  }
+
+  function initRoleCharter() {
+    refreshRoleCharter();
+    document.addEventListener('dos-section-change', function (e) {
+      if (e.detail && e.detail.section === 'role-targets') refreshRoleCharter();
+    });
+  }
+
   function init() {
     bindActions();
     initAnnouncements();
     if (global.DOSRouter) global.DOSRouter.init();
+    initRoleCharter();
     loadAll();
     startSessionKeepAlive();
   }

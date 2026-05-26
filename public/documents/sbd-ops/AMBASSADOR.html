@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ambassador — Personal Deployment Operations Blueprint</title>
+  <style>
+    :root { --text: #18181b; --muted: #52525b; --accent: #7c3aed; --border: #e4e4e7; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      background: #fafafa;
+    }
+    .doc-header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+    .doc-header h1 { margin: 0 0 8px; font-size: 1.75rem; }
+    .doc-header p { margin: 4px 0; color: var(--muted); font-size: 0.95rem; }
+    .doc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+    .doc-actions a, .doc-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+    .doc-actions a.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    article h2 {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      margin: 2rem 0 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    article h2:first-of-type { border-top: none; padding-top: 0; }
+    article h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
+    article p.lead {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+    }
+    article ul { margin: 0.5rem 0 1rem; padding-left: 1.25rem; }
+    article li { margin: 0.25rem 0; }
+    article .not-list { color: var(--muted); font-style: italic; }
+    footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media print {
+      body { background: #fff; padding: 16px; }
+      .doc-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Ambassador</h1>
+    <p><strong>Personal Deployment Operations Blueprint</strong></p>
+    <p>marriageducation.com · SBD Network Infrastructure · sbd-network.web.app</p>
+  </header>
+
+  <div class="doc-actions">
+    <a class="primary" href="AMBASSADOR.pdf" download><span>↓</span> Download PDF</a>
+    <a href="AMBASSADOR.md">Markdown source</a>
+    <button type="button" onclick="window.print()">Print / Save as PDF</button>
+    <a href="../../ambassador/dashboard.html">Back to dashboard</a>
+  </div>
+
+  <article>
+    <h2>Position overview</h2>
+    <p>The Ambassador is the foundational deployment tier inside the Marriage Foundation Access Network.</p>
+    <p>The role of the Ambassador is to:</p>
+    <ul>
+      <li>deploy Marriage Foundation Access daily</li>
+      <li>acquire recurring subscribers</li>
+      <li>expand educational access</li>
+      <li>support subscriber retention</li>
+      <li>grow toward leadership progression</li>
+    </ul>
+    <p class="lead">A Marriage Foundation Access deployment operator</p>
+    <p class="not-list">Not: a passive promoter, a one-time salesperson, or a temporary affiliate.</p>
+
+    <h2>Core mission</h2>
+    <p class="lead">To deploy recurring educational access daily across society.</p>
+    <p>Deployment infrastructure: <strong>sbd-network.web.app</strong></p>
+    <p class="lead">Foundation Access Subscription — $9/month recurring</p>
+    <p>Subscribers gain access to Marriage Foundation School, Teleios Formation, Advocacy Formation, Relationship Literacy, Personal Development, Leadership Systems, Marriage Education Infrastructure, Community Access, and future certifications.</p>
+    <p><strong>$2,500+</strong> equivalent educational access value.</p>
+
+    <h2>Daily deployment target</h2>
+    <p class="lead">10 subscribers/day · 20 deployment days/month</p>
+
+    <h2>Monthly deployment target</h2>
+    <p>10 subscribers/day × 20 deployment days = <strong>200 subscribers/month</strong></p>
+
+    <h2>Commission structure</h2>
+    <p class="lead">10% on recurring retained subscriptions</p>
+
+    <h2>Daily deployment economics</h2>
+    <p>10 subscribers/day × $0.90 = <strong>$9/day</strong> recurring deployment value</p>
+
+    <h2>Monthly deployment economics</h2>
+    <p>200 subscribers × $0.90 = <strong>$180/month</strong> recurring (steady-state model)</p>
+
+    <h2>Geometric recurring economics</h2>
+    <p>The Ambassador builds recurring subscriber retention economics — not one-time commissions or temporary income.</p>
+    <ul>
+      <li>Month 1: 200 retained subscribers</li>
+      <li>Month 2: 400 retained subscribers</li>
+      <li>Month 5: 1,000 retained subscribers</li>
+      <li>Month 10: 2,000 retained subscribers</li>
+    </ul>
+    <p>As deployment and retention continue: commissions compound, recurring income compounds, subscriber infrastructure compounds.</p>
+
+    <h2>Responsibilities</h2>
+    <h3>1. Daily deployment</h3>
+    <ul>
+      <li>deploying Foundation Access daily</li>
+      <li>engaging new prospects</li>
+      <li>expanding educational access</li>
+      <li>increasing subscriber growth</li>
+    </ul>
+    <h3>2. Outreach operations</h3>
+    <ul>
+      <li>community, church, campus outreach</li>
+      <li>WhatsApp and social deployment</li>
+      <li>referral deployment</li>
+    </ul>
+    <h3>3. Subscriber operations</h3>
+    <ul>
+      <li>onboarding, renewals, engagement, reducing inactivity</li>
+    </ul>
+    <h3>4. Leadership development</h3>
+    <ul>
+      <li>operational consistency, Senior progression prep, deployment discipline, duplication systems</li>
+    </ul>
+
+    <h2>Daily operations</h2>
+    <h3>Morning</h3>
+    <ul>
+      <li>review deployment targets, prepare outreach, WhatsApp status, daily planning</li>
+    </ul>
+    <h3>Afternoon</h3>
+    <ul>
+      <li>field outreach, community engagement, church/campus deployment, follow-ups</li>
+    </ul>
+    <h3>Evening</h3>
+    <ul>
+      <li>subscriber closing, follow-up completion, activity reporting, retention check-ins</li>
+    </ul>
+
+    <h2>Deployment environments</h2>
+    <p>Campuses, churches, salons, communities, workplaces, women groups, social media, WhatsApp, referrals, family networks.</p>
+
+    <h2>Dashboard access</h2>
+    <p><strong>Personal:</strong> total/retained subscribers, recurring commission, daily deployment count, monthly growth.</p>
+    <p><strong>Deployment:</strong> outreach activity, conversations, follow-ups, conversion, consistency.</p>
+    <p><strong>Retention:</strong> renewal %, inactive alerts, activity, analytics.</p>
+    <p><strong>Promotion:</strong> recruits, progress to Senior, leadership activity, consistency score.</p>
+
+    <h2>Promotion requirement</h2>
+    <p class="lead">Recruit 10 active Ambassadors and maintain operational consistency → Senior Ambassador eligibility.</p>
+
+    <h2>Success metrics</h2>
+    <ul>
+      <li>subscriber growth and retention</li>
+      <li>deployment consistency and outreach activity</li>
+      <li>operational discipline and recurring commission growth</li>
+      <li>leadership development</li>
+    </ul>
+
+    <h2>Operational principle</h2>
+    <p class="lead">A recurring educational access portfolio</p>
+    <p>Through recurring subscriptions, retention, continuous deployment, and operational consistency — not temporary traffic or one-time transactions.</p>
+
+    <h2>Deployment objectives</h2>
+    <ul>
+      <li><strong>Deployment</strong> — subscribers deployed daily</li>
+      <li><strong>Retention</strong> — subscribers active monthly</li>
+      <li><strong>Consistency</strong> — stable daily outreach and discipline</li>
+      <li><strong>Growth</strong> — structure continuously expands</li>
+    </ul>
+
+    <h2>Final mandate</h2>
+    <p class="lead">Deploy Marriage Foundation Access daily through recurring subscriber acquisition, recurring retention, operational consistency, and continuous educational access expansion across society.</p>
+  </article>
+
+  <footer>
+    Marriage Education · SBD Operational Infrastructure · Document version Phase 1 (2026-05-26)
+  </footer>
+</body>
+</html>

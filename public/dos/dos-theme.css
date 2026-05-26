@@ -364,6 +364,28 @@ body.dos-app {
   color: #71717a;
 }
 
+/* Role & targets charter (Phase 3) */
+.dos-charter { display: flex; flex-direction: column; gap: 16px; }
+.dos-charter-hero { border-left: 4px solid var(--dos-accent); }
+.dos-charter-lead { font-size: 15px; font-weight: 600; margin: 0 0 10px; line-height: 1.5; }
+.dos-charter-muted { font-size: 13px; color: #71717a; margin: 0 0 12px; line-height: 1.5; }
+.dos-charter-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dos-charter-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .dos-charter-duo { grid-template-columns: 1fr; } }
+.dos-charter-list { margin: 8px 0 0; padding-left: 1.25rem; font-size: 14px; line-height: 1.6; }
+.dos-charter-list li { margin: 6px 0; }
+.dos-charter-rhythm { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 768px) { .dos-charter-rhythm { grid-template-columns: 1fr; } }
+.dos-charter-rhythm strong { display: block; margin-bottom: 4px; color: #7c3aed; }
+.dos-charter-rhythm p { margin: 0; font-size: 13px; color: #52525b; }
+.dos-charter-nav-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.dos-charter-mandate { background: linear-gradient(135deg, #faf5ff 0%, #f0fdf4 100%); }
+.dos-charter-progress { border-left: 4px solid #7c3aed; }
+.dos-charter-stat-row { display: flex; flex-wrap: wrap; gap: 24px; }
+.dos-charter-stat-label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; }
+.dos-charter-stat-value { display: block; font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
+.dos-charter-table td strong { color: #18181b; }
+
 .dos-recruit-grid {
   display: grid;
   gap: 12px;
