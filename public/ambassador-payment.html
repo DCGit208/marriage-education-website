@@ -443,13 +443,13 @@
       </div>
 
       <!-- Payment Method Selector -->
-      <div class="payment-method-selector">
-        <h3>📱 Select Payment Method</h3>
+      <div class="payment-method-selector" id="payment-method-selector">
+        <h3 id="payment-method-heading">📱 Select Payment Method</h3>
         <div class="payment-methods">
-          <button class="payment-method-btn active" onclick="selectPaymentMethod('momo')">
+          <button type="button" class="payment-method-btn active" data-method="momo" id="btn-pay-momo" onclick="selectPaymentMethod('momo', this)">
             <span>🇨🇲</span> MTN MOMO
           </button>
-          <button class="payment-method-btn" onclick="selectPaymentMethod('stripe')">
+          <button type="button" class="payment-method-btn" data-method="stripe" id="btn-pay-stripe" onclick="selectPaymentMethod('stripe', this)">
             <span>💳</span> Credit Card
           </button>
         </div>
@@ -472,9 +472,9 @@
               <td class="benefit-name">🎯 CRLA Credential Pathway</td>
               <td class="benefit-detail">6-week Foundation School + certification</td>
             </tr>
-            <tr>
+            <tr id="benefit-earnings-row">
               <td class="benefit-name">💰 10% Advocacy Earnings</td>
-              <td class="benefit-detail">1,500 FCFA per deployment (10% of 15,000 FCFA)</td>
+              <td class="benefit-detail" id="benefit-earnings-detail">1,500 FCFA per deployment (10% of 15,000 FCFA)</td>
             </tr>
             <tr>
               <td class="benefit-name">📊 Personal Dashboard</td>
@@ -636,20 +636,18 @@
     }
 
     // Switch payment method
-    function selectPaymentMethod(method) {
+    function selectPaymentMethod(method, clickedBtn) {
       currentPaymentMethod = method;
-      
-      // Update button states
+
       document.querySelectorAll('.payment-method-btn').forEach(btn => {
-        btn.classList.remove('active');
+        btn.classList.toggle('active', btn.dataset.method === method);
       });
-      event.target.closest('.payment-method-btn').classList.add('active');
 
       if (method === 'stripe') {
         document.getElementById('momo-payment-section').classList.add('hidden');
         document.getElementById('stripe-payment-section').classList.add('active');
         initializeStripe();
-        if (!cardElement.parentElement) {
+        if (cardElement && !document.querySelector('#card-element .StripeElement')) {
           cardElement.mount('#card-element');
         }
       } else {
@@ -664,7 +662,8 @@
       const submitBtn = document.getElementById('stripe-submit-btn');
       const cardErrors = document.getElementById('card-errors');
       const code = document.getElementById('registration-code').textContent;
-      const amount = parseInt(document.getElementById('registration-price').textContent) || 15000;
+      const priceEl = document.getElementById('registration-price');
+      const payCurrency = priceEl.dataset.currency || 'XAF';
 
       if (!email) {
         cardErrors.textContent = 'Please enter your email address.';
@@ -746,14 +745,6 @@
       }
     }
 
-    // Get URL parameters
-    function getUrlParameter(name) {
-      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-      const results = regex.exec(location.search);
-      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-    }
-
     // Copy reference to clipboard
     function copyReference() {
       const reference = document.getElementById('reference-code').textContent;
@@ -777,20 +768,89 @@
       }, 5000);
     }
 
+    function getUrlParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function loadAmbassadorSession() {
+      try {
+        const raw = sessionStorage.getItem('ambassadorData');
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function resolvePaymentContext() {
+      const session = loadAmbassadorSession();
+      const urlCurrency = (getUrlParameter('currency') || '').toUpperCase();
+      const urlCountry = (getUrlParameter('country') || '').toUpperCase();
+      const urlAmount = getUrlParameter('amount');
+
+      const country = urlCountry || session?.country || 'CM';
+      const currency = urlCurrency || session?.currency || (country === 'CM' ? 'XAF' : 'USD');
+      const isCameroon = country === 'CM' || currency === 'XAF';
+
+      let amount;
+      let priceLabel;
+      if (isCameroon) {
+        amount = parseInt(urlAmount, 10) || session?.entryAmount || 15000;
+        priceLabel = amount.toLocaleString() + ' FCFA';
+      } else {
+        amount = parseInt(urlAmount, 10) || session?.entryAmount || 30;
+        priceLabel = '$' + amount + ' USD';
+      }
+
+      return { country, currency, amount, priceLabel, isCameroon, session };
+    }
+
     // Initialize page
-    const code = getUrlParameter('code') || 'AMB-UNKNOWN';
-    const amount = getUrlParameter('amount') || '15000';
+    const payCtx = resolvePaymentContext();
+    const code = getUrlParameter('code') || payCtx.session?.code || 'AMB-UNKNOWN';
     const reference = code;
     const stripeTestMode = getUrlParameter('stripe_test') === '1usd';
     const stripeDisplayAmount = stripeTestMode ? '$1 USD (Live Test)' : '$30 USD';
 
-    // Update page content
+    const priceEl = document.getElementById('registration-price');
+    priceEl.textContent = payCtx.priceLabel;
+    priceEl.dataset.amount = String(payCtx.amount);
+    priceEl.dataset.currency = payCtx.currency;
+    priceEl.dataset.country = payCtx.country;
+
     document.getElementById('registration-code').textContent = code;
-    document.getElementById('registration-price').textContent = `${amount} FCFA`;
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
-    document.getElementById('amount-text').textContent = `${amount} FCFA`;
-    document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
+
+    if (payCtx.isCameroon) {
+      document.getElementById('amount-text').textContent = payCtx.amount.toLocaleString() + ' FCFA';
+      document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
+      selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
+    } else {
+      document.getElementById('payment-method-heading').textContent = '💳 International payment';
+      document.getElementById('btn-pay-momo').style.display = 'none';
+      document.getElementById('benefit-earnings-detail').textContent =
+        '$3 USD per deployment (10% of $30 USD entry)';
+      document.querySelector('.header p').textContent =
+        'Complete your registration — $30 USD entry fee (secure card payment)';
+      selectPaymentMethod('stripe', document.getElementById('btn-pay-stripe'));
+    }
+
+    document.getElementById('stripe-amount-display').textContent =
+      payCtx.isCameroon ? stripeDisplayAmount : (stripeTestMode ? '$1 USD (Live Test)' : payCtx.priceLabel);
+
+    const sessionEmail = payCtx.session?.email;
+    if (sessionEmail) {
+      const stripeEmail = document.getElementById('stripe-email');
+      const momoEmail = document.getElementById('email');
+      if (stripeEmail) stripeEmail.value = sessionEmail;
+      if (momoEmail) momoEmail.value = sessionEmail;
+    }
+    const sessionPhone = payCtx.session?.phoneE164 || payCtx.session?.phone;
+    if (sessionPhone && payCtx.isCameroon) {
+      const phoneField = document.getElementById('phone');
+      if (phoneField) phoneField.value = sessionPhone.replace(/\D/g, '').replace(/^237/, '');
+    }
 
     // Handle form submission
     document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
@@ -804,27 +864,48 @@
       const email = document.getElementById('email').value;
 
       try {
-        // Get ambassador data from sessionStorage
+        // Get ambassador data from sessionStorage (fallback: ?ref= from registration redirect)
         let ambassadorData = null;
         const storedData = sessionStorage.getItem('ambassadorData');
         if (storedData) {
           ambassadorData = JSON.parse(storedData);
           console.log('📝 Retrieved ambassador data:', ambassadorData);
         }
+        const urlRef = getUrlParameter('ref');
+        if (urlRef && (!ambassadorData || !ambassadorData.recruitedBy)) {
+          ambassadorData = ambassadorData || {};
+          ambassadorData.recruitedBy = urlRef;
+          if (urlRef.startsWith('RD-')) {
+            ambassadorData.regional_director_code = urlRef;
+          } else if (urlRef.startsWith('AMB-')) {
+            ambassadorData.senior_code = urlRef;
+          }
+          ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
+            ? 'regional_director'
+            : 'senior_ambassador';
+          sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+          console.log('🔗 Recruiter restored from URL ref:', urlRef);
+        }
+
+        const recruitedBy =
+          ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || urlRef || '';
+
+        const payCurrency = document.getElementById('registration-price').dataset.currency || 'XAF';
+        const payAmount = document.getElementById('registration-price').dataset.amount || '15000';
 
         // Prepare payment data
         const paymentData = {
           reference: reference,
           product_id: 'ambassador-registration',
           product_name: `Ambassador Registration - ${code}`,
-          amount: amount,
-          currency: 'XAF',
+          amount: payAmount,
+          currency: payCurrency,
           phone: phone,
           email: email,
           type: 'ambassador',
           ambassador_code: code,
-          regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
-          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to clean up data
+          regional_director: recruitedBy,
+          ambassador_data: ambassadorData ? JSON.parse(JSON.stringify(ambassadorData)) : null
         };
         
         console.log('💳 Payment data being submitted:', {

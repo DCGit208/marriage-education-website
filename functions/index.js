@@ -1006,11 +1006,19 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       created_at: admin.firestore.FieldValue.serverTimestamp()
     };
 
-    // Add ambassador-specific data
-    if (type === 'ambassador' && ambassador_data) {
-      paymentData.ambassador_code = ambassador_code;
-      paymentData.regional_director = regional_director || '';
-      paymentData.ambassador_data = ambassador_data;
+    // Ambassador registration — always persist code + recruiter even if session form data was partial
+    if (type === 'ambassador' || product_id === 'ambassador-registration') {
+      paymentData.ambassador_code = ambassador_code || reference;
+      paymentData.regional_director =
+        regional_director ||
+        ambassador_data?.regional_director_code ||
+        ambassador_data?.recruitedBy ||
+        referral_code ||
+        '';
+      paymentData.ambassador_data = ambassador_data || {
+        code: ambassador_code || reference,
+        recruitedBy: paymentData.regional_director
+      };
     }
 
     await db.collection('pending_payments').doc(reference).set(paymentData);
@@ -1157,35 +1165,33 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
     }
 
     // Handle Ambassador registration activation
-    if (payment.product_id === 'ambassador-registration') {
-      if (!payment.ambassador_data) {
-        // CRITICAL: Missing data - send urgent alert to admin
-        console.error('[CRITICAL] Ambassador payment missing ambassador_data:', reference);
-        
+    if (payment.product_id === 'ambassador-registration' || payment.type === 'ambassador') {
+      const normalized = normalizeAmbassadorPayment(payment, reference);
+
+      try {
+        await activateAmbassador(normalized, reference);
+      } catch (activationError) {
+        console.error('[CRITICAL] Ambassador activation failed:', reference, activationError.message);
+
         if (TELEGRAM_BOT_TOKEN) {
-          const alertMsg = `🚨 CRITICAL ERROR - Ambassador Activation Failed\n\n` +
+          const alertMsg =
+            `🚨 CRITICAL ERROR - Ambassador Activation Failed\n\n` +
             `Reference: ${reference}\n` +
             `Email: ${payment.email}\n` +
-            `Phone: ${payment.phone}\n\n` +
-            `❌ ERROR: Missing ambassador_data\n` +
-            `This happens when registration form data is lost.\n\n` +
-            `⚠️ Payment is approved but ambassador NOT created.\n` +
-            `Please manually activate this ambassador:\n` +
-            `node fix-ambassador-payment.js ${reference}`;
-          
+            `Phone: ${payment.phone || 'N/A'}\n\n` +
+            `❌ ERROR: ${activationError.message}\n\n` +
+            `⚠️ Payment marked approved but activation incomplete.\n` +
+            `Run: node scripts/complete-ambassador-activation.js ${reference}`;
           await sendTelegram(alertMsg, false);
         }
-        
-        throw new functions.https.HttpsError('failed-precondition', 
-          `Ambassador data missing for ${reference}. Registration form may have timed out. Please contact support.`);
+
+        throw new functions.https.HttpsError('internal', activationError.message);
       }
-      
-      await activateAmbassador(payment);
 
       return {
         success: true,
         message: 'Ambassador registration approved',
-        ambassador_code: payment.ambassador_code,
+        ambassador_code: normalized.ambassador_code,
         email_sent: true
       };
     }
@@ -2070,14 +2076,185 @@ async function activateRD(payment) {
   }
 }
 
-async function activateAmbassador(payment) {
-  const ambassadorCode = payment.ambassador_code;
-  const ambassadorData = payment.ambassador_data;
-  
-  if (!ambassadorCode || !ambassadorData) {
-    console.error('Missing ambassador code or data');
+const AMBASSADOR_RECRUITMENT_BONUS_FCFA = 1500; // 10% of 15,000 FCFA signup
+const RD_NETWORK_RECRUITMENT_OVERRIDE_FCFA = 750; // 5% RD override when their ambassador recruits
+
+function pickRdCode(...candidates) {
+  for (const code of candidates) {
+    const normalized = String(code || '').trim();
+    if (normalized.startsWith('RD-')) return normalized;
+  }
+  return null;
+}
+
+async function resolveAmbassadorRdUpline(ambData) {
+  const directRd = pickRdCode(
+    ambData.rdCode,
+    ambData.recruited_by_rd,
+    ambData.regional_director_code,
+    ambData.recruitedBy,
+    ambData.recruited_by
+  );
+  if (directRd) return directRd;
+
+  const seniorCode = ambData.senior_code || ambData.recruited_by_senior;
+  if (seniorCode && seniorCode.startsWith('AMB-')) {
+    const seniorDoc = await db.collection('ambassadors').doc(seniorCode).get();
+    if (seniorDoc.exists) {
+      const seniorData = seniorDoc.data();
+      return pickRdCode(
+        seniorData.rdCode,
+        seniorData.recruited_by_rd,
+        seniorData.regional_director_code,
+        seniorData.recruitedBy,
+        seniorData.recruited_by
+      );
+    }
+  }
+  return null;
+}
+
+async function creditRdNetworkRecruitmentOverride({
+  rdCode,
+  recruitingAmbassadorCode,
+  recruitingAmbassadorName,
+  newAmbassadorCode,
+  newAmbassadorName
+}) {
+  const rdRef = db.collection('regional_directors').doc(rdCode);
+  const rdDoc = await rdRef.get();
+  if (!rdDoc.exists) {
+    console.warn(`[RD OVERRIDE] RD not found: ${rdCode}`);
     return;
   }
+
+  const rdData = rdDoc.data();
+  const overrideAmount = RD_NETWORK_RECRUITMENT_OVERRIDE_FCFA;
+
+  await rdRef.update({
+    recruitment_bonus_earned: admin.firestore.FieldValue.increment(overrideAmount),
+    recruitment_bonus_pending: admin.firestore.FieldValue.increment(overrideAmount),
+    network_recruitment_override_earned: admin.firestore.FieldValue.increment(overrideAmount),
+    network_recruitment_override_pending: admin.firestore.FieldValue.increment(overrideAmount),
+    updated_at: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  const recruitmentHistory = rdData.recruitment_history || [];
+  recruitmentHistory.push({
+    type: 'network_override',
+    recruiting_ambassador_code: recruitingAmbassadorCode,
+    recruiting_ambassador_name: recruitingAmbassadorName,
+    ambassador_code: newAmbassadorCode,
+    ambassador_name: newAmbassadorName,
+    amount: overrideAmount,
+    date: new Date().toISOString(),
+    status: 'pending'
+  });
+  await rdRef.update({ recruitment_history: recruitmentHistory });
+
+  await db.collection('admin_notifications').add({
+    type: 'rd_recruitment_bonus',
+    recruiter_type: 'rd_network_override',
+    rd_code: rdCode,
+    rd_name: rdData.name || 'Unknown',
+    recruiting_ambassador_code: recruitingAmbassadorCode,
+    recruiting_ambassador_name: recruitingAmbassadorName,
+    ambassador_code: newAmbassadorCode,
+    ambassador_name: newAmbassadorName,
+    amount: overrideAmount,
+    status: 'pending',
+    created_at: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  if (TELEGRAM_BOT_TOKEN) {
+    const rdTotalPending = (rdData.recruitment_bonus_pending || 0) + overrideAmount;
+    const rdMsg = `💰 RD NETWORK OVERRIDE (RECRUITMENT)\n\n` +
+      `RD: ${rdCode}\n` +
+      `Name: ${rdData.name || 'Unknown'}\n` +
+      `Team recruiter: ${recruitingAmbassadorCode} (${recruitingAmbassadorName})\n` +
+      `New Ambassador: ${newAmbassadorCode}\n` +
+      `Name: ${newAmbassadorName}\n` +
+      `Override: ${overrideAmount.toLocaleString()} FCFA (5%)\n\n` +
+      `Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
+      `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
+    await sendTelegram(rdMsg, false);
+  }
+
+  console.log(`[RD OVERRIDE] ${rdCode} +${overrideAmount} FCFA for recruit via ${recruitingAmbassadorCode}`);
+}
+
+function normalizeAmbassadorPayment(payment, reference) {
+  const ref = String(payment.reference || reference || '').trim();
+  const ambassadorCode = String(payment.ambassador_code || ref).trim();
+  const regional_director =
+    payment.regional_director ||
+    payment.referral_code ||
+    payment.ambassador_data?.recruitedBy ||
+    '';
+
+  let ambassadorData = payment.ambassador_data
+    ? { ...payment.ambassador_data }
+    : {};
+
+  if (!ambassadorData.recruitedBy && regional_director) {
+    ambassadorData.recruitedBy = regional_director;
+  }
+  if (!ambassadorData.senior_code && regional_director.startsWith('AMB-')) {
+    ambassadorData.senior_code = regional_director;
+  }
+  if (!ambassadorData.code) {
+    ambassadorData.code = ambassadorCode;
+  }
+
+  if (!ambassadorData.fullName) {
+    const token = ambassadorCode.replace(/^AMB-/, '').split('-')[0] || 'Ambassador';
+    const pretty =
+      token.length > 1
+        ? token.charAt(0) + token.slice(1).toLowerCase()
+        : token;
+    ambassadorData.fullName = pretty;
+    ambassadorData.firstName = ambassadorData.firstName || pretty;
+    ambassadorData.lastName = ambassadorData.lastName || '';
+  }
+
+  return {
+    ...payment,
+    reference: ref,
+    ambassador_code: ambassadorCode,
+    regional_director,
+    ambassador_data: ambassadorData
+  };
+}
+
+async function activateAmbassador(payment, reference) {
+  const normalized = normalizeAmbassadorPayment(payment, reference);
+  const ambassadorCode = normalized.ambassador_code;
+  const ambassadorData = normalized.ambassador_data;
+  payment = normalized;
+
+  if (!ambassadorCode) {
+    throw new Error(`Missing ambassador code for payment ${normalized.reference || reference || 'unknown'}`);
+  }
+  if (!ambassadorData) {
+    throw new Error(`Missing ambassador_data for ${ambassadorCode}`);
+  }
+  if (!payment.email) {
+    throw new Error(`Missing customer email for ${ambassadorCode}`);
+  }
+
+  let rdCodeForNewAmbassador = payment.regional_director || '';
+  if (rdCodeForNewAmbassador.startsWith('AMB-')) {
+    const recruiterSnap = await db.collection('ambassadors').doc(rdCodeForNewAmbassador).get();
+    if (recruiterSnap.exists) {
+      const recruiterRd = await resolveAmbassadorRdUpline(recruiterSnap.data());
+      if (recruiterRd) rdCodeForNewAmbassador = recruiterRd;
+    }
+  }
+
+  const existingAmb = await db.collection('ambassadors').doc(ambassadorCode).get();
+  if (existingAmb.exists && existingAmb.data()?.status === 'active') {
+    console.log(`[AMBASSADOR] ${ambassadorCode} already active — skipping account create`);
+  } else {
 
   // Create ambassador account in Firestore
   const ambassadorAccount = {
@@ -2086,7 +2263,12 @@ async function activateAmbassador(payment) {
     code: ambassadorCode,  // For consistency with queries
     email: payment.email,  // Ensure email is included for login
     phone: payment.phone,  // Ensure phone is included
-    rdCode: payment.regional_director || '',  // Store RD code for team queries
+    recruitedBy: payment.regional_director?.startsWith('AMB-')
+      ? payment.regional_director
+      : (ambassadorData.recruitedBy || ''),
+    senior_code: ambassadorData.senior_code ||
+      (payment.regional_director?.startsWith('AMB-') ? payment.regional_director : ''),
+    rdCode: rdCodeForNewAmbassador.startsWith('RD-') ? rdCodeForNewAmbassador : (ambassadorData.rdCode || ''),
     status: 'active',  // Both old and new login pages accept 'active'
     booksSold: 0,
     commissionEarned: 0,
@@ -2106,14 +2288,21 @@ async function activateAmbassador(payment) {
     updated_at: admin.firestore.FieldValue.serverTimestamp()
   };
 
-  await db.collection('ambassadors').doc(ambassadorCode).set(ambassadorAccount);
-  console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
+    await db.collection('ambassadors').doc(ambassadorCode).set(ambassadorAccount);
+    console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
+  }
 
   // Update recruiter statistics for any recruiter code (RD-* or AMB-*)
-  if (payment.regional_director) {
+  const existingBonusSnap = await db.collection('admin_notifications')
+    .where('ambassador_code', '==', ambassadorCode)
+    .where('type', '==', 'rd_recruitment_bonus')
+    .limit(1)
+    .get();
+
+  if (payment.regional_director && existingBonusSnap.empty) {
     try {
       const recruiterCode = payment.regional_director;
-      const recruitmentBonus = 1500; // 10% of 15,000 FCFA signup fee
+      const recruitmentBonus = AMBASSADOR_RECRUITMENT_BONUS_FCFA;
 
       if (recruiterCode.startsWith('RD-')) {
         const rdRef = db.collection('regional_directors').doc(recruiterCode);
@@ -2232,6 +2421,18 @@ async function activateAmbassador(payment) {
               `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
             await sendTelegram(ambMsg, false);
           }
+
+          // RD network override: 750 FCFA when an ambassador recruited by an RD brings a new recruit
+          const rdUpline = await resolveAmbassadorRdUpline(ambData);
+          if (rdUpline && rdUpline !== recruiterCode) {
+            await creditRdNetworkRecruitmentOverride({
+              rdCode: rdUpline,
+              recruitingAmbassadorCode: recruiterCode,
+              recruitingAmbassadorName: ambData.name || ambData.fullName || 'Unknown',
+              newAmbassadorCode: ambassadorCode,
+              newAmbassadorName: ambassadorData.fullName
+            });
+          }
         }
       }
     } catch (error) {
@@ -2293,6 +2494,70 @@ async function activateAmbassador(payment) {
 
   console.log(`[COMPLETE] Ambassador ${ambassadorCode} activated and notified`);
 }
+
+/**
+ * Re-run ambassador activation for an approved payment (admin recovery).
+ */
+async function reprocessAmbassadorActivationCore(reference) {
+  const paymentDoc = await db.collection('pending_payments').doc(reference).get();
+  if (!paymentDoc.exists) {
+    throw new Error(`Payment not found: ${reference}`);
+  }
+
+  const payment = paymentDoc.data();
+  if (payment.product_id !== 'ambassador-registration' && payment.type !== 'ambassador') {
+    throw new Error('Not an ambassador registration payment');
+  }
+
+  await activateAmbassador(payment, reference);
+  const normalized = normalizeAmbassadorPayment(payment, reference);
+
+  return {
+    success: true,
+    ambassador_code: normalized.ambassador_code,
+    message: 'Ambassador activation reprocessed'
+  };
+}
+
+exports.reprocessAmbassadorActivation = functions.https.onCall(async (data, context) => {
+  try {
+    const reference = String(data?.reference || '').trim();
+    if (!reference) {
+      throw new functions.https.HttpsError('invalid-argument', 'reference is required');
+    }
+    return await reprocessAmbassadorActivationCore(reference);
+  } catch (error) {
+    console.error('reprocessAmbassadorActivation error:', error);
+    if (error instanceof functions.https.HttpsError) throw error;
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+/** HTTP recovery endpoint (service-account auth) for admin scripts */
+exports.reprocessAmbassadorActivationHttp = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const reference = String(req.body?.reference || req.query?.reference || '').trim();
+    if (!reference) {
+      return res.status(400).json({ error: 'reference is required' });
+    }
+    const result = await reprocessAmbassadorActivationCore(reference);
+    return res.json(result);
+  } catch (error) {
+    console.error('reprocessAmbassadorActivationHttp error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName, bookUrl }) {
   try {
@@ -2372,6 +2637,62 @@ async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName
   }
 }
 
+exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, context) => {
+  try {
+    const ambassadorCode = String(data?.ambassadorCode || '').trim();
+    const email = String(data?.email || '').trim().toLowerCase();
+
+    if (!ambassadorCode || !email) {
+      throw new functions.https.HttpsError('invalid-argument', 'Missing required fields: ambassadorCode, email');
+    }
+
+    const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+    if (!ambassadorDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Ambassador account not found.');
+    }
+
+    const ambassador = ambassadorDoc.data();
+    const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${ambassadorCode}`;
+
+    const sendResult = await sendAmbassadorAccessEmail({
+      email,
+      ambassadorCode,
+      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador',
+      bookUrl
+    });
+
+    if (!sendResult.sent) {
+      throw new functions.https.HttpsError('internal', sendResult.error || 'Failed to resend access email.');
+    }
+
+    if (TELEGRAM_BOT_TOKEN) {
+      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      await sendTelegram(
+        `✅ AMBASSADOR ACCESS EMAIL RESENT\n\n` +
+          `🎯 Code: ${ambassadorCode}\n` +
+          `📧 Email: ${email}\n\n` +
+          `📥 Book Download (expires ${expiryDate}):\n${bookUrl}\n\n` +
+          `🔐 Dashboard: https://marriageducation.com/ambassador-login.html`,
+        false
+      );
+    }
+
+    return {
+      success: true,
+      message: 'Access email resent successfully.',
+      ambassadorCode,
+      email,
+      book_url: bookUrl
+    };
+  } catch (error) {
+    console.error('[EMAIL] resendAmbassadorAccessEmail error:', error.message);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError('internal', error.message || 'Failed to resend access email.');
+  }
+});
+
 exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, context) => {
   try {
     const ambassadorCode = String(data?.ambassadorCode || '').trim();
@@ -2402,7 +2723,6 @@ exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, 
 
     const ambassador = ambassadorDoc.data();
     const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${ambassadorCode}`;
-
     const sendResult = await sendAmbassadorAccessEmail({
       email,
       ambassadorCode,
@@ -2414,12 +2734,7 @@ exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, 
       throw new functions.https.HttpsError('internal', sendResult.error || 'Failed to resend access email.');
     }
 
-    return {
-      success: true,
-      message: 'Access email resent successfully.',
-      ambassadorCode,
-      email
-    };
+    return { success: true, message: 'Access email resent successfully.', ambassadorCode, email };
   } catch (error) {
     console.error('[STRIPE] resendAmbassadorStripeAccessEmail error:', error.message);
     if (error instanceof functions.https.HttpsError) {
@@ -3606,11 +3921,19 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
+
+    const phoneStored = data.phoneE164 || data.phone;
+    const countryCode = data.country || 'CM';
+    const currency = data.currency || (countryCode === 'CM' ? 'XAF' : 'USD');
     
     // Save to Firestore for backup (in addition to client-side save)
     try {
       await db.collection('ambassadors').add({
         ...data,
+        phone: phoneStored,
+        phoneE164: phoneStored,
+        country: countryCode,
+        currency,
         submittedAt: admin.firestore.FieldValue.serverTimestamp(),
         source: 'cloud_function'
       });
@@ -3643,7 +3966,11 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
-              <td style="padding: 8px 0;">${data.phone}</td>
+              <td style="padding: 8px 0;">${phoneStored}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Country:</td>
+              <td style="padding: 8px 0;">${data.countryName || countryCode}</td>
             </tr>
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px 0; font-weight: bold;">City:</td>
@@ -3652,6 +3979,10 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
             <tr style="border-bottom: 1px solid #eee;">
               <td style="padding: 8px 0; font-weight: bold;">Region:</td>
               <td style="padding: 8px 0;">${data.region}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 8px 0; font-weight: bold;">Entry fee:</td>
+              <td style="padding: 8px 0;">${currency === 'USD' ? '$' + (data.entryAmount || 30) + ' USD' : (data.entryAmount || 15000) + ' FCFA'}</td>
             </tr>
           </table>
           
@@ -6240,4 +6571,48 @@ exports.onOrderRevenueProfileV2 = functions.firestore
       console.error('[FIS_V2] onOrderRevenueProfileV2:', err.code || err.message);
       return null;
     }
+  });
+
+// ============================================
+// COMMERCE ENGINE V1 (SANDBOX — isolated from production checkout)
+// ============================================
+const commerceEngineV1 = require('./commerceEngine');
+exports.commerceV1InitiateCheckout = commerceEngineV1.commerceV1InitiateCheckout;
+exports.commerceV1SimulatePayment = commerceEngineV1.commerceV1SimulatePayment;
+exports.commerceV1GetDashboard = commerceEngineV1.commerceV1GetDashboard;
+exports.commerceV1CampayWebhook = commerceEngineV1.commerceV1CampayWebhook;
+exports.commerceV1ProcessPayoutBatch = commerceEngineV1.commerceV1ProcessPayoutBatch;
+exports.commerceV1RunPayoutBatch = commerceEngineV1.commerceV1RunPayoutBatch;
+
+// ============================================
+// DOS — Deployment Operations System (Phase 0 metrics)
+// ============================================
+const dosMetrics = require('./dos/metricsAggregator');
+
+exports.refreshDosMetrics = functions.https.onCall(async (data) => {
+  const code = (data && (data.ambassadorCode || data.code)) || '';
+  if (!code) {
+    throw new functions.https.HttpsError('invalid-argument', 'ambassadorCode is required');
+  }
+  const doc = await db.collection('ambassadors').doc(code).get();
+  if (!doc.exists) {
+    throw new functions.https.HttpsError('not-found', 'Ambassador not found');
+  }
+  const payload = await dosMetrics.syncDosMetrics(db, code, doc.data());
+  return { success: true, metrics: payload };
+});
+
+exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
+  .document('ambassadors/{ambassadorCode}')
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) {
+      return null;
+    }
+    const ambassadorCode = context.params.ambassadorCode;
+    try {
+      await dosMetrics.syncDosMetrics(db, ambassadorCode, change.after.data());
+    } catch (err) {
+      console.error('[DOS] syncDosMetrics failed for', ambassadorCode, err);
+    }
+    return null;
   });
