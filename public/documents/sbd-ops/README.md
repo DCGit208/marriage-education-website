@@ -37,8 +37,15 @@ Regenerate from the HTML page (macOS, Chrome installed):
 
 Or edit `AMBASSADOR.md` and re-run the Chrome command after updating `AMBASSADOR.html`.
 
-## Future (Phase 7+)
+## Senior Ambassador (Phase 7)
 
-- `SENIOR_AMBASSADOR.pdf` / `.md` / `.html`
+| File | Purpose |
+|------|---------|
+| `SENIOR_AMBASSADOR.pdf` | Primary download for seniors |
+| `SENIOR_AMBASSADOR.md` | Source markdown |
+| `SENIOR_AMBASSADOR.html` | Read in browser |
+
+## Future (Phase 8+)
+
 - `REGIONAL_DIRECTOR.pdf`
 - `EXECUTIVE_NETWORK_DIRECTOR.pdf`

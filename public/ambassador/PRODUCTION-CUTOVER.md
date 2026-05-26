@@ -42,6 +42,7 @@ After deploy, log in on **https://marriageducation.com** (or web.app) and confir
 
 ### Senior (`AMB-…` with `ambassador_type: senior`)
 - [ ] Lands on `senior-dashboard.html` (not ambassador shell)
+- [ ] **Role & targets** — team blueprint, PDF (`SENIOR_AMBASSADOR.pdf`), live team progress
 - [ ] Team command shows downline
 - [ ] Personal KPIs still load for senior’s own code
 

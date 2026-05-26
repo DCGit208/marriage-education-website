@@ -4,7 +4,7 @@
 (function (global) {
   'use strict';
 
-  var TOUR_VERSION = 'v3';
+  var TOUR_VERSION = 'v4';
   var stepIndex = 0;
   var steps = [];
   var active = false;
@@ -51,6 +51,9 @@
       'The tour covers every sidebar section, where to start Foundation School, and links to Resources and Leaderboard.';
     if (r === 'ambassador' && document.querySelector('[data-section="role-targets"]')) {
       body += ' New ambassadors: open Role & targets first — your operational blueprint, targets, commission, and PDF download.';
+    }
+    if (r === 'senior' && document.querySelector('[data-section="role-targets"]')) {
+      body += ' Senior leaders: start with Role & targets for your team blueprint (10 ambassadors, 5% override, PDF).';
     }
     if (r === 'senior') {
       body += ' You also have Team command for your downline.';
@@ -147,25 +150,46 @@
     ];
   }
 
-  function ambassadorRoleTargetsSteps() {
-    if (rank() !== 'ambassador') return [];
+  function roleTargetsIntroSteps() {
     if (!document.querySelector('[data-section="role-targets"]')) return [];
-    return [
-      {
-        section: 'role-targets',
-        target: '[data-dos-nav="role-targets"]',
-        placement: 'right',
-        title: 'Role & targets — start here',
-        body: 'Sidebar item #2. Your official Ambassador blueprint: role, 10/day & 200/month targets, 10% commission, daily rhythm, Senior promotion (10 recruits), and PDF download.'
-      },
-      {
-        section: 'role-targets',
-        target: '#dosRoleTargetsMount',
-        placement: 'top',
-        title: 'Study your charter',
-        body: 'Scroll this section anytime. Download the PDF to study offline. Use the buttons at the bottom to jump to Daily ops, Network, Commissions, and other work areas.'
-      }
-    ];
+    var r = rank();
+    if (r === 'ambassador') {
+      return [
+        {
+          section: 'role-targets',
+          target: '[data-dos-nav="role-targets"]',
+          placement: 'right',
+          title: 'Role & targets — start here',
+          body: 'Sidebar item #2. Your official Ambassador blueprint: role, 10/day & 200/month targets, 10% commission, daily rhythm, Senior promotion (10 recruits), and PDF download.'
+        },
+        {
+          section: 'role-targets',
+          target: '#dosRoleTargetsMount',
+          placement: 'top',
+          title: 'Study your charter',
+          body: 'Scroll this section anytime. Download the PDF to study offline. Use the buttons at the bottom to jump to Daily ops, Network, Commissions, and other work areas.'
+        }
+      ];
+    }
+    if (r === 'senior') {
+      return [
+        {
+          section: 'role-targets',
+          target: '[data-dos-nav="role-targets"]',
+          placement: 'right',
+          title: 'Role & targets — team blueprint',
+          body: 'Sidebar item #2. Senior team blueprint: 10 ambassadors, 2,000 subs/month model, 5% override, daily senior ops, RD progression, and PDF download.'
+        },
+        {
+          section: 'role-targets',
+          target: '#dosRoleTargetsMount',
+          placement: 'top',
+          title: 'Study your Senior charter',
+          body: 'Download the PDF for offline study. Use Team command for live downline metrics; buttons below link to retention, commissions, and reports.'
+        }
+      ];
+    }
+    return [];
   }
 
   function leadershipSteps() {
@@ -194,6 +218,10 @@
       body =
         'First time: Role & targets (blueprint + PDF). Then daily: Overview → Daily ops → Links / Field deploy → Subscribers & Retention → Commissions. ' +
         'Training: Formation or Foundation School in the sidebar footer. Guide replays this tour; Map opens the written guide.';
+    } else if (rank() === 'senior' && document.querySelector('[data-section="role-targets"]')) {
+      body =
+        'First time: Role & targets (team blueprint + PDF). Daily: Overview → Team command → support retention & commissions. ' +
+        'Personal deployment sections remain available. Guide replays this tour; Map opens the written guide.';
     }
     return {
       placement: 'center',
@@ -207,9 +235,14 @@
     var body =
       'Every deployment module is listed here — ops, pipeline, commissions, network, formation, performance' +
       (rank() !== 'ambassador' ? ', plus leadership sections for your rank.' : '.');
-    if (rank() === 'ambassador' && document.querySelector('[data-dos-nav="role-targets"]')) {
-      body =
-        'Deployment modules are listed here. New ambassadors: open Role & targets (2nd item) before heavy field work — then Overview, Daily ops, and the rest.';
+    if (document.querySelector('[data-dos-nav="role-targets"]')) {
+      if (rank() === 'ambassador') {
+        body =
+          'Deployment modules are listed here. New ambassadors: open Role & targets (2nd item) before heavy field work — then Overview, Daily ops, and the rest.';
+      } else if (rank() === 'senior') {
+        body =
+          'Deployment modules plus Team command at the bottom. Seniors: open Role & targets (2nd item) for your team blueprint — then Overview and Team command daily.';
+      }
     }
     return {
       target: '#dosSidebarNav',
@@ -222,7 +255,7 @@
   function buildSteps() {
     steps = [welcomeStep()]
       .concat([sidebarIntroStep()])
-      .concat(ambassadorRoleTargetsSteps())
+      .concat(roleTargetsIntroSteps())
       .concat(externalLinkSteps())
       .concat(coreSectionSteps())
       .concat(leadershipSteps())
