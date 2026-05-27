@@ -20,6 +20,46 @@ let allUsers = [];
 let currentManagingUserId = null;
 let currentMovePostId = null;
 
+/** Coerce legacy/corrupt Firestore `groups` values to a string[] (fixes Manage modal crashes). */
+function userGroupsArray(groups) {
+  if (Array.isArray(groups)) {
+    return groups.filter(function (id) { return typeof id === 'string' && id; });
+  }
+  if (groups && typeof groups === 'object') {
+    return Object.keys(groups).filter(function (k) { return k; });
+  }
+  if (typeof groups === 'string' && groups.trim()) {
+    return [groups.trim()];
+  }
+  return [];
+}
+
+function formatAdminDate(val) {
+  if (!val) return 'Unknown';
+  try {
+    if (typeof val.toDate === 'function') return val.toDate().toLocaleDateString();
+    if (val.seconds != null) return new Date(val.seconds * 1000).toLocaleDateString();
+    if (typeof val === 'number') return new Date(val).toLocaleDateString();
+    return new Date(val).toLocaleDateString();
+  } catch (_) {
+    return 'Unknown';
+  }
+}
+
+function normalizeUserRole(role) {
+  if (role == null || role === '') return 'member';
+  return String(role).toLowerCase();
+}
+
+/** Writes a proper array back when `groups` was stored as a map/string (mobile-friendly — no console). */
+async function repairUserGroupsField(userId, rawGroups) {
+  if (Array.isArray(rawGroups)) return userGroupsArray(rawGroups);
+  const fixed = userGroupsArray(rawGroups);
+  await db.collection('users').doc(userId).update({ groups: fixed });
+  console.log('[Admin] Repaired groups[] for user', userId);
+  return fixed;
+}
+
 // DOM Elements
 const backBtn = document.getElementById('backBtn');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -424,6 +464,7 @@ document.getElementById('createBoardForm')?.addEventListener('submit', async (e)
 // ================================================================
 
 async function loadUsers() {
+  if (!usersList) return;
   try {
     usersList.innerHTML = '<div class="loading-text">Loading users...</div>';
     const snap = await db.collection('users').get();
@@ -432,113 +473,173 @@ async function loadUsers() {
     if (snap.empty) { usersList.innerHTML = '<p class="empty-state">No users yet</p>'; return; }
     snap.forEach(doc => {
       const u = doc.data();
-      allUsers.push({ id: doc.id, ...u });
+      const groupIds = userGroupsArray(u.groups);
+      allUsers.push({ id: doc.id, ...u, groups: groupIds });
       const card = document.createElement('div');
       card.className = 'admin-card' + (u.disabled ? ' admin-card-archived' : '');
-      const lastActive = u.lastActive ? new Date(u.lastActive.seconds * 1000).toLocaleDateString() : 'Unknown';
+      const lastActive = formatAdminDate(u.lastActive);
+      const needsRepair = !Array.isArray(u.groups);
+      const repairHint = needsRepair ? ' · <span style="color:#fa0">needs repair</span>' : '';
       card.innerHTML = `
         <h4>${escapeHtml(u.name || u.email)}${u.disabled ? ' <span class="badge-archived">Suspended</span>' : ''}</h4>
-        <p class="small-text">${escapeHtml(u.email)}</p>
-        <p class="small-text">Role: <strong>${escapeHtml(u.role || 'member')}</strong> · Last active: ${lastActive}</p>
-        <p class="small-text">Groups: ${u.groups ? u.groups.length : 0}</p>
+        <p class="small-text">${escapeHtml(u.email || '')}</p>
+        <p class="small-text">Role: <strong>${escapeHtml(normalizeUserRole(u.role))}</strong> · Tier: <strong>${escapeHtml(u.tier || 'free')}</strong> · Last active: ${lastActive}${repairHint}</p>
+        <p class="small-text">Groups: ${groupIds.length}</p>
         <div class="admin-card-actions">
-          <button class="btn btn-sm btn-primary manage-user-btn" data-id="${doc.id}">Manage</button>
+          <button type="button" class="btn btn-sm btn-primary manage-user-btn" data-id="${escapeHtml(doc.id)}">Manage</button>
         </div>`;
       usersList.appendChild(card);
     });
-    usersList.querySelectorAll('.manage-user-btn').forEach(b => b.addEventListener('click', () => handleManageUser(b.dataset.id)));
     updateBroadcastTargets();
   } catch (err) {
     console.error('loadUsers:', err);
-    usersList.innerHTML = '<div class="error-text">Error loading users</div>';
+    usersList.innerHTML = '<div class="error-text">Error loading users: ' + escapeHtml(err.message || String(err)) + '</div>';
   }
 }
 
-async function handleManageUser(userId) {
-  currentManagingUserId = userId;
-  const u = allUsers.find(x => x.id === userId);
-  if (!u) { console.error('handleManageUser: user not found in allUsers. userId=', userId, 'allUsers=', allUsers.map(x => x.id)); alert('User data not found. Try refreshing the page.'); return; }
-  try {
-
-  document.getElementById('manageUserTitle').textContent = 'Manage User';
-  document.getElementById('manageUserName').textContent = `${u.name || u.email} — ${u.email}`;
-
-  // Tier
-  const currentTier = u.tier || 'free';
-  const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
-  document.getElementById('manageUserTier').textContent = tierLabel[currentTier] || currentTier;
-  document.getElementById('setUserTierSelect').value = currentTier;
-  document.getElementById('setUserTierBtn').onclick = () => {
-    const selectedTier = document.getElementById('setUserTierSelect').value;
-    handleSetUserTier(userId, selectedTier);
-  };
-
-  // Role
-  const role = u.role || 'member';
-  document.getElementById('manageUserRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
-
-  var mentorCb = document.getElementById('manageUserMentor');
-  var saveMentorBtn = document.getElementById('saveUserMentorBtn');
-  if (mentorCb) mentorCb.checked = !!u.mentor;
-  if (saveMentorBtn) {
-    saveMentorBtn.onclick = async function () {
-      try {
-        showLoading(true);
-        await db.collection('users').doc(userId).set({ mentor: !!mentorCb.checked }, { merge: true });
-        alert('Mentor flag saved.');
-        closeAllModals();
-        await loadUsers();
-      } catch (err) {
-        console.error('saveMentor:', err);
-        alert('Error: ' + (err.message || err));
-      } finally {
-        showLoading(false);
-      }
-    };
-  }
-  const toggleBtn = document.getElementById('toggleRoleBtn');
-  if (role === 'admin') {
-    toggleBtn.textContent = 'Demote to Member';
-    toggleBtn.onclick = () => handleToggleRole(userId, 'member');
-  } else {
-    toggleBtn.textContent = 'Promote to Admin';
-    toggleBtn.onclick = () => handleToggleRole(userId, 'admin');
-  }
-
-  // Password reset
-  document.getElementById('resetPasswordBtn').onclick = () => handleResetPassword(u.email);
-
-  // Suspend / reinstate toggle
-  const removeBtn = document.getElementById('removeUserBtn');
-  if (u.disabled) {
-    removeBtn.textContent = '✅ Reinstate';
-    removeBtn.onclick = () => handleReinstateUser(userId, u.email);
-  } else {
-    removeBtn.textContent = '🚫 Suspend';
-    removeBtn.onclick = () => handleRemoveUser(userId, u.email);
-  }
-
-  // Hard delete button
-  document.getElementById('hardDeleteUserBtn').onclick = () => handleHardDeleteUser(userId, u.email);
-
-  // Groups checklist — shows tier badge per group
-  const checklist = document.getElementById('userGroupsChecklist');
-  checklist.innerHTML = '';
-  const tierColors = { free: '#4caf50', foundation: '#2196f3', premium: '#9c27b0', elite: '#c6a96b' };
-  allGroups.forEach(g => {
-    const checked = u.groups && u.groups.includes(g.id);
-    const tColor = tierColors[g.requiredTier] || '#888';
-    const tLabel = g.requiredTier ? ` <span style="font-size:10px;background:${tColor}22;color:${tColor};border:1px solid ${tColor}44;border-radius:4px;padding:1px 5px;vertical-align:middle">${g.requiredTier}</span>` : '';
-    const lbl = document.createElement('label');
-    lbl.className = 'checkbox-label';
-    lbl.innerHTML = `<input type="checkbox" value="${g.id}" ${checked ? 'checked' : ''}><span>${escapeHtml(g.title)}${tLabel}</span>`;
-    checklist.appendChild(lbl);
+if (usersList && !usersList.dataset.manageBound) {
+  usersList.dataset.manageBound = '1';
+  usersList.addEventListener('click', function (e) {
+    const btn = e.target.closest('.manage-user-btn');
+    if (!btn || !btn.dataset.id) return;
+    e.preventDefault();
+    handleManageUser(btn.dataset.id);
   });
+}
 
-  openModal(manageUserModal);
+async function handleManageUser(userId) {
+  if (!userId) return;
+  currentManagingUserId = userId;
+  let u = allUsers.find(function (x) { return x.id === userId; });
+  if (!u) {
+    try {
+      const snap = await db.collection('users').doc(userId).get();
+      if (!snap.exists) {
+        alert('User not found.');
+        return;
+      }
+      u = { id: snap.id, ...snap.data() };
+    } catch (fetchErr) {
+      alert('Could not load user: ' + (fetchErr.message || fetchErr));
+      return;
+    }
+  }
+  try {
+    if (!manageUserModal) {
+      alert('Manage user dialog is missing. Hard-refresh Admin Panel.');
+      return;
+    }
+
+    let memberGroups = userGroupsArray(u.groups);
+    if (!Array.isArray(u.groups)) {
+      try {
+        memberGroups = await repairUserGroupsField(userId, u.groups);
+      } catch (repairErr) {
+        console.warn('[Admin] groups repair failed (will still open modal):', repairErr);
+      }
+    }
+    u.groups = memberGroups;
+    const idx = allUsers.findIndex(function (x) { return x.id === userId; });
+    if (idx >= 0) allUsers[idx] = Object.assign({}, allUsers[idx], u, { id: userId, groups: memberGroups });
+    else allUsers.push(Object.assign({ id: userId }, u, { groups: memberGroups }));
+
+    const titleEl = document.getElementById('manageUserTitle');
+    const nameEl = document.getElementById('manageUserName');
+    if (titleEl) titleEl.textContent = 'Manage User';
+    if (nameEl) nameEl.textContent = (u.name || u.email || 'User') + ' — ' + (u.email || userId);
+
+    const currentTier = u.tier || 'free';
+    const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+    const tierEl = document.getElementById('manageUserTier');
+    const tierSelect = document.getElementById('setUserTierSelect');
+    const tierBtn = document.getElementById('setUserTierBtn');
+    if (tierEl) tierEl.textContent = tierLabel[currentTier] || currentTier;
+    if (tierSelect) tierSelect.value = currentTier;
+    if (tierBtn) {
+      tierBtn.onclick = function () {
+        handleSetUserTier(userId, tierSelect ? tierSelect.value : currentTier);
+      };
+    }
+
+    const roleNorm = normalizeUserRole(u.role);
+    const roleEl = document.getElementById('manageUserRole');
+    if (roleEl) roleEl.textContent = roleNorm.charAt(0).toUpperCase() + roleNorm.slice(1);
+
+    var mentorCb = document.getElementById('manageUserMentor');
+    var saveMentorBtn = document.getElementById('saveUserMentorBtn');
+    if (mentorCb) mentorCb.checked = !!u.mentor;
+    if (saveMentorBtn) {
+      saveMentorBtn.onclick = async function () {
+        try {
+          showLoading(true);
+          await db.collection('users').doc(userId).set({ mentor: !!(mentorCb && mentorCb.checked) }, { merge: true });
+          alert('Mentor flag saved.');
+          closeAllModals();
+          await loadUsers();
+        } catch (err) {
+          console.error('saveMentor:', err);
+          alert('Error: ' + (err.message || err));
+        } finally {
+          showLoading(false);
+        }
+      };
+    }
+
+    const toggleBtn = document.getElementById('toggleRoleBtn');
+    if (toggleBtn) {
+      if (roleNorm === 'admin') {
+        toggleBtn.textContent = 'Demote to Member';
+        toggleBtn.onclick = function () { handleToggleRole(userId, 'member'); };
+      } else {
+        toggleBtn.textContent = 'Promote to Admin';
+        toggleBtn.onclick = function () { handleToggleRole(userId, 'admin'); };
+      }
+    }
+
+    const resetBtn = document.getElementById('resetPasswordBtn');
+    if (resetBtn) {
+      resetBtn.onclick = function () {
+        if (!u.email) {
+          alert('This user has no email on file — cannot send password reset.');
+          return;
+        }
+        handleResetPassword(u.email);
+      };
+    }
+
+    const removeBtn = document.getElementById('removeUserBtn');
+    if (removeBtn) {
+      if (u.disabled) {
+        removeBtn.textContent = '✅ Reinstate';
+        removeBtn.onclick = function () { handleReinstateUser(userId, u.email); };
+      } else {
+        removeBtn.textContent = '🚫 Suspend';
+        removeBtn.onclick = function () { handleRemoveUser(userId, u.email); };
+      }
+    }
+
+    const hardDelBtn = document.getElementById('hardDeleteUserBtn');
+    if (hardDelBtn) hardDelBtn.onclick = function () { handleHardDeleteUser(userId, u.email); };
+
+    const checklist = document.getElementById('userGroupsChecklist');
+    if (checklist) {
+      checklist.innerHTML = '';
+      const tierColors = { free: '#4caf50', foundation: '#2196f3', premium: '#9c27b0', elite: '#c6a96b' };
+      allGroups.forEach(function (g) {
+        const checked = memberGroups.includes(g.id);
+        const tColor = tierColors[g.requiredTier] || '#888';
+        const tLabel = g.requiredTier ? ' <span style="font-size:10px;background:' + tColor + '22;color:' + tColor + ';border:1px solid ' + tColor + '44;border-radius:4px;padding:1px 5px;vertical-align:middle">' + escapeHtml(g.requiredTier) + '</span>' : '';
+        const lbl = document.createElement('label');
+        lbl.className = 'checkbox-label';
+        lbl.innerHTML = '<input type="checkbox" value="' + escapeHtml(g.id) + '"' + (checked ? ' checked' : '') + '><span>' + escapeHtml(g.title) + tLabel + '</span>';
+        checklist.appendChild(lbl);
+      });
+    }
+
+    openModal(manageUserModal);
   } catch (err) {
     console.error('handleManageUser error:', err);
-    alert('Error opening manage panel: ' + err.message);
+    alert('Error opening manage panel: ' + (err.message || err));
   }
 }
 
@@ -560,24 +661,24 @@ async function handleSetUserTier(userId, newTier) {
   if (!confirm(`Set this user's tier to "${tierLabel[newTier] || newTier}" and auto-assign all corresponding community groups?`)) return;
   try {
     showLoading(true);
-    const userRef  = db.collection('users').doc(userId);
-    const groups   = ADMIN_TIER_GROUPS[newTier] || [];
-    // For free tier, clear the subscription; for paid tiers set a far-future end date
-    // so learn-v2.js (which checks sub.status === 'active' && subEnd > now) resolves correctly.
+    const userRef = db.collection('users').doc(userId);
+    const tierGroups = ADMIN_TIER_GROUPS[newTier] || [];
     const farFuture = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
     const subUpdate = newTier === 'free'
       ? { tier: 'free', 'subscription.tier': 'free', 'subscription.status': 'inactive', 'subscription.endDate': firebase.firestore.Timestamp.fromDate(new Date(0)) }
       : { tier: newTier, 'subscription.tier': newTier, 'subscription.status': 'active', 'subscription.endDate': farFuture };
-    await userRef.update(subUpdate);
-    if (groups.length > 0) {
-      await userRef.update({ groups: firebase.firestore.FieldValue.arrayUnion(...groups) });
+    if (tierGroups.length > 0) {
+      const snap = await userRef.get();
+      const existing = userGroupsArray(snap.exists ? snap.data().groups : []);
+      subUpdate.groups = Array.from(new Set(existing.concat(tierGroups)));
     }
+    await userRef.update(subUpdate);
     closeAllModals();
     await loadUsers();
-    alert(`✅ Tier set to "${tierLabel[newTier]}" and ${groups.length} group(s) assigned.`);
+    alert(`✅ Tier set to "${tierLabel[newTier]}" and ${tierGroups.length} group(s) assigned.`);
   } catch (err) {
     console.error('setUserTier:', err);
-    alert('Error updating tier: ' + err.message);
+    alert('Error updating tier: ' + (err.message || err));
   } finally { showLoading(false); }
 }
 
@@ -793,7 +894,9 @@ document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () 
   let targetUsers = allUsers;
   if (target.startsWith('group:')) {
     const groupId = target.slice(6);
-    targetUsers = allUsers.filter(u => u.groups && u.groups.includes(groupId));
+    targetUsers = allUsers.filter(function (u) {
+      return userGroupsArray(u.groups).includes(groupId);
+    });
   }
 
   if (targetUsers.length === 0) { alert('No users to send to'); return; }
@@ -1137,4 +1240,4 @@ if (ce2QuickSetupBtn) {
   ce2QuickSetupBtn.addEventListener('click', runCe2QuickTestSetup);
 }
 
-console.log('Admin module v53 loaded');
+console.log('Admin module v56 loaded (user groups auto-repair)');

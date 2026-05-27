@@ -164,6 +164,88 @@
         .subscription-note .btn {
             padding: 12px 32px;
         }
+
+        .shop-toolbar {
+            padding: 16px 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shop-search {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color, #333);
+            background: var(--bg-secondary, #1a1a1a);
+            color: var(--text-primary, #fff);
+            font-size: 0.95rem;
+        }
+
+        .shop-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary, #aaa);
+            padding: 0 20px 8px;
+        }
+
+        .shop-cat-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0 20px 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .shop-cat-btn {
+            flex: 0 0 auto;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color, #333);
+            background: var(--bg-secondary, #1a1a1a);
+            color: var(--text-secondary, #aaa);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .shop-cat-btn.active {
+            background: var(--accent-primary, #00bcd4);
+            border-color: var(--accent-primary, #00bcd4);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .shop-phase-banner {
+            background: rgba(0, 188, 212, 0.1);
+            border: 1px solid rgba(0, 188, 212, 0.35);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 0 20px 16px;
+            color: var(--text-secondary, #ccc);
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .product-card--soon {
+            opacity: 0.85;
+        }
+
+        .soon-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary, #aaa);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .shop-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-secondary, #aaa);
+            padding: 40px 20px;
+        }
     </style>
 </head>
 <body data-page="shop" class="shop-page bottom-nav-page has-header">
@@ -190,82 +272,23 @@
     <!-- Main Content -->
     <main class="shop-main">
         
-        <!-- Subscription Note -->
-        <section class="shop-section">
+        <section class="shop-section" style="padding-bottom:0">
             <div class="subscription-note">
-                <h3>💡 New to SBD Network?</h3>
-                <p>Start with a subscription to access all courses and boards</p>
-                <a href="/profile.html?tab=subscription" class="btn btn-primary">View Subscription Plans</a>
+                <h3>Books · Courses · Diplomas · Membership</h3>
+                <p id="shopCatalogNote">Loading catalog…</p>
             </div>
+            <p id="shopPhaseBanner" class="shop-phase-banner" role="status">Loading rollout phase…</p>
         </section>
-        
-        <!-- Books Section -->
+
+        <div class="shop-toolbar">
+            <input type="search" id="shopSearchInput" class="shop-search" placeholder="Search products…" autocomplete="off">
+        </div>
+        <p class="shop-meta"><span id="shopProductCount">Loading…</span></p>
+        <div id="shopCategoryBar" class="shop-cat-bar" aria-label="Product categories"></div>
+
         <section class="shop-section">
-            <h2 class="section-title">Books</h2>
-            
-            <div class="product-grid">
-                <div class="product-card" onclick="buyProduct('sbd-dummies')">
-                    <div class="product-image">📖</div>
-                    <h3 class="product-name">Sex By Design for Dummies</h3>
-                    <p class="product-description">
-                        Foundational guide to understanding sexual design and covenant marriage.
-                    </p>
-                    <p class="product-price">$27</p>
-                    <button class="product-btn btn btn-primary">Buy Now</button>
-                </div>
-                
-                <div class="product-card" onclick="buyProduct('teleios-blueprint')">
-                    <div class="product-image">📘</div>
-                    <h3 class="product-name">Teleios Blueprint</h3>
-                    <p class="product-description">
-                        Complete guide to becoming whole: identity, maturity, and formation.
-                    </p>
-                    <p class="product-price">$247</p>
-                    <button class="product-btn btn btn-primary">Buy Now</button>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Bundles Section -->
-        <section class="shop-section">
-            <h2 class="section-title">Bundles</h2>
-            
-            <div class="product-grid">
-                <div class="product-card" onclick="buyProduct('starter-bundle')">
-                    <span class="bundle-badge">Bundle</span>
-                    <div class="product-image">📦</div>
-                    <h3 class="product-name">Starter Bundle</h3>
-                    <p class="product-description">
-                        SBD for Dummies + 1 Month Premium Subscription
-                    </p>
-                    <p class="savings-text">Save $10!</p>
-                    <p class="product-price">$37</p>
-                    <button class="product-btn btn btn-primary">Buy Bundle</button>
-                </div>
-                
-                <div class="product-card" onclick="buyProduct('teleios-bundle')">
-                    <span class="bundle-badge">Bundle</span>
-                    <div class="product-image">🎁</div>
-                    <h3 class="product-name">Teleios Bundle</h3>
-                    <p class="product-description">
-                        Teleios Blueprint + 3 Months Premium + Coaching Session
-                    </p>
-                    <p class="savings-text">Save $50!</p>
-                    <p class="product-price">$297</p>
-                    <button class="product-btn btn btn-primary">Buy Bundle</button>
-                </div>
-                
-                <div class="product-card" onclick="buyProduct('elite-bundle')">
-                    <span class="bundle-badge">Elite</span>
-                    <div class="product-image">👑</div>
-                    <h3 class="product-name">Elite Formation Bundle</h3>
-                    <p class="product-description">
-                        Both Books + 6 Months Elite + Advanced Muliebrity Access
-                    </p>
-                    <p class="savings-text">Save $127!</p>
-                    <p class="product-price">$497</p>
-                    <button class="product-btn btn btn-primary">Buy Bundle</button>
-                </div>
+            <div id="shopProductGrid" class="product-grid">
+                <p class="shop-empty">Loading catalog…</p>
             </div>
         </section>
         
@@ -283,7 +306,7 @@
     <script defer src="/js/sw-update-checker.js?v=98"></script>
     <script defer src="/js/notifications.js?v=52"></script>
     <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/shop.js?v=104"></script>
+    <script defer src="/js/shop.js?v=201"></script>
     
 
     <!-- NAV_INJECT -->

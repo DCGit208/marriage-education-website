@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "build": "node build.js",
+    "catalog": "node scripts/generate-shop-catalog.js",
     "deploy": "node build.js && firebase deploy --only hosting",
     "deploy:all": "node build.js && firebase deploy --only hosting,firestore:rules",
     "migrate": "node migrate.js"
