@@ -53,6 +53,10 @@ Or edit `AMBASSADOR.md` and re-run the Chrome command after updating `AMBASSADOR
 | `REGIONAL_DIRECTOR.md` | Source markdown |
 | `REGIONAL_DIRECTOR.html` | Read in browser |
 
-## Future (Phase 9)
+## Executive Network Director (Phase 9)
 
-- `EXECUTIVE_NETWORK_DIRECTOR.pdf`
+| File | Purpose |
+|------|---------|
+| `EXECUTIVE_NETWORK_DIRECTOR.pdf` | Primary download for executives |
+| `EXECUTIVE_NETWORK_DIRECTOR.md` | Source markdown |
+| `EXECUTIVE_NETWORK_DIRECTOR.html` | Read in browser |
