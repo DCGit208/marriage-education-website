@@ -140,3 +140,17 @@ Preview: `/regional-director/rd-dashboard-test.html?v=20260528b#role-targets`
 Production: `/regional-director/rd-dashboard.html?v=20260528prod#role-targets`
 
 Deploy when validated: `git push origin main` + Firebase hosting both targets.
+
+## Phase 9 — Executive Network Director Role & targets
+
+| What | Detail |
+|------|--------|
+| Documents | `/documents/sbd-ops/EXECUTIVE_NETWORK_DIRECTOR.{pdf,html,md}` |
+| Dashboards | `executive/dashboard.html` + `executive/dashboard-test.html` |
+| Charter | `DOSRoleCharter.renderExecutive()` — global structure, 10-month target, executive mandate |
+| Tour | v6 — Executive Role & targets steps |
+
+Preview: `/executive/dashboard-test.html?v=20260529b#role-targets`  
+Production: `/executive/dashboard.html?v=20260529prod#role-targets`
+
+Deploy when validated: `git push origin main` + Firebase hosting both targets.

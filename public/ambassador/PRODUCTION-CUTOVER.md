@@ -54,6 +54,7 @@ After deploy, log in on **https://marriageducation.com** (or web.app) and confir
 
 ### Executive
 - [ ] Lands on `executive/dashboard.html`
+- [ ] **Role & targets** — global blueprint, PDF (`EXECUTIVE_NETWORK_DIRECTOR.pdf`), live global progress
 - [ ] Global command aggregates network
 
 ## Rollback
@@ -71,7 +72,7 @@ Then redeploy hosting.
 
 ## Cache
 
-Hard refresh or append `?v=20260526prod` if an old dashboard appears.
+Hard refresh or append `?v=20260529prod` if an old dashboard appears.
 
 ## Role & targets (Phase 6 — 2026-05-26)
 

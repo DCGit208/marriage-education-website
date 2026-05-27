@@ -331,10 +331,6 @@
     mountEl.setAttribute('data-charter-built', '1');
   }
 
-    bindSectionLinks(mountEl);
-    mountEl.setAttribute('data-charter-built', '1');
-  }
-
   function regionalTargetsTable(d) {
     var ambPerDay = d.dailyTargets.newSubscribers || 10;
     var rdOverridePct = Math.round((d.rdOverridePercent || 0.05) * 100);
@@ -486,10 +482,124 @@
     mountEl.setAttribute('data-charter-built', '1');
   }
 
+  function executiveTargetsTable(d) {
+    var ambPerDay = d.dailyTargets.newSubscribers || 10;
+    var overridePct = Math.round((d.rdOverridePercent || 0.05) * 100);
+    var perSub = (d.subscriptionMonthlyUsd || 9) * (d.rdOverridePercent || 0.05);
+    var seniorsPerRegion = d.promotion.rdSeniors || 50;
+    var ambPerSenior = d.promotion.ambassadorsPerSenior || 10;
+    return (
+      '<div class="dos-table-wrap"><table class="dos-table dos-charter-table">' +
+      '<thead><tr><th>Metric</th><th>Target</th></tr></thead><tbody>' +
+      '<tr><td>Executive structure</td><td><strong>1 END</strong> → Regional Directors → Seniors → Ambassadors</td></tr>' +
+      '<tr><td>Per Regional Director</td><td><strong>' + seniorsPerRegion + ' seniors</strong> × ' + ambPerSenior + ' ambassadors</td></tr>' +
+      '<tr><td>Per Ambassador</td><td><strong>' + ambPerDay + '/day</strong> × 20 days = <strong>200/month</strong></td></tr>' +
+      '<tr><td>Global target horizon</td><td><strong>1,000,000 retained subscribers</strong> (10-month target)</td></tr>' +
+      '<tr><td>Product</td><td>Foundation Access · <strong>' + fmtUsd(d.subscriptionMonthlyUsd) + '/mo</strong></td></tr>' +
+      '<tr><td>Override economics</td><td><strong>' + overridePct + '%</strong> on recurring retained network volume</td></tr>' +
+      '<tr><td>Per retained subscriber</td><td><strong>' + fmtUsd(perSub) + '/mo</strong></td></tr>' +
+      '</tbody></table></div>'
+    );
+  }
+
+  function renderExecutive(mountEl, options) {
+    if (!mountEl) return;
+    options = options || {};
+    var d = doctrine();
+    var overridePct = Math.round((d.rdOverridePercent || 0.05) * 100);
+    var perSub = (d.subscriptionMonthlyUsd || 9) * (d.rdOverridePercent || 0.05);
+    var millionTarget = 1000000;
+    var millionMonthly = millionTarget * perSub;
+
+    var progressHtml = '';
+    if (options.globalAmbassadors != null || options.globalSeniors != null || options.globalRds != null) {
+      progressHtml =
+        '<div class="dos-card dos-charter-progress">' +
+        '<h3><i class="fa-solid fa-chart-line"></i> Global progress (live)</h3>' +
+        '<div class="dos-charter-stat-row">' +
+        (options.globalAmbassadors != null
+          ? '<div><span class="dos-charter-stat-label">Active ambassadors</span><span class="dos-charter-stat-value">' + (Number(options.globalAmbassadors) || 0) + '</span></div>'
+          : '') +
+        (options.globalSeniors != null
+          ? '<div><span class="dos-charter-stat-label">Senior ambassadors</span><span class="dos-charter-stat-value">' + (Number(options.globalSeniors) || 0) + '</span></div>'
+          : '') +
+        (options.globalRds != null
+          ? '<div><span class="dos-charter-stat-label">Regional directors</span><span class="dos-charter-stat-value">' + (Number(options.globalRds) || 0) + '</span></div>'
+          : '') +
+        (options.globalUnits != null
+          ? '<div><span class="dos-charter-stat-label">Network units</span><span class="dos-charter-stat-value">' + (Number(options.globalUnits) || 0).toLocaleString() + '</span></div>'
+          : '') +
+        '</div></div>';
+    }
+
+    mountEl.innerHTML =
+      '<div class="dos-charter">' +
+      '<div class="dos-card dos-charter-hero">' +
+      '<h3><i class="fa-solid fa-book-open"></i> Executive Network Director — Role &amp; targets</h3>' +
+      '<p class="dos-charter-lead">You are a <strong>global educational deployment executive</strong> — scale Marriage Foundation Access through regional infrastructure, retention economies, and leadership duplication.</p>' +
+      '<p class="dos-charter-muted">Powered by <strong>marriageducation.com</strong> and <strong>sbd-network.web.app</strong>.</p>' +
+      '<div class="dos-charter-actions">' +
+      '<a class="dos-btn dos-btn-primary" href="' + DOC_BASE + 'EXECUTIVE_NETWORK_DIRECTOR.pdf" download><i class="fa-solid fa-file-pdf"></i> Download blueprint (PDF)</a>' +
+      '<a class="dos-btn" href="' + DOC_BASE + 'EXECUTIVE_NETWORK_DIRECTOR.html" target="_blank" rel="noopener"><i class="fa-solid fa-book"></i> Read full charter</a>' +
+      '</div></div>' +
+
+      progressHtml +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-bullseye"></i> Global targets at a glance</h3>' +
+      executiveTargetsTable(d) +
+      '</div>' +
+
+      '<div class="dos-charter-duo">' +
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-coins"></i> Geometric recurring economics</h3>' +
+      '<p class="dos-charter-muted">Executive economics scale through recurring retention and network duplication.</p>' +
+      '<ul class="dos-charter-list">' +
+      '<li><strong>1,000,000 retained subs</strong> × ' + fmtUsd(perSub) + ' = <strong>' + fmtUsd(millionMonthly) + '/month</strong> model at target horizon</li>' +
+      '<li>Commissions, recurring revenue, leadership overrides, and institutional growth compound over time</li>' +
+      '</ul></div>' +
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-gauge-high"></i> Dashboard deployment target</h3>' +
+      '<p class="dos-charter-muted">Executive operates primarily through global command and regional supervision.</p>' +
+      '<p class="dos-charter-stat-value" style="font-size:1.5rem;margin:8px 0">Global scale operations</p>' +
+      '</div></div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-list-check"></i> Executive responsibilities</h3>' +
+      '<ol class="dos-charter-list">' +
+      '<li><strong>Global expansion</strong> — open regions, appoint RDs, scale territory systems</li>' +
+      '<li><strong>Regional supervision</strong> — standards, performance, inactive leadership replacement</li>' +
+      '<li><strong>Retention economics</strong> — renewals, stability, churn reduction</li>' +
+      '<li><strong>Deployment infrastructure</strong> — workflows, strategy, institutional access</li>' +
+      '<li><strong>Leadership development</strong> — talent, RD training, discipline, capacity</li>' +
+      '</ol></div>' +
+
+      '<div class="dos-card">' +
+      '<h3><i class="fa-solid fa-map"></i> Where to work in this dashboard</h3>' +
+      '<div class="dos-charter-nav-grid">' +
+      navBtn('global', 'fa-earth-americas', 'Global command') +
+      navBtn('region', 'fa-globe', 'Regional command') +
+      navBtn('team', 'fa-bolt', 'Team command') +
+      navBtn('reporting', 'fa-file-export', 'Reports') +
+      navBtn('retention', 'fa-heart-pulse', 'Retention') +
+      navBtn('commissions', 'fa-coins', 'Commissions') +
+      navBtn('formation', 'fa-graduation-cap', 'Formation') +
+      '</div></div>' +
+
+      '<div class="dos-card dos-charter-mandate">' +
+      '<h3><i class="fa-solid fa-flag"></i> Final mandate</h3>' +
+      '<p class="dos-charter-lead">Ensure Marriage Foundation Access reaches society at scale through disciplined recurring deployment, recurring retention, and institutional educational expansion globally.</p>' +
+      '</div></div>';
+
+    bindSectionLinks(mountEl);
+    mountEl.setAttribute('data-charter-built', '1');
+  }
+
   global.DOSRoleCharter = {
     renderAmbassador: renderAmbassador,
     renderSenior: renderSenior,
     renderRegionalDirector: renderRegionalDirector,
+    renderExecutive: renderExecutive,
     DOC_BASE: DOC_BASE
   };
 })(typeof window !== 'undefined' ? window : global);
