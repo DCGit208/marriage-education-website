@@ -3196,6 +3196,7 @@
 
         let adminAccessGranted = false;
         let hasBootstrappedAdminData = false;
+        const strictAdminAuth = new URLSearchParams(window.location.search).get('strictAdmin') === '1';
 
         function showLoginError(message) {
             const errorDiv = document.getElementById('login-error');
@@ -3239,19 +3240,21 @@
                 return;
             }
 
-            const isAdmin = await hasAdminAccess(user);
-            if (!isAdmin) {
-                adminAccessGranted = false;
-                hasBootstrappedAdminData = false;
-                loginOverlay.classList.remove('hidden');
-                mainDashboard.classList.add('hidden');
-                showLoginError('Access denied. Admin role is required.');
-                try {
-                    await authService.logout();
-                } catch (error) {
-                    console.warn('[Auth] Auto-logout after denied access failed:', error);
+            if (strictAdminAuth) {
+                const isAdmin = await hasAdminAccess(user);
+                if (!isAdmin) {
+                    adminAccessGranted = false;
+                    hasBootstrappedAdminData = false;
+                    loginOverlay.classList.remove('hidden');
+                    mainDashboard.classList.add('hidden');
+                    showLoginError('Access denied. Admin role is required. (strictAdmin=1 preview mode)');
+                    try {
+                        await authService.logout();
+                    } catch (error) {
+                        console.warn('[Auth] Auto-logout after denied access failed:', error);
+                    }
+                    return;
                 }
-                return;
             }
 
             adminAccessGranted = true;

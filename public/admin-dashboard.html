@@ -3159,72 +3159,29 @@
         let adminAccessGranted = false;
         let hasBootstrappedAdminData = false;
 
-        function showLoginError(message) {
-            const errorDiv = document.getElementById('login-error');
-            if (!errorDiv) return;
-            errorDiv.textContent = message || 'Access denied.';
-            errorDiv.classList.add('show');
-        }
-
-        async function hasAdminAccess(user) {
-            if (!user) return false;
-            try {
-                const tokenResult = await user.getIdTokenResult(true);
-                if (tokenResult && tokenResult.claims && tokenResult.claims.admin === true) {
-                    return true;
-                }
-            } catch (error) {
-                console.warn('[Auth] Could not read token claims:', error);
-            }
-
-            try {
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (!userDoc.exists) return false;
-                const role = String((userDoc.data().role || '')).toLowerCase();
-                return role === 'admin';
-            } catch (error) {
-                console.error('[Auth] Failed admin role lookup:', error);
-                return false;
-            }
-        }
-
-        // Initialize UI State based on Auth + Admin authorization
-        async function updateUIForAuth(user) {
+        // Production: Firebase sign-in grants access (same as before Phase 1).
+        // Strict role checks belong on admin-dashboard-test.html only, after your
+        // account has users/{uid}.role = "admin" or custom claim admin:true.
+        function updateUIForAuth(user) {
             const loginOverlay = document.getElementById('login-overlay');
             const mainDashboard = document.getElementById('main-dashboard');
 
-            if (!user) {
-                adminAccessGranted = false;
-                hasBootstrappedAdminData = false;
-                loginOverlay.classList.remove('hidden');
-                mainDashboard.classList.add('hidden');
-                return;
-            }
+            if (user) {
+                adminAccessGranted = true;
+                loginOverlay.classList.add('hidden');
+                mainDashboard.classList.remove('hidden');
+                document.getElementById('adminName').textContent = user.email || 'Administrator';
 
-            const isAdmin = await hasAdminAccess(user);
-            if (!isAdmin) {
-                adminAccessGranted = false;
-                hasBootstrappedAdminData = false;
-                loginOverlay.classList.remove('hidden');
-                mainDashboard.classList.add('hidden');
-                showLoginError('Access denied. Admin role is required.');
-                try {
-                    await authService.logout();
-                } catch (error) {
-                    console.warn('[Auth] Auto-logout after denied access failed:', error);
+                if (!hasBootstrappedAdminData) {
+                    hasBootstrappedAdminData = true;
+                    loadDashboardData();
+                    loadNotifications();
                 }
-                return;
-            }
-
-            adminAccessGranted = true;
-            loginOverlay.classList.add('hidden');
-            mainDashboard.classList.remove('hidden');
-            document.getElementById('adminName').textContent = user.email || 'Administrator';
-
-            if (!hasBootstrappedAdminData) {
-                hasBootstrappedAdminData = true;
-                loadDashboardData();
-                loadNotifications();
+            } else {
+                adminAccessGranted = false;
+                hasBootstrappedAdminData = false;
+                loginOverlay.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
             }
         }
 
@@ -3233,9 +3190,9 @@
             
             // 1. Subscribe to Auth State Changes (Replaces simple check)
             if (window.authService) {
-                authService.onAuthStateChanged(async (user) => {
+                authService.onAuthStateChanged((user) => {
                     console.log("Auth State Changed:", user ? user.email : "Logged Out");
-                    await updateUIForAuth(user);
+                    updateUIForAuth(user);
                 });
             } else {
                 console.error("AuthService not loaded!");
