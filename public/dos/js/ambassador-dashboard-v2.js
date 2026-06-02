@@ -321,7 +321,9 @@
     var m = getMetrics(stats, code);
     var recruits = state.verifiedDirectRecruits != null
       ? Number(state.verifiedDirectRecruits)
-      : (m ? m.network.recruits : (stats.recruits_count || 0));
+      : (m && m.network && m.network.recruitsSource === 'verified_recruitedBy'
+        ? Number(m.network.recruits)
+        : 0);
     var seniorTarget = m ? m.network.seniorTarget : SENIOR_TARGET;
     var recruitPct = Math.min(100, Math.round((recruits / seniorTarget) * 100));
     var units = m ? m.deployment.unitsDeployed : unitsDeployed(stats);
@@ -750,11 +752,17 @@
     return [];
   }
 
-  function primeNetworkCountFromStats(stats) {
+  function primeNetworkCountFromVerified() {
     var countEl = document.getElementById('dosRecruitCount');
-    if (!countEl || !stats) return;
-    var n = stats.recruits_count != null ? stats.recruits_count : stats.directAmbassadorCount;
-    if (n != null && Number(n) > 0) countEl.textContent = String(Number(n));
+    if (!countEl || state.verifiedDirectRecruits == null) return;
+    countEl.textContent = String(Number(state.verifiedDirectRecruits));
+  }
+
+  async function refreshVerifiedDirectRecruitCount(leaderCode, stats) {
+    if (isRdPreview() || isSeniorPreview() || isExecutivePreview()) return null;
+    var docs = await loadVerifiedDirectRecruits(leaderCode, stats);
+    state.verifiedDirectRecruits = docs.length;
+    return docs.length;
   }
 
   function buildFallbackLeaderNetwork(leaderCode, stats, recruitDocs) {
@@ -811,10 +819,9 @@
       list.innerHTML = '<div class="dos-empty">Network data is still loading…</div>';
       return;
     }
-    primeNetworkCountFromStats(stats);
+    primeNetworkCountFromVerified();
 
     var leaderCode = String(code || '').trim().toUpperCase();
-    if (!isRdPreview()) state.verifiedDirectRecruits = null;
 
     try {
     var rdCode = isRdPreview() ? getEffectiveRdCode(stats, code) : leaderCode;
@@ -879,18 +886,17 @@
     }
 
     if (!isRdPreview() && global.DOSRdNetwork && global.DOSRdNetwork.loadLeaderNetwork) {
-      var recruitCount = stats.recruits_count != null ? stats.recruits_count : 0;
       var verifiedDirect = await loadVerifiedDirectRecruits(leaderCode, stats);
-      if (!isSeniorPreview()) renderOverview(stats, code);
       if (isSeniorPreview() || treeEl) {
         var lnet = await loadLeaderNetworkData(leaderCode, !!forceRefresh);
         if (lnet && lnet.stats && verifiedDirect.length > 0 && (lnet.stats.directRecruits || 0) === 0 && !forceRefresh) {
           lnet = await loadLeaderNetworkData(leaderCode, true);
         }
         var directN = (lnet && lnet.stats && lnet.stats.directRecruits) || 0;
-        var displayCount = Math.max(recruitCount, directN, verifiedDirect.length);
+        var displayCount = Math.max(directN, verifiedDirect.length);
         state.verifiedDirectRecruits = displayCount;
         if (countEl) countEl.textContent = String(displayCount);
+        if (!isSeniorPreview()) renderOverview(stats, code);
         if (isSeniorPreview()) renderLeaderNetworkBlurb(lnet);
         if (summaryEl && lnet && lnet.stats && global.DOSRdNetwork.renderLeaderNetworkSummary) {
           global.DOSRdNetwork.renderLeaderNetworkSummary(summaryEl, lnet.stats, lnet.leaderName);
@@ -964,7 +970,7 @@
 
     var count = isRdPreview()
       ? (stats.recruits_count != null ? stats.recruits_count : recruits.length)
-      : recruits.length;
+      : Math.max(recruits.length, state.verifiedDirectRecruits != null ? Number(state.verifiedDirectRecruits) : 0);
     if (countEl) countEl.textContent = count;
     if (summaryEl) summaryEl.innerHTML = '';
 
@@ -1004,7 +1010,7 @@
     }
     } catch (err) {
       console.error('loadRecruits', err);
-      if (countEl && stats) primeNetworkCountFromStats(stats);
+      primeNetworkCountFromVerified();
       if (treeEl) treeEl.innerHTML = '<div class="dos-empty" style="color:#991b1b">Network could not load. Refresh the page or try again in a moment.</div>';
       list.innerHTML = '<div class="dos-empty" style="color:#991b1b">' + escapeHtml(err.message || 'Network load failed') + '</div>';
       return;
@@ -1284,14 +1290,24 @@
     }
     state.stats = stats;
     state.name = resolveName(stats, localStorage.getItem('ambassadorData'));
-    primeNetworkCountFromStats(stats);
+    if (!isRdPreview() && !isSeniorPreview() && !isExecutivePreview()) {
+      await refreshVerifiedDirectRecruitCount(code, stats);
+    }
+    primeNetworkCountFromVerified();
     var networkLoadPromise = loadRecruits(code, stats);
     if (global.MEAmbassadorSession) {
       global.MEAmbassadorSession.saveSession(code, localStorage.getItem('ambassadorEmail'), stats);
     }
 
     if (global.DOSMetrics) {
-      state.metrics = await global.DOSMetrics.persist(db(), code, stats);
+      var metricsOpts = state.verifiedDirectRecruits != null
+        ? { verifiedRecruits: state.verifiedDirectRecruits }
+        : undefined;
+      state.metrics = await global.DOSMetrics.persist(db(), code, stats, metricsOpts);
+      if (state.verifiedDirectRecruits != null && state.metrics && state.metrics.network) {
+        state.metrics.network.recruits = state.verifiedDirectRecruits;
+        state.metrics.network.recruitsSource = 'verified_recruitedBy';
+      }
     }
 
     if (!skipRankRedirectOnThisPage()) {
@@ -1656,7 +1672,9 @@
     } else if (state.stats) {
       opts.recruits = state.verifiedDirectRecruits != null
         ? Number(state.verifiedDirectRecruits)
-        : state.stats.recruits_count;
+        : (state.metrics && state.metrics.network && state.metrics.network.recruitsSource === 'verified_recruitedBy'
+          ? state.metrics.network.recruits
+          : 0);
       var sbd = state.stats.sbdReferrals || {};
       opts.activeSubscribers = Number(sbd.subscribers) || 0;
       if (global.DOSEconomics) {
