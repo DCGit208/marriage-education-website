@@ -9,13 +9,16 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   }
 
-  function buildFromAmbassador(code, stats) {
+  function buildFromAmbassador(code, stats, options) {
     stats = stats || {};
+    options = options || {};
     var mk = monthKey();
     var sbd = stats.sbdReferrals || {};
     var activeSubs = Number(sbd.subscribers) || 0;
     var units = stats.accessUnitsDeployed || stats.sales_count || stats.booksSold || 0;
-    var recruits = stats.recruits_count != null ? stats.recruits_count : 0;
+    var recruits = options.verifiedRecruits != null
+      ? Number(options.verifiedRecruits)
+      : (stats.recruits_count != null ? stats.recruits_count : 0);
     var earningsXaf = stats.commission_earned || stats.commissionEarned || 0;
     var monthlyXaf = (stats.monthly_earnings && stats.monthly_earnings[mk])
       ? stats.monthly_earnings[mk].total : 0;
@@ -44,6 +47,7 @@
       },
       network: {
         recruits: recruits,
+        recruitsSource: options.verifiedRecruits != null ? 'verified_recruitedBy' : 'profile_field',
         seniorTarget: (global.DOSConfig && global.DOSConfig.SENIOR_RECRUIT_TARGET) || 10
       },
       retention: {
@@ -89,9 +93,9 @@
     return built;
   }
 
-  async function persist(db, code, stats) {
+  async function persist(db, code, stats, options) {
     if (!db || !code) return null;
-    var payload = buildFromAmbassador(code, stats);
+    var payload = buildFromAmbassador(code, stats, options);
     if (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
       payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
     }
