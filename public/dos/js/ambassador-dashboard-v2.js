@@ -750,6 +750,55 @@
     return [];
   }
 
+  function primeNetworkCountFromStats(stats) {
+    var countEl = document.getElementById('dosRecruitCount');
+    if (!countEl || !stats) return;
+    var n = stats.recruits_count != null ? stats.recruits_count : stats.directAmbassadorCount;
+    if (n != null && Number(n) > 0) countEl.textContent = String(Number(n));
+  }
+
+  function buildFallbackLeaderNetwork(leaderCode, stats, recruitDocs) {
+    var leader = String(leaderCode || '').trim().toUpperCase();
+    var name = (stats && (stats.fullName || stats.name)) || state.name || leader;
+    var members = [{
+      id: leader,
+      data: stats || {},
+      name: name,
+      recruitedBy: '',
+      recruits: (recruitDocs && recruitDocs.length) || 0,
+      isSenior: false,
+      isDeveloping: false
+    }];
+    (recruitDocs || []).forEach(function (r) {
+      var d = r.data || {};
+      members.push({
+        id: r.id,
+        data: d,
+        name: d.fullName || d.name || r.id,
+        recruitedBy: leader,
+        recruits: 0,
+        isSenior: false,
+        isDeveloping: false
+      });
+    });
+    var graph = global.DOSRdNetwork && global.DOSRdNetwork.attachRecruitmentGraph
+      ? global.DOSRdNetwork.attachRecruitmentGraph(members, leader)
+      : { children: {}, byId: {} };
+    return {
+      leaderCode: leader,
+      leaderName: name,
+      members: members,
+      pipeline: [],
+      graph: graph,
+      stats: {
+        directRecruits: Math.max((recruitDocs && recruitDocs.length) || 0, 0),
+        totalInOrg: members.length,
+        developingCount: 0,
+        pipelineCount: 0
+      }
+    };
+  }
+
   async function loadRecruits(code, stats, forceRefresh) {
     var list = document.getElementById('dosRecruitList');
     var countEl = document.getElementById('dosRecruitCount');
@@ -757,8 +806,17 @@
     var treeEl = document.getElementById('dosRecruitmentTree');
     if (!list) return;
 
+    stats = stats || state.stats;
+    if (!stats) {
+      list.innerHTML = '<div class="dos-empty">Network data is still loading…</div>';
+      return;
+    }
+    primeNetworkCountFromStats(stats);
+
     var leaderCode = String(code || '').trim().toUpperCase();
     if (!isRdPreview()) state.verifiedDirectRecruits = null;
+
+    try {
     var rdCode = isRdPreview() ? getEffectiveRdCode(stats, code) : leaderCode;
     var useTree = !!treeEl && global.DOSRdNetworkTree;
 
@@ -837,13 +895,21 @@
         if (summaryEl && lnet && lnet.stats && global.DOSRdNetwork.renderLeaderNetworkSummary) {
           global.DOSRdNetwork.renderLeaderNetworkSummary(summaryEl, lnet.stats, lnet.leaderName);
         }
+        if (!lnet || !lnet.members || !lnet.members.length) {
+          lnet = buildFallbackLeaderNetwork(leaderCode, stats, verifiedDirect);
+        }
         if (treeEl && global.DOSRdNetworkTree && lnet) {
-          state.rdTreeController = mountGenealogyTree(treeEl, lnet, {
-            rootCode: leaderCode,
-            rootKind: 'leader',
-            rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
-            defaultView: 'full'
-          });
+          try {
+            state.rdTreeController = mountGenealogyTree(treeEl, lnet, {
+              rootCode: leaderCode,
+              rootKind: 'leader',
+              rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
+              defaultView: 'full'
+            });
+          } catch (treeErr) {
+            console.error('Genealogy tree mount', treeErr);
+            treeEl.innerHTML = '<div class="dos-empty" style="color:#991b1b">Could not draw network tree. Try refresh.</div>';
+          }
         } else if (treeEl) {
           treeEl.innerHTML = '<div class="dos-empty">Genealogy tree module did not load. Hard-refresh the page.</div>';
         }
@@ -936,6 +1002,14 @@
         defaultView: 'full'
       });
     }
+    } catch (err) {
+      console.error('loadRecruits', err);
+      if (countEl && stats) primeNetworkCountFromStats(stats);
+      if (treeEl) treeEl.innerHTML = '<div class="dos-empty" style="color:#991b1b">Network could not load. Refresh the page or try again in a moment.</div>';
+      list.innerHTML = '<div class="dos-empty" style="color:#991b1b">' + escapeHtml(err.message || 'Network load failed') + '</div>';
+      return;
+    }
+
     list.innerHTML = '<div class="dos-recruit-grid">' + recruits.map(function (r) {
       var d = r.data;
       var name = d.fullName || d.name || d.email || r.id;
@@ -1210,6 +1284,8 @@
     }
     state.stats = stats;
     state.name = resolveName(stats, localStorage.getItem('ambassadorData'));
+    primeNetworkCountFromStats(stats);
+    var networkLoadPromise = loadRecruits(code, stats);
     if (global.MEAmbassadorSession) {
       global.MEAmbassadorSession.saveSession(code, localStorage.getItem('ambassadorEmail'), stats);
     }
@@ -1297,7 +1373,7 @@
     try {
       await Promise.all([
         loadCommissionHistory(code),
-        loadRecruits(code, stats),
+        networkLoadPromise,
         loadRecentSales(code),
         loadLeaderboard(code)
       ]);
