@@ -483,8 +483,9 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           console.error('[SBD] Webhook missing uid or productId:', session.metadata);
           return res.json({ received: true, action: 'sbd-missing-metadata' });
         }
-        const tgMeta = await unlockSbdContent(uid, productId, session);
-        const prodName = SBD_CATALOG_SERVER[productId]?.name || productId;
+        const canonicalProductId = resolveSbdProductId(productId);
+        const tgMeta = await unlockSbdContent(uid, canonicalProductId, session);
+        const prodName = SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId;
         const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
         const payer    = session.customer_details?.email || uid;
 
@@ -2051,6 +2052,15 @@ async function activateRD(payment) {
   // Send RD credentials email
   const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
   const rd = rdDoc.data();
+
+  // Provision SBD Network referral code + Foundation app access (RD- → SBD-)
+  if (rd && rd.email) {
+    try {
+      await provisionSBDAccess(rd.email, rdCode, rd.name || rd.fullName || rd.email);
+    } catch (sbdErr) {
+      console.error(`[SBD] RD provision failed for ${rdCode}:`, sbdErr.message);
+    }
+  }
   
   // Send email via SMTP (same as ambassador - working solution)
   try {
@@ -2269,6 +2279,9 @@ async function activateAmbassador(payment, reference) {
     senior_code: ambassadorData.senior_code ||
       (payment.regional_director?.startsWith('AMB-') ? payment.regional_director : ''),
     rdCode: rdCodeForNewAmbassador.startsWith('RD-') ? rdCodeForNewAmbassador : (ambassadorData.rdCode || ''),
+    regional_director_code: rdCodeForNewAmbassador.startsWith('RD-')
+      ? rdCodeForNewAmbassador
+      : (ambassadorData.regional_director_code || ''),
     status: 'active',  // Both old and new login pages accept 'active'
     booksSold: 0,
     commissionEarned: 0,
@@ -2477,18 +2490,45 @@ async function activateAmbassador(payment, reference) {
   // ── SBD Network Access Provisioning ─────────────────────────────
   // Isolated block — failure here never blocks ambassador activation
   try {
-    await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName);
+    await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName, {
+      rdCode: rdCodeForNewAmbassador.startsWith('RD-') ? rdCodeForNewAmbassador : undefined,
+    });
     console.log(`[SBD] Access provisioned for ${ambassadorCode}`);
   } catch (sbdError) {
     console.error(`[SBD] Provisioning failed (non-critical) for ${ambassadorCode}:`, sbdError.message);
-    if (TELEGRAM_BOT_TOKEN) {
-      await sendTelegram(
-        `⚠️ SBD Network provisioning failed for ${ambassadorCode}\n` +
-        `Email: ${payment.email}\n` +
-        `Error: ${sbdError.message}\n\n` +
-        `Ambassador is active. SBD access needs manual fix.`,
-        false
-      );
+    const sbdOpts = {
+      rdCode: rdCodeForNewAmbassador.startsWith('RD-') ? rdCodeForNewAmbassador : undefined,
+    };
+    try {
+      await db.collection('ambassadors').doc(ambassadorCode).update({
+        sbdProvisionPending: true,
+        sbdProvisionLastError: sbdError.message,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await provisionSBDAccess(payment.email, ambassadorCode, ambassadorData.fullName, sbdOpts);
+      await db.collection('ambassadors').doc(ambassadorCode).update({
+        sbdProvisionPending: admin.firestore.FieldValue.delete(),
+        sbdProvisionLastError: admin.firestore.FieldValue.delete(),
+      });
+      console.log(`[SBD] Retry succeeded for ${ambassadorCode}`);
+      if (TELEGRAM_BOT_TOKEN) {
+        await sendTelegram(
+          `✅ SBD Network access repaired for ${ambassadorCode} (auto-retry after initial error).`,
+          false
+        );
+      }
+    } catch (retryErr) {
+      console.error(`[SBD] Retry failed for ${ambassadorCode}:`, retryErr.message);
+      if (TELEGRAM_BOT_TOKEN) {
+        await sendTelegram(
+          `⚠️ SBD provisioning queued for ${ambassadorCode}\n` +
+          `Email: ${payment.email}\n` +
+          `Error: ${retryErr.message}\n\n` +
+          `Ambassador is active. Auto-repair will retry — no manual step needed.`,
+          false
+        );
+      }
     }
   }
 
@@ -2745,15 +2785,79 @@ exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, 
 });
 
 // ── SBD Network Access Provisioner ───────────────────────────────
-// Called after ambassador activation. Creates a Firebase Auth account
+// Called after ambassador / RD activation. Creates a Firebase Auth account
 // on the same project (marriage-education) and writes a users/ doc so
-// the ambassador can log into sbd-network.web.app with Foundation tier.
-async function provisionSBDAccess(email, ambassadorCode, fullName) {
-  const emailLower = email.toLowerCase();
+// the seller can log into sbd-network.web.app with Foundation tier.
+function deriveSbdReferralCode(sellerCode) {
+  const c = String(sellerCode || '').trim().toUpperCase();
+  if (!c) return null;
+  if (c.startsWith('SBD-')) return c;
+  if (c.startsWith('AMB-')) return c.replace(/^AMB-/, 'SBD-');
+  if (c.startsWith('RD-')) return c.replace(/^RD-/, 'SBD-');
+  return null;
+}
 
-  // Generate a unique SBD referral code derived from the ambassador code
-  // e.g. AMB-MAKO-0599 → SBD-MAKO-0599
-  const sbdReferralCode = ambassadorCode.replace(/^AMB-/, 'SBD-');
+async function findSellerBySbdReferralCode(refCode) {
+  const code = String(refCode || '').trim().toUpperCase();
+  if (!code) return null;
+
+  const ambSnap = await db.collection('ambassadors')
+    .where('sbdReferralCode', '==', code).limit(1).get();
+  if (!ambSnap.empty) {
+    const doc = ambSnap.docs[0];
+    return { type: 'ambassador', ref: doc.ref, data: doc.data(), id: doc.id };
+  }
+
+  const rdSnap = await db.collection('regional_directors')
+    .where('sbdReferralCode', '==', code).limit(1).get();
+  if (!rdSnap.empty) {
+    const doc = rdSnap.docs[0];
+    return { type: 'rd', ref: doc.ref, data: doc.data(), id: doc.id };
+  }
+
+  if (code.startsWith('SBD-')) {
+    const rdCode = code.replace(/^SBD-/, 'RD-');
+    const rdDoc = await db.collection('regional_directors').doc(rdCode).get();
+    if (rdDoc.exists) {
+      return { type: 'rd', ref: rdDoc.ref, data: rdDoc.data(), id: rdDoc.id };
+    }
+  }
+
+  return null;
+}
+
+function firestoreSafeObject(obj) {
+  const out = {};
+  Object.keys(obj || {}).forEach((key) => {
+    if (obj[key] !== undefined) out[key] = obj[key];
+  });
+  return out;
+}
+
+async function resolveRdCodeForSeller(sellerCodeUpper, options) {
+  options = options || {};
+  if (options.rdCode && String(options.rdCode).startsWith('RD-')) {
+    return String(options.rdCode).trim().toUpperCase();
+  }
+  if (sellerCodeUpper.startsWith('RD-')) return sellerCodeUpper;
+  if (!sellerCodeUpper.startsWith('AMB-')) return null;
+
+  const ambSnap = await db.collection('ambassadors').doc(sellerCodeUpper).get();
+  if (!ambSnap.exists) return null;
+  return resolveAmbassadorRdUpline(ambSnap.data());
+}
+
+async function provisionSBDAccess(email, sellerCode, fullName, options) {
+  options = options || {};
+  const emailLower = (email || '').toLowerCase().trim();
+  const sellerCodeUpper = String(sellerCode || '').trim().toUpperCase();
+  const sbdReferralCode = deriveSbdReferralCode(sellerCodeUpper);
+  if (!sbdReferralCode || !emailLower) {
+    console.warn('[SBD] Skipping provision — missing email or seller code:', sellerCode);
+    return;
+  }
+
+  const rdCodeForUser = await resolveRdCodeForSeller(sellerCodeUpper, options);
 
   // 1. Get or create Firebase Auth user
   let uid = null;
@@ -2777,10 +2881,10 @@ async function provisionSBDAccess(email, ambassadorCode, fullName) {
     uid = userRecord.uid;
     console.log(`[SBD] Created Auth user: ${uid}`);
 
-    // Send password-reset email so ambassador can set their own password
+    // Send password-reset email so seller can set their own password
     const resetLink = await admin.auth().generatePasswordResetLink(emailLower);
     // Fire-and-forget — don't await so it can't block provisioning
-    sendSBDWelcomeEmail(emailLower, fullName, ambassadorCode, sbdReferralCode, resetLink)
+    sendSBDWelcomeEmail(emailLower, fullName, sellerCodeUpper, sbdReferralCode, resetLink)
       .catch(e => console.error('[SBD] Welcome email failed:', e.message));
   }
 
@@ -2789,35 +2893,178 @@ async function provisionSBDAccess(email, ambassadorCode, fullName) {
   const existingDoc = await db.collection('users').doc(uid).get();
   const existingRole = existingDoc.exists ? existingDoc.data().role : null;
   if (existingRole !== 'admin') {
-    await db.collection('users').doc(uid).set({
+    const subscription = firestoreSafeObject({
+      tier: 'foundation',
+      status: 'active',
+      source: 'ambassador',
+      ambassadorCode: sellerCodeUpper.startsWith('AMB-') ? sellerCodeUpper : undefined,
+      rdCode: rdCodeForUser || undefined,
+    });
+
+    await db.collection('users').doc(uid).set(firestoreSafeObject({
       uid,
       name: fullName,
       email: emailLower,
       tier: 'foundation',
-      subscription: {
-        tier: 'foundation',
-        status: 'active',
-        source: 'ambassador',
-        ambassadorCode,
-      },
+      subscription,
       role: 'member',
       sbdReferralCode,
       groups: [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastActive:  admin.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
+      lastActive: admin.firestore.FieldValue.serverTimestamp(),
+    }), { merge: true });
   }
 
-  // 3. Write sbdReferralCode back onto the ambassadors doc
-  await db.collection('ambassadors').doc(ambassadorCode).update({
+  const sbdPatch = {
     sbdReferralCode,
     sbdAccessProvisioned: true,
     sbdUid: uid,
-    sbdReferrals: { signups: 0, subscribers: 0 },
+  };
+
+  // 3. Write sbdReferralCode onto seller doc(s)
+  if (sellerCodeUpper.startsWith('RD-')) {
+    const rdRef = db.collection('regional_directors').doc(sellerCodeUpper);
+    const rdSnap = await rdRef.get();
+    const existingRefs = rdSnap.exists ? (rdSnap.data().sbdReferrals || {}) : {};
+    await rdRef.set({
+      ...sbdPatch,
+      sbdReferrals: existingRefs.signups != null ? existingRefs : { signups: 0, subscribers: 0 },
+    }, { merge: true });
+
+    const ambCode = sellerCodeUpper.replace(/^RD-/, 'AMB-');
+    const ambRef = db.collection('ambassadors').doc(ambCode);
+    const ambSnap = await ambRef.get();
+    if (ambSnap.exists) {
+      const ambRefs = ambSnap.data().sbdReferrals || { signups: 0, subscribers: 0 };
+      await ambRef.update({ ...sbdPatch, sbdReferrals: ambRefs });
+    }
+  } else if (sellerCodeUpper.startsWith('AMB-')) {
+    const ambRef = db.collection('ambassadors').doc(sellerCodeUpper);
+    const ambSnap = await ambRef.get();
+    if (!ambSnap.exists) {
+      console.warn('[SBD] Ambassador doc missing:', sellerCodeUpper);
+      return;
+    }
+    const ambRefs = ambSnap.data().sbdReferrals || { signups: 0, subscribers: 0 };
+    await ambRef.update({ ...sbdPatch, sbdReferrals: ambRefs });
+  } else {
+    console.warn('[SBD] Unrecognized seller code format:', sellerCodeUpper);
+    return;
+  }
+
+  console.log(`[SBD] ${sellerCodeUpper} → uid:${uid} tier:foundation referral:${sbdReferralCode}`);
+}
+
+/** Repair active ambassadors/RDs missing SBD access (e.g. after undefined rdCode bug). */
+async function repairUnprovisionedSbdAccessJob() {
+  const result = { repaired: [], failed: [], skipped: 0 };
+
+  async function tryProvision(code, data, collection) {
+    const status = String(data.status || '').toLowerCase();
+    if (status !== 'active' && status !== 'approved') {
+      result.skipped++;
+      return;
+    }
+    if (data.sbdAccessProvisioned === true) {
+      result.skipped++;
+      return;
+    }
+    const email = (data.email || data.contactEmail || '').toLowerCase().trim();
+    if (!email) {
+      result.failed.push({ code, collection, error: 'missing email' });
+      return;
+    }
+    const name = data.fullName || data.name || email;
+    try {
+      const rdCode = collection === 'ambassadors'
+        ? await resolveRdCodeForSeller(code, {})
+        : code;
+      await provisionSBDAccess(email, code, name, {
+        rdCode: rdCode && String(rdCode).startsWith('RD-') ? rdCode : undefined,
+      });
+      result.repaired.push(code);
+      console.log(`[SBD REPAIR] OK ${code}`);
+    } catch (err) {
+      result.failed.push({ code, collection, error: err.message });
+      console.error(`[SBD REPAIR] FAIL ${code}:`, err.message);
+    }
+  }
+
+  const ambSnap = await db.collection('ambassadors').get();
+  for (const doc of ambSnap.docs) {
+    if (!doc.id.startsWith('AMB-')) continue;
+    await tryProvision(doc.id, doc.data(), 'ambassadors');
+  }
+
+  const rdSnap = await db.collection('regional_directors').get();
+  for (const doc of rdSnap.docs) {
+    if (!doc.id.startsWith('RD-')) continue;
+    await tryProvision(doc.id, doc.data(), 'regional_directors');
+  }
+
+  return result;
+}
+
+exports.repairUnprovisionedSbdAccess = functions.runWith({ timeoutSeconds: 300, memory: '512MB' })
+  .https.onRequest(async (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    try {
+      const result = await repairUnprovisionedSbdAccessJob();
+      res.status(200).json({ ok: true, ...result });
+    } catch (err) {
+      console.error('[SBD REPAIR]', err);
+      res.status(500).json({ ok: false, error: err.message });
+    }
   });
 
-  console.log(`[SBD] ${ambassadorCode} → uid:${uid} tier:foundation referral:${sbdReferralCode}`);
-}
+exports.scheduledSbdProvisionRepair = functions.pubsub
+  .schedule('every 30 minutes')
+  .onRun(async () => {
+    const result = await repairUnprovisionedSbdAccessJob();
+    console.log('[SBD REPAIR] scheduled run', JSON.stringify({
+      repaired: result.repaired.length,
+      failed: result.failed.length,
+      skipped: result.skipped,
+    }));
+    return null;
+  });
+
+exports.autoRepairSbdAccessOnAmbassador = functions.firestore
+  .document('ambassadors/{code}')
+  .onWrite(async (change, context) => {
+    const after = change.after.exists ? change.after.data() : null;
+    if (!after) return null;
+    const code = context.params.code;
+    if (!code.startsWith('AMB-')) return null;
+    if (after.sbdAccessProvisioned === true) return null;
+    if (after.sbdProvisionInProgress === true) return null;
+    if (after.sbdProvisionPending !== true) return null;
+
+    const email = (after.email || after.contactEmail || '').toLowerCase().trim();
+    if (!email) return null;
+
+    const ref = change.after.ref;
+    try {
+      await ref.update({ sbdProvisionInProgress: true });
+      const rdCode = await resolveRdCodeForSeller(code, {});
+      await provisionSBDAccess(email, code, after.fullName || after.name || email, {
+        rdCode: rdCode && String(rdCode).startsWith('RD-') ? rdCode : undefined,
+      });
+      await ref.update({
+        sbdProvisionInProgress: admin.firestore.FieldValue.delete(),
+        sbdProvisionPending: admin.firestore.FieldValue.delete(),
+        sbdProvisionLastError: admin.firestore.FieldValue.delete(),
+      });
+      console.log(`[SBD] Trigger repair OK ${code}`);
+    } catch (err) {
+      console.error(`[SBD] Trigger repair FAIL ${code}:`, err.message);
+      await ref.update({
+        sbdProvisionInProgress: admin.firestore.FieldValue.delete(),
+        sbdProvisionLastError: err.message,
+      });
+    }
+    return null;
+  });
 
 async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralCode, resetLink) {
   const { Resend } = require('resend');
@@ -3495,40 +3742,425 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
 // SBD NETWORK — PAYMENT CONSTANTS & HELPERS
 // ═══════════════════════════════════════════════════════════════════
 
+const SBD_STRIPE_PRICE_IDS = {
+  'foundation-monthly': process.env.SBD_PRICE_FOUNDATION_MONTHLY || '',
+  'premium-monthly': process.env.SBD_PRICE_PREMIUM_MONTHLY || '',
+  'elite-monthly': process.env.SBD_PRICE_ELITE_MONTHLY || '',
+  'teleios-blueprint': process.env.SBD_PRICE_TELEIOS_BLUEPRINT || '',
+  'starter-bundle': process.env.SBD_PRICE_STARTER_BUNDLE || '',
+  'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
+  'elite-bundle': process.env.SBD_PRICE_ELITE_BUNDLE || '',
+  'sbd-dummies': process.env.SBD_PRICE_SBD_DUMMIES || '',
+  'the-sex-by-design-compendium': process.env.SBD_PRICE_THE_SEX_BY_DESIGN_COMPENDIUM || '',
+  'sbd-dummies-digital-print': process.env.SBD_PRICE_SBD_DUMMIES_DIGITAL_PRINT || '',
+  'sbd-canonical': process.env.SBD_PRICE_SBD_CANONICAL || '',
+  'sbd-standard': process.env.SBD_PRICE_SBD_STANDARD || '',
+  'sbd-real-couples': process.env.SBD_PRICE_SBD_REAL_COUPLES || '',
+  'sbd-the-heart-of-relationship': process.env.SBD_PRICE_SBD_THE_HEART_OF_RELATIONSHIP || '',
+  'sbd-unequally-yoked-together': process.env.SBD_PRICE_SBD_UNEQUALLY_YOKED_TOGETHER || '',
+  'sbd-2-the-impregnable-assemblage': process.env.SBD_PRICE_SBD_2_THE_IMPREGNABLE_ASSEMBLAGE || '',
+  'marriage-porn-beyond': process.env.SBD_PRICE_MARRIAGE_PORN_BEYOND || '',
+  'naked-and-not-ashamed': process.env.SBD_PRICE_NAKED_AND_NOT_ASHAMED || '',
+  'marriage-equals-sexuality': process.env.SBD_PRICE_MARRIAGE_EQUALS_SEXUALITY || '',
+  'the-arts-of-marriage': process.env.SBD_PRICE_THE_ARTS_OF_MARRIAGE || '',
+  'the-art-of-sexuality': process.env.SBD_PRICE_THE_ART_OF_SEXUALITY || '',
+  'the-art-of-seduction': process.env.SBD_PRICE_THE_ART_OF_SEDUCTION || '',
+  'the-art-of-fucking': process.env.SBD_PRICE_THE_ART_OF_FUCKING || '',
+  'sbd-magazine-annual-subscription': process.env.SBD_PRICE_SBD_MAGAZINE_ANNUAL_SUBSCRIPTION || '',
+  'sbd-magazine-single-issue': process.env.SBD_PRICE_SBD_MAGAZINE_SINGLE_ISSUE || '',
+  'sbd-digital-archive-access': process.env.SBD_PRICE_SBD_DIGITAL_ARCHIVE_ACCESS || '',
+  'complete-sbd-library': process.env.SBD_PRICE_COMPLETE_SBD_LIBRARY || '',
+  'sbd-complete-package': process.env.SBD_PRICE_SBD_COMPLETE_PACKAGE || '',
+  'arts-of-marriage-collection': process.env.SBD_PRICE_ARTS_OF_MARRIAGE_COLLECTION || '',
+  'marriage-foundation-bundle': process.env.SBD_PRICE_MARRIAGE_FOUNDATION_BUNDLE || '',
+  'sbd-starter-magazine': process.env.SBD_PRICE_SBD_STARTER_MAGAZINE || '',
+  'newlywed-special': process.env.SBD_PRICE_NEWLYWED_SPECIAL || '',
+  'anniversary-celebration': process.env.SBD_PRICE_ANNIVERSARY_CELEBRATION || '',
+  'sexual-literacy-101': process.env.SBD_PRICE_SEXUAL_LITERACY_101 || '',
+  'anatomy-of-desire': process.env.SBD_PRICE_ANATOMY_OF_DESIRE || '',
+  'teleios-blueprint-mini': process.env.SBD_PRICE_TELEIOS_BLUEPRINT_MINI || '',
+  'marriage-builds-nations-intro': process.env.SBD_PRICE_MARRIAGE_BUILDS_NATIONS_INTRO || '',
+  'sbd-dummies-course-13wk': process.env.SBD_PRICE_SBD_DUMMIES_COURSE_13WK || '',
+  'sbd-dummies-core-curriculum': process.env.SBD_PRICE_SBD_DUMMIES_CORE_CURRICULUM || '',
+  'art-of-marriage-course': process.env.SBD_PRICE_ART_OF_MARRIAGE_COURSE || '',
+  'sexual-mastery-bundle': process.env.SBD_PRICE_SEXUAL_MASTERY_BUNDLE || '',
+  'teleios-development-bundle': process.env.SBD_PRICE_TELEIOS_DEVELOPMENT_BUNDLE || '',
+  'marriage-governance-bundle': process.env.SBD_PRICE_MARRIAGE_GOVERNANCE_BUNDLE || '',
+  'teleios-blueprint-full': process.env.SBD_PRICE_TELEIOS_BLUEPRINT_FULL || '',
+  'teleios-level-2': process.env.SBD_PRICE_TELEIOS_LEVEL_2 || '',
+  'anthropology-of-wholeness': process.env.SBD_PRICE_ANTHROPOLOGY_OF_WHOLENESS || '',
+  'identity-mastery': process.env.SBD_PRICE_IDENTITY_MASTERY || '',
+  'four-faculties-training': process.env.SBD_PRICE_FOUR_FACULTIES_TRAINING || '',
+  'anthropocentric-development': process.env.SBD_PRICE_ANTHROPOCENTRIC_DEVELOPMENT || '',
+  'personal-development-masterclass': process.env.SBD_PRICE_PERSONAL_DEVELOPMENT_MASTERCLASS || '',
+  'science-of-self-command': process.env.SBD_PRICE_SCIENCE_OF_SELF_COMMAND || '',
+  'heart-of-relationship-l1': process.env.SBD_PRICE_HEART_OF_RELATIONSHIP_L1 || '',
+  'relationship-relatednesses-l2': process.env.SBD_PRICE_RELATIONSHIP_RELATEDNESSES_L2 || '',
+  'relationship-mastery-intensive-l3': process.env.SBD_PRICE_RELATIONSHIP_MASTERY_INTENSIVE_L3 || '',
+  'perfect-self-program': process.env.SBD_PRICE_PERFECT_SELF_PROGRAM || '',
+  'emotional-literacy': process.env.SBD_PRICE_EMOTIONAL_LITERACY || '',
+  'temperament-intelligence': process.env.SBD_PRICE_TEMPERAMENT_INTELLIGENCE || '',
+  'sex-equals-marriage': process.env.SBD_PRICE_SEX_EQUALS_MARRIAGE || '',
+  'sexual-self': process.env.SBD_PRICE_SEXUAL_SELF || '',
+  'course-art-of-sexuality': process.env.SBD_PRICE_COURSE_ART_OF_SEXUALITY || '',
+  'course-art-of-seduction': process.env.SBD_PRICE_COURSE_ART_OF_SEDUCTION || '',
+  'course-art-of-nakedness': process.env.SBD_PRICE_COURSE_ART_OF_NAKEDNESS || '',
+  'sexual-imagination-pics-pearls': process.env.SBD_PRICE_SEXUAL_IMAGINATION_PICS_PEARLS || '',
+  'conjugal-intelligence-masterclass': process.env.SBD_PRICE_CONJUGAL_INTELLIGENCE_MASTERCLASS || '',
+  'arousal-mastery': process.env.SBD_PRICE_AROUSAL_MASTERY || '',
+  'course-art-of-fucking': process.env.SBD_PRICE_COURSE_ART_OF_FUCKING || '',
+  'erotic-devotion-song-of-solomon': process.env.SBD_PRICE_EROTIC_DEVOTION_SONG_OF_SOLOMON || '',
+  'nakedness-muliebrity': process.env.SBD_PRICE_NAKEDNESS_MULIEBRITY || '',
+  'nakedness-virility': process.env.SBD_PRICE_NAKEDNESS_VIRILITY || '',
+  'bedroom-governance': process.env.SBD_PRICE_BEDROOM_GOVERNANCE || '',
+  'marriage-porn-beyond-course-individual': process.env.SBD_PRICE_MARRIAGE_PORN_BEYOND_COURSE_INDIVIDUAL || '',
+  'marriage-porn-beyond-course-couple': process.env.SBD_PRICE_MARRIAGE_PORN_BEYOND_COURSE_COUPLE || '',
+  'marriage-system-design': process.env.SBD_PRICE_MARRIAGE_SYSTEM_DESIGN || '',
+  'covenant-governance': process.env.SBD_PRICE_COVENANT_GOVERNANCE || '',
+  'fidelity-curriculum': process.env.SBD_PRICE_FIDELITY_CURRICULUM || '',
+  'communication-covenant-couples': process.env.SBD_PRICE_COMMUNICATION_COVENANT_COUPLES || '',
+  'conflict-mastery': process.env.SBD_PRICE_CONFLICT_MASTERY || '',
+  'household-management': process.env.SBD_PRICE_HOUSEHOLD_MANAGEMENT || '',
+  'daily-liturgies-marriage': process.env.SBD_PRICE_DAILY_LITURGIES_MARRIAGE || '',
+  'one-flesh-intensive': process.env.SBD_PRICE_ONE_FLESH_INTENSIVE || '',
+  'marriage-builds-nations': process.env.SBD_PRICE_MARRIAGE_BUILDS_NATIONS || '',
+  'political-theology-of-home': process.env.SBD_PRICE_POLITICAL_THEOLOGY_OF_HOME || '',
+  'family-systems-architecture': process.env.SBD_PRICE_FAMILY_SYSTEMS_ARCHITECTURE || '',
+  'parenting-teleios': process.env.SBD_PRICE_PARENTING_TELEIOS || '',
+  'raising-sexual-literacy-children': process.env.SBD_PRICE_RAISING_SEXUAL_LITERACY_CHILDREN || '',
+  'family-culture-flourishing': process.env.SBD_PRICE_FAMILY_CULTURE_FLOURISHING || '',
+  'civilizational-intelligence-masterclass': process.env.SBD_PRICE_CIVILIZATIONAL_INTELLIGENCE_MASTERCLASS || '',
+  'human-rights-marriage-udhr16': process.env.SBD_PRICE_HUMAN_RIGHTS_MARRIAGE_UDHR16 || '',
+  'diploma-sexual-literacy-conjugal': process.env.SBD_PRICE_DIPLOMA_SEXUAL_LITERACY_CONJUGAL || '',
+  'diploma-teleios-personal-development': process.env.SBD_PRICE_DIPLOMA_TELEIOS_PERSONAL_DEVELOPMENT || '',
+  'sbd-certified-facilitator': process.env.SBD_PRICE_SBD_CERTIFIED_FACILITATOR || '',
+  'private-coaching-hourly': process.env.SBD_PRICE_PRIVATE_COACHING_HOURLY || '',
+  'marriage-labs-weekend': process.env.SBD_PRICE_MARRIAGE_LABS_WEEKEND || '',
+  'sbd-academy-lifetime-pass': process.env.SBD_PRICE_SBD_ACADEMY_LIFETIME_PASS || '',
+};
+
 const SBD_CATALOG_SERVER = {
-  // amount = USD cents (Stripe). revenueBaseFCFA = net revenue after 200 FCFA OPEX, used for commission calc.
-  'foundation-monthly': { name: 'SBD Network — Foundation',    amount: 900,   mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000 },
-  'premium-monthly':    { name: 'SBD Network — Premium',       amount: 2000,  mode: 'subscription', tier: 'premium',    revenueBaseFCFA: 5000 },
-  'elite-monthly':      { name: 'SBD Network — Elite',         amount: 5000,  mode: 'subscription', tier: 'elite',      revenueBaseFCFA: 5000 },
-  'sbd-dummies':        { name: 'Sex By Design for Dummies',   amount: 2700,  mode: 'payment'                          },
-  'teleios-blueprint':  { name: 'Teleios Blueprint',           amount: 24700, mode: 'payment'                          },
-  'starter-bundle':     { name: 'Starter Bundle',              amount: 3700,  mode: 'payment',       tier: 'premium'   },
-  'teleios-bundle':     { name: 'Teleios Bundle',              amount: 29700, mode: 'payment',       tier: 'premium'   },
-  'elite-bundle':       { name: 'Elite Formation Bundle',      amount: 49700, mode: 'payment',       tier: 'elite'     },
+  'foundation-monthly': { name: 'Foundation Tier', amount: 900, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
+  'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
+  'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
+  'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
+  'starter-bundle': { name: 'Starter Bundle', amount: 3700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['starter-bundle'] },
+  'teleios-bundle': { name: 'Teleios Bundle', amount: 29700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-bundle'] },
+  'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
+  'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
+  'the-sex-by-design-compendium': { name: 'The Sex by Design Compendium', amount: 3499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-sex-by-design-compendium'] },
+  'sbd-dummies-digital-print': { name: 'SBD for Dummies — Digital + Print', amount: 4000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies-digital-print'] },
+  'sbd-canonical': { name: 'SBD Canonical', amount: 2999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-canonical'] },
+  'sbd-standard': { name: 'SBD Standard', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-standard'] },
+  'sbd-real-couples': { name: 'SBD Real Couples', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-real-couples'] },
+  'sbd-the-heart-of-relationship': { name: 'SBD The Heart of Relationship', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-the-heart-of-relationship'] },
+  'sbd-unequally-yoked-together': { name: 'SBD Unequally Yoked Together', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-unequally-yoked-together'] },
+  'sbd-2-the-impregnable-assemblage': { name: 'SBD 2 — The Impregnable Assemblage', amount: 2999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-2-the-impregnable-assemblage'] },
+  'marriage-porn-beyond': { name: 'Marriage=Porn & Beyond', amount: 2999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-porn-beyond'] },
+  'naked-and-not-ashamed': { name: 'Naked & Not Ashamed', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['naked-and-not-ashamed'] },
+  'marriage-equals-sexuality': { name: 'Marriage = Sexuality', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-equals-sexuality'] },
+  'the-arts-of-marriage': { name: 'The Arts of Marriage', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-arts-of-marriage'] },
+  'the-art-of-sexuality': { name: 'The Art of Sexuality', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-art-of-sexuality'] },
+  'the-art-of-seduction': { name: 'The Art of Seduction', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-art-of-seduction'] },
+  'the-art-of-fucking': { name: 'The Art of Fucking', amount: 2499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-art-of-fucking'] },
+  'sbd-magazine-annual-subscription': { name: 'SBD Magazine — Annual Subscription', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-magazine-annual-subscription'] },
+  'sbd-magazine-single-issue': { name: 'SBD Magazine — Single Issue', amount: 2000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-magazine-single-issue'] },
+  'sbd-digital-archive-access': { name: 'SBD Digital Archive Access', amount: 3000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-digital-archive-access'] },
+  'complete-sbd-library': { name: 'Complete SBD Library', amount: 18999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['complete-sbd-library'] },
+  'sbd-complete-package': { name: 'SBD for Dummies Complete Package', amount: 41700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-complete-package'] },
+  'arts-of-marriage-collection': { name: 'Arts of Marriage Complete Collection', amount: 5999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['arts-of-marriage-collection'] },
+  'marriage-foundation-bundle': { name: 'Marriage Foundation Bundle', amount: 5499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-foundation-bundle'] },
+  'sbd-starter-magazine': { name: 'SBD Starter + Magazine Bundle', amount: 8999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-starter-magazine'] },
+  'newlywed-special': { name: 'Newlywed Special Bundle', amount: 4999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['newlywed-special'] },
+  'anniversary-celebration': { name: 'Anniversary Celebration Bundle', amount: 6999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anniversary-celebration'] },
+  'sexual-literacy-101': { name: 'Sexual Literacy 101', amount: 2500, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sexual-literacy-101'] },
+  'anatomy-of-desire': { name: 'The Anatomy of Desire', amount: 4900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anatomy-of-desire'] },
+  'teleios-blueprint-mini': { name: 'The Teleios Blueprint (Mini)', amount: 3900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint-mini'] },
+  'marriage-builds-nations-intro': { name: 'Marriage Builds Nations (Intro)', amount: 2900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-builds-nations-intro'] },
+  'sbd-dummies-course-13wk': { name: 'Sex By Design for Dummies — 13-Week Course', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies-course-13wk'] },
+  'sbd-dummies-core-curriculum': { name: 'Sex By Design Core Curriculum', amount: 49700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies-core-curriculum'] },
+  'art-of-marriage-course': { name: 'The Art of Marriage — Course', amount: 29700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['art-of-marriage-course'] },
+  'sexual-mastery-bundle': { name: 'Sexual Mastery Bundle', amount: 39900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sexual-mastery-bundle'] },
+  'teleios-development-bundle': { name: 'Teleios Development Bundle', amount: 29900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-development-bundle'] },
+  'marriage-governance-bundle': { name: 'Marriage Governance Bundle', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-governance-bundle'] },
+  'teleios-blueprint-full': { name: 'The Teleios Blueprint: Full Human Maturity', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint-full'] },
+  'teleios-level-2': { name: 'Teleios Level 2: Advanced Development', amount: 39700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-level-2'] },
+  'anthropology-of-wholeness': { name: 'The Anthropology of Wholeness', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropology-of-wholeness'] },
+  'identity-mastery': { name: 'Identity Mastery', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['identity-mastery'] },
+  'four-faculties-training': { name: 'The Four Faculties Training', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['four-faculties-training'] },
+  'anthropocentric-development': { name: 'Anthropocentric Development', amount: 12900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropocentric-development'] },
+  'personal-development-masterclass': { name: 'Personal Development MasterClass', amount: 69700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['personal-development-masterclass'] },
+  'science-of-self-command': { name: 'The Science of Self-Command', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['science-of-self-command'] },
+  'heart-of-relationship-l1': { name: 'The Heart of Relationship (Level 1)', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['heart-of-relationship-l1'] },
+  'relationship-relatednesses-l2': { name: 'Relationship Relatednesses (Level 2)', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['relationship-relatednesses-l2'] },
+  'relationship-mastery-intensive-l3': { name: 'Relationship Mastery Intensive (Level 3)', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['relationship-mastery-intensive-l3'] },
+  'perfect-self-program': { name: 'The Perfect Self Program', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['perfect-self-program'] },
+  'emotional-literacy': { name: 'Emotional Literacy for Couples & Singles', amount: 12900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['emotional-literacy'] },
+  'temperament-intelligence': { name: 'Temperament Intelligence for Marriage', amount: 9900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['temperament-intelligence'] },
+  'sex-equals-marriage': { name: 'Sex = Marriage: The Only Equation', amount: 35000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sex-equals-marriage'] },
+  'sexual-self': { name: 'The Sexual Self', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sexual-self'] },
+  'course-art-of-sexuality': { name: 'The Art of Sexuality — Course', amount: 39700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['course-art-of-sexuality'] },
+  'course-art-of-seduction': { name: 'The Art of Seduction — Course', amount: 34700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['course-art-of-seduction'] },
+  'course-art-of-nakedness': { name: 'The Art of Nakedness — Course', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['course-art-of-nakedness'] },
+  'sexual-imagination-pics-pearls': { name: 'Sexual Imagination (Pics & Pearls)', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sexual-imagination-pics-pearls'] },
+  'conjugal-intelligence-masterclass': { name: 'Conjugal Intelligence MasterClass', amount: 89700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['conjugal-intelligence-masterclass'] },
+  'arousal-mastery': { name: 'Arousal Mastery Program', amount: 29900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['arousal-mastery'] },
+  'course-art-of-fucking': { name: 'The Art of Fucking — Course', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['course-art-of-fucking'] },
+  'erotic-devotion-song-of-solomon': { name: 'Erotic Devotion: Song of Solomon', amount: 29900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['erotic-devotion-song-of-solomon'] },
+  'nakedness-muliebrity': { name: 'Nakedness Stewardship — Muliebrity', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['nakedness-muliebrity'] },
+  'nakedness-virility': { name: 'Nakedness Stewardship — Virility', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['nakedness-virility'] },
+  'bedroom-governance': { name: 'Bedroom Governance & Responsibility', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['bedroom-governance'] },
+  'marriage-porn-beyond-course-individual': { name: 'Marriage=Porn & Beyond — Individual', amount: 44700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-porn-beyond-course-individual'] },
+  'marriage-porn-beyond-course-couple': { name: 'Marriage=Porn & Beyond — Couple', amount: 59700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-porn-beyond-course-couple'] },
+  'marriage-system-design': { name: 'Marriage System Design', amount: 29700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-system-design'] },
+  'covenant-governance': { name: 'Covenant Governance', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['covenant-governance'] },
+  'fidelity-curriculum': { name: 'The Fidelity Curriculum', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['fidelity-curriculum'] },
+  'communication-covenant-couples': { name: 'Communication for Covenant Couples', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['communication-covenant-couples'] },
+  'conflict-mastery': { name: 'Conflict Mastery & Marital Peacekeeping', amount: 17900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['conflict-mastery'] },
+  'household-management': { name: 'Household Management Program', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['household-management'] },
+  'daily-liturgies-marriage': { name: 'Daily Liturgies of Marriage', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['daily-liturgies-marriage'] },
+  'one-flesh-intensive': { name: 'The One-Flesh Intensive', amount: 27900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['one-flesh-intensive'] },
+  'marriage-builds-nations': { name: 'Marriage Builds Nations', amount: 29900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-builds-nations'] },
+  'political-theology-of-home': { name: 'The Political Theology of Home', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['political-theology-of-home'] },
+  'family-systems-architecture': { name: 'Family Systems Architecture', amount: 27900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['family-systems-architecture'] },
+  'parenting-teleios': { name: 'Parenting Through Teleios Principles', amount: 29900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['parenting-teleios'] },
+  'raising-sexual-literacy-children': { name: 'Raising Sons & Daughters Through Sexual Literacy', amount: 24900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['raising-sexual-literacy-children'] },
+  'family-culture-flourishing': { name: 'Family Culture & Human Flourishing', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['family-culture-flourishing'] },
+  'civilizational-intelligence-masterclass': { name: 'Civilizational Intelligence Masterclass', amount: 69700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['civilizational-intelligence-masterclass'] },
+  'human-rights-marriage-udhr16': { name: 'Human Rights & Marriage (UDHR 16)', amount: 17900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['human-rights-marriage-udhr16'] },
+  'diploma-sexual-literacy-conjugal': { name: 'Diploma in Sexual Literacy & Conjugal Mastery', amount: 250000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['diploma-sexual-literacy-conjugal'] },
+  'diploma-teleios-personal-development': { name: 'Diploma in Teleios Personal Development', amount: 200000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['diploma-teleios-personal-development'] },
+  'sbd-certified-facilitator': { name: 'SBD Certified Facilitator Training', amount: 149700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-certified-facilitator'] },
+  'private-coaching-hourly': { name: 'SBD Private Coaching (Dr. Coach)', amount: 15000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['private-coaching-hourly'] },
+  'marriage-labs-weekend': { name: 'SBD Marriage Labs — Weekend Intensive', amount: 89900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-labs-weekend'] },
+  'sbd-academy-lifetime-pass': { name: 'SBD Academy Lifetime Access Pass', amount: 199700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-academy-lifetime-pass'] },
 };
 
 const SBD_UNLOCK_RULES = {
   'foundation-monthly': { tier: 'foundation', months: 1 },
-  'premium-monthly':    { tier: 'premium',    months: 1 },
-  'elite-monthly':      { tier: 'elite',      months: 1 },
-  'sbd-dummies':        { courses: ['sbd-dummies-course'] },
-  'teleios-blueprint':  { courses: ['teleios-blueprint'] },
-  'starter-bundle':     { courses: ['sbd-dummies-course'],                        tier: 'premium', months: 1 },
-  'teleios-bundle':     { courses: ['teleios-blueprint'],                         tier: 'premium', months: 3 },
-  'elite-bundle':       { courses: ['sbd-dummies-course', 'teleios-blueprint'],  tier: 'elite',   months: 6 },
+  'premium-monthly': { tier: 'premium', months: 1 },
+  'elite-monthly': { tier: 'elite', months: 1 },
+  'teleios-blueprint': { courses: ['teleios-blueprint'] },
+  'starter-bundle': { products: ['sbd-dummies'], tier: 'premium', months: 1 },
+  'teleios-bundle': { products: ['teleios-bundle'] },
+  'elite-bundle': { products: ['elite-bundle'] },
+  'sbd-dummies': { courses: ['sbd-dummies-course'] },
+  'the-sex-by-design-compendium': { products: ['the-sex-by-design-compendium'] },
+  'sbd-dummies-digital-print': { products: ['sbd-dummies-digital-print'] },
+  'sbd-canonical': { products: ['sbd-canonical'] },
+  'sbd-standard': { products: ['sbd-standard'] },
+  'sbd-real-couples': { products: ['sbd-real-couples'] },
+  'sbd-the-heart-of-relationship': { products: ['sbd-the-heart-of-relationship'] },
+  'sbd-unequally-yoked-together': { products: ['sbd-unequally-yoked-together'] },
+  'sbd-2-the-impregnable-assemblage': { products: ['sbd-2-the-impregnable-assemblage'] },
+  'marriage-porn-beyond': { products: ['marriage-porn-beyond'] },
+  'naked-and-not-ashamed': { products: ['naked-and-not-ashamed'] },
+  'marriage-equals-sexuality': { products: ['marriage-equals-sexuality'] },
+  'the-arts-of-marriage': { products: ['the-arts-of-marriage'] },
+  'the-art-of-sexuality': { products: ['the-art-of-sexuality'] },
+  'the-art-of-seduction': { products: ['the-art-of-seduction'] },
+  'the-art-of-fucking': { products: ['the-art-of-fucking'] },
+  'sbd-magazine-annual-subscription': { products: ['sbd-magazine-annual-subscription'] },
+  'sbd-magazine-single-issue': { products: ['sbd-magazine-single-issue'] },
+  'sbd-digital-archive-access': { products: ['sbd-digital-archive-access'] },
+  'complete-sbd-library': { products: ['complete-sbd-library'] },
+  'sbd-complete-package': { products: ['sbd-complete-package'] },
+  'arts-of-marriage-collection': { products: ['arts-of-marriage-collection'] },
+  'marriage-foundation-bundle': { products: ['marriage-foundation-bundle'] },
+  'sbd-starter-magazine': { products: ['sbd-starter-magazine'] },
+  'newlywed-special': { products: ['newlywed-special'] },
+  'anniversary-celebration': { products: ['anniversary-celebration'] },
+  'sexual-literacy-101': { products: ['sexual-literacy-101'] },
+  'anatomy-of-desire': { products: ['anatomy-of-desire'] },
+  'teleios-blueprint-mini': { products: ['teleios-blueprint-mini'] },
+  'marriage-builds-nations-intro': { products: ['marriage-builds-nations-intro'] },
+  'sbd-dummies-course-13wk': { products: ['sbd-dummies-course-13wk'] },
+  'sbd-dummies-core-curriculum': { products: ['sbd-dummies-core-curriculum'] },
+  'art-of-marriage-course': { products: ['art-of-marriage-course'] },
+  'sexual-mastery-bundle': { products: ['sexual-mastery-bundle'] },
+  'teleios-development-bundle': { products: ['teleios-development-bundle'] },
+  'marriage-governance-bundle': { products: ['marriage-governance-bundle'] },
+  'teleios-blueprint-full': { products: ['teleios-blueprint-full'] },
+  'teleios-level-2': { products: ['teleios-level-2'] },
+  'anthropology-of-wholeness': { products: ['anthropology-of-wholeness'] },
+  'identity-mastery': { products: ['identity-mastery'] },
+  'four-faculties-training': { products: ['four-faculties-training'] },
+  'anthropocentric-development': { products: ['anthropocentric-development'] },
+  'personal-development-masterclass': { products: ['personal-development-masterclass'] },
+  'science-of-self-command': { products: ['science-of-self-command'] },
+  'heart-of-relationship-l1': { products: ['heart-of-relationship-l1'] },
+  'relationship-relatednesses-l2': { products: ['relationship-relatednesses-l2'] },
+  'relationship-mastery-intensive-l3': { products: ['relationship-mastery-intensive-l3'] },
+  'perfect-self-program': { products: ['perfect-self-program'] },
+  'emotional-literacy': { products: ['emotional-literacy'] },
+  'temperament-intelligence': { products: ['temperament-intelligence'] },
+  'sex-equals-marriage': { products: ['sex-equals-marriage'] },
+  'sexual-self': { products: ['sexual-self'] },
+  'course-art-of-sexuality': { products: ['course-art-of-sexuality'] },
+  'course-art-of-seduction': { products: ['course-art-of-seduction'] },
+  'course-art-of-nakedness': { products: ['course-art-of-nakedness'] },
+  'sexual-imagination-pics-pearls': { products: ['sexual-imagination-pics-pearls'] },
+  'conjugal-intelligence-masterclass': { products: ['conjugal-intelligence-masterclass'] },
+  'arousal-mastery': { products: ['arousal-mastery'] },
+  'course-art-of-fucking': { products: ['course-art-of-fucking'] },
+  'erotic-devotion-song-of-solomon': { products: ['erotic-devotion-song-of-solomon'] },
+  'nakedness-muliebrity': { products: ['nakedness-muliebrity'] },
+  'nakedness-virility': { products: ['nakedness-virility'] },
+  'bedroom-governance': { products: ['bedroom-governance'] },
+  'marriage-porn-beyond-course-individual': { products: ['marriage-porn-beyond-course-individual'] },
+  'marriage-porn-beyond-course-couple': { products: ['marriage-porn-beyond-course-couple'] },
+  'marriage-system-design': { products: ['marriage-system-design'] },
+  'covenant-governance': { products: ['covenant-governance'] },
+  'fidelity-curriculum': { products: ['fidelity-curriculum'] },
+  'communication-covenant-couples': { products: ['communication-covenant-couples'] },
+  'conflict-mastery': { products: ['conflict-mastery'] },
+  'household-management': { products: ['household-management'] },
+  'daily-liturgies-marriage': { products: ['daily-liturgies-marriage'] },
+  'one-flesh-intensive': { products: ['one-flesh-intensive'] },
+  'marriage-builds-nations': { products: ['marriage-builds-nations'] },
+  'political-theology-of-home': { products: ['political-theology-of-home'] },
+  'family-systems-architecture': { products: ['family-systems-architecture'] },
+  'parenting-teleios': { products: ['parenting-teleios'] },
+  'raising-sexual-literacy-children': { products: ['raising-sexual-literacy-children'] },
+  'family-culture-flourishing': { products: ['family-culture-flourishing'] },
+  'civilizational-intelligence-masterclass': { products: ['civilizational-intelligence-masterclass'] },
+  'human-rights-marriage-udhr16': { products: ['human-rights-marriage-udhr16'] },
+  'diploma-sexual-literacy-conjugal': { products: ['diploma-sexual-literacy-conjugal'] },
+  'diploma-teleios-personal-development': { products: ['diploma-teleios-personal-development'] },
+  'sbd-certified-facilitator': { products: ['sbd-certified-facilitator'] },
+  'private-coaching-hourly': { products: ['private-coaching-hourly'] },
+  'marriage-labs-weekend': { products: ['marriage-labs-weekend'] },
+  'sbd-academy-lifetime-pass': { products: ['sbd-academy-lifetime-pass'] },
 };
 
+const SBD_PRODUCT_ALIASES = require('./sbd-product-aliases.json').aliases || {};
+
+function resolveSbdProductId(rawProductId) {
+  const normalized = typeof rawProductId === 'string' ? rawProductId.trim() : '';
+  if (!normalized) return '';
+  return SBD_PRODUCT_ALIASES[normalized] || normalized;
+}
+
+const advExprLib = require('./lib/advanced-expression-access');
+const SBD_ADVANCED_EXPRESSION_GROUPS = advExprLib.ADVANCED_EXPRESSION_GROUP_IDS;
 const SBD_TIER_GROUPS = {
   free:       ['group-sbd-community'],
   foundation: ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies'],
   premium:    ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies', 'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
-  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies', 'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13', 'group-marriage-systems', 'group-civilization-leadership', 'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
+  elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies', 'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13', 'group-marriage-systems', 'group-civilization-leadership'],
 };
 
+/** SBD Life editorial entitlements (shop → Firestore). */
+const SBD_LIFE_SHOP_PRODUCTS = {
+  'sbd-magazine-annual-subscription': 'annual',
+  'sbd-magazine-single-issue': 'single_issue',
+  'sbd-digital-archive-access': 'archive',
+};
+const SBD_LIFE_DEFAULT_ISSUE_ID = 'issue-attraction-formation-2026';
+
+async function resolveCurrentSbdLifeIssueId() {
+  try {
+    const featured = await db.collection('sbdLifeTrending').doc('featured').get();
+    if (featured.exists) {
+      const data = featured.data() || {};
+      if (Array.isArray(data.issueIds) && data.issueIds[0]) {
+        return data.issueIds[0];
+      }
+      if (Array.isArray(data.articleIds) && data.articleIds[0]) {
+        const art = await db.collection('sbdLifeArticles').doc(data.articleIds[0]).get();
+        if (art.exists && art.data().issueId) {
+          return art.data().issueId;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[SBD Life] resolveCurrentSbdLifeIssueId:', err.message);
+  }
+  return SBD_LIFE_DEFAULT_ISSUE_ID;
+}
+
+async function grantSbdLifeEntitlements(uid, productId, session) {
+  const canonicalProductId = resolveSbdProductId(productId);
+  const grantType = SBD_LIFE_SHOP_PRODUCTS[canonicalProductId];
+  if (!grantType) {
+    return { granted: false };
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  const oneYear = admin.firestore.Timestamp.fromMillis(Date.now() + 365 * 24 * 60 * 60 * 1000);
+  const sessionId = session?.id || null;
+
+  if (grantType === 'annual') {
+    await db.collection('sbdLifeSubscriptions').doc(uid).set(
+      {
+        userId: uid,
+        plan: 'annual',
+        status: 'active',
+        productId: canonicalProductId,
+        archiveAccess: true,
+        source: 'shop_stripe',
+        stripeSessionId: sessionId,
+        startedAt: now,
+        expiresAt: oneYear,
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+    console.log(`[SBD Life] Annual subscription granted uid=${uid}`);
+    return { granted: true, type: 'annual', expiresAt: oneYear };
+  }
+
+  if (grantType === 'archive') {
+    await db.collection('sbdLifeSubscriptions').doc(uid).set(
+      {
+        userId: uid,
+        plan: 'archive',
+        status: 'active',
+        productId: canonicalProductId,
+        archiveAccess: true,
+        source: 'shop_stripe',
+        stripeSessionId: sessionId,
+        startedAt: now,
+        expiresAt: null,
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+    console.log(`[SBD Life] Archive access granted uid=${uid}`);
+    return { granted: true, type: 'archive' };
+  }
+
+  if (grantType === 'single_issue') {
+    const issueId = await resolveCurrentSbdLifeIssueId();
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('sbdLifePurchasedIssues')
+      .doc(issueId)
+      .set(
+        {
+          userId: uid,
+          issueId: issueId,
+          productId: canonicalProductId,
+          status: 'active',
+          source: 'shop_stripe',
+          stripeSessionId: sessionId,
+          purchasedAt: now,
+        },
+        { merge: true }
+      );
+    console.log(`[SBD Life] Issue purchase granted uid=${uid} issue=${issueId}`);
+    return { granted: true, type: 'single_issue', issueId: issueId };
+  }
+
+  return { granted: false };
+}
+
 async function unlockSbdContent(uid, productId, session) {
-  const rule = SBD_UNLOCK_RULES[productId];
+  const canonicalProductId = resolveSbdProductId(productId);
+  const rule = SBD_UNLOCK_RULES[canonicalProductId];
   if (!rule) {
-    console.warn(`[SBD] No unlock rule for: ${productId}`);
+    console.warn(`[SBD] No unlock rule for: ${canonicalProductId}`);
     return null;
   }
 
@@ -3547,14 +4179,14 @@ async function unlockSbdContent(uid, productId, session) {
     ambassadorCommissionFCFA: null,
     seniorCommissionFCFA: null,
     tierKeyed: rule.tier || null,
-    productId,
-    productName: SBD_CATALOG_SERVER[productId]?.name || productId,
+    productId: canonicalProductId,
+    productName: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
   };
 
   if (rule.tier) {
     // Recurring subscriptions: endDate = 2099 (Stripe manages billing cancellation).
     // One-time bundles: endDate = now + N months.
-    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(productId);
+    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     const endDate = isRecurring
       ? new Date('2099-12-31')
       : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
@@ -3571,28 +4203,28 @@ async function unlockSbdContent(uid, productId, session) {
       } else if (wasAlreadySubscribed) {
         tgMeta.referralSkipReason = 'already_subscribed';
       } else {
-        const ambSnap = await db.collection('ambassadors')
-          .where('sbdReferralCode', '==', referralCode).limit(1).get();
-        if (ambSnap.empty) {
+        const seller = await findSellerBySbdReferralCode(referralCode);
+        if (!seller) {
           tgMeta.referralSkipReason = 'no_matching_ambassador';
         } else {
-          const ambDoc  = ambSnap.docs[0];
-          const ambData = ambDoc.data();
+          const ambData = seller.data;
           const tierKey        = rule.tier;
-          const revenueBase    = SBD_CATALOG_SERVER[productId]?.revenueBaseFCFA || 5000;
+          const revenueBase    = SBD_CATALOG_SERVER[canonicalProductId]?.revenueBaseFCFA || 5000;
           const ambCommission  = Math.round(revenueBase * 0.10);
 
-          await ambDoc.ref.update({
+          await seller.ref.update({
             'sbdReferrals.subscribers':         admin.firestore.FieldValue.increment(1),
             [`sbdReferrals.${tierKey}`]:         admin.firestore.FieldValue.increment(1),
             'sbdReferrals.commissionPending':   admin.firestore.FieldValue.increment(ambCommission),
             'sbdReferrals.commissionEarned':    admin.firestore.FieldValue.increment(ambCommission),
           });
-          console.log(`[SBD] Ambassador ${ambData.ambassadorCode} +${ambCommission} FCFA commission (tier=${tierKey})`);
+          console.log(`[SBD] ${seller.type} ${seller.id} +${ambCommission} FCFA commission (tier=${tierKey})`);
 
           let seniorCode       = null;
           let seniorCommission = 0;
-          const uplineCode = ambData.regional_director || null;
+          const uplineCode = seller.type === 'ambassador'
+            ? (ambData.regional_director || null)
+            : null;
           if (uplineCode && uplineCode.startsWith('AMB-')) {
             const seniorSnap = await db.collection('ambassadors').doc(uplineCode).get();
             if (seniorSnap.exists) {
@@ -3608,11 +4240,14 @@ async function unlockSbdContent(uid, productId, session) {
           }
 
           await db.collection('sbd_sales').add({
-            ambassadorCode:          ambData.ambassadorCode || null,
-            ambassadorName:          ambData.fullName || '',
+            ambassadorCode:          seller.type === 'ambassador'
+              ? (ambData.ambassadorCode || ambData.code || seller.id)
+              : (ambData.ambassador_code || null),
+            rdCode:                  seller.type === 'rd' ? seller.id : (ambData.rd_code || null),
+            ambassadorName:          ambData.fullName || ambData.name || '',
             sbdReferralCode:         referralCode,
             subscriberUid:           uid,
-            productId,
+            productId: canonicalProductId,
             tier:                    tierKey,
             revenueBaseFCFA:         revenueBase,
             ambassadorCommission:    ambCommission,
@@ -3624,7 +4259,9 @@ async function unlockSbdContent(uid, productId, session) {
 
           tgMeta.referralCredited = true;
           tgMeta.referralSkipReason = null;
-          tgMeta.referrerAmbassadorCode = ambData.ambassadorCode || ambData.code || null;
+          tgMeta.referrerAmbassadorCode = seller.type === 'ambassador'
+            ? (ambData.ambassadorCode || ambData.code || seller.id)
+            : seller.id;
           tgMeta.referrerFullName = ambData.fullName || ambData.name || null;
           tgMeta.seniorAmbassadorCode = seniorCode;
           tgMeta.ambassadorCommissionFCFA = ambCommission;
@@ -3670,12 +4307,16 @@ async function unlockSbdContent(uid, productId, session) {
     await userRef.update({ ownedCourses: admin.firestore.FieldValue.arrayUnion(...rule.courses) });
   }
 
+  if (rule.products && rule.products.length > 0) {
+    await userRef.update({ ownedProducts: admin.firestore.FieldValue.arrayUnion(...rule.products) });
+  }
+
   // Audit trail
   await db.collection('orders').add({
     app: 'sbd-network',
     userId: uid,
-    productId,
-    productName: SBD_CATALOG_SERVER[productId]?.name || productId,
+    productId: canonicalProductId,
+    productName: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
     amount: session?.amount_total ? session.amount_total / 100 : 0,
     currency: session?.currency?.toUpperCase() || 'USD',
     status: 'completed',
@@ -3685,14 +4326,14 @@ async function unlockSbdContent(uid, productId, session) {
 
   await writeUnifiedPaymentRecord({
     source: 'stripe_sbd',
-    reference: session?.id || `${uid}-${productId}`,
+    reference: session?.id || `${uid}-${canonicalProductId}`,
     external_reference: session?.payment_intent || session?.id || '',
     record_type: 'customer_payment',
     channel: 'stripe',
     payment_method: 'card',
-    payment_category: productId,
-    product_id: productId,
-    product_name: SBD_CATALOG_SERVER[productId]?.name || productId,
+    payment_category: canonicalProductId,
+    product_id: canonicalProductId,
+    product_name: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
     amount: session?.amount_total ? session.amount_total / 100 : 0,
     currency: session?.currency?.toUpperCase() || 'USD',
     customer_email: session?.customer_details?.email || '',
@@ -3705,9 +4346,86 @@ async function unlockSbdContent(uid, productId, session) {
     created_at: admin.firestore.FieldValue.serverTimestamp()
   });
 
-  console.log(`[SBD] Unlocked: uid=${uid} product=${productId}`);
+  try {
+    await grantSbdLifeEntitlements(uid, canonicalProductId, session);
+  } catch (lifeErr) {
+    console.error('[SBD Life] Entitlement grant failed (non-critical):', lifeErr.message);
+  }
+
+  console.log(`[SBD] Unlocked: uid=${uid} product=${canonicalProductId}`);
   return tgMeta;
 }
+
+/**
+ * Backup: client checkout-success can sync SBD Life entitlements if webhook is delayed.
+ */
+exports.syncSbdLifeShopEntitlement = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+  }
+  const sessionId = typeof data?.sessionId === 'string' ? data.sessionId.trim() : '';
+  const productId = resolveSbdProductId(data?.productId);
+  if (!sessionId || !productId) {
+    throw new functions.https.HttpsError('invalid-argument', 'sessionId and productId required.');
+  }
+  if (!SBD_LIFE_SHOP_PRODUCTS[productId]) {
+    return { ok: true, skipped: true, reason: 'not_sbd_life_product' };
+  }
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.metadata?.app !== 'sbd' || session.metadata?.uid !== context.auth.uid) {
+    throw new functions.https.HttpsError('permission-denied', 'Session does not belong to this user.');
+  }
+  if (session.metadata?.productId && resolveSbdProductId(session.metadata.productId) !== productId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Product mismatch.');
+  }
+  if (session.payment_status !== 'paid') {
+    return { ok: false, reason: 'payment_not_completed' };
+  }
+
+  const life = await grantSbdLifeEntitlements(context.auth.uid, productId, session);
+  return { ok: true, life: life };
+});
+
+/**
+ * Grant advanced expression community groups when formation milestone is met.
+ */
+async function grantAdvancedExpressionIfEligible(uid, userData) {
+  if (!advExprLib.computeFormationMilestoneMet(userData)) return false;
+  const userRef = db.collection('users').doc(uid);
+  const updates = {
+    groups: admin.firestore.FieldValue.arrayUnion(...SBD_ADVANCED_EXPRESSION_GROUPS),
+  };
+  if (userData.progress?.advancedExpressionUnlocked !== true) {
+    updates['progress.advancedExpressionUnlocked'] = true;
+    updates['progress.advancedExpressionUnlockedAt'] = admin.firestore.FieldValue.serverTimestamp();
+  }
+  await userRef.update(updates);
+  console.log(`[SBD] Advanced expression unlocked for uid=${uid}`);
+  return true;
+}
+
+exports.onUserAdvancedExpressionUnlock = functions.firestore
+  .document('users/{userId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data() || {};
+    const after = change.after.data() || {};
+    const beforeCourses = JSON.stringify(before.progress?.completedCourses || []);
+    const afterCourses = JSON.stringify(after.progress?.completedCourses || []);
+    if (beforeCourses === afterCourses) return null;
+    if (!advExprLib.computeFormationMilestoneMet(after)) return null;
+    if (after.progress?.advancedExpressionUnlocked === true) {
+      const groups = after.groups || [];
+      const hasAll = SBD_ADVANCED_EXPRESSION_GROUPS.every((g) => groups.includes(g));
+      if (hasAll) return null;
+    }
+    try {
+      await grantAdvancedExpressionIfEligible(context.params.userId, after);
+    } catch (e) {
+      console.error('[SBD] grantAdvancedExpressionIfEligible:', e.message);
+    }
+    return null;
+  });
 
 /**
  * Telegram: new SBD PWA self-serve signup (users doc created from PWA auth).
@@ -3754,33 +4472,38 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
   }
 
   const { productId } = data;
+  const canonicalProductId = resolveSbdProductId(productId);
   const uid   = context.auth.uid;
   const email = context.auth.token.email || '';
 
-  const product = SBD_CATALOG_SERVER[productId];
+  const product = SBD_CATALOG_SERVER[canonicalProductId];
   if (!product) {
-    throw new functions.https.HttpsError('invalid-argument', `Unknown product: ${productId}`);
+    throw new functions.https.HttpsError('invalid-argument', `Unknown product: ${canonicalProductId}`);
   }
 
   const baseUrl    = 'https://sbd-network.web.app';
-  const cancelTier = product.tier || productId.replace('-monthly', '');
+  const cancelTier = product.tier || canonicalProductId.replace('-monthly', '');
   const priceData  = {
     currency: 'usd',
     product_data: { name: product.name },
     unit_amount: product.amount,
     ...(product.mode === 'subscription' ? { recurring: { interval: 'month' } } : {}),
   };
+  const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
+  const lineItem = trimmedPriceId
+    ? { price: trimmedPriceId, quantity: 1 }
+    : { price_data: priceData, quantity: 1 };
 
   const session = await stripe.checkout.sessions.create({
     customer_email: email,
-    metadata: { app: 'sbd', uid, productId },
+    metadata: { app: 'sbd', uid, productId: canonicalProductId },
     mode: product.mode,
-    line_items: [{ price_data: priceData, quantity: 1 }],
-    success_url: `${baseUrl}/checkout-success.html?product=${productId}&session_id={CHECKOUT_SESSION_ID}`,
+    line_items: [lineItem],
+    success_url: `${baseUrl}/checkout-success.html?product=${canonicalProductId}&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url:  `${baseUrl}/payment?tier=${cancelTier}&cancelled=true`,
   });
 
-  console.log(`[SBD Checkout] uid=${uid} product=${productId} session=${session.id}`);
+  console.log(`[SBD Checkout] uid=${uid} product=${canonicalProductId} session=${session.id}`);
   return { url: session.url };
 });
 
@@ -3926,9 +4649,9 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
     const countryCode = data.country || 'CM';
     const currency = data.currency || (countryCode === 'CM' ? 'XAF' : 'USD');
     
-    // Save to Firestore for backup (in addition to client-side save)
+    // Save to Firestore for backup — merge by AMB code or email (avoid duplicate auto-IDs on resubmit)
     try {
-      await db.collection('ambassadors').add({
+      const backupPayload = {
         ...data,
         phone: phoneStored,
         phoneE164: phoneStored,
@@ -3936,8 +4659,26 @@ exports.submitAmbassadorApplication = functions.https.onRequest(async (req, res)
         currency,
         submittedAt: admin.firestore.FieldValue.serverTimestamp(),
         source: 'cloud_function'
-      });
-      console.log('[Ambassador] Saved to Firestore:', data.code);
+      };
+      const ambCode = (data.code || '').toString().trim().toUpperCase();
+      if (ambCode.startsWith('AMB-')) {
+        await db.collection('ambassadors').doc(ambCode).set(backupPayload, { merge: true });
+        console.log('[Ambassador] Merged backup to:', ambCode);
+      } else if (data.email) {
+        const emailSnap = await db.collection('ambassadors')
+          .where('email', '==', data.email)
+          .limit(1)
+          .get();
+        if (!emailSnap.empty) {
+          await emailSnap.docs[0].ref.set(backupPayload, { merge: true });
+          console.log('[Ambassador] Merged backup to existing email doc:', emailSnap.docs[0].id);
+        } else {
+          await db.collection('ambassadors').add(backupPayload);
+          console.log('[Ambassador] Created backup application doc for:', data.email);
+        }
+      } else {
+        await db.collection('ambassadors').add(backupPayload);
+      }
     } catch (firestoreError) {
       console.warn('[Ambassador] Firestore save failed:', firestoreError.message);
       // Continue with email even if Firestore fails
@@ -5339,6 +6080,7 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
     
     // 2. Create/update regional_directors record
     const rdCode = ambassadorCode.replace('AMB-', 'RD-');
+    const rdSbdCode = deriveSbdReferralCode(rdCode) || rdCode.replace(/^RD-/, 'SBD-');
     const rdRef = db.collection('regional_directors').doc(rdCode);
     batch.set(rdRef, {
       ...fullAmbassadorData,
@@ -5346,6 +6088,8 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
       rd_code: rdCode,
       ambassador_code: ambassadorCode,
       ambassador_type: 'regional_director',
+      sbdReferralCode: fullAmbassadorData.sbdReferralCode || rdSbdCode,
+      sbdReferrals: fullAmbassadorData.sbdReferrals || { signups: 0, subscribers: 0 },
       promotion_date: admin.firestore.FieldValue.serverTimestamp(),
       network_size: fullAmbassadorData.seniors_recruited || 50,
       network_ambassadors: 0, // Will be calculated from team
@@ -5369,6 +6113,18 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
     await batch.commit();
     
     console.log(`✅ ${ambassadorCode} promoted to Regional Director successfully`);
+
+    if (fullAmbassadorData.email) {
+      try {
+        await provisionSBDAccess(
+          fullAmbassadorData.email,
+          rdCode,
+          fullAmbassadorData.fullName || fullAmbassadorData.name || fullAmbassadorData.email
+        );
+      } catch (sbdErr) {
+        console.error(`[SBD] RD promotion provision failed for ${rdCode}:`, sbdErr.message);
+      }
+    }
     
     // Send email notification
     if (fullAmbassadorData.email && transporter) {

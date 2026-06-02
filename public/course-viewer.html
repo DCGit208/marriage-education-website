@@ -1383,6 +1383,7 @@
       loadingOverlay = document.getElementById('loadingOverlay');
       
       console.log('[Course Viewer] DOM Ready - Starting to load course:', courseId);
+      console.log('[Course Viewer] Build: scroll-progress-v20260602 (Week 1 scroll tracking fix)');
       console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
       
       if (!courseId) {
@@ -1525,6 +1526,13 @@
               // Process visual enhancements only for first module
               setTimeout(() => {
                 processModuleEnhancements(content, module);
+                const contentSection = content.querySelector('.content-section');
+                if (contentSection) {
+                  setTimeout(() => {
+                    console.log('🔧 Initializing scroll tracking for Week 1 (initial load)');
+                    initializeProgressTracking(contentSection);
+                  }, 150);
+                }
               }, 100);
             } else {
               // Show placeholder for other modules
@@ -2099,6 +2107,75 @@
       readingProgress: 0
     };
     
+    /** Measure how far the user has read the active week (content-area or window scroll). */
+    function measureReadingProgress() {
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab || activeTab.id === 'module-exam') return 0;
+
+      const contentArea = document.querySelector('.content-area');
+      const readTarget = activeTab.querySelector('#markCompleteSection') ||
+        activeTab.querySelector('.content-section') ||
+        activeTab;
+      if (!readTarget) return 0;
+
+      // Desktop: scroll happens inside .content-area
+      if (contentArea && contentArea.scrollHeight > contentArea.clientHeight + 5) {
+        const maxScroll = contentArea.scrollHeight - contentArea.clientHeight;
+        if (maxScroll <= 0) return 0;
+        return Math.min(100, Math.round((contentArea.scrollTop / maxScroll) * 100));
+      }
+
+      // Mobile / overflow-visible layouts: page scroll
+      const rect = readTarget.getBoundingClientRect();
+      const contentHeight = Math.max(readTarget.scrollHeight, readTarget.offsetHeight, rect.height);
+      if (contentHeight <= 0) return 0;
+      const passed = Math.max(0, window.innerHeight - rect.top);
+      return Math.min(100, Math.round((passed / contentHeight) * 100));
+    }
+
+    function persistReadingProgress() {
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      localStorage.setItem(progressKey, JSON.stringify(progressData));
+    }
+
+    function applyReadingProgress(scrollPercentage) {
+      if (progressData.contentRead) return;
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab || activeTab.id === 'module-exam') return;
+
+      const next = Math.min(100, Math.max(progressData.readingProgress || 0, scrollPercentage || 0));
+      if (next === progressData.readingProgress) return;
+
+      progressData.readingProgress = next;
+      console.log(`📖 Scroll progress: ${next}%`);
+      updateMarkCompleteButtonState(next);
+      persistReadingProgress();
+    }
+
+    let readingScrollTimeout = null;
+    function handleReadingScroll() {
+      if (progressData.contentRead) return;
+      clearTimeout(readingScrollTimeout);
+      readingScrollTimeout = setTimeout(() => {
+        applyReadingProgress(measureReadingProgress());
+      }, 120);
+    }
+
+    function setupReadingScrollTracking() {
+      if (window.__courseReadingScrollReady) return;
+      window.__courseReadingScrollReady = true;
+
+      const contentArea = document.querySelector('.content-area');
+      console.log('🎯 Setting up reading scroll listeners');
+      if (contentArea) {
+        contentArea.addEventListener('scroll', handleReadingScroll, { passive: true });
+      }
+      window.addEventListener('scroll', handleReadingScroll, { passive: true });
+      window.addEventListener('resize', handleReadingScroll, { passive: true });
+    }
+
     function initializeProgressTracking(contentSection) {
       // Use global courseId
       const module = courseModules[currentModuleIndex];
@@ -2137,51 +2214,21 @@
         // Initialize with 0% if no saved progress
         progressData.readingProgress = 0;
       }
-      
-      // Track scroll progress to enable "Mark Complete" button
-      const contentArea = document.querySelector('.content-area');
-      if (contentArea && !contentArea.hasAttribute('data-scroll-listener-added')) {
-        contentArea.setAttribute('data-scroll-listener-added', 'true');
-        let scrollTimeout;
-        
-        console.log('🎯 Setting up scroll listener with initial progress:', progressData.readingProgress);
-        
-        // Initialize button state immediately based on current progress
-        setTimeout(() => {
-          const currentProgress = progressData.readingProgress || 0;
-          console.log(`🎯 Initializing visual elements with progress: ${currentProgress}%`);
-          updateMarkCompleteButtonState(currentProgress);
-        }, 200);
-        
-        contentArea.addEventListener('scroll', () => {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            // CRITICAL: Skip scroll tracking for exam content
-            const activeTab = document.querySelector('.tab-content.active');
-            if (!activeTab || activeTab.id === 'module-exam') {
-              return; // Exam uses quiz interface, not scroll tracking
-            }
-            
-            const scrollPercentage = (contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight)) * 100;
-            progressData.readingProgress = Math.min(100, Math.round(scrollPercentage));
-            
-            console.log(`📖 Scroll progress: ${progressData.readingProgress}%`);
-            
-            // Update Mark Complete button state based on scroll
-            updateMarkCompleteButtonState(progressData.readingProgress);
-            
-            // NOTE: updateMarkCompleteButtonState already handles finding the right elements in active tab
-            // No need to update scrollProgressEl separately - it's done in that function
-            
-            // Save progress to localStorage (but don't mark as complete or save to Firestore)
-            const module = courseModules[currentModuleIndex];
-            const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
-            const progressKey = `progress_${courseId}_module_${moduleId}`;
-            localStorage.setItem(progressKey, JSON.stringify(progressData));
-            
-          }, 300);
-        });
-      }
+
+      setupReadingScrollTracking();
+
+      // Sync UI with current scroll position (e.g. user already scrolled before listener attached)
+      setTimeout(() => {
+        const currentProgress = progressData.contentRead
+          ? 100
+          : Math.max(progressData.readingProgress || 0, measureReadingProgress());
+        console.log(`🎯 Initializing visual elements with progress: ${currentProgress}%`);
+        if (!progressData.contentRead) {
+          progressData.readingProgress = currentProgress;
+          persistReadingProgress();
+        }
+        updateMarkCompleteButtonState(currentProgress);
+      }, 250);
     }
     
     function updateProgressIndicator() {

@@ -1,0 +1,1055 @@
+/* RD Genealogy — Concept A (dark canvas, arrows, contrast) */
+
+.dos-tree-shell {
+  margin: 20px 0 24px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #27272a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* —— Toolbar (light, matches DOS content) —— */
+.dos-tree-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.dos-tree-toolbar-title {
+  flex: 1 1 220px;
+}
+
+.dos-tree-toolbar h4 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.dos-tree-toolbar-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #71717a;
+}
+
+.dos-tree-toolbar-sub code {
+  font-size: 12px;
+  background: #f4f4f5;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.dos-tree-toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dos-tree-toggle {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dos-tree-toggle:hover {
+  background: #e4e4e7;
+}
+
+.dos-tree-toggle[aria-pressed="true"] {
+  background: #18181b;
+  color: #fff;
+}
+
+.dos-tree-search-wrap {
+  position: relative;
+  flex: 0 1 260px;
+}
+
+.dos-tree-search-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1aa;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.dos-tree-search {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  font-size: 14px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.dos-tree-search:focus {
+  outline: none;
+  border-color: #00b894;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.2);
+}
+
+/* —— Body —— */
+.dos-tree-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  background: #18181b;
+}
+
+/* —— Dark canvas (tree area only) —— */
+.dos-tree-canvas-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.dos-tree-canvas-tools {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  background: rgba(24, 24, 27, 0.92);
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.dos-tree-mode-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  background: #27272a;
+  color: #e4e4e7;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dos-tree-mode-btn:hover {
+  background: #3f3f46;
+  border-color: #71717a;
+}
+
+.dos-tree-mode-btn[aria-pressed="true"] {
+  background: #00b894;
+  border-color: #00b894;
+  color: #fff;
+}
+
+.dos-tree-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 6px;
+  border-left: 1px solid #52525b;
+  margin-left: 2px;
+}
+
+.dos-tree-zoom-btn {
+  padding: 6px 9px;
+  min-width: 32px;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  background: #27272a;
+  color: #e4e4e7;
+  cursor: pointer;
+}
+
+.dos-tree-zoom-btn:hover {
+  background: #3f3f46;
+}
+
+.dos-tree-zoom-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #a1a1aa;
+  min-width: 36px;
+  text-align: center;
+}
+
+.dos-tree-scroll-sizer {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.dos-tree-canvas.is-scroll-mode {
+  display: block;
+}
+
+.dos-tree-fullpage-hint {
+  display: none;
+  font-size: 11px;
+  color: #a1a1aa;
+  padding-left: 8px;
+  border-left: 1px solid #52525b;
+  margin-left: 4px;
+}
+
+.dos-tree-shell.is-tree-fullpage .dos-tree-fullpage-hint {
+  display: inline;
+}
+
+.dos-tree-touch-hint {
+  display: none;
+  font-size: 11px;
+  color: #a1a1aa;
+  flex: 1 1 100%;
+  line-height: 1.35;
+  padding-top: 2px;
+}
+
+.dos-tree-tools-more {
+  display: none;
+  padding: 6px 10px;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  background: #27272a;
+  color: #e4e4e7;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.dos-tree-shell.is-touch-ui .dos-tree-touch-hint {
+  display: block;
+}
+
+.dos-tree-shell.is-touch-ui .dos-tree-tools-more {
+  display: inline-flex;
+}
+
+.dos-tree-shell.is-touch-ui .dos-tree-tool-btn {
+  display: none;
+}
+
+.dos-tree-shell.is-touch-ui .dos-tree-canvas-tools.is-tools-expanded .dos-tree-tool-btn {
+  display: inline-block;
+  flex: 1 1 auto;
+}
+
+.dos-tree-shell.is-touch-ui .dos-tree-fullpage-hint {
+  display: none !important;
+}
+
+.dos-tree-shell.is-touch-ui.is-tree-fullpage .dos-tree-touch-hint {
+  display: block;
+}
+
+/* Full-page overlay (genealogy block only — toolbar + detail unchanged in DOM) */
+.dos-tree-shell.is-tree-fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+}
+
+body.dos-tree-fullpage-open {
+  overflow: hidden;
+}
+
+.dos-tree-shell.is-tree-fullpage .dos-tree-body {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.dos-tree-shell.is-tree-fullpage .dos-tree-canvas {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.dos-tree-shell.is-tree-fullpage .dos-tree-detail {
+  max-height: none;
+}
+
+.dos-tree-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 480px;
+  max-height: min(68vh, 640px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 184, 148, 0.1) 0%, transparent 55%),
+    linear-gradient(180deg, #1a1a1e 0%, #121214 100%);
+  border-bottom: 1px solid #27272a;
+}
+
+/* Default: scroll (Option 1) */
+.dos-tree-canvas.is-scroll-mode {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+.dos-tree-canvas.is-scroll-mode .dos-tree-scaler {
+  margin: 32px 48px 48px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* Full page: drag to pan (no zoom scale) */
+.dos-tree-canvas.is-fullpage-mode {
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dos-tree-canvas.is-fullpage-mode.is-panning {
+  cursor: grabbing;
+}
+
+.dos-tree-canvas.is-fullpage-mode .dos-tree-scaler {
+  margin: 0;
+  display: block;
+}
+
+.dos-tree-scaler {
+  position: relative;
+  transform-origin: 0 0;
+}
+
+.dos-genealogy-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.dos-genealogy-edge {
+  fill: none;
+  stroke: url(#dosEdgeGrad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.95;
+}
+
+.dos-genealogy-arrowhead {
+  fill: #34d399;
+}
+
+.dos-genealogy-nodes {
+  position: relative;
+  z-index: 2;
+}
+
+.dos-genealogy-node-wrap {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+/* —— Nodes —— */
+.dos-genealogy-node {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+  padding: 12px 14px 10px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  font: inherit;
+  color: #fafafa;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.dos-tree-shell.is-leader-root .dos-genealogy-node {
+  min-height: calc(100% + 6px);
+  padding: 14px 16px 12px;
+}
+
+.dos-tree-shell.is-leader-root .dos-gn-name {
+  font-size: 19px;
+}
+
+.dos-tree-shell.is-leader-root .dos-gn-code {
+  font-size: 12px;
+}
+
+.dos-genealogy-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+.dos-gn-branch-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fafafa;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dos-gn-branch-btn:active {
+  background: #00b894;
+  border-color: #00b894;
+}
+
+.dos-tree-shell:not(.is-touch-ui) .dos-gn-branch-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.dos-tree-shell:not(.is-touch-ui) .dos-gn-branch-btn:hover {
+  opacity: 1;
+  background: rgba(0, 184, 148, 0.85);
+}
+
+.dos-genealogy-node.is-selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.5), 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.dos-genealogy-node.is-dimmed {
+  opacity: 0.28;
+}
+
+/* RD root — teal pill */
+.dos-genealogy-node.is-rd {
+  border-radius: 999px;
+  background: linear-gradient(145deg, #00d4aa 0%, #00b894 45%, #009b7d 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.dos-genealogy-node.is-rd .dos-gn-code {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Depth 1 — zinc */
+.dos-genealogy-node.is-developing {
+  background: linear-gradient(160deg, #3f3f46 0%, #27272a 100%);
+  border-color: #f97316;
+}
+
+.dos-genealogy-node.is-senior {
+  background: linear-gradient(160deg, #4c1d95 0%, #2e1065 100%);
+  border-color: #a78bfa;
+}
+
+.dos-genealogy-node.is-ambassador {
+  background: linear-gradient(160deg, #3f3f46 0%, #27272a 100%);
+  border-color: #52525b;
+}
+
+.dos-gn-role,
+.dos-gn-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: 0.95;
+}
+
+.dos-gn-badge {
+  color: #fdba74;
+}
+
+.dos-genealogy-node.is-senior .dos-gn-badge {
+  color: #c4b5fd;
+}
+
+.dos-genealogy-node.is-ambassador .dos-gn-badge {
+  color: #a1a1aa;
+}
+
+.dos-gn-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.dos-gn-code {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #a1a1aa;
+  margin-bottom: 6px;
+}
+
+.dos-genealogy-node.is-rd .dos-gn-name {
+  font-size: 15px;
+}
+
+.dos-gn-recruits {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e4e4e7;
+}
+
+.dos-gn-recruits--muted {
+  color: #71717a;
+  font-weight: 500;
+}
+
+.dos-gn-bar {
+  width: 100%;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 99px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.dos-gn-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #00b894);
+  border-radius: 99px;
+}
+
+/* Legend */
+.dos-tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 12px 20px;
+  font-size: 12px;
+  color: #a1a1aa;
+  background: #121214;
+  border-top: 1px solid #27272a;
+}
+
+.dos-tree-legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+.dos-tree-legend-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dos-tree-legend-rd::before {
+  background: #00b894;
+  border-radius: 99px;
+}
+
+.dos-tree-legend-dev::before {
+  background: #27272a;
+  border: 2px solid #f97316;
+}
+
+.dos-tree-legend-amb::before {
+  background: #27272a;
+  border: 2px solid #52525b;
+}
+
+.dos-tree-legend-arrow {
+  margin-left: auto;
+  color: #00b894;
+  font-weight: 600;
+}
+
+.dos-tree-empty-state {
+  color: #a1a1aa;
+  text-align: center;
+  padding: 80px 24px;
+  font-size: 15px;
+}
+
+/* —— Detail panel —— */
+.dos-tree-detail {
+  padding: 22px 20px;
+  background: #fafafa;
+  border-left: 1px solid #27272a;
+  overflow-y: auto;
+  max-height: min(68vh, 640px);
+}
+
+.dos-tree-detail-card {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #3f3f46;
+}
+
+.dos-tree-detail-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #00b894;
+}
+
+.dos-tree-detail-card h5 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #18181b;
+  line-height: 1.2;
+}
+
+.dos-tree-detail-id {
+  display: block;
+  font-size: 12px;
+  padding: 6px 10px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  color: #52525b;
+  margin-bottom: 16px;
+}
+
+.dos-tree-detail-email {
+  margin: -8px 0 12px;
+  font-size: 13px;
+  color: #71717a;
+  word-break: break-all;
+}
+
+.dos-tree-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dos-tree-detail-metrics .val {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: #18181b;
+}
+
+.dos-tree-detail-metrics .lbl {
+  font-size: 11px;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dos-tree-detail-h {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #71717a;
+}
+
+.dos-tree-leader-list,
+.dos-tree-recruit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dos-tree-leader-list li,
+.dos-tree-recruit-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.dos-tree-leader-list em {
+  font-style: normal;
+  font-weight: 700;
+  color: #00b894;
+  background: #ecfdf5;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 13px;
+}
+
+.dos-tree-recruit-list li {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dos-tree-recruit-list code {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.dos-tree-detail-line {
+  margin: 0 0 12px;
+}
+
+.dos-tree-senior-progress {
+  margin: 12px 0;
+}
+
+.dos-tree-senior-bar {
+  height: 8px;
+  background: #e4e4e7;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.dos-tree-senior-bar div {
+  height: 100%;
+  background: linear-gradient(90deg, #f97316, #00b894);
+  border-radius: 99px;
+}
+
+.dos-tree-senior-progress span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c2410c;
+}
+
+.dos-tree-detail-muted {
+  color: #71717a;
+  padding: 24px 0;
+}
+
+.dos-tree-detail-focus-btn {
+  display: block;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #00b894;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  cursor: pointer;
+  text-align: center;
+}
+
+.dos-tree-detail-focus-btn:hover {
+  background: #d1fae5;
+}
+
+/* Scale 1 — focus picker, collapse tools, large-region guard */
+.dos-tree-focus-wrap {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 6px;
+  border-left: 1px solid #52525b;
+  margin-left: 2px;
+}
+
+.dos-tree-focus-select {
+  max-width: 200px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  background: #27272a;
+  color: #e4e4e7;
+  cursor: pointer;
+}
+
+.dos-tree-tool-btn {
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+  background: #27272a;
+  color: #a1a1aa;
+  cursor: pointer;
+}
+
+.dos-tree-tool-btn:hover {
+  background: #3f3f46;
+  color: #e4e4e7;
+}
+
+.dos-tree-scale-banner {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #d4d4d8;
+  background: #27272a;
+  border-bottom: 1px solid #3f3f46;
+}
+
+.dos-tree-scale-banner strong {
+  color: #fafafa;
+}
+
+.dos-tree-scale-link {
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #34d399;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.dos-tree-scale-panel {
+  padding: 48px 32px;
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  color: #e4e4e7;
+}
+
+.dos-tree-scale-panel h5 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #fafafa;
+}
+
+.dos-tree-scale-panel p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #a1a1aa;
+}
+
+.dos-tree-scale-panel-sub {
+  margin-bottom: 20px !important;
+}
+
+.dos-tree-scale-leaders {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+.dos-tree-scale-leader-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid #3f3f46;
+  border-radius: 10px;
+  background: #27272a;
+  color: #e4e4e7;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dos-tree-scale-leader-btn:hover {
+  border-color: #00b894;
+  background: #3f3f46;
+}
+
+.dos-tree-scale-leader-btn strong {
+  font-size: 14px;
+  color: #fafafa;
+}
+
+.dos-tree-scale-leader-btn span {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.dos-tree-scale-show-full {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px dashed #52525b;
+  border-radius: 8px;
+  background: transparent;
+  color: #a1a1aa;
+  cursor: pointer;
+}
+
+.dos-tree-scale-show-full:hover {
+  border-color: #71717a;
+  color: #e4e4e7;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dos-genealogy-node.is-pipeline {
+  border-style: dashed;
+  border-color: #f59e0b;
+  background: linear-gradient(160deg, rgba(120, 53, 15, 0.9) 0%, rgba(69, 26, 3, 0.95) 100%);
+  color: #fffbeb;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.18);
+}
+
+.dos-gn-badge--pipeline {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.dos-genealogy-edge.is-pipeline-edge {
+  stroke: #fbbf24;
+  stroke-dasharray: 6 4;
+  opacity: 0.75;
+}
+
+.dos-tree-legend-pipeline {
+  color: #fbbf24;
+}
+
+.dos-tree-legend-pipeline::before {
+  background: transparent;
+  border: 2px dashed #f59e0b;
+  border-radius: 4px;
+}
+
+.dos-tree-pipeline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #27272a;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+}
+
+.dos-tree-pipeline-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #00b894;
+}
+
+.dos-tree-pipeline-count {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.dos-tree-pipeline-help {
+  font-size: 11px;
+  color: #71717a;
+  margin-left: 4px;
+}
+
+@media (max-width: 960px) {
+  .dos-tree-body {
+    grid-template-columns: 1fr;
+  }
+
+  .dos-tree-detail {
+    border-left: none;
+    border-top: 1px solid #27272a;
+    max-height: none;
+  }
+
+  .dos-tree-canvas {
+    min-height: 400px;
+    max-height: min(55vh, 520px);
+  }
+
+  .dos-tree-legend-arrow {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .dos-tree-canvas-tools {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    max-width: calc(100% - 16px);
+  }
+
+  .dos-tree-mode-btn,
+  .dos-tree-zoom-btn,
+  .dos-tree-tools-more {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 14px;
+  }
+
+  .dos-tree-focus-select {
+    max-width: min(200px, 42vw);
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .dos-tree-shell.is-touch-ui .dos-genealogy-node {
+    padding: 14px 16px 12px;
+  }
+
+  .dos-tree-shell.is-touch-ui .dos-gn-branch-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .dos-tree-detail-focus-btn {
+    min-height: 48px;
+    font-size: 15px;
+  }
+}

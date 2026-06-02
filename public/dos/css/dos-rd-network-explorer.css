@@ -1,0 +1,411 @@
+/* RD Network explorer (Scale 2) */
+
+.dos-net-explorer {
+  margin-top: 8px;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.dos-net-explorer-head {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid #f4f4f5;
+  background: linear-gradient(180deg, #fafafa 0%, #fff 100%);
+}
+
+.dos-net-explorer-head h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #18181b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dos-net-explorer-head h4 i {
+  color: #00b894;
+}
+
+.dos-net-explorer-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dos-net-explorer-head p {
+  margin: 0;
+  font-size: 13px;
+  color: #71717a;
+}
+
+.dos-net-explorer-cache {
+  font-size: 12px;
+  font-weight: 600;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.dos-net-explorer-exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f4f4f5;
+}
+
+.dos-net-explorer-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #3f3f46;
+  cursor: pointer;
+}
+
+.dos-net-explorer-export-btn:hover {
+  border-color: #00b894;
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.dos-net-explorer-export-btn--muted {
+  color: #71717a;
+}
+
+.dos-net-explorer-export-btn--muted:hover {
+  background: #f4f4f5;
+  border-color: #a1a1aa;
+  color: #3f3f46;
+}
+
+.dos-net-explorer-export-btn[aria-busy="true"] {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.dos-net-explorer-rollups {
+  border-bottom: 1px solid #e4e4e7;
+  background: #fafafa;
+}
+
+.dos-net-explorer-rollups summary {
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #18181b;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dos-net-explorer-rollups summary::-webkit-details-marker {
+  display: none;
+}
+
+.dos-net-explorer-rollups summary em {
+  font-style: normal;
+  font-weight: 600;
+  color: #00b894;
+}
+
+.dos-net-explorer-rollups-sub {
+  margin: 0 18px 10px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.dos-net-explorer-rollups .dos-net-explorer-table-wrap {
+  padding: 0 12px 14px;
+}
+
+.dos-net-explorer-tree-btn--sm {
+  padding: 4px 8px;
+  font-size: 11px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.dos-net-explorer-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  padding: 14px 18px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.dos-net-explorer-search-wrap {
+  position: relative;
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.dos-net-explorer-search-wrap i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1aa;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.dos-net-explorer-search {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  font-size: 14px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.dos-net-explorer-search:focus {
+  outline: none;
+  border-color: #00b894;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.15);
+}
+
+.dos-net-explorer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #71717a;
+}
+
+.dos-net-explorer-field select {
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #3f3f46;
+  min-width: 140px;
+}
+
+.dos-net-explorer-count {
+  flex: 1 1 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+}
+
+@media (min-width: 640px) {
+  .dos-net-explorer-count {
+    flex: 1 1 auto;
+    text-align: right;
+    margin-left: auto;
+  }
+}
+
+.dos-net-explorer-table-wrap {
+  margin: 0;
+}
+
+.dos-net-explorer-table td code {
+  font-size: 11px;
+  color: #52525b;
+}
+
+.dos-net-explorer-name strong {
+  display: block;
+  font-size: 14px;
+  color: #18181b;
+}
+
+.dos-net-explorer-name code {
+  display: block;
+  margin-top: 2px;
+}
+
+.dos-net-explorer-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+.dos-net-explorer-rank {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dos-net-explorer-rank.is-senior {
+  color: #6c5ce7;
+}
+
+.dos-net-explorer-rank.is-developing {
+  color: #c2410c;
+}
+
+.dos-net-explorer-rank.is-amb {
+  color: #71717a;
+}
+
+.dos-net-explorer-progress {
+  font-weight: 500;
+  color: #a16207;
+}
+
+.dos-net-explorer-tree-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #00b894;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dos-net-explorer-tree-btn:hover {
+  background: #d1fae5;
+}
+
+.dos-net-explorer-tree-btn i {
+  font-size: 11px;
+}
+
+.dos-net-explorer-empty {
+  text-align: center;
+  color: #71717a;
+  padding: 24px 16px !important;
+}
+
+/* Mobile cards */
+.dos-net-explorer-cards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.dos-net-explorer-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+}
+
+.dos-net-explorer-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dos-net-explorer-card-head code {
+  display: block;
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.dos-net-explorer-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.dos-net-explorer-card-meta dt {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.dos-net-explorer-card-meta dd {
+  margin: 2px 0 0;
+  color: #18181b;
+}
+
+.dos-net-explorer-card .dos-net-explorer-tree-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.dos-net-explorer .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .dos-net-explorer-exports {
+    flex-direction: column;
+  }
+
+  .dos-net-explorer-export-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .dos-net-explorer-list-table-wrap {
+    display: none;
+  }
+
+  .dos-net-explorer-rollups .dos-net-explorer-table-wrap {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dos-net-explorer-cards {
+    display: flex;
+  }
+
+  .dos-net-explorer-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dos-net-explorer-field select,
+  .dos-net-explorer-search {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .dos-net-explorer-count {
+    text-align: left;
+  }
+}
