@@ -815,16 +815,73 @@
     return status === 'active' || status === 'approved';
   }
 
-  /** Direct recruits of a leader (verified), across recruiter field variants. */
-  async function loadDirectRecruits(db, leaderCode) {
+  function isDisplayableRecruitDoc(docId, d, loose) {
+    if (!docId || docId.indexOf('AMB-') !== 0 || !d) return false;
+    if (String(d.status || '').toLowerCase() === 'merged_duplicate') return false;
+    if (d.merged_into || d.mergedInto || d.is_form_intake_only) return false;
+    if (loose) return true;
+    return isActivatedRecruitData(d);
+  }
+
+  function buildCodeVariants(leaderCode) {
     var rawCode = String(leaderCode || '').trim();
     var code = normCode(rawCode);
-    if (!code) return [];
     var codeVariants = {};
     [rawCode, code, rawCode.toLowerCase()].forEach(function (v) {
       var key = String(v || '').trim();
       if (key) codeVariants[key] = true;
     });
+    return { code: code, codeVariants: codeVariants };
+  }
+
+  function recruiterMatchesLeader(d, leaderCode, codeVariants) {
+    var leader = normCode(leaderCode);
+    var fields = [
+      'recruitedBy', 'recruited_by', 'senior_code', 'recruited_by_senior',
+      'recruiter_code', 'regional_director', 'sponsor_code', 'upline_code'
+    ];
+    for (var i = 0; i < fields.length; i++) {
+      var v = normCode(d[fields[i]]);
+      if (!v) continue;
+      if (v === leader || codeVariants[v]) return true;
+    }
+    return false;
+  }
+
+  /** Scan all ambassadors in region and match recruiter fields client-side (Firestore index-safe fallback). */
+  async function loadDirectRecruitsFromRegion(db, leaderCode, rdCode, options) {
+    options = options || {};
+    var leader = normCode(leaderCode);
+    var rd = normCode(rdCode);
+    if (!leader || rd.indexOf('RD-') !== 0) return [];
+    var cv = buildCodeVariants(leaderCode);
+    var byId = {};
+    var queries = [
+      db.collection('ambassadors').where('rdCode', '==', rd).get(),
+      db.collection('ambassadors').where('regional_director_code', '==', rd).get()
+    ];
+    var snaps = await Promise.all(queries.map(function (q) {
+      return q.catch(function () { return { forEach: function () {} }; });
+    }));
+    snaps.forEach(function (snap) {
+      if (!snap || !snap.forEach) return;
+      snap.forEach(function (doc) {
+        if (!doc || !doc.id || doc.id === leader || byId[doc.id]) return;
+        var d = doc.data();
+        if (!isDisplayableRecruitDoc(doc.id, d, options.loose)) return;
+        if (!recruiterMatchesLeader(d, leader, cv.codeVariants)) return;
+        byId[doc.id] = { id: doc.id, data: d };
+      });
+    });
+    return Object.keys(byId).map(function (k) { return byId[k]; });
+  }
+
+  /** Direct recruits of a leader (verified), across recruiter field variants. */
+  async function loadDirectRecruits(db, leaderCode, options) {
+    options = options || {};
+    var cv = buildCodeVariants(leaderCode);
+    var code = cv.code;
+    if (!code) return [];
     var recruiterFields = [
       'recruitedBy',
       'recruited_by',
@@ -837,14 +894,12 @@
     function includeDoc(doc) {
       if (!doc || !doc.id || byId[doc.id]) return;
       var d = doc.data();
-      if (!d || !isActivatedRecruitData(d)) return;
-      if (String(d.status || '').toLowerCase() === 'merged_duplicate') return;
-      if (d.merged_into || d.mergedInto || d.is_form_intake_only) return;
+      if (!isDisplayableRecruitDoc(doc.id, d, options.loose)) return;
       byId[doc.id] = { id: doc.id, data: d };
     }
     var queries = [];
     recruiterFields.forEach(function (field) {
-      Object.keys(codeVariants).forEach(function (variant) {
+      Object.keys(cv.codeVariants).forEach(function (variant) {
         queries.push(
           db.collection('ambassadors').where(field, '==', variant).get()
             .catch(function () { return { forEach: function () {} }; })
@@ -856,7 +911,11 @@
       if (!snap || !snap.forEach) return;
       snap.forEach(includeDoc);
     });
-    return Object.keys(byId).map(function (k) { return byId[k]; });
+    var results = Object.keys(byId).map(function (k) { return byId[k]; });
+    if (!results.length && options.rdCode) {
+      results = await loadDirectRecruitsFromRegion(db, leaderCode, options.rdCode, options);
+    }
+    return results;
   }
 
   function mergeDirectRecruitsIntoMembers(members, recruitDocs, leaderCode, rdCode) {
@@ -965,7 +1024,7 @@
     }
 
     // RD regional query misses downline linked only via recruitedBy AMB-* — merge direct recruits.
-    var directRecruitDocs = await loadDirectRecruits(db, leader);
+    var directRecruitDocs = await loadDirectRecruits(db, leader, { rdCode: rdCode, loose: true });
     if (directRecruitDocs.length) {
       mergeDirectRecruitsIntoMembers(regional.members, directRecruitDocs, leader, rdCode);
     }
