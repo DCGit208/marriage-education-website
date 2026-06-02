@@ -139,6 +139,32 @@ Production: `/ambassador/senior-dashboard.html?v=20260528prod#role-targets`
 Preview: `/regional-director/rd-dashboard-test.html?v=20260528b#role-targets`  
 Production: `/regional-director/rd-dashboard.html?v=20260528prod#role-targets`
 
+### RD Network genealogy tree (Phase 1 + multi-role tree15)
+
+| What | Detail |
+|------|--------|
+| Spec | `public/dos/RD-NETWORK-GENEALOGY-TREE-BUILD.md`, `RD-GENEALOGY-INTERACTION-RULES.md` |
+| Modules | `dos-rd-network.js`, `dos-rd-network-tree.js`, `dos-rd-network-explorer.js` + CSS |
+| RD | `rd-dashboard.html` — full region + pipeline toggle |
+| Senior | `senior-dashboard.html` — org tree rooted on senior |
+| Ambassador | `dashboard.html` — mini tree when recruits or pending onboarding |
+| QA RD | `RD-AYIN-5087` — 13 paid ambassadors; Eileen 2 recruits; Ngonga 1; Perpetua chain under Leinyuy |
+
+**Network tab checks**
+
+1. Open **Network** — tree loads (default **Leaders only**); **not** full screen.
+2. **Full network** — branches collapsed by default; double-click or **Expand** on diagram tools.
+3. **Focus** dropdown (diagram tools, 12+ ambassadors): pick a leader → subtree only; banner **Show full diagram** clears focus.
+4. Click leader → detail **View this organization in tree** matches Focus.
+5. Scroll / Full page / zoom (− % + 1:1) per `RD-GENEALOGY-INTERACTION-RULES.md`.
+6. **Phone:** pinch zoom; tap **▸/▾** on tree cards; explorer shows **cards** with **Open in tree**.
+7. **Network explorer:** search `Eileen` or `AMB-EILE-5969` → **Open in tree** focuses diagram on that ambassador.
+8. Filter **Leaders** / **Direct to me**; counts match verified recruits.
+9. **Scale 3:** Leader rollups expand; **CSV — all** / **CSV — leaders** download; **PNG — tree**; **Refresh data** clears 5‑min cache.
+10. Hard-refresh if stale: `?v=20260602tree21` on network scripts/CSS.
+11. **Senior dashboard:** Network tab → org tree + **Show onboarding** for pending recruits.
+12. **Ambassador (developing):** tree appears when you have recruits or pending signups.
+
 Deploy when validated: `git push origin main` + Firebase hosting both targets.
 
 ## Phase 9 — Executive Network Director Role & targets

@@ -2685,6 +2685,7 @@
 
         // Refresh Payments
         function refreshPayments() {
+            if (!adminAccessGranted) return;
             loadPaymentParitySummary();
             loadPaymentsTable();
             loadRDPaymentsTable();
@@ -2693,6 +2694,7 @@
 
         // Load Section Data
         function loadSectionData(section) {
+            if (!adminAccessGranted) return;
             switch(section) {
                 case 'dashboard':
                     loadDashboardData();
@@ -3154,21 +3156,75 @@
         // CENTRALIZED AUTHENTICATION (Phase 2 Upgrade)
         // ==============================================
 
-        // Initialize UI State based on Auth
-        function updateUIForAuth(user) {
-            if (user) {
-                // User is authenticated
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('main-dashboard').classList.remove('hidden');
-                document.getElementById('adminName').textContent = user.email || 'Administrator';
-                
-                // Initialize Data
+        let adminAccessGranted = false;
+        let hasBootstrappedAdminData = false;
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('login-error');
+            if (!errorDiv) return;
+            errorDiv.textContent = message || 'Access denied.';
+            errorDiv.classList.add('show');
+        }
+
+        async function hasAdminAccess(user) {
+            if (!user) return false;
+            try {
+                const tokenResult = await user.getIdTokenResult(true);
+                if (tokenResult && tokenResult.claims && tokenResult.claims.admin === true) {
+                    return true;
+                }
+            } catch (error) {
+                console.warn('[Auth] Could not read token claims:', error);
+            }
+
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists) return false;
+                const role = String((userDoc.data().role || '')).toLowerCase();
+                return role === 'admin';
+            } catch (error) {
+                console.error('[Auth] Failed admin role lookup:', error);
+                return false;
+            }
+        }
+
+        // Initialize UI State based on Auth + Admin authorization
+        async function updateUIForAuth(user) {
+            const loginOverlay = document.getElementById('login-overlay');
+            const mainDashboard = document.getElementById('main-dashboard');
+
+            if (!user) {
+                adminAccessGranted = false;
+                hasBootstrappedAdminData = false;
+                loginOverlay.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
+                return;
+            }
+
+            const isAdmin = await hasAdminAccess(user);
+            if (!isAdmin) {
+                adminAccessGranted = false;
+                hasBootstrappedAdminData = false;
+                loginOverlay.classList.remove('hidden');
+                mainDashboard.classList.add('hidden');
+                showLoginError('Access denied. Admin role is required.');
+                try {
+                    await authService.logout();
+                } catch (error) {
+                    console.warn('[Auth] Auto-logout after denied access failed:', error);
+                }
+                return;
+            }
+
+            adminAccessGranted = true;
+            loginOverlay.classList.add('hidden');
+            mainDashboard.classList.remove('hidden');
+            document.getElementById('adminName').textContent = user.email || 'Administrator';
+
+            if (!hasBootstrappedAdminData) {
+                hasBootstrappedAdminData = true;
                 loadDashboardData();
                 loadNotifications();
-            } else {
-                // User is NOT authenticated
-                document.getElementById('login-overlay').classList.remove('hidden');
-                document.getElementById('main-dashboard').classList.add('hidden');
             }
         }
 
@@ -3177,9 +3233,9 @@
             
             // 1. Subscribe to Auth State Changes (Replaces simple check)
             if (window.authService) {
-                authService.onAuthStateChanged((user) => {
+                authService.onAuthStateChanged(async (user) => {
                     console.log("Auth State Changed:", user ? user.email : "Logged Out");
-                    updateUIForAuth(user);
+                    await updateUIForAuth(user);
                 });
             } else {
                 console.error("AuthService not loaded!");
@@ -3231,7 +3287,7 @@
 
             // Auto-refresh notifications every 30 seconds (only if logged in)
             setInterval(() => {
-                if(authService && authService.currentUser) loadNotifications();
+                if (authService && authService.currentUser && adminAccessGranted) loadNotifications();
             }, 30000);
         });
 

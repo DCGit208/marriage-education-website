@@ -9,7 +9,8 @@
     stats: null,
     metrics: null,
     name: 'Ambassador',
-    primaryLink: ''
+    primaryLink: '',
+    verifiedDirectRecruits: null
   };
 
   var SENIOR_TARGET = 10;
@@ -284,9 +285,9 @@
     var m = getMetrics(stats, code);
     var rs = regionStats || {
       seniorCount: 0, totalAmbassadors: 0, totalUnits: 0,
-      networkOverrideUsd: 0, activeSeniors: 0, inactiveSeniors: 0, seniorTarget: 50, seniorPct: 0
+      networkOverrideUsd: 0, activeSeniors: 0, inactiveSeniors: 0, seniorTarget: 50, seniorPct: 0,
+      directToRd: 0, developingCount: 0, underAmbassadors: 0
     };
-    var units = m ? m.deployment.unitsDeployed : unitsDeployed(stats);
     var earnings = m ? m.commissions.allTimeXaf : (stats.commission_earned || stats.commissionEarned || 0);
     var activeSubs = m ? m.subscribers.active : ((stats.sbdReferrals || {}).subscribers || 0);
     var overrideLabel = global.DOSEconomics
@@ -297,11 +298,13 @@
     if (!el) return;
 
     el.innerHTML =
+      kpi('Total in region', String(rs.totalAmbassadors), (rs.directToRd || 0) + ' direct · ' +
+        (rs.underAmbassadors || 0) + ' in chains') +
       kpi('Senior ambassadors', String(rs.seniorCount) + ' / ' + rs.seniorTarget, rs.seniorPct + '% regional target') +
-      kpi('Network ambassadors', String(rs.totalAmbassadors), 'Across senior teams') +
-      kpi('Network units', String(rs.totalUnits), 'Regional deployment volume') +
+      kpi('Developing leaders', String(rs.developingCount || 0), 'Building toward Senior (10 recruits)') +
+      kpi('Network units', String(rs.totalUnits), 'All linked ambassadors') +
       kpi('Est. network override', overrideLabel, '5% on senior team volume') +
-      kpi('Seniors on track', String(rs.activeSeniors), rs.inactiveSeniors + ' need coaching') +
+      kpi('Seniors on track', String(rs.activeSeniors), (rs.inactiveSeniors || 0) + ' need coaching') +
       kpi('Your SBD subscribers', String(activeSubs), 'Personal recurring base') +
       kpi('Your total commissions', fmtUsd(earnings), 'All-time earned (USD)');
   }
@@ -316,7 +319,9 @@
       return;
     }
     var m = getMetrics(stats, code);
-    var recruits = m ? m.network.recruits : (stats.recruits_count || 0);
+    var recruits = state.verifiedDirectRecruits != null
+      ? Number(state.verifiedDirectRecruits)
+      : (m ? m.network.recruits : (stats.recruits_count || 0));
     var seniorTarget = m ? m.network.seniorTarget : SENIOR_TARGET;
     var recruitPct = Math.min(100, Math.round((recruits / seniorTarget) * 100));
     var units = m ? m.deployment.unitsDeployed : unitsDeployed(stats);
@@ -375,11 +380,35 @@
     renderSbdPanel(stats);
   }
 
+  function getEffectiveRdCode(stats, code) {
+    if (global.MEAmbassadorAccountResolve && global.MEAmbassadorAccountResolve.getEffectiveRdCode) {
+      return global.MEAmbassadorAccountResolve.getEffectiveRdCode(stats, code);
+    }
+    var c = (code || '').toString().trim().toUpperCase();
+    if (c.indexOf('RD-') === 0) return c;
+    if (c.indexOf('AMB-') === 0) return c.replace(/^AMB-/, 'RD-');
+    return c;
+  }
+
+  function resolveSbdReferralCode(stats) {
+    if (global.MEAmbassadorAccountResolve && global.MEAmbassadorAccountResolve.deriveSbdReferralCode) {
+      return global.MEAmbassadorAccountResolve.deriveSbdReferralCode(stats);
+    }
+    if (!stats) return '';
+    var direct = (stats.sbdReferralCode || stats.sbd_referral_code || '').toString().trim();
+    if (direct) return direct;
+    var rd = (stats.rd_code || stats.rdCode || stats.code || '').toString().trim();
+    if (rd.indexOf('RD-') === 0) return rd.replace(/^RD-/, 'SBD-');
+    var amb = (stats.ambassador_code || stats.existingAmbCode || '').toString().trim();
+    if (amb.indexOf('AMB-') === 0) return amb.replace(/^AMB-/, 'SBD-');
+    return '';
+  }
+
   function renderSbdPanel(stats) {
     var body = document.getElementById('dosSbdBody');
     if (!body) return;
 
-    var sbdCode = stats.sbdReferralCode;
+    var sbdCode = resolveSbdReferralCode(stats);
     if (!sbdCode) {
       body.innerHTML =
         '<p class="dos-sbd-empty"><i class="fa-solid fa-circle-info"></i> SBD Network referral code not provisioned on your account yet. ' +
@@ -563,33 +592,335 @@
     }
   }
 
-  async function loadRecruits(code, stats) {
-    var list = document.getElementById('dosRecruitList');
-    var countEl = document.getElementById('dosRecruitCount');
-    if (!list) return;
-    var recruits = [];
+  function rdNetworkLoadOptions(stats) {
+    var opts = { rdEmail: (stats && stats.email) || '' };
+    var linked = (stats && (stats.ambassador_code || stats.existingAmbCode || stats.linkedAmbassadorId)) || '';
+    if (linked) {
+      opts.linkedAmbassadorCode = linked;
+      opts.linkedAmbassadorCodes = [linked];
+    }
+    return opts;
+  }
+
+  async function loadRdNetworkData(code, forceRefresh) {
+    if (!isRdPreview()) return;
+    var rdCode = getEffectiveRdCode(state.stats, code);
+    if (!global.DOSRdNetwork) {
+      state.rdNetworkLoadError = 'Network module did not load. Hard-refresh the page (or clear site data on iPhone).';
+      return;
+    }
+    if (forceRefresh && global.DOSRdNetwork.clearNetworkCache) {
+      global.DOSRdNetwork.clearNetworkCache(rdCode);
+    }
     try {
-      var queries = [
-        db().collection('ambassadors').where('recruitedBy', '==', code).get(),
-        db().collection('ambassadors').where('senior_code', '==', code).get(),
-        db().collection('ambassadors').where('rdCode', '==', code).get()
-      ];
-      var snaps = await Promise.all(queries);
-      var seen = {};
-      snaps.forEach(function (snap) {
-        snap.forEach(function (doc) {
-          if (!seen[doc.id]) {
-            seen[doc.id] = true;
-            recruits.push({ id: doc.id, data: doc.data() });
-          }
+      var loader = global.DOSRdNetwork.loadRdNetworkCached || global.DOSRdNetwork.loadRdNetwork;
+      var net = await loader(db(), rdCode, Object.assign({}, rdNetworkLoadOptions(state.stats), {
+        forceRefresh: !!forceRefresh
+      }));
+      state.rdNetwork = net;
+      state.rdNetworkStats = net.stats;
+      state.rdNetworkQueriedCode = rdCode;
+      state.rdNetworkLoadError = null;
+    } catch (err) {
+      console.error('loadRdNetworkData', err);
+      state.rdNetwork = null;
+      state.rdNetworkStats = null;
+      state.rdNetworkLoadError = err.message || 'Network load failed';
+    }
+  }
+
+  function renderNetworkStatusNote(rdCode, stats) {
+    var blurb = document.getElementById('dosNetworkBlurb');
+    if (!blurb || !isRdPreview()) return;
+    var base = 'Everyone linked to your RD code — verified paid ambassadors only. Regional target: <strong>50 seniors</strong>.';
+    var queried = state.rdNetworkQueriedCode || getEffectiveRdCode(stats, rdCode);
+    if (state.rdNetworkLoadError) {
+      blurb.innerHTML = base + '<br><span style="color:#991b1b;font-size:13px;margin-top:8px;display:block">' +
+        escapeHtml(state.rdNetworkLoadError) + ' (queried <code>' + escapeHtml(queried) + '</code>)</span>';
+      return;
+    }
+    if (state.rdNetwork && state.rdNetwork.stats) {
+      var cacheNote = '';
+      if (global.DOSRdNetwork && state.rdNetwork.cachedAt) {
+        if (state.rdNetwork.fromCache) {
+          cacheNote = ' · <span title="Session cache (5 min)">Cached ' +
+            escapeHtml(global.DOSRdNetwork.formatCacheAge(state.rdNetwork.cachedAt)) + '</span>';
+        } else {
+          cacheNote = ' · Live from Firestore';
+        }
+      }
+      blurb.innerHTML = base + '<br><span style="color:#71717a;font-size:12px;margin-top:6px;display:block">Region code <code>' +
+        escapeHtml(queried) + '</code> · ' + state.rdNetwork.stats.totalAmbassadors + ' linked ambassador(s)' +
+        cacheNote + '</span>';
+    }
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  async function loadLeaderNetworkData(leaderCode, forceRefresh) {
+    if (!global.DOSRdNetwork || !global.DOSRdNetwork.loadLeaderNetwork) return null;
+    var leader = String(leaderCode || '').trim().toUpperCase();
+    if (!leader) return null;
+    if (forceRefresh) state.leaderNetwork = null;
+    if (state.leaderNetwork && state.leaderNetworkQueriedCode === leader && !forceRefresh) {
+      return state.leaderNetwork;
+    }
+    try {
+      var net = await global.DOSRdNetwork.loadLeaderNetwork(db(), leader, {});
+      state.leaderNetwork = net;
+      state.leaderNetworkQueriedCode = leader;
+      return net;
+    } catch (err) {
+      console.error('loadLeaderNetworkData', err);
+      state.leaderNetwork = null;
+      return { loadError: err.message || 'Network load failed', leaderCode: leader, members: [], pipeline: [] };
+    }
+  }
+
+  function resetNetworkTreeMount(treeEl) {
+    if (!treeEl) return;
+    if (global.DOSRdNetworkTree) global.DOSRdNetworkTree.destroy();
+    state.rdTreeController = null;
+    treeEl.innerHTML = '';
+  }
+
+  function mountGenealogyTree(treeEl, net, opts) {
+    if (!treeEl || !global.DOSRdNetworkTree) return null;
+    treeEl.innerHTML = '';
+    var rootMember = (net.graph && net.graph.byId && net.graph.byId[opts.rootCode]) || null;
+    return global.DOSRdNetworkTree.init(treeEl, {
+      rootCode: opts.rootCode,
+      rdCode: opts.rootCode,
+      rootKind: opts.rootKind || 'leader',
+      rootName: opts.rootName,
+      rootMember: rootMember,
+      members: net.members || [],
+      pipelineMembers: net.pipeline || [],
+      graph: net.graph || { children: {}, byId: {} },
+      stats: net.stats || {},
+      defaultView: opts.defaultView
+    });
+  }
+
+  function renderLeaderNetworkBlurb(net) {
+    var blurb = document.getElementById('dosNetworkBlurb');
+    if (!blurb) return;
+    var pipelineN = (net.pipeline && net.pipeline.length) || 0;
+    blurb.innerHTML = 'Your verified organization. Use <strong>Include pending signups</strong> to also view people still in payment/approval.' +
+      (pipelineN ? ' <span style="color:#71717a">(' + pipelineN + ' awaiting activation)</span>' : '');
+  }
+
+  async function loadVerifiedDirectRecruits(leaderCode) {
+    var rawCode = String(leaderCode || '').trim();
+    var code = rawCode.toUpperCase();
+    if (!code) return [];
+    var codeVariants = {};
+    [rawCode, code, rawCode.toLowerCase()].forEach(function (v) {
+      var key = String(v || '').trim();
+      if (key) codeVariants[key] = true;
+    });
+    var recruiterFields = [
+      'recruitedBy',
+      'recruited_by',
+      'senior_code',
+      'recruited_by_senior',
+      'recruiter_code',
+      'regional_director'
+    ];
+    var byId = {};
+    function isActivatedRecruit(d) {
+      if (!d) return false;
+      if (d.activated_at || d.activatedAt || d.activation_date || d.activatedOn) return true;
+      var status = String(d.status || '').toLowerCase();
+      return status === 'active' || status === 'approved';
+    }
+    function includeDoc(doc) {
+      if (!doc || !doc.id || byId[doc.id]) return;
+      var d = doc.data();
+      if (!d || !isActivatedRecruit(d)) return;
+      if (String(d.status || '').toLowerCase() === 'merged_duplicate') return;
+      if (d.merged_into || d.mergedInto || d.is_form_intake_only) return;
+      byId[doc.id] = { id: doc.id, data: d };
+    }
+    try {
+      var queries = [];
+      recruiterFields.forEach(function (field) {
+        Object.keys(codeVariants).forEach(function (variant) {
+          queries.push(
+            db().collection('ambassadors').where(field, '==', variant).get()
+              .catch(function () { return { forEach: function () {} }; })
+          );
         });
       });
+      var snaps = await Promise.all(queries);
+      snaps.forEach(function (snap) {
+        if (!snap || !snap.forEach) return;
+        snap.forEach(includeDoc);
+      });
     } catch (e) {
-      console.warn('Recruit queries', e);
+      console.warn('Direct recruit queries', e);
+    }
+    return Object.keys(byId).map(function (k) { return byId[k]; });
+  }
+
+  async function loadRecruits(code, stats, forceRefresh) {
+    var list = document.getElementById('dosRecruitList');
+    var countEl = document.getElementById('dosRecruitCount');
+    var summaryEl = document.getElementById('dosNetworkSummary');
+    var treeEl = document.getElementById('dosRecruitmentTree');
+    if (!list) return;
+
+    var leaderCode = String(code || '').trim().toUpperCase();
+    if (!isRdPreview()) state.verifiedDirectRecruits = null;
+    var rdCode = isRdPreview() ? getEffectiveRdCode(stats, code) : leaderCode;
+    var useTree = !!treeEl && global.DOSRdNetworkTree;
+
+    if (isRdPreview() || isSeniorPreview() || useTree) {
+      list.innerHTML = '<div class="dos-empty">Loading network…</div>';
+      if (summaryEl) summaryEl.innerHTML = '';
+      resetNetworkTreeMount(treeEl);
     }
 
-    var count = stats.recruits_count != null ? stats.recruits_count : recruits.length;
+    if (isRdPreview() && global.DOSRdNetwork) {
+      if (forceRefresh || !state.rdNetwork || state.rdNetworkQueriedCode !== rdCode) {
+        await loadRdNetworkData(rdCode, !!forceRefresh);
+      }
+      renderNetworkStatusNote(rdCode, stats);
+      var net = state.rdNetwork;
+      if (net) {
+        if (net.loadError) {
+          state.rdNetworkLoadError = net.loadError;
+          list.innerHTML = '<div class="dos-empty" style="color:#991b1b">' + escapeHtml(net.loadError) + '</div>';
+          if (countEl) countEl.textContent = '0';
+          return;
+        }
+        if (global.DOSRdNetwork.enrichRdNetworkWithPipeline) {
+          await global.DOSRdNetwork.enrichRdNetworkWithPipeline(db(), net);
+        }
+        if (countEl) countEl.textContent = String(net.stats.totalAmbassadors);
+        if (summaryEl) global.DOSRdNetwork.renderNetworkSummary(summaryEl, net.stats, stats);
+        if (treeEl && global.DOSRdNetworkTree) {
+          state.rdTreeController = mountGenealogyTree(treeEl, net, {
+            rootCode: rdCode,
+            rootKind: 'rd',
+            rootName: (stats && (stats.fullName || stats.name)) || 'Regional Director'
+          });
+        } else if (treeEl) {
+          treeEl.innerHTML = '<div class="dos-empty">Genealogy tree module did not load. Hard-refresh the page.</div>';
+        }
+        if (global.DOSRdNetworkExplorer) {
+          global.DOSRdNetworkExplorer.render(list, net.members, {
+            rdCode: rdCode,
+            rdName: (stats && (stats.fullName || stats.name)) || rdCode,
+            graph: net.graph,
+            stats: net.stats,
+            fromCache: !!net.fromCache,
+            cachedAt: net.cachedAt,
+            onRefresh: function () {
+              state.rdNetwork = null;
+              state.rdNetworkQueriedCode = null;
+              loadRecruits(code, stats, true);
+            }
+          });
+        } else {
+          global.DOSRdNetwork.renderNetworkList(list, net.members);
+        }
+        return;
+      }
+      if (state.rdNetworkLoadError) {
+        list.innerHTML = '<div class="dos-empty" style="color:#991b1b">' + escapeHtml(state.rdNetworkLoadError) + '</div>';
+        return;
+      }
+    }
+
+    if (!isRdPreview() && global.DOSRdNetwork && global.DOSRdNetwork.loadLeaderNetwork) {
+      var recruitCount = stats.recruits_count != null ? stats.recruits_count : 0;
+      var verifiedDirect = await loadVerifiedDirectRecruits(leaderCode);
+      state.verifiedDirectRecruits = verifiedDirect.length;
+      if (!isSeniorPreview()) renderOverview(stats, code);
+      if (isSeniorPreview() || treeEl) {
+        var lnet = await loadLeaderNetworkData(leaderCode, !!forceRefresh);
+        if (lnet && lnet.stats && verifiedDirect.length > 0 && (lnet.stats.directRecruits || 0) === 0 && !forceRefresh) {
+          /* stale cache safety: force refresh once if profile + Firestore direct links disagree */
+          lnet = await loadLeaderNetworkData(leaderCode, true);
+        }
+        var hasOrg = lnet && ((lnet.stats && lnet.stats.directRecruits > 0) ||
+          (lnet.pipeline && lnet.pipeline.length) ||
+          (lnet.members && lnet.members.length > 1) ||
+          verifiedDirect.length > 0);
+        if (lnet && lnet.loadError && !hasOrg) {
+          /* fall through to card grid */
+        } else if (lnet && (isSeniorPreview() || (treeEl && hasOrg))) {
+          if (isSeniorPreview()) renderLeaderNetworkBlurb(lnet);
+          if (countEl) countEl.textContent = String(Math.max(recruitCount, (lnet.stats && lnet.stats.directRecruits) || 0, verifiedDirect.length));
+          if (summaryEl && global.DOSRdNetwork.renderLeaderNetworkSummary) {
+            global.DOSRdNetwork.renderLeaderNetworkSummary(summaryEl, lnet.stats, lnet.leaderName);
+          }
+          if (treeEl && global.DOSRdNetworkTree) {
+            state.rdTreeController = mountGenealogyTree(treeEl, lnet, {
+              rootCode: leaderCode,
+              rootKind: 'leader',
+              rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
+              defaultView: 'full'
+            });
+          }
+          if (global.DOSRdNetworkExplorer) {
+            global.DOSRdNetworkExplorer.render(list, lnet.members, {
+              rdCode: leaderCode,
+              rdName: lnet.leaderName || leaderCode,
+              graph: lnet.graph,
+              stats: lnet.stats,
+              onRefresh: function () {
+                state.leaderNetwork = null;
+                loadRecruits(code, stats, true);
+              }
+            });
+          } else {
+            global.DOSRdNetwork.renderNetworkList(list, lnet.members);
+          }
+          return;
+        }
+      }
+    }
+
+    var recruits = [];
+    if (!isRdPreview()) {
+      recruits = await loadVerifiedDirectRecruits(leaderCode);
+      state.verifiedDirectRecruits = recruits.length;
+      if (!isSeniorPreview()) renderOverview(stats, code);
+    } else {
+      try {
+        var queries = [
+          db().collection('ambassadors').where('recruitedBy', '==', rdCode).get(),
+          db().collection('ambassadors').where('senior_code', '==', rdCode).get(),
+          db().collection('ambassadors').where('rdCode', '==', rdCode).get(),
+          db().collection('ambassadors').where('regional_director_code', '==', rdCode).get()
+        ];
+        var snaps = await Promise.all(queries);
+        var seen = {};
+        snaps.forEach(function (snap) {
+          snap.forEach(function (doc) {
+            if (!seen[doc.id]) {
+              seen[doc.id] = true;
+              recruits.push({ id: doc.id, data: doc.data() });
+            }
+          });
+        });
+      } catch (e) {
+        console.warn('Recruit queries', e);
+      }
+    }
+
+    var count = isRdPreview()
+      ? (stats.recruits_count != null ? stats.recruits_count : recruits.length)
+      : recruits.length;
     if (countEl) countEl.textContent = count;
+    if (summaryEl) summaryEl.innerHTML = '';
 
     if (!recruits.length) {
       list.innerHTML = '<div class="dos-empty">No ambassadors recruited yet. Use your <strong>Recruitment</strong> link under Deployment links.</div>';
@@ -808,6 +1139,7 @@
     }
     if (global.MEAmbassadorSession) global.MEAmbassadorSession.touchSession();
     state.code = code;
+    state.verifiedDirectRecruits = null;
     clearLoadError();
 
     if (typeof firebase === 'undefined' || !firebase.apps.length) {
@@ -849,7 +1181,23 @@
       return;
     }
     code = accountId;
+    if (isRdPreview()) {
+      code = getEffectiveRdCode(stats, code);
+    }
     state.code = code;
+    if (isRdPreview() && stats && stats.ambassador_code && !stats.sbdReferrals) {
+      try {
+        var linkedAmb = await db().collection('ambassadors').doc(stats.ambassador_code).get();
+        if (linkedAmb.exists && linkedAmb.data().sbdReferrals) {
+          stats.sbdReferrals = linkedAmb.data().sbdReferrals;
+        }
+      } catch (mergeErr) {
+        console.warn('[DOS] RD sbdReferrals merge skipped:', mergeErr);
+      }
+    }
+    if (!stats.sbdReferralCode) {
+      stats.sbdReferralCode = resolveSbdReferralCode(stats);
+    }
     state.stats = stats;
     state.name = resolveName(stats, localStorage.getItem('ambassadorData'));
     if (global.MEAmbassadorSession) {
@@ -920,8 +1268,9 @@
       await loadPhase4Team(code, stats);
       await loadPhase5Region(code, stats);
     } else if (isRdPreview()) {
-      await loadPhase4Team(code, stats);
+      await loadRdNetworkData(code);
       await loadPhase5Region(code, stats);
+      await loadPhase4TeamRd(code, stats);
     } else if (isSeniorPreview()) {
       await loadPhase4Team(code, stats);
     } else {
@@ -984,8 +1333,15 @@
       return;
     }
     try {
+      if (!state.rdNetwork) await loadRdNetworkData(code);
       var seniors = await global.DOSRegion.loadRegionSeniors(db(), code);
       var regionStats = global.DOSRegion.computeRegionStats(seniors, stats);
+      if (state.rdNetworkStats && global.DOSRdNetwork) {
+        regionStats = global.DOSRdNetwork.mergeWithRegionStats(state.rdNetworkStats, regionStats);
+        if (state.rdNetworkStats.totalAmbassadors > regionStats.totalAmbassadors) {
+          regionStats.totalAmbassadors = state.rdNetworkStats.totalAmbassadors;
+        }
+      }
       state.regionSeniors = seniors;
       state.regionStats = regionStats;
       var cmd = document.getElementById('dosRegionCommandBody');
@@ -995,8 +1351,18 @@
       renderRdOverview(stats, code, regionStats);
     } catch (err) {
       console.error('Regional command load', err);
-      renderRdOverview(stats, code, null);
+      renderRdOverview(stats, code, state.regionStats || null);
     }
+  }
+
+  async function loadPhase4TeamRd(code, stats) {
+    var cmd = document.getElementById('dosTeamCommandBody');
+    var table = document.getElementById('dosTeamTableBody');
+    if (global.DOSRdNetwork) {
+      if (cmd) global.DOSRdNetwork.renderRdTeamNote(cmd);
+      if (table) table.innerHTML = '';
+    }
+    renderRdOverview(stats, code, state.regionStats);
   }
 
   function renderExecutiveOverview(stats, code, globalStats) {
@@ -1060,6 +1426,10 @@
   }
 
   async function loadPhase4Team(code, stats) {
+    if (isRdPreview()) {
+      await loadPhase4TeamRd(code, stats);
+      return;
+    }
     if (!isLeadershipPreview() || !global.DOSTeam) {
       if (isSeniorPreview()) renderSeniorOverview(stats, code, null);
       return;
@@ -1159,6 +1529,11 @@
         rdOpts.activeSeniors = rs.activeSeniors;
         rdOpts.inactiveSeniors = rs.inactiveSeniors;
       }
+      if (state.rdNetworkStats) {
+        rdOpts.totalInRegion = state.rdNetworkStats.totalAmbassadors;
+        rdOpts.developingLeaders = state.rdNetworkStats.developingCount;
+        rdOpts.directToRd = state.rdNetworkStats.directToRd;
+      }
       global.DOSRoleCharter.renderRegionalDirector(mount, rdOpts);
       return;
     }
@@ -1182,12 +1557,16 @@
     var opts = {};
     var m = state.metrics;
     if (m) {
-      opts.recruits = m.network && m.network.recruits != null ? m.network.recruits : null;
+      opts.recruits = state.verifiedDirectRecruits != null
+        ? Number(state.verifiedDirectRecruits)
+        : (m.network && m.network.recruits != null ? m.network.recruits : null);
       opts.activeSubscribers = m.subscribers && m.subscribers.active != null ? m.subscribers.active : null;
       opts.recurringCommissionUsd = m.commissions && m.commissions.estimatedMrrUsd != null
         ? m.commissions.estimatedMrrUsd : null;
     } else if (state.stats) {
-      opts.recruits = state.stats.recruits_count;
+      opts.recruits = state.verifiedDirectRecruits != null
+        ? Number(state.verifiedDirectRecruits)
+        : state.stats.recruits_count;
       var sbd = state.stats.sbdReferrals || {};
       opts.activeSubscribers = Number(sbd.subscribers) || 0;
       if (global.DOSEconomics) {
@@ -1200,7 +1579,15 @@
   function initRoleCharter() {
     refreshRoleCharter();
     document.addEventListener('dos-section-change', function (e) {
-      if (e.detail && e.detail.section === 'role-targets') refreshRoleCharter();
+      if (!e.detail || !e.detail.section) return;
+      if (e.detail.section === 'role-targets') refreshRoleCharter();
+      if (e.detail.section === 'network' && state.code && state.stats) {
+        if (isRdPreview() || isSeniorPreview() || document.getElementById('dosRecruitmentTree')) {
+          if (isRdPreview()) state.rdNetwork = null;
+          if (isSeniorPreview()) state.leaderNetwork = null;
+          loadRecruits(state.code, state.stats);
+        }
+      }
     });
   }
 

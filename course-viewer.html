@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Course Viewer</title>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00b894">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ME Ambassador">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/design-system.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   
@@ -13,6 +22,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/tier-access.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -70,9 +80,69 @@
       min-width: 300px;
       height: 100%;
       overflow-y: auto;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index: 200;
     }
       top: 0;
     }
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 199;
+    }
+    .sidebar-overlay.active {
+      display: block;
+    }
+    /* Hamburger button — mobile only */
+    .mobile-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    /* Mobile prev/next footer */
+    .mobile-module-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e293b;
+      padding: 12px 16px;
+      z-index: 150;
+      gap: 10px;
+    }
+    .mobile-module-nav button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .mobile-prev-btn {
+      background: #334155;
+      color: #94a3b8;
+    }
+    .mobile-prev-btn:not(:disabled):hover { background: #475569; color: white; }
+    .mobile-prev-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .mobile-next-btn {
+      background: #4ade80;
+      color: #0f172a;
+    }
+    .mobile-next-btn:hover { background: #22c55e; }
     .sidebar-header {
       padding: 30px 20px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -197,6 +267,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       position: sticky;
       top: 0;
       z-index: 10;
@@ -637,16 +708,66 @@
       }
     }
     @media (max-width: 768px) {
+      /* Switch to normal page scroll on mobile */
       .lms-wrapper {
         flex-direction: column;
-      }
-      .sidebar {
-        position: static;
-        width: 100%;
         height: auto;
+        overflow: visible;
       }
+      /* Sidebar becomes a slide-in drawer */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 85vw;
+        max-width: 320px;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: 200;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      /* Main content takes full width, scrolls normally */
       .main-content {
         flex-direction: column;
+        height: auto;
+        overflow: visible;
+        min-height: 100vh;
+      }
+      .main-content-wrapper {
+        height: auto;
+        overflow: visible;
+      }
+      /* Content area scrolls with page */
+      .content-area {
+        padding: 24px 16px 100px; /* bottom pad for mobile nav */
+        height: auto;
+        overflow: visible;
+      }
+      /* Top bar tighter on mobile */
+      .top-bar {
+        padding: 12px 16px;
+      }
+      .top-bar .top-actions .btn-secondary {
+        display: none; /* hide Downloads btn on mobile to save space */
+      }
+      /* Show hamburger, mobile nav */
+      .mobile-menu-btn {
+        display: flex;
+      }
+      .mobile-module-nav {
+        display: flex;
+      }
+      /* Reduce content heading sizes */
+      .content-header h1 {
+        font-size: 1.6rem;
+      }
+      .content-section h2 {
+        font-size: 1.4rem;
+      }
+      .content-section h3 {
+        font-size: 1.15rem;
       }
     }
     
@@ -931,8 +1052,11 @@
     </div>
   </div>
   
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <div class="lms-wrapper">
-    <aside class="sidebar">
+    <aside class="sidebar" id="mainSidebar">
       <div class="sidebar-header">
         <h2 id="sidebarTitle">Loading...</h2>
         <div class="course-meta">
@@ -947,6 +1071,8 @@
         </div>
         <div class="progress-text"><span id="progressPercent">0</span>% Complete</div>
       </div>
+      <!-- Formation Score Widget (shown for SBD course) -->
+      <div id="formationScoreWidget" style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);display:none"></div>
       <nav class="modules-nav">
         <h3>Course Curriculum</h3>
         <div id="modulesNav"></div>
@@ -956,6 +1082,7 @@
     <main class="main-content">
       <div class="main-content-wrapper">
         <div class="top-bar">
+          <button class="mobile-menu-btn" onclick="openSidebar()" aria-label="Open course menu">☰</button>
           <div class="breadcrumbs">
             <a href="courses.html">← All Courses</a>
           </div>
@@ -986,23 +1113,277 @@
     </main>
   </div>
 
+  <!-- Mobile prev/next module footer -->
+  <div class="mobile-module-nav" id="mobileModuleNav">
+    <button class="mobile-prev-btn" id="mobilePrevBtn" onclick="mobileNavModule(-1)" disabled>&#8592; Prev</button>
+    <button class="mobile-next-btn" id="mobileNextBtn" onclick="mobileNavModule(1)">Next &#8594;</button>
+  </div>
+
   <script>
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
+    // ── Mobile sidebar helpers ──────────────────────────────────────────────
+    function openSidebar() {
+      document.getElementById('mainSidebar').classList.add('open');
+      document.getElementById('sidebarOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+      document.getElementById('mainSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    function updateMobileNav() {
+      const prevBtn = document.getElementById('mobilePrevBtn');
+      const nextBtn = document.getElementById('mobileNextBtn');
+      if (!prevBtn || !nextBtn) return;
+      prevBtn.disabled = currentModuleIndex <= 0;
+      nextBtn.disabled = currentModuleIndex >= courseModules.length - 1;
+    }
+    function mobileNavModule(direction) {
+      const newIndex = currentModuleIndex + direction;
+      if (newIndex < 0 || newIndex >= courseModules.length) return;
+      // Reuse the existing module-click mechanism
+      const moduleItems = document.querySelectorAll('.module-item');
+      if (moduleItems[newIndex]) {
+        moduleItems[newIndex].click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        closeSidebar();
+      }
+    }
+    // ── Close sidebar when a module is tapped on mobile ────────────────────
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.module-item') && window.innerWidth <= 768) {
+        closeSidebar();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(updateMobileNav, 100);
+      }
+    });
+
     const courseId = getQueryParam('courseId') || getQueryParam('id') || getQueryParam('course');
     let currentModuleIndex = 0;
     let scrollSpyListener = null;
     let courseModules = []; // Store modules globally for access by progress functions
     let loadingOverlay = null;
+    let firestoreProgressData = null; // Store Firestore data for sequential locking
+    
+    // Function to clear test data (call from console if needed)
+    window.clearFoundationSchoolProgress = function() {
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      if (!ambassadorCode) {
+        console.error('No ambassador code found');
+        return;
+      }
+      
+      // Clear localStorage
+      for (let i = 0; i < 6; i++) {
+        localStorage.removeItem(`progress_foundation-school_module_${i}`);
+      }
+      
+      // Clear Firestore
+      firebase.firestore().collection('ambassadors').doc(ambassadorCode).update({
+        'school_enrollment.foundation_school.completed_modules': {},
+        'school_enrollment.foundation_school.progress_percent': 0,
+        'school_enrollment.foundation_school.current_week': 1
+      }).then(() => {
+        console.log('✅ Progress cleared! Reload the page.');
+        location.reload();
+      });
+    };
+    
+    // Load Foundation School progress from Firestore
+    async function loadFoundationSchoolProgress() {
+      const ambassadorCode = localStorage.getItem('ambassadorCode');
+      
+      if (!ambassadorCode || courseId !== 'foundation-school') {
+        console.log('ℹ️ Skipping Firestore sync - not Foundation School or no ambassador code');
+        return null;
+      }
+      
+      try {
+        console.log('🔄 Loading Foundation School progress from Firestore...');
+        const doc = await firebase.firestore().collection('ambassadors').doc(ambassadorCode).get();
+        
+        if (!doc.exists) {
+          console.warn('⚠️ Ambassador document not found');
+          return null;
+        }
+        
+        const data = doc.data();
+        const enrollment = data?.school_enrollment?.foundation_school;
+        
+        if (!enrollment) {
+          console.log('ℹ️ No Foundation School enrollment found');
+          return null;
+        }
+        
+        firestoreProgressData = enrollment;
+        console.log('✅ Loaded Firestore progress:', enrollment);
+        
+        // DO NOT sync to localStorage - let user actually read content first!
+        // The sync was causing weeks to show as "complete by default"
+        console.log('ℹ️ Firestore data loaded but NOT synced to localStorage (user must read content)');
+        
+        return enrollment;
+      } catch (err) {
+        console.error('❌ Error loading Firestore progress:', err);
+        return null;
+      }
+    }
+    
+    // Check if a module is completed
+    function isModuleCompleted(moduleIndex) {
+      // For Foundation School, check Firestore data
+      if (courseId === 'foundation-school' && firestoreProgressData) {
+        const completedModules = firestoreProgressData.completed_modules || {};
+        const moduleData = completedModules[`module${moduleIndex}`];
+        return moduleData?.completed === true;
+      }
+      
+      // For other courses, check localStorage
+      // CRITICAL: Use the same moduleId logic as the save function (module.moduleId || index)
+      const module = courseModules[moduleIndex];
+      const moduleId = module ? (module.moduleId || moduleIndex) : moduleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      const progress = localStorage.getItem(progressKey);
+      if (progress) {
+        const data = JSON.parse(progress);
+        return data.contentRead || data.assessmentPassed;
+      }
+      
+      return false;
+    }
+    
+    // Check if a module is unlocked (for sequential access)
+    function isModuleUnlocked(moduleIndex) {
+      // Week 1 is always unlocked
+      if (moduleIndex === 0) return true;
+      
+      // Must have previous module completed to unlock
+      return isModuleCompleted(moduleIndex - 1);
+    }
+    
+    // Refresh module lock states in the UI
+    function refreshModuleLockStates() {
+      const moduleItems = document.querySelectorAll('.module-item');
+      moduleItems.forEach((item, idx) => {
+        // CRITICAL: Skip exam nav item - it's handled separately below
+        if (item.classList.contains('exam-module')) {
+          return; // Skip this iteration
+        }
+        
+        const moduleExists = idx < courseModules.length;
+        const moduleCompleted = isModuleCompleted(idx);
+        const moduleUnlocked = isModuleUnlocked(idx);
+        const isAvailable = moduleExists && moduleUnlocked;
+        
+        const durationEl = item.querySelector('.duration');
+        const titleEl = item.querySelector('.title');
+        const iconEl = item.querySelector('.icon');
+        const module = courseModules[idx];
+        
+        // Update icon to show completion or number
+        if (iconEl) {
+          if (moduleCompleted) {
+            iconEl.textContent = '✓';
+            iconEl.style.background = '#10b981';
+            iconEl.style.color = 'white';
+          } else {
+            iconEl.textContent = idx + 1;
+            iconEl.style.background = '';
+            iconEl.style.color = '';
+          }
+        }
+        
+        // Update title to show completion badge
+        if (titleEl) {
+          const completionBadge = moduleCompleted ? '<span style="color: #10b981; font-size: 0.7rem;">✓</span> ' : '';
+          titleEl.innerHTML = `${completionBadge}Week ${idx + 1}`;
+        }
+        
+        // Update duration/status text
+        if (durationEl && module) {
+          const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
+          durationEl.textContent = `${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Complete Week ' + idx + ' to unlock'}`;
+        }
+        
+        // Update clickability
+        if (isAvailable) {
+          item.style.opacity = '1';
+          item.style.cursor = 'pointer';
+          item.setAttribute('tabindex', '0');
+          item.onclick = () => switchModule(idx);
+          
+          // CRITICAL FIX: Add raw content for newly unlocked modules
+          const contentDiv = document.getElementById(`module-${idx}`);
+          if (contentDiv && !contentDiv.getAttribute('data-raw-content') && module) {
+            console.log(`🔓 Module ${idx + 1} newly unlocked - adding content for lazy load`);
+            contentDiv.setAttribute('data-raw-content', JSON.stringify(module.content || ''));
+            contentDiv.setAttribute('data-content-loaded', 'false');
+            // Replace "Coming Soon" with loading placeholder
+            contentDiv.innerHTML = '<div class="content-section" style="padding:40px;text-align:center;color:#94a3b8;"><p>Click to load content...</p></div>';
+          }
+        } else {
+          item.style.opacity = '0.5';
+          item.style.cursor = 'not-allowed';
+          item.setAttribute('tabindex', '-1');
+          item.onclick = null;
+        }
+        
+        console.log(`🔄 Refreshed module ${idx + 1}: completed=${moduleCompleted}, unlocked=${moduleUnlocked}, available=${isAvailable}`);
+      });
+      
+      // ============================================
+      // UPDATE FINAL EXAM LOCK STATUS
+      // ============================================
+      const examNavItem = document.getElementById('exam-nav-item');
+      if (examNavItem) {
+        // Check if all weeks are completed - with detailed logging
+        const totalModules = (courseModules && courseModules.length) || 6;
+        const completionStatus = Array.from({length: totalModules}, (_, i) => ({
+          week: i + 1,
+          completed: isModuleCompleted(i)
+        }));
+        console.log('🔍 Checking Final Exam unlock status:', completionStatus);
+        
+        const allWeeksCompleted = completionStatus.every(w => w.completed);
+        
+        const durationEl = examNavItem.querySelector('.duration');
+        
+        if (allWeeksCompleted) {
+          // Unlock exam
+          examNavItem.style.opacity = '1';
+          examNavItem.style.cursor = 'pointer';
+          examNavItem.setAttribute('tabindex', '0');
+          examNavItem.onclick = () => switchToExam();
+          if (durationEl) {
+            durationEl.textContent = '50 Questions • 80% Pass';
+          }
+          console.log('🎓 Final Exam UNLOCKED (all ' + totalModules + ' weeks completed)');
+        } else {
+          // Keep locked
+          const incompleteWeeks = completionStatus.filter(w => !w.completed).map(w => w.week);
+          examNavItem.style.opacity = '0.5';
+          examNavItem.style.cursor = 'not-allowed';
+          examNavItem.setAttribute('tabindex', '-1');
+          examNavItem.onclick = null;
+          if (durationEl) {
+            durationEl.textContent = '🔒 Complete all ' + totalModules + ' weeks to unlock';
+          }
+          console.log('🔒 Final Exam locked - incomplete weeks:', incompleteWeeks);
+        }
+      }
+    }
     
     // Immediately start loading when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       loadingOverlay = document.getElementById('loadingOverlay');
       
       console.log('[Course Viewer] DOM Ready - Starting to load course:', courseId);
+      console.log('[Course Viewer] Build: scroll-progress-v20260602 (Week 1 scroll tracking fix)');
       console.log('[Course Viewer] Loading overlay element:', loadingOverlay);
       
       if (!courseId) {
@@ -1016,8 +1397,11 @@
       loadCourseData();
     });
     
-    function loadCourseData() {
+    async function loadCourseData() {
       console.log('[Course Viewer] Fetching courses catalogue...');
+      
+      // STEP 1: Load Firestore progress data FIRST (for Foundation School)
+      await loadFoundationSchoolProgress();
       
       fetch('courses-catalogue.json?t=' + new Date().getTime())
       .then(response => {
@@ -1043,7 +1427,15 @@
         console.log('[Course Viewer] Course loaded:', course.title);
 
         document.getElementById('sidebarTitle').textContent = course.title;
-        document.getElementById('courseDuration').textContent = (course.duration_weeks || 6) + ' weeks';
+        
+        // Show formation score widget for SBD course
+        if (courseId === 'sex-by-design-for-dummies') {
+          const fWidget = document.getElementById('formationScoreWidget');
+          if (fWidget) fWidget.style.display = 'block';
+        }
+        
+        const durationWeeks = course.duration_weeks || parseInt(course.duration) || (course.modules && course.modules.length) || 6;
+        document.getElementById('courseDuration').textContent = durationWeeks + ' weeks';
         document.getElementById('coursePrice').textContent = '$' + (course.price || 247);
         document.title = course.title;
         
@@ -1059,25 +1451,45 @@
         const tabsContent = document.getElementById('tabsContent');
 
         // Create placeholder weeks if modules don't exist
-        const totalWeeks = course.duration_weeks || 6;
+        const totalWeeks = course.duration_weeks || parseInt(course.duration) || modules.length || 6;
         const modules = course.modules || [];
         courseModules = modules; // Store globally for progress tracking
+        setTimeout(updateMobileNav, 300); // init mobile prev/next buttons after modules load
         
         for (let idx = 0; idx < totalWeeks; idx++) {
           const module = modules[idx];
-          const isAvailable = idx < modules.length;
+          const moduleExists = idx < modules.length;
+          const moduleCompleted = isModuleCompleted(idx);
+          const moduleUnlocked = isModuleUnlocked(idx);
+          const isAvailable = moduleExists && moduleUnlocked;
+          
+          console.log(`📚 Module ${idx + 1}:`, {
+            exists: moduleExists,
+            completed: moduleCompleted,
+            unlocked: moduleUnlocked,
+            available: isAvailable
+          });
           
           // Sidebar navigation
           const navItem = document.createElement('div');
           navItem.className = 'module-item' + (idx === 0 ? ' active' : '');
           navItem.setAttribute('role', 'button');
           navItem.setAttribute('tabindex', isAvailable ? '0' : '-1');
-          navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}`);
+          navItem.setAttribute('aria-label', `Week ${idx + 1}: ${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? '🔒 Locked' : 'Coming Soon')}`);
+          navItem.setAttribute('data-module-index', idx);
+          
+          // Icon content: ✓ if completed, number otherwise
+          const iconContent = moduleCompleted ? '✓' : (idx + 1);
+          const iconStyle = moduleCompleted ? 'background: #10b981; color: white;' : '';
+          
+          const lockIcon = (!isAvailable && moduleExists) ? '🔒 ' : '';
+          const completionBadge = moduleCompleted ? '<span style="color: #10b981; font-size: 0.7rem;">✓</span> ' : '';
+          
           navItem.innerHTML = `
-            <div class="icon">${idx + 1}</div>
+            <div class="icon" style="${iconStyle}">${iconContent}</div>
             <div class="text">
-              <div class="title">Week ${idx + 1}</div>
-              <div class="duration">${isAvailable ? (module.title || 'Module ' + (idx + 1)) : 'Coming Soon'}</div>
+              <div class="title">${completionBadge}Week ${idx + 1}</div>
+              <div class="duration">${lockIcon}${isAvailable ? (module.title || 'Module ' + (idx + 1)) : (moduleExists ? 'Complete Week ' + idx + ' to unlock' : 'Coming Soon')}</div>
             </div>
           `;
           if (isAvailable) {
@@ -1114,6 +1526,13 @@
               // Process visual enhancements only for first module
               setTimeout(() => {
                 processModuleEnhancements(content, module);
+                const contentSection = content.querySelector('.content-section');
+                if (contentSection) {
+                  setTimeout(() => {
+                    console.log('🔧 Initializing scroll tracking for Week 1 (initial load)');
+                    initializeProgressTracking(contentSection);
+                  }, 150);
+                }
               }, 100);
             } else {
               // Show placeholder for other modules
@@ -1140,14 +1559,17 @@
         const examNavItem = document.createElement('div');
         examNavItem.className = 'module-item exam-module';
         examNavItem.id = 'exam-nav-item';
+        examNavItem.style.opacity = '0.5'; // Start locked
+        examNavItem.style.cursor = 'not-allowed';
+        examNavItem.setAttribute('tabindex', '-1');
         examNavItem.innerHTML = `
           <div class="icon">🎓</div>
           <div class="text">
             <div class="title">Final Exam</div>
-            <div class="duration">Loading...</div>
+            <div class="duration">🔒 Complete all 6 weeks to unlock</div>
           </div>
         `;
-        examNavItem.onclick = () => switchToExam();
+        // Don't set onclick - will be set by refreshModuleLockStates if unlocked
         modulesNav.appendChild(examNavItem);
         
         // Add Final Exam content area
@@ -1167,6 +1589,25 @@
 
         // Calculate ACTUAL progress based on completed modules
         updateCourseProgressBar();
+        
+        // ========================================
+        // EVENT DELEGATION for Mark Complete buttons
+        // ========================================
+        // Use event delegation to avoid timing issues with dynamically created buttons
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+          contentArea.addEventListener('click', function(e) {
+            // Check if click was on either Mark Complete button
+            if (e.target.id === 'markCompleteBtn' || e.target.id === 'topMarkCompleteBtn') {
+              e.preventDefault();
+              console.log('🔵 Mark Complete button clicked via event delegation');
+              markContentComplete();
+            }
+          });
+          console.log('✅ Event delegation attached to .content-area for Mark Complete buttons');
+        } else {
+          console.error('❌ .content-area not found - event delegation failed');
+        }
         
         // Initialize section navigator with longer delay to ensure content is rendered
         setTimeout(() => {
@@ -1194,7 +1635,15 @@
     }
 
     function switchModule(index) {
+      // Check if module is unlocked before switching
+      if (!isModuleUnlocked(index)) {
+        console.warn(`🔒 Module ${index} is locked - complete previous modules first`);
+        alert(`🔒 Week ${index + 1} is locked. Please complete Week ${index} first!`);
+        return;
+      }
+      
       currentModuleIndex = index;
+      updateMobileNav(); // keep prev/next footer buttons in sync
       const module = courseModules[index];
       console.log('switchModule called:', {index, moduleTitle: module ? module.title : 'N/A', moduleId: module ? module.moduleId : 'N/A'});
       
@@ -1220,13 +1669,7 @@
         console.log('No saved progress for module:', {moduleId});
       }
       
-      // Update UI to reflect current module's progress
-      setTimeout(() => {
-        updateProgressIndicator();
-        updateCourseProgressBar(); // Update sidebar progress bar
-        updateMarkCompleteButton(progressData.contentRead); // Update button states
-      }, 50);
-      
+      // Update active module styling
       document.querySelectorAll('.module-item').forEach((item, i) => {
         item.classList.toggle('active', i === index);
       });
@@ -1253,10 +1696,39 @@
         lazyLoadModuleContent(index, module, targetContent);
       }
       
+      // Update UI to reflect current module's progress
+      // Delay to ensure lazy loading completes and buttons are created
+      setTimeout(() => {
+        updateProgressIndicator();
+        updateCourseProgressBar(); // Update sidebar progress bar
+        
+        // CRITICAL FIX: Always update the top button to reflect current week's completion status
+        // The bottom button will be managed by scroll tracking
+        if (progressData.contentRead) {
+          updateMarkCompleteButton(true); // Show completed state
+          console.log('✅ UI updated for module switch, contentRead: true - showing completed state');
+        } else {
+          updateMarkCompleteButton(false); // Reset to NOT completed state
+          console.log('✅ UI updated for module switch, contentRead: false - showing uncompleted state');
+        }
+        
+        // CRITICAL: Only initialize scroll tracking if content is already loaded (not lazy loading)
+        const targetContent = document.getElementById(`module-${index}`);
+        if (targetContent && targetContent.getAttribute('data-content-loaded') === 'true') {
+          const contentSection = targetContent.querySelector('.content-section');
+          if (contentSection) {
+            console.log('🔧 Initializing scroll tracking for already-loaded module:', index);
+            initializeProgressTracking(contentSection);
+          }
+        } else {
+          console.log('⏳ Content not loaded yet, scroll tracking will be initialized after lazy load');
+        }
+      }, 350);
+      
       // Update section navigator after a brief delay to ensure DOM is ready
       setTimeout(() => {
         updateSectionNavigator();
-      }, 300);
+      }, 400);
     }
     
     // ========================================
@@ -1279,6 +1751,16 @@
         // Process enhancements after content is loaded
         setTimeout(() => {
           processModuleEnhancements(contentElement, module);
+          
+          // Initialize scroll tracking AFTER Mark Complete section is added
+          const contentSection = contentElement.querySelector('.content-section');
+          if (contentSection) {
+            console.log('🔧 Initializing scroll tracking after lazy load for module:', index);
+            // Wait a bit longer to ensure Mark Complete section is in DOM
+            setTimeout(() => {
+              initializeProgressTracking(contentSection);
+            }, 150);
+          }
         }, 100);
         
         console.log('Module content lazy loaded successfully:', index);
@@ -1356,35 +1838,31 @@
       const markCompleteHtml = `
         <div id="markCompleteSection" style="margin-top: 60px; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; text-align: center;">
           <h3 id="markCompleteTitle" style="color: #ffffff; font-size: 1.5rem; font-weight: 600; margin-bottom: 12px;">📚 Finished Reading?</h3>
-          <p id="markCompleteDesc" style="color: #e0e7ff; margin-bottom: 24px; font-size: 1rem;">Mark this week as complete to track your progress toward CRLA certification.</p>
-          <button id="markCompleteBtn" class="btn btn-primary" style="background: #ffffff; color: #667eea; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-            ✅ Mark Week Complete
+          <p id="markCompleteDesc" style="color: #e0e7ff; margin-bottom: 16px; font-size: 1rem;">Scroll through at least 80% of the content to unlock the completion button.</p>
+          <div id="scrollProgressContainer" style="margin-bottom: 20px;">
+            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div id="scrollProgressBar" style="height: 100%; width: 0%; background: #4ade80; transition: width 0.3s ease;"></div>
+            </div>
+            <p id="scrollProgress" style="color: #e0e7ff; margin-top: 8px; font-size: 0.9rem;">0% read - Keep scrolling!</p>
+          </div>
+          <button id="markCompleteBtn" class="btn btn-primary" disabled style="background: #94a3b8; color: #cbd5e1; padding: 14px 32px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 8px; cursor: not-allowed; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            🔒 Read 80% to unlock
           </button>
         </div>
       `;
       contentElement.querySelector('.content-section').innerHTML += markCompleteHtml;
       
-      // Attach click handlers to both buttons and check completion status
+      // Update button state based on saved progress
       setTimeout(() => {
-        const bottomBtn = document.getElementById('markCompleteBtn');
-        const topBtn = document.getElementById('topMarkCompleteBtn');
-        
-        if (bottomBtn) {
-          bottomBtn.addEventListener('click', markContentComplete);
-          console.log('✅ Bottom button click handler attached');
-        }
-        
-        if (topBtn) {
-          topBtn.addEventListener('click', markContentComplete);
-          console.log('✅ Top button click handler attached');
-        }
-        
-        // Update button state if content already completed
         if (progressData.contentRead) {
           console.log('📖 Content already read, updating buttons to completed state');
           updateMarkCompleteButton(true);
+        } else {
+          // Don't call updateMarkCompleteButtonState here - let scroll tracking handle it
+          // This prevents overwriting the progress with 0% after user has scrolled
+          console.log('📖 Content not read, scroll tracking will update button state');
         }
-      }, 100);
+      }, 150);
     }
     
     // ========================================
@@ -1629,6 +2107,75 @@
       readingProgress: 0
     };
     
+    /** Measure how far the user has read the active week (content-area or window scroll). */
+    function measureReadingProgress() {
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab || activeTab.id === 'module-exam') return 0;
+
+      const contentArea = document.querySelector('.content-area');
+      const readTarget = activeTab.querySelector('#markCompleteSection') ||
+        activeTab.querySelector('.content-section') ||
+        activeTab;
+      if (!readTarget) return 0;
+
+      // Desktop: scroll happens inside .content-area
+      if (contentArea && contentArea.scrollHeight > contentArea.clientHeight + 5) {
+        const maxScroll = contentArea.scrollHeight - contentArea.clientHeight;
+        if (maxScroll <= 0) return 0;
+        return Math.min(100, Math.round((contentArea.scrollTop / maxScroll) * 100));
+      }
+
+      // Mobile / overflow-visible layouts: page scroll
+      const rect = readTarget.getBoundingClientRect();
+      const contentHeight = Math.max(readTarget.scrollHeight, readTarget.offsetHeight, rect.height);
+      if (contentHeight <= 0) return 0;
+      const passed = Math.max(0, window.innerHeight - rect.top);
+      return Math.min(100, Math.round((passed / contentHeight) * 100));
+    }
+
+    function persistReadingProgress() {
+      const module = courseModules[currentModuleIndex];
+      const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
+      const progressKey = `progress_${courseId}_module_${moduleId}`;
+      localStorage.setItem(progressKey, JSON.stringify(progressData));
+    }
+
+    function applyReadingProgress(scrollPercentage) {
+      if (progressData.contentRead) return;
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab || activeTab.id === 'module-exam') return;
+
+      const next = Math.min(100, Math.max(progressData.readingProgress || 0, scrollPercentage || 0));
+      if (next === progressData.readingProgress) return;
+
+      progressData.readingProgress = next;
+      console.log(`📖 Scroll progress: ${next}%`);
+      updateMarkCompleteButtonState(next);
+      persistReadingProgress();
+    }
+
+    let readingScrollTimeout = null;
+    function handleReadingScroll() {
+      if (progressData.contentRead) return;
+      clearTimeout(readingScrollTimeout);
+      readingScrollTimeout = setTimeout(() => {
+        applyReadingProgress(measureReadingProgress());
+      }, 120);
+    }
+
+    function setupReadingScrollTracking() {
+      if (window.__courseReadingScrollReady) return;
+      window.__courseReadingScrollReady = true;
+
+      const contentArea = document.querySelector('.content-area');
+      console.log('🎯 Setting up reading scroll listeners');
+      if (contentArea) {
+        contentArea.addEventListener('scroll', handleReadingScroll, { passive: true });
+      }
+      window.addEventListener('scroll', handleReadingScroll, { passive: true });
+      window.addEventListener('resize', handleReadingScroll, { passive: true });
+    }
+
     function initializeProgressTracking(contentSection) {
       // Use global courseId
       const module = courseModules[currentModuleIndex];
@@ -1656,40 +2203,32 @@
         setTimeout(() => {
           console.log('Calling updateProgressIndicator after delay');
           updateProgressIndicator();
+          
+          // Initialize button state based on saved reading progress
+          if (!progressData.contentRead && progressData.readingProgress) {
+            console.log(`📈 Initializing button state with saved progress: ${progressData.readingProgress}%`);
+            updateMarkCompleteButtonState(progressData.readingProgress);
+          }
         }, 100);
+      } else {
+        // Initialize with 0% if no saved progress
+        progressData.readingProgress = 0;
       }
-      
-      // Track scroll progress
-      const contentArea = document.querySelector('.content-area');
-      if (contentArea && !contentArea.hasAttribute('data-scroll-listener-added')) {
-        contentArea.setAttribute('data-scroll-listener-added', 'true');
-        let scrollTimeout;
-        
-        contentArea.addEventListener('scroll', () => {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            const scrollPercentage = (contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight)) * 100;
-            progressData.readingProgress = Math.min(100, scrollPercentage);
-            
-            // Mark as read when 80% scrolled
-            if (scrollPercentage >= 80 && !progressData.contentRead) {
-              progressData.contentRead = true;
-              
-              // Get current module info
-              // Use global courseId
-              const module = courseModules[currentModuleIndex];
-              const moduleId = module ? (module.moduleId || currentModuleIndex) : currentModuleIndex;
-              const progressKey = `progress_${courseId}_module_${moduleId}`;
-              
-              localStorage.setItem(progressKey, JSON.stringify(progressData));
-              updateProgressIndicator();
-              
-              // Save to Firebase if user is logged in
-              saveProgressToFirebase();
-            }
-          }, 300);
-        });
-      }
+
+      setupReadingScrollTracking();
+
+      // Sync UI with current scroll position (e.g. user already scrolled before listener attached)
+      setTimeout(() => {
+        const currentProgress = progressData.contentRead
+          ? 100
+          : Math.max(progressData.readingProgress || 0, measureReadingProgress());
+        console.log(`🎯 Initializing visual elements with progress: ${currentProgress}%`);
+        if (!progressData.contentRead) {
+          progressData.readingProgress = currentProgress;
+          persistReadingProgress();
+        }
+        updateMarkCompleteButtonState(currentProgress);
+      }, 250);
     }
     
     function updateProgressIndicator() {
@@ -1821,8 +2360,8 @@
       });
       
       if (ambassadorCode && courseId === 'foundation-school') {
-        // First, get current enrollment data to count completed modules
-        firebase.firestore().collection('ambassadors').doc(ambassadorCode).get()
+        // Return the promise so caller can wait for completion
+        return firebase.firestore().collection('ambassadors').doc(ambassadorCode).get()
           .then(doc => {
             const data = doc.data();
             const enrollment = data?.school_enrollment?.foundation_school || {};
@@ -1876,6 +2415,12 @@
           .then(() => {
             const weekNumber = currentModuleIndex + 1;
             console.log(`✅✅ Foundation School progress SAVED to Firestore: Week ${weekNumber}`);
+            
+            // Reload Firestore data to update unlock states and WAIT for it
+            return loadFoundationSchoolProgress();
+          })
+          .then(() => {
+            console.log('🔄 Firestore data reloaded successfully');
           })
           .catch(err => {
             console.error('❌ Error saving Foundation School progress:', err);
@@ -1888,6 +2433,8 @@
         if (courseId !== 'foundation-school') {
           console.log('ℹ️ Not Foundation School course, skipping school tracking');
         }
+        // Return resolved promise for non-Foundation School courses
+        return Promise.resolve();
       }
     }
     
@@ -1922,6 +2469,14 @@
         ambassadorCode: ambassadorCode ? 'EXISTS' : 'MISSING'
       });
       
+      // VALIDATION: Must have scrolled 80% before marking complete
+      if (progressData.readingProgress < 80) {
+        const remaining = Math.ceil(80 - progressData.readingProgress);
+        alert(`⚠️ Please read at least 80% of the content before marking complete.\n\nYou've read: ${progressData.readingProgress}%\nRemaining: ${remaining}%`);
+        console.warn(`❌ Cannot mark complete - only ${progressData.readingProgress}% read`);
+        return;
+      }
+      
       if (!progressData.contentRead) {
         progressData.contentRead = true;
         progressData.readingProgress = 100;
@@ -1934,14 +2489,30 @@
         updateProgressIndicator();
         
         console.log('🔄 Calling saveProgressToFirebase...');
-        saveProgressToFirebase();
         
-        // Update buttons and course progress bar
-        setTimeout(() => {
+        // Save to Firestore and WAIT for it to complete before updating UI
+        saveProgressToFirebase().then(() => {
+          console.log('✅ Firestore save complete, now reloading Firestore data...');
+          
+          // CRITICAL: Reload Firestore data so isModuleCompleted() checks fresh data
+          return loadFoundationSchoolProgress();
+        }).then(() => {
+          console.log('✅ Firestore data reloaded, now updating UI...');
           updateMarkCompleteButton(true);
           updateCourseProgressBar();
-          console.log('✅ Buttons and progress bar updated to COMPLETED');
-        }, 200);
+          refreshModuleLockStates(); // Refresh sidebar to show checkmarks and unlock next week
+          
+          // ── SBD Formation Score update (non-breaking) ──────────────
+          if (courseId === 'sex-by-design-for-dummies') {
+            const aCode = localStorage.getItem('ambassadorCode');
+            if (aCode && typeof updateFormationScore === 'function') {
+              let completedCount = 0;
+              const totalMods = courseModules.length || 13;
+              for (let i = 0; i < totalMods; i++) { if (isModuleCompleted(i)) completedCount++; }
+              updateFormationScore(aCode, completedCount, totalMods);
+            }
+          }
+        });
         
         // Show success notification
         // Use global courseId
@@ -1955,6 +2526,11 @@
         console.log('Content already read, calling updateProgressIndicator to refresh UI');
         // Call update anyway to refresh UI in case it's out of sync
         updateProgressIndicator();
+        updateCourseProgressBar();
+        
+        // CRITICAL: Also refresh lock states to unlock Final Exam if all weeks done
+        refreshModuleLockStates();
+        
         // Use global courseId
         if (courseId === 'foundation-school') {
           const weekNumber = currentModuleIndex + 1;
@@ -1965,16 +2541,102 @@
       }
     }
     
+    // Update Mark Complete button state based on scroll progress
+    function updateMarkCompleteButtonState(scrollProgress) {
+      // CRITICAL: Find buttons in ACTIVE tab only (not all buttons on page)
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) {
+        console.warn('⚠️ No active tab found!');
+        return;
+      }
+      
+      const bottomBtn = activeTab.querySelector('#markCompleteBtn');
+      const topBtn = activeTab.querySelector('#topMarkCompleteBtn');
+      const scrollProgressBar = activeTab.querySelector('#scrollProgressBar');
+      const scrollProgressText = activeTab.querySelector('#scrollProgress');
+      
+      console.log(`🔧 updateMarkCompleteButtonState(${scrollProgress}%) - Elements:`, {
+        activeTab: !!activeTab,
+        bottomBtn: !!bottomBtn,
+        scrollProgressBar: !!scrollProgressBar,
+        scrollProgressText: !!scrollProgressText
+      });
+      
+      // Update progress bar visual
+      if (scrollProgressBar) {
+        scrollProgressBar.style.width = scrollProgress + '%';
+        console.log(`✏️ Progress bar updated to ${scrollProgress}%`);
+      } else {
+        console.warn('⚠️ scrollProgressBar element not found!');
+      }
+      
+      // Update progress text
+      if (scrollProgressText) {
+        if (scrollProgress < 80) {
+          scrollProgressText.textContent = `${scrollProgress}% read - Keep scrolling to unlock!`;
+          scrollProgressText.style.color = '#fde68a';
+        } else {
+          scrollProgressText.textContent = `${scrollProgress}% read - You can now mark this week as complete! ✅`;
+          scrollProgressText.style.color = '#4ade80';
+        }
+        console.log(`✏️ Progress text updated: "${scrollProgressText.textContent}"`);
+      } else {
+        console.warn('⚠️ scrollProgress text element not found!');
+      }
+      
+      // Enable/disable button based on 80% threshold
+      if (scrollProgress >= 80) {
+        // Enable button
+        if (bottomBtn) {
+          bottomBtn.disabled = false;
+          bottomBtn.textContent = '✅ Mark Week Complete';
+          bottomBtn.style.background = '#ffffff';
+          bottomBtn.style.color = '#667eea';
+          bottomBtn.style.cursor = 'pointer';
+          console.log('✅ Mark Complete button ENABLED (80% reached)');
+        } else {
+          console.warn('⚠️ markCompleteBtn element not found!');
+        }
+        if (topBtn) {
+          topBtn.disabled = false;
+          topBtn.style.opacity = '1';
+          topBtn.style.cursor = 'pointer';
+        }
+      } else {
+        // Keep disabled
+        if (bottomBtn) {
+          bottomBtn.disabled = true;
+          bottomBtn.textContent = `🔒 Read ${Math.ceil(80 - scrollProgress)}% more to unlock`;
+          bottomBtn.style.background = '#94a3b8';
+          bottomBtn.style.color = '#cbd5e1';
+          bottomBtn.style.cursor = 'not-allowed';
+          console.log(`🔒 Button disabled - ${Math.ceil(80 - scrollProgress)}% more needed`);
+        }
+        if (topBtn) {
+          topBtn.disabled = true;
+          topBtn.style.opacity = '0.5';
+          topBtn.style.cursor = 'not-allowed';
+        }
+      }
+    }
+    
     // Update Mark Complete button appearance based on completion status
     // Update ALL mark complete buttons (top and bottom)
     function updateMarkCompleteButton(isComplete) {
-      // Update bottom button (in content)
-      const bottomBtn = document.getElementById('markCompleteBtn');
-      const title = document.getElementById('markCompleteTitle');
-      const desc = document.getElementById('markCompleteDesc');
-      const section = document.getElementById('markCompleteSection');
+      // CRITICAL: Find buttons in ACTIVE tab only
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) {
+        console.warn('⚠️ No active tab found in updateMarkCompleteButton');
+        return;
+      }
       
-      // Update top button (in header)
+      // Update bottom button (in content)
+      const bottomBtn = activeTab.querySelector('#markCompleteBtn');
+      const title = activeTab.querySelector('#markCompleteTitle');
+      const desc = activeTab.querySelector('#markCompleteDesc');
+      const section = activeTab.querySelector('#markCompleteSection');
+      
+      // Update top button (in header) - this is NOT in tab content, so use document
       const topBtn = document.getElementById('topMarkCompleteBtn');
       
       console.log('🔄 updateMarkCompleteButton called', { 
@@ -1988,8 +2650,13 @@
         // Update bottom button
         if (bottomBtn && section) {
           section.style.background = 'linear-gradient(135deg, #00b894 0%, #00856f 100%)';
-          title.textContent = '✅ Week Completed!';
-          desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
+          if (title) title.textContent = '✅ Week Completed!';
+          if (desc) desc.textContent = 'Great job! You have completed this week. Continue to the next module.';
+          
+          // Hide scroll progress container when complete
+          const scrollContainer = activeTab.querySelector('#scrollProgressContainer');
+          if (scrollContainer) scrollContainer.style.display = 'none';
+          
           bottomBtn.textContent = '✓ Completed';
           bottomBtn.style.background = '#ffffff';
           bottomBtn.style.color = '#00b894';
@@ -2007,17 +2674,8 @@
         
         console.log('✅ Both buttons updated to COMPLETED state');
       } else {
-        // Reset bottom button
-        if (bottomBtn && section) {
-          section.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          title.textContent = '📚 Finished Reading?';
-          desc.textContent = 'Mark this week as complete to track your progress toward CRLA certification.';
-          bottomBtn.textContent = '✅ Mark Week Complete';
-          bottomBtn.style.background = '#ffffff';
-          bottomBtn.style.color = '#667eea';
-          bottomBtn.style.cursor = 'pointer';
-          bottomBtn.disabled = false;
-        }
+        // DON'T reset bottom button - let scroll tracking handle it
+        // We only need to reset the TOP button here
         
         // Reset top button
         if (topBtn) {
@@ -2027,7 +2685,7 @@
           topBtn.disabled = false;
         }
         
-        console.log('🔄 Both buttons reset to UNCOMPLETED state');
+        console.log('🔄 Top button reset to UNCOMPLETED state (bottom button managed by scroll tracking)');
       }
     }
     
@@ -2036,15 +2694,10 @@
       const totalWeeks = 6;
       let completedCount = 0;
       
-      // Count completed modules from localStorage
+      // Count completed modules using same check as visual indicators
       for (let i = 0; i < totalWeeks; i++) {
-        const progressKey = `progress_${courseId}_module_${i}`;
-        const saved = localStorage.getItem(progressKey);
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.contentRead || data.assessmentPassed) {
-            completedCount++;
-          }
+        if (isModuleCompleted(i)) {
+          completedCount++;
         }
       }
       
@@ -3274,5 +3927,20 @@
       }
     }
   </script>
+  <!-- Marriage Education Chatbot -->
+  <script src="marriage-chatbot.js"></script>
+
+  <!-- System Gate Modal -->
+  <div id="systemGateModal" class="hidden" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:24px">
+    <div style="background:white;border-radius:20px;padding:40px;max-width:480px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+      <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+      <h2 style="color:#0f172a;font-size:1.5rem;margin-bottom:12px">Feature Locked</h2>
+      <p id="gateReason" style="color:#475569;line-height:1.7;margin-bottom:28px">This feature requires a higher Formation Score.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="ambassador-payment.html" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;padding:12px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:0.95rem">Upgrade Now</a>
+        <button onclick="closeSystemGate()" style="background:#f1f5f9;color:#475569;border:none;padding:12px 28px;border-radius:10px;font-weight:600;cursor:pointer;font-size:0.95rem">Close</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
