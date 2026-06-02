@@ -671,7 +671,7 @@
       return state.leaderNetwork;
     }
     try {
-      var net = await global.DOSRdNetwork.loadLeaderNetwork(db(), leader, {});
+      var net = await global.DOSRdNetwork.loadLeaderNetwork(db(), leader, { loose: true });
       state.leaderNetwork = net;
       state.leaderNetworkQueriedCode = leader;
       return net;
@@ -715,10 +715,33 @@
       (pipelineN ? ' <span style="color:#71717a">(' + pipelineN + ' awaiting activation)</span>' : '');
   }
 
-  async function loadVerifiedDirectRecruits(leaderCode) {
+  async function resolveLeaderRdCode(leaderCode, stats) {
+    var rd = stats && (stats.rdCode || stats.regional_director_code);
+    if (rd && global.DOSRdNetwork && global.DOSRdNetwork.normCode) {
+      return global.DOSRdNetwork.normCode(rd);
+    }
+    if (rd) return String(rd).trim().toUpperCase();
+    try {
+      var snap = await db().collection('ambassadors').doc(String(leaderCode || '').trim().toUpperCase()).get();
+      if (snap.exists) {
+        var d = snap.data();
+        rd = d.rdCode || d.regional_director_code || '';
+        if (rd && global.DOSRdNetwork && global.DOSRdNetwork.normCode) {
+          return global.DOSRdNetwork.normCode(rd);
+        }
+        return String(rd || '').trim().toUpperCase();
+      }
+    } catch (e) {
+      console.warn('resolveLeaderRdCode', e);
+    }
+    return '';
+  }
+
+  async function loadVerifiedDirectRecruits(leaderCode, stats) {
     if (global.DOSRdNetwork && global.DOSRdNetwork.loadDirectRecruits) {
       try {
-        return await global.DOSRdNetwork.loadDirectRecruits(db(), leaderCode);
+        var rdCode = await resolveLeaderRdCode(leaderCode, stats);
+        return await global.DOSRdNetwork.loadDirectRecruits(db(), leaderCode, { rdCode: rdCode, loose: true });
       } catch (e) {
         console.warn('Direct recruit queries', e);
         return [];
@@ -799,57 +822,55 @@
 
     if (!isRdPreview() && global.DOSRdNetwork && global.DOSRdNetwork.loadLeaderNetwork) {
       var recruitCount = stats.recruits_count != null ? stats.recruits_count : 0;
-      var verifiedDirect = await loadVerifiedDirectRecruits(leaderCode);
-      state.verifiedDirectRecruits = verifiedDirect.length;
+      var verifiedDirect = await loadVerifiedDirectRecruits(leaderCode, stats);
       if (!isSeniorPreview()) renderOverview(stats, code);
       if (isSeniorPreview() || treeEl) {
         var lnet = await loadLeaderNetworkData(leaderCode, !!forceRefresh);
         if (lnet && lnet.stats && verifiedDirect.length > 0 && (lnet.stats.directRecruits || 0) === 0 && !forceRefresh) {
-          /* stale cache safety: force refresh once if profile + Firestore direct links disagree */
           lnet = await loadLeaderNetworkData(leaderCode, true);
         }
-        var hasOrg = lnet && ((lnet.stats && lnet.stats.directRecruits > 0) ||
-          (lnet.pipeline && lnet.pipeline.length) ||
-          (lnet.members && lnet.members.length > 1) ||
-          verifiedDirect.length > 0);
-        if (lnet && lnet.loadError && !hasOrg) {
-          /* fall through to card grid */
-        } else if (lnet && (isSeniorPreview() || (treeEl && (hasOrg || verifiedDirect.length > 0)))) {
-          if (isSeniorPreview()) renderLeaderNetworkBlurb(lnet);
-          if (countEl) countEl.textContent = String(Math.max(recruitCount, (lnet.stats && lnet.stats.directRecruits) || 0, verifiedDirect.length));
-          if (summaryEl && global.DOSRdNetwork.renderLeaderNetworkSummary) {
-            global.DOSRdNetwork.renderLeaderNetworkSummary(summaryEl, lnet.stats, lnet.leaderName);
-          }
-          if (treeEl && global.DOSRdNetworkTree) {
-            state.rdTreeController = mountGenealogyTree(treeEl, lnet, {
-              rootCode: leaderCode,
-              rootKind: 'leader',
-              rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
-              defaultView: 'full'
-            });
-          }
-          if (global.DOSRdNetworkExplorer) {
-            global.DOSRdNetworkExplorer.render(list, lnet.members, {
-              rdCode: leaderCode,
-              rdName: lnet.leaderName || leaderCode,
-              graph: lnet.graph,
-              stats: lnet.stats,
-              onRefresh: function () {
-                state.leaderNetwork = null;
-                loadRecruits(code, stats, true);
-              }
-            });
-          } else {
-            global.DOSRdNetwork.renderNetworkList(list, lnet.members);
-          }
-          return;
+        var directN = (lnet && lnet.stats && lnet.stats.directRecruits) || 0;
+        var displayCount = Math.max(recruitCount, directN, verifiedDirect.length);
+        state.verifiedDirectRecruits = displayCount;
+        if (countEl) countEl.textContent = String(displayCount);
+        if (isSeniorPreview()) renderLeaderNetworkBlurb(lnet);
+        if (summaryEl && lnet && lnet.stats && global.DOSRdNetwork.renderLeaderNetworkSummary) {
+          global.DOSRdNetwork.renderLeaderNetworkSummary(summaryEl, lnet.stats, lnet.leaderName);
         }
+        if (treeEl && global.DOSRdNetworkTree && lnet) {
+          state.rdTreeController = mountGenealogyTree(treeEl, lnet, {
+            rootCode: leaderCode,
+            rootKind: 'leader',
+            rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
+            defaultView: 'full'
+          });
+        } else if (treeEl) {
+          treeEl.innerHTML = '<div class="dos-empty">Genealogy tree module did not load. Hard-refresh the page.</div>';
+        }
+        if (global.DOSRdNetworkExplorer && lnet) {
+          global.DOSRdNetworkExplorer.render(list, lnet.members || [], {
+            rdCode: leaderCode,
+            rdName: lnet.leaderName || leaderCode,
+            graph: lnet.graph,
+            stats: lnet.stats,
+            onRefresh: function () {
+              state.leaderNetwork = null;
+              state.leaderNetworkQueriedCode = null;
+              loadRecruits(code, stats, true);
+            }
+          });
+        } else if (displayCount === 0) {
+          list.innerHTML = '<div class="dos-empty">No ambassadors recruited yet. Use your <strong>Recruitment</strong> link under Deployment links.</div>';
+        } else if (lnet) {
+          global.DOSRdNetwork.renderNetworkList(list, lnet.members || []);
+        }
+        return;
       }
     }
 
     var recruits = [];
     if (!isRdPreview()) {
-      recruits = await loadVerifiedDirectRecruits(leaderCode);
+      recruits = await loadVerifiedDirectRecruits(leaderCode, stats);
       state.verifiedDirectRecruits = recruits.length;
       if (!isSeniorPreview()) renderOverview(stats, code);
     } else {
@@ -1285,6 +1306,10 @@
       showLoadError('Some sections failed to load. Try refreshing the page.');
     }
 
+    if (global.DOSRouter && global.DOSRouter.getSection && global.DOSRouter.getSection() === 'network') {
+      await loadRecruits(code, stats, true);
+    }
+
     refreshRoleCharter();
   }
 
@@ -1571,12 +1596,10 @@
       if (!e.detail || !e.detail.section) return;
       if (e.detail.section === 'role-targets') refreshRoleCharter();
       if (e.detail.section === 'network' && state.code && state.stats) {
-        if (isRdPreview() || isSeniorPreview() || document.getElementById('dosRecruitmentTree')) {
-          if (isRdPreview()) state.rdNetwork = null;
-          state.leaderNetwork = null;
-          state.leaderNetworkQueriedCode = null;
-          loadRecruits(state.code, state.stats, true);
-        }
+        if (isRdPreview()) state.rdNetwork = null;
+        state.leaderNetwork = null;
+        state.leaderNetworkQueriedCode = null;
+        loadRecruits(state.code, state.stats, true);
       }
     });
   }
