@@ -778,10 +778,25 @@
     var pipeline = [];
 
     var snap;
+    function queryPending() {
+      return db.collection('pending_payments').where('status', '==', 'pending').limit(250).get();
+    }
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise(function (_, reject) {
+          setTimeout(function () { reject(new Error('pending_payments timeout')); }, ms);
+        })
+      ]);
+    }
     try {
-      snap = await db.collection('pending_payments').where('status', '==', 'pending').limit(250).get();
+      snap = await withTimeout(queryPending(), 10000);
     } catch (e) {
-      snap = await db.collection('pending_payments').limit(250).get();
+      try {
+        snap = await withTimeout(db.collection('pending_payments').limit(250).get(), 10000);
+      } catch (e2) {
+        snap = { forEach: function () {} };
+      }
     }
 
     snap.forEach(function (doc) {
@@ -848,18 +863,24 @@
     return false;
   }
 
-  /** Scan all ambassadors in region and match recruiter fields client-side (Firestore index-safe fallback). */
+  /** Scan ambassadors sharing an rd/upline code (RD-* or senior AMB-*) and match recruiter fields client-side. */
   async function loadDirectRecruitsFromRegion(db, leaderCode, rdCode, options) {
     options = options || {};
     var leader = normCode(leaderCode);
     var rd = normCode(rdCode);
-    if (!leader || rd.indexOf('RD-') !== 0) return [];
+    if (!leader || !rd || rd === leader) return [];
     var cv = buildCodeVariants(leaderCode);
     var byId = {};
     var queries = [
       db.collection('ambassadors').where('rdCode', '==', rd).get(),
       db.collection('ambassadors').where('regional_director_code', '==', rd).get()
     ];
+    if (rd.indexOf('AMB-') === 0) {
+      queries.push(
+        db.collection('ambassadors').where('senior_code', '==', rd).get(),
+        db.collection('ambassadors').where('recruitedBy', '==', rd).get()
+      );
+    }
     var snaps = await Promise.all(queries.map(function (q) {
       return q.catch(function () { return { forEach: function () {} }; });
     }));
