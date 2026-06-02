@@ -808,6 +808,73 @@
     return pipeline;
   }
 
+  function isActivatedRecruitData(d) {
+    if (!d) return false;
+    if (d.activated_at || d.activatedAt || d.activation_date || d.activatedOn) return true;
+    var status = String(d.status || '').toLowerCase();
+    return status === 'active' || status === 'approved';
+  }
+
+  /** Direct recruits of a leader (verified), across recruiter field variants. */
+  async function loadDirectRecruits(db, leaderCode) {
+    var rawCode = String(leaderCode || '').trim();
+    var code = normCode(rawCode);
+    if (!code) return [];
+    var codeVariants = {};
+    [rawCode, code, rawCode.toLowerCase()].forEach(function (v) {
+      var key = String(v || '').trim();
+      if (key) codeVariants[key] = true;
+    });
+    var recruiterFields = [
+      'recruitedBy',
+      'recruited_by',
+      'senior_code',
+      'recruited_by_senior',
+      'recruiter_code',
+      'regional_director'
+    ];
+    var byId = {};
+    function includeDoc(doc) {
+      if (!doc || !doc.id || byId[doc.id]) return;
+      var d = doc.data();
+      if (!d || !isActivatedRecruitData(d)) return;
+      if (String(d.status || '').toLowerCase() === 'merged_duplicate') return;
+      if (d.merged_into || d.mergedInto || d.is_form_intake_only) return;
+      byId[doc.id] = { id: doc.id, data: d };
+    }
+    var queries = [];
+    recruiterFields.forEach(function (field) {
+      Object.keys(codeVariants).forEach(function (variant) {
+        queries.push(
+          db.collection('ambassadors').where(field, '==', variant).get()
+            .catch(function () { return { forEach: function () {} }; })
+        );
+      });
+    });
+    var snaps = await Promise.all(queries);
+    snaps.forEach(function (snap) {
+      if (!snap || !snap.forEach) return;
+      snap.forEach(includeDoc);
+    });
+    return Object.keys(byId).map(function (k) { return byId[k]; });
+  }
+
+  function mergeDirectRecruitsIntoMembers(members, recruitDocs, leaderCode, rdCode) {
+    var leader = normCode(leaderCode);
+    var rd = normCode(rdCode);
+    var seen = {};
+    members.forEach(function (m) { seen[m.id] = true; });
+    recruitDocs.forEach(function (r) {
+      if (!r || !r.id || seen[r.id]) return;
+      var m = classifyMember(r.id, r.data, rd || leader);
+      if (normCode(m.recruitedBy) !== leader) {
+        m.recruitedBy = leader;
+      }
+      members.push(m);
+      seen[r.id] = true;
+    });
+  }
+
   function computeLeaderNetworkStats(members, leaderCode) {
     var leader = normCode(leaderCode);
     var direct = 0;
@@ -897,6 +964,13 @@
       regional.graph = attachRecruitmentGraph(regional.members, leader);
     }
 
+    // RD regional query misses downline linked only via recruitedBy AMB-* — merge direct recruits.
+    var directRecruitDocs = await loadDirectRecruits(db, leader);
+    if (directRecruitDocs.length) {
+      mergeDirectRecruitsIntoMembers(regional.members, directRecruitDocs, leader, rdCode);
+    }
+    regional.graph = attachRecruitmentGraph(regional.members, leader);
+
     var subtree = filterSubtreeMembers(regional.members, regional.graph, leader);
     if (!subtree.some(function (m) { return m.id === leader; })) {
       if (regional.graph.byId[leader]) {
@@ -982,6 +1056,8 @@
     filterMembersByView: filterMembersByView,
     filterSubtreeMembers: filterSubtreeMembers,
     loadLeaderNetwork: loadLeaderNetwork,
+    loadDirectRecruits: loadDirectRecruits,
+    mergeDirectRecruitsIntoMembers: mergeDirectRecruitsIntoMembers,
     loadPipelineRecruits: loadPipelineRecruits,
     mergePipelineGraph: mergePipelineGraph,
     enrichRdNetworkWithPipeline: enrichRdNetworkWithPipeline,
