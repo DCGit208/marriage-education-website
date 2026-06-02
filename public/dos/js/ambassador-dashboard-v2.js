@@ -716,56 +716,15 @@
   }
 
   async function loadVerifiedDirectRecruits(leaderCode) {
-    var rawCode = String(leaderCode || '').trim();
-    var code = rawCode.toUpperCase();
-    if (!code) return [];
-    var codeVariants = {};
-    [rawCode, code, rawCode.toLowerCase()].forEach(function (v) {
-      var key = String(v || '').trim();
-      if (key) codeVariants[key] = true;
-    });
-    var recruiterFields = [
-      'recruitedBy',
-      'recruited_by',
-      'senior_code',
-      'recruited_by_senior',
-      'recruiter_code',
-      'regional_director'
-    ];
-    var byId = {};
-    function isActivatedRecruit(d) {
-      if (!d) return false;
-      if (d.activated_at || d.activatedAt || d.activation_date || d.activatedOn) return true;
-      var status = String(d.status || '').toLowerCase();
-      return status === 'active' || status === 'approved';
+    if (global.DOSRdNetwork && global.DOSRdNetwork.loadDirectRecruits) {
+      try {
+        return await global.DOSRdNetwork.loadDirectRecruits(db(), leaderCode);
+      } catch (e) {
+        console.warn('Direct recruit queries', e);
+        return [];
+      }
     }
-    function includeDoc(doc) {
-      if (!doc || !doc.id || byId[doc.id]) return;
-      var d = doc.data();
-      if (!d || !isActivatedRecruit(d)) return;
-      if (String(d.status || '').toLowerCase() === 'merged_duplicate') return;
-      if (d.merged_into || d.mergedInto || d.is_form_intake_only) return;
-      byId[doc.id] = { id: doc.id, data: d };
-    }
-    try {
-      var queries = [];
-      recruiterFields.forEach(function (field) {
-        Object.keys(codeVariants).forEach(function (variant) {
-          queries.push(
-            db().collection('ambassadors').where(field, '==', variant).get()
-              .catch(function () { return { forEach: function () {} }; })
-          );
-        });
-      });
-      var snaps = await Promise.all(queries);
-      snaps.forEach(function (snap) {
-        if (!snap || !snap.forEach) return;
-        snap.forEach(includeDoc);
-      });
-    } catch (e) {
-      console.warn('Direct recruit queries', e);
-    }
-    return Object.keys(byId).map(function (k) { return byId[k]; });
+    return [];
   }
 
   async function loadRecruits(code, stats, forceRefresh) {
@@ -855,7 +814,7 @@
           verifiedDirect.length > 0);
         if (lnet && lnet.loadError && !hasOrg) {
           /* fall through to card grid */
-        } else if (lnet && (isSeniorPreview() || (treeEl && hasOrg))) {
+        } else if (lnet && (isSeniorPreview() || (treeEl && (hasOrg || verifiedDirect.length > 0)))) {
           if (isSeniorPreview()) renderLeaderNetworkBlurb(lnet);
           if (countEl) countEl.textContent = String(Math.max(recruitCount, (lnet.stats && lnet.stats.directRecruits) || 0, verifiedDirect.length));
           if (summaryEl && global.DOSRdNetwork.renderLeaderNetworkSummary) {
@@ -923,8 +882,38 @@
     if (summaryEl) summaryEl.innerHTML = '';
 
     if (!recruits.length) {
+      if (treeEl) treeEl.innerHTML = '';
       list.innerHTML = '<div class="dos-empty">No ambassadors recruited yet. Use your <strong>Recruitment</strong> link under Deployment links.</div>';
       return;
+    }
+    if (treeEl && global.DOSRdNetworkTree && recruits.length) {
+      var miniMembers = [{ id: leaderCode, data: stats, name: state.name || leaderCode, recruitedBy: '', recruits: recruits.length }];
+      recruits.forEach(function (r) {
+        var d = r.data || {};
+        miniMembers.push({
+          id: r.id,
+          data: d,
+          name: d.fullName || d.name || r.id,
+          recruitedBy: leaderCode,
+          recruits: 0,
+          isSenior: false,
+          isDeveloping: false
+        });
+      });
+      var miniGraph = global.DOSRdNetwork.attachRecruitmentGraph(miniMembers, leaderCode);
+      resetNetworkTreeMount(treeEl);
+      mountGenealogyTree(treeEl, {
+        members: miniMembers,
+        pipeline: [],
+        graph: miniGraph,
+        stats: { directRecruits: recruits.length, totalInOrg: miniMembers.length },
+        leaderName: state.name || leaderCode
+      }, {
+        rootCode: leaderCode,
+        rootKind: 'leader',
+        rootName: state.name || leaderCode,
+        defaultView: 'full'
+      });
     }
     list.innerHTML = '<div class="dos-recruit-grid">' + recruits.map(function (r) {
       var d = r.data;
@@ -1584,8 +1573,9 @@
       if (e.detail.section === 'network' && state.code && state.stats) {
         if (isRdPreview() || isSeniorPreview() || document.getElementById('dosRecruitmentTree')) {
           if (isRdPreview()) state.rdNetwork = null;
-          if (isSeniorPreview()) state.leaderNetwork = null;
-          loadRecruits(state.code, state.stats);
+          state.leaderNetwork = null;
+          state.leaderNetworkQueriedCode = null;
+          loadRecruits(state.code, state.stats, true);
         }
       }
     });
