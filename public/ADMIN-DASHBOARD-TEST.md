@@ -14,11 +14,11 @@ Deployed: `https://marriageducation.com/admin-dashboard-test.html`
 ## What changed (Phase 0 + 1)
 
 - **Phase 0:** Preview page with orange banner; same UI and payment workflows as production.
-- **Phase 1:** After Firebase sign-in, user must be an admin:
+- **Production (`admin-dashboard.html`):** Login works as before — **any valid Firebase sign-in** opens the dashboard (no role block).
+- **Preview strict mode (`admin-dashboard-test.html?strictAdmin=1` only):** Optional role gate for testing:
   - Firebase custom claim `admin: true`, **or**
   - Firestore `users/{uid}.role === 'admin'`
-- Non-admins see **Access denied**, stay on login, and are signed out automatically.
-- Payment tab logic (approve/reject, RD payments, tables) is **unchanged** for authorized admins.
+- Payment tab logic (approve/reject, RD payments, tables) is **unchanged**.
 
 ## QA checklist (run on preview first)
 
