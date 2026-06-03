@@ -7,6 +7,9 @@ const axios = require('axios');
 const { jsPDF } = require('jspdf');
 const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
 const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
+const {
+  creditSbdSubscriptionCommissions
+} = require('./sbd-subscription-commission');
 
 // UUID - generate random tokens
 function uuidv4() {
@@ -450,6 +453,9 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
             if (tgMeta.seniorAmbassadorCode) {
               payMsg += `\n👑 Senior override: ${tgMeta.seniorAmbassadorCode} (+${tgMeta.seniorCommissionFCFA || 0} FCFA)`;
             }
+            if (tgMeta.rdCode) {
+              payMsg += `\n🌍 RD override: ${tgMeta.rdCode} (+${tgMeta.rdCommissionFCFA || 0} FCFA)`;
+            }
             payMsg += '\n';
           } else if (tgMeta.referralSkipReason) {
             payMsg += `ℹ️ Referral payout: not applied (${tgMeta.referralSkipReason})\n`;
@@ -530,6 +536,28 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
       console.error('Enrollment error:', error);
       return res.status(500).json({ error: error.message });
     }
+  }
+
+  // ── SBD subscription renewal commissions (invoice.payment_succeeded) ──
+  if (event.type === 'invoice.payment_succeeded') {
+    const invoice = event.data.object;
+    try {
+      const meta = await handleSbdStripeInvoice(invoice);
+      if (meta?.credited && invoice.billing_reason === 'subscription_cycle' && TELEGRAM_BOT_TOKEN) {
+        await sendTelegram(
+          `🔁 SBD SUBSCRIPTION RENEWAL COMMISSION\n\n` +
+          `Invoice: ${invoice.id}\n` +
+          `Direct: ${meta.ambassadorCommissionFCFA || 0} FCFA\n` +
+          (meta.seniorAmbassadorCode ? `Senior ${meta.seniorAmbassadorCode}: +${meta.seniorCommissionFCFA || 0} FCFA\n` : '') +
+          (meta.rdCode ? `RD ${meta.rdCode}: +${meta.rdCommissionFCFA || 0} FCFA\n` : '') +
+          `Policy: ${meta.policyVersion || '2026-04-v1'}`,
+          false
+        );
+      }
+    } catch (invErr) {
+      console.error('[SBD] invoice.payment_succeeded commission error:', invErr.message);
+    }
+    return res.json({ received: true, action: 'sbd-invoice' });
   }
 
   // ── SBD subscription cancelled (recurring billing stopped by user) ──
@@ -2130,7 +2158,7 @@ async function resolveAmbassadorRdUpline(ambData) {
   return null;
 }
 
-/** @deprecated Use creditRecruitmentBonusesV2 (docs/RECRUITMENT-BONUS-POLICY.md v2026-03-v2). Kept for reference only. */
+/** @deprecated Use creditRecruitmentBonusesV2 (docs/RECRUITMENT-BONUS-POLICY.md v2026-03-v3). Kept for reference only. */
 async function creditRdNetworkRecruitmentOverride({
   rdCode,
   recruitingAmbassadorCode,
@@ -2309,7 +2337,7 @@ async function activateAmbassador(payment, reference) {
     console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
   }
 
-  // Recruitment bonuses — policy v2026-03-v2 (see docs/RECRUITMENT-BONUS-POLICY.md)
+  // Recruitment bonuses — policy v2026-03-v3 (see docs/RECRUITMENT-BONUS-POLICY.md)
   const existingBonusSnap = await db.collection('admin_notifications')
     .where('ambassador_code', '==', ambassadorCode)
     .where('type', '==', 'rd_recruitment_bonus')
@@ -2681,6 +2709,80 @@ function deriveSbdReferralCode(sellerCode) {
   if (c.startsWith('AMB-')) return c.replace(/^AMB-/, 'SBD-');
   if (c.startsWith('RD-')) return c.replace(/^RD-/, 'SBD-');
   return null;
+}
+
+function mapStripePriceToSbdProduct(priceId) {
+  const pid = String(priceId || '').trim();
+  if (!pid) return null;
+  for (const [productId, meta] of Object.entries(SBD_CATALOG_SERVER)) {
+    if (meta.stripePriceId && String(meta.stripePriceId).trim() === pid) {
+      return productId;
+    }
+  }
+  return null;
+}
+
+/**
+ * Credit SBD tier subscription commissions (2026-04-v1). Idempotent per Stripe invoice id.
+ */
+async function handleSbdStripeInvoice(invoice) {
+  if (!invoice || invoice.status !== 'paid') {
+    return { credited: false, referralSkipReason: 'invoice_not_paid' };
+  }
+
+  const billingReason = invoice.billing_reason || '';
+  if (billingReason !== 'subscription_cycle' && billingReason !== 'subscription_create') {
+    return { credited: false, referralSkipReason: 'not_subscription_billing' };
+  }
+
+  let uid = invoice.metadata?.uid || null;
+  let productId = resolveSbdProductId(invoice.metadata?.productId);
+
+  if (invoice.subscription) {
+    const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription.id;
+    const sub = await stripe.subscriptions.retrieve(subId);
+    uid = uid || sub.metadata?.uid || null;
+    productId = productId || resolveSbdProductId(sub.metadata?.productId);
+    if (!productId && sub.items?.data?.length) {
+      productId = mapStripePriceToSbdProduct(sub.items.data[0].price?.id);
+    }
+  }
+
+  if (!productId && invoice.lines?.data?.length) {
+    productId = mapStripePriceToSbdProduct(invoice.lines.data[0].price?.id);
+  }
+
+  if (!uid && invoice.customer) {
+    const custId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer.id;
+    const snap = await db.collection('users').where('stripeCustomerId', '==', custId).limit(1).get();
+    if (!snap.empty) uid = snap.docs[0].id;
+  }
+
+  if (!uid) {
+    console.warn('[SBD] invoice commission skipped — no uid:', invoice.id);
+    return { credited: false, referralSkipReason: 'no_uid' };
+  }
+
+  productId = resolveSbdProductId(productId);
+  const rule = SBD_UNLOCK_RULES[productId];
+  if (!rule?.tier) {
+    return { credited: false, referralSkipReason: 'non_tier_product' };
+  }
+
+  const userSnap = await db.collection('users').doc(uid).get();
+  const userData = userSnap.exists ? userSnap.data() : {};
+  const chargeKind = billingReason === 'subscription_create' ? 'initial' : 'renewal';
+
+  return creditSbdSubscriptionCommissions({
+    db,
+    findSellerByReferralCode: findSellerBySbdReferralCode,
+    uid,
+    referralCode: userData.referredBy,
+    productId,
+    tierKey: rule.tier,
+    idempotencyKey: `invoice_${invoice.id}`,
+    chargeKind
+  });
 }
 
 async function findSellerBySbdReferralCode(refCode) {
@@ -4174,6 +4276,8 @@ async function unlockSbdContent(uid, productId, session) {
     seniorAmbassadorCode: null,
     ambassadorCommissionFCFA: null,
     seniorCommissionFCFA: null,
+    rdCode: null,
+    rdCommissionFCFA: null,
     tierKeyed: rule.tier || null,
     productId: canonicalProductId,
     productName: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
@@ -4187,86 +4291,34 @@ async function unlockSbdContent(uid, productId, session) {
       ? new Date('2099-12-31')
       : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
 
-    // ── Ambassador commission credit (first subscription only, no double-count on upgrades) ──
-    // Direct Ambassador:  10% of revenueBaseFCFA = 500 FCFA
-    // Senior Ambassador:   5% of revenueBaseFCFA = 250 FCFA (override on recruits' sales)
+    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice ──
     try {
-      const wasAlreadySubscribed = userData.subscription?.status === 'active';
-      const referralCode = userData.referredBy || null;
-
-      if (!referralCode) {
-        tgMeta.referralSkipReason = 'no_referral_code';
-      } else if (wasAlreadySubscribed) {
-        tgMeta.referralSkipReason = 'already_subscribed';
+      let invoiceId = session?.invoice || null;
+      if (!invoiceId && session?.id && session?.mode === 'subscription') {
+        const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+        invoiceId = fullSession.invoice || null;
+      }
+      if (invoiceId) {
+        const invoice = await stripe.invoices.retrieve(
+          typeof invoiceId === 'string' ? invoiceId : invoiceId.id
+        );
+        const commissionResult = await handleSbdStripeInvoice(invoice);
+        Object.assign(tgMeta, {
+          referralCredited: !!commissionResult.credited,
+          referralSkipReason: commissionResult.referralSkipReason || null,
+          referrerAmbassadorCode: commissionResult.referrerAmbassadorCode || null,
+          referrerFullName: commissionResult.referrerFullName || null,
+          seniorAmbassadorCode: commissionResult.seniorAmbassadorCode || null,
+          ambassadorCommissionFCFA: commissionResult.ambassadorCommissionFCFA,
+          seniorCommissionFCFA: commissionResult.seniorCommissionFCFA,
+          rdCode: commissionResult.rdCode || null,
+          rdCommissionFCFA: commissionResult.rdCommissionFCFA
+        });
       } else {
-        const seller = await findSellerBySbdReferralCode(referralCode);
-        if (!seller) {
-          tgMeta.referralSkipReason = 'no_matching_ambassador';
-        } else {
-          const ambData = seller.data;
-          const tierKey        = rule.tier;
-          const revenueBase    = SBD_CATALOG_SERVER[canonicalProductId]?.revenueBaseFCFA || 5000;
-          const ambCommission  = Math.round(revenueBase * 0.10);
-
-          await seller.ref.update({
-            'sbdReferrals.subscribers':         admin.firestore.FieldValue.increment(1),
-            [`sbdReferrals.${tierKey}`]:         admin.firestore.FieldValue.increment(1),
-            'sbdReferrals.commissionPending':   admin.firestore.FieldValue.increment(ambCommission),
-            'sbdReferrals.commissionEarned':    admin.firestore.FieldValue.increment(ambCommission),
-          });
-          console.log(`[SBD] ${seller.type} ${seller.id} +${ambCommission} FCFA commission (tier=${tierKey})`);
-
-          let seniorCode       = null;
-          let seniorCommission = 0;
-          const uplineCode = seller.type === 'ambassador'
-            ? (ambData.regional_director || null)
-            : null;
-          if (uplineCode && uplineCode.startsWith('AMB-')) {
-            const seniorSnap = await db.collection('ambassadors').doc(uplineCode).get();
-            if (seniorSnap.exists) {
-              seniorCommission = Math.round(revenueBase * 0.05);
-              seniorCode       = uplineCode;
-              await seniorSnap.ref.update({
-                'sbdReferrals.overrideCommissionPending': admin.firestore.FieldValue.increment(seniorCommission),
-                'sbdReferrals.overrideCommissionEarned':  admin.firestore.FieldValue.increment(seniorCommission),
-                'sbdReferrals.overrideSubscribers':       admin.firestore.FieldValue.increment(1),
-              });
-              console.log(`[SBD] Senior Ambassador ${uplineCode} +${seniorCommission} FCFA override (tier=${tierKey})`);
-            }
-          }
-
-          await db.collection('sbd_sales').add({
-            ambassadorCode:          seller.type === 'ambassador'
-              ? (ambData.ambassadorCode || ambData.code || seller.id)
-              : (ambData.ambassador_code || null),
-            rdCode:                  seller.type === 'rd' ? seller.id : (ambData.rd_code || null),
-            ambassadorName:          ambData.fullName || ambData.name || '',
-            sbdReferralCode:         referralCode,
-            subscriberUid:           uid,
-            productId: canonicalProductId,
-            tier:                    tierKey,
-            revenueBaseFCFA:         revenueBase,
-            ambassadorCommission:    ambCommission,
-            seniorAmbassadorCode:    seniorCode,
-            seniorAmbassadorCommission: seniorCommission,
-            status:                  'pending',
-            createdAt:               admin.firestore.FieldValue.serverTimestamp(),
-          });
-
-          tgMeta.referralCredited = true;
-          tgMeta.referralSkipReason = null;
-          tgMeta.referrerAmbassadorCode = seller.type === 'ambassador'
-            ? (ambData.ambassadorCode || ambData.code || seller.id)
-            : seller.id;
-          tgMeta.referrerFullName = ambData.fullName || ambData.name || null;
-          tgMeta.seniorAmbassadorCode = seniorCode;
-          tgMeta.ambassadorCommissionFCFA = ambCommission;
-          tgMeta.seniorCommissionFCFA = seniorCode ? seniorCommission : null;
-          tgMeta.tierKeyed = tierKey;
-        }
+        tgMeta.referralSkipReason = 'no_invoice_for_commission';
       }
     } catch (refErr) {
-      console.error('[SBD] Ambassador commission credit failed (non-critical):', refErr.message);
+      console.error('[SBD] Subscription commission credit failed (non-critical):', refErr.message);
       tgMeta.referralSkipReason = 'credit_error';
     }
 
@@ -4493,6 +4545,9 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
   const session = await stripe.checkout.sessions.create({
     customer_email: email,
     metadata: { app: 'sbd', uid, productId: canonicalProductId },
+    ...(product.mode === 'subscription'
+      ? { subscription_data: { metadata: { app: 'sbd', uid, productId: canonicalProductId } } }
+      : {}),
     mode: product.mode,
     line_items: [lineItem],
     success_url: `${baseUrl}/checkout-success.html?product=${canonicalProductId}&session_id={CHECKOUT_SESSION_ID}`,
@@ -5213,35 +5268,17 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
     console.log(`👤 Customer: ${customer.name} (${customer.id})`);
     console.log(`🎯 Attribution: AMB=${customer.source_ambassador}, SNR=${customer.source_senior}, RD=${customer.source_rd}`);
     
-    // 3. Calculate commissions (10% + 5% + 5% + 6.67% = 26.67%)
+    // 3. Calculate commissions (10% + 5% + 5% = 20%)
     const baseCommission = product.price * (product.commission_rate || 0.10);
     
-    // Get Executive sponsor (if exists) by walking up from RD
-    let executiveId = null;
-    if (customer.source_rd) {
-      const rdDoc = await db.collection('regional_directors').doc(customer.source_rd).get();
-      if (rdDoc.exists) {
-        const rdData = rdDoc.data();
-        // Check if RD has a sponsor who is Executive (role_level 4)
-        if (rdData.sponsor_code) {
-          const executiveDoc = await db.collection('ambassadors').doc(rdData.sponsor_code).get();
-          if (executiveDoc.exists && executiveDoc.data().role_level === 4) {
-            executiveId = rdData.sponsor_code;
-          }
-        }
-      }
-    }
-    
     const commissions = {
-      total_commission: baseCommission * 2.667, // 26.67% total
+      total_commission: baseCommission * 2.0, // 20% total
       ambassador_amount: baseCommission,       // 10%
       ambassador_id: customer.source_ambassador,
       senior_amount: customer.source_senior ? baseCommission * 0.5 : 0,  // 5%
       senior_id: customer.source_senior,
-      rd_amount: customer.source_rd ? baseCommission * 0.5 : 0,  // 5% (SUSTAINABLE MODEL)
+      rd_amount: customer.source_rd ? baseCommission * 0.5 : 0,  // 5%
       rd_id: customer.source_rd,
-      executive_amount: executiveId ? baseCommission * 0.667 : 0,  // 6.67% (SUSTAINABLE MODEL)
-      executive_id: executiveId,
       product_category: product.category
     };
     
@@ -5266,8 +5303,7 @@ exports.processProductDeployment = functions.https.onCall(async (data, context) 
         total: commissions.total_commission,
         ambassador: commissions.ambassador_amount,
         senior: commissions.senior_amount,
-        rd: commissions.rd_amount,
-        executive: commissions.executive_amount
+        rd: commissions.rd_amount
       },
       deployment_type: 'access_facilitation',
       earnings_type: 'advocacy_earnings',
@@ -5537,23 +5573,7 @@ async function creditCommissionsToUpline(customer, product, commissions, saleId)
     console.log(`✅ Credited RD: ${commissions.rd_amount.toLocaleString()} FCFA (5% override)`);
   }
   
-  // 4. Credit Executive (6.67%)
-  if (commissions.executive_id) {
-    const executiveRef = db.collection('ambassadors').doc(commissions.executive_id);
-    
-    batch.update(executiveRef, {
-      commissionEarned: admin.firestore.FieldValue.increment(commissions.executive_amount),
-      executive_override_earned: admin.firestore.FieldValue.increment(commissions.executive_amount),
-      [`executive_revenue_by_category.${product.category}`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
-      [`monthly_earnings.${monthKey}.total`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
-      [`monthly_earnings.${monthKey}.executive_override`]: admin.firestore.FieldValue.increment(commissions.executive_amount),
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    console.log(`✅ Credited Executive: ${commissions.executive_amount.toLocaleString()} FCFA (6.67% override)`);
-  }
-  
-  // 5. Update volume tracking
+  // 4. Update volume tracking
   await updateVolumeTracking(customer, product.price);
   
   await batch.commit();
@@ -6364,18 +6384,18 @@ async function promoteToExecutive(ambassadorCode, ambassadorData) {
             
             <h3>What This Means:</h3>
             <ul>
-              <li>✅ <strong>TOP TIER LEADERSHIP</strong> - Elite status in the organization</li>
-              <li>✅ Earn <strong>9% executive override (7% + 2% leadership bonus)</strong> on entire network</li>
+              <li>✅ <strong>TOP TIER LEADERSHIP</strong> — elite status in the organization</li>
+              <li>✅ You earn by <strong>replicating full RD infrastructure</strong> — not by an extra override layer</li>
+              <li>✅ Each mature RD network you develop generates recurring RD override (~250M FCFA/month at scale)</li>
               <li>✅ Manage multiple Regional Directors and their networks</li>
               <li>✅ Access the <strong>Executive Dashboard</strong> with advanced analytics</li>
-              <li>✅ Target: <strong>$1M-$1.5M+/month</strong> with active network</li>
             </ul>
             
             <h3>Your Network:</h3>
             <ul>
               <li>Regional Directors Recruited: ${fullAmbassadorData.directRDCount || fullAmbassadorData.rds_recruited || 1}+</li>
               <li>Total Network: 1,000+ ambassadors across multiple RD territories</li>
-              <li>Commission Structure: 10% + 5% + 3% + 9% = 27% total payout</li>
+              <li>Product commissions remain 10% + 5% + 5% (Ambassador · Senior · RD) — no executive slice</li>
             </ul>
             
             <h3>Next Steps:</h3>
@@ -6383,7 +6403,7 @@ async function promoteToExecutive(ambassadorCode, ambassadorData) {
               <li>Login to your dashboard: <a href="https://marriageducation.com/ambassador-login.html">Ambassador Login</a></li>
               <li>Access your Executive Network Director Dashboard</li>
               <li>Monitor network-wide performance and RD development</li>
-              <li>Your executive override earnings (9%) will show on your dashboard</li>
+              <li>Focus on duplicating RD deployments to scale recurring override income</li>
             </ol>
             
             <p><strong>🏆 You are now part of an elite group of Executive Network Directors!</strong></p>
@@ -6407,8 +6427,8 @@ async function promoteToExecutive(ambassadorCode, ambassadorData) {
         `RDs Recruited: ${fullAmbassadorData.directRDCount || fullAmbassadorData.rds_recruited || 1}+\n` +
         `Network Size: 1,000+ ambassadors\n\n` +
         `🎯 TOP TIER REACHED!\n` +
-        `Executive Override: 9% on entire network\n` +
-        `Target: $1M+/month!`;
+        `Earn by replicating RD infrastructure — no executive override layer\n` +
+        `Target: scale multiple mature RD networks (~250M FCFA/month each at scale)`;
       
       await sendTelegram(msg, false);
     }

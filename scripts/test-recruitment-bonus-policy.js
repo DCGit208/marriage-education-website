@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Unit tests for recruitment bonus policy v2026-03-v2.
+ * Unit tests for recruitment bonus policy v2026-03-v3.
  * Run: node scripts/test-recruitment-bonus-policy.js
  * See: docs/RECRUITMENT-BONUS-POLICY.md
  */
@@ -24,7 +24,7 @@ function ok(name, cond, detail) {
   }
 }
 
-ok('policy version set', POLICY_VERSION === '2026-03-v2');
+ok('policy version set', POLICY_VERSION === '2026-03-v3');
 ok('normalize underscores', normalizeReferralCode('AMB_KONI_8321') === 'AMB-KONI-8321');
 ok('normalize lowercase', normalizeReferralCode('rd-gust-4230') === 'RD-GUST-4230');
 

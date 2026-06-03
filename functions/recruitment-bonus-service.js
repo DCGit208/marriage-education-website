@@ -1,5 +1,5 @@
 /**
- * Credits recruitment bonuses per docs/RECRUITMENT-BONUS-POLICY.md (v2026-03-v2).
+ * Credits recruitment bonuses per docs/RECRUITMENT-BONUS-POLICY.md (v2026-03-v3).
  */
 
 const admin = require('firebase-admin');

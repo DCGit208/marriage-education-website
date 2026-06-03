@@ -1,9 +1,10 @@
 # Recruitment Bonus Policy — Authoritative Reference
 
-**Policy version:** `2026-03-v2`  
+**Policy version:** `2026-03-v3`  
 **Status:** Active (implemented in Cloud Functions `activateAmbassador`)  
 **Last updated:** March 2026  
 
+> **Read [COMMISSION-MASTER-PRINCIPLES.md](./COMMISSION-MASTER-PRINCIPLES.md) first.**  
 > **Read this document before changing recruitment bonuses, admin payout UI, dashboard copy, or activation scripts.**
 
 ---
@@ -54,8 +55,9 @@ Must be `AMB-…`, `SNR-…`, or `RD-…`.
 **Uplines** = everyone **above** the direct recruiter, walking **up** the chain (closest first). Includes:
 
 - Ambassadors / Senior ambassadors (`AMB-…`, `SNR-…`)
-- Regional Director (`RD-…`) when in chain
-- **Executive Network Director** when linked above an RD (`regional_directors/{RD}.sponsor_code` → ambassador with `role_level === 4` or `ambassador_type === 'executive'`)
+- Regional Director (`RD-…`) when in chain — **walk stops at RD**
+
+**Executive Network Director is never in the upline pool.** No recruitment bonus on signup. See [EXECUTIVE-NETWORK-DIRECTOR.md](./EXECUTIVE-NETWORK-DIRECTOR.md).
 
 The **direct recruiter is never** in the upline list.
 
@@ -124,15 +126,17 @@ AMB-KONI-8321
 | Upline 2 | 750 |
 | **Total** | **3,000** |
 
-### 5.4 Four uplines including Executive
+### 5.4 RD at top of chain (Executive gets nothing)
 
 If `RD-GUST-4230` has Executive sponsor `AMB-EXEC-XXXX`:
 
 | Payee | FCFA |
 |-------|------|
 | Direct recruiter | 1,500 |
-| Each of 4 uplines | 375 |
-| **Total** | **3,000** |
+| Uplines (Amb · Senior · RD only) | Same as §5.1 — **3 uplines max in example** |
+| Executive sponsor | **0** |
+
+Executive economics come from **replicating RD infrastructure**, not signup upline shares.
 
 ### 5.5 RD recruits directly
 
@@ -152,7 +156,7 @@ Starting from **direct recruiter code** (not the new ambassador):
 2. Set `current = recruitedBy` (or equivalent on RD record).
 3. Loop until stop:
    - If `current` is `AMB-` / `SNR-`: append to uplines; load doc; set `current = data.recruitedBy`.
-   - If `current` is `RD-`: append RD; load `regional_directors/{RD}`; if `sponsor_code` points to Executive (`role_level === 4`), append Executive; **stop**.
+   - If `current` is `RD-`: append RD; **stop** (do not walk `sponsor_code` to Executive).
    - If `current` empty or cycle detected: **stop**.
 4. Apply §4 share math to the upline list order (index 0 = closest to direct recruiter).
 
@@ -176,9 +180,10 @@ Starting from **direct recruiter code** (not the new ambassador):
 ```javascript
 {
   type: 'rd_recruitment_bonus',
-  policy_version: '2026-03-v2',
+  policy_version: '2026-03-v3',
   bonus_tier: 'direct' | 'upline',           // pool A vs pool B
-  recruiter_type: 'direct_recruiter' | 'upline_share' | 'regional_director' | 'executive_upline' | 'senior',
+  recruiter_type: 'direct_recruiter' | 'upline_share' | 'regional_director' | 'senior',
+  // legacy rows may show executive_upline (v2026-03-v2 only)
   rd_code: 'AMB-…' | 'RD-…',               // payee code (legacy column name in admin UI)
   rd_name: 'Display name',
   ambassador_code: 'AMB-NEW-…',            // new recruit
@@ -226,13 +231,14 @@ Does **not** create or activate accounts.
 
 ---
 
-## 9. Related systems (unchanged by this policy)
+## 9. Related systems (separate policies)
 
-| System | Bonus | Notes |
-|--------|-------|-------|
-| **SBD first subscription** | 500 FCFA direct + 250 senior override | `users.referredBy` + `sbdReferralCode`; separate from recruitment |
-| **Book / campaign sales** | ~10% / book-sharer rules | `trackAmbassadorSale()` |
-| **Senior promotion** | Role change at 10 recruits | Still uses `recruits_count` on direct recruiter only |
+| System | Bonus | Policy doc |
+|--------|-------|------------|
+| **SBD Foundation subscription** | **500 + 250 + 250 FCFA/month recurring** (10/5/5 of 5,000 base) | [SBD-SUBSCRIPTION-COMMISSION-POLICY.md](./SBD-SUBSCRIPTION-COMMISSION-POLICY.md) |
+| **Executive Network Director** | **0** on signup; earns via RD replication | [EXECUTIVE-NETWORK-DIRECTOR.md](./EXECUTIVE-NETWORK-DIRECTOR.md) |
+| **Book / campaign sales** | ~10% / book-sharer rules | `trackAmbassadorSale()` — Phase 4 aligns roles |
+| **Senior promotion** | Role change at 10 recruits | `recruits_count` on direct recruiter only |
 
 ---
 
@@ -258,6 +264,7 @@ Does **not** create or activate accounts.
 | RD-only **750 FCFA** `network_override` on ambassador recruits | Upline pool split (§4) |
 | Upline ambassadors **0** on downline recruits | Equal / 750 upline shares |
 | `creditRdNetworkRecruitmentOverride()` as sole upline payment | `creditRecruitmentBonusesV2()` |
+| Executive in recruitment upline pool (v2026-03-v2) | **Removed in v2026-03-v3** — Executive = replication only |
 
 ---
 
@@ -277,7 +284,8 @@ After policy or code changes:
 
 | Version | Date | Summary |
 |---------|------|---------|
-| `2026-03-v2` | Mar 2026 | Two-pool model: 1,500 direct + 1,500 upline (750/750/÷N rules); Executive in upline split; org retains unused pool |
+| `2026-03-v3` | Mar 2026 | Remove Executive from upline pool; align with replication doctrine; link SBD recurring policy |
+| `2026-03-v2` | Mar 2026 | Two-pool model; Executive in upline split (**superseded**) |
 | `legacy` | pre-2026 | 1,500 direct + 750 RD override only |
 
 ---
@@ -287,12 +295,13 @@ After policy or code changes:
 ```
 DIRECT  = 1500 FCFA → always to recruiter on payment
 
-UPLINES = up to 1500 FCFA total:
+UPLINES = up to 1500 FCFA total (Amb · Senior · RD only):
   N=0  → org keeps 1500 (RD direct case)
   N=1  → upline gets 750, org keeps 750
   N=2  → 750 + 750
   N≥3  → 1500 ÷ N each (remainder to closest upline)
 
-Executive above RD counts as +1 upline in the split.
+Executive: 0 on signup — see EXECUTIVE-NETWORK-DIRECTOR.md
+SBD subs: 500+250+250/month — see SBD-SUBSCRIPTION-COMMISSION-POLICY.md
 Admin approves activation → bonuses pending → admin Pay button.
 ```
