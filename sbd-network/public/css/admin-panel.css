@@ -1,0 +1,293 @@
+/**
+ * Admin panel — layout, sticky tabs, overflow-safe cards
+ */
+
+:root {
+  --admin-header-h: calc(56px + env(safe-area-inset-top, 0px));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --admin-header-h: calc(60px + env(safe-area-inset-top, 0px));
+  }
+}
+
+.admin-page {
+  padding-top: var(--admin-header-h);
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.admin-page .app-header {
+  height: var(--admin-header-h);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.admin-main {
+  padding: 12px 14px 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  max-width: 1100px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* ── Sticky tab bar (always visible below header) ─────────────── */
+.admin-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 0 -14px 16px;
+  padding: 10px 14px 12px;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0a0a0c 88%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-tabs::after {
+  content: '';
+  flex: 0 0 8px;
+}
+
+.admin-tabs .tab-btn {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.admin-tabs .tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-tabs .tab-btn.active {
+  color: #0a0a0c;
+  background: var(--accent-primary, #00bcd4);
+  border-color: var(--accent-primary, #00bcd4);
+  border-bottom-color: var(--accent-primary, #00bcd4);
+}
+
+/* ── Section headers ─────────────────────────────────────────── */
+.admin-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-section-header h3 {
+  font-size: 1.05rem;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-section-header .btn {
+  flex-shrink: 0;
+}
+
+/* ── Cards: no wall-of-text overflow ─────────────────────────── */
+.admin-list {
+  gap: 12px;
+}
+
+.admin-card {
+  padding: 14px 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ce2-member-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--bg-card, #1a1a1a);
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  font: inherit;
+}
+
+.ce2-member-picker-row:hover:not(:disabled) {
+  border-color: var(--accent-primary, #00bcd4);
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.ce2-member-picker-row:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ce2-member-picker-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.ce2-member-picker-row__action {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-primary, #00bcd4);
+}
+
+.admin-card h4 {
+  font-size: 1rem;
+  margin: 0 0 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.admin-card p,
+.admin-card .small-text {
+  margin: 0 0 8px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.admin-card > p:not(.small-text) {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.admin-card-actions {
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.admin-card-actions .btn {
+  min-width: 0;
+}
+
+/* ── Forms / modals on small screens ───────────────────────────── */
+.admin-manage-row {
+  flex-wrap: wrap;
+}
+
+.admin-select {
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .admin-tabs .tab-btn {
+    padding: 9px 12px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Loading overlay must not block clicks when hidden */
+.admin-page .loading-overlay[aria-hidden="true"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#manageUserModal.modal {
+  align-items: flex-start;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+}
+
+#manageUserModal .modal-content {
+  max-height: min(92dvh, 720px);
+  margin: auto 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* iOS: one scroll container — avoid nested overflow traps inside manage modal */
+#manageUserModal #manageUserContent {
+  overflow: visible;
+  flex: none;
+  min-height: auto;
+}
+
+#manageUserModal #manageUserContent .modal-actions {
+  position: static;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#manageUserModal .groups-checklist {
+  max-height: none;
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS scroll-lock: position:fixed beats overflow:hidden on body */
+body.admin-modal-open {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+.admin-page .manage-user-btn {
+  min-height: 44px;
+  min-width: 88px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#manageUserModal .btn,
+#manageUserModal .admin-select,
+#manageUserModal .checkbox-label {
+  touch-action: manipulation;
+}
+
+#manageUserModal .checkbox-label input[type="checkbox"] {
+  min-width: 22px;
+  min-height: 22px;
+}
+
+/* Loading overlay must never block taps when hidden (iOS PWA ghost layer) */
+.admin-page .loading-overlay {
+  pointer-events: none;
+}
+
+.admin-page .loading-overlay.is-visible {
+  pointer-events: auto;
+}

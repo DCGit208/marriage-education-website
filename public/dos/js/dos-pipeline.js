@@ -106,7 +106,7 @@
     return records.length;
   }
 
-  async function loadPipeline(db, code) {
+  async function loadPipeline(db, code, noReseed) {
     var list = [];
     try {
       var snap = await db.collection('dos_pipeline')
@@ -116,11 +116,19 @@
       });
     } catch (e) {
       console.warn('[DOSPipeline] load', e);
+      if (e && (e.code === 'permission-denied' || String(e.message || '').indexOf('permission') !== -1)) {
+        return [];
+      }
     }
 
-    if (!list.length) {
-      await seedFromFirestore(db, code);
-      return loadPipeline(db, code);
+    if (!list.length && !noReseed) {
+      try {
+        await seedFromFirestore(db, code);
+        return loadPipeline(db, code, true);
+      } catch (seedErr) {
+        console.warn('[DOSPipeline] seed skipped', seedErr);
+        return [];
+      }
     }
 
     list.sort(function (a, b) {

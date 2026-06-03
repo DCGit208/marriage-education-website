@@ -100,6 +100,13 @@ let currentUserData = {};
 let currentTab      = 'saved';
 let allItems        = [];
 let activeItemId    = null; // item being acted on in a modal
+window.wardrobeViewMode = 'mine';
+window.sharedWardrobeContext = null;
+
+function isSharedWardrobeView() {
+  return window.wardrobeViewMode === 'shared-view' ||
+    (typeof window.MvHouseShares !== 'undefined' && window.MvHouseShares.isSharedView?.());
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────
 
@@ -113,37 +120,45 @@ async function init() {
   try {
     const userSnap = await firebase.firestore().collection('users').doc(currentUid).get();
     currentUserData = userSnap.exists ? userSnap.data() : {};
-    const tier = currentUserData?.subscription?.tier || currentUserData?.tier || 'free';
+
+    const FA = window.FormationAccess;
+    let tier = 'free';
+    if (FA?.getUserTier) {
+      tier = await FA.getUserTier(currentUid);
+    } else if (FA?.resolveEffectiveTier) {
+      tier = FA.resolveEffectiveTier(currentUserData);
+    } else {
+      tier = currentUserData?.subscription?.tier || currentUserData?.tier || 'free';
+    }
 
     const badge = document.getElementById('tierBadge');
     if (badge) {
-      badge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
-      if (tier !== 'elite') { badge.style.background = 'rgba(255,255,255,0.05)'; badge.style.color = '#A8A29E'; }
+      const label = String(tier).replace(/_/g, ' ');
+      badge.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+      const hasAdv =
+        typeof AdvancedExpressionAccess !== 'undefined'
+          ? AdvancedExpressionAccess.hasAdvancedExpressionAccess(currentUserData)
+          : (FA?.hasEliteTier ? FA.hasEliteTier(currentUserData) : tier === 'elite');
+      if (!hasAdv) { badge.style.background = 'rgba(255,255,255,0.05)'; badge.style.color = '#A8A29E'; }
     }
 
-    if (tier !== 'elite' && currentUserData?.role !== 'admin') {
+    const access = FA?.getMvHouseAccess
+      ? FA.getMvHouseAccess(currentUserData)
+      : { allowed: tier === 'elite' || currentUserData?.role === 'admin' };
+
+    if (!access.allowed) {
+      const gateEl = document.getElementById('mvGate');
+      if (gateEl) {
+        const gateTitle = gateEl.querySelector('h2, h3, .gate-title');
+        const gateMsg   = gateEl.querySelector('p, .gate-msg');
+        if (gateTitle && access.message) gateTitle.textContent = access.message;
+        if (gateMsg && (access.detail || access.reason)) {
+          gateMsg.textContent = access.detail || access.reason;
+        }
+      }
       document.getElementById('mvGate').style.display = 'block';
       document.getElementById('mvLoading').style.display = 'none';
       return;
-    }
-
-    // Elite: expression score gate — must have ≥20 to prevent zero-engagement access
-    if (currentUserData?.role !== 'admin') {
-      const v2 = currentUserData?.formationProfile_v2 || {};
-      const expression = v2.expression || 0;
-      if (expression < 20) {
-        const gateEl = document.getElementById('mvGate');
-        if (gateEl) {
-          // Swap gate message to reflect formation gate rather than tier gate
-          const gateTitle = gateEl.querySelector('h2, h3, .gate-title');
-          const gateMsg   = gateEl.querySelector('p, .gate-msg');
-          if (gateTitle) gateTitle.textContent = 'Build Your Expression Score';
-          if (gateMsg)   gateMsg.textContent   = `Expression score: ${expression}/100 — need 20 to unlock MV House. Engage with the community and wardrobe system to build your score.`;
-        }
-        document.getElementById('mvGate').style.display = 'block';
-        document.getElementById('mvLoading').style.display = 'none';
-        return;
-      }
     }
 
     document.getElementById('mvGate').style.display = 'none';
@@ -151,6 +166,24 @@ async function init() {
 
     await loadFirestoreGuidance();
     await loadWardrobeItems();
+
+    window._mvHouseApi = {
+      currentUid,
+      currentUserData,
+      fetchDmPeers,
+      showToast,
+      setAllItems(items) {
+        allItems = items;
+        updateTabCounts();
+      },
+      refreshUi() {
+        updateTabCounts();
+        switchTab(currentTab, document.querySelector(`.mv-tab[data-tab="${currentTab}"]`));
+      },
+      reloadWardrobe: loadWardrobeItems,
+      switchTab,
+    };
+    if (window.MvHouseShares) await window.MvHouseShares.init();
   } catch (err) {
     console.error('[MV House] init error:', err);
     document.getElementById('mvLoading').textContent = 'Could not load wardrobe. Refresh to retry.';
@@ -382,6 +415,19 @@ function buildLookCard(item) {
       <span class="a3-face-item"><span class="a3-face-lbl">L</span>${buildA3Dots(ratings.allure)}</span>
     </div>` : '';
 
+  const sharedView = isSharedWardrobeView();
+  const actionsHtml = sharedView
+    ? `<div class="look-card-actions look-card-actions--readonly" onclick="event.stopPropagation()">
+        <button class="lca-btn" onclick="openLook('${safeId}')">↗ View post</button>
+      </div>`
+    : `<div class="look-card-actions" onclick="event.stopPropagation()">
+        <button class="lca-btn" onclick="openNotesModal('${safeId}')">✏️ Note</button>
+        <button class="lca-btn" onclick="openRecatModal('${safeId}')">📂 Move</button>
+        <button class="lca-btn share" onclick="openShareModal('${safeId}')">💬 Share</button>
+        <button class="lca-btn lca-expand" onclick="expandExpression('${safeId}')">⊕ Expand</button>
+        <button class="lca-btn" onclick="removeLook(event,'${safeId}')" style="color:#ff5a5a;">✕</button>
+      </div>`;
+
   return `
     <div class="look-card" onclick="openLook('${safeId}')">
       ${mediaHtml}
@@ -390,15 +436,9 @@ function buildLookCard(item) {
         ${faceRatingsHtml}
         ${savedDate ? `<p class="look-card-meta">Saved ${savedDate} · ${CATEGORY_ICONS[item.category] || ''} ${item.category || ''}</p>` : ''}
       </div>
-      ${noteHtml}
-      ${guidanceHtml}
-      <div class="look-card-actions" onclick="event.stopPropagation()">
-        <button class="lca-btn" onclick="openNotesModal('${safeId}')">✏️ Note</button>
-        <button class="lca-btn" onclick="openRecatModal('${safeId}')">📂 Move</button>
-        <button class="lca-btn share" onclick="openShareModal('${safeId}')">💬 Share</button>
-        <button class="lca-btn lca-expand" onclick="expandExpression('${safeId}')">⊕ Expand</button>
-        <button class="lca-btn" onclick="removeLook(event,'${safeId}')" style="color:#ff5a5a;">✕</button>
-      </div>
+      ${sharedView ? '' : noteHtml}
+      ${sharedView ? '' : guidanceHtml}
+      ${actionsHtml}
     </div>`;
 }
 
@@ -871,8 +911,8 @@ function escHtml(str) {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['recatModal','notesModal','shareDmModal'].forEach(id => closeModal(id));
+    ['recatModal', 'notesModal', 'shareDmModal', 'shareWardrobeModal', 'manageSharesModal'].forEach(id => closeModal(id));
   }
 });
 
-console.log('[MV House] v256 loaded.');
+console.log('[MV House] v257 loaded.');

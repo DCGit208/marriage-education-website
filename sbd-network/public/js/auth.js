@@ -217,17 +217,35 @@ if (signupForm) {
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      // If referred by an ambassador, increment their signup count
+      // If referred by an ambassador or RD, increment their signup count
       if (refCode) {
         db.collection('ambassadors').where('sbdReferralCode', '==', refCode).limit(1).get()
-          .then(snap => {
+          .then(function (snap) {
             if (!snap.empty) {
-              snap.docs[0].ref.update({
+              return snap.docs[0].ref.update({
                 'sbdReferrals.signups': firebase.firestore.FieldValue.increment(1)
               });
             }
+            return db.collection('regional_directors').where('sbdReferralCode', '==', refCode).limit(1).get()
+              .then(function (rdSnap) {
+                if (!rdSnap.empty) {
+                  return rdSnap.docs[0].ref.update({
+                    'sbdReferrals.signups': firebase.firestore.FieldValue.increment(1)
+                  });
+                }
+                if (refCode.indexOf('SBD-') === 0) {
+                  var rdCode = refCode.replace(/^SBD-/, 'RD-');
+                  return db.collection('regional_directors').doc(rdCode).get().then(function (rdDoc) {
+                    if (rdDoc.exists) {
+                      return rdDoc.ref.update({
+                        'sbdReferrals.signups': firebase.firestore.FieldValue.increment(1)
+                      });
+                    }
+                  });
+                }
+              });
           })
-          .catch(() => {}); // non-critical
+          .catch(function () {}); // non-critical
       }
 
       // Update profile

@@ -11,19 +11,33 @@ service cloud.firestore {
         : null;
     }
     function ce2IsAdmin(ud) {
-      return ud != null && ud.role == 'admin';
+      return ud != null && (
+        (ud.role is string &&
+          (ud.role == 'admin' || ud.role == 'Admin' || ud.role == 'ADMIN')) ||
+        (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
+      );
     }
-    // Numeric rank: foundation/free → 0, premium → 1, elite → 2; admin acts as elite+
-    function ce2TierRank(ud) {
-      return ud != null && ce2IsAdmin(ud) ? 3
-        : ud != null && ud.tier == 'elite' ? 2
-        : ud != null && ud.tier == 'premium' ? 1
-        : 0;
-    }
-    function ce2RequiredTierRank(t) {
-      return t == 'elite' ? 2
+    function ce2TierRankFromString(t) {
+      return t == 'rd' ? 5
+        : t == 'senior_ambassador' ? 4
+        : t == 'ambassador' ? 3
+        : t == 'elite' ? 2
         : t == 'premium' ? 1
         : 0;
+    }
+    // Numeric rank: foundation → 0 … rd → 5; admin acts as highest for policy checks
+    function ce2TierRank(ud) {
+      return ud != null && ce2IsAdmin(ud) ? 6
+        : ud != null && ud.tierLevel is int ? ud.tierLevel
+        : ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation');
+    }
+    // DM open policy uses formation tier string only (tierLevel is progress, not messaging rank)
+    function ce2PolicyTierRank(ud) {
+      return ud != null && ce2IsAdmin(ud) ? 6
+        : ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation');
+    }
+    function ce2RequiredTierRank(t) {
+      return ce2TierRankFromString(t);
     }
     function ce2FormationLevel(ud) {
       return ud != null && ud.formationLevel is int ? ud.formationLevel : 0;
@@ -31,16 +45,26 @@ service cloud.firestore {
     function ce2IsMentor(ud) {
       return ud != null && ud.mentor == true;
     }
+    // Default ON when field absent; only explicit messagingEnabled == false suspends
+    function ce2MessagingEnabled(ud) {
+      return ud != null && (
+        ce2IsAdmin(ud) ||
+        !('messagingEnabled' in ud) ||
+        ud.messagingEnabled == true
+      );
+    }
     // Lower → higher DM: blocked unless receiver is mentor (or admin involved handled by rank)
     function ce2CanOpenDirectBetween(senderUid, receiverUid) {
       let s = ce2UserDataOrNull(senderUid);
       let r = ce2UserDataOrNull(receiverUid);
-      return s != null && r != null
-        && (
-          ce2IsAdmin(s) || ce2IsAdmin(r) ||
-          ce2TierRank(s) >= ce2TierRank(r) ||
+      return s != null && (
+        ce2IsAdmin(s) ||
+        (r != null && (
+          ce2IsAdmin(r) ||
+          ce2PolicyTierRank(s) >= ce2PolicyTierRank(r) ||
           ce2IsMentor(r)
-        );
+        ))
+      );
     }
     function ce2GroupFormationMin(gdata) {
       return gdata != null && gdata.formationMinLevel is int ? gdata.formationMinLevel : 0;
@@ -63,8 +87,107 @@ service cloud.firestore {
         : c == 'foundation' ? 0
         : c == 'premium' ? 1
         : c == 'elite' ? 2
-        : c == 'mentor' ? 4
+        : c == 'ambassador' ? 3
+        : c == 'senior_ambassador' ? 4
+        : c == 'rd' ? 5
+        : c == 'mentor' ? 6
         : 99;
+    }
+    function ce2MessageOptionalFieldsValid() {
+      return (!('messageType' in request.resource.data) ||
+          request.resource.data.messageType in ['text', 'image', 'video', 'voice', 'board_share']) &&
+        (!('imageUrl' in request.resource.data) ||
+          (request.resource.data.imageUrl is string &&
+            request.resource.data.imageUrl.size() > 0 &&
+            request.resource.data.imageUrl.size() < 2048)) &&
+        (!('boardShare' in request.resource.data) ||
+          (request.resource.data.boardShare is map &&
+            request.resource.data.boardShare.keys().hasAll(['boardId', 'postId', 'token']) &&
+            request.resource.data.boardShare.boardId is string &&
+            request.resource.data.boardShare.postId is string &&
+            request.resource.data.boardShare.token is string &&
+            request.resource.data.boardShare.token.size() <= 64)) &&
+        (!('replyTo' in request.resource.data) ||
+          (request.resource.data.replyTo is map &&
+            request.resource.data.replyTo.messageId is string &&
+            request.resource.data.replyTo.senderId is string &&
+            request.resource.data.replyTo.preview is string)) &&
+        (!('videoUrl' in request.resource.data) ||
+          (request.resource.data.videoUrl is string &&
+            request.resource.data.videoUrl.size() < 2048)) &&
+        (!('audioUrl' in request.resource.data) ||
+          (request.resource.data.audioUrl is string &&
+            request.resource.data.audioUrl.size() < 2048)) &&
+        (!('deleted' in request.resource.data) || request.resource.data.deleted is bool) &&
+        (!('forwardFrom' in request.resource.data) ||
+          (request.resource.data.forwardFrom is map &&
+            request.resource.data.forwardFrom.messageId is string &&
+            request.resource.data.forwardFrom.senderId is string &&
+            request.resource.data.forwardFrom.preview is string)) &&
+        (!('formationTag' in request.resource.data) ||
+          request.resource.data.formationTag == null ||
+          request.resource.data.formationTag in ['prayer', 'check_in']) &&
+        (!('reactions' in request.resource.data) || request.resource.data.reactions is map);
+    }
+    function ce2MessageReactionsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) &&
+        request.resource.data.reactions is map;
+    }
+    function ce2MessageFormationTagOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['formationTag']) &&
+        (!('formationTag' in request.resource.data) ||
+          request.resource.data.formationTag == null ||
+          request.resource.data.formationTag in ['prayer', 'check_in']);
+    }
+    function ce2WithinEditWindow() {
+      return !('createdAt' in resource.data) ||
+        !(resource.data.createdAt is timestamp) ||
+        request.time < resource.data.createdAt + duration.value(60, 'm');
+    }
+    function ce2MessageEditValid() {
+      return resource.data.senderId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']) &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() <= 8000 &&
+        request.resource.data.editedAt is timestamp &&
+        ce2WithinEditWindow();
+    }
+    function ce2AdminMessageEditValid() {
+      return ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+        resource.data.senderId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']) &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() <= 8000 &&
+        request.resource.data.editedAt is timestamp;
+    }
+    function ce2MessageUnsendValid() {
+      return request.resource.data.deleted == true &&
+        request.resource.data.deletedAt is timestamp &&
+        request.resource.data.content == 'Message removed';
+    }
+    function ce2WithinUnsendWindow() {
+      return resource.data.createdAt is timestamp &&
+        request.time < resource.data.createdAt + duration.value(60, 'm');
+    }
+    function ce2CanUnsendMessage() {
+      return resource.data.senderId == request.auth.uid &&
+        ce2WithinUnsendWindow() &&
+        ce2MessageUnsendValid() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deleted', 'deletedAt', 'content']);
+    }
+    function ce2ConvMetaUpdateKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'lastMessageAt', 'lastPreview', 'securityTier', 'securityLevel', 'participantIds', 'type',
+        'typing', 'lastRead', 'unreadCount', 'lastSenderId',
+        'pinnedMessageId', 'pinnedAt', 'pinnedBy'
+      ]);
+    }
+    function ce2GroupMetaUpdateKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'lastMessageAt', 'lastPreview', 'typing', 'lastRead', 'unreadCount', 'lastSenderId',
+        'pinnedMessageId', 'pinnedAt', 'pinnedBy'
+      ]);
     }
     function ce2IsRequestTime(field) {
       return field == request.time;
@@ -78,6 +201,33 @@ service cloud.firestore {
         || c == 'public'
         || (c == 'mentor' && ce2IsMentor(ud))
         || (c != 'mentor' && ce2TierRank(ud) >= ce2ClassRank(c));
+    }
+    // Governance v1: conversation content floor (-1 = legacy conv, no floor field)
+    function ce2ConvSecurityLevel(convData) {
+      return convData != null && convData.securityLevel is int ? convData.securityLevel : -1;
+    }
+    function ce2MessageAllowedAtConversationSecurity(classification, convData) {
+      let floor = ce2ConvSecurityLevel(convData);
+      return floor < 0
+        || ce2ClassRank(ce2MessageClassification(classification)) <= floor;
+    }
+    function ce2GroupContentFloor(gdata) {
+      return gdata != null && gdata.securityLevel is int
+        ? gdata.securityLevel
+        : ce2RequiredTierRank(
+            gdata != null && gdata.requiredTier is string ? gdata.requiredTier : 'foundation'
+          );
+    }
+    function ce2MessageAllowedInGroup(classification, gdata) {
+      return ce2ClassRank(ce2MessageClassification(classification)) <= ce2GroupContentFloor(gdata);
+    }
+
+    // Post owner can moderate comments on their own post.
+    function isPostOwner(postId) {
+      return postId is string &&
+        exists(/databases/$(database)/documents/posts/$(postId)) &&
+        request.auth != null &&
+        get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid;
     }
 
     // ============================================================
@@ -270,11 +420,31 @@ service cloud.firestore {
     // Users (sbd-network profiles)
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (
+        request.auth.uid == userId ||
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+      );
       allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
+
+      match /sbdLifePurchasedIssues/{issueId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == userId ||
+          sbdIsAdmin(sbdUserDataOrNull(request.auth.uid))
+        );
+        allow create, update: if request.auth != null && (
+          sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+          (
+            request.auth.uid == userId &&
+            request.resource.data.userId == userId &&
+            request.resource.data.issueId == issueId &&
+            request.resource.data.status == 'active'
+          )
+        );
+        allow delete: if request.auth != null &&
+          sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      }
     }
     
     // Groups
@@ -347,6 +517,7 @@ service cloud.firestore {
       );
       allow delete: if request.auth != null && (
         request.auth.uid == resource.data.authorId ||
+        isPostOwner(resource.data.postId) ||
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
     }
@@ -453,13 +624,72 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // ── MV House wardrobe sharing (Elite → Elite read-only grants) ──
+    function wardrobeUserTier(uid) {
+      let d = get(/databases/$(database)/documents/users/$(uid)).data;
+      return d.subscription is map && d.subscription.tier is string
+        ? d.subscription.tier
+        : (d.tier is string ? d.tier : 'foundation');
+    }
+    function userAdvancedExpressionUnlocked(uid) {
+      let d = get(/databases/$(database)/documents/users/$(uid)).data;
+      return d.role == 'admin'
+        || (d.staffAccess is map && d.staffAccess.advancedExpression == true && wardrobeUserTier(uid) == 'elite')
+        || (d.progress is map && d.progress.advancedExpressionUnlocked == true)
+        || (d.subscription is map && d.subscription.source == 'admin' && wardrobeUserTier(uid) == 'elite');
+    }
+    function isEliteWardrobeUser(uid) {
+      return userAdvancedExpressionUnlocked(uid);
+    }
+    function wardrobeShareId(ownerUid, viewerUid) {
+      return ownerUid + '_' + viewerUid;
+    }
+    function hasActiveWardrobeShare(ownerUid, viewerUid) {
+      let sid = wardrobeShareId(ownerUid, viewerUid);
+      return exists(/databases/$(database)/documents/wardrobeShares/$(sid))
+        && get(/databases/$(database)/documents/wardrobeShares/$(sid)).data.status == 'active'
+        && get(/databases/$(database)/documents/wardrobeShares/$(sid)).data.ownerUid == ownerUid
+        && get(/databases/$(database)/documents/wardrobeShares/$(sid)).data.viewerUid == viewerUid
+        && isEliteWardrobeUser(ownerUid)
+        && isEliteWardrobeUser(viewerUid);
+    }
+    function canReadWardrobeItems(ownerUid) {
+      return request.auth != null && (
+        request.auth.uid == ownerUid ||
+        (hasActiveWardrobeShare(ownerUid, request.auth.uid) && isEliteWardrobeUser(request.auth.uid))
+      );
+    }
+
+    match /wardrobeShares/{shareId} {
+      allow read: if request.auth != null && (
+        resource.data.ownerUid == request.auth.uid ||
+        resource.data.viewerUid == request.auth.uid
+      );
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.viewerUid is string
+        && request.resource.data.viewerUid != request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.categories is list
+        && request.resource.data.createdAt is timestamp
+        && shareId == wardrobeShareId(request.resource.data.ownerUid, request.resource.data.viewerUid)
+        && isEliteWardrobeUser(request.auth.uid)
+        && isEliteWardrobeUser(request.resource.data.viewerUid);
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.viewerUid == resource.data.viewerUid
+        && request.resource.data.status in ['active', 'revoked'];
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
     // Wardrobes — top-level collection (mv-house.js v247 path: wardrobes/{uid}/items/{itemId})
     match /wardrobes/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if request.auth != null && request.auth.uid == uid;
 
       match /items/{itemId} {
-        allow read: if request.auth != null && request.auth.uid == uid;
+        allow read: if canReadWardrobeItems(uid);
         allow create: if request.auth != null && request.auth.uid == uid &&
           request.resource.data.savedAt is timestamp;
         allow delete: if request.auth != null && request.auth.uid == uid;
@@ -601,11 +831,8 @@ service cloud.firestore {
 
     // ── Communication Engine V2 (isolated; legacy /conversations untouched) ──
     match /communicationGroups/{groupId} {
-      // list: admin may load all in panel; others only docs their tier can discover
-      allow list: if request.auth != null && (
-        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-        ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data)
-      );
+      // list: must not use per-doc tier checks (breaks requiredTier "in" queries); get stays gated
+      allow list: if request.auth != null;
       allow get: if request.auth != null && (
         ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data) ||
         ce2IsGroupMember(groupId, request.auth.uid) ||
@@ -623,7 +850,7 @@ service cloud.firestore {
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
         (
           ce2IsGroupMember(groupId, request.auth.uid) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageAt', 'lastPreview'])
+          ce2GroupMetaUpdateKeysOnly()
         )
       );
       allow delete: if request.auth != null &&
@@ -635,15 +862,17 @@ service cloud.firestore {
           ce2IsGroupMember(groupId, request.auth.uid) ||
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
         );
-        allow create: if request.auth != null &&
-          request.auth.uid == memberId &&
+        // Self-join if tier allows; admins may add any user (staff groups, onboarding)
+        allow create: if request.auth != null && (
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
           (
-            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            request.auth.uid == memberId &&
             ce2UserMeetsGroupTier(
               ce2UserDataOrNull(request.auth.uid),
               get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
             )
-          );
+          )
+        );
         allow update: if request.auth != null &&
           request.auth.uid == memberId &&
           (
@@ -663,12 +892,10 @@ service cloud.firestore {
         allow read: if request.auth != null &&
           (
             ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            (
-              ce2IsGroupMember(groupId, request.auth.uid) &&
-              ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification)
-            )
+            ce2IsGroupMember(groupId, request.auth.uid)
           );
         allow create: if request.auth != null &&
+          ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
           (
             ce2IsGroupMember(groupId, request.auth.uid) ||
             ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
@@ -684,11 +911,32 @@ service cloud.firestore {
           request.resource.data.content is string &&
           request.resource.data.content.size() <= 8000 &&
           request.resource.data.createdAt is timestamp &&
-          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification) &&
+          ce2MessageAllowedInGroup(
+            request.resource.data.classification,
+            get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
+          ) &&
+          ce2MessageOptionalFieldsValid();
         allow update: if request.auth != null &&
-          ce2IsGroupMember(groupId, request.auth.uid) &&
-          resource.data.senderId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']);
+          (
+            ce2CanUnsendMessage() ||
+            (
+              ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+              ce2MessageUnsendValid() &&
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['deleted', 'deletedAt', 'content'])
+            ) ||
+            ce2MessageEditValid() ||
+            ce2AdminMessageEditValid() ||
+            (
+              ce2IsGroupMember(groupId, request.auth.uid) &&
+              ce2MessageReactionsOnly()
+            ) ||
+            (
+              resource.data.senderId == request.auth.uid &&
+              ce2MessageFormationTagOnly()
+            )
+          );
         allow delete: if false;
       }
     }
@@ -712,18 +960,25 @@ service cloud.firestore {
           ce2DirectOtherUid(request.resource.data.participantIds, request.auth.uid)
         );
       allow update: if request.auth != null &&
-        request.auth.uid in resource.data.participantIds &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageAt', 'lastPreview']);
+        (
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+          request.auth.uid in resource.data.participantIds
+        ) &&
+        ce2ConvMetaUpdateKeysOnly();
       allow delete: if false;
 
       match /ce2_messages/{messageId} {
+        // Read: participants only; classification floor enforced in CE2 UI (not on query)
         allow read: if request.auth != null &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
-          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
-          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), resource.data.classification);
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds;
         allow create: if request.auth != null &&
+          ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
-          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds
+          ) &&
           request.auth.uid == request.resource.data.senderId &&
           request.resource.data.keys().hasAll([
             'conversationId', 'senderId', 'receiverId', 'tier', 'classification', 'shareable', 'content', 'createdAt'
@@ -736,17 +991,476 @@ service cloud.firestore {
           request.resource.data.content is string &&
           request.resource.data.content.size() <= 8000 &&
           request.resource.data.createdAt is timestamp &&
-          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification);
+          ce2CanReadMessageClassification(ce2UserDataOrNull(request.auth.uid), request.resource.data.classification) &&
+          ce2MessageAllowedAtConversationSecurity(
+            request.resource.data.classification,
+            get(/databases/$(database)/documents/ce2_conversations/$(convId)).data
+          ) &&
+          ce2MessageOptionalFieldsValid();
         allow update: if request.auth != null &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
           request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
-          resource.data.senderId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'editedAt']);
+          (
+            ce2CanUnsendMessage() ||
+            (
+              ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+              ce2MessageUnsendValid() &&
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['deleted', 'deletedAt', 'content'])
+            ) ||
+            ce2MessageEditValid() ||
+            ce2AdminMessageEditValid() ||
+            ce2MessageReactionsOnly() ||
+            (
+              resource.data.senderId == request.auth.uid &&
+              ce2MessageFormationTagOnly()
+            )
+          );
         allow delete: if false;
       }
     }
 
+    match /ce2_message_reports/{reportId} {
+      allow create: if request.auth != null &&
+        request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.messageId is string &&
+        request.resource.data.conversationId is string &&
+        request.resource.data.createdAt is timestamp;
+      allow read: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
+      allow update: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'reviewedAt', 'reviewedBy']) &&
+        request.resource.data.status in ['open', 'reviewed', 'dismissed'];
+      allow delete: if false;
+    }
+
+    match /users/{userId}/ce2_saved/{saveId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/ce2_blocks/{blockedId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/ce2_formation_notes/{noteId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /ce2_share_tokens/{tokenId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.boardId is string &&
+        request.resource.data.postId is string &&
+        request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+
+    match /ce2_audit_log/{logId} {
+      allow create: if request.auth != null &&
+        request.resource.data.type is string &&
+        request.resource.data.uid == request.auth.uid;
+      allow read: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
+      allow update, delete: if false;
+    }
+
+    // ── SBD Life (Phase 1 — governance + field validation) ───────────────
+    function sbdUserDataOrNull(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data
+        : null;
+    }
+    function sbdIsAdmin(ud) {
+      return ud != null && (
+        (ud.role is string &&
+          (ud.role == 'admin' || ud.role == 'Admin' || ud.role == 'ADMIN')) ||
+        (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
+      );
+    }
+    function sbdTierRankFromString(t) {
+      return t == 'admin' ? 4
+        : t == 'elite' ? 3
+        : t == 'premium' ? 2
+        : t == 'foundation' ? 1
+        : 0;
+    }
+    function sbdTierRank(ud) {
+      return sbdIsAdmin(ud) ? 4
+        : sbdTierRankFromString(ud != null && ud.tier is string ? ud.tier : 'public');
+    }
+    function sbdCanReadTier(tierRequired, ud) {
+      return sbdTierRank(ud) >= sbdTierRankFromString(tierRequired is string ? tierRequired : 'public');
+    }
+    function sbdAccessTierValid(t) {
+      return t is string && t in ['public', 'foundation', 'premium', 'elite', 'admin'];
+    }
+    function sbdArticleStatusValid(s) {
+      return s is string &&
+        s in ['draft', 'review', 'scheduled', 'published', 'archived', 'hidden'];
+    }
+    function sbdArticleStatusTransition(fromStatus, toStatus) {
+      return fromStatus == toStatus ||
+        (fromStatus == 'draft' && toStatus == 'review') ||
+        (fromStatus == 'review' && (toStatus == 'draft' || toStatus == 'scheduled')) ||
+        (fromStatus == 'scheduled' && (toStatus == 'review' || toStatus == 'published')) ||
+        (fromStatus == 'published' && (toStatus == 'archived' || toStatus == 'hidden')) ||
+        (fromStatus == 'archived' && (toStatus == 'published' || toStatus == 'hidden')) ||
+        (fromStatus == 'hidden' && (toStatus == 'published' || toStatus == 'archived'));
+    }
+    function sbdContentTypeValid(t) {
+      return t is string && t in [
+        'feature_article', 'hot_topic', 'elite_essay', 'audio_essay', 'visual_editorial',
+        'debate', 'confession', 'dating_analysis', 'style_feature', 'cultural_commentary',
+        'sbd_life_now', 'issue'
+      ];
+    }
+    function sbdArticleCoreFieldsValid(data) {
+      return data.keys().hasAll([
+          'title', 'slug', 'contentType', 'tierRequired', 'status', 'authorId', 'updatedAt'
+        ]) &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 240 &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 160 &&
+        sbdContentTypeValid(data.contentType) &&
+        sbdAccessTierValid(data.tierRequired) &&
+        sbdArticleStatusValid(data.status) &&
+        data.authorId is string && data.authorId.size() > 0 &&
+        data.updatedAt is timestamp &&
+        (!('publishedAt' in data) || data.publishedAt is timestamp) &&
+        (!('visibility' in data) || data.visibility in ['public', 'hidden']);
+    }
+    function sbdArticleCreateValid() {
+      return sbdArticleCoreFieldsValid(request.resource.data) &&
+        request.resource.data.status in ['draft', 'review'];
+    }
+    function sbdArticleUpdateValid() {
+      return sbdArticleCoreFieldsValid(request.resource.data) &&
+        sbdArticleStatusTransition(resource.data.status, request.resource.data.status);
+    }
+    function sbdIssueCoreFieldsValid(data) {
+      return data.keys().hasAll([
+          'title', 'slug', 'issueNumber', 'theme', 'tierRequired', 'releaseDate', 'archived'
+        ]) &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 240 &&
+        data.slug is string && data.slug.size() > 0 && data.slug.size() <= 160 &&
+        data.issueNumber is int && data.issueNumber > 0 &&
+        data.theme is string && data.theme.size() > 0 && data.theme.size() <= 120 &&
+        sbdAccessTierValid(data.tierRequired) &&
+        data.releaseDate is timestamp &&
+        data.archived is bool;
+    }
+    function sbdReflectionTypeValid(t) {
+      return t is string && t in [
+        'reflection', 'insight', 'question', 'debate', 'experience', 'mentor_response'
+      ];
+    }
+    function sbdModerationStatusValid(s) {
+      return s is string && s in ['pending', 'approved', 'hidden', 'flagged'];
+    }
+    function sbdReactionTypeValid(t) {
+      return t is string && t in [
+        'thought-provoking', 'powerful', 'challenging', 'eye-opening',
+        'transformative', 'emotionally-resonant', 'insightful'
+      ];
+    }
+    function sbdIsPublishedVisible(data) {
+      return data != null &&
+        data.status is string &&
+        data.status == 'published' &&
+        (!('visibility' in data) || data.visibility != 'hidden');
+    }
+    function sbdArticleData(articleId) {
+      return get(/databases/$(database)/documents/sbdLifeArticles/$(articleId)).data;
+    }
+    function sbdCanReadArticle(articleId, ud) {
+      return exists(/databases/$(database)/documents/sbdLifeArticles/$(articleId)) && (
+        sbdIsAdmin(ud) ||
+        (
+          sbdIsPublishedVisible(sbdArticleData(articleId)) &&
+          sbdCanReadTier(sbdArticleData(articleId).tierRequired, ud)
+        )
+      );
+    }
+    function sbdLifeSubscriptionActive(uid) {
+      return exists(/databases/$(database)/documents/sbdLifeSubscriptions/$(uid)) &&
+        get(/databases/$(database)/documents/sbdLifeSubscriptions/$(uid)).data.userId == uid &&
+        get(/databases/$(database)/documents/sbdLifeSubscriptions/$(uid)).data.status == 'active' &&
+        (
+          !('expiresAt' in get(/databases/$(database)/documents/sbdLifeSubscriptions/$(uid)).data) ||
+          get(/databases/$(database)/documents/sbdLifeSubscriptions/$(uid)).data.expiresAt > request.time
+        );
+    }
+    function sbdPurchasedIssue(uid, issueId) {
+      return exists(/databases/$(database)/documents/users/$(uid)/sbdLifePurchasedIssues/$(issueId));
+    }
+    function sbdCanAccessPublishedArticle(articleId, uid, ud) {
+      let data = sbdArticleData(articleId);
+      return sbdIsPublishedVisible(data) && (
+        sbdCanReadTier(data.tierRequired, ud) ||
+        sbdLifeSubscriptionActive(uid) ||
+        (data.issueId is string && sbdPurchasedIssue(uid, data.issueId))
+      );
+    }
+
+    match /sbdLifeArticles/{articleId} {
+      allow get: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        sbdCanAccessPublishedArticle(articleId, request.auth.uid, sbdUserDataOrNull(request.auth.uid))
+      );
+      allow list: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow create: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) &&
+        sbdArticleCreateValid();
+      allow update: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) &&
+        sbdArticleUpdateValid();
+      allow delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeIssues/{issueId} {
+      allow get: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          (!('archived' in resource.data) || resource.data.archived == false) &&
+          (
+            sbdCanReadTier(resource.data.tierRequired, sbdUserDataOrNull(request.auth.uid)) ||
+            sbdLifeSubscriptionActive(request.auth.uid) ||
+            sbdPurchasedIssue(request.auth.uid, issueId)
+          )
+        )
+      );
+      allow list: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow create, update: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) &&
+        sbdIssueCoreFieldsValid(request.resource.data);
+      allow delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeDiscussions/{discussionId} {
+      allow get: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          resource.data.userId == request.auth.uid &&
+          resource.data.moderationStatus in ['pending', 'approved']
+        ) ||
+        (
+          resource.data.moderationStatus == 'approved' &&
+          sbdCanReadTier(resource.data.tier, sbdUserDataOrNull(request.auth.uid))
+        )
+      );
+      allow list: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          resource.data.moderationStatus == 'approved' &&
+          sbdCanReadTier(resource.data.tier, sbdUserDataOrNull(request.auth.uid)) &&
+          sbdCanReadArticle(resource.data.articleId, sbdUserDataOrNull(request.auth.uid))
+        )
+      );
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll([
+          'articleId', 'userId', 'content', 'reflectionType', 'moderationStatus', 'createdAt', 'tier'
+        ]) &&
+        request.resource.data.articleId is string &&
+        sbdCanAccessPublishedArticle(
+          request.resource.data.articleId,
+          request.auth.uid,
+          sbdUserDataOrNull(request.auth.uid)
+        ) &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 4000 &&
+        sbdReflectionTypeValid(request.resource.data.reflectionType) &&
+        request.resource.data.moderationStatus == 'pending' &&
+        sbdAccessTierValid(request.resource.data.tier) &&
+        request.resource.data.createdAt is timestamp &&
+        sbdTierRankFromString(request.resource.data.tier) <=
+          sbdTierRank(sbdUserDataOrNull(request.auth.uid));
+      allow update: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          resource.data.userId == request.auth.uid &&
+          request.resource.data.userId == resource.data.userId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['content', 'reflectionType'])
+        )
+      );
+      allow delete: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        resource.data.userId == request.auth.uid
+      );
+    }
+
+    match /sbdLifeBookmarks/{bookmarkId} {
+      allow read: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    match /sbdLifeReactions/{reactionId} {
+      allow read: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['articleId', 'userId', 'reactionType', 'createdAt']) &&
+        request.resource.data.articleId is string &&
+        sbdCanAccessPublishedArticle(
+          request.resource.data.articleId,
+          request.auth.uid,
+          sbdUserDataOrNull(request.auth.uid)
+        ) &&
+        sbdReactionTypeValid(request.resource.data.reactionType) &&
+        request.resource.data.createdAt is timestamp;
+      allow get: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    match /sbdLifeQuotes/{quoteId} {
+      allow get: if request.auth != null;
+      allow list: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        sbdCanAccessPublishedArticle(
+          resource.data.articleId,
+          request.auth.uid,
+          sbdUserDataOrNull(request.auth.uid)
+        )
+      );
+      allow create: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow update: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shareCount', 'engagementScore']) &&
+          sbdCanAccessPublishedArticle(
+            resource.data.articleId,
+            request.auth.uid,
+            sbdUserDataOrNull(request.auth.uid)
+          )
+        )
+      );
+      allow delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    function sbdCanReadAudio(audioId, uid, ud) {
+      return exists(/databases/$(database)/documents/sbdLifeAudio/$(audioId)) && (
+        sbdIsAdmin(ud) ||
+        (
+          sbdCanReadTier(
+            get(/databases/$(database)/documents/sbdLifeAudio/$(audioId)).data.tierRequired,
+            ud
+          ) ||
+          sbdLifeSubscriptionActive(uid) ||
+          (
+            get(/databases/$(database)/documents/sbdLifeAudio/$(audioId)).data.articleId is string &&
+            sbdCanAccessPublishedArticle(
+              get(/databases/$(database)/documents/sbdLifeAudio/$(audioId)).data.articleId,
+              uid,
+              ud
+            )
+          )
+        )
+      );
+    }
+
+    match /sbdLifeAudio/{audioId} {
+      allow get: if request.auth != null && (
+        resource == null ||
+        sbdCanReadAudio(audioId, request.auth.uid, sbdUserDataOrNull(request.auth.uid))
+      );
+      allow list: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow create, update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeAnalytics/{analyticsId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeContributors/{contributorId} {
+      allow get: if request.auth != null;
+      allow list: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+      allow create, update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeNotifications/{notificationId} {
+      allow read: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    match /sbdLifeModeration/{moderationId} {
+      allow read, write: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeTrending/{trendId} {
+      allow get, list: if request.auth != null;
+      allow create, update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeTopics/{topicId} {
+      allow get: if request.auth != null;
+      allow list, create, update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeIssuePurchases/{purchaseId} {
+      allow read: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
+    match /sbdLifeSubscriptions/{subscriptionId} {
+      allow read: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        subscriptionId == request.auth.uid
+      );
+      allow create, update: if request.auth != null && (
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid)) ||
+        (
+          subscriptionId == request.auth.uid &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.status is string &&
+          request.resource.data.status in ['active', 'cancelled', 'expired']
+        )
+      );
+      allow delete: if request.auth != null &&
+        sbdIsAdmin(sbdUserDataOrNull(request.auth.uid));
+    }
+
     // Admin Settings — scoring weights, scoring thresholds, flags
+    match /admin/flags {
+      allow get: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     match /admin/{section} {
       allow read: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';

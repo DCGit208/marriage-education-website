@@ -30,6 +30,7 @@
       firebase.initializeApp(firebaseConfig);
     }
   </script>
+  <script src="js/ambassador-referral-code.js"></script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -932,20 +933,35 @@
           ambassadorData = JSON.parse(storedData);
           console.log('📝 Retrieved ambassador data:', ambassadorData);
         }
-        const urlRef = getUrlParameter('ref');
+        const urlRefRaw = getUrlParameter('ref') || '';
+        const urlRef = window.MEAmbassadorReferralCode
+          ? window.MEAmbassadorReferralCode.normalizeReferralCode(urlRefRaw)
+          : String(urlRefRaw || '').trim().toUpperCase();
         if (urlRef && (!ambassadorData || !ambassadorData.recruitedBy)) {
           ambassadorData = ambassadorData || {};
-          ambassadorData.recruitedBy = urlRef;
-          if (urlRef.startsWith('RD-')) {
-            ambassadorData.regional_director_code = urlRef;
-          } else if (urlRef.startsWith('AMB-')) {
-            ambassadorData.senior_code = urlRef;
+          if (window.MEAmbassadorReferralCode) {
+            ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(ambassadorData, urlRef);
+          } else {
+            ambassadorData.recruitedBy = urlRef;
+            if (urlRef.startsWith('RD-')) {
+              ambassadorData.regional_director_code = urlRef;
+            } else if (urlRef.startsWith('AMB-')) {
+              ambassadorData.senior_code = urlRef;
+            }
+            ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
+              ? 'regional_director'
+              : 'senior_ambassador';
           }
-          ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
-            ? 'regional_director'
-            : 'senior_ambassador';
           sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
           console.log('🔗 Recruiter restored from URL ref:', urlRef);
+        }
+
+        if (ambassadorData && window.MEAmbassadorReferralCode) {
+          ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(
+            ambassadorData,
+            ambassadorData.recruitedBy || ambassadorData.regional_director_code || urlRef
+          );
+          sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
         }
 
         const recruitedBy =
@@ -968,6 +984,16 @@
           regional_director: recruitedBy,
           ambassador_data: ambassadorData ? JSON.parse(JSON.stringify(ambassadorData)) : null
         };
+        if (window.MEAmbassadorReferralCode && paymentData.ambassador_data) {
+          paymentData.ambassador_data = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(
+            paymentData.ambassador_data,
+            paymentData.regional_director
+          );
+          paymentData.regional_director =
+            paymentData.ambassador_data.recruitedBy ||
+            paymentData.ambassador_data.regional_director_code ||
+            paymentData.regional_director;
+        }
         
         console.log('💳 Payment data being submitted:', {
           reference,

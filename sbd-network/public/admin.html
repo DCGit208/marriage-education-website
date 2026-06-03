@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1778871579265">
+  <meta name="build-version" content="1780490199408">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>Admin Panel - SBD Network</title>
     
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/admin-panel.css">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
 <body class="admin-page has-header">
@@ -207,9 +208,13 @@
                     <a href="/communication-v2/" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open beta app</a>
                 </div>
             </div>
-            <p class="small-text" style="padding:0 12px 12px;color:var(--text-secondary);max-width:640px;">
-                These are <strong>not</strong> the same as community Groups (boards). CE2 groups power the gated messenger beta.
-                After creating a group, open the beta, select it, tap <strong>Join selected group</strong>, then send.
+            <p class="small-text" style="padding:0 12px 12px;color:var(--text-secondary);max-width:720px;">
+                These are <strong>not</strong> community Groups (boards). CE2 groups are messenger channels in
+                <a href="/communication-v2/">Messages V2</a>.
+                <strong>Only admins</strong> can create them here. Members are stored under
+                <code>communicationGroups/{id}/members</code> — use <strong>Manage members</strong> on each card to add staff
+                (you are added automatically when you create a group). Others can also self-join in the beta if their tier meets
+                the group minimum.
             </p>
             <div id="ce2GroupsList" class="admin-list"></div>
         </section>
@@ -249,6 +254,47 @@
         </div>
     </div>
 
+    <!-- CE2 group members modal -->
+    <div id="ce2MembersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ce2MembersModalTitle">Group members</h3>
+                <button type="button" class="btn btn-icon close-modal">×</button>
+            </div>
+            <p class="small-text" id="ce2MembersModalHint" style="margin:0 0 12px;color:var(--text-secondary);"></p>
+            <h4 class="admin-manage-label" style="margin:12px 0 8px;">Current members</h4>
+            <div id="ce2MembersList" class="admin-list" style="max-height:160px;overflow:auto;margin-bottom:16px;"></div>
+            <h4 class="admin-manage-label" style="margin:0 0 8px;">Add from directory</h4>
+            <div class="form-group" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+                <div style="flex:1;min-width:140px;">
+                    <label for="ce2MemberSearch">Search name or email</label>
+                    <input type="search" id="ce2MemberSearch" placeholder="Type to filter…" autocomplete="off">
+                </div>
+                <div style="min-width:160px;">
+                    <label for="ce2MemberPoolFilter">Show</label>
+                    <select id="ce2MemberPoolFilter">
+                        <option value="same">Same tier as group minimum</option>
+                        <option value="eligible">All tiers that can join</option>
+                    </select>
+                </div>
+            </div>
+            <div id="ce2MemberPickerList" class="admin-list ce2-member-picker" style="max-height:220px;overflow:auto;margin:8px 0 12px;"></div>
+            <details class="small-text" style="margin-bottom:12px;color:var(--text-secondary);">
+                <summary style="cursor:pointer;">Advanced: add by user ID or email</summary>
+                <form id="ce2AddMemberForm" style="margin-top:10px;">
+                    <div class="form-group">
+                        <label for="ce2AddMemberUid">User ID or email</label>
+                        <input type="text" id="ce2AddMemberUid" placeholder="Only if not in the list above">
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-sm">Add manually</button>
+                </form>
+            </details>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary close-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Create CE2 Group Modal (Messages V2 beta) -->
     <div id="createCe2GroupModal" class="modal">
         <div class="modal-content">
@@ -267,6 +313,9 @@
                         <option value="foundation" selected>Foundation</option>
                         <option value="premium">Premium</option>
                         <option value="elite">Elite</option>
+                        <option value="ambassador">Ambassador</option>
+                        <option value="senior_ambassador">Senior Ambassador</option>
+                        <option value="rd">Regional Director</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -435,6 +484,21 @@
                     </div>
                 </div>
 
+                <!-- Staff: MV House + advanced boards -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Staff — MV House &amp; advanced boards</h4>
+                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        Full expression-layer access (MV House, advanced Muliebrity/Virility boards) without formation milestones.
+                        For SBD staff only — user must be <strong>Elite</strong> tier (set above).
+                    </p>
+                    <label class="checkbox-label" style="display:block;margin-bottom:8px;">
+                        <input type="checkbox" id="manageUserStaffExpression">
+                        <span>Grant staff expression access (MV House + advanced boards)</span>
+                    </label>
+                    <p id="manageUserStaffExpressionStatus" style="font-size:12px;color:var(--text-secondary);margin:0 0 8px;"></p>
+                    <button type="button" id="saveStaffExpressionBtn" class="btn btn-sm btn-primary">Save staff expression access</button>
+                </div>
+
                 <!-- Messages V2 -->
                 <div class="admin-manage-section">
                     <h4 class="admin-manage-label">Messages V2 (beta)</h4>
@@ -523,7 +587,7 @@
     </div>
     
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
         <div class="spinner"></div>
     </div>
     
@@ -533,10 +597,10 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=1778871579265"></script>
-    <script defer src="/js/sw-update-checker.js?v=1778871579265"></script>
-    <script defer src="/js/upload.js?v=1778871579265"></script>
-    <script defer src="/js/admin.js?v=1779265000000"></script>
-    <script defer src="/js/admin-formation.js?v=1778871579265"></script>
+    <script defer src="/js/firebase.js?v=1780490199408"></script>
+    <script defer src="/js/sw-update-checker.js?v=1780490199408"></script>
+    <script defer src="/js/upload.js?v=1780490199408"></script>
+    <script defer src="/js/admin.js?v=1780490199408"></script>
+    <script defer src="/js/admin-formation.js?v=1780490199408"></script>
 </body>
 </html>

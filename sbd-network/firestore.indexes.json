@@ -273,6 +273,37 @@
         { "fieldPath": "courseId", "order": "ASCENDING" },
         { "fieldPath": "order",    "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sbdLifeDiscussions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "articleId", "order": "ASCENDING" },
+        { "fieldPath": "moderationStatus", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sbdLifeQuotes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "articleId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "wardrobeShares",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "viewerUid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "wardrobeShares",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerUid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -1,50 +1,68 @@
 // ================================================================
-// AUTH GUARD - Ensures user is authenticated before dashboard loads
+// AUTH GUARD - Ensures user is authenticated before protected pages load
+// Never sets pointer-events:none on body (breaks iOS PWA / CE2).
 // ================================================================
 
-(function() {
-  const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
-  const guestAllowedRoutes = new Set(['/dashboard', '/dashboard.html', '/auth', '/auth.html', '/index', '/index.html']);
+(function () {
+  var normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+  var guestAllowedRoutes = new Set([
+    '/dashboard',
+    '/dashboard.html',
+    '/auth',
+    '/auth.html',
+    '/index',
+    '/index.html',
+  ]);
+
+  if (normalizedPath.indexOf('/communication-v2') === 0) {
+    return;
+  }
 
   if (guestAllowedRoutes.has(normalizedPath)) {
     return;
   }
 
-  // Show loading screen immediately
-  document.body.style.opacity = '0.3';
-  document.body.style.pointerEvents = 'none';
-  
-  // Wait for Firebase to be ready
-  const checkAuth = () => {
-    if (typeof firebase === 'undefined' || typeof auth === 'undefined') {
-      // Firebase not loaded yet, wait
-      setTimeout(checkAuth, 100);
-      return;
-    }
-    
-    // Firebase loaded, now check auth state
-    let authChecked = false;
-    const timeout = setTimeout(() => {
-      if (!authChecked) {
-        console.warn('[Auth Guard] Timeout waiting for auth, redirecting to login');
-        window.location.href = '/auth';
-      }
-    }, 5000);
-    
-    auth.onAuthStateChanged((user) => {
-      authChecked = true;
-      clearTimeout(timeout);
-      
-      if (!user) {
-        // Not authenticated, redirect
-        window.location.href = '/auth';
-      } else {
-        // Authenticated, show page
-        document.body.style.opacity = '';
-        document.body.style.pointerEvents = '';
-      }
+  function waitForFirebase(maxMs) {
+    var start = Date.now();
+    return new Promise(function (resolve, reject) {
+      (function tick() {
+        if (typeof firebase !== 'undefined' && typeof auth !== 'undefined') {
+          resolve();
+          return;
+        }
+        if (Date.now() - start >= maxMs) {
+          reject(new Error('Firebase did not load'));
+          return;
+        }
+        window.setTimeout(tick, 100);
+      })();
     });
-  };
-  
-  checkAuth();
+  }
+
+  function waitForUser(maxMs) {
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      var timeout = window.setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        reject(new Error('Auth timeout'));
+      }, maxMs);
+
+      auth.onAuthStateChanged(function (user) {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        if (!user) {
+          reject(new Error('Not signed in'));
+          return;
+        }
+        resolve(user);
+      });
+    });
+  }
+
+  Promise.all([waitForFirebase(8000), waitForUser(8000)])
+    .catch(function () {
+      window.location.href = '/auth';
+    });
 })();

@@ -1,8 +1,12 @@
     <!-- HAMBURGER -->
-    <div id="menuBtn" class="menu-btn">☰</div>
-    <div id="menuOverlay" class="menu-overlay"></div>
-    <div id="sideMenu" class="side-menu">
-      <div class="menu-links">
+    <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
+    <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+    <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+      <div class="ham-drawer-head">
+        <span class="ham-drawer-title">Menu</span>
+        <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+      </div>
+      <nav class="menu-links ham-drawer-body" aria-label="Main menu">
         <div class="ham-section">
           <div class="ham-section-label">Formation</div>
           <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
@@ -12,7 +16,7 @@
         <div class="ham-section">
           <div class="ham-section-label">Community</div>
           <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
-          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
+          <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
         </div>
         <div class="ham-section">
           <div class="ham-section-label">Lifestyle</div>
@@ -26,12 +30,13 @@
         <div class="ham-section">
           <div class="ham-section-label">Account</div>
           <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
-          <div id="adminSection" style="display:none;">
+          <div id="adminSection" class="hidden-admin-section">
             <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
-            <a href="/communication-v2/"><span class="menu-icon">✦</span> Messages V2 <span style="opacity:.72;font-size:.82em;">(Beta)</span></a>
           </div>
-          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+          <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
         </div>
+      </nav>
+      <div class="ham-drawer-foot">
         <div id="versionPill"></div>
       </div>
     </div>
@@ -59,4 +64,5 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/ham-nav.js?v=2"></script>
+    <link rel="stylesheet" href="/css/ham-drawer.css">
+    <script defer src="/js/ham-nav.js?v=3"></script>

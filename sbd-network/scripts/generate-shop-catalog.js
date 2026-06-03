@@ -8,20 +8,110 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { loadProductAliases, legacyAliasesByCanonical } = require('./lib/product-aliases');
+const { syncProductAliases } = require('./sync-product-aliases');
+const { syncShopImages } = require('./sync-shop-images');
+const { enrichProductWithProgramDetails } = require('./lib/course-program-details');
 
-/** Products visible in shop = phase <= SHOP_ACTIVE_PHASE. Start at 1. */
-const SHOP_ACTIVE_PHASE = parseInt(process.env.SHOP_ACTIVE_PHASE || '1', 10);
+/** Products visible in shop = phase <= SHOP_ACTIVE_PHASE. Default to full catalog. */
+const SHOP_ACTIVE_PHASE = parseInt(process.env.SHOP_ACTIVE_PHASE || '6', 10);
 
 /** IDs with Stripe checkout + unlock rules in functions/index.js (Phase 1). */
 const STRIPE_READY_IDS = new Set([
   'foundation-monthly',
   'premium-monthly',
   'elite-monthly',
-  'sbd-dummies',
   'teleios-blueprint',
   'starter-bundle',
   'teleios-bundle',
   'elite-bundle',
+  'sbd-dummies',
+  'the-sex-by-design-compendium',
+  'sbd-dummies-digital-print',
+  'sbd-canonical',
+  'sbd-standard',
+  'sbd-real-couples',
+  'sbd-the-heart-of-relationship',
+  'sbd-unequally-yoked-together',
+  'sbd-2-the-impregnable-assemblage',
+  'marriage-porn-beyond',
+  'naked-and-not-ashamed',
+  'marriage-equals-sexuality',
+  'the-arts-of-marriage',
+  'the-art-of-sexuality',
+  'the-art-of-seduction',
+  'the-art-of-fucking',
+  'sbd-magazine-annual-subscription',
+  'sbd-magazine-single-issue',
+  'sbd-digital-archive-access',
+  'complete-sbd-library',
+  'sbd-complete-package',
+  'arts-of-marriage-collection',
+  'marriage-foundation-bundle',
+  'sbd-starter-magazine',
+  'newlywed-special',
+  'anniversary-celebration',
+  'sexual-literacy-101',
+  'anatomy-of-desire',
+  'teleios-blueprint-mini',
+  'marriage-builds-nations-intro',
+  'sbd-dummies-course-13wk',
+  'sbd-dummies-core-curriculum',
+  'art-of-marriage-course',
+  'sexual-mastery-bundle',
+  'teleios-development-bundle',
+  'marriage-governance-bundle',
+  'teleios-blueprint-full',
+  'teleios-level-2',
+  'anthropology-of-wholeness',
+  'identity-mastery',
+  'four-faculties-training',
+  'anthropocentric-development',
+  'personal-development-masterclass',
+  'science-of-self-command',
+  'heart-of-relationship-l1',
+  'relationship-relatednesses-l2',
+  'relationship-mastery-intensive-l3',
+  'perfect-self-program',
+  'emotional-literacy',
+  'temperament-intelligence',
+  'sex-equals-marriage',
+  'sexual-self',
+  'course-art-of-sexuality',
+  'course-art-of-seduction',
+  'course-art-of-nakedness',
+  'sexual-imagination-pics-pearls',
+  'conjugal-intelligence-masterclass',
+  'arousal-mastery',
+  'course-art-of-fucking',
+  'erotic-devotion-song-of-solomon',
+  'nakedness-muliebrity',
+  'nakedness-virility',
+  'bedroom-governance',
+  'marriage-porn-beyond-course-individual',
+  'marriage-porn-beyond-course-couple',
+  'marriage-system-design',
+  'covenant-governance',
+  'fidelity-curriculum',
+  'communication-covenant-couples',
+  'conflict-mastery',
+  'household-management',
+  'daily-liturgies-marriage',
+  'one-flesh-intensive',
+  'marriage-builds-nations',
+  'political-theology-of-home',
+  'family-systems-architecture',
+  'parenting-teleios',
+  'raising-sexual-literacy-children',
+  'family-culture-flourishing',
+  'civilizational-intelligence-masterclass',
+  'human-rights-marriage-udhr16',
+  'diploma-sexual-literacy-conjugal',
+  'diploma-teleios-personal-development',
+  'sbd-certified-facilitator',
+  'private-coaching-hourly',
+  'marriage-labs-weekend',
+  'sbd-academy-lifetime-pass',
 ]);
 
 const PHASES = [
@@ -32,39 +122,160 @@ const PHASES = [
   { id: 5, label: 'Academy schools 1–4', note: '44 school programs' },
   { id: 6, label: 'Diplomas, coaching, lifetime', note: 'High-ticket — manual review OK' },
 ];
-const CATEGORIES = [
-  { id: 'network_subscription', label: 'Membership', icon: '◆', sort: 1 },
-  { id: 'books_sbd_series', label: 'SBD Books', icon: '📖', sort: 2 },
-  { id: 'books_arts_of_marriage', label: 'Arts of Marriage', icon: '🎨', sort: 3 },
-  { id: 'magazine', label: 'Magazine', icon: '📰', sort: 4 },
-  { id: 'book_bundles', label: 'Book Bundles', icon: '📦', sort: 5 },
-  { id: 'courses_entry', label: 'Start Here', icon: '🎯', sort: 6 },
-  { id: 'courses_school1', label: 'School 1 — Teleios', icon: '🟦', sort: 7 },
-  { id: 'courses_school2', label: 'School 2 — Sexual Literacy', icon: '🟩', sort: 8 },
-  { id: 'courses_school3', label: 'School 3 — Marriage Systems', icon: '🟧', sort: 9 },
-  { id: 'courses_school4', label: 'School 4 — Civilization', icon: '🟫', sort: 10 },
-  { id: 'course_bundles', label: 'Course Bundles', icon: '🎁', sort: 11 },
-  { id: 'diplomas_certifications', label: 'Diplomas & Certs', icon: '🎓', sort: 12 },
-  { id: 'coaching_live', label: 'Coaching & Events', icon: '🤝', sort: 13 },
-  { id: 'lifetime_pass', label: 'Lifetime Access', icon: '∞', sort: 14 },
+const SECTIONS = [
+  { id: 'membership', label: 'Membership' },
+  { id: 'books_magazine', label: 'Books & Magazine' },
+  { id: 'academy', label: 'Academy' },
+  { id: 'bundles_diplomas', label: 'Bundles & Diplomas' },
 ];
+const CATEGORIES = [
+  { id: 'network_subscription', label: 'SBD Network Membership', icon: '◆', sort: 1 },
+  { id: 'books_sbd_series', label: 'SBD Book Series', icon: '📖', sort: 2 },
+  { id: 'books_arts_of_marriage', label: 'Arts of Marriage', icon: '🎨', sort: 3 },
+  { id: 'books_standalone', label: 'Other Books', icon: '📙', sort: 4 },
+  { id: 'magazine', label: 'Magazine', icon: '📰', sort: 5 },
+  { id: 'book_bundles', label: 'Book Bundles', icon: '📦', sort: 6 },
+  { id: 'courses_entry', label: 'Start Here', icon: '🎯', sort: 7 },
+  { id: 'courses_school1', label: 'School 1 — Teleios', icon: '🟦', sort: 8 },
+  { id: 'courses_school2', label: 'School 2 — Sexual Literacy', icon: '🟩', sort: 9 },
+  { id: 'courses_school3', label: 'School 3 — Marriage Systems', icon: '🟧', sort: 10 },
+  { id: 'courses_school4', label: 'School 4 — Civilization', icon: '🟫', sort: 11 },
+  { id: 'course_bundles', label: 'Course Bundles', icon: '🎁', sort: 12 },
+  { id: 'diplomas_certifications', label: 'Diplomas & Certs', icon: '🎓', sort: 13 },
+  { id: 'coaching_live', label: 'Coaching & Events', icon: '🤝', sort: 14 },
+  { id: 'lifetime_pass', label: 'Lifetime Access', icon: '∞', sort: 15 },
+];
+
+const CATEGORY_SECTION = {
+  network_subscription: 'membership',
+  books_sbd_series: 'books_magazine',
+  books_arts_of_marriage: 'books_magazine',
+  books_standalone: 'books_magazine',
+  magazine: 'books_magazine',
+  book_bundles: 'bundles_diplomas',
+  courses_entry: 'academy',
+  courses_school1: 'academy',
+  courses_school2: 'academy',
+  courses_school3: 'academy',
+  courses_school4: 'academy',
+  course_bundles: 'academy',
+  diplomas_certifications: 'bundles_diplomas',
+  coaching_live: 'bundles_diplomas',
+  lifetime_pass: 'bundles_diplomas',
+};
+
+const BOOK_COVERS = {
+  'the-sex-by-design-compendium': '/images/sexbydesigncompendium.jpg',
+  'teleios-blueprint': '/images/sbd-deluxe.jpg',
+  'sbd-dummies': '/images/sbd-dummies.jpg',
+  'sbd-dummies-digital-print': '/images/sbd-dummies.jpg',
+  'sbd-canonical': '/images/sbd-canonical.jpg',
+  'sbd-standard': '/images/sbd-standard.jpg',
+  'sbd-real-couples': '/images/SBD-Real-Couples.jpg',
+  'sbd-the-heart-of-relationship': '/images/sbd-the-heart-of-relationship.jpg',
+  'sbd-unequally-yoked-together': '/images/sbd-unequally yoked together.jpg',
+  'sbd-2-the-impregnable-assemblage': '/images/Sex-by-design-2-the-impregnable-assemblage.jpg',
+  'marriage-porn-beyond': '/images/Marriage=Porn&Beyond.jpg',
+  'naked-and-not-ashamed': '/images/naked-not-ashamed.jpg',
+  'marriage-equals-sexuality': '/images/sbd-standard.jpg',
+  'the-arts-of-marriage': '/images/sbd-the-heart-of-relationship.jpg',
+  'the-art-of-sexuality': '/images/the-art-of-sexuality.jpg',
+  'the-art-of-seduction': '/images/sbd-the-art-of-seduction.jpg',
+  'the-art-of-fucking': '/images/sbd-the-art-of-fucking.jpg',
+  'sbd-magazine-annual-subscription': '/images/Sex-by-design-magazine.jpg',
+  'sbd-magazine-single-issue': '/images/Sex-by-design-magazine.jpg',
+  'sbd-digital-archive-access': '/images/Sex-by-design-magazine.jpg',
+  'complete-sbd-library': '/images/sbd-standard.jpg',
+  'sbd-complete-package': '/images/sbd-dummies.jpg',
+  'arts-of-marriage-collection': '/images/sbd-the-art-of-seduction.jpg',
+  'marriage-foundation-bundle': '/images/sbd-dummies.jpg',
+  'sbd-starter-magazine': '/images/Sex-by-design-magazine.jpg',
+  'newlywed-special': '/images/naked-not-ashamed.jpg',
+  'anniversary-celebration': '/images/sbd-the-heart-of-relationship.jpg',
+};
+
+const LEGACY_PRODUCT_ALIASES = legacyAliasesByCanonical(loadProductAliases());
+
+const SCHOOL_VISUAL = {
+  school1: { visualKey: 'school1', from: '#1a3a52', to: '#0d1f2e', label: 'School 1 — Teleios' },
+  school2: { visualKey: 'school2', from: '#1a3d2e', to: '#0f2418', label: 'School 2 — Sexual Literacy' },
+  school3: { visualKey: 'school3', from: '#3d2e1a', to: '#24180f', label: 'School 3 — Marriage Systems' },
+  school4: { visualKey: 'school4', from: '#3d281a', to: '#1f150d', label: 'School 4 — Civilization' },
+};
+
+function resolveVisualKey(id, category, opts) {
+  if (category === 'network_subscription') {
+    const tier = opts.unlocks?.tier || id.replace('-monthly', '');
+    return 'membership-' + tier;
+  }
+  if (opts.schoolId && SCHOOL_VISUAL[opts.schoolId]) return opts.schoolId;
+  if (category === 'book_bundles' || category === 'course_bundles') return 'bundle';
+  if (category === 'diplomas_certifications') return 'diploma';
+  if (category === 'coaching_live') return 'coaching';
+  if (category === 'lifetime_pass') return 'lifetime';
+  if (category === 'magazine') return 'magazine';
+  if (category && category.startsWith('courses_')) return 'course';
+  if (category && category.startsWith('books_')) return 'book';
+  return 'default';
+}
+
+function resolveCoverImage(id, category, opts) {
+  if (BOOK_COVERS[id]) return BOOK_COVERS[id];
+  if (opts.coverImage) return opts.coverImage;
+  if (category === 'magazine' || (id && id.indexOf('magazine') >= 0)) {
+    return BOOK_COVERS['sbd-magazine-annual-subscription'] || '';
+  }
+  if (category === 'book_bundles' || (opts.type === 'bundle' && category !== 'course_bundles')) {
+    return BOOK_COVERS['complete-sbd-library'] || BOOK_COVERS['sbd-dummies'] || '';
+  }
+  return '';
+}
+
+function toPriceDisplay(priceUsd, suffix = '') {
+  const normalized = Number(priceUsd) % 1 === 0 ? Number(priceUsd).toFixed(0) : Number(priceUsd).toFixed(2);
+  return `$${normalized}${suffix || ''}`;
+}
+
+function inferSourceUrl(sourceHint, category) {
+  if (!sourceHint && category && (category.startsWith('courses_') || category === 'course_bundles')) {
+    return 'https://marriageducation.com/courses.html';
+  }
+  if (!sourceHint) return 'https://marriageducation.com/shop.html';
+  if (/^https?:\/\//.test(sourceHint)) return sourceHint;
+  if (category && (category.startsWith('courses_') || category === 'course_bundles')) {
+    return 'https://marriageducation.com/courses.html';
+  }
+  if (sourceHint.includes('courses') || sourceHint.includes('schools')) return 'https://marriageducation.com/courses.html';
+  if (sourceHint.includes('magazine')) return 'https://marriageducation.com/magazine.html';
+  return 'https://marriageducation.com/shop.html';
+}
 
 function p(id, name, category, priceUsd, opts = {}) {
   const phase = opts.phase ?? 6;
+  const priceSuffix = opts.priceSuffix || '';
   return {
     id,
     name,
     category,
+    section: opts.section || CATEGORY_SECTION[category] || 'books_magazine',
+    subcategory: opts.subcategory || null,
     phase,
     stripeReady: STRIPE_READY_IDS.has(id),
     type: opts.type || 'book',
     priceUsd,
-    priceSuffix: opts.priceSuffix || '',
+    priceDisplay: opts.priceDisplay || toPriceDisplay(priceUsd, priceSuffix),
+    priceSuffix,
     originalPriceUsd: opts.originalPriceUsd || null,
     description: opts.description || '',
     icon: opts.icon || '📘',
+    format: opts.format || (opts.type === 'bundle' ? 'bundle' : 'digital'),
     recurring: !!opts.recurring,
     schoolId: opts.schoolId || null,
+    requiredTier: opts.requiredTier || 'free',
+    sourceUrl: inferSourceUrl(opts.sourceUrl || opts.source, category),
+    coverImage: resolveCoverImage(id, category, opts),
+    visualKey: opts.visualKey || resolveVisualKey(id, category, opts),
+    legacyAliases: opts.legacyAliases || LEGACY_PRODUCT_ALIASES[id] || [],
     sortOrder: opts.sortOrder || 100,
     status: 'active',
     source: opts.source || 'marriageducation.com',
@@ -226,23 +437,36 @@ const PRODUCTS = [
   p('sbd-academy-lifetime-pass', 'SBD Academy Lifetime Access Pass', 'lifetime_pass', 1997, { phase: 6, type: 'lifetime', sortOrder: 160, description: 'All current and future courses, books, and community — one payment.' }),
 ];
 
+const PRODUCTS_ENRICHED = PRODUCTS.map(enrichProductWithProgramDetails);
+
 const catalog = {
-  version: 3,
+  version: 4,
   generatedAt: new Date().toISOString(),
   currency: 'USD',
   activePhase: SHOP_ACTIVE_PHASE,
   maxPhase: PHASES.length,
   phases: PHASES,
+  sections: SECTIONS,
   categories: CATEGORIES,
-  products: PRODUCTS,
+  products: PRODUCTS_ENRICHED,
 };
 
 const outPath = path.join(__dirname, '../public/data/shop-catalog.json');
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(catalog, null, 2));
-const visible = PRODUCTS.filter((x) => x.phase <= SHOP_ACTIVE_PHASE).length;
-const checkoutReady = PRODUCTS.filter((x) => x.phase <= SHOP_ACTIVE_PHASE && x.stripeReady).length;
+const visible = PRODUCTS_ENRICHED.filter((x) => x.phase <= SHOP_ACTIVE_PHASE).length;
+const checkoutReady = PRODUCTS_ENRICHED.filter((x) => x.phase <= SHOP_ACTIVE_PHASE && x.stripeReady).length;
+const academyPrograms = PRODUCTS_ENRICHED.filter((x) => x.section === 'academy' && x.program).length;
+console.log('   Academy program cards:', academyPrograms);
 console.log('✅ Wrote', outPath);
 console.log('   Categories:', CATEGORIES.length);
 console.log('   Products (total):', PRODUCTS.length);
 console.log('   Active phase:', SHOP_ACTIVE_PHASE, '→ visible:', visible, '| checkout-ready:', checkoutReady);
+syncProductAliases();
+try {
+  const img = syncShopImages();
+  console.log('   Images synced:', img.total, 'files (', img.copied, ' copied)');
+} catch (imgErr) {
+  console.warn('   ⚠️  Image sync skipped:', imgErr.message);
+}
+console.log('   Aliases synced from data/product-aliases.json');

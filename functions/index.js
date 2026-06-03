@@ -5,6 +5,8 @@ const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const axios = require('axios');
 const { jsPDF } = require('jspdf');
+const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
+const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
 
 // UUID - generate random tokens
 function uuidv4() {
@@ -956,6 +958,14 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
         code: ambassador_code || reference,
         recruitedBy: paymentData.regional_director
       };
+      const normalizedRecruiter = normalizeAmbassadorRecruiterPaymentFields(paymentData);
+      paymentData.regional_director = normalizedRecruiter.regional_director;
+      paymentData.referral_code = normalizedRecruiter.referral_code;
+      paymentData.ambassador_data = normalizedRecruiter.ambassador_data;
+      if (normalizedRecruiter.recruiter_code_normalized_from) {
+        paymentData.recruiter_code_normalized_from = normalizedRecruiter.recruiter_code_normalized_from;
+        paymentData.recruiter_code_normalized_at = normalizedRecruiter.recruiter_code_normalized_at;
+      }
     }
 
     await db.collection('pending_payments').doc(reference).set(paymentData);
@@ -1343,15 +1353,19 @@ exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
 
     console.log(`[RD PAYMENT] Marking payment as paid:`, { notification_id, rd_code, amount });
 
-    // Update notification status
-    await db.collection('admin_notifications').doc(notification_id).update({
+    const notifRef = db.collection('admin_notifications').doc(notification_id);
+    const notifDoc = await notifRef.get();
+    const notifData = notifDoc.exists ? notifDoc.data() : {};
+    const newAmbassadorCode = notifData.ambassador_code || '';
+
+    await notifRef.update({
       status: 'paid',
       paid_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Update recruiter's pending balance (RD-* or AMB-*)
     let recruiterName = 'Unknown';
     let remainingPending = 0;
+    const payAmount = Number(amount) || 0;
 
     if (rd_code && rd_code.startsWith('RD-')) {
       const rdRef = db.collection('regional_directors').doc(rd_code);
@@ -1362,20 +1376,24 @@ exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
         recruiterName = rdData.name || 'Unknown';
 
         await rdRef.update({
-          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
-          recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
+          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-payAmount),
+          recruitment_bonus_paid: admin.firestore.FieldValue.increment(payAmount),
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
 
         const recruitmentHistory = rdData.recruitment_history || [];
         const updatedHistory = recruitmentHistory.map(entry => {
-          if (entry.status === 'pending' && entry.amount === amount) {
+          if (
+            entry.status === 'pending' &&
+            entry.amount === payAmount &&
+            (!newAmbassadorCode || entry.ambassador_code === newAmbassadorCode)
+          ) {
             return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
           }
           return entry;
         });
         await rdRef.update({ recruitment_history: updatedHistory });
-        remainingPending = Math.max(0, (rdData.recruitment_bonus_pending || 0) - amount);
+        remainingPending = Math.max(0, (rdData.recruitment_bonus_pending || 0) - payAmount);
       }
     } else if (rd_code && rd_code.startsWith('AMB-')) {
       const ambRef = db.collection('ambassadors').doc(rd_code);
@@ -1386,21 +1404,25 @@ exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
         recruiterName = ambData.name || ambData.fullName || 'Unknown';
 
         await ambRef.update({
-          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-amount),
-          recruitment_bonus_paid: admin.firestore.FieldValue.increment(amount),
-          commission_earned: admin.firestore.FieldValue.increment(amount),
+          recruitment_bonus_pending: admin.firestore.FieldValue.increment(-payAmount),
+          recruitment_bonus_paid: admin.firestore.FieldValue.increment(payAmount),
+          commission_earned: admin.firestore.FieldValue.increment(payAmount),
           updated_at: admin.firestore.FieldValue.serverTimestamp()
         });
 
         const recruitmentHistory = ambData.recruitment_history || [];
         const updatedHistory = recruitmentHistory.map(entry => {
-          if (entry.status === 'pending' && entry.amount === amount) {
+          if (
+            entry.status === 'pending' &&
+            entry.amount === payAmount &&
+            (!newAmbassadorCode || entry.ambassador_code === newAmbassadorCode)
+          ) {
             return { ...entry, status: 'paid', paid_at: new Date().toISOString() };
           }
           return entry;
         });
         await ambRef.update({ recruitment_history: updatedHistory });
-        remainingPending = Math.max(0, (ambData.recruitment_bonus_pending || 0) - amount);
+        remainingPending = Math.max(0, (ambData.recruitment_bonus_pending || 0) - payAmount);
       }
     }
 
@@ -2022,8 +2044,56 @@ async function activateRD(payment) {
   }
 }
 
-const AMBASSADOR_RECRUITMENT_BONUS_FCFA = 1500; // 10% of 15,000 FCFA signup
-const RD_NETWORK_RECRUITMENT_OVERRIDE_FCFA = 750; // 5% RD override when their ambassador recruits
+const AMBASSADOR_RECRUITMENT_BONUS_FCFA = 1500; // see docs/RECRUITMENT-BONUS-POLICY.md
+const RD_NETWORK_RECRUITMENT_OVERRIDE_FCFA = 750; // DEPRECATED — replaced by upline pool in v2026-03-v2
+
+/** Canonical AMB-/RD-/SNR- recruiter codes (underscores → hyphens). Does not activate anyone. */
+function normalizeReferralCode(raw) {
+  let c = String(raw || '').trim().toUpperCase();
+  if (!c) return '';
+  if (/^(AMB|RD|SNR)([_-]|$)/.test(c)) {
+    c = c.replace(/_/g, '-');
+  }
+  return c.replace(/-+/g, '-');
+}
+
+function applyRecruiterFieldsToAmbassadorData(ambassadorData, recruiterRaw) {
+  const data = { ...(ambassadorData || {}) };
+  const recruiter = normalizeReferralCode(
+    recruiterRaw || data.recruitedBy || data.regional_director_code || data.regional_director || ''
+  );
+  if (!recruiter) return data;
+
+  data.recruitedBy = recruiter;
+  if (recruiter.startsWith('RD-')) {
+    data.regional_director_code = recruiter;
+    data.regional_director = recruiter;
+    data.recruited_by_type = data.recruited_by_type || 'regional_director';
+  } else if (recruiter.startsWith('AMB-') || recruiter.startsWith('SNR-')) {
+    data.senior_code = recruiter;
+    data.recruited_by_type = data.recruited_by_type || 'senior_ambassador';
+  }
+  return data;
+}
+
+function normalizeAmbassadorRecruiterPaymentFields(payment) {
+  const out = { ...payment };
+  const recruiterRaw =
+    out.regional_director ||
+    out.referral_code ||
+    out.ambassador_data?.recruitedBy ||
+    out.ambassador_data?.regional_director_code ||
+    '';
+  const recruiter = normalizeReferralCode(recruiterRaw);
+  out.regional_director = recruiter;
+  out.referral_code = recruiter ? recruiter : normalizeReferralCode(out.referral_code);
+  out.ambassador_data = applyRecruiterFieldsToAmbassadorData(out.ambassador_data, recruiter);
+  if (recruiter && recruiter !== recruiterRaw) {
+    out.recruiter_code_normalized_from = String(recruiterRaw || '');
+    out.recruiter_code_normalized_at = admin.firestore.FieldValue.serverTimestamp();
+  }
+  return out;
+}
 
 function pickRdCode(...candidates) {
   for (const code of candidates) {
@@ -2060,6 +2130,7 @@ async function resolveAmbassadorRdUpline(ambData) {
   return null;
 }
 
+/** @deprecated Use creditRecruitmentBonusesV2 (docs/RECRUITMENT-BONUS-POLICY.md v2026-03-v2). Kept for reference only. */
 async function creditRdNetworkRecruitmentOverride({
   rdCode,
   recruitingAmbassadorCode,
@@ -2132,21 +2203,18 @@ async function creditRdNetworkRecruitmentOverride({
 function normalizeAmbassadorPayment(payment, reference) {
   const ref = String(payment.reference || reference || '').trim();
   const ambassadorCode = String(payment.ambassador_code || ref).trim();
-  const regional_director =
-    payment.regional_director ||
-    payment.referral_code ||
-    payment.ambassador_data?.recruitedBy ||
-    '';
-
-  let ambassadorData = payment.ambassador_data
-    ? { ...payment.ambassador_data }
+  const recruiterNormalized = normalizeAmbassadorRecruiterPaymentFields({
+    ...payment,
+    reference: ref,
+    ambassador_code: ambassadorCode
+  });
+  const regional_director = recruiterNormalized.regional_director || '';
+  let ambassadorData = recruiterNormalized.ambassador_data
+    ? { ...recruiterNormalized.ambassador_data }
     : {};
 
   if (!ambassadorData.recruitedBy && regional_director) {
-    ambassadorData.recruitedBy = regional_director;
-  }
-  if (!ambassadorData.senior_code && regional_director.startsWith('AMB-')) {
-    ambassadorData.senior_code = regional_director;
+    ambassadorData = applyRecruiterFieldsToAmbassadorData(ambassadorData, regional_director);
   }
   if (!ambassadorData.code) {
     ambassadorData.code = ambassadorCode;
@@ -2241,7 +2309,7 @@ async function activateAmbassador(payment, reference) {
     console.log(`[AMBASSADOR] Account created: ${ambassadorCode}`);
   }
 
-  // Update recruiter statistics for any recruiter code (RD-* or AMB-*)
+  // Recruitment bonuses — policy v2026-03-v2 (see docs/RECRUITMENT-BONUS-POLICY.md)
   const existingBonusSnap = await db.collection('admin_notifications')
     .where('ambassador_code', '==', ambassadorCode)
     .where('type', '==', 'rd_recruitment_bonus')
@@ -2250,142 +2318,24 @@ async function activateAmbassador(payment, reference) {
 
   if (payment.regional_director && existingBonusSnap.empty) {
     try {
-      const recruiterCode = payment.regional_director;
-      const recruitmentBonus = AMBASSADOR_RECRUITMENT_BONUS_FCFA;
-
-      if (recruiterCode.startsWith('RD-')) {
-        const rdRef = db.collection('regional_directors').doc(recruiterCode);
-        const rdDoc = await rdRef.get();
-
-        if (rdDoc.exists) {
-          await rdRef.update({
-            downline_count: admin.firestore.FieldValue.increment(1),
-            team_ambassadors: admin.firestore.FieldValue.increment(1),
-            recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
-            recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
-            recruitment_count: admin.firestore.FieldValue.increment(1),
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-          const rdData = rdDoc.data();
-          const recruitmentHistory = rdData.recruitment_history || [];
-          recruitmentHistory.push({
-            ambassador_code: ambassadorCode,
-            ambassador_name: ambassadorData.fullName,
-            amount: recruitmentBonus,
-            date: new Date().toISOString(),
-            status: 'pending'
-          });
-
-          await rdRef.update({ recruitment_history: recruitmentHistory });
-
-          await db.collection('admin_notifications').add({
-            type: 'rd_recruitment_bonus',
-            recruiter_type: 'regional_director',
-            rd_code: recruiterCode, // Legacy field kept for dashboard compatibility
-            rd_name: rdData.name || 'Unknown',
-            ambassador_code: ambassadorCode,
-            ambassador_name: ambassadorData.fullName,
-            amount: recruitmentBonus,
-            status: 'pending',
-            created_at: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-          if (TELEGRAM_BOT_TOKEN) {
-            const rdTotalPending = (rdData.recruitment_bonus_pending || 0) + recruitmentBonus;
-            const rdMsg = `💰 RECRUITMENT BONUS (RD)\n\n` +
-              `Recruiter: ${recruiterCode}\n` +
-              `Name: ${rdData.name || 'Unknown'}\n` +
-              `New Ambassador: ${ambassadorCode}\n` +
-              `Ambassador Name: ${ambassadorData.fullName}\n` +
-              `Bonus: 1,500 FCFA\n\n` +
-              `Total Pending: ${rdTotalPending.toLocaleString()} FCFA\n\n` +
-              `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
-            await sendTelegram(rdMsg, false);
-          }
-        }
-      } else if (recruiterCode.startsWith('AMB-')) {
-        const ambRef = db.collection('ambassadors').doc(recruiterCode);
-        const ambDoc = await ambRef.get();
-
-        if (ambDoc.exists) {
-          const ambData = ambDoc.data();
-          const currentRecruits = ambData.recruits_count || 0;
-          const updatedRecruits = currentRecruits + 1;
-
-          const ambUpdates = {
-            recruits_count: admin.firestore.FieldValue.increment(1),
-            directAmbassadorCount: admin.firestore.FieldValue.increment(1),
-            recruitment_bonus_earned: admin.firestore.FieldValue.increment(recruitmentBonus),
-            recruitment_bonus_pending: admin.firestore.FieldValue.increment(recruitmentBonus),
-            recruitment_count: admin.firestore.FieldValue.increment(1),
-            'deployment_by_category.recruitment': admin.firestore.FieldValue.increment(1),
-            'revenue_by_category.recruitment': admin.firestore.FieldValue.increment(recruitmentBonus),
-            rdCode: ambData.rdCode || '',
-            updated_at: admin.firestore.FieldValue.serverTimestamp()
-          };
-
-          // Auto-promotion: Ambassador → Senior at 10 successful ambassador recruits
-          if (updatedRecruits >= 10 && ambData.ambassador_type !== 'senior' && ambData.ambassador_type !== 'regional_director') {
-            ambUpdates.ambassador_type = 'senior';
-            ambUpdates.role_level = Math.max(ambData.role_level || 1, 2);
-            ambUpdates.level = ambData.level || 'Senior Ambassador';
-            ambUpdates.promotion_date = admin.firestore.FieldValue.serverTimestamp();
-          }
-
-          await ambRef.update(ambUpdates);
-
-          const recruitmentHistory = ambData.recruitment_history || [];
-          recruitmentHistory.push({
-            ambassador_code: ambassadorCode,
-            ambassador_name: ambassadorData.fullName,
-            amount: recruitmentBonus,
-            date: new Date().toISOString(),
-            status: 'pending'
-          });
-          await ambRef.update({ recruitment_history: recruitmentHistory });
-
-          await db.collection('admin_notifications').add({
-            type: 'rd_recruitment_bonus',
-            recruiter_type: ambData.ambassador_type === 'senior' ? 'senior' : 'ambassador',
-            rd_code: recruiterCode, // Legacy field kept for dashboard compatibility
-            rd_name: ambData.name || ambData.fullName || 'Unknown',
-            ambassador_code: ambassadorCode,
-            ambassador_name: ambassadorData.fullName,
-            amount: recruitmentBonus,
-            status: 'pending',
-            created_at: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-          if (TELEGRAM_BOT_TOKEN) {
-            const ambTotalPending = (ambData.recruitment_bonus_pending || 0) + recruitmentBonus;
-            const ambMsg = `💰 RECRUITMENT BONUS (AMBASSADOR)\n\n` +
-              `Recruiter: ${recruiterCode}\n` +
-              `Name: ${ambData.name || ambData.fullName || 'Unknown'}\n` +
-              `New Ambassador: ${ambassadorCode}\n` +
-              `Ambassador Name: ${ambassadorData.fullName}\n` +
-              `Bonus: 1,500 FCFA\n` +
-              `Recruit Count: ${updatedRecruits}\n\n` +
-              `Total Pending: ${ambTotalPending.toLocaleString()} FCFA\n\n` +
-              `👉 Admin Dashboard: https://marriageducation.com/admin-dashboard.html`;
-            await sendTelegram(ambMsg, false);
-          }
-
-          // RD network override: 750 FCFA when an ambassador recruited by an RD brings a new recruit
-          const rdUpline = await resolveAmbassadorRdUpline(ambData);
-          if (rdUpline && rdUpline !== recruiterCode) {
-            await creditRdNetworkRecruitmentOverride({
-              rdCode: rdUpline,
-              recruitingAmbassadorCode: recruiterCode,
-              recruitingAmbassadorName: ambData.name || ambData.fullName || 'Unknown',
-              newAmbassadorCode: ambassadorCode,
-              newAmbassadorName: ambassadorData.fullName
-            });
-          }
-        }
-      }
+      await creditRecruitmentBonusesV2({
+        db,
+        newAmbassadorCode: ambassadorCode,
+        newAmbassadorName: ambassadorData.fullName,
+        directRecruiterCode: payment.regional_director,
+        sendTelegram
+      });
     } catch (error) {
-      console.error('Error updating recruiter stats:', error);
+      console.error('[RECRUITMENT] Bonus credit failed:', error.message);
+      if (TELEGRAM_BOT_TOKEN) {
+        await sendTelegram(
+          `⚠️ Recruitment bonus failed for ${ambassadorCode}\n` +
+          `Recruiter: ${payment.regional_director}\n` +
+          `Error: ${error.message}\n` +
+          `Policy: ${RECRUITMENT_POLICY_VERSION}`,
+          false
+        );
+      }
     }
   }
 
@@ -3162,13 +3112,16 @@ async function processSuccessfulAmbassadorStripePayment(paymentIntent, { email, 
   const existingPaymentDoc = await db.collection('stripe_payments').doc(ambassadorCode).get();
   const alreadyApproved = existingPaymentDoc.exists && existingPaymentDoc.data()?.status === 'approved';
 
+  const stripeRecruiterRaw =
+    meta.recruitedBy || parsedAmbassadorData.regional_director_code || parsedAmbassadorData.recruitedBy || '';
+  const stripeRecruiter = normalizeReferralCode(stripeRecruiterRaw);
   const paymentForActivation = {
     reference: ambassadorCode,
     ambassador_code: ambassadorCode,
     email: resolvedEmail,
     phone: meta.phone || parsedAmbassadorData.phone || '',
-    regional_director: meta.recruitedBy || parsedAmbassadorData.regional_director_code || parsedAmbassadorData.recruitedBy || '',
-    ambassador_data: parsedAmbassadorData
+    regional_director: stripeRecruiter,
+    ambassador_data: applyRecruiterFieldsToAmbassadorData(parsedAmbassadorData, stripeRecruiter)
   };
 
   if (!alreadyApproved) {

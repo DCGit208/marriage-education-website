@@ -1,0 +1,18 @@
+---
+description: Read recruitment bonus policy before changing ambassador activation, bonuses, or recruiter codes
+globs: functions/**/*.{js,ts},public/admin-dashboard.html,public/ambassador-*.html,public/js/ambassador*.js,scripts/*ambassador*,scripts/*recruitment*
+alwaysApply: false
+---
+
+# Recruitment bonus policy (required reading)
+
+Before editing ambassador recruitment bonuses, payout UI, activation, or recruiter code handling:
+
+1. Read **`docs/RECRUITMENT-BONUS-POLICY.md`** (policy `2026-03-v2`) end-to-end.
+2. Implement via `functions/recruitment-bonus-policy.js` + `recruitment-bonus-service.js` — do not reintroduce legacy RD-only 750 override logic.
+3. After changes, run:
+   - `node scripts/test-recruitment-bonus-policy.js`
+   - `node scripts/verify-ambassador-register-flow.mjs`
+4. Deploy: `firebase deploy --only functions` plus site deploy for public/admin JS.
+
+Recruiter codes must use hyphen format (`AMB-KONI-8321`); normalize on client and server. Admin approval still gates activation.

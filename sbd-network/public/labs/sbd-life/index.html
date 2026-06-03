@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>SBD Life Labs | Isolated Preview</title>
+  <meta name="description" content="SBD Life isolated staging preview for safe validation before production integration." />
+  <link rel="stylesheet" href="/css/sbd-life-labs.css" />
+  <link rel="stylesheet" href="/css/sbd-life-reader.css?v=phase2" />
+</head>
+<body>
+  <main class="life-labs-shell">
+    <section class="hero">
+      <p class="kicker">SBD Network Labs</p>
+      <h1>SBD Life Isolated Sandbox</h1>
+      <p class="lede">
+        Phase 5 sandbox — audio, quotes, discovery. Not linked to live navigation.
+      </p>
+    </section>
+
+    <section class="status-card">
+      <h2>Readiness</h2>
+      <ul id="readinessList" class="readiness-list">
+        <li data-key="auth">Auth session check: pending</li>
+        <li data-key="role">Admin gate check: pending</li>
+        <li data-key="flag">SBD Life feature flag check: pending</li>
+        <li data-key="contracts">Phase 1 contracts: pending</li>
+        <li data-key="validation">Client validation probe: pending</li>
+      </ul>
+      <p id="gateMessage" class="gate-message">Running environment checks...</p>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Status transitions</h2>
+      <table class="matrix-table" aria-label="Article status transitions">
+        <thead>
+          <tr><th>From</th><th>Allowed next</th></tr>
+        </thead>
+        <tbody id="transitionTable"></tbody>
+      </table>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Phase 1 probes</h2>
+      <p>Run these as admin to validate client contracts and deployed Firestore rules.</p>
+      <div class="actions probe-actions">
+        <button type="button" id="runClientProbeBtn" class="btn-secondary">Run client validation probe</button>
+        <button type="button" id="runRulesProbeBtn" class="btn-secondary">Run Firestore rules probe</button>
+      </div>
+      <div id="probeLog" class="probe-log" aria-live="polite"></div>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Production rollout</h2>
+      <p>
+        Turn on SBD Life for all signed-in members (hamburger link + <code>/sbd-life/</code>).
+        Uses your admin session — one click.
+      </p>
+      <div class="actions probe-actions">
+        <button type="button" id="enableProductionBtn" class="btn-secondary">Enable member rollout</button>
+        <button type="button" id="disableProductionBtn" class="btn-secondary">Disable rollout</button>
+        <a class="btn-secondary" href="/sbd-life/">Open production home</a>
+      </div>
+      <p id="productionFlagStatus" class="gate-message">Checking flags…</p>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Real editorial — publish</h2>
+      <p>
+        Publish <strong>The Crisis of Modern Attraction</strong> to Firestore (public tier). Adds issue, quotes,
+        optional listen, and sets it first on discovery rails. Safe to re-run — replaces prior version.
+      </p>
+      <div class="actions probe-actions">
+        <button type="button" id="publishCrisisBtn" class="btn-secondary">Publish real article + issue</button>
+        <button type="button" id="syncDiscoveryBtn" class="btn-secondary">Sync member discovery rails</button>
+        <a class="btn-secondary" href="/sbd-life/article.html?slug=crisis-of-modern-attraction">Open on production</a>
+        <a class="btn-secondary" href="/labs/sbd-life/article.html?slug=crisis-of-modern-attraction">Open in labs</a>
+        <a class="btn-secondary" href="/sbd-life/issue.html?slug=issue-attraction-formation-2026">Open issue</a>
+      </div>
+      <p id="publishCrisisStatus" class="gate-message"></p>
+      <p id="syncDiscoveryStatus" class="gate-message"></p>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Phase 2–4 — Demo sandbox (optional)</h2>
+      <p>Seed demo content, test reflections, then verify entitlements and shop checkout links.</p>
+      <div class="actions probe-actions">
+        <button type="button" id="seedDemoBtn" class="btn-secondary">Seed demo article + issue</button>
+        <a class="btn-secondary" href="/labs/sbd-life/article.html?slug=labs-demo-presence">Open demo article</a>
+        <a class="btn-secondary" href="/labs/sbd-life/issue.html?slug=labs-demo-q1-presence">Open demo issue</a>
+        <a class="btn-secondary" href="/labs/sbd-life/article.html?slug=labs-demo-elite-covenant">Open elite essay (paywall)</a>
+      </div>
+      <p id="seedStatus" class="gate-message"></p>
+      <div id="lifeCatalog" class="life-catalog-wrap"></div>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Phase 4 — Entitlements</h2>
+      <div id="lifeCommercePanel"></div>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Phase 5 — Optional listen (free)</h2>
+      <p>
+        Listen is opt-in only — readers choose when they want it. Uses the device voice (no paid API).
+        Pause and pace are calibrated from your editorial reference recording; timbre still varies by browser.
+      </p>
+      <div class="actions probe-actions">
+        <button type="button" id="enableNarrationBtn" class="btn-secondary">
+          Enable optional listen (demo article)
+        </button>
+        <a class="btn-secondary" href="/labs/sbd-life/article.html?slug=labs-demo-presence">Try on demo article</a>
+      </div>
+      <p id="narrationStatus" class="gate-message"></p>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Phase 5 — Curated discovery</h2>
+      <p>Weighted editorial rails (not algorithmic chaos). Re-seed to refresh audio, quotes, and rails.</p>
+      <div id="lifeDiscovery" class="life-catalog-wrap"></div>
+    </section>
+
+    <section class="blueprint-card">
+      <h2>Current scope</h2>
+      <p>
+        Phase 5 adds audio essays, quote sharing, and curated discovery rails in the sandbox.
+      </p>
+      <div class="actions">
+        <a href="/dashboard" class="btn-secondary">Return to Dashboard</a>
+      </div>
+    </section>
+  </main>
+
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="/js/firebase.js?v=1779977713309"></script>
+  <script defer src="/js/sbd-life-contracts.js?v=phase1b"></script>
+  <script defer src="/js/sbd-life-routes.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-editorial-crisis.js?v=1"></script>
+  <script defer src="/js/sbd-life-data.js?v=phase6b"></script>
+  <script defer src="/js/sbd-life-discovery.js?v=phase6c"></script>
+  <script defer src="/js/sbd-life-entitlements.js?v=phase4"></script>
+  <script defer src="/js/sbd-life-commerce.js?v=phase4"></script>
+  <script defer src="/js/sbd-life-tts.js?v=human-cal"></script>
+  <script defer src="/js/sbd-life-narration-admin.js?v=human-cal"></script>
+  <script defer src="/js/sbd-life-flags-admin.js?v=1"></script>
+  <script defer src="/js/sbd-life-hub.js?v=phase6c"></script>
+  <script defer src="/js/sbd-life-labs.js?v=phase1b"></script>
+</body>
+</html>

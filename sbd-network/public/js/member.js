@@ -128,7 +128,7 @@ auth.onAuthStateChanged(async (viewer) => {
     const dmBtn = document.getElementById('dmMemberBtn');
     if (dmBtn) {
       dmBtn.addEventListener('click', () => {
-        window.location.href = `dm.html?uid=${encodeURIComponent(memberUid)}`;
+        window.location.href = `/communication-v2/?uid=${encodeURIComponent(memberUid)}`;
       });
     }
 

@@ -318,7 +318,8 @@
   display: none;
 }
 
-.side-menu {
+/* Drawer layout: see ham-drawer.css (transform-based; no left:-300px) */
+.side-menu:not(.ham-drawer) {
   position: fixed;
   top: 0;
   left: -300px;
@@ -333,11 +334,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   box-sizing: border-box;
 }
-.side-menu.open { left: 0; }
+.side-menu:not(.ham-drawer).open { left: 0; }
 
 .menu-links {
   display: flex;

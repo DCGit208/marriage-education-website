@@ -22,7 +22,7 @@ async function initNotifications(userId) {
   // Show a nudge banner if the user hasn't enabled push yet
   _maybeShowPushNudge(userId);
   // Silently refresh the FCM token on every login (fixes stale tokens after SW updates)
-  if (Notification.permission === 'granted') {
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     _initPush(userId);
   }
 }

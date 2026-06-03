@@ -1243,7 +1243,7 @@ async function _triggerDmPush(convId, recipientId, body) {
         senderName,
         title:    `💬 ${senderName}`,
         body:     body.slice(0, 100),
-        url:      `/dm.html`,
+        url:      `/communication-v2/`,
         convId,
       }),
     });

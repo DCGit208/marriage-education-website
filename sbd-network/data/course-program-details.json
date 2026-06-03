@@ -1,0 +1,283 @@
+{
+  "products": {
+    "sbd-dummies-course-13wk": {
+      "badge": "⭐ BEST VALUE",
+      "badgeStyle": "featured",
+      "tagline": "📚 Most Comprehensive Program",
+      "pitch": "13-week comprehensive program covering every chapter with exercises, exams, and lifetime access. Includes the book!",
+      "featureLabel": "What's Included:",
+      "features": [
+        "13 modules covering complete SBD framework",
+        "Video lessons for each chapter",
+        "Interactive exercises & assessments",
+        "Digital book included (PDF)",
+        "Lifetime course access & updates",
+        "Certificate upon completion"
+      ],
+      "duration": "13 weeks",
+      "format": "Self-paced video course",
+      "ctaLabel": "Enroll in Course"
+    },
+    "sexual-literacy-101": {
+      "badge": "⭐ POPULAR",
+      "badgeStyle": "entry",
+      "tagline": "Most Popular Entry Course",
+      "pitch": "Quick 90-minute introduction to understanding the human sexual system and how it works in covenant.",
+      "featureLabel": "You'll discover:",
+      "features": [
+        "What sexuality actually is (vs. sex acts)",
+        "How desire, arousal, and covenant connect",
+        "Why most marriage advice fails",
+        "The SBD framework overview"
+      ],
+      "duration": "90 minutes",
+      "format": "Video course",
+      "ctaLabel": "Start Learning"
+    },
+    "anatomy-of-desire": {
+      "tagline": "Foundational desire training",
+      "pitch": "Understand how desire works, what triggers it, and how to steward it in marriage.",
+      "featureLabel": "You'll learn:",
+      "features": [
+        "The psychology and theology of desire",
+        "How attraction is formed and sustained",
+        "Desire in covenant vs. counterfeit desire",
+        "Practical desire cultivation habits"
+      ],
+      "duration": "2 hours",
+      "format": "Video + workbook"
+    },
+    "teleios-blueprint-mini": {
+      "tagline": "Fast-track teleios intro",
+      "pitch": "Fast-track introduction to full human maturity and the wholeness required for covenant faithfulness.",
+      "featureLabel": "You'll explore:",
+      "features": [
+        "What teleios (wholeness) means",
+        "The 4 faculties of human development",
+        "Why personal development must come first",
+        "How to Practice From Perfection"
+      ],
+      "duration": "2 hours",
+      "format": "Video + assessment"
+    },
+    "marriage-builds-nations-intro": {
+      "tagline": "Civilizational vision",
+      "pitch": "Discover why your marriage matters beyond your bedroom — and how it shapes civilization.",
+      "featureLabel": "You'll understand:",
+      "features": [
+        "UDHR 16: family as fundamental unit of society",
+        "How marriage creates or destroys nations",
+        "Your home as a micro-parliament",
+        "The civilizational vision for your family"
+      ],
+      "duration": "90 minutes",
+      "format": "Video lecture"
+    },
+    "sbd-dummies-core-curriculum": {
+      "tagline": "Flagship SBD pathway",
+      "pitch": "The flagship course based on Sex By Design for Dummies — full framework for couples and serious singles.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Design: one flesh, naked and not ashamed",
+        "Wholeness math: 1 + 1 → 1",
+        "Pics & Pearls basics",
+        "UDHR 16 & 26 as marriage frame",
+        "Practice From Perfection"
+      ],
+      "duration": "10 weeks",
+      "format": "Cohort or self-paced"
+    },
+    "art-of-marriage-course": {
+      "pitch": "Couples who love each other but want a civilization-grade understanding of what their marriage is.",
+      "featureLabel": "You'll explore:",
+      "features": [
+        "Marriage as political theology of home",
+        "UDHR 16: family as fundamental unit",
+        "Genesis 2:24–25 + 1 Cor. 6:16",
+        "Your home as micro-nation with laws and liturgies"
+      ],
+      "duration": "6 weeks",
+      "format": "Workshop + case studies"
+    },
+    "teleios-blueprint-full": {
+      "pitch": "Singles, engaged, and married individuals building full personal development before or alongside marriage work.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Behavioral maturity (self-command, reliability)",
+        "Temperamental maturity (difference without contempt)",
+        "Emotional maturity (ordered affection)",
+        "Mental maturity (sound judgment about sex and covenant)",
+        "UDHR 26(2) in real life"
+      ],
+      "duration": "6 weeks",
+      "format": "Online program + weekly Q&A"
+    },
+    "teleios-level-2": {
+      "pitch": "For those who completed Level 1 or already practice strong self-command but want marriage-readiness at civilizational standard.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Epistemology — how you know about love and marriage",
+        "Axiology — ranking what matters in home and nation",
+        "Ontology — marriage as divine system",
+        "Etymology — why definitions of marriage and fidelity matter"
+      ],
+      "duration": "8 weeks",
+      "format": "Live cohort + assignments"
+    },
+    "course-art-of-sexuality": {
+      "pitch": "Married couples who need to restore or upgrade sexual atmosphere, not just frequency.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Sexuality vs. sex: lifestyle vs. isolated act",
+        "A3 Model (Attitude → Attire → Allure)",
+        "Muliebrity & Virility packs",
+        "Song of Songs liturgies for daily allure"
+      ],
+      "duration": "8 weeks",
+      "format": "Practicum + wardrobe labs"
+    },
+    "course-art-of-seduction": {
+      "pitch": "Couples ready to outperform porn by learning holy seduction inside covenant.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Biblical eroticism (Song of Songs)",
+        "Seduction as service, not manipulation",
+        "Pursuit patterns for husbands and wives",
+        "Predictably arousing rituals within holiness"
+      ],
+      "duration": "6 weeks",
+      "format": "Live/online hybrid + drills"
+    },
+    "marriage-porn-beyond-course-couple": {
+      "pitch": "Couples wrestling with porn, or wanting a marriage that makes porn irrelevant.",
+      "featureLabel": "You'll master:",
+      "features": [
+        "Why porn works — and why marriage must do it better",
+        "Covenant imagery (Pics & Pearls) vs. counterfeit",
+        "Direct imagination and arousal toward your spouse only",
+        "Build a home where porn has nothing to offer"
+      ],
+      "duration": "8 weeks",
+      "format": "Freedom lab + couple exercises"
+    },
+    "sexual-mastery-bundle": {
+      "badge": "⭐ BUNDLE",
+      "badgeStyle": "bundle",
+      "tagline": "Complete sexual literacy pathway",
+      "pitch": "Accelerate transformation with four flagship School 2 courses in one purchase.",
+      "featureLabel": "Includes 4 flagship courses:",
+      "features": [
+        "The Art of Sexuality ($397)",
+        "The Art of Seduction ($347)",
+        "The Art of Nakedness ($199)",
+        "Sexual Imagination Course ($249)"
+      ],
+      "duration": "Self-paced",
+      "format": "Bundle — own all four programs",
+      "ctaLabel": "Get Complete Bundle"
+    },
+    "teleios-development-bundle": {
+      "badgeStyle": "bundle",
+      "tagline": "Full teleios foundation",
+      "pitch": "Full personal development foundation for covenant readiness.",
+      "featureLabel": "Includes 4 core programs:",
+      "features": [
+        "The Teleios Blueprint ($247)",
+        "Identity Mastery ($149)",
+        "The Heart of Relationship ($149)",
+        "Four Faculties Training ($199)"
+      ],
+      "ctaLabel": "Get Complete Bundle"
+    },
+    "marriage-governance-bundle": {
+      "badgeStyle": "bundle",
+      "tagline": "Marriage systems mastery",
+      "pitch": "Master marriage systems, communication, and household leadership.",
+      "featureLabel": "Includes 4 essential courses:",
+      "features": [
+        "Marriage System Design ($297)",
+        "Covenant Governance ($249)",
+        "Daily Liturgies of Marriage ($149)",
+        "Communication Mastery ($199)"
+      ],
+      "ctaLabel": "Get Complete Bundle"
+    },
+    "diploma-sexual-literacy-conjugal": {
+      "badge": "🎓 DIPLOMA",
+      "badgeStyle": "diploma",
+      "tagline": "Premium Certification Program",
+      "pitch": "Highest level of sexual literacy, conjugal intelligence, and covenantal mastery.",
+      "featureLabel": "Complete curriculum includes:",
+      "features": [
+        "All Sexual Mastery Bundle courses",
+        "Arousal Mastery, Bedroom Governance, Erotic Devotion",
+        "Song of Solomon deep study",
+        "Pics & Pearls advanced practicum",
+        "12 live coaching sessions",
+        "Official SBD Diploma certificate"
+      ],
+      "duration": "16 weeks",
+      "format": "Diploma + live sessions",
+      "ctaLabel": "Apply for Diploma"
+    },
+    "diploma-teleios-personal-development": {
+      "badge": "🎓 DIPLOMA",
+      "badgeStyle": "diploma",
+      "tagline": "Premium Certification Program",
+      "pitch": "Full human maturity and becoming a whole person ready for covenant life.",
+      "featureLabel": "Complete curriculum includes:",
+      "features": [
+        "All Teleios Development Bundle courses",
+        "Anthropology of Wholeness & Science of Self-Command",
+        "Relationship Mastery Intensive (Levels 1–3)",
+        "10 private coaching sessions",
+        "Personalized maturity assessment",
+        "Official SBD Teleios Diploma"
+      ],
+      "duration": "14 weeks",
+      "format": "Diploma + coaching",
+      "ctaLabel": "Apply for Diploma"
+    },
+    "sbd-academy-lifetime-pass": {
+      "badge": "🌟 LIFETIME",
+      "badgeStyle": "lifetime",
+      "tagline": "All current & future academy content",
+      "pitch": "Get access to ALL current and future courses, all books, all updates, and lifetime membership in the SBD community.",
+      "featureLabel": "Lifetime access to:",
+      "features": [
+        "Every academy course — current and future",
+        "All book digital releases",
+        "Community membership",
+        "Course updates at no extra cost"
+      ],
+      "duration": "Lifetime",
+      "format": "One-time payment",
+      "ctaLabel": "Get Lifetime Access"
+    },
+    "private-coaching-hourly": {
+      "pitch": "Individuals or couples needing precision help, not generic advice.",
+      "featureLabel": "You'll receive:",
+      "features": [
+        "Deep diagnostic (SBD & Teleios framework)",
+        "Custom practice plan for 6–12 weeks",
+        "Support between sessions (email/WhatsApp)"
+      ],
+      "duration": "60 minutes",
+      "format": "Video/phone session",
+      "ctaLabel": "Apply for Coaching"
+    },
+    "marriage-labs-weekend": {
+      "pitch": "Couples needing breakthrough in 48 hours — not another year of confusion.",
+      "featureLabel": "You'll experience:",
+      "features": [
+        "2 days teaching, labs, and guided conversations",
+        "Sexual literacy labs (covenant-anchored)",
+        "Personal development + marital fidelity integration",
+        "Follow-up group calls after the retreat"
+      ],
+      "duration": "Weekend",
+      "format": "In-person intensive",
+      "ctaLabel": "Join Marriage Lab"
+    }
+  }
+}

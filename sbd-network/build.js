@@ -10,6 +10,8 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { syncProductAliases } = require('./scripts/sync-product-aliases');
+const { syncShopImages } = require('./scripts/sync-shop-images');
 
 // ── Guardrail: must run from sbd-network/ ──────────────────────────
 if (!fs.existsSync(path.join(__dirname, 'src/pages'))) {
@@ -74,6 +76,16 @@ for (const file of files) {
 
 console.log(`\n✅ Built ${built}/${files.length} pages → public/`);
 if (skipped) console.log(`   Skipped ${skipped} (no NAV_INJECT marker)`);
+
+try {
+  const aliasSync = syncProductAliases();
+  console.log(`🔧 Product aliases synced (${aliasSync.aliasCount} entries)`);
+  const imgSync = syncShopImages();
+  console.log(`🔧 Shop images synced (${imgSync.total} files, ${imgSync.copied} updated)`);
+} catch (err) {
+  console.error('❌ shop asset sync failed:', err.message);
+  process.exit(1);
+}
 
 // ── Auto-stamp ALL versioned JS/CSS assets in every built page ────
 // Replaces every ?v=<number> on ANY .js or .css reference with the

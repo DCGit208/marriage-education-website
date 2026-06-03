@@ -91,4 +91,12 @@
         .catch(function () {});
     });
   }
+
+  if (!window.__sbdLifeNavLoader) {
+    window.__sbdLifeNavLoader = true;
+    var navScript = document.createElement('script');
+    navScript.src = '/js/sbd-life-nav.js?v=phase6';
+    navScript.defer = true;
+    document.body.appendChild(navScript);
+  }
 })();

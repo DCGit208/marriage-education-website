@@ -6,6 +6,14 @@
 let currentUserId = null;
 let currentProductId = null;
 let checkoutProduct = null;
+function resolveShopProductId(productId) {
+  const root = typeof window !== 'undefined' ? window : global;
+  if (root.SBDShopProductIds && typeof root.SBDShopProductIds.resolve === 'function') {
+    return root.SBDShopProductIds.resolve(productId);
+  }
+  const normalized = typeof productId === 'string' ? productId.trim() : '';
+  return normalized || '';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   firebase.auth().onAuthStateChanged(async (user) => {
@@ -25,7 +33,8 @@ function isCheckoutAllowed(product, activePhase) {
 }
 
 async function loadCheckoutProduct() {
-  const productId = new URLSearchParams(window.location.search).get('product');
+  const requestedProductId = new URLSearchParams(window.location.search).get('product');
+  const productId = resolveShopProductId(requestedProductId);
   if (!productId) {
     window.location.href = '/shop.html';
     return;

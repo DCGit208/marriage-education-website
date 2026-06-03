@@ -100,7 +100,9 @@ async function isUserAdmin() {
   if (!user) return false;
   try {
     const userDoc = await db.collection('users').doc(user.uid).get();
-    return userDoc.exists && userDoc.data().role === 'admin';
+    if (!userDoc.exists) return false;
+    const role = String((userDoc.data().role || '')).toLowerCase();
+    return role === 'admin';
   } catch (error) {
     console.error('Error checking admin status:', error);
     return false;

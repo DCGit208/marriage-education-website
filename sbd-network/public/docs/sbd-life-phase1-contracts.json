@@ -1,0 +1,64 @@
+{
+  "version": "phase1b",
+  "description": "Canonical contracts + status transitions for SBD Life Phase 1.",
+  "enums": {
+    "articleStatus": ["draft", "review", "scheduled", "published", "archived", "hidden"],
+    "accessTier": ["public", "foundation", "premium", "elite", "admin"],
+    "reflectionType": ["reflection", "insight", "question", "debate", "experience", "mentor_response"],
+    "moderationStatus": ["pending", "approved", "hidden", "flagged"],
+    "reactionType": [
+      "thought-provoking",
+      "powerful",
+      "challenging",
+      "eye-opening",
+      "transformative",
+      "emotionally-resonant",
+      "insightful"
+    ],
+    "contentType": [
+      "feature_article",
+      "hot_topic",
+      "elite_essay",
+      "audio_essay",
+      "visual_editorial",
+      "debate",
+      "confession",
+      "dating_analysis",
+      "style_feature",
+      "cultural_commentary",
+      "sbd_life_now",
+      "issue"
+    ]
+  },
+  "statusTransitions": {
+    "draft": ["draft", "review"],
+    "review": ["review", "draft", "scheduled"],
+    "scheduled": ["scheduled", "review", "published"],
+    "published": ["published", "archived", "hidden"],
+    "archived": ["archived", "published", "hidden"],
+    "hidden": ["hidden", "published", "archived"]
+  },
+  "collections": {
+    "sbdLifeArticles": {
+      "required": ["title", "slug", "contentType", "tierRequired", "status", "authorId", "updatedAt"],
+      "createStatus": ["draft", "review"],
+      "recommended": ["excerpt", "content", "contentBlocks", "coverImage", "heroVideo", "issueId", "tags", "featured", "trending", "seoTitle", "seoDescription"]
+    },
+    "sbdLifeIssues": {
+      "required": ["title", "slug", "issueNumber", "theme", "tierRequired", "releaseDate", "archived"],
+      "recommended": ["description", "coverImage", "mobileCoverImage", "trailerVideo", "editorLetter", "featuredArticles", "downloadablePdf", "printEditionAvailable"]
+    },
+    "sbdLifeDiscussions": {
+      "required": ["articleId", "userId", "content", "reflectionType", "moderationStatus", "createdAt", "tier"],
+      "recommended": ["replyTo", "engagementScore"]
+    },
+    "sbdLifeAudio": {
+      "required": ["articleId", "audioUrl", "duration", "tierRequired"],
+      "recommended": ["narrator", "waveformData", "transcript"]
+    },
+    "sbdLifeQuotes": {
+      "required": ["articleId", "quote", "createdAt"],
+      "recommended": ["quoteImage", "shareCount", "engagementScore"]
+    }
+  }
+}

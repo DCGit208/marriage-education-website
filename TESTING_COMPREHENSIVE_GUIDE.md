@@ -189,18 +189,18 @@ This guide will help you test all features of the **Administrative Dashboard** i
 firebase functions:config:get telegram
 ```
 
-Expected output:
+Expected output shape (values are secrets — do not commit or paste into docs):
 ```json
 {
-  "bot_token": "8598876620:AAG9qTORojDOewDxUS0JZG6rFT3zdDnpvR0",
-  "chat_id": "6658054668"
+  "bot_token": "<your-bot-token>",
+  "chat_id": "<your-chat-or-group-id>"
 }
 ```
 
 ### Test Telegram Notifications
 
 1. **Create and approve a test payment**
-2. **Check Telegram chat (ID: 6658054668)**
+2. **Check your admin Telegram chat** (the `chat_id` from config)
 3. **Expected message format:**
    ```
    ✅ *Payment Approved & Sent*
@@ -335,11 +335,11 @@ firebase functions:log --only approvePayment
 2. Chat ID correct?
 3. Bot has permission to send to chat?
 
-**Test Telegram directly:**
+**Test Telegram directly** (replace placeholders with values from `firebase functions:config:get telegram`):
 ```bash
-curl -X POST "https://api.telegram.org/bot8598876620:AAG9qTORojDOewDxUS0JZG6rFT3zdDnpvR0/sendMessage" \
+curl -X POST "https://api.telegram.org/bot<BOT_TOKEN>/sendMessage" \
   -H "Content-Type: application/json" \
-  -d '{"chat_id":"6658054668","text":"Test message","parse_mode":"Markdown"}'
+  -d '{"chat_id":"<CHAT_ID>","text":"Test message"}'
 ```
 
 ### Download Link Returns 404

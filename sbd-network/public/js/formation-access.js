@@ -21,12 +21,126 @@ const TIERS = {
 
 const _FA_TIER_ORDER = ['free', 'foundation', 'premium', 'elite'];
 
+function normalizeTierSlug(tier) {
+  if (!tier) return 'free';
+  return String(tier).toLowerCase().trim();
+}
+
+function subscriptionEndMs(subscription) {
+  if (!subscription?.endDate) return 0;
+  return subscription.endDate.toMillis ? subscription.endDate.toMillis() : 0;
+}
+
+function isSubscriptionCurrentlyActive(subscription) {
+  if (!subscription || subscription.status !== 'active') return false;
+  const endMs = subscriptionEndMs(subscription);
+  return endMs > Date.now();
+}
+
+/**
+ * Active subscription tier, or null if inactive/expired.
+ */
+function resolveActiveSubscriptionTier(userData) {
+  if (!userData?.subscription || !isSubscriptionCurrentlyActive(userData.subscription)) {
+    return null;
+  }
+  return normalizeTierSlug(userData.subscription.tier || 'free');
+}
+
+/**
+ * Elite billing tier only (admin-granted or purchased). Ambassador/RD tiers are separate.
+ */
+function hasEliteTier(userData) {
+  if (!userData) return false;
+  const docTier = normalizeTierSlug(userData.tier || 'free');
+  const subTier = resolveActiveSubscriptionTier(userData);
+  return docTier === 'elite' || subTier === 'elite';
+}
+
+/**
+ * Admin panel sets elite + active subscription through 2099 (staff grants).
+ */
+function isAdminGrantedElite(userData) {
+  if (!userData || !hasEliteTier(userData)) return false;
+  const sub = userData.subscription;
+  if (sub?.source === 'admin') return true;
+  if (!sub || sub.status !== 'active' || normalizeTierSlug(sub.tier) !== 'elite') return false;
+  const endMs = subscriptionEndMs(sub);
+  return endMs >= new Date('2090-01-01').getTime();
+}
+
+/**
+ * Resolve tier from user doc (sync). Prefer active subscription.tier, else users.tier.
+ */
+function resolveEffectiveTier(userData) {
+  if (!userData) return 'free';
+  const subTier = resolveActiveSubscriptionTier(userData);
+  if (subTier) return subTier;
+  return normalizeTierSlug(userData.tier || 'free');
+}
+
+/**
+ * MV House: Elite billing + advanced expression formation (same gate as advanced boards).
+ */
+function getMvHouseAccess(userData) {
+  if (!userData) {
+    return { allowed: false, reason: 'tier', message: 'MV House is Elite', showPaywall: true };
+  }
+  if (userData.role === 'admin') {
+    return { allowed: true, reason: '', message: '', showPaywall: false };
+  }
+
+  const eliteBilling =
+    hasEliteTier(userData) || isAdminGrantedElite(userData);
+  if (!eliteBilling) {
+    return {
+      allowed: false,
+      reason: 'tier',
+      message: 'MV House is Elite',
+      showPaywall: true,
+      tier: resolveEffectiveTier(userData),
+    };
+  }
+
+  const adv =
+    typeof AdvancedExpressionAccess !== 'undefined'
+      ? AdvancedExpressionAccess.getAdvancedExpressionAccess(userData)
+      : null;
+  if (adv) {
+    if (!adv.allowed) {
+      return {
+        allowed: false,
+        reason: adv.reason,
+        message: adv.message || 'Formation Required',
+        detail: adv.detail || '',
+        showPaywall: false,
+        ctaUrl: adv.ctaUrl || '/courses.html',
+        progress: adv.progress,
+      };
+    }
+    return { allowed: true, reason: '', message: '', showPaywall: false, tier: 'elite' };
+  }
+
+  if (isAdminGrantedElite(userData)) {
+    return { allowed: true, reason: '', message: '', showPaywall: false, tier: 'elite' };
+  }
+
+  return {
+    allowed: false,
+    reason: 'formation',
+    message: 'Formation Required',
+    detail: 'Complete your Premium arc and Elite schools to unlock MV House.',
+    showPaywall: false,
+    ctaUrl: '/courses.html',
+  };
+}
+
 /**
  * Check if user's tier is sufficient for required tier
  */
 function hasSufficientTier(userTier, requiredTier) {
-  const userIndex = _FA_TIER_ORDER.indexOf(userTier || 'free');
-  const requiredIndex = _FA_TIER_ORDER.indexOf(requiredTier || 'free');
+  const userIndex = _FA_TIER_ORDER.indexOf(normalizeTierSlug(userTier));
+  const requiredIndex = _FA_TIER_ORDER.indexOf(normalizeTierSlug(requiredTier));
   return userIndex >= requiredIndex;
 }
 
@@ -71,18 +185,11 @@ async function getUserTier(userId) {
     const userData = userDoc.data();
     const subscription = userData.subscription;
     
-    // Check if subscription is active
-    if (subscription && subscription.status === 'active') {
-      const now = Date.now();
-      const endDate = subscription.endDate?.toMillis ? subscription.endDate.toMillis() : 0;
-      
-      if (endDate > now) {
-        return subscription.tier || 'free';
-      }
-    }
-    
-    // Fall back to direct tier field if subscription object not present/active
-    return userData.tier || 'free';
+    const docTier = normalizeTierSlug(userData.tier || 'free');
+    const subTier = resolveActiveSubscriptionTier(userData);
+    if (docTier === 'elite' || subTier === 'elite') return 'elite';
+    if (subTier) return subTier;
+    return docTier;
   } catch (error) {
     console.error('[Access Control] Error fetching user tier:', error);
     return 'free';
@@ -617,7 +724,7 @@ if (typeof window !== 'undefined') {
  *
  * Features:
  *   'dating'    — Premium + score≥60 + S1≥70 + S2≥70 | Elite + score≥70
- *   'mv_house'  — Elite + FIS_V2 expression≥20
+ *   'mv_house'  — Elite billing + advanced expression formation gate
  *   'school2'   — Premium+ (tier gate only, formation-access.js already handles)
  *   'boards'    — foundation+ (tier gate only)
  *
@@ -688,19 +795,12 @@ async function canAccessFeature(uid, feature) {
 
   // ── MV HOUSE ─────────────────────────────────────────────────────
   if (feature === 'mv_house') {
-    if (tierLevel < _FA_TIER_ORDER.indexOf('elite')) {
+    const mv = getMvHouseAccess(userData);
+    if (!mv.allowed) {
       return {
         allowed: false,
-        reason: 'MV House is an Elite feature. Upgrade to Elite to access your wardrobe system.',
-        showPaywall: true,
-      };
-    }
-    // Elite: require expression score ≥ 20 (anti-game: must have actual MV engagement)
-    if (expression < 20) {
-      return {
-        allowed: false,
-        reason: `Expression score too low to access MV House (${expression}/100 — need 20). Engage with the community and wardrobe system to build your expression score.`,
-        showPaywall: false,
+        reason: mv.detail || mv.message || 'MV House is an Elite feature.',
+        showPaywall: mv.showPaywall === true,
       };
     }
     return { allowed: true, reason: '', showPaywall: false };
@@ -744,6 +844,11 @@ if (typeof window !== 'undefined') {
     // Tier helpers
     TIERS,
     hasSufficientTier,
+    hasEliteTier,
+    isAdminGrantedElite,
+    resolveEffectiveTier,
+    resolveActiveSubscriptionTier,
+    getMvHouseAccess,
     getUserTier,
     
     // Access checks
@@ -771,6 +876,11 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     TIERS,
     hasSufficientTier,
+    hasEliteTier,
+    isAdminGrantedElite,
+    resolveEffectiveTier,
+    resolveActiveSubscriptionTier,
+    getMvHouseAccess,
     getUserTier,
     canAccessSchool,
     canAccessCourse,

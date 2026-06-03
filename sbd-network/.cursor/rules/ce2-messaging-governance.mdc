@@ -1,0 +1,17 @@
+---
+description: CE2 (Messages V2 beta) — non-destructive governance only
+globs:
+  - sbd-network/public/communication-v2/**
+  - sbd-network/firestore.rules
+  - sbd-network/docs/CE2-*.md
+alwaysApply: false
+---
+
+Before editing CE2 messaging:
+
+1. Read `docs/CE2-AGENT-GOVERNANCE.md` (mandatory).
+2. Rollback steps: `docs/CE2-GOVERNANCE-ROLLBACK.md`.
+3. Beta URL: `/communication-v2/` — never redirect or replace with `/messaging-v2/`.
+4. Do not modify `communication-v2.css` for Phases 1–4 governance-only work; Phase 5 UX may change CSS per `docs/CE2-GOVERNANCE-PHASE5.md`.
+5. Use `ce2-governance.js` feature flag for client rollback.
+6. Phase 1 is complete; see `docs/CE2-GOVERNANCE-PHASE1.md` for sign-off.

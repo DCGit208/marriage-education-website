@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1779262000000';
+const CACHE_VERSION = 'sbd-network-v1780490199420';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
@@ -105,11 +105,31 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== location.origin) {
     return;
   }
+
+  // Never cache or intercept the SW script or version manifest — doing so breaks
+  // registration.update() with "unknown error when fetching the script".
+  if (url.pathname === '/service-worker.js' || url.pathname === '/version.json') {
+    return;
+  }
   
   // Skip Firebase requests (always use network)
   if (url.href.includes('firebaseio.com') || 
       url.href.includes('googleapis.com') ||
       url.href.includes('firebasestorage.googleapis.com')) {
+    return;
+  }
+
+  // Labs contract JSON — network-first (avoid stale phase1 contracts in runtime cache).
+  if (url.pathname.indexOf('/docs/sbd-life-') === 0 && url.pathname.endsWith('.json')) {
+    event.respondWith(
+      fetch(new Request(request, { cache: 'no-store' })).then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const toCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, toCache));
+        }
+        return response;
+      }).catch(() => caches.match(request))
+    );
     return;
   }
 

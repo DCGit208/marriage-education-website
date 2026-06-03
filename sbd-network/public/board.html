@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1778871579265">
+  <meta name="build-version" content="1780490199408">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
@@ -12,8 +12,9 @@
     <title>Board - SBD Network</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/board-media.css?v=1778871579265">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1778871579265">
+    <link rel="stylesheet" href="/css/board-media.css?v=1780490199408">
+    <link rel="stylesheet" href="/css/board-rich-editor.css">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1780490199408">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
 </head>
@@ -413,7 +414,11 @@
           <span style="font-size:1rem;font-weight:700;color:#fff;">👗 Apply This Expression</span>
           <button id="applyExprClose" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:rgba(255,255,255,0.5);line-height:1;">✕</button>
         </div>
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">
+        <div id="applyExprDestWrap" class="apply-expr-dest-wrap" style="display:none;">
+          <p class="apply-expr-dest-label">Apply to which MV House wardrobe?</p>
+          <div id="applyExprDestList" class="apply-expr-dest-list" role="radiogroup" aria-label="MV House wardrobe destination"></div>
+        </div>
+        <p id="applyExprNoteHint" style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">
           Add a personal note — when you'd wear it, how it makes you feel, what occasion it suits.
         </p>
         <textarea id="applyExprNote" maxlength="300" rows="3"
@@ -457,18 +462,22 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=1778871579265"></script>
-    <script defer src="/js/sw-update-checker.js?v=1778871579265"></script>
-    <script defer src="/js/upload.js?v=1778871579265"></script>
-    <script defer src="/js/image-editor.js?v=1778871579265"></script>
-    <script defer src="/js/mentions.js?v=1778871579265"></script>
-    <script defer src="/js/posts.js?v=1778871579265"></script>
-    <script defer src="/js/notifications.js?v=1778871579265"></script>
-    <script defer src="/js/dm-badge.js?v=1778871579265"></script>
-    <script defer src="/js/ptr.js?v=1778871579265"></script>
-    <script defer src="/js/board.js?v=1778871579265"></script>
-    <script defer src="/js/transitions.js?v=1778871579265"></script>
-    <script defer src="/js/swipe-back.js?v=1778871579265"></script>
+    <script defer src="/js/firebase.js?v=1780490199408"></script>
+    <script defer src="/js/sw-update-checker.js?v=1780490199408"></script>
+    <script defer src="/js/upload.js?v=1780490199408"></script>
+    <script defer src="/js/image-editor.js?v=1780490199408"></script>
+    <script defer src="/js/mentions.js?v=1780490199408"></script>
+    <script defer src="/js/board-rich-editor.js"></script>
+    <script defer src="/js/posts.js?v=1780490199408"></script>
+    <script defer src="/js/notifications.js?v=1780490199408"></script>
+    <script defer src="/js/dm-badge.js?v=1780490199408"></script>
+    <script defer src="/js/ptr.js?v=1780490199408"></script>
+    <script defer src="/js/formation-access.js?v=1780490199408"></script>
+    <script defer src="/js/advanced-expression-access.js?v=1780490199408"></script>
+    <script defer src="/js/tier-access.js?v=1780490199408"></script>
+    <script defer src="/js/board.js?v=1780490199408"></script>
+    <script defer src="/js/transitions.js?v=1780490199408"></script>
+    <script defer src="/js/swipe-back.js?v=1780490199408"></script>
 
   <!-- Save to Collection Modal -->
   <div id="saveColModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);align-items:flex-end;">
@@ -486,10 +495,14 @@
 
 
         <!-- HAMBURGER -->
-    <div id="menuBtn" class="menu-btn">☰</div>
-    <div id="menuOverlay" class="menu-overlay"></div>
-    <div id="sideMenu" class="side-menu">
-      <div class="menu-links">
+    <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
+    <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+    <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+      <div class="ham-drawer-head">
+        <span class="ham-drawer-title">Menu</span>
+        <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+      </div>
+      <nav class="menu-links ham-drawer-body" aria-label="Main menu">
         <div class="ham-section">
           <div class="ham-section-label">Formation</div>
           <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
@@ -499,7 +512,7 @@
         <div class="ham-section">
           <div class="ham-section-label">Community</div>
           <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
-          <a href="/dm.html"><span class="menu-icon">◷</span> Messages</a>
+          <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
         </div>
         <div class="ham-section">
           <div class="ham-section-label">Lifestyle</div>
@@ -513,12 +526,13 @@
         <div class="ham-section">
           <div class="ham-section-label">Account</div>
           <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
-          <div id="adminSection" style="display:none;">
+          <div id="adminSection" class="hidden-admin-section">
             <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
-            <a href="/communication-v2/"><span class="menu-icon">✦</span> Messages V2 <span style="opacity:.72;font-size:.82em;">(Beta)</span></a>
           </div>
-          <button id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+          <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
         </div>
+      </nav>
+      <div class="ham-drawer-foot">
         <div id="versionPill"></div>
       </div>
     </div>
@@ -546,7 +560,8 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <script defer src="/js/ham-nav.js?v=1778871579265"></script>
+    <link rel="stylesheet" href="/css/ham-drawer.css">
+    <script defer src="/js/ham-nav.js?v=1780490199408"></script>
 
 </body>
 </html>

@@ -1,0 +1,159 @@
+:root {
+  color-scheme: dark;
+  --bg: #070707;
+  --panel: #101010;
+  --text: #f3ede0;
+  --muted: #b7ab94;
+  --gold: #c7a45b;
+  --line: #2a2418;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #18120b 0%, var(--bg) 40%);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.life-labs-shell {
+  width: min(980px, 92vw);
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 0 max(40px, env(safe-area-inset-bottom));
+  display: grid;
+  gap: 18px;
+}
+
+.hero,
+.status-card,
+.blueprint-card {
+  background: linear-gradient(160deg, rgba(18, 15, 11, 0.95), rgba(10, 10, 10, 0.98));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+h1,
+h2 {
+  margin: 0 0 12px;
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+}
+
+h1 {
+  font-size: clamp(32px, 8vw, 54px);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: clamp(24px, 6vw, 34px);
+}
+
+.lede,
+.gate-message,
+.blueprint-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.readiness-list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.readiness-list li {
+  color: var(--muted);
+}
+
+.readiness-list li.pass {
+  color: #94db9b;
+}
+
+.readiness-list li.fail {
+  color: #f08b8b;
+}
+
+.actions {
+  margin-top: 16px;
+}
+
+.btn-secondary {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(199, 164, 91, 0.12);
+}
+
+button.btn-secondary {
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.probe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.matrix-table th,
+.matrix-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 6px;
+  text-align: left;
+  color: var(--muted);
+}
+
+.probe-log {
+  margin-top: 14px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.probe-line {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.probe-line.pass {
+  color: #94db9b;
+}
+
+.probe-line.fail {
+  color: #f08b8b;
+}
+
+.life-catalog-wrap {
+  margin-top: 16px;
+}

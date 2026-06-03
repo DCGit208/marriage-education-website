@@ -3,8 +3,8 @@
     "source": "functions"
   },
   "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+    "rules": "sbd-network/firestore.rules",
+    "indexes": "sbd-network/firestore.indexes.json"
   },
   "hosting": [
     {

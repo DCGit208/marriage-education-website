@@ -7,7 +7,7 @@
  *   Free       → Teleios Week 1 preview only
  *   Foundation → Teleios Blueprint (6wks) + SBD Dummies (13wks) — TIME-DRIPPED
  *   Premium    → Schools 1+2 (28 courses) — TIME-DRIPPED, more parallel lanes
- *   Elite      → All 44 courses + MV House — TIME-DRIPPED, all lanes concurrent
+ *   Elite      → Schools 3–4 + billing; advanced boards + MV House formation-gated (see advanced-expression-access.js)
  *
  * DRIP RULE: 1 week unlocks per 7 calendar days from subscription.dripStartDate
  * DRIP BYPASS: Elite tier & admin role bypass drip (no wait, immediate access)
@@ -249,25 +249,57 @@ function canAccessModule(module, userTier) {
 // ── BOARD GATE ──────────────────────────────────────────────────
 /**
  * Check if user can access a board.
- * MV House boards: Elite only.
+ * Advanced / MV House boards: Elite billing + formation milestone (see advanced-expression-access.js).
  * Standard boards: Foundation+ full access, Free = read-only.
  */
-function canAccessBoard(boardId, userTier) {
+function canAccessBoard(boardId, userTier, userData = null, boardData = null) {
   const tier      = userTier || 'free';
   const tierLevel = TIER_HIERARCHY[tier] ?? 0;
 
-  // Elite → full access everywhere
-  if (tier === 'elite') return { canAccess: true, canPost: true, canWardrobe: true };
+  const isAdvBoard =
+    MV_HOUSE_BOARDS.includes(boardId) ||
+    (typeof AdvancedExpressionAccess !== 'undefined' &&
+      AdvancedExpressionAccess.isAdvancedExpressionBoard(boardId, boardData));
 
-  // MV House boards: Elite only
-  if (MV_HOUSE_BOARDS.includes(boardId)) {
+  if (isAdvBoard) {
+    const eliteBilling =
+      tier === 'elite' ||
+      userData?.role === 'admin' ||
+      (typeof AdvancedExpressionAccess !== 'undefined' && AdvancedExpressionAccess.hasEliteTier(userData));
+    if (!eliteBilling) {
+      return {
+        canAccess: false,
+        canPost: false,
+        canWardrobe: false,
+        requiredTier: 'elite',
+        reason: '🏠 Advanced expression boards require Elite. Upgrade to continue your formation arc.',
+        upgradeUrl: '/payment?tier=elite',
+      };
+    }
+    if (typeof AdvancedExpressionAccess !== 'undefined' && userData) {
+      const access = AdvancedExpressionAccess.getAdvancedExpressionAccess(userData);
+      return {
+        canAccess: access.allowed,
+        canPost: access.allowed,
+        canWardrobe: access.allowed,
+        formationLocked: !access.allowed,
+        reason: access.detail || access.message,
+        message: access.message,
+        ctaUrl: access.ctaUrl || '/courses.html',
+        progress: access.progress,
+      };
+    }
     return {
       canAccess: false,
-      requiredTier: 'elite',
-      reason: '🏠 MV House is an Elite-only expression system. Upgrade to access.',
-      upgradeUrl: '/payment?tier=elite',
+      canPost: false,
+      canWardrobe: false,
+      formationLocked: true,
+      reason: 'Complete your formation arc (Schools 1–2, then School 3, then halfway through School 4) to unlock advanced boards.',
+      ctaUrl: '/courses.html',
     };
   }
+
+  if (tier === 'elite') return { canAccess: true, canPost: true, canWardrobe: false };
 
   // Standard boards: Foundation+ can post
   if (tierLevel >= TIER_HIERARCHY['foundation']) {

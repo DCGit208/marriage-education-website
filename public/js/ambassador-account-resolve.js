@@ -12,6 +12,32 @@
     return normEmail(a) === normEmail(b);
   }
 
+  /** Always use RD-… for regional network queries (session may store linked AMB-…). */
+  function getEffectiveRdCode(stats, code) {
+    var c = (code || '').toString().trim().toUpperCase();
+    if (c.indexOf('RD-') === 0) return c;
+    if (stats) {
+      var fromStats = (stats.rd_code || stats.rdCode || stats.regional_director_code ||
+        (String(stats.ambassador_type || '').toLowerCase() === 'regional_director' ? stats.code : '') ||
+        '').toString().trim().toUpperCase();
+      if (fromStats.indexOf('RD-') === 0) return fromStats;
+    }
+    if (c.indexOf('AMB-') === 0) return c.replace(/^AMB-/, 'RD-');
+    return c;
+  }
+
+  /** RD-XXXX → SBD-XXXX; AMB-XXXX → SBD-XXXX; prefers stored Firestore value. */
+  function deriveSbdReferralCode(stats) {
+    if (!stats) return '';
+    var direct = (stats.sbdReferralCode || stats.sbd_referral_code || '').toString().trim();
+    if (direct) return direct;
+    var rd = (stats.rd_code || stats.rdCode || stats.code || '').toString().trim();
+    if (rd.indexOf('RD-') === 0) return rd.replace(/^RD-/, 'SBD-');
+    var amb = (stats.ambassador_code || stats.existingAmbCode || '').toString().trim();
+    if (amb.indexOf('AMB-') === 0) return amb.replace(/^AMB-/, 'SBD-');
+    return '';
+  }
+
   function normalizeRdStats(rdId, rd) {
     var stats = Object.assign({}, rd);
     stats.ambassador_type = stats.ambassador_type || 'regional_director';
@@ -27,6 +53,7 @@
     if (stats.sales_count == null && stats.team_books_sold != null) {
       stats.sales_count = stats.team_books_sold;
     }
+    stats.sbdReferralCode = deriveSbdReferralCode(stats);
     return stats;
   }
 
@@ -86,10 +113,14 @@
           sbdReferrals: a.sbdReferrals || resolved.stats.sbdReferrals,
           sbdReferralCode: a.sbdReferralCode || resolved.stats.sbdReferralCode
         });
+        resolved.stats.sbdReferralCode = deriveSbdReferralCode(resolved.stats);
         resolved.linkedAmbassadorId = snap.id;
       }
     } catch (e) {
       console.warn('mergeLinkedAmbassador', e);
+    }
+    if (!resolved.stats.sbdReferralCode) {
+      resolved.stats.sbdReferralCode = deriveSbdReferralCode(resolved.stats);
     }
     return resolved;
   }
@@ -121,6 +152,8 @@
 
   global.MEAmbassadorAccountResolve = {
     resolveAccount: resolveAccount,
-    normalizeRdStats: normalizeRdStats
+    normalizeRdStats: normalizeRdStats,
+    deriveSbdReferralCode: deriveSbdReferralCode,
+    getEffectiveRdCode: getEffectiveRdCode
   };
 })(typeof window !== 'undefined' ? window : global);

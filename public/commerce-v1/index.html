@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SBD Commerce Engine V1 — Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #121820;
+      --surface2: #1a2230;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8edf5;
+      --muted: #8b9bb4;
+      --gold: #c6a96b;
+      --success: #2ecc71;
+      --warn: #f39c12;
+      --danger: #e74c3c;
+      --accent: #5b8def;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #152033 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    .banner {
+      background: linear-gradient(135deg, rgba(198,169,107,0.15), rgba(91,141,239,0.1));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .banner h1 { margin: 0 0 0.35rem; font-size: 1.5rem; }
+    .banner p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .pill {
+      display: inline-block;
+      background: rgba(243,156,18,0.15);
+      color: var(--warn);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .card h2 { margin: 0 0 1rem; font-size: 1rem; color: var(--gold); }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem; }
+    input, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.75rem;
+      font-family: inherit;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-primary { background: var(--gold); color: #1a1208; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 700px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+    .metric {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 0.85rem;
+      border: 1px solid var(--border);
+    }
+    .metric .val { font-size: 1.35rem; font-weight: 700; font-family: 'DM Mono', monospace; }
+    .metric .lbl { font-size: 0.75rem; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    .mono { font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+    .status { font-weight: 600; font-size: 0.75rem; }
+    .status.SUCCESS, .status.PAID, .status.APPROVED { color: var(--success); }
+    .status.PENDING, .status.QUEUED { color: var(--warn); }
+    .status.FAILED, .status.REJECTED { color: var(--danger); }
+    #log {
+      background: #080a0e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      max-height: 200px;
+      overflow: auto;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: #9fb3cf;
+    }
+    .full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="banner">
+      <span class="pill">SANDBOX ONLY — NOT PRODUCTION</span>
+      <h1>SBD Network — Commerce Engine V1</h1>
+      <p>CamPay payments · commissions · wallets · payout queue · webhook idempotency. Isolated from live checkout and ambassador dashboards.</p>
+    </div>
+
+    <div class="metrics" id="metrics">
+      <div class="metric"><div class="val" id="mTx">—</div><div class="lbl">Transactions</div></div>
+      <div class="metric"><div class="val" id="mCom">—</div><div class="lbl">Commissions</div></div>
+      <div class="metric"><div class="val" id="mWal">—</div><div class="lbl">Wallets</div></div>
+      <div class="metric"><div class="val" id="mPo">—</div><div class="lbl">Payouts queued</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Test checkout</h2>
+        <label>Customer UID (sandbox)</label>
+        <input id="uid" placeholder="sandbox_user_001" />
+        <label>Phone (MoMo)</label>
+        <input id="phone" placeholder="6XXXXXXXX" />
+        <label>Product</label>
+        <select id="productType">
+          <option value="foundation_subscription">Foundation Subscription (5,200 FCFA)</option>
+          <option value="book_purchase">Book Purchase</option>
+        </select>
+        <label>Referrer UID (ambassador)</label>
+        <input id="referrerUid" placeholder="optional" />
+        <label>Senior UID</label>
+        <input id="seniorUid" placeholder="optional" />
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnCheckout">Initiate CamPay checkout</button>
+          <button class="btn btn-secondary" id="btnSimulate" disabled>Simulate success</button>
+        </div>
+        <p class="mono" id="lastTx" style="margin-top:0.75rem;color:var(--muted);">No transaction yet</p>
+      </div>
+
+      <div class="card">
+        <h2>Commission rules (Foundation)</h2>
+        <ul style="margin:0;padding-left:1.1rem;color:var(--muted);font-size:0.9rem;line-height:1.6;">
+          <li>Total: <strong style="color:var(--text)">5,200 FCFA</strong> · Commissionable: <strong>5,000</strong> · OPEX: <strong>200</strong></li>
+          <li>Ambassador: <strong style="color:var(--success)">500 FCFA</strong> (10%)</li>
+          <li>Senior Ambassador: <strong style="color:var(--success)">250 FCFA</strong> (5% override)</li>
+          <li>Payouts are <strong>queued</strong> — not sent instantly</li>
+        </ul>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btnRefresh">Refresh dashboard</button>
+          <button class="btn btn-secondary" id="btnPayoutBatch">Run payout batch (sandbox)</button>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Transactions</h2>
+        <div style="overflow-x:auto"><table id="txTable"><thead><tr><th>ID</th><th>Status</th><th>Amount</th><th>Product</th><th>Commission</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card full">
+        <h2>Commissions &amp; wallets</h2>
+        <div class="grid" style="gap:1rem;">
+          <div><h3 style="font-size:0.85rem;color:var(--muted);">Commissions</h3><div style="overflow-x:auto"><table id="comTable"><thead><tr><th>Role</th><th>Beneficiary</th><th>Amount</th><th>Status</th></tr></thead><tbody></tbody></table></div></div>
+          <div><h3 style="font-size:0.85rem;color:var(--muted);">Wallets</h3><div style="overflow-x:auto"><table id="walletTable"><thead><tr><th>UID</th><th>Pending</th><th>Available</th><th>Earned</th></tr></thead><tbody></tbody></table></div></div>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Payout queue &amp; webhook logs</h2>
+        <div class="grid">
+          <div><table id="payoutTable"><thead><tr><th>Payout</th><th>UID</th><th>Amount</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+          <div><table id="whTable"><thead><tr><th>Log</th><th>Verified</th><th>Gateway</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Event log</h2>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+  <script src="commerce-v1.js"></script>
+</body>
+</html>
