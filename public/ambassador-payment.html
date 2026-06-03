@@ -196,6 +196,22 @@
       display: inline-block;
       font-family: 'Courier New', monospace;
     }
+    .momo-recipient {
+      margin-top: 10px;
+    }
+    .momo-name {
+      margin-top: 10px;
+      color: #111827;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .momo-name-hint {
+      display: block;
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.4;
+    }
     .form-section {
       background: #f9fafb;
       padding: 30px;
@@ -550,7 +566,11 @@
             <div class="step-title">Transfer Money</div>
             <div class="step-text">
               Send <strong id="amount-text">15,000 FCFA</strong> to<br>
-              <span class="momo-number">237 677 604 100</span>
+              <div class="momo-recipient">
+                <span class="momo-number">237 677 604 100</span>
+                <div class="momo-name">Account name: <strong>Achu Gustave Mokom</strong></div>
+                <small class="momo-name-hint">This name must match what MTN MoMo shows before you confirm the transfer.</small>
+              </div>
             </div>
           </div>
         </div>
