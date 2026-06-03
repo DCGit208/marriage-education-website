@@ -1073,7 +1073,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, initializeFirestore, terminate, doc, getDoc, collection, query, where, getDocs, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { initializeFirestore, terminate, doc, getDoc, collection, query, where, getDocs, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -1086,7 +1086,10 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: true,
+            useFetchStreams: false
+        });
         
         // Track active listeners for cleanup
         let activeListeners = [];

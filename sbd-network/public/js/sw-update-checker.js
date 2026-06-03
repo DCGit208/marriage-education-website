@@ -7,7 +7,10 @@
   // ── Self-heal: fetch /version.json directly from the network (bypassing all
   // caches) so we ALWAYS compare against the latest deployed version, even when
   // iOS has cached the HTML with an old build-version meta tag.
+  let _nuking = false;
   function _nukeAndReload() {
+    if (_nuking) return;
+    _nuking = true;
     const go = () => caches.keys()
       .then(keys => Promise.all(keys.map(k => caches.delete(k))))
       .then(() => window.location.reload(true));
@@ -52,6 +55,18 @@
 
   let updateAvailable = false;
   let newWorker = null;
+  let _updating = false;
+
+  function safeUpdate(registration) {
+    if (!registration || _updating) return;
+    _updating = true;
+    registration.update()
+      .catch((err) => {
+        // Benign during deploys, offline, or when _nukeAndReload unregisters mid-flight
+        console.warn('[SW] Update check failed (non-fatal):', err?.message || err);
+      })
+      .finally(() => { _updating = false; });
+  }
 
   // Show update notification
   function showUpdateNotification() {
@@ -93,24 +108,17 @@
     });
   }
 
-  // Register service worker
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(registration => {
-      console.log('[SW] Registered successfully');
+  // Attach to existing registration (firebase.js registers on every page)
+  const attachToRegistration = (registration) => {
+    if (!registration) return;
+    console.log('[SW] Update checker attached');
 
-      // Check for updates every 30 seconds
-      setInterval(() => {
-        registration.update();
-      }, 30000);
+    setInterval(() => safeUpdate(registration), 60000);
 
-      // ALSO check immediately when the user switches back to the PWA
-      // (critical for iOS: home screen → switch app → come back)
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          registration.update();
-        }
-      });
-      window.addEventListener('focus', () => registration.update());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') safeUpdate(registration);
+    });
+    window.addEventListener('focus', () => safeUpdate(registration));
 
       // Listen for new service worker installing
       registration.addEventListener('updatefound', () => {
@@ -136,6 +144,22 @@
             }
           }
         });
+      });
+  };
+
+  navigator.serviceWorker.ready
+    .then(() => navigator.serviceWorker.getRegistration('/'))
+    .then((registration) => {
+      if (registration) {
+        attachToRegistration(registration);
+        return;
+      }
+      return navigator.serviceWorker.register('/service-worker.js', {
+        scope: '/',
+        updateViaCache: 'none',
+      }).then((reg) => {
+        console.log('[SW] Registered successfully (fallback)');
+        attachToRegistration(reg);
       });
     })
     .catch(err => {

@@ -1,5 +1,5 @@
 // ================================================================
-// ADMIN PANEL LOGIC  —  v50
+// ADMIN PANEL LOGIC  —  v51 (iOS manage-user fixes)
 // ================================================================
 
 // Tier → community group mapping (mirrors checkout.js — keep in sync)
@@ -10,9 +10,14 @@ const ADMIN_TIER_GROUPS = {
                'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13'],
   elite:      ['group-sbd-community', 'group-teleios-formation', 'group-sbd-dummies',
                'group-sexual-literacy', 'CYUhNHqGvf7bhVIR6D13',
-               'group-marriage-systems', 'group-civilization-leadership',
-               'z8lmnHLoFUBBZaRp2Vdd', 'advanced-muliebrity-training-school'],
+               'group-marriage-systems', 'group-civilization-leadership'],
 };
+
+/** Granted when formation milestone met — not on Elite payment alone. */
+const ADMIN_ADVANCED_EXPRESSION_GROUPS = [
+  'z8lmnHLoFUBBZaRp2Vdd',
+  'advanced-muliebrity-training-school',
+];
 
 let allGroups = [];
 let allBoards = [];
@@ -497,30 +502,59 @@ async function loadUsers() {
   }
 }
 
+var _manageUserOpening = false;
+var _adminModalScrollY = 0;
+var _lastManageTouchId = '';
+var _lastManageTouchAt = 0;
+
+function endManageUserOpen() {
+  showLoading(false);
+  _manageUserOpening = false;
+}
+
+function triggerManageUser(userId) {
+  if (!userId || _manageUserOpening) return;
+  handleManageUser(userId);
+}
+
 if (usersList && !usersList.dataset.manageBound) {
   usersList.dataset.manageBound = '1';
   usersList.addEventListener('click', function (e) {
     const btn = e.target.closest('.manage-user-btn');
     if (!btn || !btn.dataset.id) return;
+    if (_lastManageTouchId === btn.dataset.id && Date.now() - _lastManageTouchAt < 500) return;
     e.preventDefault();
-    handleManageUser(btn.dataset.id);
+    triggerManageUser(btn.dataset.id);
   });
+  /* iOS Safari / PWA: click can be swallowed after list scroll — touchend is reliable */
+  usersList.addEventListener('touchend', function (e) {
+    const btn = e.target.closest('.manage-user-btn');
+    if (!btn || !btn.dataset.id) return;
+    _lastManageTouchId = btn.dataset.id;
+    _lastManageTouchAt = Date.now();
+    e.preventDefault();
+    triggerManageUser(btn.dataset.id);
+  }, { passive: false });
 }
 
 async function handleManageUser(userId) {
-  if (!userId) return;
+  if (!userId || _manageUserOpening) return;
+  _manageUserOpening = true;
   currentManagingUserId = userId;
+  showLoading(true);
   let u = allUsers.find(function (x) { return x.id === userId; });
   if (!u) {
     try {
       const snap = await db.collection('users').doc(userId).get();
       if (!snap.exists) {
         alert('User not found.');
+        endManageUserOpen();
         return;
       }
       u = { id: snap.id, ...snap.data() };
     } catch (fetchErr) {
       alert('Could not load user: ' + (fetchErr.message || fetchErr));
+      endManageUserOpen();
       return;
     }
   }
@@ -530,14 +564,9 @@ async function handleManageUser(userId) {
       return;
     }
 
-    let memberGroups = userGroupsArray(u.groups);
-    if (!Array.isArray(u.groups)) {
-      try {
-        memberGroups = await repairUserGroupsField(userId, u.groups);
-      } catch (repairErr) {
-        console.warn('[Admin] groups repair failed (will still open modal):', repairErr);
-      }
-    }
+    const rawGroups = u.groups;
+    let memberGroups = userGroupsArray(rawGroups);
+    const needsGroupsRepair = !Array.isArray(rawGroups);
     u.groups = memberGroups;
     const idx = allUsers.findIndex(function (x) { return x.id === userId; });
     if (idx >= 0) allUsers[idx] = Object.assign({}, allUsers[idx], u, { id: userId, groups: memberGroups });
@@ -558,6 +587,23 @@ async function handleManageUser(userId) {
     if (tierBtn) {
       tierBtn.onclick = function () {
         handleSetUserTier(userId, tierSelect ? tierSelect.value : currentTier);
+      };
+    }
+
+    const staffExprCb = document.getElementById('manageUserStaffExpression');
+    const staffExprStatus = document.getElementById('manageUserStaffExpressionStatus');
+    const saveStaffExprBtn = document.getElementById('saveStaffExpressionBtn');
+    const hasStaffExpr = !!(u.staffAccess && u.staffAccess.advancedExpression) ||
+      !!(u.progress && u.progress.advancedExpressionUnlocked && (u.subscription && u.subscription.source === 'admin'));
+    if (staffExprCb) staffExprCb.checked = hasStaffExpr;
+    if (staffExprStatus) {
+      staffExprStatus.textContent = hasStaffExpr
+        ? '✓ Staff expression access is ON (MV House + advanced boards).'
+        : 'Off — user needs formation milestones unless you grant staff access here.';
+    }
+    if (saveStaffExprBtn) {
+      saveStaffExprBtn.onclick = function () {
+        handleSaveStaffExpressionAccess(userId, !!(staffExprCb && staffExprCb.checked));
       };
     }
 
@@ -637,9 +683,28 @@ async function handleManageUser(userId) {
     }
 
     openModal(manageUserModal);
+
+    if (needsGroupsRepair) {
+      repairUserGroupsField(userId, rawGroups).then(function (fixed) {
+        memberGroups = fixed;
+        u.groups = fixed;
+        const idx2 = allUsers.findIndex(function (x) { return x.id === userId; });
+        if (idx2 >= 0) allUsers[idx2].groups = fixed;
+        const checklist2 = document.getElementById('userGroupsChecklist');
+        if (checklist2 && currentManagingUserId === userId) {
+          checklist2.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+            cb.checked = fixed.includes(cb.value);
+          });
+        }
+      }).catch(function (repairErr) {
+        console.warn('[Admin] groups repair failed (modal already open):', repairErr);
+      });
+    }
   } catch (err) {
     console.error('handleManageUser error:', err);
     alert('Error opening manage panel: ' + (err.message || err));
+  } finally {
+    endManageUserOpen();
   }
 }
 
@@ -665,21 +730,95 @@ async function handleSetUserTier(userId, newTier) {
     const tierGroups = ADMIN_TIER_GROUPS[newTier] || [];
     const farFuture = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
     const subUpdate = newTier === 'free'
-      ? { tier: 'free', 'subscription.tier': 'free', 'subscription.status': 'inactive', 'subscription.endDate': firebase.firestore.Timestamp.fromDate(new Date(0)) }
-      : { tier: newTier, 'subscription.tier': newTier, 'subscription.status': 'active', 'subscription.endDate': farFuture };
+      ? { tier: 'free', 'subscription.tier': 'free', 'subscription.status': 'inactive', 'subscription.endDate': firebase.firestore.Timestamp.fromDate(new Date(0)), 'subscription.source': 'admin' }
+      : { tier: newTier, 'subscription.tier': newTier, 'subscription.status': 'active', 'subscription.endDate': farFuture, 'subscription.source': 'admin' };
     if (tierGroups.length > 0) {
       const snap = await userRef.get();
       const existing = userGroupsArray(snap.exists ? snap.data().groups : []);
-      subUpdate.groups = Array.from(new Set(existing.concat(tierGroups)));
+      let merged = Array.from(new Set(existing.concat(tierGroups)));
+      if (newTier !== 'elite') {
+        merged = merged.filter((g) => !ADMIN_ADVANCED_EXPRESSION_GROUPS.includes(g));
+      } else {
+        merged = Array.from(new Set(merged.concat(ADMIN_ADVANCED_EXPRESSION_GROUPS)));
+        subUpdate['progress.advancedExpressionUnlocked'] = true;
+        subUpdate['staffAccess.advancedExpression'] = true;
+        subUpdate['staffAccess.grantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
+        subUpdate['staffAccess.via'] = 'admin_tier_grant';
+      }
+      subUpdate.groups = merged;
+    }
+    if (newTier !== 'elite') {
+      subUpdate['staffAccess.advancedExpression'] = false;
     }
     await userRef.update(subUpdate);
     closeAllModals();
     await loadUsers();
-    alert(`✅ Tier set to "${tierLabel[newTier]}" and ${tierGroups.length} group(s) assigned.`);
+    const staffNote = newTier === 'elite' ? ' Staff MV House / advanced board access included.' : '';
+    alert(`✅ Tier set to "${tierLabel[newTier]}" and ${tierGroups.length} group(s) assigned.${staffNote}`);
   } catch (err) {
     console.error('setUserTier:', err);
     alert('Error updating tier: ' + (err.message || err));
   } finally { showLoading(false); }
+}
+
+async function handleSaveStaffExpressionAccess(userId, enabled) {
+  const tierLabel = { free: 'Free', foundation: 'Foundation', premium: 'Premium', elite: 'Elite' };
+  try {
+    const snap = await db.collection('users').doc(userId).get();
+    if (!snap.exists) {
+      alert('User not found.');
+      return;
+    }
+    const data = snap.data();
+    const tier = data.tier || data.subscription?.tier || 'free';
+    if (enabled && tier !== 'elite') {
+      if (!confirm(`This user is "${tierLabel[tier] || tier}", not Elite. Grant Elite tier and staff expression access together?`)) return;
+      await handleSetUserTier(userId, 'elite');
+      return;
+    }
+    if (!confirm(enabled
+      ? 'Grant full MV House and advanced board access for this staff member (bypasses formation milestones)?'
+      : 'Remove staff expression access? They will need to earn advanced access through formation.')) return;
+
+    showLoading(true);
+    const userRef = db.collection('users').doc(userId);
+    const existing = userGroupsArray(data.groups || []);
+    let groups = existing;
+    if (enabled) {
+      groups = Array.from(new Set(existing.concat(ADMIN_ADVANCED_EXPRESSION_GROUPS)));
+    } else {
+      groups = existing.filter((g) => !ADMIN_ADVANCED_EXPRESSION_GROUPS.includes(g));
+    }
+
+    const update = {
+      'staffAccess.advancedExpression': enabled,
+      'staffAccess.via': 'admin_manage_user',
+      groups,
+    };
+    if (enabled) {
+      update['staffAccess.grantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
+      update['progress.advancedExpressionUnlocked'] = true;
+      update['subscription.source'] = 'admin';
+      if (!data.subscription || data.subscription.status !== 'active') {
+        update.tier = 'elite';
+        update['subscription.tier'] = 'elite';
+        update['subscription.status'] = 'active';
+        update['subscription.endDate'] = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
+      }
+    }
+
+    await userRef.update(update);
+    closeAllModals();
+    await loadUsers();
+    alert(enabled
+      ? '✅ Staff expression access granted (MV House + advanced boards).'
+      : '✅ Staff expression access removed.');
+  } catch (err) {
+    console.error('saveStaffExpression:', err);
+    alert('Error: ' + (err.message || err));
+  } finally {
+    showLoading(false);
+  }
 }
 
 async function handleResetPassword(email) {
@@ -1001,12 +1140,18 @@ function updateGroupSelects() {
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
 
 function openModal(modal) {
-  if (modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  if (!modal) return;
+  _adminModalScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.classList.add('admin-modal-open');
+  document.body.style.top = '-' + _adminModalScrollY + 'px';
+  modal.style.display = 'flex';
 }
 
 function closeAllModals() {
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-  document.body.style.overflow = '';
+  document.body.classList.remove('admin-modal-open');
+  document.body.style.top = '';
+  window.scrollTo(0, _adminModalScrollY);
   currentMovePostId = null;
 }
 
@@ -1015,7 +1160,10 @@ if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'das
 if (logoutBtn) logoutBtn.addEventListener('click', async () => { await auth.signOut(); window.location.href = '/auth'; });
 
 function showLoading(show) {
-  if (loadingOverlay) loadingOverlay.style.display = show ? 'flex' : 'none';
+  if (!loadingOverlay) return;
+  loadingOverlay.style.display = show ? 'flex' : 'none';
+  loadingOverlay.setAttribute('aria-hidden', show ? 'false' : 'true');
+  loadingOverlay.classList.toggle('is-visible', !!show);
 }
 
 function escapeHtml(text) {
@@ -1117,6 +1265,425 @@ if (document.getElementById('refreshSalesBtn')) {
 const ce2GroupsList = document.getElementById('ce2GroupsList');
 const createCe2GroupBtn = document.getElementById('createCe2GroupBtn');
 const createCe2GroupModal = document.getElementById('createCe2GroupModal');
+const ce2MembersModal = document.getElementById('ce2MembersModal');
+const ce2MembersModalTitle = document.getElementById('ce2MembersModalTitle');
+const ce2MembersModalHint = document.getElementById('ce2MembersModalHint');
+const ce2MembersList = document.getElementById('ce2MembersList');
+const ce2MemberPickerList = document.getElementById('ce2MemberPickerList');
+const ce2MemberSearch = document.getElementById('ce2MemberSearch');
+const ce2MemberPoolFilter = document.getElementById('ce2MemberPoolFilter');
+let ce2MembersModalGroupId = null;
+let ce2MembersModalGroupMeta = null;
+let ce2MemberPickerCache = [];
+let ce2MemberPickerMemberIds = new Set();
+
+const CE2_ADMIN_TIER_RANK = {
+  foundation: 0,
+  free: 0,
+  premium: 1,
+  elite: 2,
+  ambassador: 3,
+  senior_ambassador: 4,
+  rd: 5,
+};
+const CE2_ADMIN_TIER_ORDER = [
+  'foundation',
+  'free',
+  'premium',
+  'elite',
+  'ambassador',
+  'senior_ambassador',
+  'rd',
+];
+
+function normalizeCe2AdminTier(t) {
+  const raw = (t && String(t).toLowerCase()) || 'foundation';
+  if (raw === 'free') return 'foundation';
+  return CE2_ADMIN_TIER_RANK[raw] !== undefined ? raw : 'foundation';
+}
+
+function ce2AdminTierRank(t) {
+  return CE2_ADMIN_TIER_RANK[normalizeCe2AdminTier(t)] || 0;
+}
+
+function ce2TiersForGroupPool(requiredTier, mode) {
+  const min = normalizeCe2AdminTier(requiredTier);
+  const minRank = ce2AdminTierRank(min);
+  if (mode === 'same') {
+    if (min === 'foundation') return ['foundation', 'free'];
+    return [min];
+  }
+  return CE2_ADMIN_TIER_ORDER.filter(function (t) {
+    return ce2AdminTierRank(t) >= minRank;
+  });
+}
+
+function ce2UserDisplayLabel(uid, data) {
+  const d = data || {};
+  const name = d.name || d.displayName || d.email || 'Member';
+  const tier = normalizeCe2AdminTier(d.tier);
+  const email = d.email ? ' · ' + d.email : '';
+  const admin = d.role === 'admin' ? ' · admin' : '';
+  return name + ' · ' + tier + email + admin;
+}
+
+async function fetchCe2GroupMemberIds(groupId) {
+  const snap = await db
+    .collection('communicationGroups')
+    .doc(groupId)
+    .collection('members')
+    .limit(200)
+    .get();
+  const ids = new Set();
+  snap.forEach(function (doc) {
+    ids.add(doc.id);
+  });
+  return ids;
+}
+
+async function loadCe2MemberPickerPool() {
+  if (!ce2MemberPickerList || !ce2MembersModalGroupMeta) return;
+  const meta = ce2MembersModalGroupMeta;
+  const mode = ce2MemberPoolFilter ? ce2MemberPoolFilter.value : 'same';
+  const search = ce2MemberSearch ? ce2MemberSearch.value.trim().toLowerCase() : '';
+  ce2MemberPickerList.innerHTML = '<div class="loading-text">Loading members…</div>';
+
+  try {
+    const tiers = ce2TiersForGroupPool(meta.requiredTier || 'foundation', mode);
+    const uniqueTiers = [];
+    tiers.forEach(function (t) {
+      if (uniqueTiers.indexOf(t) < 0) uniqueTiers.push(t);
+    });
+
+    const minTier = normalizeCe2AdminTier(meta.requiredTier || 'foundation');
+    const minRank = ce2AdminTierRank(minTier);
+    const candidates = [];
+    const seen = new Set();
+
+    function pushUser(doc) {
+      if (seen.has(doc.id)) return;
+      const data = doc.data();
+      const t = normalizeCe2AdminTier(data.tier);
+      const r = ce2AdminTierRank(t);
+      if (mode === 'same') {
+        if (t !== minTier) return;
+      } else if (r < minRank) {
+        return;
+      }
+      seen.add(doc.id);
+      candidates.push({ uid: doc.id, data: data });
+    }
+
+    for (let i = 0; i < uniqueTiers.length; i += 10) {
+      const chunk = uniqueTiers.slice(i, i + 10);
+      const snap = await db.collection('users').where('tier', 'in', chunk).limit(200).get();
+      snap.forEach(pushUser);
+    }
+
+    if (search && search.length >= 2) {
+      const start = search.indexOf('@') > 0 ? search : search;
+      const end = start + '\uf8ff';
+      try {
+        const emailSnap = await db
+          .collection('users')
+          .where('email', '>=', start)
+          .where('email', '<=', end)
+          .limit(40)
+          .get();
+        emailSnap.forEach(pushUser);
+      } catch (emailErr) {
+        console.warn('ce2 email search', emailErr);
+      }
+    }
+
+    ce2MemberPickerCache = candidates;
+    renderCe2MemberPickerList(search);
+  } catch (err) {
+    console.error('loadCe2MemberPickerPool:', err);
+    ce2MemberPickerList.innerHTML =
+      '<div class="error-text">Could not load directory: ' + escapeHtml(err.message || String(err)) + '</div>';
+  }
+}
+
+function renderCe2MemberPickerList(search) {
+  if (!ce2MemberPickerList) return;
+  const q = (search || '').toLowerCase();
+  const filtered = ce2MemberPickerCache.filter(function (row) {
+    if (ce2MemberPickerMemberIds.has(row.uid)) return false;
+    if (!q) return true;
+    const d = row.data || {};
+    const hay =
+      (d.name || '') +
+      ' ' +
+      (d.displayName || '') +
+      ' ' +
+      (d.email || '') +
+      ' ' +
+      (d.tier || '') +
+      ' ' +
+      row.uid;
+    return hay.toLowerCase().indexOf(q) >= 0;
+  });
+
+  filtered.sort(function (a, b) {
+    const na = (a.data && (a.data.name || a.data.displayName || a.data.email)) || '';
+    const nb = (b.data && (b.data.name || b.data.displayName || b.data.email)) || '';
+    return na.localeCompare(nb);
+  });
+
+  ce2MemberPickerList.innerHTML = '';
+  if (!ce2MemberPickerCache.length) {
+    ce2MemberPickerList.innerHTML =
+      '<p class="empty-state">No users found for this tier filter in the database.</p>';
+    return;
+  }
+  if (!filtered.length) {
+    ce2MemberPickerList.innerHTML = q
+      ? '<p class="empty-state">No matches for “' + escapeHtml(q) + '”. Try another search or switch Show filter.</p>'
+      : '<p class="empty-state">Everyone in this pool is already in the group.</p>';
+    return;
+  }
+
+  const cap = 80;
+  const show = filtered.slice(0, cap);
+  if (filtered.length > cap) {
+    const note = document.createElement('p');
+    note.className = 'small-text';
+    note.style.padding = '6px 8px';
+    note.textContent = 'Showing first ' + cap + ' of ' + filtered.length + ' — refine search to narrow down.';
+    ce2MemberPickerList.appendChild(note);
+  }
+
+  show.forEach(function (row) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ce2-member-picker-row';
+    btn.innerHTML =
+      '<span class="ce2-member-picker-row__name">' +
+      escapeHtml(ce2UserDisplayLabel(row.uid, row.data)) +
+      '</span><span class="ce2-member-picker-row__action">+ Add</span>';
+    btn.addEventListener('click', function () {
+      addCe2GroupMemberFromPicker(row.uid, btn);
+    });
+    ce2MemberPickerList.appendChild(btn);
+  });
+}
+
+async function addCe2GroupMemberFromPicker(uid, btn) {
+  if (!ce2MembersModalGroupId || !uid) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+  }
+  try {
+    await addCe2GroupMember(ce2MembersModalGroupId, uid);
+    ce2MemberPickerMemberIds.add(uid);
+    await loadCe2GroupMemberRows(ce2MembersModalGroupId);
+    await loadCe2Groups();
+    renderCe2MemberPickerList(ce2MemberSearch ? ce2MemberSearch.value.trim().toLowerCase() : '');
+  } catch (err) {
+    alert('Could not add member: ' + (err.message || err));
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML =
+        '<span class="ce2-member-picker-row__name">' +
+        escapeHtml(ce2UserDisplayLabel(uid, (ce2MemberPickerCache.find(function (r) { return r.uid === uid; }) || {}).data)) +
+        '</span><span class="ce2-member-picker-row__action">+ Add</span>';
+    }
+  }
+}
+
+if (ce2MemberSearch) {
+  let ce2SearchTimer = null;
+  ce2MemberSearch.addEventListener('input', function () {
+    clearTimeout(ce2SearchTimer);
+    const q = ce2MemberSearch.value.trim().toLowerCase();
+    ce2SearchTimer = setTimeout(function () {
+      if (q.length >= 2) {
+        loadCe2MemberPickerPool();
+      } else if (ce2MemberPickerCache.length) {
+        renderCe2MemberPickerList(q);
+      } else if (ce2MembersModalGroupMeta) {
+        loadCe2MemberPickerPool();
+      }
+    }, 280);
+  });
+}
+
+if (ce2MemberPoolFilter) {
+  ce2MemberPoolFilter.addEventListener('change', function () {
+    loadCe2MemberPickerPool();
+  });
+}
+
+async function resolveCe2UserId(input) {
+  const raw = (input || '').trim();
+  if (!raw) return null;
+  if (raw.indexOf('@') < 0) {
+    const direct = await db.collection('users').doc(raw).get();
+    return direct.exists ? raw : null;
+  }
+  const q = await db.collection('users').where('email', '==', raw).limit(1).get();
+  if (!q.empty) return q.docs[0].id;
+  const q2 = await db.collection('users').where('email', '==', raw.toLowerCase()).limit(1).get();
+  return q2.empty ? null : q2.docs[0].id;
+}
+
+async function loadCe2GroupMemberRows(groupId) {
+  if (!ce2MembersList) return;
+  ce2MembersList.innerHTML = '<div class="loading-text">Loading members…</div>';
+  const snap = await db
+    .collection('communicationGroups')
+    .doc(groupId)
+    .collection('members')
+    .limit(100)
+    .get();
+  ce2MembersList.innerHTML = '';
+  if (snap.empty) {
+    ce2MembersList.innerHTML =
+      '<p class="empty-state">No members yet. Add staff below or have them join in Messages V2.</p>';
+    return;
+  }
+  for (const doc of snap.docs) {
+    const uid = doc.id;
+    let label = uid;
+    try {
+      const ud = await db.collection('users').doc(uid).get();
+      if (ud.exists) {
+        const d = ud.data();
+        label =
+          (d.name || d.displayName || d.email || 'Member') +
+          ' · ' +
+          (d.tier || 'foundation') +
+          (d.role === 'admin' ? ' · admin' : '');
+      }
+    } catch (e) {
+      /* keep uid */
+    }
+    const row = document.createElement('div');
+    row.className = 'admin-card';
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.innerHTML =
+      '<span class="small-text">' +
+      escapeHtml(label) +
+      '</span>' +
+      '<button type="button" class="btn btn-secondary btn-sm" data-remove-member="' +
+      escapeHtml(uid) +
+      '">Remove</button>';
+    ce2MembersList.appendChild(row);
+  }
+  ce2MembersList.querySelectorAll('[data-remove-member]').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      const uid = btn.getAttribute('data-remove-member');
+      if (!uid || !ce2MembersModalGroupId) return;
+      if (!confirm('Remove this member from the group?')) return;
+      try {
+        showLoading(true);
+        await db
+          .collection('communicationGroups')
+          .doc(ce2MembersModalGroupId)
+          .collection('members')
+          .doc(uid)
+          .delete();
+        ce2MemberPickerMemberIds.delete(uid);
+        await loadCe2GroupMemberRows(ce2MembersModalGroupId);
+        await loadCe2Groups();
+        renderCe2MemberPickerList(
+          ce2MemberSearch ? ce2MemberSearch.value.trim().toLowerCase() : ''
+        );
+      } catch (err) {
+        alert('Could not remove member: ' + (err.message || err));
+      } finally {
+        showLoading(false);
+      }
+    });
+  });
+}
+
+function openCe2MembersModal(groupId, groupName, groupMeta) {
+  ce2MembersModalGroupId = groupId;
+  ce2MembersModalGroupMeta = groupMeta || { requiredTier: 'foundation', allowCrossTier: false };
+  if (ce2MembersModalTitle) {
+    ce2MembersModalTitle.textContent = 'Members — ' + (groupName || 'Group');
+  }
+  const minTier = normalizeCe2AdminTier(ce2MembersModalGroupMeta.requiredTier);
+  if (ce2MembersModalHint) {
+    ce2MembersModalHint.textContent =
+      'Minimum tier: ' +
+      minTier +
+      '. Search the directory below (defaults to same-tier members). Admins can still add anyone via Advanced.';
+  }
+  const input = document.getElementById('ce2AddMemberUid');
+  if (input) input.value = '';
+  if (ce2MemberSearch) ce2MemberSearch.value = '';
+  if (ce2MemberPoolFilter) ce2MemberPoolFilter.value = 'same';
+  openModal(ce2MembersModal);
+  fetchCe2GroupMemberIds(groupId)
+    .then(function (ids) {
+      ce2MemberPickerMemberIds = ids;
+      return Promise.all([loadCe2GroupMemberRows(groupId), loadCe2MemberPickerPool()]);
+    })
+    .catch(function (err) {
+      if (ce2MembersList) {
+        ce2MembersList.innerHTML =
+          '<div class="error-text">' + escapeHtml(err.message || String(err)) + '</div>';
+      }
+      if (ce2MemberPickerList) {
+        ce2MemberPickerList.innerHTML =
+          '<div class="error-text">' + escapeHtml(err.message || String(err)) + '</div>';
+      }
+    });
+}
+
+async function addCe2GroupMember(groupId, userInput) {
+  const raw = (userInput || '').trim();
+  let uid = null;
+  if (raw.indexOf('@') < 0 && raw.length >= 20) {
+    const direct = await db.collection('users').doc(raw).get();
+    if (direct.exists) uid = raw;
+  }
+  if (!uid) uid = await resolveCe2UserId(raw);
+  if (!uid) throw new Error('No user found for that ID or email.');
+  await db
+    .collection('communicationGroups')
+    .doc(groupId)
+    .collection('members')
+    .doc(uid)
+    .set(
+      {
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        addedBy: auth.currentUser ? auth.currentUser.uid : '',
+      },
+      { merge: true }
+    );
+  return uid;
+}
+
+document.getElementById('ce2AddMemberForm')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  if (!ce2MembersModalGroupId) return;
+  const input = document.getElementById('ce2AddMemberUid');
+  const value = input && input.value ? input.value.trim() : '';
+  if (!value) return;
+  try {
+    showLoading(true);
+    const uid = await addCe2GroupMember(ce2MembersModalGroupId, value);
+    if (input) input.value = '';
+    ce2MemberPickerMemberIds.add(uid);
+    await loadCe2GroupMemberRows(ce2MembersModalGroupId);
+    await loadCe2Groups();
+    renderCe2MemberPickerList(ce2MemberSearch ? ce2MemberSearch.value.trim().toLowerCase() : '');
+    alert('Member added.');
+  } catch (err) {
+    console.error('addCe2Member:', err);
+    alert('Could not add member: ' + (err.message || err));
+  } finally {
+    showLoading(false);
+  }
+});
 
 async function loadCe2Groups() {
   if (!ce2GroupsList) return;
@@ -1129,16 +1696,51 @@ async function loadCe2Groups() {
         '<p class="empty-state">No CE2 groups yet. Click <strong>+ Create CE2 Group</strong>, then test in the beta app.</p>';
       return;
     }
-    snap.forEach(function (doc) {
-      const g = doc.data();
+    const cards = await Promise.all(
+      snap.docs.map(async function (doc) {
+        const g = doc.data();
+        let memberCount = 0;
+        try {
+          const ms = await db
+            .collection('communicationGroups')
+            .doc(doc.id)
+            .collection('members')
+            .limit(200)
+            .get();
+          memberCount = ms.size;
+        } catch (e) {
+          memberCount = -1;
+        }
+        return { doc: doc, g: g, memberCount: memberCount };
+      })
+    );
+    cards.forEach(function (row) {
+      const doc = row.doc;
+      const g = row.g;
+      const memberCount = row.memberCount;
       const card = document.createElement('div');
       card.className = 'admin-card';
+      const countLabel =
+        memberCount < 0 ? '?' : memberCount === 0 ? '0 (empty — add members)' : String(memberCount);
       card.innerHTML =
         '<h4>' + escapeHtml(g.name || 'Unnamed') + '</h4>' +
-        '<p class="small-text">Tier: <strong>' + escapeHtml(g.requiredTier || 'foundation') + '</strong>' +
+        '<p class="small-text">Min tier: <strong>' + escapeHtml(g.requiredTier || 'foundation') + '</strong>' +
         (g.mentorLed ? ' · mentor-led' : '') +
-        (g.allowCrossTier ? ' · cross-tier' : '') + '</p>' +
-        '<p class="small-text">ID: ' + escapeHtml(doc.id) + '</p>';
+        (g.allowCrossTier ? ' · cross-tier' : '') +
+        ' · <strong>' + escapeHtml(countLabel) + '</strong> members</p>' +
+        '<p class="small-text">ID: ' + escapeHtml(doc.id) + '</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' +
+        '<button type="button" class="btn btn-secondary btn-sm ce2-manage-members-btn">Manage members</button>' +
+        '</div>';
+      const manageBtn = card.querySelector('.ce2-manage-members-btn');
+      if (manageBtn) {
+        manageBtn.addEventListener('click', function () {
+          openCe2MembersModal(doc.id, g.name || 'Group', {
+            requiredTier: g.requiredTier || 'foundation',
+            allowCrossTier: !!g.allowCrossTier,
+          });
+        });
+      }
       ce2GroupsList.appendChild(card);
     });
   } catch (err) {
@@ -1163,7 +1765,7 @@ document.getElementById('createCe2GroupForm')?.addEventListener('submit', async 
   try {
     showLoading(true);
     const uid = auth.currentUser && auth.currentUser.uid;
-    await db.collection('communicationGroups').add({
+    const groupRef = await db.collection('communicationGroups').add({
       name: name,
       requiredTier: requiredTier,
       mentorLed: mentorLed,
@@ -1171,10 +1773,20 @@ document.getElementById('createCe2GroupForm')?.addEventListener('submit', async 
       createdBy: uid || '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    if (uid) {
+      await groupRef.collection('members').doc(uid).set({
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        addedBy: uid,
+        role: 'creator',
+      });
+    }
     document.getElementById('createCe2GroupForm').reset();
     closeAllModals();
     await loadCe2Groups();
-    alert('CE2 group created. Open Messages V2 beta, select it, tap Join, then send a test message.');
+    alert(
+      'CE2 group created and you were added as a member.\n\n' +
+        'Use Manage members on the group card to add staff, or they can self-join in Messages V2 if their tier allows.'
+    );
   } catch (err) {
     console.error('createCe2Group:', err);
     alert('Error creating CE2 group: ' + (err.message || err));

@@ -19,8 +19,16 @@ async function loadAllBoards(user) {
 
     // Load user doc to get group IDs
     const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.data();
-    const groupIds = userData?.groups || [];
+    const userData = userDoc.exists ? userDoc.data() : {};
+    let groupIds = userData?.groups || [];
+    const advGroups =
+      typeof AdvancedExpressionAccess !== 'undefined'
+        ? AdvancedExpressionAccess.ADVANCED_EXPRESSION_GROUP_IDS
+        : ['advanced-muliebrity-training-school', 'z8lmnHLoFUBBZaRp2Vdd'];
+    if (typeof AdvancedExpressionAccess !== 'undefined' &&
+        !AdvancedExpressionAccess.hasAdvancedExpressionAccess(userData)) {
+      groupIds = groupIds.filter((g) => !advGroups.includes(g));
+    }
 
     if (!groupIds.length) {
       allBoardsContainer.innerHTML = '';

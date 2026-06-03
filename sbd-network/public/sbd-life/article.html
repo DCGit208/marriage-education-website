@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>SBD Life | Article</title>
+  <link rel="stylesheet" href="/css/sbd-life-reader.css?v=phase6" />
+  <link rel="stylesheet" href="/css/ham-drawer.css" />
+</head>
+<body class="life-reader-body">
+  <div class="life-read-progress" id="readProgress" aria-hidden="true"></div>
+  <div id="menuBtn" class="menu-btn" aria-label="Open menu">☰</div>
+  <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+  <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+    <div class="ham-drawer-head">
+      <span class="ham-drawer-title">Menu</span>
+      <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+    </div>
+    <nav class="menu-links ham-drawer-body" aria-label="Main menu">
+      <div class="ham-section">
+        <div class="ham-section-label">Lifestyle</div>
+        <a href="/sbd-life/"><span class="menu-icon">◑</span> SBD Life</a>
+        <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+        <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+      </div>
+    </nav>
+  </div>
+  <header class="life-reader-top">
+    <a href="/sbd-life/">← SBD Life</a>
+    <span class="kicker">Editorial</span>
+  </header>
+  <div id="lifeProductionGate" style="display:none"></div>
+  <main id="readerRoot">
+    <p class="life-loading">Loading…</p>
+  </main>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="/js/firebase.js"></script>
+  <script defer src="/js/sbd-life-routes.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-data.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-entitlements.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-tts.js?v=human-cal"></script>
+  <script defer src="/js/sbd-life-audio.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-quotes.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-reflections.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-production.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-reader.js?v=phase6"></script>
+  <script defer src="/js/ham-nav.js?v=phase6"></script>
+</body>
+</html>

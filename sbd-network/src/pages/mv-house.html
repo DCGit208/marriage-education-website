@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1779988103341">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
@@ -11,7 +12,7 @@
     <title>MV House | SBD Network</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1779988103341">
 
     <style>
         :root {
@@ -821,6 +822,162 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* ── Wardrobe sharing ───────────────────────────────── */
+        .mv-mode-bar {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 12px;
+            flex-wrap: wrap;
+        }
+        .mv-mode-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(198, 163, 132, 0.25);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .mv-mode-btn.active {
+            background: rgba(198, 163, 132, 0.15);
+            border-color: rgba(198, 163, 132, 0.55);
+            color: var(--gold);
+            font-weight: 600;
+        }
+        .mv-share-actions {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 14px;
+            flex-wrap: wrap;
+        }
+        .mv-share-action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(198, 163, 132, 0.35);
+            background: rgba(198, 163, 132, 0.1);
+            color: var(--gold);
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .mv-share-action-btn.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.75);
+            font-weight: 500;
+        }
+        .mv-shared-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 0 16px 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(198, 163, 132, 0.12);
+            border: 1px solid rgba(198, 163, 132, 0.35);
+        }
+        .mv-shared-banner strong { display: block; color: #fff; font-size: 0.9rem; }
+        .mv-shared-banner-meta { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }
+        .mv-shared-banner-back {
+            border: none;
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--gold);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .mv-shared-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 0 16px 24px;
+        }
+        .mv-shared-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            text-align: left;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: inherit;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .mv-shared-card-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(198, 163, 132, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .mv-shared-card-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .mv-shared-card-body strong { color: #fff; font-size: 0.88rem; }
+        .mv-shared-card-body span { font-size: 0.72rem; color: rgba(255, 255, 255, 0.5); }
+        .mv-shared-card-arrow { color: var(--gold); }
+        .mv-share-cats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .mv-share-cat-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+        }
+        .mv-elite-pill {
+            font-size: 0.62rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(198, 163, 132, 0.2);
+            color: var(--gold);
+            margin-left: 6px;
+        }
+        .mv-outgoing-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mv-outgoing-row strong { display: block; color: #fff; font-size: 0.85rem; }
+        .mv-outgoing-row span { font-size: 0.72rem; color: rgba(255, 255, 255, 0.45); }
+        .mv-revoke-btn {
+            border: 1px solid rgba(255, 90, 90, 0.4);
+            background: rgba(255, 90, 90, 0.1);
+            color: #ff8a8a;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+        }
+        .mv-share-empty, .mv-share-loading {
+            padding: 1rem;
+            font-size: 0.82rem;
+            color: var(--text-sec);
+        }
+        .look-card-actions--readonly { justify-content: flex-end; }
+
         /* ── BOTTOM NAV ─────────────────────────────────────── */
     </style>
 </head>
@@ -860,9 +1017,27 @@
             <div class="mv-hero-emblem">🏠</div>
             <h1 class="mv-hero-title">Muliebrity &amp; <span>Virility</span> House</h1>
             <p class="mv-hero-sub">
-                Your identity made visible. Save looks from MV House boards, curate your wardrobe,
-                and purchase with one tap.
+                Your identity made visible. Save looks from boards, curate your wardrobe,
+                and share collections with other Elite members.
             </p>
+        </div>
+
+        <div class="mv-mode-bar">
+            <button type="button" class="mv-mode-btn active" id="mvMyWardrobeBtn">My wardrobe</button>
+            <button type="button" class="mv-mode-btn" id="mvSharedTabBtn">Shared with me</button>
+        </div>
+
+        <div class="mv-share-actions" id="mvShareActions">
+            <button type="button" class="mv-share-action-btn" id="mvShareWardrobeBtn">👥 Share my wardrobe</button>
+            <button type="button" class="mv-share-action-btn secondary" id="mvManageSharesBtn">Manage access (<span id="mvOutgoingShareCount">0</span>)</button>
+        </div>
+
+        <div class="mv-shared-banner" id="mvSharedBanner">
+            <div>
+                <strong>Viewing <span class="mv-shared-banner-name">Member</span>'s wardrobe</strong>
+                <span class="mv-shared-banner-meta">Read-only</span>
+            </div>
+            <button type="button" class="mv-shared-banner-back" id="mvSharedBannerBack">← Back to list</button>
         </div>
 
         <!-- Category tabs -->
@@ -929,6 +1104,11 @@
             <div class="wardrobe-grid" id="grid-official"></div>
         </div>
 
+        <div class="mv-section" id="panel-shared-list" style="display:none;">
+            <p class="mv-section-label">Shared with me</p>
+            <div class="mv-shared-list" id="mvSharedList"></div>
+        </div>
+
         <!-- Purchase CTA strip -->
         <div class="mv-cta-strip">
             <span class="mv-cta-icon">🛍</span>
@@ -982,6 +1162,40 @@
         </div>
     </div>
 
+    <!-- ── SHARE WARDROBE MODAL ───────────────── -->
+    <div class="mvh-modal-overlay" id="shareWardrobeModal">
+        <div class="mvh-modal" style="max-height:85vh;">
+            <div class="mvh-modal-header">
+                <span class="mvh-modal-title">👥 Share wardrobe</span>
+                <button type="button" class="mvh-modal-close" id="shareWardrobeModalClose">✕</button>
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-sec);margin:0 0 10px;line-height:1.45;">
+                Elite members only. Choose categories, then select who can view (read-only).
+            </p>
+            <div class="mv-share-cats" id="shareWardrobeCats">
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="all" checked> All categories</label>
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="corporate"> 💼 Corporate</label>
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="casual-day"> ☀️ Casual Day</label>
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="casual-night"> 🌙 Casual Night</label>
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="casual-home"> 🏡 Casual at Home</label>
+                <label class="mv-share-cat-label"><input type="checkbox" data-cat="official"> 👑 Official</label>
+            </div>
+            <input class="mvh-dm-search" type="text" id="shareWardrobeSearch" placeholder="Search Elite members…">
+            <div class="mvh-dm-list" id="shareWardrobeUserList" style="max-height:40vh;"></div>
+        </div>
+    </div>
+
+    <!-- ── MANAGE SHARES MODAL ─────────────────── -->
+    <div class="mvh-modal-overlay" id="manageSharesModal">
+        <div class="mvh-modal">
+            <div class="mvh-modal-header">
+                <span class="mvh-modal-title">Manage wardrobe access</span>
+                <button type="button" class="mvh-modal-close" id="manageSharesModalClose">✕</button>
+            </div>
+            <div id="mvOutgoingShareList"></div>
+        </div>
+    </div>
+
     <!-- ── SHARE TO DM MODAL ──────────────────── -->
     <div class="mvh-modal-overlay" id="shareDmModal">
         <div class="mvh-modal">
@@ -997,13 +1211,83 @@
     </div>
 
 
-    <!-- NAV_INJECT -->
+        <!-- HAMBURGER -->
+    <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
+    <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+    <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+      <div class="ham-drawer-head">
+        <span class="ham-drawer-title">Menu</span>
+        <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+      </div>
+      <nav class="menu-links ham-drawer-body" aria-label="Main menu">
+        <div class="ham-section">
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
+          <div id="adminSection" class="hidden-admin-section">
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
+          </div>
+          <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+        </div>
+      </nav>
+      <div class="ham-drawer-foot">
+        <div id="versionPill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
+        </a>
+    </nav>
+    <link rel="stylesheet" href="/css/ham-drawer.css">
+    <script defer src="/js/ham-nav.js?v=1779988103341"></script>
+
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=76"></script>
-    <script src="/js/formation-access.js?v=249"></script>
-    <script src="/js/mv-house.js?v=263"></script>
+    <script src="/js/firebase.js?v=1779988103341"></script>
+    <script src="/js/formation-access.js?v=1779988103341"></script>
+    <script src="/js/advanced-expression-access.js?v=1779988103341"></script>
+    <script src="/js/mv-house-shares.js?v=1779988103341"></script>
+    <script src="/js/mv-house.js?v=1779988103341"></script>
 </body>
 </html>

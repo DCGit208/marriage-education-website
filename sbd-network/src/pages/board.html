@@ -12,6 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/board-media.css?v=62">
+    <link rel="stylesheet" href="/css/board-rich-editor.css">
     <link rel="stylesheet" href="/css/bottom-nav.css?v=60">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     
@@ -412,7 +413,11 @@
           <span style="font-size:1rem;font-weight:700;color:#fff;">👗 Apply This Expression</span>
           <button id="applyExprClose" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:rgba(255,255,255,0.5);line-height:1;">✕</button>
         </div>
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">
+        <div id="applyExprDestWrap" class="apply-expr-dest-wrap" style="display:none;">
+          <p class="apply-expr-dest-label">Apply to which MV House wardrobe?</p>
+          <div id="applyExprDestList" class="apply-expr-dest-list" role="radiogroup" aria-label="MV House wardrobe destination"></div>
+        </div>
+        <p id="applyExprNoteHint" style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">
           Add a personal note — when you'd wear it, how it makes you feel, what occasion it suits.
         </p>
         <textarea id="applyExprNote" maxlength="300" rows="3"
@@ -461,10 +466,14 @@
     <script defer src="/js/upload.js?v=61"></script>
     <script defer src="/js/image-editor.js?v=77"></script>
     <script defer src="/js/mentions.js?v=75"></script>
+    <script defer src="/js/board-rich-editor.js"></script>
     <script defer src="/js/posts.js?v=61"></script>
     <script defer src="/js/notifications.js?v=60"></script>
     <script defer src="/js/dm-badge.js?v=60"></script>
     <script defer src="/js/ptr.js?v=60"></script>
+    <script defer src="/js/formation-access.js?v=113"></script>
+    <script defer src="/js/advanced-expression-access.js?v=113"></script>
+    <script defer src="/js/tier-access.js?v=113"></script>
     <script defer src="/js/board.js?v=113"></script>
     <script defer src="/js/transitions.js?v=60"></script>
     <script defer src="/js/swipe-back.js?v=60"></script>

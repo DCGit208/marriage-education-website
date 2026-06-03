@@ -3396,6 +3396,7 @@
     <script src="js/firebase-config.js"></script>
 
     <script src="js/ambassador-register-intl.js"></script>
+    <script src="js/ambassador-referral-code.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.AmbassadorRegisterIntl) {
@@ -3405,9 +3406,12 @@
 
         // Capture referral code from URL on page load (supports both RD and Senior Ambassador recruitment)
         (function() {
+            const norm = window.MEAmbassadorReferralCode && window.MEAmbassadorReferralCode.normalizeReferralCode
+                ? window.MEAmbassadorReferralCode.normalizeReferralCode.bind(window.MEAmbassadorReferralCode)
+                : function (c) { return String(c || '').trim().toUpperCase(); };
             const urlParams = new URLSearchParams(window.location.search);
-            const rdCode = urlParams.get('ref') || urlParams.get('rd');
-            const seniorCode = urlParams.get('senior');
+            const rdCode = norm(urlParams.get('ref') || urlParams.get('rd') || '');
+            const seniorCode = norm(urlParams.get('senior') || '');
             
             let referralCode = null;
             let referralType = null;
@@ -3461,7 +3465,10 @@
 
         // Auto-fill recruited by field - use both DOMContentLoaded and immediate check
         function autoFillRecruitedBy() {
-            const referralCode = sessionStorage.getItem('referral_code');
+            const norm = window.MEAmbassadorReferralCode && window.MEAmbassadorReferralCode.normalizeReferralCode
+                ? window.MEAmbassadorReferralCode.normalizeReferralCode.bind(window.MEAmbassadorReferralCode)
+                : function (c) { return String(c || '').trim().toUpperCase(); };
+            const referralCode = norm(sessionStorage.getItem('referral_code') || '');
             const referralType = sessionStorage.getItem('referral_type');
             
             if (referralCode) {
@@ -3495,6 +3502,17 @@
         
         // Also try after a small delay as backup
         setTimeout(autoFillRecruitedBy, 500);
+
+        (function bindRecruitedByNormalize() {
+            const field = document.querySelector('input[name="recruitedBy"]');
+            if (!field || !window.MEAmbassadorReferralCode) return;
+            field.addEventListener('blur', function () {
+                const fixed = window.MEAmbassadorReferralCode.normalizeReferralCode(field.value);
+                if (fixed && fixed !== field.value.trim()) {
+                    field.value = fixed;
+                }
+            });
+        })();
 
         // Tab Navigation
         // Tab Navigation
@@ -3587,40 +3605,52 @@
             // Generate ambassador code
             const ambCode = 'AMB-' + data.firstName.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) + '-' + Date.now().toString().slice(-4);
             
-            // Get referral info from form or sessionStorage
-            const referralCode = data.recruitedBy || sessionStorage.getItem('referral_code') || '';
+            // Get referral info from form or sessionStorage (normalize format only — admin still approves)
+            const rawReferral = data.recruitedBy || sessionStorage.getItem('referral_code') || '';
+            const referralCode = window.MEAmbassadorReferralCode
+                ? window.MEAmbassadorReferralCode.normalizeReferralCode(rawReferral)
+                : String(rawReferral || '').trim().toUpperCase();
             const referralType = sessionStorage.getItem('referral_type') || (referralCode.startsWith('RD-') ? 'regional_director' : 'senior_ambassador');
-            
-            // Determine hierarchy
-            let seniorAmbassador = null;
-            let regionalDirector = null;
-            
-            if (referralCode.startsWith('RD-')) {
-                regionalDirector = referralCode;
-            } else if (referralCode.startsWith('AMB-')) {
-                seniorAmbassador = referralCode;
-            }
-            
-            // Store data for payment page
-            sessionStorage.setItem('ambassadorData', JSON.stringify({
-                ...data,
-                code: ambCode,
-                fullName: data.firstName + ' ' + data.lastName,
-                role: 'Marriage Literacy Ambassador',
-                track: 'Women\'s Track',
-                country: countryCode,
-                countryName: countryMeta.name,
-                phoneE164: data.phone,
-                currency: pay.currency,
-                entryAmount: pay.amount,
-                paymentMethod: pay.method,
-                regionType: intl && intl.isCameroon(countryCode) ? 'cameroon_region' : 'state_province',
-                recruitedBy: referralCode,
-                recruited_by_type: referralType,
-                senior_code: seniorAmbassador,
-                regional_director_code: regionalDirector,
-                ambassador_type: 'regular'
-            }));
+
+            const sessionPayload = window.MEAmbassadorReferralCode
+                ? window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData({
+                    ...data,
+                    code: ambCode,
+                    fullName: data.firstName + ' ' + data.lastName,
+                    role: 'Marriage Literacy Ambassador',
+                    track: 'Women\'s Track',
+                    country: countryCode,
+                    countryName: countryMeta.name,
+                    phoneE164: data.phone,
+                    currency: pay.currency,
+                    entryAmount: pay.amount,
+                    paymentMethod: pay.method,
+                    regionType: intl && intl.isCameroon(countryCode) ? 'cameroon_region' : 'state_province',
+                    recruitedBy: referralCode,
+                    recruited_by_type: referralType,
+                    ambassador_type: 'regular'
+                })
+                : {
+                    ...data,
+                    code: ambCode,
+                    fullName: data.firstName + ' ' + data.lastName,
+                    role: 'Marriage Literacy Ambassador',
+                    track: 'Women\'s Track',
+                    country: countryCode,
+                    countryName: countryMeta.name,
+                    phoneE164: data.phone,
+                    currency: pay.currency,
+                    entryAmount: pay.amount,
+                    paymentMethod: pay.method,
+                    regionType: intl && intl.isCameroon(countryCode) ? 'cameroon_region' : 'state_province',
+                    recruitedBy: referralCode,
+                    recruited_by_type: referralType,
+                    senior_code: referralCode.startsWith('AMB-') ? referralCode : null,
+                    regional_director_code: referralCode.startsWith('RD-') ? referralCode : null,
+                    ambassador_type: 'regular'
+                };
+
+            sessionStorage.setItem('ambassadorData', JSON.stringify(sessionPayload));
             
             console.log('✅ Ambassador registration prepared:', ambCode, countryMeta.name, pay.label);
             

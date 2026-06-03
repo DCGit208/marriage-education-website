@@ -30,6 +30,7 @@ let lightboxPhotos    = [];   // [{ url, caption }]
 let lightboxIndex     = 0;
 let ctxPost           = null;  // post currently targeted by context menu
 let ctxCard           = null;  // card element currently targeted
+let ctxMediaSelection = null;  // specific media tile targeted by context menu
 let lastLongPress     = 0;     // timestamp — stops media click from firing after a long-press
 let pinnedPosts           = [];    // pinned posts for this board
 let pinnedBannerIndex     = 0;    // which pinned post the banner currently shows
@@ -41,13 +42,91 @@ let bulkSelectMode    = false;         // true while select mode is active
 let bulkSelected      = new Set();     // Set of selected post IDs
 let bulkSelectedPosts = {};            // { postId: postData }
 
-// MV House board IDs — save-to-wardrobe button visible on these boards for Elite users
-const MV_HOUSE_BOARD_IDS = [
-  'mv-house-corporate', 'mv-house-casual-day', 'mv-house-casual-night',
-  'mv-house-casual-home', 'mv-house-official',
-  'muliebrity-corporate', 'muliebrity-casual', 'virility-corporate', 'virility-casual',
-  'mv-house-general',
+// Apply Expression + Save to Wardrobe: enabled on all boards except these titles
+const WARDROBE_EXPRESSION_BOARD_EXCLUSIONS = [
+  'sexual hygiene',           // includes "Sexual Hygiene et al"
+  'business board',
+  'self defense for couples',
 ];
+
+function isWardrobeExpressionBoard(boardData) {
+  const title = (boardData?.title || boardData?.name || '').trim().toLowerCase();
+  if (!title) return true;
+  return !WARDROBE_EXPRESSION_BOARD_EXCLUSIONS.some((excluded) => {
+    if (excluded === 'sexual hygiene') return title.includes('sexual hygiene');
+    return title === excluded;
+  });
+}
+
+// MV House wardrobe destinations (topic boards must pick one of these)
+const MV_HOUSE_WARDROBE_DESTINATIONS = [
+  { category: 'corporate',    label: '💼 Corporate',       targetBoardId: 'mv-house-corporate' },
+  { category: 'casual-day',   label: '☀️ Casual Day',      targetBoardId: 'mv-house-casual-day' },
+  { category: 'casual-night', label: '🌙 Casual Night',    targetBoardId: 'mv-house-casual-night' },
+  { category: 'casual-home',  label: '🏡 Casual at Home',  targetBoardId: 'mv-house-casual-home' },
+  { category: 'official',     label: '👑 Official',        targetBoardId: 'mv-house-official' },
+];
+
+const WARDROBE_CATEGORY_BY_BOARD_ID = {
+  'mv-house-corporate': 'corporate',
+  'muliebrity-corporate': 'corporate',
+  'virility-corporate': 'corporate',
+  'advanced-muliebrity-corporate': 'corporate',
+  'advanced-virility-corporate': 'corporate',
+  'mv-house-casual-day': 'casual-day',
+  'muliebrity-casual': 'casual-day',
+  'virility-casual': 'casual-day',
+  'advanced-muliebrity-casual-day': 'casual-day',
+  'advanced-virility-casual-day': 'casual-day',
+  'mv-house-casual-night': 'casual-night',
+  'advanced-muliebrity-casual-night': 'casual-night',
+  'advanced-virility-casual-night': 'casual-night',
+  'mv-house-casual-home': 'casual-home',
+  'advanced-muliebrity-casual-home': 'casual-home',
+  'advanced-virility-casual-home': 'casual-home',
+  'mv-house-official': 'official',
+  'advanced-muliebrity-official': 'official',
+  'advanced-virility-official': 'official',
+  'mv-house-general': 'saved',
+};
+
+/** Infer wardrobe category when saving from an MV House board itself; null → show picker. */
+function inferWardrobeCategoryFromBoard(boardData, bid = boardId) {
+  if (bid && WARDROBE_CATEGORY_BY_BOARD_ID[bid]) {
+    return WARDROBE_CATEGORY_BY_BOARD_ID[bid];
+  }
+
+  const nameLower = (boardData?.title || boardData?.name || '').trim().toLowerCase();
+  if (!nameLower) return null;
+
+  const isMvNamedBoard =
+    nameLower.includes('muliebrity') ||
+    nameLower.includes('virility') ||
+    nameLower.includes('mv house');
+
+  if (!isMvNamedBoard && !(bid || '').startsWith('mv-house-')) return null;
+
+  if (nameLower.includes('corporate')) return 'corporate';
+  if (nameLower.includes('official')) return 'official';
+  if (nameLower.includes('casual')) {
+    if (nameLower.includes('night')) return 'casual-night';
+    if (nameLower.includes('home')) return 'casual-home';
+    if (nameLower.includes('day')) return 'casual-day';
+    return 'casual-day';
+  }
+  if (nameLower.includes('general')) return 'saved';
+
+  return null;
+}
+
+function needsWardrobeDestinationPicker(boardData) {
+  return inferWardrobeCategoryFromBoard(boardData) === null;
+}
+
+function getWardrobeDestinationLabel(category) {
+  const dest = MV_HOUSE_WARDROBE_DESTINATIONS.find((d) => d.category === category);
+  return dest ? dest.label : category.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 // ── DOM refs ─────────────────────────────────────────────────────
 const backBtn           = document.getElementById('backBtn');
@@ -185,9 +264,33 @@ auth.onAuthStateChanged(async (user) => {
       const _subActive = _sub?.status === 'active' && (_sub.endDate?.toMillis?.() ?? 0) > _now;
       const _subTier = _subActive ? (_sub.tier || '') : '';
       const uTier = currentUserData.role === 'admin' ? 'elite' : (_subTier || currentUserData.tier || 'free');
-      if ((_BO[uTier] ?? 0) < (_BO[bTier] ?? 0)) {
+      const boardData = _boardMeta.data();
+      const isAdvBoard =
+        typeof AdvancedExpressionAccess !== 'undefined' &&
+        AdvancedExpressionAccess.isAdvancedExpressionBoard(boardId, boardData);
+
+      if (isAdvBoard && typeof AdvancedExpressionAccess !== 'undefined') {
+        const access = AdvancedExpressionAccess.getAdvancedExpressionAccess(currentUserData);
+        if (!access.allowed) {
+          if (boardTitle) boardTitle.textContent = boardData.title || 'Board';
+          if (createPostBtn) createPostBtn.style.display = 'none';
+          const cta = access.ctaUrl || '/courses.html';
+          if (postsContainer) {
+            postsContainer.innerHTML = `
+          <div style="text-align:center;padding:3rem 1.5rem;color:var(--text-sec)">
+            <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+            <h3 style="margin:0 0 .5rem;color:#fff">${access.message || 'Formation Required'}</h3>
+            <p style="margin:0 0 1.5rem;line-height:1.6">${access.detail || 'Complete your formation arc to unlock advanced expression boards and MV House.'}</p>
+            <a href="${cta}" style="display:inline-block;background:var(--gold,#c6a96b);color:#000;padding:.75rem 2rem;border-radius:8px;font-weight:700;text-decoration:none">Continue Formation →</a>
+            <br><a href="/boards.html" style="display:inline-block;margin-top:1rem;font-size:13px;color:var(--text-sec);text-decoration:none">← Back to Community</a>
+          </div>`;
+          }
+          showLoading(false);
+          return;
+        }
+      } else if ((_BO[uTier] ?? 0) < (_BO[bTier] ?? 0)) {
         const _cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-        if (boardTitle)    boardTitle.textContent    = _boardMeta.data().title || 'Board';
+        if (boardTitle)    boardTitle.textContent    = boardData.title || 'Board';
         if (createPostBtn) createPostBtn.style.display = 'none';
         if (postsContainer) postsContainer.innerHTML = `
           <div style="text-align:center;padding:3rem 1.5rem;color:var(--text-sec)">
@@ -322,11 +425,17 @@ auth.onAuthStateChanged(async (user) => {
   if (postContentTextarea && typeof initMentionAutocomplete === 'function') {
     initMentionAutocomplete(postContentTextarea, boardId);
   }
+  if (postContentTextarea && typeof initBoardRichEditor === 'function') {
+    initBoardRichEditor(postContentTextarea, { placeholder: 'Write a caption…' });
+  }
   
   // Initialize mention autocomplete for edit post modal
   const editPostTextarea = document.getElementById('editPostContent');
   if (editPostTextarea && typeof initMentionAutocomplete === 'function') {
     initMentionAutocomplete(editPostTextarea, boardId);
+  }
+  if (editPostTextarea && typeof initBoardRichEditor === 'function') {
+    initBoardRichEditor(editPostTextarea, { placeholder: 'Edit your post…' });
   }
 });
 
@@ -615,9 +724,11 @@ function buildPostCard(post) {
 
   // Wardrobe button: Elite users on MV House boards
   const uTierLocal   = currentUserData?.subscription?.tier || currentUserData?.tier || 'free';
-  const isElite      = uTierLocal === 'elite' || currentIsAdmin;
-  const isMvBoard    = MV_HOUSE_BOARD_IDS.includes(boardId);
-  const wardrobeBtn  = (isElite && isMvBoard)
+  const advAccess    = typeof AdvancedExpressionAccess !== 'undefined'
+    ? AdvancedExpressionAccess.getAdvancedExpressionAccess(currentUserData)
+    : { allowed: uTierLocal === 'elite' || currentIsAdmin };
+  const canWardrobe  = isWardrobeExpressionBoard(currentBoardData);
+  const wardrobeBtn  = (advAccess.allowed && canWardrobe)
     ? `<button class="wardrobe-save-btn" data-postid="${esc(post.id)}" type="button" title="Save to Wardrobe">🏠 Save</button>`
     : '';
 
@@ -853,6 +964,9 @@ function buildPostCard(post) {
   if (commentInput && typeof initMentionAutocomplete === 'function') {
     initMentionAutocomplete(commentInput, boardId);
   }
+  if (commentInput && typeof initBoardRichEditor === 'function') {
+    initBoardRichEditor(commentInput, { compact: true, placeholder: 'Add a comment…' });
+  }
 
   setReplyTo = (replyData) => {
     // Clean up any leftover media thumb from a previous media reply
@@ -884,7 +998,8 @@ function buildPostCard(post) {
       quoteTextEl.textContent   = (replyData.text || '').slice(0, 60) + ((replyData.text || '').length > 60 ? '…' : '');
     }
     quotePreview.style.display = 'block';
-    commentInput.focus();
+    if (commentInput._boardRichEditor) commentInput._boardRichEditor.focus();
+    else commentInput.focus();
   };
 
   quoteCancelBtn && quoteCancelBtn.addEventListener('click', () => {
@@ -923,20 +1038,18 @@ function buildPostCard(post) {
     });
   }
 
-  // Auto-grow textarea
-  commentInput.addEventListener('input', () => {
-    commentInput.style.height = 'auto';
-    commentInput.style.height = commentInput.scrollHeight + 'px';
-  });
-
   const sendComment = async () => {
-    const text = commentInput.value.trim();
+    const text = getBoardFieldMarkdown(commentInput);
     if (!text) return;
     sendBtn.disabled = true;
     try {
       await addComment(post.id, text, activeReplyTo);
-      commentInput.value = '';
-      commentInput.style.height = 'auto';
+      if (commentInput._boardRichEditor) {
+        commentInput._boardRichEditor.setMarkdown('');
+      } else {
+        commentInput.value = '';
+        commentInput.style.height = 'auto';
+      }
       activeReplyTo = null;
       quotePreview.style.display = 'none';
       commentsLoaded = false;
@@ -953,9 +1066,13 @@ function buildPostCard(post) {
     if ('vibrate' in navigator) navigator.vibrate(15);
     sendComment();
   });
-  commentInput.addEventListener('keydown', e => {
+  const onCommentEnter = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); }
-  });
+  };
+  commentInput.addEventListener('keydown', onCommentEnter);
+  if (commentInput._boardRichEditor?.surface) {
+    commentInput._boardRichEditor.surface.addEventListener('keydown', onCommentEnter);
+  }
 
   // Render post-level reactions (distinct from comments)
   renderReactionChips(card, post.reactions || {}, post.id);
@@ -975,7 +1092,7 @@ function buildPostCard(post) {
       if (touchMoved) return;
       lastLongPress = Date.now();
       if ('vibrate' in navigator) navigator.vibrate(30);
-      openContextMenu(post, card);
+      openContextMenu(post, card, e.target);
     }, 400);
   };
   const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
@@ -987,7 +1104,7 @@ function buildPostCard(post) {
     if (e.target.closest('button, a')) return;
     e.preventDefault();
     lastLongPress = Date.now();
-    openContextMenu(post, card);
+    openContextMenu(post, card, e.target);
   });
 
   // ── Bulk-select overlay (sits above card content in select mode) ──
@@ -1025,12 +1142,14 @@ function openEditModal(post, card) {
   const saveBtn   = document.getElementById('saveEditPostBtn');
   const cancelBtn = document.getElementById('cancelEditPostBtn');
 
-  textarea.value = post.content || '';
-  textarea.style.height = 'auto';
-  textarea.style.height = textarea.scrollHeight + 'px';
+  if (textarea._boardRichEditor) {
+    textarea._boardRichEditor.setMarkdown(post.content || '');
+    textarea._boardRichEditor.focus();
+  } else {
+    textarea.value = post.content || '';
+  }
   modal.style.display   = 'flex';
   document.body.style.overflow = 'hidden';
-  textarea.focus();
 
   // Use .onclick so repeated openings never stack duplicate listeners
   const close = () => {
@@ -1043,7 +1162,7 @@ function openEditModal(post, card) {
   cancelBtn.onclick = close;
 
   saveBtn.onclick = async () => {
-    const newContent = textarea.value.trim();
+    const newContent = getBoardFieldMarkdown(textarea);
     if (!newContent) return;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
@@ -1052,12 +1171,12 @@ function openEditModal(post, card) {
       // Update the visible post text in-place
       let textEl = card.querySelector('.post-text');
       if (textEl) {
-        textEl.textContent = newContent;
+        textEl.innerHTML = escAndLinkify(newContent);
       } else {
         // Post was media-only; add a text element now
         textEl = document.createElement('p');
         textEl.className = 'post-text';
-        textEl.textContent = newContent;
+        textEl.innerHTML = escAndLinkify(newContent);
         const actions = card.querySelector('.post-actions');
         if (actions) card.insertBefore(textEl, actions);
       }
@@ -1348,7 +1467,8 @@ function openModal() {
   document.body.style.overflow = 'hidden';
   setTimeout(() => {
     const caption = document.getElementById('postContent');
-    if (caption) caption.focus();
+    if (caption?._boardRichEditor) caption._boardRichEditor.focus();
+    else if (caption) caption.focus();
   }, 80);
 }
 
@@ -1379,6 +1499,8 @@ function closeModal() {
   // Reset story toggle
   const _storBtn = document.getElementById('storyToggleBtn');
   if (_storBtn) _storBtn.classList.remove('active');
+  const postContent = document.getElementById('postContent');
+  if (postContent?._boardRichEditor) postContent._boardRichEditor.setMarkdown('');
 }
 
 createPostBtn && createPostBtn.addEventListener('click', () => {
@@ -1488,7 +1610,7 @@ if (createPostForm) {
     // Synchronous guard — stops double-tap / double-click before any paint happens
     if (isSubmitting) return;
 
-    const content  = document.getElementById('postContent').value.trim();
+    const content  = getBoardFieldMarkdown(document.getElementById('postContent'));
     const allFiles = postMediaInput ? Array.from(postMediaInput.files) : [];
     if (!content && !allFiles.length) { alert('Add a caption, photo, or video.'); return; }
 
@@ -1976,7 +2098,12 @@ function renderComment(comment, onReply) {
       ta.value = currentText;
       ta.rows  = Math.max(2, currentText.split('\n').length);
       textEl.replaceWith(ta);
-      ta.focus();
+      if (typeof initBoardRichEditor === 'function') {
+        initBoardRichEditor(ta, { compact: true, placeholder: 'Add a comment…' });
+        ta._boardRichEditor.focus();
+      } else {
+        ta.focus();
+      }
 
       const saveRow = document.createElement('div');
       saveRow.className = 'comment-edit-actions';
@@ -1997,7 +2124,7 @@ function renderComment(comment, onReply) {
       saveRow.querySelector('.comment-edit-cancel').onclick = cancelEdit;
 
       saveRow.querySelector('.comment-edit-save').onclick = async () => {
-        const newText = ta.value.trim();
+        const newText = getBoardFieldMarkdown(ta);
         if (!newText) return;
         const saveBtn = saveRow.querySelector('.comment-edit-save');
         saveBtn.disabled = true;
@@ -2005,7 +2132,7 @@ function renderComment(comment, onReply) {
         try {
           await editComment(comment.id, newText);
           comment.text     = newText;
-          textEl.textContent = newText;
+          textEl.innerHTML = escAndLinkify(newText);
           ta.replaceWith(textEl);
           saveRow.remove();
           editBtn.style.display = '';
@@ -2085,6 +2212,8 @@ function escAndLinkify(str) {
   if (!str) return '';
   // First escape HTML
   let escaped = esc(str);
+  // Apply a safe, minimal inline formatting syntax on escaped text only.
+  escaped = applyInlineRichFormatting(escaped);
   // Then linkify if functions are available
   if (typeof linkifyContent === 'function') {
     return linkifyContent(escaped);
@@ -2092,13 +2221,66 @@ function escAndLinkify(str) {
   return escaped;
 }
 
+function applyInlineRichFormatting(escapedText) {
+  if (!escapedText) return '';
+  let text = escapedText;
+
+  // Protect inline code first so later replacements don't alter it.
+  const codeTokens = [];
+  text = text.replace(/`([^`\n]+)`/g, (_, code) => {
+    const token = `__RT_CODE_${codeTokens.length}__`;
+    codeTokens.push(`<code>${code}</code>`);
+    return token;
+  });
+
+  // **bold**
+  text = text.replace(/\*\*([^*\n][^*\n]*?)\*\*/g, '<strong>$1</strong>');
+  // __underline__
+  text = text.replace(/__([^_\n][^_\n]*?)__/g, '<u>$1</u>');
+  // *italic* (single-star only)
+  text = text.replace(/(^|[^\*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+
+  // Restore inline code tokens.
+  text = text.replace(/__RT_CODE_(\d+)__/g, (_, idx) => codeTokens[parseInt(idx, 10)] || '');
+  return text;
+}
+
+function getContextSelectedMedia(post, triggerEl) {
+  if (!post || !triggerEl) return null;
+  const mediaEl = triggerEl.closest('.video-thumb, .photo-thumb, .photo-thumb-cell');
+  if (!mediaEl) return null;
+
+  if (mediaEl.classList.contains('video-thumb')) {
+    let urls = [];
+    try { urls = JSON.parse(mediaEl.dataset.videos || '[]'); } catch (_) { urls = []; }
+    const videoIndex = parseInt(mediaEl.dataset.videoIndex || '0', 10);
+    const fallbackUrl = mediaEl.dataset.video || null;
+    const selectedUrl = (Number.isFinite(videoIndex) && urls[videoIndex]) ? urls[videoIndex] : (urls[0] || fallbackUrl);
+    if (!selectedUrl) return null;
+    return {
+      type: 'video',
+      url: selectedUrl,
+      thumbUrl: mediaEl.querySelector('img')?.src || null,
+    };
+  }
+
+  const photoUrl = mediaEl.querySelector('img')?.src || null;
+  if (!photoUrl) return null;
+  return {
+    type: 'image',
+    url: photoUrl,
+    thumbUrl: photoUrl,
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT MENU — open / close / actions
 // ═══════════════════════════════════════════════════════════════
 
-function openContextMenu(post, card) {
+function openContextMenu(post, card, triggerEl = null) {
   ctxPost = post;
   ctxCard = card;
+  ctxMediaSelection = getContextSelectedMedia(post, triggerEl);
 
   // Update pin label
   document.getElementById('ctxPinLabel').textContent = post.isPinned ? 'Unpin' : 'Pin';
@@ -2113,14 +2295,11 @@ function openContextMenu(post, card) {
   const hasMedia = !!(post.imageUrl || post.videoUrl || (post.allMedia && post.allMedia.length));
   document.getElementById('ctxPostToStory').style.display = hasMedia ? '' : 'none';
 
-  // Show "Apply This Expression" for Fashion/Style boards (Muliebrity/Virility)
+  // Apply This Expression — all boards except explicit exclusions (media required)
   const applyExpressionBtn = document.getElementById('ctxApplyExpression');
   if (applyExpressionBtn) {
-    const boardName = currentBoardData?.title || currentBoardData?.name || '';
-    // Check by board ID first (covers mv-house-general etc.), then fallback to name regex
-    const isExpressionBoard = MV_HOUSE_BOARD_IDS.includes(boardId) ||
-      /muliebrity|virility|corporate|casual|official|fashion|style|general/i.test(boardName);
-    applyExpressionBtn.style.display = (isExpressionBoard && hasMedia) ? '' : 'none';
+    const canApply = isWardrobeExpressionBoard(currentBoardData);
+    applyExpressionBtn.style.display = (canApply && hasMedia) ? '' : 'none';
   }
 
   // Highlight emojis user has already reacted with
@@ -2142,6 +2321,7 @@ function closeContextMenu() {
   postCtxMenu.style.display    = 'none';
   ctxPost = null;
   ctxCard = null;
+  ctxMediaSelection = null;
 }
 
 // Set up singleton context menu listeners once
@@ -2228,48 +2408,75 @@ document.getElementById('ctxPostToStory').addEventListener('click', async () => 
 // Apply This Expression - Save to MV House Wardrobe
 document.getElementById('ctxApplyExpression').addEventListener('click', async () => {
   const post = ctxPost;
+  const savedMediaSelection = ctxMediaSelection;
   closeContextMenu();
   if (!post) return;
 
-  // Show note modal first, then apply on confirm
-  const modal   = document.getElementById('applyExprModal');
-  const noteTA  = document.getElementById('applyExprNote');
-  const counter = document.getElementById('applyExprCount');
-  const saveBtn = document.getElementById('applyExprSave');
-  const skipBtn = document.getElementById('applyExprSkip');
-  const closeBtn = document.getElementById('applyExprClose');
+  const modal      = document.getElementById('applyExprModal');
+  const destWrap   = document.getElementById('applyExprDestWrap');
+  const destList   = document.getElementById('applyExprDestList');
+  const noteHint   = document.getElementById('applyExprNoteHint');
+  const noteTA     = document.getElementById('applyExprNote');
+  const counter    = document.getElementById('applyExprCount');
+  const saveBtn    = document.getElementById('applyExprSave');
+  const skipBtn    = document.getElementById('applyExprSkip');
+  const closeBtn   = document.getElementById('applyExprClose');
+
+  const showPicker = needsWardrobeDestinationPicker(currentBoardData);
+  let selectedCategory = showPicker ? null : inferWardrobeCategoryFromBoard(currentBoardData);
 
   noteTA.value = '';
   counter.textContent = '0';
-  modal.style.display = 'flex';
 
+  if (destWrap && destList) {
+    destWrap.style.display = showPicker ? 'block' : 'none';
+    destList.innerHTML = MV_HOUSE_WARDROBE_DESTINATIONS.map((dest) => `
+      <button type="button" class="apply-expr-dest-btn" data-category="${dest.category}" role="radio" aria-checked="false">
+        ${dest.label}
+      </button>
+    `).join('');
+
+    destList.querySelectorAll('.apply-expr-dest-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedCategory = btn.dataset.category;
+        destList.querySelectorAll('.apply-expr-dest-btn').forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('selected', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+      });
+    });
+  }
+
+  if (noteHint) {
+    noteHint.textContent = showPicker
+      ? 'Choose the MV House wardrobe this look belongs in, then add an optional note.'
+      : 'Add a personal note — when you\'d wear it, how it makes you feel, what occasion it suits.';
+  }
+
+  modal.style.display = 'flex';
   noteTA.oninput = () => { counter.textContent = noteTA.value.length; };
 
   function closeModal() { modal.style.display = 'none'; }
-
   closeBtn.onclick = closeModal;
 
   async function doApply(userNote) {
+    const category = showPicker ? selectedCategory : inferWardrobeCategoryFromBoard(currentBoardData);
+    if (!category) {
+      showToast('Choose which MV House wardrobe to apply to');
+      return;
+    }
+
     closeModal();
 
-    // Determine expression context based on board
     const boardName = currentBoardData?.title || currentBoardData?.name || '';
-    let context = 'corporate';
-    const nameLower = boardName.toLowerCase();
-
-    if (nameLower.includes('corporate')) context = 'corporate';
-    else if (nameLower.includes('casual')) {
-      if (nameLower.includes('night')) context = 'casual-night';
-      else if (nameLower.includes('home')) context = 'casual-home';
-      else if (nameLower.includes('day')) context = 'casual-day';
-      else context = 'casual-day';
-    }
-    else if (nameLower.includes('official')) context = 'official';
-    else if (nameLower.includes('private')) context = 'private';
+    const destMeta = MV_HOUSE_WARDROBE_DESTINATIONS.find((d) => d.category === category);
 
     try {
       let mediaUrl = null;
-      if (post.allMedia && post.allMedia.length > 0) {
+      if (savedMediaSelection?.url) {
+        mediaUrl = savedMediaSelection.url;
+      } else if (post.allMedia && post.allMedia.length > 0) {
         mediaUrl = post.allMedia[0].url;
       } else if (post.imageUrl) {
         mediaUrl = post.imageUrl;
@@ -2277,17 +2484,16 @@ document.getElementById('ctxApplyExpression').addEventListener('click', async ()
         mediaUrl = post.videoUrl;
       }
 
-      // Save to NEW flat path: wardrobes/{uid}/items/{postId}
-      // Matches saveToWardrobe() so MV House PATH 1 picks it up reliably.
       const itemData = {
-        postId:    post.id,
-        boardId:   boardId,
-        boardName: boardName,
-        mediaUrl:  mediaUrl,
-        caption:   (post.content || '').slice(0, 200),
-        category:  context,
-        note:      userNote,
-        savedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+        postId:          post.id,
+        boardId,         // source board (where the post lives)
+        boardName,
+        mediaUrl,
+        caption:         (post.content || '').slice(0, 200),
+        category,
+        wardrobeBoardId: destMeta?.targetBoardId || null,
+        note:            userNote,
+        savedAt:         firebase.firestore.FieldValue.serverTimestamp(),
       };
 
       await db.collection('wardrobes')
@@ -2296,9 +2502,7 @@ document.getElementById('ctxApplyExpression').addEventListener('click', async ()
         .doc(post.id)
         .set(itemData, { merge: true });
 
-      const contextName = context.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      showToast(`✓ Applied to ${contextName} Wardrobe`);
-
+      showToast(`✓ Applied to ${getWardrobeDestinationLabel(category)}`);
     } catch (err) {
       console.error('Failed to apply expression:', err);
       showToast('Failed to save expression');
@@ -2397,11 +2601,13 @@ document.getElementById('ctxSelect').addEventListener('click', () => {
 // ── Repost with Thoughts ──────────────────────────────────────────
 document.getElementById('ctxRepost').addEventListener('click', async () => {
   const post = ctxPost;
+  const selectedMedia = ctxMediaSelection;
+  const sourceCard = ctxCard;
   closeContextMenu();
-  if (post) await openRepostModal(post);
+  if (post) await openRepostModal(post, selectedMedia, sourceCard);
 });
 
-async function openRepostModal(post) {
+async function openRepostModal(post, selectedMedia = null, sourceCard = null) {
   const modal = document.getElementById('repostModal');
   const thoughtsInput = document.getElementById('repostThoughts');
   const originalAuthor = document.getElementById('repostOriginalAuthor');
@@ -2411,15 +2617,29 @@ async function openRepostModal(post) {
   const closeBtn = document.getElementById('repostModalClose');
 
   if (!modal) return;
+  if (thoughtsInput && typeof initBoardRichEditor === 'function') {
+    initBoardRichEditor(thoughtsInput, {
+      placeholder: 'Share your thoughts about this post...',
+    });
+  }
 
   // Clear previous state
-  thoughtsInput.value = '';
+  if (thoughtsInput._boardRichEditor) {
+    thoughtsInput._boardRichEditor.setMarkdown('');
+  } else {
+    thoughtsInput.value = '';
+  }
   originalAuthor.textContent = post.authorName || 'Member';
   originalContent.textContent = post.content || 'Post with media';
   
   // Show media preview if exists
   originalMedia.innerHTML = '';
-  if (post.imageUrl) {
+  if (selectedMedia?.type === 'image' && selectedMedia.url) {
+    originalMedia.innerHTML = `<img src="${selectedMedia.url}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
+  } else if (selectedMedia?.type === 'video' && selectedMedia.url) {
+    const previewUrl = selectedMedia.thumbUrl || selectedMedia.url;
+    originalMedia.innerHTML = `<img src="${previewUrl}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
+  } else if (post.imageUrl) {
     originalMedia.innerHTML = `<img src="${post.imageUrl}" alt="" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;">`;
   } else if (post.videoUrl) {
     originalMedia.innerHTML = `<video src="${post.videoUrl}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover;" muted></video>`;
@@ -2449,15 +2669,7 @@ async function openRepostModal(post) {
     </details>
   `;
 
-  // Handle "Repost to Current Board" button
-  modal.addEventListener('click', async (e) => {
-    if (e.target.id === 'repostToCurrentBoard') {
-      const userThoughts = thoughtsInput.value.trim();
-      await submitRepost(post, boardId, userThoughts);
-      modal.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-  });
+  let repostSubmitting = false;
 
   // Load other boards asynchronously when details is opened
   const detailsEl = boardList.querySelector('details');
@@ -2499,11 +2711,17 @@ async function openRepostModal(post) {
         // Handle clicks on other board buttons
         otherBoardsList.querySelectorAll('button[data-board-id]').forEach(btn => {
           btn.addEventListener('click', async () => {
+            if (repostSubmitting) return;
+            repostSubmitting = true;
             const targetBoardId = btn.getAttribute('data-board-id');
-            const userThoughts = thoughtsInput.value.trim();
-            await submitRepost(post, targetBoardId, userThoughts);
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
+            const userThoughts = getBoardFieldMarkdown(thoughtsInput);
+            try {
+              await submitRepost(post, targetBoardId, userThoughts, selectedMedia, sourceCard);
+              modal.style.display = 'none';
+              document.body.style.overflow = '';
+            } finally {
+              repostSubmitting = false;
+            }
           });
         });
 
@@ -2516,7 +2734,8 @@ async function openRepostModal(post) {
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  thoughtsInput.focus();
+  if (thoughtsInput?._boardRichEditor) thoughtsInput._boardRichEditor.focus();
+  else thoughtsInput?.focus();
 
   const close = () => {
     modal.style.display = 'none';
@@ -2524,12 +2743,105 @@ async function openRepostModal(post) {
   };
 
   closeBtn.onclick = close;
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) close();
-  });
+  modal.onclick = async (e) => {
+    if (e.target === modal) {
+      close();
+      return;
+    }
+    if (e.target.id === 'repostToCurrentBoard') {
+      if (repostSubmitting) return;
+      repostSubmitting = true;
+      try {
+        const userThoughts = getBoardFieldMarkdown(thoughtsInput);
+        await submitRepost(post, boardId, userThoughts, selectedMedia, sourceCard);
+        close();
+      } finally {
+        repostSubmitting = false;
+      }
+    }
+  };
 }
 
-async function submitRepost(originalPost, targetBoardId, userThoughts) {
+function isFeedNearTop() {
+  return window.scrollY < window.innerHeight * 2;
+}
+
+function scrollToPostCard(postId) {
+  const card = postsContainer?.querySelector(`[data-post-id="${postId}"]`);
+  if (!card) return false;
+  card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  card.classList.add('pin-highlight');
+  card.addEventListener('animationend', () => card.classList.remove('pin-highlight'), { once: true });
+  return true;
+}
+
+function ensurePostInFeedAndScroll(postId, localPost) {
+  if (!postsContainer || !localPost) return;
+  let card = postsContainer.querySelector(`[data-post-id="${postId}"]`);
+  if (!card) {
+    card = buildPostCard(localPost);
+    postsContainer.insertBefore(card, postsContainer.firstChild);
+    if (noPostsMessage) noPostsMessage.style.display = 'none';
+  }
+  requestAnimationFrame(() => scrollToPostCard(postId));
+}
+
+function markSourcePostReposted(sourceCard) {
+  if (!sourceCard) return;
+  if (sourceCard.querySelector('.post-reposted-badge')) return;
+  const meta = sourceCard.querySelector('.post-meta');
+  if (!meta) return;
+  const badge = document.createElement('span');
+  badge.className = 'post-reposted-badge';
+  badge.textContent = '🔄 Reposted';
+  meta.appendChild(badge);
+}
+
+const _authorIdByNameCache = new Map();
+
+/** Resolve authorId for legacy/imported posts that only have authorName. */
+async function resolvePostAuthorId(postData) {
+  const direct =
+    postData?.authorId ||
+    postData?.userId ||
+    postData?.author?.id ||
+    postData?.author?.uid;
+  if (direct) return direct;
+
+  const name = (postData?.authorName || postData?.userName || postData?.author?.name || '').trim();
+  if (!name || !db) return null;
+
+  const cacheKey = name.toLowerCase();
+  if (_authorIdByNameCache.has(cacheKey)) return _authorIdByNameCache.get(cacheKey);
+
+  try {
+    const exact = await db.collection('users').where('name', '==', name).limit(1).get();
+    if (!exact.empty) {
+      const id = exact.docs[0].id;
+      _authorIdByNameCache.set(cacheKey, id);
+      return id;
+    }
+
+    const norm = name.toLowerCase().replace(/\s+/g, '');
+    const scan = await db.collection('users').limit(250).get();
+    for (const doc of scan.docs) {
+      const u = doc.data();
+      const uName = (u.name || '').toLowerCase().replace(/\s+/g, '');
+      const uEmail = (u.email || '').split('@')[0].toLowerCase();
+      if (uName === norm || uEmail === norm || (u.name || '').toLowerCase() === cacheKey) {
+        _authorIdByNameCache.set(cacheKey, doc.id);
+        return doc.id;
+      }
+    }
+  } catch (err) {
+    console.warn('[Repost] Author lookup failed for', name, err);
+  }
+
+  _authorIdByNameCache.set(cacheKey, null);
+  return null;
+}
+
+async function submitRepost(originalPost, targetBoardId, userThoughts, selectedMedia = null, sourceCard = null) {
   try {
     showLoading(true);
     
@@ -2539,72 +2851,93 @@ async function submitRepost(originalPost, targetBoardId, userThoughts) {
     // ALWAYS fetch the complete post data from Firestore to ensure all fields are present
     let fullPostData = originalPost;
     try {
-      console.log('[Repost] Fetching full post data for:', originalPost.id);
       const postDoc = await db.collection('posts').doc(originalPost.id).get();
       if (postDoc.exists) {
         fullPostData = { id: postDoc.id, ...postDoc.data() };
-        console.log('[Repost] Full post data:', fullPostData);
-        console.log('[Repost] Available fields:', Object.keys(fullPostData));
       } else {
         console.warn('[Repost] Post document does not exist:', originalPost.id);
       }
     } catch (fetchErr) {
       console.error('[Repost] Error fetching full post data:', fetchErr);
     }
-    
-    // Ensure we have an authorId - try multiple possible field names
-    const postAuthorId = fullPostData.authorId || 
-                         fullPostData.userId || 
-                         fullPostData.author?.id || 
-                         fullPostData.author?.uid ||
-                         originalPost.authorId ||
-                         originalPost.userId;
-    
-    // If still no author ID, log error and use current user as fallback
-    if (!postAuthorId) {
-      console.error('[Repost] WARNING: No author ID found in post data. Full data:', fullPostData);
-      console.error('[Repost] Using current user ID as fallback');
-    }
-    
-    const safeAuthorId = postAuthorId || currentUserId;
-    const safeAuthorName = fullPostData.authorName || 
-                          fullPostData.userName || 
+
+    const safeAuthorName = fullPostData.authorName ||
+                          fullPostData.userName ||
                           fullPostData.author?.name ||
                           fullPostData.author?.displayName ||
                           'Member';
+
+    let originalAuthorId =
+      fullPostData.authorId ||
+      fullPostData.userId ||
+      fullPostData.author?.id ||
+      fullPostData.author?.uid ||
+      originalPost.authorId ||
+      originalPost.userId ||
+      null;
+
+    if (!originalAuthorId) {
+      originalAuthorId = await resolvePostAuthorId(fullPostData);
+    }
+
+    const isImported = !!(fullPostData.sourceMsgId || fullPostData.importedAt);
+    if (!originalAuthorId && isImported) {
+      console.info('[Repost] Imported post — attribution by name only:', safeAuthorName);
+    } else if (!originalAuthorId) {
+      console.warn('[Repost] Original post missing authorId:', fullPostData.id, safeAuthorName);
+    }
     
-    console.log('[Repost] Using authorId:', safeAuthorId, 'authorName:', safeAuthorName);
-    
+    // Use selected media tile from the grid context menu when available.
+    const mediaPayload = selectedMedia && selectedMedia.url
+      ? {
+          imageUrl: selectedMedia.type === 'image' ? selectedMedia.url : null,
+          videoUrl: selectedMedia.type === 'video' ? selectedMedia.url : null,
+          thumbUrl: selectedMedia.type === 'video' ? (selectedMedia.thumbUrl || null) : null,
+          allMedia: [{ type: selectedMedia.type, url: selectedMedia.url, ...(selectedMedia.thumbUrl ? { thumbUrl: selectedMedia.thumbUrl } : {}) }],
+        }
+      : {
+          imageUrl: fullPostData.imageUrl || null,
+          videoUrl: fullPostData.videoUrl || null,
+          thumbUrl: fullPostData.thumbUrl || null,
+          allMedia: fullPostData.allMedia || null,
+        };
+
     // Create repost data with guaranteed non-undefined values
     const repostData = {
       content: userThoughts || '', // User's thoughts go in the main content
       boardId: targetBoardId,
-      authorId: currentUserId,
+      authorId: currentUserId || user.uid,
       authorName: currentUserData.name || user.displayName || 'Member',
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       
-      // Original post data embedded
+      // Original post data embedded (authorId omitted when unknown — never attribute to reposter)
       repostedFrom: {
         postId: fullPostData.id,
-        authorId: safeAuthorId, // Guaranteed to have a value
         authorName: safeAuthorName,
         content: fullPostData.content || '',
         timestamp: fullPostData.timestamp || firebase.firestore.FieldValue.serverTimestamp(),
+        ...(originalAuthorId ? { authorId: originalAuthorId } : {}),
+        ...(isImported ? { imported: true } : {}),
       },
       
-      // Preserve media references from original post
-      imageUrl: fullPostData.imageUrl || null,
-      videoUrl: fullPostData.videoUrl || null,
-      thumbUrl: fullPostData.thumbUrl || null,
-      allMedia: fullPostData.allMedia || null,
+      // Preserve media references from original post (or selected grid media)
+      imageUrl: mediaPayload.imageUrl,
+      videoUrl: mediaPayload.videoUrl,
+      thumbUrl: mediaPayload.thumbUrl,
+      allMedia: mediaPayload.allMedia,
       
       reactions: {},
       commentCount: 0,
     };
     
-    console.log('[Repost] Submitting repost data:', repostData);
+    const newPostRef = await db.collection('posts').add(repostData);
+    const newPostId = newPostRef.id;
+    const localPost = {
+      id: newPostId,
+      ...repostData,
+      timestamp: firebase.firestore.Timestamp.now(),
+    };
 
-    await db.collection('posts').add(repostData);
     await db.collection('boards').doc(targetBoardId).update({
       lastActivityAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastPostAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -2614,12 +2947,27 @@ async function submitRepost(originalPost, targetBoardId, userThoughts) {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }).catch(() => {});
     refreshBoardRankScoreNonBlocking(targetBoardId);
-    
-    showToast('Reposted successfully!');
-    
-    // If reposting to current board, refresh the feed
+
     if (targetBoardId === boardId) {
-      await loadPosts(true);
+      if (isFeedNearTop()) {
+        ensurePostInFeedAndScroll(newPostId, localPost);
+        showToast('Reposted!');
+      } else {
+        markSourcePostReposted(sourceCard);
+        showActionToast('Reposted!', 'View repost', () => {
+          ensurePostInFeedAndScroll(newPostId, localPost);
+        });
+      }
+    } else {
+      markSourcePostReposted(sourceCard);
+      let targetBoardTitle = 'board';
+      try {
+        const bDoc = await db.collection('boards').doc(targetBoardId).get();
+        if (bDoc.exists) targetBoardTitle = bDoc.data().title || targetBoardTitle;
+      } catch (_) {}
+      showActionToast(`Reposted to ${targetBoardTitle}`, 'View repost', () => {
+        window.location.href = `/board.html?boardId=${encodeURIComponent(targetBoardId)}&post=${encodeURIComponent(newPostId)}`;
+      });
     }
     
   } catch (err) {
@@ -2694,12 +3042,13 @@ async function openShareDmModal(post) {
   let peers = [];
   try {
     peers = await fetchDmPeers();
+    const blockedIds = await loadCe2BlockedPeerIds();
+    peers = peers.filter(u => !blockedIds.has(u.id));
   } catch (err) {
     list.innerHTML = `<div style="padding:16px;color:#f55;">${err.message}</div>`;
     return;
   }
 
-  const postUrl = `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(post.id)}`;
   const preview = post.content ? post.content.slice(0, 80) : '📎 Shared post';
 
   function renderPeers(filtered) {
@@ -2722,9 +3071,9 @@ async function openShareDmModal(post) {
         row.style.opacity = '0.5';
         row.style.pointerEvents = 'none';
         try {
-          await sendPostAsDm(u, postUrl, preview);
+          await sendPostAsDm(u, boardId, post.id, preview);
           close();
-          showToast('Post shared to ' + u.name);
+          showToast('Post shared via Messages V2 to ' + u.name);
         } catch (err) {
           showToast('Could not share: ' + err.message);
           row.style.opacity = '';
@@ -2762,43 +3111,130 @@ async function fetchDmPeers() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-async function sendPostAsDm(otherUser, postUrl, preview) {
-  // Find existing conversation or create one
-  const snap = await db.collection('conversations')
-    .where('participantIds', 'array-contains', currentUserId)
-    .get();
-  const existing = snap.docs.find(doc => doc.data().participantIds.includes(otherUser.id));
+function ce2DirectConvId(a, b) {
+  const s = [a, b].sort();
+  return 'd_' + s[0] + '_' + s[1];
+}
 
-  const now   = firebase.firestore.Timestamp.fromDate(new Date());
-  const myName = currentUserData.name || auth.currentUser?.displayName || 'Member';
-  const msgText = `📎 Shared post: ${preview}\n${postUrl}`;
+function boardCe2TierRank(tier) {
+  const g = typeof window !== 'undefined' ? window.Ce2Governance : null;
+  if (g && g.tierRank) return g.tierRank(tier);
+  const map = { foundation: 0, free: 0, premium: 1, elite: 2, ambassador: 3, senior_ambassador: 4, rd: 5 };
+  const t = (tier && String(tier).toLowerCase()) || 'foundation';
+  return map[t] !== undefined ? map[t] : 0;
+}
 
-  let convId;
-  if (existing) {
-    convId = existing.id;
-  } else {
-    const ref = await db.collection('conversations').add({
-      participantIds: [currentUserId, otherUser.id],
-      participantNames:  { [currentUserId]: myName, [otherUser.id]: otherUser.name },
-      participantPhotos: { [currentUserId]: currentUserData.photoUrl || null, [otherUser.id]: otherUser.photoUrl },
-      lastMessage:   '',
-      lastMessageAt: now,
-      lastRead:      { [currentUserId]: now, [otherUser.id]: null },
-      createdAt:     now,
-    });
-    convId = ref.id;
+function boardCe2CanCommunicate(sender, receiver) {
+  if (!sender || !receiver) return false;
+  if (sender.isAdmin || receiver.isAdmin) return true;
+  const sr = boardCe2TierRank(sender.tier);
+  const rr = boardCe2TierRank(receiver.tier);
+  if (sr >= rr) return true;
+  if (receiver.mentor) return true;
+  return false;
+}
+
+async function loadCe2BlockedPeerIds() {
+  if (!currentUserId) return new Set();
+  const snap = await db.collection('users').doc(currentUserId).collection('ce2_blocks').limit(100).get();
+  return new Set(snap.docs.map(d => d.id));
+}
+
+async function ensureCe2DirectConv(otherUid) {
+  const convId = ce2DirectConvId(currentUserId, otherUid);
+  const ref = db.collection('ce2_conversations').doc(convId);
+  const snap = await ref.get();
+  if (snap.exists) return convId;
+
+  const sorted = [currentUserId, otherUid].sort();
+  const now = firebase.firestore.Timestamp.now();
+  const otherDoc = await db.collection('users').doc(otherUid).get();
+  const otherData = otherDoc.exists ? otherDoc.data() : {};
+  const payload = {
+    participantIds: sorted,
+    type: 'direct',
+    createdAt: now,
+    lastMessageAt: now,
+    lastPreview: '',
+  };
+  const g = typeof window !== 'undefined' ? window.Ce2Governance : null;
+  if (g && g.isEnabled && g.isEnabled() && g.calculateConversationSecurityLevel) {
+    const security = g.calculateConversationSecurityLevel([
+      { tier: currentUserData.tier || 'foundation' },
+      { tier: otherData.tier || 'foundation' },
+    ]);
+    if (security) {
+      payload.securityTier = security.tier;
+      payload.securityLevel = security.level;
+    }
+  }
+  await ref.set(payload);
+  return convId;
+}
+
+/** Share board post via Messages V2 (ce2_conversations / board_share). */
+async function sendPostAsDm(otherUser, boardId, postId, preview) {
+  if (!window.Ce2Share || !Ce2Share.mintBoardShareToken) {
+    throw new Error('Messages V2 share module failed to load. Refresh and try again.');
+  }
+  if (!boardId || !postId) {
+    throw new Error('Missing board post reference.');
   }
 
-  await db.collection('conversations').doc(convId).collection('messages').add({
-    senderId:  currentUserId,
-    text:      msgText,
-    timestamp: now,
-  });
-  await db.collection('conversations').doc(convId).update({
-    lastMessage:   msgText.slice(0, 100),
-    lastMessageAt: now,
-    [`lastRead.${currentUserId}`]: now,
-  });
+  const otherDoc = await db.collection('users').doc(otherUser.id).get();
+  const otherData = otherDoc.exists ? otherDoc.data() : {};
+  const sender = {
+    tier: currentUserData.tier || 'foundation',
+    isAdmin: currentIsAdmin,
+    mentor: !!currentUserData.mentor,
+  };
+  const receiver = {
+    tier: otherData.tier || 'foundation',
+    isAdmin: !!(otherData.roles && otherData.roles.includes('admin')),
+    mentor: !!otherData.mentor,
+  };
+  if (!boardCe2CanCommunicate(sender, receiver)) {
+    throw new Error('Your formation tier cannot message this member via Messages V2.');
+  }
+
+  const blocked = await loadCe2BlockedPeerIds();
+  if (blocked.has(otherUser.id)) {
+    throw new Error('You blocked this member in Messages V2. Unblock them there to share.');
+  }
+
+  const convId = await ensureCe2DirectConv(otherUser.id);
+  const now = firebase.firestore.Timestamp.now();
+  const title = preview ? String(preview).slice(0, 120) : 'Board post';
+  const token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+  const boardShare = {
+    boardId,
+    postId,
+    token,
+    title,
+    excerpt: preview ? String(preview).slice(0, 200) : '',
+  };
+  const content = preview ? '📎 ' + String(preview).slice(0, 80) : 'Shared a board post';
+  const patch = {
+    conversationId: convId,
+    senderId: currentUserId,
+    receiverId: otherUser.id,
+    tier: currentIsAdmin ? 'elite' : (currentUserData.tier || 'foundation'),
+    classification: 'public',
+    shareable: true,
+    content,
+    messageType: 'board_share',
+    boardShare,
+    createdAt: now,
+  };
+
+  await db.collection('ce2_conversations').doc(convId).collection('ce2_messages').add(patch);
+  await db.collection('ce2_conversations').doc(convId).set(
+    {
+      lastMessageAt: now,
+      lastPreview: content.slice(0, 140),
+    },
+    { merge: true }
+  );
 }
 
 document.getElementById('ctxDelete').addEventListener('click', async () => {
@@ -3062,10 +3498,48 @@ function openBulkForwardModal()   {
 // ── Toast ─────────────────────────────────────────────────────────
 function showToast(msg) {
   const toast = document.getElementById('appToast');
+  if (!toast) return;
+  clearTimeout(toast._timer);
+  toast.classList.remove('app-toast--actionable');
+  toast.innerHTML = '';
   toast.textContent = msg;
   toast.classList.add('show');
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.remove('app-toast--actionable');
+  }, 2600);
+}
+
+function showActionToast(message, actionLabel, onAction, durationMs = 5200) {
+  const toast = document.getElementById('appToast');
+  if (!toast) return;
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => toast.classList.remove('show'), 2600);
+  toast.classList.add('app-toast--actionable');
+  toast.innerHTML = '';
+  const msgEl = document.createElement('span');
+  msgEl.className = 'app-toast-msg';
+  msgEl.textContent = message;
+  toast.appendChild(msgEl);
+  if (actionLabel && typeof onAction === 'function') {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'app-toast-action';
+    btn.textContent = actionLabel;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearTimeout(toast._timer);
+      toast.classList.remove('show');
+      toast.classList.remove('app-toast--actionable');
+      onAction();
+    });
+    toast.appendChild(btn);
+  }
+  toast.classList.add('show');
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.remove('app-toast--actionable');
+    toast.innerHTML = '';
+  }, durationMs);
 }
 
 // ═══════════════════════════════════════════════════════════════

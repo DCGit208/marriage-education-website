@@ -209,7 +209,12 @@
           : 0,
       roles: Array.isArray(d.roles) ? d.roles : [],
       mentor: !!d.mentor,
-      isAdmin: String(d.role || '').toLowerCase() === 'admin',
+      isAdmin:
+        String(d.role || '').toLowerCase() === 'admin' ||
+        (Array.isArray(d.roles) &&
+          d.roles.some(function (r) {
+            return String(r || '').toLowerCase() === 'admin';
+          })),
       messagingEnabled: d.messagingEnabled !== false,
       raw: d,
     };
@@ -485,11 +490,20 @@
     return ac.type === 'group' ? 'Formation group' : 'Direct message';
   }
 
+  /** Formation tier for DM/discovery policy (tier string only; tierLevel is not messaging rank). */
   function tierRank(u) {
     if (!u) return 0;
     if (u.isAdmin) return 6;
-    if (typeof u.tierLevel === 'number') return u.tierLevel;
     var g = gov();
+    if (g && g.tierRank) return g.tierRank(u.tier);
+    return 0;
+  }
+
+  /** Discovery filters use profile tier only — admin role does not widen peer/lower lists. */
+  function formationTierRank(u) {
+    if (!u) return 0;
+    var g = gov();
+    if (g && g.formationRankFromParticipant) return g.formationRankFromParticipant(u);
     if (g && g.tierRank) return g.tierRank(u.tier);
     return 0;
   }
@@ -503,9 +517,8 @@
   /** Tiers a user may discover below their own (higher → lower messaging policy). */
   function lowerTierQueriesForUser(u) {
     var g = gov();
-    var rank = tierRank(u);
+    var rank = formationTierRank(u);
     if (g && g.tiersBelowRank) return g.tiersBelowRank(rank);
-    if (rank >= 6) return ['foundation', 'free', 'premium', 'elite', 'ambassador', 'senior_ambassador', 'rd'];
     if (rank >= 2) return ['foundation', 'free', 'premium'];
     if (rank >= 1) return ['foundation', 'free'];
     return [];
@@ -513,9 +526,6 @@
 
   function peerTierQueriesForUser(u) {
     if (!u) return ['foundation', 'free'];
-    if (u.isAdmin) {
-      return ['foundation', 'free', 'premium', 'elite', 'ambassador', 'senior_ambassador', 'rd'];
-    }
     var t = normalizeTier(u.tier);
     if (t === 'foundation') return ['foundation', 'free'];
     return [t];
@@ -534,7 +544,7 @@
       }
       return 'No members found below your tier. They must have tier foundation or premium in their profile.';
     }
-    return 'No members at your tier (' + (u.isAdmin ? 'admin' : u.tier) + ') besides you.';
+    return 'No other ' + normalizeTier(u.tier) + ' members found.';
   }
 
   function updateDiscoveryTabs(u) {
@@ -1620,9 +1630,8 @@
     }
     if (context === 'direct' || context === 'send') {
       return (
-        'Cannot open or send in this direct thread. Formation policy allows messaging ' +
-        'same tier, lower tiers, or mentors — not members above your tier unless they are marked Mentor in Admin. ' +
-        'Admins: confirm your account is not messaging-suspended in Admin → Messages V2.'
+        'Cannot send in this direct thread. If messaging was suspended for your account, ask an administrator to restore it in Admin → Messages V2. ' +
+        'Otherwise refresh the page and try again — if it persists, contact support with your account email.'
       );
     }
     return null;
@@ -1980,7 +1989,8 @@
       .orderBy('lastMessageAt', 'desc')
       .limit(30)
       .get()
-      .catch(function () {
+      .catch(function (err) {
+        console.warn('loadThreads (ordered)', err);
         return null;
       });
 
@@ -1990,13 +2000,18 @@
         .where('participantIds', 'array-contains', uid)
         .limit(30)
         .get()
-        .catch(function () {
+        .catch(function (err) {
+          console.warn('loadThreads', err);
           return null;
         });
     }
 
     if (!snap) {
       CommunicationState.threads = [];
+      if (!CommunicationState.error) {
+        CommunicationState.error =
+          'Could not load conversations. Check connection or refresh the page.';
+      }
       return;
     }
 
@@ -2142,10 +2157,10 @@
     if (other) await openDirectThread(conv, other, 'Conversation');
   }
 
-  function ensureDiscoveryLoaded() {
+  function ensureDiscoveryLoaded(forceReload) {
     var me = CommunicationState.me;
     if (!me) return Promise.resolve();
-    if (CommunicationState.discoveryLoaded) return Promise.resolve();
+    if (CommunicationState.discoveryLoaded && !forceReload) return Promise.resolve();
     return loadDiscovery(me)
       .then(function () {
         CommunicationState.discoveryLoaded = true;
@@ -2153,6 +2168,14 @@
       .catch(function () {
         CommunicationState.discoveryLoaded = true;
       });
+  }
+
+  function reloadDiscoveryForActiveTab() {
+    var me = CommunicationState.me;
+    if (!me) return Promise.resolve();
+    return loadDiscovery(me).then(function () {
+      CommunicationState.discoveryLoaded = true;
+    });
   }
 
   async function loadDiscovery(u) {
@@ -2188,20 +2211,22 @@
         var nu = normalizeCe2User(doc.id, doc.data());
         if (!canCommunicate(u, nu)) return;
         if (isUserBlockedUid(doc.id)) return;
-        if (tierRank(nu) >= tierRank(u) && !nu.mentor) return;
+        if (formationTierRank(nu) >= formationTierRank(u) && !nu.mentor) return;
         CommunicationState.visibleUsers.push(nu);
       });
       CommunicationState.visibleUsers.sort(function (a, b) {
-        return tierRank(a) - tierRank(b) || (a.name || '').localeCompare(b.name || '');
+        return formationTierRank(a) - formationTierRank(b) || (a.name || '').localeCompare(b.name || '');
       });
       return;
     }
 
     var tierQueries = peerTierQueriesForUser(u);
     var q2 = await db.collection('users').where('tier', 'in', tierQueries).limit(40).get();
+    var myPeerTier = normalizeTier(u.tier);
     q2.forEach(function (doc) {
       if (doc.id === u.uid) return;
       var nu = normalizeCe2User(doc.id, doc.data());
+      if (normalizeTier(nu.tier) !== myPeerTier) return;
       if (!canCommunicate(u, nu)) return;
       if (isUserBlockedUid(doc.id)) return;
       CommunicationState.visibleUsers.push(nu);
@@ -3595,7 +3620,7 @@
         CommunicationState.discoveryMode = btn.getAttribute('data-discovery') || 'mentors';
         render();
         if (CommunicationState.me) {
-          ensureDiscoveryLoaded()
+          reloadDiscoveryForActiveTab()
             .then(function () {
               render();
             })

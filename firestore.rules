@@ -40,6 +40,31 @@ service cloud.firestore {
       allow update: if true; // Allow ambassadors to update their own progress (using ambassadorCode)
       allow delete: if request.auth != null && request.auth.token.admin == true;
     }
+
+    // DOS metrics (Phase 0) — dashboard read; client + Cloud Functions write
+    match /dos_metrics/{ambassadorCode} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // DOS daily logs (Phase 2+)
+    match /dos_daily_logs/{logId} {
+      allow read, create, update: if true;
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // DOS subscriber pipeline (Phase 3)
+    match /dos_pipeline/{recordId} {
+      allow read, create, update: if true;
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    match /sbd_sales/{saleId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow create: if true;
+    }
     
     // School Progress - Ambassadors can read/write their own progress
     match /school_progress/{progressId} {
@@ -93,10 +118,16 @@ service cloud.firestore {
       allow write: if true; // TEMPORARY: Allow writes for marking as paid
     }
 
-    // SBD Sales — written by Cloud Function (admin SDK), read by admin
+    // SBD Sales — written by Cloud Function (admin SDK), read by admin dashboard
     match /sbd_sales/{saleId} {
-      allow read: if request.auth != null;
+      allow read: if true; // Temporary: allow dashboard access until auth is enforced
       allow write: if false; // Cloud Function only
+    }
+
+    // Unified Payments Ledger - Read-only preview for Payment tab, admin dashboard
+    match /payments/{paymentId} {
+      allow read: if true; // Temporary: read-only dashboard preview
+      allow write: if false; // No direct client writes
     }
     
     // Notifications - Allow public read for ambassador dashboard

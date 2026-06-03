@@ -1,0 +1,571 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  color-scheme: dark;
+  --bg: #050505;
+  --text: #f5efe3;
+  --muted: #b8ab92;
+  --gold: #c7a45b;
+  --line: #2a2418;
+  --issue-accent: var(--gold);
+}
+
+* { box-sizing: border-box; }
+
+body.life-reader-body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.life-read-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--issue-accent));
+  z-index: 100;
+  transition: width 0.12s ease-out;
+}
+
+.life-reader-top {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  background: linear-gradient(180deg, rgba(5,5,5,0.95), rgba(5,5,5,0.6));
+  backdrop-filter: blur(8px);
+}
+
+.life-reader-top a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.life-reader-top a:hover { color: var(--text); }
+
+#readerRoot,
+#issueRoot {
+  min-height: 60vh;
+}
+
+.life-loading,
+.life-error {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.life-hero {
+  position: relative;
+  min-height: 72vh;
+  background: #111 center/cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+}
+
+.life-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.85) 78%);
+}
+
+.life-hero-inner {
+  position: relative;
+  padding: 32px 20px max(40px, env(safe-area-inset-bottom));
+  max-width: 720px;
+}
+
+.life-hero-inner h1 {
+  margin: 0 0 12px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(36px, 9vw, 56px);
+  line-height: 1.05;
+  font-weight: 600;
+}
+
+.life-hero-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.life-article-body {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+.life-dek {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(22px, 5vw, 28px);
+  line-height: 1.35;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+
+.life-body-p {
+  font-size: 18px;
+  line-height: 1.75;
+  margin: 0 0 1.4em;
+  color: var(--text);
+}
+
+.life-body-heading {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(26px, 6vw, 34px);
+  margin: 2em 0 0.6em;
+  font-weight: 600;
+}
+
+.life-pull-quote {
+  margin: 36px 0;
+  padding: 24px 0 24px 20px;
+  border-left: 2px solid var(--gold);
+}
+
+.life-pull-quote p {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(24px, 5.5vw, 32px);
+  line-height: 1.35;
+  font-style: italic;
+}
+
+.life-pull-quote cite {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  font-style: normal;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.life-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.btn-secondary {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  background: rgba(199, 164, 91, 0.1);
+}
+
+button.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.life-paywall {
+  max-width: 520px;
+  margin: 80px auto;
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.life-paywall h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 36px;
+}
+
+.life-issue-cover {
+  padding: max(48px, env(safe-area-inset-top)) 20px 32px;
+  text-align: center;
+  background: radial-gradient(ellipse at top, rgba(199,164,91,0.15), transparent 60%);
+}
+
+.life-issue-cover h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(34px, 8vw, 52px);
+  margin: 0 0 8px;
+}
+
+.life-issue-theme {
+  color: var(--issue-accent);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.life-issue-letter,
+.life-issue-section {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 20px 32px;
+}
+
+.life-issue-letter h2,
+.life-issue-section h2 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.life-issue-letter p {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.life-issue-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.life-issue-card {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+
+.life-issue-card:hover {
+  border-color: var(--gold);
+}
+
+.life-issue-card-kicker {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.life-issue-card-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+}
+
+.life-catalog-heading {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+  margin: 20px 0 10px;
+  color: var(--muted);
+}
+
+.life-catalog-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.life-catalog-card {
+  display: block;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.life-catalog-card:hover { border-color: var(--gold); }
+
+.life-catalog-kicker {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.life-catalog-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.life-reflections {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.life-reflections-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.life-reflections-note {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.life-reflection-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.life-reflection-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.life-reflection-form select,
+.life-reflection-form textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.life-reactions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.life-reactions-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  width: 100%;
+}
+
+.life-reaction-chip {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.life-reaction-chip.is-selected {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.life-reflection-list {
+  display: grid;
+  gap: 12px;
+}
+
+.life-reflection-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.life-reflection-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.life-reflection-type {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.life-reflection-mod {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.life-reflection-card p {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.life-ref-approve {
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.life-messenger-bridge {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+
+.life-messenger-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.life-ent-list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.life-audio {
+  margin: 32px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.life-audio-player {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.life-audio-progress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.life-audio-bar {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+}
+
+.life-audio-transcript {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.life-tts-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.life-tts-voice-label {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.life-tts-voice-select {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font: inherit;
+}
+
+.life-tts-status {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.life-tts-role {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--gold);
+  min-height: 1.2em;
+}
+
+.life-tts-pattern {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.life-tts-pattern-list {
+  margin: 8px 0 0 18px;
+  line-height: 1.55;
+}
+
+.life-tts-cue-list {
+  margin: 8px 0 0 18px;
+  line-height: 1.5;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.life-tts-cue-role {
+  display: inline-block;
+  min-width: 72px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.life-quotes {
+  margin: 36px 0;
+}
+
+.life-quote-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.life-quote-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.life-quote-card blockquote {
+  margin: 0 0 12px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.life-discovery-rail {
+  margin-bottom: 20px;
+}

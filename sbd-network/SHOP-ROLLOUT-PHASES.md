@@ -32,6 +32,8 @@ The shop UI only shows products with `phase <= activePhase`. Checkout is blocked
 
 Source of truth for product definitions: `scripts/generate-shop-catalog.js`.
 
+Legacy slug aliases (e.g. `sbd-for-dummies` → `sbd-dummies`): edit **only** `data/product-aliases.json`, then run `node scripts/generate-shop-catalog.js` (syncs browser + public JSON) and redeploy functions. Validate with `node scripts/audit-product-ids.js`.
+
 ## How to advance a phase
 
 ### 1. Add Stripe + unlock rules (required)

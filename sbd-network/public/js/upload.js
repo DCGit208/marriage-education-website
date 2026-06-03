@@ -7,20 +7,7 @@
 // Update this after running: cd workers/upload-signer && npx wrangler deploy
 const UPLOAD_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
 
-/**
- * Upload a file to R2 via the Cloudflare Worker proxy.
- * The Worker verifies the Firebase ID token and writes directly to R2.
- * No S3 credentials or presigned URLs involved.
- */
-async function uploadToR2(file, folder) {
-  const user = getCurrentUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const idToken  = await user.getIdToken();
-  const uid      = Math.random().toString(36).slice(2, 8);
-  const filename = `${Date.now()}_${uid}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-
-  // iOS camera roll sometimes reports empty MIME type — detect from extension as fallback
+function detectUploadContentType(file) {
   let contentType = file.type;
   if (!contentType) {
     const ext = file.name.split('.').pop().toLowerCase();
@@ -29,17 +16,96 @@ async function uploadToR2(file, folder) {
       webp: 'image/webp', heic: 'image/heic',
       mp4: 'video/mp4', webm: 'video/webm',
       mov: 'video/quicktime', m4v: 'video/x-m4v',
+      m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav',
     };
     contentType = extMap[ext] || 'application/octet-stream';
   }
+  return contentType;
+}
+
+function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
+  options = options || {};
+  return new Promise(function (resolve, reject) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${UPLOAD_WORKER_URL}/upload`);
+    xhr.setRequestHeader('Authorization', `Bearer ${idToken}`);
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.setRequestHeader('X-Folder', folder);
+    xhr.setRequestHeader('X-Filename', filename);
+
+    if (options.onProgress) {
+      xhr.upload.addEventListener('progress', function (e) {
+        if (e.lengthComputable) options.onProgress(e.loaded / e.total);
+      });
+    }
+
+    xhr.addEventListener('load', function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.publicUrl);
+        } catch (err) {
+          reject(new Error('Invalid upload response'));
+        }
+        return;
+      }
+      let msg = `Upload failed (${xhr.status})`;
+      try {
+        const err = JSON.parse(xhr.responseText);
+        if (err.error) msg = err.error;
+      } catch (_) {}
+      reject(new Error(msg));
+    });
+
+    xhr.addEventListener('error', function () {
+      reject(new Error('Upload failed — network error'));
+    });
+
+    xhr.addEventListener('abort', function () {
+      reject(new Error('Upload cancelled'));
+    });
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        xhr.abort();
+        return;
+      }
+      options.signal.addEventListener('abort', function () {
+        xhr.abort();
+      });
+    }
+
+    xhr.send(file);
+  });
+}
+
+/**
+ * Upload a file to R2 via the Cloudflare Worker proxy.
+ * @param {File} file
+ * @param {string} folder
+ * @param {{ onProgress?: function(number), signal?: AbortSignal }} [options]
+ */
+async function uploadToR2(file, folder, options) {
+  const user = getCurrentUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const idToken = await user.getIdToken();
+  const uid = Math.random().toString(36).slice(2, 8);
+  const filename = `${Date.now()}_${uid}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const contentType = detectUploadContentType(file);
+  options = options || {};
+
+  if (options.onProgress || options.signal) {
+    return uploadToR2XHR(file, folder, idToken, filename, contentType, options);
+  }
 
   const res = await fetch(`${UPLOAD_WORKER_URL}/upload`, {
-    method:  'POST',
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${idToken}`,
-      'Content-Type':  contentType,
-      'X-Folder':      folder,
-      'X-Filename':    filename,
+      'Content-Type': contentType,
+      'X-Folder': folder,
+      'X-Filename': filename,
     },
     body: file,
   });

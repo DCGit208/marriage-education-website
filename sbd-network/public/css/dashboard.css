@@ -502,8 +502,8 @@
 ======================================== */
 
 #menuBtn {
-  left: 16px;
-  top: 16px;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  top: calc(14px + env(safe-area-inset-top, 0px));
 }
 
 #dashboardBellBtn {

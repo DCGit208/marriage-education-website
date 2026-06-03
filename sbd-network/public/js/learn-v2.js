@@ -18,7 +18,7 @@ const TIER_HIGHLIGHTS = {
   free:       ['Teleios Week 1 — You Were Created Teleios', 'Free resource library', 'Community read access'],
   foundation: ['Teleios Blueprint (6 weeks)', 'Sex By Design For Dummies (13 weeks)', 'Foundation boards + resources'],
   premium:    ['Full School 1 — 13 courses', 'Full School 2 — 15 courses', 'School certificates'],
-  elite:      ['All 4 schools — 44 courses', 'MV House expression system', 'Elite boards · Mastery cert'],
+  elite:      ['Schools 3–4 training', 'Advanced boards + MV House unlock through formation', 'Mastery cert'],
 };
 
 // ── Boot ─────────────────────────────────────────────────────────
@@ -231,7 +231,7 @@ const TIER_HUB = {
     {
       icon: '👑',
       title: 'Elite — All 4 Schools + MV House',
-      sub: 'All 44 courses, advanced boards, MV House wardrobe system',
+      sub: 'Elite billing unlocks Schools 3–4; advanced boards + MV House unlock when formation milestones are met',
       href: '/payment?tier=elite',
       locked: true,
       lockLabel: '$50/mo',

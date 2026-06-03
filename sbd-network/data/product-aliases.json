@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "description": "Single source of truth: legacy slug -> canonical shop product id. Edit only this file.",
+  "aliases": {
+    "sbd-for-dummies": "sbd-dummies"
+  }
+}

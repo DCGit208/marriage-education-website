@@ -2483,8 +2483,14 @@
                     const recruiterCode = data.rd_code || data.recruiter_code || 'N/A';
                     const recruiterName = data.rd_name || data.recruiter_name || 'N/A';
                     const recruiterType = data.recruiter_type || (String(recruiterCode).startsWith('RD-') ? 'regional_director' : 'ambassador');
-                    const roleLabel = recruiterType === 'rd_network_override'
-                        ? '<span class="badge" style="background:#9333ea;">RD Override</span>'
+                    const roleLabel = recruiterType === 'executive_upline'
+                        ? '<span class="badge" style="background:#1e3a5f;">Executive upline</span>'
+                        : recruiterType === 'upline_share'
+                        ? '<span class="badge" style="background:#0984e3;">Upline share</span>'
+                        : recruiterType === 'direct_recruiter'
+                        ? '<span class="badge" style="background:#00b894;">Direct 1,500</span>'
+                        : recruiterType === 'rd_network_override'
+                        ? '<span class="badge" style="background:#9333ea;">RD Override (legacy)</span>'
                         : recruiterType === 'regional_director'
                         ? '<span class="badge" style="background:#9333ea;">RD</span>'
                         : (recruiterType === 'senior'
@@ -2492,6 +2498,11 @@
                             : '<span class="badge" style="background:#00b894;">Ambassador</span>');
                     const viaTeam = data.recruiting_ambassador_code
                         ? `<br><small style="color:#636e72;">via ${data.recruiting_ambassador_code}</small>`
+                        : (data.direct_recruiter_code && data.bonus_tier === 'upline'
+                            ? `<br><small style="color:#636e72;">team: ${data.direct_recruiter_code}</small>`
+                            : '');
+                    const policyTag = data.policy_version
+                        ? `<br><small style="color:#b2bec3;">${data.policy_version}</small>`
                         : '';
                     
                     html += `
@@ -2499,7 +2510,7 @@
                             <td><strong style="color:var(--primary);">${recruiterCode}</strong></td>
                             <td>${recruiterName}</td>
                             <td>${roleLabel}</td>
-                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span>${viaTeam}</td>
+                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span>${viaTeam}${policyTag}</td>
                             <td>${data.ambassador_name || 'N/A'}</td>
                             <td><strong style="color:var(--success);font-size:1.1rem;">${(data.amount || 0).toLocaleString()} FCFA</strong></td>
                             <td style="font-size:0.85rem;color:#636e72;">${date}</td>

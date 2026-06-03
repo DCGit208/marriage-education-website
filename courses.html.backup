@@ -641,7 +641,7 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-    import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+    import { initializeFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBnKMGPBu9LNi2_NfU6OhfxP3_2TmqY4jE",
@@ -653,7 +653,10 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      useFetchStreams: false
+    });
 
     // Load dynamic course cards from Firebase
     async function loadDynamicCourses() {
