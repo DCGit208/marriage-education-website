@@ -66,6 +66,7 @@ At mature scale, **one full RD network** targets on the order of **~250M FCFA/mo
 | 3 | SBD recurring 500+250+250 in production code | Done |
 | 4 | Remove 6.67% executive override on product sales | Done |
 | 5 | Dashboards & copy alignment | Done |
+| 6 | Ledger backfill & reconciliation | Done |
 
 ---
 

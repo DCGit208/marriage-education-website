@@ -8,6 +8,7 @@
 | **Ambassador recruitment bonuses (15,000 FCFA)** | [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) (`2026-03-v3`) |
 | **SBD subscription commissions (5,200/month)** | [SBD-SUBSCRIPTION-COMMISSION-POLICY.md](./SBD-SUBSCRIPTION-COMMISSION-POLICY.md) (`2026-04-v1`) |
 | **Executive Network Director** | [EXECUTIVE-NETWORK-DIRECTOR.md](./EXECUTIVE-NETWORK-DIRECTOR.md) |
+| **Phase 6 backfill report** | [COMMISSION-BACKFILL-PHASE6.md](./COMMISSION-BACKFILL-PHASE6.md) |
 | SBD Network architecture | [../SBD-NETWORK-TECHNICAL-BRIEF.md](../SBD-NETWORK-TECHNICAL-BRIEF.md) |
 | Legacy RD bonus notes (archived) | [../RD-RECRUITMENT-BONUS-IMPLEMENTATION.md](../RD-RECRUITMENT-BONUS-IMPLEMENTATION.md) |
 
@@ -20,12 +21,14 @@
 | 3 | SBD recurring 500+250+250 in production | **Done** |
 | 4 | Remove executive product override | Done |
 | 5 | Dashboards & copy alignment | Done |
+| 6 | Ledger backfill & reconciliation | Done |
 
 ## Tests
 
 ```bash
 node scripts/test-recruitment-bonus-policy.js
 node scripts/test-sbd-subscription-commission.js
+node scripts/reconcile-commission-ledger-phase6.js
 node scripts/verify-ambassador-register-flow.mjs
 ```
 
