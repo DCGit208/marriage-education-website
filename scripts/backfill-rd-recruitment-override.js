@@ -1,6 +1,6 @@
 /**
  * @deprecated Legacy v1 backfill — RD 750 FCFA network override only.
- * New activations use creditRecruitmentBonusesV2 (docs/RECRUITMENT-BONUS-POLICY.md v2026-03-v2).
+ * New activations use creditRecruitmentBonusesV2 (docs/RECRUITMENT-BONUS-POLICY.md v2026-03-v3).
  * Use scripts/complete-ambassador-activation-local.js for recovery under the new policy.
  *
  * Usage:

@@ -1,9 +1,9 @@
 /**
- * Recruitment bonus policy v2026-03-v2 — pure logic + Firestore upline resolution.
- * See docs/RECRUITMENT-BONUS-POLICY.md before changing.
+ * Recruitment bonus policy v2026-03-v3 — pure logic + Firestore upline resolution.
+ * See docs/RECRUITMENT-BONUS-POLICY.md and docs/COMMISSION-MASTER-PRINCIPLES.md
  */
 
-const POLICY_VERSION = '2026-03-v2';
+const POLICY_VERSION = '2026-03-v3';
 
 const DIRECT_RECRUITMENT_BONUS_FCFA = 1500;
 const UPLINE_POOL_FCFA = 1500;
@@ -49,7 +49,6 @@ function computeUplineShareAmounts(uplineCount) {
 }
 
 function recruiterTypeForUpline(upline) {
-  if (upline.role === 'executive') return 'executive_upline';
   if (upline.role === 'regional_director') return 'regional_director';
   if (upline.role === 'senior') return 'senior';
   return 'upline_share';
@@ -99,7 +98,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
       });
       const following = normalizeReferralCode(data.recruitedBy || data.recruited_by || '');
       if (following.startsWith('RD-')) {
-        await appendRdAndExecutive(db, uplines, following, seen);
+        await appendRdUpline(db, uplines, following, seen);
         break;
       }
       nextCode = following;
@@ -107,7 +106,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
     }
 
     if (nextCode.startsWith('RD-')) {
-      await appendRdAndExecutive(db, uplines, nextCode, seen);
+      await appendRdUpline(db, uplines, nextCode, seen);
       break;
     }
 
@@ -117,7 +116,8 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
   return uplines;
 }
 
-async function appendRdAndExecutive(db, uplines, rdCode, seen) {
+/** Append RD to upline list; stop — Executive is not a recruitment payee (v2026-03-v3). */
+async function appendRdUpline(db, uplines, rdCode, seen) {
   const rd = normalizeReferralCode(rdCode);
   if (!rd || seen.has(rd)) return;
   seen.add(rd);
@@ -129,22 +129,6 @@ async function appendRdAndExecutive(db, uplines, rdCode, seen) {
     name: rdData.name || rdData.fullName || rd,
     role: 'regional_director',
     collection: 'regional_directors'
-  });
-
-  const execCode = normalizeReferralCode(rdData.sponsor_code || '');
-  if (!execCode || seen.has(execCode)) return;
-
-  const execSnap = await db.collection('ambassadors').doc(execCode).get();
-  if (!execSnap.exists) return;
-  const execData = execSnap.data();
-  if (classifyAmbassadorRole(execData) !== 'executive') return;
-
-  seen.add(execCode);
-  uplines.push({
-    code: execCode,
-    name: execData.fullName || execData.name || execCode,
-    role: 'executive',
-    collection: 'ambassadors'
   });
 }
 

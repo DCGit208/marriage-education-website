@@ -2,11 +2,12 @@
 
 > **This document is archived.** The authoritative specification is:
 >
-> **[docs/RECRUITMENT-BONUS-POLICY.md](./docs/RECRUITMENT-BONUS-POLICY.md)** (policy `2026-03-v2`)
+> **[docs/COMMISSION-MASTER-PRINCIPLES.md](./docs/COMMISSION-MASTER-PRINCIPLES.md)**  
+> **[docs/RECRUITMENT-BONUS-POLICY.md](./docs/RECRUITMENT-BONUS-POLICY.md)** (policy `2026-03-v3`)
 
 ## What changed (March 2026)
 
-| Legacy | Current (`2026-03-v2`) |
+| Legacy | Current (`2026-03-v3`) |
 |--------|----------------------|
 | 1,500 direct recruiter only | 1,500 direct recruiter (unchanged) |
 | 750 RD network override only | Up to 1,500 upline pool shared by all uplines (750 / 750+750 / ÷N) |

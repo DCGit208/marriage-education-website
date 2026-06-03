@@ -339,7 +339,8 @@ sbd-network/
 - Each ambassador gets a unique `SBD-XXXX-NNNN` referral code
 - Referral tracking: `?ref=SBD-XXXX-NNNN` on signup captured by `auth.js`
 - Ambassador dashboard panel shows referral signups/subscribers
-- **Recruitment bonuses** on ambassador signup: see **[docs/RECRUITMENT-BONUS-POLICY.md](../docs/RECRUITMENT-BONUS-POLICY.md)** (`2026-03-v2`)
+- **Recruitment bonuses** on ambassador signup: see **[docs/COMMISSION-MASTER-PRINCIPLES.md](../docs/COMMISSION-MASTER-PRINCIPLES.md)** and **[docs/RECRUITMENT-BONUS-POLICY.md](../docs/RECRUITMENT-BONUS-POLICY.md)** (`2026-03-v3`)
+- **SBD subscription commissions:** **[docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md](../docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md)** (`2026-04-v1`, recurring 500+250+250)
 
 ### Payments
 - **Stripe**: Card payments via Checkout Sessions, webhook at `stripeWebhook`
