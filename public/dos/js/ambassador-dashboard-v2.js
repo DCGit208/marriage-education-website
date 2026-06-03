@@ -695,12 +695,22 @@
     if (!treeEl || !global.DOSRdNetworkTree) return null;
     treeEl.innerHTML = '';
     var rootMember = (net.graph && net.graph.byId && net.graph.byId[opts.rootCode]) || null;
+    if (!rootMember && opts.rootProfile) {
+      rootMember = {
+        id: opts.rootCode,
+        name: opts.rootName || opts.rootCode,
+        data: opts.rootProfile,
+        recruits: 0,
+        units: 0
+      };
+    }
     return global.DOSRdNetworkTree.init(treeEl, {
       rootCode: opts.rootCode,
       rdCode: opts.rootCode,
       rootKind: opts.rootKind || 'leader',
       rootName: opts.rootName,
       rootMember: rootMember,
+      rootProfile: opts.rootProfile || (rootMember && rootMember.data) || null,
       members: net.members || [],
       pipelineMembers: net.pipeline || [],
       graph: net.graph || { children: {}, byId: {} },
@@ -855,7 +865,8 @@
           state.rdTreeController = mountGenealogyTree(treeEl, net, {
             rootCode: rdCode,
             rootKind: 'rd',
-            rootName: (stats && (stats.fullName || stats.name)) || 'Regional Director'
+            rootName: (stats && (stats.fullName || stats.name)) || 'Regional Director',
+            rootProfile: stats
           });
         } else if (treeEl) {
           treeEl.innerHTML = '<div class="dos-empty">Genealogy tree module did not load. Hard-refresh the page.</div>';
@@ -910,6 +921,7 @@
               rootCode: leaderCode,
               rootKind: 'leader',
               rootName: lnet.leaderName || (stats && (stats.fullName || stats.name)) || leaderCode,
+              rootProfile: stats,
               defaultView: 'full'
             });
           } catch (treeErr) {
@@ -1005,6 +1017,7 @@
         rootCode: leaderCode,
         rootKind: 'leader',
         rootName: state.name || leaderCode,
+        rootProfile: stats,
         defaultView: 'full'
       });
     }

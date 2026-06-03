@@ -725,6 +725,31 @@ body.dos-tree-fullpage-open {
 
 .dos-tree-detail-line {
   margin: 0 0 12px;
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.45;
+}
+
+.dos-tree-detail-label {
+  display: inline-block;
+  min-width: 72px;
+  font-weight: 600;
+  color: #71717a;
+}
+
+.dos-tree-detail-muted-inline {
+  color: #a1a1aa;
+  font-style: italic;
+}
+
+.dos-tree-detail-link {
+  color: #00b894;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dos-tree-detail-link:hover {
+  text-decoration: underline;
 }
 
 .dos-tree-senior-progress {
