@@ -226,6 +226,7 @@
     this.rootKind = options.rootKind || (this.rootCode.indexOf('RD-') === 0 ? 'rd' : 'leader');
     this.rootName = options.rootName || options.rdName || (this.rootKind === 'rd' ? 'Regional Director' : 'Leader');
     this.rootMember = options.rootMember || null;
+    this.rootProfile = options.rootProfile || (this.rootMember && this.rootMember.data) || null;
     this.allMembers = options.members || [];
     this.pipelineMembers = options.pipelineMembers || [];
     this.showPipeline = options.showPipeline !== false;
@@ -1064,35 +1065,32 @@
     if (nid === this.rootCode) {
       var leaders = this.allMembers.filter(function (m) { return m.recruits > 0; });
       var pipelineN = this.pipelineMembers.length;
-      if (this.rootKind === 'rd') {
-        this.detailEl.innerHTML =
-          '<div class="dos-tree-detail-card">' +
-          '<p class="dos-tree-detail-kicker">Regional Director</p>' +
-          '<h5>' + escapeHtml(this.rootName) + '</h5>' +
-          '<code class="dos-tree-detail-id">' + escapeHtml(this.rootCode) + '</code>' +
-          '<div class="dos-tree-detail-metrics">' +
-          '<div><span class="val">' + (this.stats.totalAmbassadors || this.allMembers.length) + '</span><span class="lbl">in region</span></div>' +
+      var rootView = memberViewForRoot(this);
+      var rootKicker = this.rootKind === 'rd' ? 'Regional Director' : 'Your organization';
+      var metricsHtml = this.rootKind === 'rd'
+        ? '<div><span class="val">' + (this.stats.totalAmbassadors || this.allMembers.length) + '</span><span class="lbl">in region</span></div>' +
           '<div><span class="val">' + (this.stats.directToRd || 0) + '</span><span class="lbl">direct</span></div>' +
           '<div><span class="val">' + leaders.length + '</span><span class="lbl">leaders</span></div>' +
-          (pipelineN ? '<div><span class="val">' + pipelineN + '</span><span class="lbl">onboarding</span></div>' : '') +
-          '</div>' +
-          (leaders.length ? '<p class="dos-tree-detail-h">Recruitment leaders</p><ul class="dos-tree-leader-list">' +
+          (pipelineN ? '<div><span class="val">' + pipelineN + '</span><span class="lbl">onboarding</span></div>' : '')
+        : '<div><span class="val">' + this.allMembers.length + '</span><span class="lbl">in org</span></div>' +
+          '<div><span class="val">' + leaders.length + '</span><span class="lbl">leaders</span></div>' +
+          (pipelineN ? '<div><span class="val">' + pipelineN + '</span><span class="lbl">onboarding</span></div>' : '');
+      this.detailEl.innerHTML =
+        '<div class="dos-tree-detail-card">' +
+        '<p class="dos-tree-detail-kicker">' + rootKicker + '</p>' +
+        '<h5>' + escapeHtml(this.rootName) + '</h5>' +
+        '<code class="dos-tree-detail-id">' + escapeHtml(this.rootCode) + '</code>' +
+        renderContactSection(rootView) +
+        renderProfileSection(rootView) +
+        '<p class="dos-tree-detail-h">Network</p>' +
+        '<div class="dos-tree-detail-metrics">' + metricsHtml + '</div>' +
+        (this.rootKind === 'rd' && leaders.length
+          ? '<p class="dos-tree-detail-h">Recruitment leaders</p><ul class="dos-tree-leader-list">' +
             leaders.map(function (l) {
               return '<li><strong>' + escapeHtml(l.name) + '</strong> <em>' + l.recruits + '</em></li>';
-            }).join('') + '</ul>' : '') +
-          '</div>';
-      } else {
-        this.detailEl.innerHTML =
-          '<div class="dos-tree-detail-card">' +
-          '<p class="dos-tree-detail-kicker">Your organization</p>' +
-          '<h5>' + escapeHtml(this.rootName) + '</h5>' +
-          '<code class="dos-tree-detail-id">' + escapeHtml(this.rootCode) + '</code>' +
-          '<div class="dos-tree-detail-metrics">' +
-          '<div><span class="val">' + this.allMembers.length + '</span><span class="lbl">in org</span></div>' +
-          '<div><span class="val">' + leaders.length + '</span><span class="lbl">leaders</span></div>' +
-          (pipelineN ? '<div><span class="val">' + pipelineN + '</span><span class="lbl">onboarding</span></div>' : '') +
-          '</div></div>';
-      }
+            }).join('') + '</ul>'
+          : '') +
+        '</div>';
       return;
     }
 
@@ -1107,10 +1105,10 @@
         '<div class="dos-tree-detail-card">' +
         '<p class="dos-tree-detail-kicker">Onboarding</p>' +
         '<h5>' + escapeHtml(m.name) + '</h5>' +
-        (m.email ? '<p class="dos-tree-detail-email">' + escapeHtml(m.email) + '</p>' : '') +
-        (m.phone ? '<p class="dos-tree-detail-line">Phone <code>' + escapeHtml(m.phone) + '</code></p>' : '') +
+        '<code class="dos-tree-detail-id">' + escapeHtml(m.pipelineRef || m.id) + '</code>' +
+        renderContactSection(m) +
+        renderProfileSection(m) +
         '<p class="dos-tree-detail-line">Recruited by <code>' + escapeHtml(m.recruitedBy === this.rootCode ? 'You' : m.recruitedBy) + '</code></p>' +
-        '<p class="dos-tree-detail-line"><strong>Status:</strong> Pending payment / admin approval</p>' +
         '<p class="dos-tree-detail-muted">Not counted toward Senior rank until activated.</p></div>';
       return;
     }
@@ -1136,7 +1134,8 @@
       '<p class="dos-tree-detail-kicker">' + escapeHtml(m.isSenior ? 'Senior' : (m.isDeveloping ? 'Developing' : 'Ambassador')) + '</p>' +
       '<h5>' + escapeHtml(m.name) + '</h5>' +
       '<code class="dos-tree-detail-id">' + escapeHtml(m.id) + '</code>' +
-      (memberEmail(m) ? '<p class="dos-tree-detail-email">' + escapeHtml(memberEmail(m)) + '</p>' : '') +
+      renderContactSection(m) +
+      renderProfileSection(m) +
       '<p class="dos-tree-detail-line">Recruited by <code>' + escapeHtml(recruitedBy) + '</code></p>' +
       focusBtn +
       (m.isDeveloping && !m.isSenior
@@ -1154,8 +1153,111 @@
     }
   };
 
+  function memberViewForRoot(ctrl) {
+    if (ctrl.rootMember) return ctrl.rootMember;
+    if (ctrl.rootProfile) {
+      return { id: ctrl.rootCode, name: ctrl.rootName, data: ctrl.rootProfile };
+    }
+    return { id: ctrl.rootCode, name: ctrl.rootName, data: {} };
+  }
+
   function memberEmail(m) {
+    if (m && m.email && !m.data) return String(m.email).trim();
     return (m.data && (m.data.email || m.data.contactEmail)) || '';
+  }
+
+  function memberPhone(m) {
+    if (m && m.phone && !m.data) return String(m.phone).trim();
+    var d = m && m.data;
+    return String((d && (d.phoneE164 || d.phone || d.phoneNumber)) || '').trim();
+  }
+
+  function memberCity(m) {
+    var d = m && m.data;
+    return String((d && (d.city || d.town)) || '').trim();
+  }
+
+  function memberRegion(m) {
+    var d = m && m.data;
+    return String((d && (d.region || d.state || d.province)) || '').trim();
+  }
+
+  function memberStatusLabel(m) {
+    if (m && m.isPipeline) {
+      var pending = String((m.pipelineStatus || (m.data && m.data.status) || 'pending')).trim();
+      return pending.charAt(0).toUpperCase() + pending.slice(1).replace(/_/g, ' ');
+    }
+    var status = String((m.data && m.data.status) || 'active').trim();
+    if (!status) return 'Active';
+    return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+  }
+
+  function formatActivatedDate(m) {
+    if (m && m.isPipeline) return '';
+    var d = m && m.data;
+    var ts = d && (d.activated_at || d.activatedAt || d.activation_date || d.activatedOn || d.created_at || d.createdAt);
+    if (!ts) return '';
+    var date = null;
+    if (typeof ts.toDate === 'function') date = ts.toDate();
+    else if (ts.seconds) date = new Date(ts.seconds * 1000);
+    else if (typeof ts === 'string' || typeof ts === 'number') date = new Date(ts);
+    if (!date || isNaN(date.getTime())) return '';
+    try {
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+      return date.toISOString().slice(0, 10);
+    }
+  }
+
+  function phoneDigits(phone) {
+    return String(phone || '').replace(/\D/g, '');
+  }
+
+  function renderPhoneValue(phone) {
+    if (!phone) {
+      return '<span class="dos-tree-detail-muted-inline">Not on file</span>';
+    }
+    var esc = escapeHtml(phone);
+    var digits = phoneDigits(phone);
+    var links = '';
+    if (digits.length >= 8) {
+      var waDigits = digits.indexOf('237') === 0 ? digits : digits;
+      links = ' <a class="dos-tree-detail-link" href="https://wa.me/' + waDigits + '" target="_blank" rel="noopener">WhatsApp</a>' +
+        ' <a class="dos-tree-detail-link" href="tel:+' + waDigits + '">Call</a>';
+    }
+    return '<code>' + esc + '</code>' + links;
+  }
+
+  function renderEmailValue(email) {
+    if (!email) {
+      return '<span class="dos-tree-detail-muted-inline">Not on file</span>';
+    }
+    var esc = escapeHtml(email);
+    return '<a class="dos-tree-detail-link" href="mailto:' + esc + '">' + esc + '</a>';
+  }
+
+  function renderDetailRow(label, valueHtml) {
+    return '<p class="dos-tree-detail-line"><span class="dos-tree-detail-label">' + escapeHtml(label) + '</span> ' + valueHtml + '</p>';
+  }
+
+  function renderContactSection(m) {
+    return '<p class="dos-tree-detail-h">Contact</p>' +
+      renderDetailRow('Phone', renderPhoneValue(memberPhone(m))) +
+      renderDetailRow('Email', renderEmailValue(memberEmail(m)));
+  }
+
+  function renderProfileSection(m) {
+    var city = memberCity(m);
+    var region = memberRegion(m);
+    var location = city && region ? city + ', ' + region : (city || region || '');
+    var activated = formatActivatedDate(m);
+    var statusNote = m && m.isPipeline ? 'Pending payment / admin approval' : memberStatusLabel(m);
+    return '<p class="dos-tree-detail-h">Profile</p>' +
+      renderDetailRow('Location', location
+        ? escapeHtml(location)
+        : '<span class="dos-tree-detail-muted-inline">Not on file</span>') +
+      renderDetailRow('Status', escapeHtml(statusNote)) +
+      (activated ? renderDetailRow('Activated', escapeHtml(activated)) : '');
   }
 
   function clearStoredFullpageMode() {
