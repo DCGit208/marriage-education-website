@@ -19,6 +19,7 @@
 | 2 | Recruitment v2026-03-v3 (no Executive upline) | Done |
 | 3 | SBD recurring 500+250+250 in production | **Done** |
 | 4 | Remove executive product override | Done |
+| 5 | Dashboards & copy alignment | Done |
 
 ## Tests
 

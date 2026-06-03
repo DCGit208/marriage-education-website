@@ -6361,7 +6361,7 @@ async function promoteToExecutive(ambassadorCode, ambassadorData) {
     batch.set(notificationRef, {
       type: 'executive_promotion',
       title: '🏆 Congratulations! You\'re now an Executive Network Director!',
-      message: `You've been promoted to Executive Network Director for recruiting 1+ Regional Directors! You can now earn 9% executive override on your entire network. Target: $1M+/month.`,
+      message: `You've been promoted to Executive Network Director for recruiting 1+ Regional Directors! Earn by replicating full RD infrastructure — scale recurring override across multiple mature networks.`,
       ambassador_code: ambassadorCode,
       read: false,
       created_at: admin.firestore.FieldValue.serverTimestamp()
