@@ -1,7 +1,11 @@
 # ✅ COMMISSION STRUCTURE UPDATE - SUSTAINABLE MODEL
 
+> **Superseded (March 2026):** Executive Network Director **no longer** receives a 6.67% product-sale override.
+> Authoritative policy: [docs/COMMISSION-MASTER-PRINCIPLES.md](./docs/COMMISSION-MASTER-PRINCIPLES.md) and [docs/EXECUTIVE-NETWORK-DIRECTOR.md](./docs/EXECUTIVE-NETWORK-DIRECTOR.md).
+> Product sales: **10% + 5% + 5% = 20%** (Ambassador · Senior · RD). Executive earns by **RD replication**, not an extra transaction tier.
+
 **Date:** February 26, 2026  
-**Status:** ✅ IMPLEMENTED  
+**Status:** ⚠️ PARTIALLY SUPERSEDED — see banner above  
 **Rationale:** Professional evaluation confirms this structure is more sustainable and scalable
 
 ---

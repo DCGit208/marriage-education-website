@@ -110,7 +110,7 @@ Label all figures **planning targets** — actuals depend on deployment, retenti
 |--------|----------------|
 | [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) | One-time 15,000 FCFA signup — separate |
 | `functions/commerce/` | Sandbox CamPay engine — mirror these rules; not production checkout yet |
-| Product / book sales | Phase 4 — remove executive 6.67%; align to 10/5/5 where applicable |
+| Product / book sales | **Done** — 10/5/5 only; no executive override (Phase 4) |
 
 ---
 

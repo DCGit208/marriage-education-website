@@ -65,7 +65,7 @@ At mature scale, **one full RD network** targets on the order of **~250M FCFA/mo
 | 2 | Recruitment v2026-03-v3 (no Executive upline) | Done |
 | 3 | SBD recurring 500+250+250 in production code | Done |
 | 4 | Remove 6.67% executive override on product sales | Done |
-| 5 | Dashboards & copy alignment | Planned |
+| 5 | Dashboards & copy alignment | Done |
 
 ---
 
