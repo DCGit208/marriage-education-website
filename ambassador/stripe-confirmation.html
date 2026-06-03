@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="cache-bust" content="v2-20260502-stripe-ambassador-confirmation">
+  <meta name="cache-bust" content="v3-20260603-stripe-ambassador-3ds-verify">
   <title>Stripe Payment Confirmed - Ambassador Access</title>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -383,10 +383,51 @@
       }
     }
 
-    (function initStripeConfirmation() {
+    async function verifyStripePayment(code, email, paymentIntentId) {
+      const statusEl = document.getElementById('status');
+      const headerTitle = document.querySelector('.header h1');
+      const headerSub = document.querySelector('.header p');
+
+      if (!paymentIntentId) {
+        statusEl.className = 'notice notice-error';
+        statusEl.textContent = 'Missing payment reference. Please return to the payment page or contact support with your ambassador code.';
+        if (headerTitle) headerTitle.textContent = 'Verification Required';
+        if (headerSub) headerSub.textContent = 'We could not confirm your Stripe payment.';
+        updateTracker('Missing payment ID', 'Page opened');
+        return false;
+      }
+
+      statusEl.className = 'notice notice-warning';
+      statusEl.textContent = 'Verifying your payment with Stripe...';
+      updateTracker('Verifying...', 'Stripe check');
+
+      try {
+        const complete = firebase.functions().httpsCallable('completeAmbassadorStripePayment');
+        const result = await complete({
+          paymentIntentId,
+          ambassadorCode: code,
+          email
+        });
+        if (!result.data || !result.data.success) {
+          throw new Error(result.data?.error || 'Payment has not been confirmed.');
+        }
+        return true;
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        statusEl.className = 'notice notice-error';
+        statusEl.textContent = (error.message || 'We could not verify your payment.') +
+          ' If you were charged, contact support with your ambassador code below.';
+        if (headerTitle) headerTitle.textContent = 'Verification Required';
+        if (headerSub) headerSub.textContent = 'Payment verification pending or incomplete.';
+        updateTracker('Not verified', 'Stripe check');
+        return false;
+      }
+    }
+
+    (async function initStripeConfirmation() {
       let code = getQueryParam('code');
       let email = getQueryParam('email');
-      let paymentIntentId = getQueryParam('payment_intent');
+      let paymentIntentId = getQueryParam('payment_intent') || getQueryParam('payment_intent_id');
 
       if (!code || !email) {
         const storedContext = getStoredConfirmationContext();
@@ -400,6 +441,19 @@
         statusEl.className = 'notice notice-error';
         statusEl.textContent = 'Missing confirmation details. Please return to the payment page or contact support with your payment reference.';
         updateTracker('Missing details', 'Page opened without code/email');
+        return;
+      }
+
+      const verified = await verifyStripePayment(code, email, paymentIntentId);
+      if (!verified) {
+        document.getElementById('code-value').textContent = code;
+        document.getElementById('email-value').textContent = email;
+        const supportReference = buildSupportReference(code, email, paymentIntentId);
+        document.getElementById('support-reference').textContent = supportReference;
+        document.getElementById('copy-reference-btn').addEventListener('click', function() {
+          copySupportReference(supportReference);
+        });
+        document.getElementById('resend-btn').disabled = true;
         return;
       }
 
