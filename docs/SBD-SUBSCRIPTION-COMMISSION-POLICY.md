@@ -134,7 +134,8 @@ Label all figures **planning targets** — actuals depend on deployment, retenti
 2. Add RD 250 + fix senior/RD attribution fields
 3. Add `scripts/test-sbd-subscription-commission.js`
 4. `firebase deploy --only functions`
-5. Verify test sub month 1 and simulated renewal
+5. Stripe webhook endpoint must subscribe to **`invoice.payment_succeeded`** (renewals) — configured on `we_1TL50G…` → `stripeWebhook` (May 2026)
+6. Verify test sub month 1 and simulated renewal
 
 ---
 
