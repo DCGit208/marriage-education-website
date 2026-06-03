@@ -659,6 +659,35 @@
     }
 
     // Process Stripe payment
+    async function redirectToStripeConfirmation(code, email, paymentIntentId) {
+      showAlert('✅ Payment successful! Your ambassador account is now active. Redirecting...', 'success');
+      sessionStorage.setItem('stripeConfirmationContext', JSON.stringify({
+        code,
+        email,
+        paymentIntentId: paymentIntentId || '',
+        paymentMethod: 'stripe',
+        savedAt: Date.now()
+      }));
+      sessionStorage.removeItem('ambassadorData');
+      setTimeout(() => {
+        window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email) + '&payment_intent=' + encodeURIComponent(paymentIntentId || '');
+      }, 2000);
+    }
+
+    async function finalizeStripePayment(paymentIntentId, code, email, ambassadorData) {
+      const complete = firebase.functions().httpsCallable('completeAmbassadorStripePayment');
+      const finalizeResult = await complete({
+        paymentIntentId,
+        ambassadorCode: code,
+        email,
+        ambassadorData
+      });
+      if (!finalizeResult.data || !finalizeResult.data.success) {
+        throw new Error(finalizeResult.data?.error || 'Payment verification failed.');
+      }
+      return finalizeResult.data;
+    }
+
     async function processStripePayment() {
       const email = document.getElementById('stripe-email').value;
       const submitBtn = document.getElementById('stripe-submit-btn');
@@ -719,25 +748,37 @@
             description: 'Ambassador Registration - ' + code
           });
 
-          if (result.data.success) {
-            showAlert('✅ Payment successful! Your ambassador account is now active. Redirecting to dashboard...', 'success');
-            sessionStorage.setItem('stripeConfirmationContext', JSON.stringify({
-              code,
-              email,
-              paymentIntentId: result.data.paymentIntentId || '',
-              paymentMethod: 'stripe',
-              savedAt: Date.now()
-            }));
-            // Clear session data
-            sessionStorage.removeItem('ambassadorData');
-            setTimeout(() => {
-              window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email) + '&payment_intent=' + encodeURIComponent(result.data.paymentIntentId || '');
-            }, 2000);
-          } else {
-            cardErrors.textContent = result.data.error || 'Payment processing failed';
-            submitBtn.disabled = false;
-            submitBtn.textContent = '💳 Pay ' + stripeAmountText;
+          const data = result.data;
+          const confirmationReturnUrl = window.location.origin + '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email);
+
+          if (data.requiresAction && data.clientSecret) {
+            submitBtn.textContent = 'Authenticating with your bank...';
+            const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
+              return_url: confirmationReturnUrl
+            });
+            if (confirmError) {
+              cardErrors.textContent = confirmError.message;
+              submitBtn.disabled = false;
+              submitBtn.textContent = '💳 Pay ' + stripeAmountText;
+              return;
+            }
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+              await finalizeStripePayment(paymentIntent.id, code, email, ambassadorData);
+              await redirectToStripeConfirmation(code, email, paymentIntent.id);
+              return;
+            }
+            // Redirect-based 3DS — browser navigates to return_url; activation runs there.
+            return;
           }
+
+          if (data.success && data.status === 'succeeded') {
+            await redirectToStripeConfirmation(code, email, data.paymentIntentId);
+            return;
+          }
+
+          cardErrors.textContent = data.error || 'Payment was not completed. Please try again.';
+          submitBtn.disabled = false;
+          submitBtn.textContent = '💳 Pay ' + stripeAmountText;
       } catch (err) {
         console.error('Stripe error:', err);
           cardErrors.textContent = 'Error: ' + (err.message || 'Payment processing failed');
@@ -804,13 +845,31 @@
       const email = document.getElementById('email').value;
 
       try {
-        // Get ambassador data from sessionStorage
+        // Get ambassador data from sessionStorage (fallback: ?ref= from registration redirect)
         let ambassadorData = null;
         const storedData = sessionStorage.getItem('ambassadorData');
         if (storedData) {
           ambassadorData = JSON.parse(storedData);
           console.log('📝 Retrieved ambassador data:', ambassadorData);
         }
+        const urlRef = getUrlParameter('ref');
+        if (urlRef && (!ambassadorData || !ambassadorData.recruitedBy)) {
+          ambassadorData = ambassadorData || {};
+          ambassadorData.recruitedBy = urlRef;
+          if (urlRef.startsWith('RD-')) {
+            ambassadorData.regional_director_code = urlRef;
+          } else if (urlRef.startsWith('AMB-')) {
+            ambassadorData.senior_code = urlRef;
+          }
+          ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
+            ? 'regional_director'
+            : 'senior_ambassador';
+          sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
+          console.log('🔗 Recruiter restored from URL ref:', urlRef);
+        }
+
+        const recruitedBy =
+          ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || urlRef || '';
 
         // Prepare payment data
         const paymentData = {
@@ -823,8 +882,8 @@
           email: email,
           type: 'ambassador',
           ambassador_code: code,
-          regional_director: ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || '',
-          ambassador_data: JSON.parse(JSON.stringify(ambassadorData)) // Serialize to clean up data
+          regional_director: recruitedBy,
+          ambassador_data: ambassadorData ? JSON.parse(JSON.stringify(ambassadorData)) : null
         };
         
         console.log('💳 Payment data being submitted:', {
