@@ -1,0 +1,42 @@
+---
+description: Tier 1 Commerce OS — wallet, payout, and admin Finance work (read docs first)
+globs: docs/*COMMERCE*,docs/*PAYOUT*,docs/*WALLET*,functions/**/*commerce*,public/admin-dashboard*.html,public/dos/js/ambassador-dashboard-v2.js,public/dos/js/dos-pipeline.js,scripts/*payout*,scripts/*wallet*
+alwaysApply: false
+---
+
+# Commerce OS Tier 1 — payout & wallet
+
+Before editing payout profiles, wallet UI, admin Finance section, or disbursement code:
+
+## Required reading (in order)
+
+1. `docs/COMMISSION-MASTER-PRINCIPLES.md` — commission math is frozen Phases 1–6
+2. `docs/WALLET-DATA-MODEL.md` — aggregate existing fields; no new primary ledger in Tier 1
+3. `docs/PAYOUT-OPERATIONS.md` — CamPay (CM) + Wise (intl); Stripe does not pay ambassadors
+4. `docs/COMMERCE-OS-ARCHITECTURE-v2.md` — gateway abstraction; no Executive commission tier
+5. `docs/COMMERCE-OS-ADMIN-UX.md` — add Finance section; do not replace Payments tab
+6. `docs/COMMERCE-OS-BUILD-PLAN.md` — scope Tier 1 only unless user asks for Tier 2+
+
+## Hard rules
+
+- **Do not** modify Messenger V2, Dating, MV House, or core auth.
+- **Do not** add commission % sliders or Executive override on transactions.
+- **Do not** create parallel wallet collections (`commerce_v1_*` stays sandbox-isolated).
+- **Do not** trust frontend payment success — webhooks/admin only for money-in.
+- **Do not** mark paid without `payout_events` audit row.
+- Wallet writes and payout execution: **Cloud Functions only**.
+
+## After commission-touching changes
+
+```bash
+node scripts/test-recruitment-bonus-policy.js
+node scripts/test-sbd-subscription-commission.js
+```
+
+## Tier 1 deliverables only (unless user expands scope)
+
+- `payout_profile` on payee docs
+- `payout_events` collection
+- `getWalletSummary` callable
+- DOS Commissions wallet card
+- Admin Finance section (queue, Wise CSV, mark paid)
