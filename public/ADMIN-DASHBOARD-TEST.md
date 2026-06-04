@@ -28,6 +28,19 @@ Deployed: `https://marriageducation.com/admin-dashboard-test.html`
 4. **Payments smoke test** — On preview, open Payments: pending list loads; do **not** approve/reject real payments unless you intend to (same Firestore as production).
 5. **Production link** — Banner link opens `/admin-dashboard.html` (live page; gate applies there too after deploy).
 
+## Finance tab — Tier 1 dry run (preview)
+
+Firebase: `https://marriage-education.web.app/admin-dashboard-test.html?v=20260526tier1`
+
+1. **Finance nav** — Sidebar shows **Finance** after Payments.
+2. **Payments hint** — Payments tab banner links to Finance (customer vs commission payouts).
+3. **Payout queue** — Finance → **Refresh queue** loads payees (admin auth required; uses `listPayoutQueue`).
+4. **Wise CSV** — Select rows (or all `wise_bank` payees) → **Export Wise CSV** downloads without error.
+5. **Payout history** — **Load history** reads `payout_events` (empty OK on first run).
+6. **Mark paid** — Use only on a **test payee** with small pending, after a fake external ref. Confirm `payout_events` row and pending decrement. **Do not** mark real production balances unless intended.
+
+Functions: `getWalletSummary`, `updatePayoutProfile`, `listPayoutQueue`, `markPayoutBatchPaid`.
+
 ## Deploy
 
 - Push/deploy `public/admin-dashboard.html` and `public/admin-dashboard-test.html` together.
