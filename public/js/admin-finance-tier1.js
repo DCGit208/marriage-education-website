@@ -167,10 +167,29 @@
     }
   }
 
+  async function runCampayDisburse(dryRun) {
+    if (!confirm(dryRun
+      ? 'Dry run CamPay disburse for all momo_cm payees above threshold?'
+      : 'LIVE CamPay disburse will send MoMo and mark paid. Continue?')) {
+      return;
+    }
+    try {
+      var fn = firebase.functions().httpsCallable('runCampayDisburseBatch');
+      var res = await fn({ dry_run: dryRun === true });
+      alert('CamPay batch: ' + JSON.stringify(res.data && res.data.results ? res.data.results.slice(0, 5) : res.data, null, 2));
+      loadFinanceQueue();
+      loadFinanceHistory();
+    } catch (e) {
+      alert('CamPay disburse failed: ' + (e.message || e));
+    }
+  }
+
   function initFinanceSection() {
     document.getElementById('financeRefreshBtn')?.addEventListener('click', loadFinanceQueue);
     document.getElementById('financeExportWiseBtn')?.addEventListener('click', exportWiseCsv);
     document.getElementById('financeLoadHistoryBtn')?.addEventListener('click', loadFinanceHistory);
+    document.getElementById('financeCampayDryBtn')?.addEventListener('click', function () { runCampayDisburse(true); });
+    document.getElementById('financeCampayLiveBtn')?.addEventListener('click', function () { runCampayDisburse(false); });
   }
 
   window.AdminFinanceTier1 = {

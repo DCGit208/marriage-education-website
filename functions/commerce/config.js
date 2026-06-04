@@ -20,6 +20,7 @@ function cfg(path, fallback = '') {
 }
 
 const SANDBOX_MODE = cfg('commerce.sandbox_mode', 'true') !== 'false';
+const CAMPAY_LIVE_ENABLED = cfg('commerce.campay_live_enabled', 'false') === 'true';
 
 /** Collection names — prefixed in sandbox to avoid production collisions */
 const COLLECTIONS = SANDBOX_MODE
@@ -47,8 +48,8 @@ const CAMPAY = {
   accessToken: cfg('campay.access_token'),
   webhookSecret: cfg('campay.webhook_secret'),
   /** CamPay API base — override for sandbox */
-  apiBase: cfg('campay.api_base', 'https://demo.campay.net/api'),
-  testMode: SANDBOX_MODE || cfg('campay.test_mode', 'true') === 'true'
+  apiBase: cfg('campay.api_base', CAMPAY_LIVE_ENABLED ? 'https://www.campay.net/api' : 'https://demo.campay.net/api'),
+  testMode: !CAMPAY_LIVE_ENABLED && (SANDBOX_MODE || cfg('campay.test_mode', 'true') === 'true')
 };
 
 const COMMISSION_RULES = {
@@ -109,6 +110,7 @@ const PAYOUT_STATUS = Object.freeze({
 
 module.exports = {
   SANDBOX_MODE,
+  CAMPAY_LIVE_ENABLED,
   COLLECTIONS,
   CAMPAY,
   COMMISSION_RULES,

@@ -331,6 +331,20 @@ service cloud.firestore {
       allow read: if true;
       allow write: if false;
     }
+
+    // Tier 2 CamPay production pilot
+    match /campay_payments/{paymentId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /campay_webhook_logs/{logId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /campay_webhook_processed/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
     
     // Notifications - Public read/create for ambassador dashboard
     match /notifications/{notifId} {

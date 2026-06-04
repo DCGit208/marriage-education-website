@@ -221,8 +221,7 @@ function registerWalletPayoutTier1(db, exports) {
     return { success: true, ...(await scanPayoutQueue(db, minPending)) };
   });
 
-  exports.markPayoutBatchPaid = functions.https.onCall(async (data, context) => {
-    const adminUser = await assertAdmin(db, context);
+  async function markPayoutBatchPaidCore(data, adminUser) {
     const payeeCode = (data && data.payee_code) || '';
     const idempotencyKey = (data && data.idempotency_key) || '';
     const externalRef = (data && data.external_reference) || '';
@@ -328,7 +327,19 @@ function registerWalletPayoutTier1(db, exports) {
       event_id: eventRef.id,
       wallet_after: walletAfter
     };
+  }
+
+  exports.markPayoutBatchPaid = functions.https.onCall(async (data, context) => {
+    const adminUser = await assertAdmin(db, context);
+    try {
+      return await markPayoutBatchPaidCore(data, adminUser);
+    } catch (err) {
+      if (err instanceof functions.https.HttpsError) throw err;
+      throw new functions.https.HttpsError('internal', err.message);
+    }
   });
+
+  return { markPayoutBatchPaidCore, assertAdmin };
 }
 
 module.exports = {
@@ -336,5 +347,6 @@ module.exports = {
   TIER1_POLICY_VERSION,
   buildWalletSummary,
   sbdPendingTotal,
+  resolvePayeeRef,
   registerWalletPayoutTier1
 };
