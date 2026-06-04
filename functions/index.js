@@ -7388,3 +7388,9 @@ exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
     }
     return null;
   });
+
+// ============================================
+// Commerce OS Tier 1 — wallet & payout
+// ============================================
+const walletPayoutTier1 = require('./wallet-payout-tier1');
+walletPayoutTier1.registerWalletPayoutTier1(db, exports);

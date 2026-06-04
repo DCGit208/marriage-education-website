@@ -1320,6 +1320,9 @@
                 <li><a href="#" class="nav-link" data-section="payments">
                     <i class="fas fa-credit-card"></i> Payments
                 </a></li>
+                <li><a href="#" class="nav-link" data-section="finance">
+                    <i class="fas fa-coins"></i> Finance
+                </a></li>
                 <li><a href="#" class="nav-link" data-section="rds">
                     <i class="fas fa-crown"></i> Regional Directors
                 </a></li>
@@ -1478,6 +1481,10 @@
             <!-- Payments Section -->
             <div class="section" id="payments">
                 <h1 style="margin-bottom: 2rem;">Payment Approval Center</h1>
+                <p style="margin:-1rem 0 1.5rem;padding:12px 16px;background:#f0f4ff;border-radius:8px;font-size:14px;color:#4338ca">
+                    Customer payments are approved here. To pay ambassador <strong>commissions</strong>, use
+                    <a href="#" onclick="document.querySelector('[data-section=finance]').click();return false;">Finance → Payout queue</a>.
+                </p>
                 
                 <!-- Bulk Actions -->
                 <div class="bulk-actions">
@@ -1656,6 +1663,50 @@
                                         <p>Loading payments...</p>
                                     </td>
                                 </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finance / Commerce OS Tier 1 -->
+            <div class="section" id="finance">
+                <h1 style="margin-bottom: 1rem;">Finance — Commission Payouts</h1>
+                <p class="section-subtitle" style="margin-bottom: 1.5rem">Pay earned commissions (recruitment + SBD). Export Wise CSV, then mark paid after funds are sent.</p>
+                <div class="bulk-actions" style="margin-bottom: 1rem;">
+                    <label>Min pending (FCFA)
+                        <input type="number" id="financeMinPending" value="25000" style="width:120px;margin-left:8px">
+                    </label>
+                    <button class="btn btn-primary btn-sm" id="financeRefreshBtn"><i class="fas fa-sync"></i> Refresh queue</button>
+                    <button class="btn btn-success btn-sm" id="financeExportWiseBtn"><i class="fas fa-file-csv"></i> Export Wise CSV</button>
+                    <button class="btn btn-secondary btn-sm" id="financeLoadHistoryBtn"><i class="fas fa-history"></i> Load history</button>
+                    <span id="financeQueueStatus" style="margin-left:12px;font-size:14px;color:#636e72"></span>
+                </div>
+                <div class="table-card">
+                    <div class="table-header"><h2>Payout queue</h2></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th><th>Code</th><th>Name</th><th>Country</th><th>Method</th>
+                                    <th>Recruitment</th><th>SBD</th><th>Total</th><th>Profile</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financeQueueBody">
+                                <tr><td colspan="10">Open this section to load queue.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="table-card" style="margin-top:2rem">
+                    <div class="table-header"><h2>Payout history</h2></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>When</th><th>Payee</th><th>Amount</th><th>Method</th><th>Reference</th><th>Admin</th></tr>
+                            </thead>
+                            <tbody id="financeHistoryBody">
+                                <tr><td colspan="6">Click Load history.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2743,6 +2794,12 @@
                     loadRDPaymentsTable();
                     loadUnifiedPaymentsPreview();
                     break;
+                case 'finance':
+                    if (window.AdminFinanceTier1) {
+                        AdminFinanceTier1.loadFinanceQueue();
+                        AdminFinanceTier1.loadFinanceHistory();
+                    }
+                    break;
                 case 'crm':
                     loadCRMTable();
                     break;
@@ -3501,6 +3558,7 @@
     </script>
     </div> <!-- Close main-dashboard -->
 
+  <script src="js/admin-finance-tier1.js"></script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>
 </body>
