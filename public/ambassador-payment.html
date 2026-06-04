@@ -475,6 +475,8 @@
         </div>
       </div>
 
+      <div id="payment-alert" class="alert" role="alert" aria-live="polite" style="margin-bottom:20px"></div>
+
       <!-- Benefits -->
       <div class="benefits">
         <h3>📚 What You Get:</h3>
@@ -553,7 +555,15 @@
       <!-- CamPay automated MoMo (Tier 2 pilot — Cameroon) -->
       <div class="momo-section hidden" id="campay-payment-section" style="margin-bottom:24px;padding:20px;background:#ecfdf5;border-radius:12px;border:1px solid #6ee7b7">
         <h3>📲 Pay with CamPay (automated MoMo)</h3>
-        <p style="font-size:14px;color:#047857;margin-bottom:16px">Confirm on your phone when prompted. No manual transfer reference needed when CamPay is enabled.</p>
+        <p style="font-size:14px;color:#047857;margin-bottom:16px">Enter your MoMo number and email, then tap pay. Confirm on your phone when prompted.</p>
+        <div class="form-group">
+          <label for="campay-phone">MTN MoMo phone (Cameroon)</label>
+          <input type="tel" id="campay-phone" name="campay-phone" placeholder="670000000" pattern="[0-9]{9,12}" required>
+        </div>
+        <div class="form-group">
+          <label for="campay-email">Email (for login credentials)</label>
+          <input type="email" id="campay-email" name="campay-email" placeholder="your@email.com" required>
+        </div>
         <button type="button" class="submit-btn" id="campay-submit-btn" onclick="processCampayPayment()">
           Pay with CamPay MoMo
         </button>
@@ -700,14 +710,34 @@
       }
     }
 
+    function callableErrorMessage(err) {
+      if (!err) return 'Request failed';
+      if (typeof err.details === 'string' && err.details) return err.details;
+      if (err.message) return err.message;
+      return 'Request failed';
+    }
+
+    function getCampayContactFields() {
+      const phoneEl = document.getElementById('campay-phone');
+      const emailEl = document.getElementById('campay-email');
+      const phone = (phoneEl && phoneEl.value ? phoneEl.value : document.getElementById('phone').value || '').trim();
+      const email = (emailEl && emailEl.value ? emailEl.value : document.getElementById('email').value || '').trim();
+      return { phone, email };
+    }
+
     async function processCampayPayment() {
-      const phone = document.getElementById('phone').value;
-      const email = document.getElementById('email').value;
+      const contact = getCampayContactFields();
+      const phone = contact.phone;
+      const email = contact.email;
       const code = document.getElementById('registration-code').textContent;
       const ref = document.getElementById('reference-code').textContent;
       const btn = document.getElementById('campay-submit-btn');
       if (!phone || !email) {
-        showAlert('Enter phone and email first (use the form below).', 'error');
+        showAlert('Enter your MoMo phone number and email in the CamPay section.', 'error');
+        return;
+      }
+      if (ref === 'Loading...' || code === 'Loading...') {
+        showAlert('Payment page is still loading. Wait a moment and try again.', 'error');
         return;
       }
       btn.disabled = true;
@@ -744,7 +774,9 @@
           window.location.href = 'payment-pending.html?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email) + '&channel=campay';
         }, 2500);
       } catch (err) {
-        showAlert(err.message || 'CamPay failed', 'error');
+        console.error('CamPay checkout error:', err);
+        showAlert(callableErrorMessage(err), 'error');
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Pay with CamPay MoMo';
       }
@@ -893,14 +925,24 @@
       });
     }
 
-    // Show alert
+    // Show alert (payment-alert stays visible on CamPay tab)
     function showAlert(message, type) {
-      const alert = document.getElementById('alert');
-      alert.textContent = message;
-      alert.className = `alert ${type} show`;
-      setTimeout(() => {
-        alert.classList.remove('show');
-      }, 5000);
+      ['payment-alert', 'alert'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'alert ' + type + ' show';
+      });
+      const primary = document.getElementById('payment-alert') || document.getElementById('alert');
+      if (primary) {
+        primary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      setTimeout(function () {
+        ['payment-alert', 'alert'].forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('show');
+        });
+      }, 8000);
     }
 
     function getUrlParameter(name) {
@@ -987,13 +1029,18 @@
     if (sessionEmail) {
       const stripeEmail = document.getElementById('stripe-email');
       const momoEmail = document.getElementById('email');
+      const campayEmail = document.getElementById('campay-email');
       if (stripeEmail) stripeEmail.value = sessionEmail;
       if (momoEmail) momoEmail.value = sessionEmail;
+      if (campayEmail) campayEmail.value = sessionEmail;
     }
     const sessionPhone = payCtx.session?.phoneE164 || payCtx.session?.phone;
     if (sessionPhone && payCtx.isCameroon) {
+      const localPhone = sessionPhone.replace(/\D/g, '').replace(/^237/, '');
       const phoneField = document.getElementById('phone');
-      if (phoneField) phoneField.value = sessionPhone.replace(/\D/g, '').replace(/^237/, '');
+      const campayPhone = document.getElementById('campay-phone');
+      if (phoneField) phoneField.value = localPhone;
+      if (campayPhone) campayPhone.value = localPhone;
     }
 
     // Handle form submission
