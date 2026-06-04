@@ -313,6 +313,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+
+    // Tier 1 payout audit — Cloud Functions write only; admin dashboard reads history
+    match /payout_events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
     
     // Notifications - Public read/create for ambassador dashboard
     match /notifications/{notifId} {
