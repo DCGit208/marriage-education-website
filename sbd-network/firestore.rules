@@ -306,6 +306,12 @@ service cloud.firestore {
       allow update, delete: if true;
       allow create: if true;
     }
+
+    // Unified payments ledger — read-only admin preview (written by backend)
+    match /payments/{paymentId} {
+      allow read: if true;
+      allow write: if false;
+    }
     
     // Referral Codes - Public read/create, admin update/delete
     match /referral_codes/{referralCode} {
