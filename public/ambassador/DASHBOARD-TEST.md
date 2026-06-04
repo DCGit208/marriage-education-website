@@ -45,6 +45,16 @@ Cache bust: `?v=20260526prod` (production), `?v=20260526c` (preview test)
 | RD | /regional-director/rd-dashboard-test.html |
 | Executive | /executive/dashboard-test.html |
 
+Firebase preview: `https://marriage-education.web.app` + paths above. Cache bust: `?v=20260526tier1`.
+
+### Commissions — Tier 1 wallet dry run
+
+1. Sign in with a test `AMB-…` or `RD-…` code.
+2. Open **Commissions** — **Payout wallet** card appears above recurring commissions.
+3. Confirm **Total pending**, **Recruitment pending**, **SBD pending** match Firestore (no client-side math errors).
+4. **Payout profile** — Save MoMo or Wise fields → `updatePayoutProfile` succeeds; profile shows Complete when required fields filled.
+5. Do **not** expect cash transfer from this UI (payouts are admin Finance + Wise/CamPay).
+
 ## Role charter documents (Phase 1 — static only)
 
 Hosted under `/documents/sbd-ops/` (no dashboard tab yet).
