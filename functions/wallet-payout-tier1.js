@@ -124,19 +124,46 @@ async function resolvePayeeRef(db, payeeCode) {
   return { ref, data: doc.data(), collection: 'ambassadors' };
 }
 
+function adminEmailAllowlist() {
+  const fromConfig = (functions.config().admin && functions.config().admin.emails) || '';
+  const parsed = fromConfig.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  if (parsed.length) return parsed;
+  return ['admin@marriageducation.com'];
+}
+
+/**
+ * Match admin-dashboard-test hasAdminAccess + production admin inboxes.
+ * Checks: custom claim admin, users/{uid}.role|isAdmin, config/default email allowlist.
+ */
 async function assertAdmin(db, context) {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
   }
-  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
-  const callerData = callerSnap.data() || {};
-  if (callerData.role !== 'admin' && callerData.isAdmin !== true) {
-    throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+
+  const tokenEmail = (context.auth.token.email || '').toLowerCase();
+
+  if (context.auth.token.admin === true) {
+    return { uid: context.auth.uid, email: tokenEmail };
   }
-  return {
-    uid: context.auth.uid,
-    email: context.auth.token.email || callerData.email || ''
-  };
+
+  const callerSnap = await db.collection('users').doc(context.auth.uid).get();
+  const callerData = callerSnap.exists ? callerSnap.data() : {};
+  const role = String(callerData.role || '').toLowerCase();
+  if (role === 'admin' || callerData.isAdmin === true) {
+    return {
+      uid: context.auth.uid,
+      email: tokenEmail || (callerData.email || '')
+    };
+  }
+
+  if (tokenEmail && adminEmailAllowlist().includes(tokenEmail)) {
+    return { uid: context.auth.uid, email: tokenEmail };
+  }
+
+  throw new functions.https.HttpsError(
+    'permission-denied',
+    'Admin access required. Use an admin account (custom claim admin:true, users/{uid}.role=admin, or configured admin email).'
+  );
 }
 
 async function scanPayoutQueue(db, minPendingFcfa) {

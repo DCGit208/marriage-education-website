@@ -52,7 +52,10 @@
       }).join('');
       bindFinanceRowActions();
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="10">Error: ' + esc(e.message) + '</td></tr>';
+      var hint = (e.message || '').indexOf('Admin access') !== -1
+        ? ' Sign in as admin@marriageducation.com or set users/{uid}.role=admin / custom claim admin:true.'
+        : '';
+      tbody.innerHTML = '<tr><td colspan="10">Error: ' + esc(e.message) + esc(hint) + '</td></tr>';
     }
   }
 
