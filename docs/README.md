@@ -20,6 +20,7 @@
 | **Wallet field mapping (no new ledger)** | [WALLET-DATA-MODEL.md](./WALLET-DATA-MODEL.md) |
 | **Architecture v2** | [COMMERCE-OS-ARCHITECTURE-v2.md](./COMMERCE-OS-ARCHITECTURE-v2.md) |
 | **Build plan (tiers 1–6)** | [COMMERCE-OS-BUILD-PLAN.md](./COMMERCE-OS-BUILD-PLAN.md) |
+| **Tier 2 CamPay runbook** | [COMMERCE-OS-TIER2-RUNBOOK.md](./COMMERCE-OS-TIER2-RUNBOOK.md) |
 | **Admin Finance UX** | [COMMERCE-OS-ADMIN-UX.md](./COMMERCE-OS-ADMIN-UX.md) |
 
 Cursor rule for Tier 1 work: `.cursor/rules/commerce-payout-tier1.mdc`
@@ -34,7 +35,8 @@ Cursor rule for Tier 1 work: `.cursor/rules/commerce-payout-tier1.mdc`
 | 4 | Remove executive product override | Done |
 | 5 | Dashboards & copy alignment | Done |
 | 6 | Ledger backfill & reconciliation | Done |
-| **Tier 1** | Payout profiles, wallet UI, `payout_events`, admin Finance | **In progress** |
+| **Tier 1** | Payout profiles, wallet UI, `payout_events`, admin Finance | Done |
+| **Tier 2** | CamPay collect/disburse pilot (ambassador registration) | **Code ready — enable via config** |
 
 ## Tests
 

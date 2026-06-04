@@ -53,6 +53,8 @@ node scripts/reconcile-commission-ledger-phase6.js
 
 ## Tier 2 — CamPay Cameroon (collect + disburse pilot)
 
+**Status:** Implemented — see [COMMERCE-OS-TIER2-RUNBOOK.md](./COMMERCE-OS-TIER2-RUNBOOK.md). Enable with `commerce.campay_live_enabled` + CamPay credentials.
+
 **Duration estimate:** ~3–5 weeks after Tier 1.
 
 | # | Feature |

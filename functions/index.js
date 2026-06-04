@@ -1069,168 +1069,20 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
  * Approve Payment (Admin Only)
  */
 exports.approvePayment = functions.https.onCall(async (data, context) => {
-  // TODO: Re-enable admin authentication after implementing Firebase Auth in admin panel
-  // TEMPORARY: Disabled for testing
-  // if (!context.auth || !context.auth.token.admin) {
-  //   throw new functions.https.HttpsError('permission-denied', 'Admin access required');
-  // }
-
   try {
     const { reference } = data;
-
-    const paymentRef = db.collection('pending_payments').doc(reference);
-    const paymentDoc = await paymentRef.get();
-
-    if (!paymentDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Payment not found');
-    }
-
-    const payment = paymentDoc.data();
-
-    // Update payment status
-    await paymentRef.update({
-      status: 'approved',
-      approved_at: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    await writeUnifiedPaymentRecord({
-      source: 'manual_payment',
-      reference,
-      external_reference: reference,
-      record_type: 'customer_payment',
+    const result = await getPaymentFulfillment().fulfillPendingPayment(reference, {
       channel: 'manual',
-      payment_method: (payment.type === 'ambassador' || payment.product_id === 'ambassador-registration') ? 'manual' : 'momo',
-      payment_category: payment.type || payment.product_id || 'book-purchase',
-      product_id: payment.product_id || '',
-      product_name: payment.product_name || '',
-      amount: Number(payment.amount || 0),
-      currency: payment.currency || 'XAF',
-      customer_email: payment.email || '',
-      customer_phone: payment.phone || '',
-      ambassador_code: payment.ambassador_code || '',
-      recruiter_code: payment.regional_director || payment.rd_code || '',
-      status: 'approved',
-      action_required: false,
-      approved_at: admin.firestore.FieldValue.serverTimestamp()
+      payment_method: 'momo'
     });
-
     console.log(`[APPROVE] Payment ${reference} approved`);
-
-    // Handle RD registration activation
-    if (payment.product_id === 'rd-registration' && payment.rd_code) {
-      await activateRD(payment);
-      
-      // Send Telegram notification for RD registration (plain text)
-      if (TELEGRAM_BOT_TOKEN) {
-        const rdMsg = `✅ RD REGISTRATION APPROVED\n\n` +
-          `👑 Code: ${payment.rd_code}\n` +
-          `👤 Name: ${payment.name || 'N/A'}\n` +
-          `📧 Email: ${payment.email}\n` +
-          `📱 Phone: ${payment.phone}\n` +
-          `💰 Fee: ${payment.amount} ${payment.currency}`;
-        await sendTelegram(rdMsg, false);
-      }
-
-      return {
-        success: true,
-        message: 'RD registration approved',
-        rd_code: payment.rd_code,
-        email_sent: true
-      };
-    }
-
-    // Handle Ambassador registration activation
-    if (payment.product_id === 'ambassador-registration' || payment.type === 'ambassador') {
-      const normalized = normalizeAmbassadorPayment(payment, reference);
-
-      try {
-        await activateAmbassador(normalized, reference);
-      } catch (activationError) {
-        console.error('[CRITICAL] Ambassador activation failed:', reference, activationError.message);
-
-        if (TELEGRAM_BOT_TOKEN) {
-          const alertMsg =
-            `🚨 CRITICAL ERROR - Ambassador Activation Failed\n\n` +
-            `Reference: ${reference}\n` +
-            `Email: ${payment.email}\n` +
-            `Phone: ${payment.phone || 'N/A'}\n\n` +
-            `❌ ERROR: ${activationError.message}\n\n` +
-            `⚠️ Payment marked approved but activation incomplete.\n` +
-            `Run: node scripts/complete-ambassador-activation.js ${reference}`;
-          await sendTelegram(alertMsg, false);
-        }
-
-        throw new functions.https.HttpsError('internal', activationError.message);
-      }
-
-      return {
-        success: true,
-        message: 'Ambassador registration approved',
-        ambassador_code: normalized.ambassador_code,
-        email_sent: true
-      };
-    }
-
-    // Track ambassador commission
-    if (payment.ambassador_ref) {
-      await trackAmbassadorSale(payment.ambassador_ref, payment.amount);
-      console.log(`[COMMISSION] Ambassador ${payment.ambassador_ref}: ${payment.amount}`);
-    }
-
-    // Track referral commission
-    if (payment.referral_code) {
-      await trackReferralSale(payment.referral_code, payment.amount);
-      console.log(`[REFERRAL] Code ${payment.referral_code}: ${payment.amount}`);
-    }
-
-    // Generate download URL for book purchase
-    const downloadUrl = await generateDownloadURL(payment.product_id);
-    console.log(`[DOWNLOAD] URL generated: ${downloadUrl.substring(0, 50)}...`);
-
-    // Send download email to customer
-    const emailSent = await sendDownloadEmail(
-      payment.email,
-      payment.product_name,
-      downloadUrl,
-      reference  // Pass payment reference for simple redirect URL
-    );
-
-    // Send comprehensive Telegram notification to admin (plain text)
-    if (TELEGRAM_BOT_TOKEN) {
-      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
-      const simpleUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${reference}`;
-      const adminMsg = `✅ PAYMENT APPROVED & SENT\n\n` +
-        `📋 Reference: ${payment.reference}\n` +
-        `👤 Customer: ${payment.email}\n` +
-        `📱 Phone: ${payment.phone || 'N/A'}\n` +
-        `📚 Product: ${payment.product_name}\n` +
-        `💰 Amount: ${payment.amount} ${payment.currency}\n\n` +
-        `📧 Email: ${emailSent ? '✅' : '❌'}\n` +
-        `${payment.ambassador_ref ? `🎯 Ambassador: ${payment.ambassador_ref}\n` : ''}` +
-        `${payment.referral_code ? `🔗 Referral: ${payment.referral_code}\n` : ''}` +
-        `${payment.rd_code ? `👑 RD: ${payment.rd_code}\n` : ''}\n` +
-        `📥 Simple Download Link:\n${simpleUrl}\n\n` +
-        `📥 Direct Download (expires ${expiryDate}):\n${downloadUrl}`;
-      
-      await sendTelegram(adminMsg, false);
-      console.log('[Telegram] Admin notification sent');
-    }
-
-    return {
-      success: true,
-      message: 'Payment approved successfully',
-      download_url: downloadUrl,
-      email_sent: emailSent,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-    };
+    return result;
   } catch (error) {
     console.error('approvePayment error:', error);
-    
-    // Send error notification to admin (plain text)
     if (TELEGRAM_BOT_TOKEN) {
       await sendTelegram(`❌ PAYMENT APPROVAL ERROR\n\nReference: ${data.reference}\nError: ${error.message}`, false);
     }
-    
+    if (error instanceof functions.https.HttpsError) throw error;
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
@@ -2471,6 +2323,28 @@ async function reprocessAmbassadorActivationCore(reference) {
     ambassador_code: normalized.ambassador_code,
     message: 'Ambassador activation reprocessed'
   };
+}
+
+const { createPendingPaymentFulfillment } = require('./pending-payment-fulfillment');
+let _paymentFulfillment = null;
+function getPaymentFulfillment() {
+  if (!_paymentFulfillment) {
+    _paymentFulfillment = createPendingPaymentFulfillment({
+      db,
+      admin,
+      writeUnifiedPaymentRecord,
+      normalizeAmbassadorPayment,
+      activateAmbassador,
+      activateRD,
+      trackAmbassadorSale,
+      trackReferralSale,
+      generateDownloadURL,
+      sendDownloadEmail,
+      sendTelegram,
+      TELEGRAM_BOT_TOKEN
+    });
+  }
+  return _paymentFulfillment;
 }
 
 exports.reprocessAmbassadorActivation = functions.https.onCall(async (data, context) => {
@@ -7393,4 +7267,16 @@ exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
 // Commerce OS Tier 1 — wallet & payout
 // ============================================
 const walletPayoutTier1 = require('./wallet-payout-tier1');
-walletPayoutTier1.registerWalletPayoutTier1(db, exports);
+const walletTier1Api = walletPayoutTier1.registerWalletPayoutTier1(db, exports);
+
+// ============================================
+// Commerce OS Tier 2 — CamPay production pilot
+// ============================================
+const { registerCommerceOsTier2 } = require('./commerce-os-tier2');
+registerCommerceOsTier2(db, admin, exports, {
+  fulfillPendingPayment: (reference, options) =>
+    getPaymentFulfillment().fulfillPendingPayment(reference, options),
+  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  markPayoutBatchPaidCore: (data, adminUser) =>
+    walletTier1Api.markPayoutBatchPaidCore(data, adminUser)
+});

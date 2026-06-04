@@ -469,6 +469,9 @@
           <button type="button" class="payment-method-btn" data-method="stripe" id="btn-pay-stripe" onclick="selectPaymentMethod('stripe', this)">
             <span>💳</span> Credit Card
           </button>
+          <button type="button" class="payment-method-btn hidden" data-method="campay" id="btn-pay-campay" onclick="selectPaymentMethod('campay', this)">
+            <span>📲</span> CamPay MoMo
+          </button>
         </div>
       </div>
 
@@ -545,6 +548,15 @@
             <span class="secure-badge-text">Secure checkout powered by Stripe</span>
           </div>
         </div>
+      </div>
+
+      <!-- CamPay automated MoMo (Tier 2 pilot — Cameroon) -->
+      <div class="momo-section hidden" id="campay-payment-section" style="margin-bottom:24px;padding:20px;background:#ecfdf5;border-radius:12px;border:1px solid #6ee7b7">
+        <h3>📲 Pay with CamPay (automated MoMo)</h3>
+        <p style="font-size:14px;color:#047857;margin-bottom:16px">Confirm on your phone when prompted. No manual transfer reference needed when CamPay is enabled.</p>
+        <button type="button" class="submit-btn" id="campay-submit-btn" onclick="processCampayPayment()">
+          Pay with CamPay MoMo
+        </button>
       </div>
 
       <!-- MOMO Payment Section -->
@@ -646,6 +658,7 @@
     let elements = null;
     let cardElement = null;
     let currentPaymentMethod = 'momo';
+    let campayPilotEnabled = false;
 
     // Initialize Stripe
     function initializeStripe() {
@@ -664,16 +677,76 @@
         btn.classList.toggle('active', btn.dataset.method === method);
       });
 
+      const campaySec = document.getElementById('campay-payment-section');
+      const momoSec = document.getElementById('momo-payment-section');
+      const stripeSec = document.getElementById('stripe-payment-section');
+
       if (method === 'stripe') {
-        document.getElementById('momo-payment-section').classList.add('hidden');
-        document.getElementById('stripe-payment-section').classList.add('active');
+        if (momoSec) momoSec.classList.add('hidden');
+        if (campaySec) campaySec.classList.add('hidden');
+        if (stripeSec) stripeSec.classList.add('active');
         initializeStripe();
         if (cardElement && !document.querySelector('#card-element .StripeElement')) {
           cardElement.mount('#card-element');
         }
+      } else if (method === 'campay') {
+        if (stripeSec) stripeSec.classList.remove('active');
+        if (momoSec) momoSec.classList.add('hidden');
+        if (campaySec) campaySec.classList.remove('hidden');
       } else {
-        document.getElementById('momo-payment-section').classList.remove('hidden');
-        document.getElementById('stripe-payment-section').classList.remove('active');
+        if (stripeSec) stripeSec.classList.remove('active');
+        if (campaySec) campaySec.classList.add('hidden');
+        if (momoSec) momoSec.classList.remove('hidden');
+      }
+    }
+
+    async function processCampayPayment() {
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+      const code = document.getElementById('registration-code').textContent;
+      const ref = document.getElementById('reference-code').textContent;
+      const btn = document.getElementById('campay-submit-btn');
+      if (!phone || !email) {
+        showAlert('Enter phone and email first (use the form below).', 'error');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Starting CamPay…';
+      try {
+        const payAmount = document.getElementById('registration-price').dataset.amount || '15000';
+        const payCurrency = document.getElementById('registration-price').dataset.currency || 'XAF';
+        let ambassadorData = null;
+        const stored = sessionStorage.getItem('ambassadorData');
+        if (stored) ambassadorData = JSON.parse(stored);
+        const submit = firebase.functions().httpsCallable('submitManualPayment');
+        await submit({
+          reference: ref,
+          product_id: 'ambassador-registration',
+          product_name: 'Ambassador Registration - ' + code,
+          amount: payAmount,
+          currency: payCurrency,
+          phone,
+          email,
+          type: 'ambassador',
+          ambassador_code: code,
+          regional_director: ambassadorData?.recruitedBy || ambassadorData?.regional_director_code || '',
+          ambassador_data: ambassadorData
+        });
+        const campay = firebase.functions().httpsCallable('initiateCampayCheckout');
+        const res = await campay({
+          reference: ref,
+          phone: phone.startsWith('+') ? phone : '+237' + phone.replace(/\D/g, ''),
+          product_type: 'ambassador_registration',
+          amount: Number(payAmount)
+        });
+        showAlert('CamPay request sent. Approve the prompt on your phone. You will be redirected when payment completes.', 'success');
+        setTimeout(function () {
+          window.location.href = 'payment-pending.html?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email) + '&channel=campay';
+        }, 2500);
+      } catch (err) {
+        showAlert(err.message || 'CamPay failed', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Pay with CamPay MoMo';
       }
     }
 
@@ -888,6 +961,15 @@
       document.getElementById('amount-text').textContent = payCtx.amount.toLocaleString() + ' FCFA';
       document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
       selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
+      if (typeof firebase !== 'undefined' && firebase.functions) {
+        firebase.functions().httpsCallable('getCampayPilotStatus')().then(function (res) {
+          if (res.data && (res.data.campay_live_enabled || res.data.credentials_configured)) {
+            campayPilotEnabled = true;
+            var campayBtn = document.getElementById('btn-pay-campay');
+            if (campayBtn) campayBtn.classList.remove('hidden');
+          }
+        }).catch(function () {});
+      }
     } else {
       document.getElementById('payment-method-heading').textContent = '💳 International payment';
       document.getElementById('btn-pay-momo').style.display = 'none';
