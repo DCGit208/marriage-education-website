@@ -34,7 +34,7 @@ Cursor rule for Tier 1 work: `.cursor/rules/commerce-payout-tier1.mdc`
 | 4 | Remove executive product override | Done |
 | 5 | Dashboards & copy alignment | Done |
 | 6 | Ledger backfill & reconciliation | Done |
-| **Tier 1** | Payout profiles, wallet UI, `payout_events`, admin Finance | **Docs done — code next** |
+| **Tier 1** | Payout profiles, wallet UI, `payout_events`, admin Finance | **In progress** |
 
 ## Tests
 
@@ -42,6 +42,7 @@ Cursor rule for Tier 1 work: `.cursor/rules/commerce-payout-tier1.mdc`
 node scripts/test-recruitment-bonus-policy.js
 node scripts/test-sbd-subscription-commission.js
 node scripts/reconcile-commission-ledger-phase6.js
+node scripts/test-wallet-payout-tier1.js
 node scripts/verify-ambassador-register-flow.mjs
 ```
 

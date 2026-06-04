@@ -310,5 +310,11 @@ service cloud.firestore {
     match /users/{userId}/wardrobes/{categoryId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Tier 1 payout audit — written by Cloud Functions only
+    match /payout_events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

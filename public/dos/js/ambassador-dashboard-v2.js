@@ -1438,6 +1438,14 @@
   }
 
   async function loadPhase3Sections(code, stats) {
+    if (global.DOSWalletTier1) {
+      var walletEl = global.DOSWalletTier1.ensureWalletContainer();
+      if (walletEl) {
+        var collection = state.accountSource === 'regional_directors'
+          ? 'regional_directors' : 'ambassadors';
+        global.DOSWalletTier1.renderWalletCard(walletEl, stats, code, collection);
+      }
+    }
     if (!global.DOSPipeline) return;
     await refreshPipelineUI(code);
     var recEl = document.getElementById('dosRecurringBody');
