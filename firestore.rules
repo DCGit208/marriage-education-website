@@ -98,6 +98,12 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
     
+    // Unified payments ledger — read-only admin preview (written by backend)
+    match /payments/{paymentId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Pending Payments - Temporarily allow reads for testing (TODO: Add proper admin auth)
     match /pending_payments/{paymentRef} {
       allow read: if true; // TEMPORARY: Allow reads for testing
@@ -124,12 +130,6 @@ service cloud.firestore {
       allow write: if false; // Cloud Function only
     }
 
-    // Unified Payments Ledger - Read-only preview for Payment tab, admin dashboard
-    match /payments/{paymentId} {
-      allow read: if true; // Temporary: read-only dashboard preview
-      allow write: if false; // No direct client writes
-    }
-    
     // Notifications - Allow public read for ambassador dashboard
     match /notifications/{notificationId} {
       allow read: if true; // Allow ambassadors to read notifications
