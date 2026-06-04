@@ -258,6 +258,12 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
       allow create: if true;
     }
+
+    // SBD subscription sales audit — written by Cloud Functions; admin dashboard reads
+    match /sbd_sales/{saleId} {
+      allow read: if true;
+      allow write: if false;
+    }
     
     // Ambassadors - Public can register and read, update own progress
     match /ambassadors/{ambassadorId} {

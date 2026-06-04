@@ -4,6 +4,9 @@
 (function (global) {
   'use strict';
 
+  /** Last render context so KPI updates after save without full page reload. */
+  var lastWalletRender = null;
+
   function num(v) {
     var n = Number(v);
     return n === n ? n : 0;
@@ -34,6 +37,12 @@
 
   function renderWalletCard(container, stats, payeeCode, collection) {
     if (!container) return;
+    lastWalletRender = {
+      container: container,
+      stats: stats,
+      payeeCode: payeeCode,
+      collection: collection
+    };
     var w = summarizeFromStats(stats, payeeCode, collection);
     var profile = w.payout_profile || {};
     var profileOk = profile.profile_complete === true;
@@ -121,11 +130,34 @@
     try {
       var fn = firebase.functions().httpsCallable('updatePayoutProfile');
       var res = await fn(payload);
+      var savedProfile = res.data && res.data.payout_profile;
       if (msg) {
         msg.style.color = '#16a34a';
-        msg.textContent = res.data && res.data.payout_profile && res.data.payout_profile.profile_complete
+        msg.textContent = savedProfile && savedProfile.profile_complete
           ? 'Profile saved and complete.'
           : 'Profile saved — add required fields to mark complete.';
+      }
+      if (
+        savedProfile &&
+        lastWalletRender &&
+        lastWalletRender.payeeCode === payeeCode
+      ) {
+        lastWalletRender.stats = Object.assign({}, lastWalletRender.stats, {
+          payout_profile: savedProfile
+        });
+        renderWalletCard(
+          lastWalletRender.container,
+          lastWalletRender.stats,
+          payeeCode,
+          lastWalletRender.collection
+        );
+        var msgAfter = document.getElementById('ppSaveMsg');
+        if (msgAfter) {
+          msgAfter.style.color = '#16a34a';
+          msgAfter.textContent = savedProfile.profile_complete
+            ? 'Profile saved and complete.'
+            : 'Profile saved — add required fields to mark complete.';
+        }
       }
     } catch (e) {
       if (msg) {
