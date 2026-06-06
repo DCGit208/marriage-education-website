@@ -380,6 +380,7 @@
     }
 
     renderSbdPanel(stats);
+    updateTopbarSbdAppLink(stats);
   }
 
   function getEffectiveRdCode(stats, code) {
@@ -404,6 +405,32 @@
     var amb = (stats.ambassador_code || stats.existingAmbCode || '').toString().trim();
     if (amb.indexOf('AMB-') === 0) return amb.replace(/^AMB-/, 'SBD-');
     return '';
+  }
+
+  function getSbdAppReferralUrl(stats) {
+    var sbdCode = resolveSbdReferralCode(stats);
+    if (!sbdCode) return 'https://sbd-network.web.app';
+    return 'https://sbd-network.web.app/auth?ref=' + encodeURIComponent(sbdCode);
+  }
+
+  function updateTopbarSbdAppLink(stats) {
+    stats = stats || state.stats;
+    var link = document.getElementById('dosTopbarSbdApp');
+    if (!link) {
+      var wrap = document.querySelector('.dos-topbar-links');
+      if (!wrap) return;
+      link = document.createElement('a');
+      link.id = 'dosTopbarSbdApp';
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.innerHTML = '<i class="fa-solid fa-mobile-screen"></i> SBD app';
+      wrap.appendChild(link);
+    }
+    var sbdCode = resolveSbdReferralCode(stats);
+    link.href = getSbdAppReferralUrl(stats);
+    link.title = sbdCode
+      ? 'Open SBD Network app · share signups with ref ' + sbdCode
+      : 'Open SBD Network app (referral code not provisioned yet)';
   }
 
   function renderSbdPanel(stats) {
@@ -1215,6 +1242,7 @@
         pill.style.display = 'none';
       }
     }
+    updateTopbarSbdAppLink(state.stats);
   }
 
   function isPreviewDashboardPage() {

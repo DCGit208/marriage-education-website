@@ -624,6 +624,16 @@ body.dos-app {
   color: #18181b;
 }
 
+.dos-topbar-links a#dosTopbarSbdApp {
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.dos-topbar-links a#dosTopbarSbdApp:hover {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
 .dos-notif-wrap {
   position: relative;
 }
