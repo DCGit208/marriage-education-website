@@ -468,38 +468,163 @@ document.getElementById('createBoardForm')?.addEventListener('submit', async (e)
 // USERS
 // ================================================================
 
+const adminUsersSearch = document.getElementById('adminUsersSearch');
+const adminUsersTierFilter = document.getElementById('adminUsersTierFilter');
+const adminUsersSearchMeta = document.getElementById('adminUsersSearchMeta');
+
+function adminUserSearchHaystack(u) {
+  const parts = [
+    u.id,
+    u.name,
+    u.displayName,
+    u.email,
+    u.role,
+    u.tier,
+    u.mentor ? 'mentor' : '',
+    u.disabled ? 'suspended disabled' : '',
+  ];
+  return parts
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+function getAdminUsersFilterState() {
+  return {
+    query: adminUsersSearch ? adminUsersSearch.value.trim().toLowerCase() : '',
+    tier: adminUsersTierFilter ? adminUsersTierFilter.value.trim().toLowerCase() : '',
+  };
+}
+
+function filterAdminUsers(list, filters) {
+  const q = (filters && filters.query) || '';
+  const tier = (filters && filters.tier) || '';
+  return list.filter(function (u) {
+    if (tier) {
+      const ut = String(u.tier || 'free').toLowerCase();
+      if (tier === 'foundation' && (ut === 'foundation' || ut === 'free')) {
+        /* ok */
+      } else if (ut !== tier) {
+        return false;
+      }
+    }
+    if (!q) return true;
+    return adminUserSearchHaystack(u).indexOf(q) >= 0;
+  });
+}
+
+function renderUsersList(filters) {
+  if (!usersList) return;
+  const state = filters || getAdminUsersFilterState();
+  const filtered = filterAdminUsers(allUsers, state);
+  usersList.innerHTML = '';
+
+  if (adminUsersSearchMeta) {
+    const total = allUsers.length;
+    const shown = filtered.length;
+    if (!total) {
+      adminUsersSearchMeta.textContent = '';
+    } else if (state.query || state.tier) {
+      adminUsersSearchMeta.textContent =
+        'Showing ' + shown + ' of ' + total + ' users' + (shown === 0 ? ' — try a different search or tier.' : '');
+    } else {
+      adminUsersSearchMeta.textContent = total + ' users';
+    }
+  }
+
+  if (!allUsers.length) {
+    usersList.innerHTML = '<p class="empty-state">No users yet</p>';
+    return;
+  }
+  if (!filtered.length) {
+    usersList.innerHTML = '<p class="empty-state">No users match your search.</p>';
+    return;
+  }
+
+  const cap = 120;
+  const rows = filtered.slice(0, cap);
+  if (filtered.length > cap) {
+    const note = document.createElement('p');
+    note.className = 'small-text';
+    note.style.padding = '0 0 10px';
+    note.textContent =
+      'Showing first ' + cap + ' matches — narrow your search to find others faster.';
+    usersList.appendChild(note);
+  }
+
+  rows.forEach(function (u) {
+    const groupIds = userGroupsArray(u.groups);
+    const card = document.createElement('div');
+    card.className = 'admin-card' + (u.disabled ? ' admin-card-archived' : '');
+    const lastActive = formatAdminDate(u.lastActive);
+    const needsRepair = !Array.isArray(u.groups);
+    const repairHint = needsRepair ? ' · <span style="color:#fa0">needs repair</span>' : '';
+    card.innerHTML =
+      '<h4>' +
+      escapeHtml(u.name || u.email) +
+      (u.disabled ? ' <span class="badge-archived">Suspended</span>' : '') +
+      '</h4>' +
+      '<p class="small-text">' +
+      escapeHtml(u.email || '') +
+      '</p>' +
+      '<p class="small-text">Role: <strong>' +
+      escapeHtml(normalizeUserRole(u.role)) +
+      '</strong> · Tier: <strong>' +
+      escapeHtml(u.tier || 'free') +
+      '</strong> · Last active: ' +
+      lastActive +
+      repairHint +
+      '</p>' +
+      '<p class="small-text">UID: ' +
+      escapeHtml(u.id) +
+      ' · Groups: ' +
+      groupIds.length +
+      '</p>' +
+      '<div class="admin-card-actions">' +
+      '<button type="button" class="btn btn-sm btn-primary manage-user-btn" data-id="' +
+      escapeHtml(u.id) +
+      '">Manage</button>' +
+      '</div>';
+    usersList.appendChild(card);
+  });
+}
+
 async function loadUsers() {
   if (!usersList) return;
   try {
     usersList.innerHTML = '<div class="loading-text">Loading users...</div>';
+    if (adminUsersSearchMeta) adminUsersSearchMeta.textContent = 'Loading…';
     const snap = await db.collection('users').get();
     allUsers = [];
-    usersList.innerHTML = '';
-    if (snap.empty) { usersList.innerHTML = '<p class="empty-state">No users yet</p>'; return; }
-    snap.forEach(doc => {
+    snap.forEach(function (doc) {
       const u = doc.data();
       const groupIds = userGroupsArray(u.groups);
       allUsers.push({ id: doc.id, ...u, groups: groupIds });
-      const card = document.createElement('div');
-      card.className = 'admin-card' + (u.disabled ? ' admin-card-archived' : '');
-      const lastActive = formatAdminDate(u.lastActive);
-      const needsRepair = !Array.isArray(u.groups);
-      const repairHint = needsRepair ? ' · <span style="color:#fa0">needs repair</span>' : '';
-      card.innerHTML = `
-        <h4>${escapeHtml(u.name || u.email)}${u.disabled ? ' <span class="badge-archived">Suspended</span>' : ''}</h4>
-        <p class="small-text">${escapeHtml(u.email || '')}</p>
-        <p class="small-text">Role: <strong>${escapeHtml(normalizeUserRole(u.role))}</strong> · Tier: <strong>${escapeHtml(u.tier || 'free')}</strong> · Last active: ${lastActive}${repairHint}</p>
-        <p class="small-text">Groups: ${groupIds.length}</p>
-        <div class="admin-card-actions">
-          <button type="button" class="btn btn-sm btn-primary manage-user-btn" data-id="${escapeHtml(doc.id)}">Manage</button>
-        </div>`;
-      usersList.appendChild(card);
     });
+    renderUsersList();
     updateBroadcastTargets();
   } catch (err) {
     console.error('loadUsers:', err);
-    usersList.innerHTML = '<div class="error-text">Error loading users: ' + escapeHtml(err.message || String(err)) + '</div>';
+    usersList.innerHTML =
+      '<div class="error-text">Error loading users: ' + escapeHtml(err.message || String(err)) + '</div>';
+    if (adminUsersSearchMeta) adminUsersSearchMeta.textContent = '';
   }
+}
+
+if (adminUsersSearch) {
+  let adminUsersSearchTimer = null;
+  adminUsersSearch.addEventListener('input', function () {
+    clearTimeout(adminUsersSearchTimer);
+    adminUsersSearchTimer = setTimeout(function () {
+      renderUsersList();
+    }, 200);
+  });
+}
+
+if (adminUsersTierFilter) {
+  adminUsersTierFilter.addEventListener('change', function () {
+    renderUsersList();
+  });
 }
 
 var _manageUserOpening = false;
@@ -805,6 +930,8 @@ async function handleSaveStaffExpressionAccess(userId, enabled) {
         update['subscription.status'] = 'active';
         update['subscription.endDate'] = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
       }
+    } else {
+      update['progress.advancedExpressionUnlocked'] = false;
     }
 
     await userRef.update(update);
@@ -891,9 +1018,16 @@ document.getElementById('saveUserGroupsBtn')?.addEventListener('click', async ()
     showLoading(true);
     const checkboxes = document.querySelectorAll('#userGroupsChecklist input[type="checkbox"]');
     const selectedGroups = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-    await db.collection('users').doc(currentManagingUserId).update({ groups: selectedGroups });
+    const update = { groups: selectedGroups };
+    const stillHasAdv = ADMIN_ADVANCED_EXPRESSION_GROUPS.some((g) => selectedGroups.includes(g));
+    if (!stillHasAdv) {
+      update['staffAccess.advancedExpression'] = false;
+      update['progress.advancedExpressionUnlocked'] = false;
+    }
+    await db.collection('users').doc(currentManagingUserId).update(update);
     closeAllModals();
     await loadUsers();
+    alert(stillHasAdv ? 'Community groups updated.' : 'Community groups updated — advanced Muliebrity / Virility access removed.');
   } catch (err) {
     console.error('saveUserGroups:', err);
     alert('Error updating user groups');
