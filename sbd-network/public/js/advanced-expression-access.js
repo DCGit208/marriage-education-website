@@ -76,11 +76,12 @@
 
   function isAdminGrantedElite(userData) {
     if (!userData || !hasEliteTier(userData)) return false;
-    if (userData.staffAccess?.advancedExpression === true) return true;
-    const sub = userData.subscription;
-    if (sub?.source === 'admin') return true;
-    if (!sub || sub.status !== 'active' || normalizeTierSlug(sub.tier) !== 'elite') return false;
-    return subscriptionEndMs(sub) >= new Date('2090-01-01').getTime();
+    return userData.staffAccess?.advancedExpression === true;
+  }
+
+  function userHasAdvancedExpressionGroup(userData) {
+    const groups = Array.isArray(userData?.groups) ? userData.groups : [];
+    return ADVANCED_EXPRESSION_GROUP_IDS.some((id) => groups.includes(id));
   }
 
   function getCompletedCourses(userData) {
@@ -137,6 +138,7 @@
   function hasAdvancedExpressionAccess(userData) {
     if (!userData) return false;
     if (userData.role === 'admin') return true;
+    if (!userHasAdvancedExpressionGroup(userData)) return false;
     if (isAdminGrantedElite(userData)) return true;
     if (userData.progress?.advancedExpressionUnlocked === true) return true;
     return computeFormationMilestoneMet(userData);
@@ -146,7 +148,20 @@
     if (!userData) {
       return { allowed: false, reason: 'auth', message: 'Sign in required', showPaywall: false };
     }
-    if (userData.role === 'admin' || isAdminGrantedElite(userData)) {
+    if (userData.role === 'admin') {
+      return { allowed: true, reason: '', message: '', showPaywall: false };
+    }
+    if (!userHasAdvancedExpressionGroup(userData)) {
+      return {
+        allowed: false,
+        reason: 'group_revoked',
+        message: 'Advanced access not assigned',
+        detail: 'An administrator must assign Advanced Muliebrity / Virility training in Admin → Manage user → Community groups.',
+        showPaywall: false,
+        ctaUrl: '/dashboard.html',
+      };
+    }
+    if (isAdminGrantedElite(userData)) {
       return { allowed: true, reason: '', message: '', showPaywall: false };
     }
     if (userData.progress?.advancedExpressionUnlocked === true || computeFormationMilestoneMet(userData)) {
@@ -240,6 +255,7 @@
     computeFormationMilestoneMet,
     hasAdvancedExpressionAccess,
     getAdvancedExpressionAccess,
+    userHasAdvancedExpressionGroup,
     isAdvancedExpressionBoard,
     filterAdvancedExpressionGroups,
     eliteBillingGroupsOnly,

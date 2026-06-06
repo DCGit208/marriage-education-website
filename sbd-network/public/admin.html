@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1780490199408">
+  <meta name="build-version" content="1780659095112">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>Admin Panel - SBD Network</title>
     
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/admin-panel.css">
+    <link rel="stylesheet" href="/css/admin-panel.css?v=1780659095112">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
 <body class="admin-page has-header">
@@ -64,6 +64,26 @@
                 <h3>Manage Users</h3>
                 <button id="refreshUsersBtn" class="btn btn-secondary">↻ Refresh</button>
             </div>
+            <div class="admin-users-toolbar">
+                <div class="form-group" style="flex:1;min-width:200px;margin:0;">
+                    <label for="adminUsersSearch">Search users</label>
+                    <input type="search" id="adminUsersSearch" placeholder="Name, email, UID, tier, or role…" autocomplete="off">
+                </div>
+                <div class="form-group" style="min-width:140px;margin:0;">
+                    <label for="adminUsersTierFilter">Tier</label>
+                    <select id="adminUsersTierFilter" class="admin-select">
+                        <option value="">All tiers</option>
+                        <option value="foundation">Foundation</option>
+                        <option value="free">Free</option>
+                        <option value="premium">Premium</option>
+                        <option value="elite">Elite</option>
+                        <option value="ambassador">Ambassador</option>
+                        <option value="senior_ambassador">Senior Ambassador</option>
+                        <option value="rd">RD</option>
+                    </select>
+                </div>
+            </div>
+            <p id="adminUsersSearchMeta" class="small-text" style="padding:0 12px 10px;color:var(--text-secondary);"></p>
             <div id="usersList" class="admin-list"></div>
         </section>
 
@@ -597,10 +617,10 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=1780490199408"></script>
-    <script defer src="/js/sw-update-checker.js?v=1780490199408"></script>
-    <script defer src="/js/upload.js?v=1780490199408"></script>
-    <script defer src="/js/admin.js?v=1780490199408"></script>
-    <script defer src="/js/admin-formation.js?v=1780490199408"></script>
+    <script defer src="/js/firebase.js?v=1780659095112"></script>
+    <script defer src="/js/sw-update-checker.js?v=1780659095112"></script>
+    <script defer src="/js/upload.js?v=1780659095112"></script>
+    <script defer src="/js/admin.js?v=20260606access1"></script>
+    <script defer src="/js/admin-formation.js?v=1780659095112"></script>
 </body>
 </html>

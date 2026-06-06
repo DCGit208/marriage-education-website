@@ -87,6 +87,60 @@
     return 'g:' + (ac.id || '');
   }
 
+  function persistActiveComposerDraft() {
+    var ac = CommunicationState.activeConversation;
+    var input = el('ce2Input');
+    var me = CommunicationState.me;
+    if (!ac || !me || !input || !root.Ce2Drafts) return;
+    root.Ce2Drafts.save(me.uid, threadComposerKey(ac), input.value);
+  }
+
+  function clearComposerDraft(ac) {
+    var me = CommunicationState.me;
+    ac = ac || CommunicationState.activeConversation;
+    if (!ac || !me || !root.Ce2Drafts) return;
+    root.Ce2Drafts.clear(me.uid, threadComposerKey(ac));
+  }
+
+  function restoreComposerDraft(ac) {
+    var input = el('ce2Input');
+    var me = CommunicationState.me;
+    if (!ac || !me || !input) return;
+    if (CommunicationState.shareDraft) {
+      input.value = CommunicationState.shareDraft.slice(0, 4000);
+      CommunicationState.shareDraft = null;
+      syncCe2ComposerInputHeight(input);
+      if (root.Ce2Format) root.Ce2Format.syncInputMirror();
+      return;
+    }
+    var text = root.Ce2Drafts ? root.Ce2Drafts.load(me.uid, threadComposerKey(ac)) : '';
+    input.value = text || '';
+    syncCe2ComposerInputHeight(input);
+    if (root.Ce2Format) root.Ce2Format.syncInputMirror();
+  }
+
+  function listMetaLine(uid, threadKey, fallbackSub) {
+    if (uid && root.Ce2Drafts && root.Ce2Drafts.has(uid, threadKey)) {
+      return {
+        text: 'Draft: ' + root.Ce2Drafts.preview(uid, threadKey, 44),
+        isDraft: true,
+      };
+    }
+    return { text: fallbackSub || '', isDraft: false };
+  }
+
+  function syncVisibleGroupMeta(groupId, data) {
+    if (!groupId || !data) return;
+    var me = CommunicationState.me;
+    var rc = receipts();
+    var g = (CommunicationState.visibleGroups || []).find(function (row) {
+      return row.id === groupId;
+    });
+    if (!g || !me || !rc) return;
+    g.unread = rc.unreadCount(data, me.uid);
+    if (data.lastPreview) g.lastPreview = String(data.lastPreview).trim();
+  }
+
   function getComposerSlot(ac) {
     ac = ac || CommunicationState.activeConversation;
     if (!ac) return null;
@@ -286,7 +340,12 @@
     convMetaUnsub = ref.onSnapshot(
       function (snap) {
         CommunicationState.convMeta = snap.exists ? snap.data() : null;
-        requestRender({ throttle: true, threadOnly: true });
+        if (ac.type === 'group' && snap.exists) {
+          syncVisibleGroupMeta(ac.id, snap.data());
+          requestRender({ throttle: true });
+        } else {
+          requestRender({ throttle: true, threadOnly: true });
+        }
       },
       function () {}
     );
@@ -324,16 +383,67 @@
     if (!banner) return;
     if (!CommunicationState.replyTo) {
       banner.hidden = true;
-      if (text) text.textContent = '';
+      if (text) text.innerHTML = '';
       return;
     }
     banner.hidden = false;
     if (text) {
-      text.textContent =
-        'Replying to ' +
-        (CommunicationState.replyTo.senderName || 'Member') +
-        ': ' +
-        (CommunicationState.replyTo.preview || '');
+      text.innerHTML =
+        '<span class="ce2-reply-banner-kicker">Replying to</span>' +
+        '<span class="ce2-reply-banner-name">' +
+        escapeHtml(CommunicationState.replyTo.senderName || 'Member') +
+        '</span>' +
+        '<span class="ce2-reply-banner-preview">' +
+        escapeHtml(CommunicationState.replyTo.preview || '') +
+        '</span>';
+    }
+  }
+
+  function computeUnreadTotals() {
+    var groups = 0;
+    var direct = 0;
+    (CommunicationState.visibleGroups || []).forEach(function (g) {
+      if (g.unread > 0) groups += g.unread;
+    });
+    (CommunicationState.threads || []).forEach(function (t) {
+      if (t.unread > 0) direct += t.unread;
+    });
+    return { total: groups + direct, groups: groups, direct: direct };
+  }
+
+  function renderHubUnreadBadges() {
+    var counts = computeUnreadTotals();
+    var totalEl = el('ce2HubUnreadTotal');
+    if (totalEl) {
+      if (counts.total > 0) {
+        totalEl.textContent = counts.total > 99 ? '99+' : String(counts.total);
+        totalEl.hidden = false;
+        totalEl.setAttribute('aria-label', counts.total + ' unread messages');
+      } else {
+        totalEl.textContent = '';
+        totalEl.hidden = true;
+      }
+    }
+    document.querySelectorAll('.ce2-hub-tab').forEach(function (btn) {
+      var hub = btn.getAttribute('data-hub');
+      if (hub !== 'groups' && hub !== 'direct') return;
+      var n = hub === 'groups' ? counts.groups : counts.direct;
+      var badge = btn.querySelector('.ce2-hub-tab-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ce2-hub-tab-badge';
+        btn.appendChild(badge);
+      }
+      if (n > 0) {
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.hidden = false;
+      } else {
+        badge.textContent = '';
+        badge.hidden = true;
+      }
+    });
+    if ('setAppBadge' in navigator) {
+      if (counts.total > 0) navigator.setAppBadge(counts.total).catch(function () {});
     }
   }
 
@@ -427,6 +537,7 @@
       syncViewport: function () {
         syncCe2VisualViewport();
       },
+      syncComposerInputHeight: syncCe2ComposerInputHeight,
       isCoarsePointer: function () {
         return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
       },
@@ -512,6 +623,51 @@
     var g = gov();
     if (g && g.classRank) return g.classRank(cls);
     return 99;
+  }
+
+  /** Match Firestore ce2GroupContentFloor + clamp classification before group send. */
+  async function resolveGroupSendPolicy(groupId, classification, me) {
+    var snap = await db.collection('communicationGroups').doc(groupId).get();
+    var gdata = snap.exists ? snap.data() : {};
+    var g = gov();
+    var requiredTier = normalizeTier(gdata.requiredTier || 'foundation');
+    var requiredRank = g && g.tierRank ? g.tierRank(requiredTier) : 0;
+    var userRank = tierRank(me);
+    if (!me.isAdmin && userRank < requiredRank) {
+      var tierErr = new Error(
+        'This group requires ' +
+          requiredTier +
+          ' tier. Your profile is ' +
+          (me.tier || 'foundation') +
+          ' — ask an admin to confirm your tier in Admin → Manage user.'
+      );
+      tierErr.code = 'tier-mismatch';
+      throw tierErr;
+    }
+    var floorRank =
+      typeof gdata.securityLevel === 'number'
+        ? gdata.securityLevel
+        : requiredRank;
+    var cls = classification || 'foundation';
+    if (g && g.clampClassification) {
+      cls = g.clampClassification(cls, floorRank);
+    } else if (classRank(cls) > floorRank) {
+      cls = g && g.tierLabelFromRank ? g.tierLabelFromRank(floorRank) : requiredTier;
+    }
+    return { classification: cls, requiredTier: requiredTier, floorRank: floorRank };
+  }
+
+  async function ensureGroupReadyToSend(ac, me) {
+    if (!ac || ac.type !== 'group' || !ac.id) return ac;
+    var joined = await isGroupMember(ac.id);
+    if (!joined) {
+      await joinGroupById(ac.id, ac.title || 'Group');
+      ac = CommunicationState.activeConversation;
+    } else if (ac.needsJoin) {
+      ac = Object.assign({}, ac, { needsJoin: false });
+      CommunicationState.activeConversation = ac;
+    }
+    return ac;
   }
 
   /** Tiers a user may discover below their own (higher → lower messaging policy). */
@@ -901,11 +1057,28 @@
     }, 800);
   }
 
+  function scheduleLoadGroups(uid) {
+    if (!uid) return;
+    if (CommunicationState._loadGroupsTimer) {
+      clearTimeout(CommunicationState._loadGroupsTimer);
+    }
+    CommunicationState._loadGroupsTimer = setTimeout(function () {
+      CommunicationState._loadGroupsTimer = null;
+      loadGroupsForUser(CommunicationState.me).then(function () {
+        requestRender({ throttle: true });
+      }).catch(function () {});
+    }, 800);
+  }
+
   function markThreadReadOnce(ac) {
     var rc = receipts();
     var ref = getMetaDocRef(ac);
-    if (rc && ref && CommunicationState.me) {
-      rc.markRead(ref, CommunicationState.me.uid);
+    var me = CommunicationState.me;
+    if (rc && ref && me) {
+      rc.markRead(ref, me.uid).then(function () {
+        if (ac && ac.type === 'group') scheduleLoadGroups(me.uid);
+        else scheduleLoadThreads(me.uid);
+      });
     }
   }
 
@@ -1015,14 +1188,26 @@
           li.className =
             'ce2-li' + (CommunicationState.selectedGroupId === g.id ? ' is-selected' : '');
           li.dataset.groupId = g.id;
+          var gMeta = listMetaLine(u.uid, 'g:' + g.id, g.lastPreview || '');
+          var gSub = gMeta.text;
+          if (!gSub && !gMeta.isDraft) {
+            gSub = 'requires ' + g.requiredTier + (g.mentorLed ? ' · mentor-led' : '');
+          }
           li.innerHTML =
             '<div class="ce2-li-row"><span class="ce2-avatar">' +
             escapeHtml(personInitial(g.name)) +
-            '</span><span class="ce2-li-body"><div class="ce2-li-name">' +
+            '</span><span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
             escapeHtml(g.name) +
-            '</div></div><div class="ce2-li-meta">requires ' +
-            escapeHtml(g.requiredTier) +
-            (g.mentorLed ? ' · mentor-led' : '') +
+            '</div>' +
+            (g.unread
+              ? '<span class="ce2-unread-badge">' +
+                (g.unread > 99 ? '99+' : String(g.unread)) +
+                '</span>'
+              : '') +
+            '</div><div class="ce2-li-meta' +
+            (gMeta.isDraft ? ' ce2-li-meta--draft' : '') +
+            '">' +
+            escapeHtml(gSub) +
             '</div></span></div>';
           li.dataset.action = 'select-group';
           li.dataset.groupName = g.name || 'Group';
@@ -1038,6 +1223,7 @@
           '<li class="ce2-placeholder">No CE2 direct threads yet. Open someone from Discovery.</li>';
       } else {
         CommunicationState.threads.forEach(function (t) {
+          var tMeta = listMetaLine(u.uid, 'd:' + t.id, t.sub || '');
           const li = document.createElement('li');
           li.className =
             'ce2-li' +
@@ -1057,8 +1243,10 @@
                 (t.unread > 99 ? '99+' : String(t.unread)) +
                 '</span>'
               : '') +
-            '</div><div class="ce2-li-meta">' +
-            escapeHtml(t.sub || '') +
+            '</div><div class="ce2-li-meta' +
+            (tMeta.isDraft ? ' ce2-li-meta--draft' : '') +
+            '">' +
+            escapeHtml(tMeta.text) +
             '</div></span></div>';
           li.dataset.action = 'open-thread';
           li.dataset.convId = t.id;
@@ -1131,6 +1319,25 @@
         });
       }
     }
+    renderHubUnreadBadges();
+  }
+
+  function scrollToReplyMessage(messageId) {
+    if (!messageId) return;
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) return;
+    CommunicationState.highlightMessageId = messageId;
+    render({ threadOnly: true });
+    requestAnimationFrame(function () {
+      var row = scroll.querySelector('.ce2-row[data-message-id="' + messageId + '"]');
+      if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function () {
+        if (CommunicationState.highlightMessageId === messageId) {
+          CommunicationState.highlightMessageId = null;
+          render({ threadOnly: true });
+        }
+      }, 2200);
+    });
   }
 
   function renderThreadChrome() {
@@ -1258,7 +1465,10 @@
         const reader = CommunicationState.me;
         const canRead = canReadMessageContent(reader, m, ac);
         const bubble = document.createElement('div');
-        bubble.className = 'ce2-bubble' + (canRead ? '' : ' ce2-bubble-locked');
+        bubble.className =
+          'ce2-bubble' +
+          (canRead ? '' : ' ce2-bubble-locked') +
+          (canRead && m.replyTo ? ' ce2-bubble--has-reply' : '');
         if (ma && canRead) {
           ma.renderForwardQuote(bubble, m);
           ma.renderFormationBadge(bubble, m);
@@ -1360,20 +1570,17 @@
       updateComposerState();
       updateAttachPreview();
       syncReplyBanner();
+      syncAttachInputState();
       syncCe2FocusableInputs();
+      syncComposerAlert();
       return;
     }
-    if (CommunicationState.error) {
-      showAlert(CommunicationState.error, 'err');
-    } else if (CommunicationState.statusMessage) {
-      showAlert(CommunicationState.statusMessage, 'ok');
-    } else {
-      showAlert('', '');
-    }
+    syncComposerAlert();
     updateComposerState();
     if (CommunicationState.me) updateDiscoveryTabs(CommunicationState.me);
     updateAttachPreview();
     syncReplyBanner();
+    syncAttachInputState();
     renderSidebarLists();
     renderThreadChrome();
     renderMessagePanel();
@@ -1490,10 +1697,14 @@
     ) {
       var para = document.createElement('div');
       para.className = 'ce2-msg-text';
+      var html = escapeHtml(text);
+      if (root.Ce2Format && root.Ce2Format.formatMessageHtml) {
+        html = root.Ce2Format.formatMessageHtml(html);
+      }
       if (lk && lk.linkifyHtml) {
-        para.innerHTML = lk.linkifyHtml(escapeHtml(text));
+        para.innerHTML = lk.linkifyHtml(html);
       } else {
-        para.textContent = text;
+        para.innerHTML = html;
       }
       bubble.appendChild(para);
     }
@@ -1506,6 +1717,7 @@
       preview.hidden = true;
       preview.innerHTML = '';
     }
+    setAttachStatus('', '');
   }
 
   function updateAttachPreview() {
@@ -1540,10 +1752,21 @@
     });
     if (slot.uploading && slot.localPreviewUrl) {
       var pct = Math.round((slot.uploadProgress || 0) * 100);
+      var attMod = attachments();
+      var uploadingVideo =
+        slot.localFile && attMod && attMod.isVideoFile && attMod.isVideoFile(slot.localFile);
+      var uploadingCell =
+        uploadingVideo
+          ? '<video src="' +
+            escapeHtml(slot.localPreviewUrl) +
+            '" class="ce2-attach-thumb-vid" muted playsinline></video>'
+          : '<img src="' +
+            escapeHtml(slot.localPreviewUrl) +
+            '" alt="" class="ce2-attach-thumb-img">';
       html +=
-        '<div class="ce2-attach-cell ce2-attach-cell-uploading"><img src="' +
-        escapeHtml(slot.localPreviewUrl) +
-        '" alt="" class="ce2-attach-thumb-img"><span class="ce2-attach-pct">' +
+        '<div class="ce2-attach-cell ce2-attach-cell-uploading">' +
+        uploadingCell +
+        '<span class="ce2-attach-pct">' +
         pct +
         '%</span></div>';
     }
@@ -1617,6 +1840,51 @@
     banner.textContent = message;
   }
 
+  function syncComposerAlert() {
+    if (CommunicationState.error) {
+      showAlert(CommunicationState.error, 'err');
+    } else if (CommunicationState.statusMessage) {
+      showAlert(CommunicationState.statusMessage, 'ok');
+    } else {
+      showAlert('', '');
+    }
+  }
+
+  function setAttachStatus(message, kind) {
+    var node = el('ce2AttachStatus');
+    if (!node) return;
+    if (!message) {
+      node.hidden = true;
+      node.textContent = '';
+      node.className = 'ce2-attach-status';
+      return;
+    }
+    node.hidden = false;
+    node.textContent = message;
+    node.className =
+      'ce2-attach-status' + (kind === 'ok' ? ' ce2-attach-status--ok' : ' ce2-attach-status--err');
+  }
+
+  function surfaceComposerError(message) {
+    CommunicationState.statusMessage = null;
+    CommunicationState.error = message || 'Something went wrong.';
+    setAttachStatus(message || 'Something went wrong.', 'err');
+    syncComposerAlert();
+  }
+
+  function syncAttachInputState() {
+    var wrap = el('ce2AttachWrap');
+    var input = el('ce2AttachInput');
+    if (!wrap || !input) return;
+    var ac = CommunicationState.activeConversation;
+    var enabled = !!(ac && !ac.needsJoin);
+    wrap.classList.toggle('is-disabled', !enabled);
+    input.disabled = !enabled;
+    if (!enabled) {
+      input.value = '';
+    }
+  }
+
   function ce2PermissionHint(err, context) {
     if (!err || err.code !== 'permission-denied') return null;
     if (isMessagingSuspended()) {
@@ -1634,16 +1902,30 @@
         'Otherwise refresh the page and try again — if it persists, contact support with your account email.'
       );
     }
+    if (context === 'group') {
+      return (
+        'Message was not saved. Join the group first (Join button if shown), open the composer drawer and set classification to Elite or lower, or ask an admin to confirm your profile tier matches this group.'
+      );
+    }
+    if (context === 'messages' || context === 'group') {
+      return (
+        'Cannot load messages for this thread. Join the formation group first, or ask an admin to add you under Admin → Messages V2 → Manage members.'
+      );
+    }
+    if (context === 'boot') {
+      return 'Could not load your messenger profile. Sign out and back in, or ask an admin to confirm your users/{uid} document exists with role and tier.';
+    }
     return null;
   }
 
   function handleCe2Error(err, context) {
-    console.error(err);
+    console.error('[CE2]', context || 'error', err);
+    CommunicationState.statusMessage = null;
     CommunicationState.error =
       ce2PermissionHint(err, context) ||
       (err && err.message) ||
       'Request failed — check tier, group membership, or Firestore rules.';
-    showAlert(CommunicationState.error, 'err');
+    syncComposerAlert();
     render();
   }
 
@@ -1702,6 +1984,8 @@
   }
 
   function attachMessagesListener(messagesCol) {
+    var ac = CommunicationState.activeConversation;
+    var errContext = ac && ac.type === 'group' ? 'group' : 'messages';
     messagesUnsub = messagesCol
       .orderBy('createdAt', 'asc')
       .limitToLast(MESSAGE_PAGE)
@@ -1717,9 +2001,25 @@
           CommunicationState.messages = mergeServerAndPending(
             CommunicationState.lastServerMessages
           );
+          var me = CommunicationState.me;
+          if (me && ac && snap.docs.length) {
+            var lastDoc = snap.docs[snap.docs.length - 1];
+            var lastData = lastDoc.data();
+            if (lastData.senderId && lastData.senderId !== me.uid) {
+              if (ac.type === 'group') scheduleLoadGroups(me.uid);
+              scheduleLoadThreads(me.uid);
+            }
+          }
           requestRender({ throttle: true, threadOnly: true });
         },
-        handleCe2Error
+        function (err) {
+          stopMessagesWatch();
+          if (ac && ac.type === 'group') {
+            CommunicationState.activeConversation = Object.assign({}, ac, { needsJoin: true });
+            CommunicationState.messages = [];
+          }
+          handleCe2Error(err, errContext);
+        }
       );
   }
 
@@ -1774,6 +2074,7 @@
   }
 
   function selectGroupOnly(groupId, name) {
+    persistActiveComposerDraft();
     stopMessagesWatch();
     CommunicationState.messages = [];
     CommunicationState.activeGroup = groupId;
@@ -1794,6 +2095,7 @@
   }
 
   async function openDirectThread(convId, otherUid, label) {
+    persistActiveComposerDraft();
     var openToken = bumpThreadOpenToken();
     stopMessagesWatch();
     CommunicationState.activeGroup = null;
@@ -1866,10 +2168,12 @@
     markThreadReadOnce(CommunicationState.activeConversation);
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
+    restoreComposerDraft(CommunicationState.activeConversation);
     render();
   }
 
   async function openGroupThread(groupId, name) {
+    persistActiveComposerDraft();
     var openToken = bumpThreadOpenToken();
     stopMessagesWatch();
     CommunicationState.activeGroup = groupId;
@@ -1934,6 +2238,7 @@
     markThreadReadOnce(CommunicationState.activeConversation);
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
+    restoreComposerDraft(CommunicationState.activeConversation);
     render();
   }
 
@@ -1958,6 +2263,8 @@
           .limit(40)
           .get();
       }
+      var rc = receipts();
+      var uid = u.uid;
       CommunicationState.visibleGroups = snap.docs
         .map(function (d) {
           const x = d.data();
@@ -1967,9 +2274,13 @@
             requiredTier: normalizeTier(x.requiredTier),
             mentorLed: !!x.mentorLed,
             allowCrossTier: !!x.allowCrossTier,
+            unread: rc ? rc.unreadCount(x, uid) : 0,
+            lastPreview: (x.lastPreview && String(x.lastPreview).trim()) || '',
           };
         })
         .sort(function (a, b) {
+          var unreadDiff = (b.unread || 0) - (a.unread || 0);
+          if (unreadDiff) return unreadDiff;
           return (a.name || '').localeCompare(b.name || '');
         });
     } catch (err) {
@@ -2125,8 +2436,19 @@
       CommunicationState.shareDraft = prefill;
       CommunicationState.mobileHubPanel = 'discover';
       var shareInput = el('ce2Input');
-      if (shareInput && prefill) shareInput.value = prefill.slice(0, 4000);
+      if (shareInput && prefill) {
+        shareInput.value = prefill.slice(0, 4000);
+        syncCe2ComposerInputHeight(shareInput);
+      }
       CommunicationState.statusMessage = 'Shared content ready — pick a thread and send.';
+      return;
+    }
+    var groupId = q.get('group');
+    if (groupId) {
+      var gmeta = (CommunicationState.visibleGroups || []).find(function (g) {
+        return g.id === groupId;
+      });
+      await openGroupThread(groupId, gmeta ? gmeta.name : 'Group');
       return;
     }
     if (peerUid) {
@@ -2306,41 +2628,109 @@
     CommunicationState.activeConversation.securityLevel = security.level;
   }
 
+  async function writeGroupMessageNotifications(ac, preview, me) {
+    if (!ac || ac.type !== 'group' || !ac.id || !me) return;
+    try {
+      var memberIds = CommunicationState.memberIds;
+      if (!memberIds || !memberIds.length) {
+        memberIds = await loadGroupMemberIds(ac.id);
+      }
+      if (!memberIds.length) return;
+      var groupName = ac.title || 'Group';
+      var senderName = ((me && me.name) || 'Someone').trim() || 'Someone';
+      var plainPreview =
+        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+          ? root.Ce2Format.stripFormattingForPreview(preview || 'New message')
+          : preview || 'New message';
+      var body = senderName + ': ' + plainPreview.slice(0, 80);
+      var batch = db.batch();
+      var count = 0;
+      memberIds.forEach(function (uid) {
+        if (uid === me.uid || count >= 40) return;
+        var ref = db.collection('notifications').doc();
+        batch.set(ref, {
+          userId: uid,
+          type: 'group_message',
+          title: groupName,
+          body: body,
+          groupId: ac.id,
+          convId: ac.id,
+          read: false,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        count += 1;
+      });
+      if (count) await batch.commit();
+    } catch (e) {
+      console.warn('[CE2 Group Notif]', e);
+    }
+  }
+
   async function triggerCe2Push(ac, preview, me) {
-    if (!ac || ac.type !== 'direct' || !ac.otherUid) return;
+    if (!ac || !me) return;
     try {
       var user = firebase.auth().currentUser;
       if (!user) return;
-      var recipDoc = await db.collection('users').doc(ac.otherUid).get();
-      if (!recipDoc.exists) return;
-      var token = recipDoc.data().fcmToken;
-      if (!token) return;
       var senderName = ((me && me.name) || 'Someone').trim() || 'Someone';
       var idToken = await user.getIdToken();
-      var convId = ac.id || '';
-      await fetch(
-        'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer ' + idToken,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            senderId: user.uid,
-            recipientId: ac.otherUid,
-            message: preview || '',
-            recipientToken: token,
-            senderName: senderName,
-            title: senderName,
-            body: (preview || 'New message').slice(0, 100),
-            url:
-              '/communication-v2/?conv=' +
-              encodeURIComponent(convId),
-            convId: convId,
-          }),
-        }
-      );
+      var messageText = (
+        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+          ? root.Ce2Format.stripFormattingForPreview(preview || 'New message')
+          : preview || 'New message'
+      ).slice(0, 100);
+
+      if (ac.type === 'direct' && ac.otherUid) {
+        var recipDoc = await db.collection('users').doc(ac.otherUid).get();
+        if (!recipDoc.exists) return;
+        var token = recipDoc.data().fcmToken;
+        if (!token) return;
+        var convId = ac.id || '';
+        await fetch(
+          'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + idToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              senderId: user.uid,
+              recipientId: ac.otherUid,
+              message: messageText,
+              recipientToken: token,
+              senderName: senderName,
+              title: senderName,
+              body: messageText,
+              url: '/communication-v2/?conv=' + encodeURIComponent(convId),
+              convId: convId,
+            }),
+          }
+        );
+        return;
+      }
+
+      if (ac.type === 'group' && ac.id) {
+        await fetch(
+          'https://us-central1-marriage-education.cloudfunctions.net/notifyGroupV2',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + idToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              senderId: user.uid,
+              groupId: ac.id,
+              message: messageText,
+              senderName: senderName,
+              groupName: ac.title || 'Group',
+              url: '/communication-v2/?group=' + encodeURIComponent(ac.id),
+              convId: ac.id,
+            }),
+          }
+        );
+        writeGroupMessageNotifications(ac, preview, me);
+      }
     } catch (e) {
       console.warn('[CE2 Push]', e);
     }
@@ -2358,7 +2748,11 @@
     var recipients = ac.type === 'direct' ? [ac.otherUid] : CommunicationState.memberIds || [];
     var metaPatch = {
       lastMessageAt: now,
-      lastPreview: (patch.content || '').slice(0, 140),
+      lastPreview: (
+        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+          ? root.Ce2Format.stripFormattingForPreview(patch.content || '')
+          : patch.content || ''
+      ).slice(0, 140),
     };
     Object.assign(metaPatch, rc.markReadPatch(me.uid));
     Object.assign(metaPatch, rc.incrementUnreadPatch(me.uid, recipients, unreadMap));
@@ -2385,7 +2779,7 @@
       return;
     }
     patch.conversationId = ac.id;
-    patch.receiverId = '';
+    delete patch.receiverId;
     await db
       .collection('communicationGroups')
       .doc(ac.id)
@@ -2432,9 +2826,28 @@
 
   function addComposerFiles(fileList) {
     var ac = CommunicationState.activeConversation;
-    if (!ac || ac.needsJoin) return;
+    if (!ac || ac.needsJoin) {
+      surfaceComposerError('Open a thread before attaching a photo or video.');
+      render();
+      return;
+    }
     var slot = getComposerSlot(ac);
-    if (!slot) return;
+    if (!slot) {
+      surfaceComposerError('Could not prepare composer. Refresh and try again.');
+      render();
+      return;
+    }
+    var att = attachments();
+    if (!att || !att.uploadCe2Media || !att.validateComposerFile) {
+      surfaceComposerError('Photo upload is not ready. Refresh the page and try again.');
+      render();
+      return;
+    }
+    if (att.r2Ready && !att.r2Ready()) {
+      surfaceComposerError('Upload service not ready. Sign in and refresh the page.');
+      render();
+      return;
+    }
     var files = Array.from(fileList || []);
     if (!files.length) return;
     var room =
@@ -2446,15 +2859,34 @@
       render();
       return;
     }
+    var added = 0;
     files.slice(0, room).forEach(function (file) {
-      slot.attachQueue.push(file);
+      try {
+        if (att && att.validateComposerFile) att.validateComposerFile(file);
+        slot.attachQueue.push(file);
+        added++;
+      } catch (err) {
+        CommunicationState.error =
+          (err && err.message) || 'Could not attach that file.';
+      }
     });
+    if (!added) {
+      syncComposerAlert();
+      render();
+      return;
+    }
+    CommunicationState.error = null;
     if (files.length > room) {
       CommunicationState.statusMessage =
         'Only ' + MAX_COMPOSER_ATTACHMENTS + ' attachments allowed; extra files skipped.';
+      setAttachStatus(CommunicationState.statusMessage, 'ok');
+    } else {
+      CommunicationState.statusMessage = 'Uploading…';
+      setAttachStatus('Uploading attachment…', 'ok');
     }
     processAttachQueue(ac);
     updateAttachPreview();
+    syncComposerAlert();
     render();
   }
 
@@ -2854,6 +3286,13 @@
     if (!scroll || scroll.dataset.ce2VoiceActionsBound) return;
     scroll.dataset.ce2VoiceActionsBound = '1';
     scroll.addEventListener('click', function (e) {
+      var quoteBtn = e.target.closest('.ce2-reply-quote[data-reply-to-id]');
+      if (quoteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToReplyMessage(quoteBtn.getAttribute('data-reply-to-id'));
+        return;
+      }
       var retryBtn = e.target.closest('.ce2-voice-retry');
       if (retryBtn) {
         e.preventDefault();
@@ -2873,8 +3312,25 @@
   function processAttachQueue(ac) {
     var slot = getComposerSlot(ac);
     if (!slot || slot.uploading || !slot.attachQueue.length) return;
+
+    var att = attachments();
+    if (!att || !att.uploadCe2Media) {
+      handleCe2Error(new Error('Media upload is not available.'));
+      return;
+    }
+
+    var file = slot.attachQueue[0];
+    try {
+      if (att.validateComposerFile) att.validateComposerFile(file);
+    } catch (err) {
+      slot.attachQueue.shift();
+      handleCe2Error(err);
+      processAttachQueue(ac);
+      return;
+    }
+
+    slot.attachQueue.shift();
     var threadKey = threadComposerKey(ac);
-    var file = slot.attachQueue.shift();
     slot.localFile = file;
     revokeLocalPreview(slot.localPreviewUrl);
     slot.localPreviewUrl = URL.createObjectURL(file);
@@ -2883,13 +3339,7 @@
     slot.uploadAbort = typeof AbortController !== 'undefined' ? new AbortController() : null;
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
-
-    var att = attachments();
-    if (!att || !att.uploadCe2Media) {
-      slot.uploading = false;
-      handleCe2Error(new Error('Media upload is not available.'));
-      return;
-    }
+    render();
     var lastProgressUi = 0;
     var uploadOpts = {
       onProgress: function (p) {
@@ -2923,13 +3373,12 @@
         revokeLocalPreview(s.localPreviewUrl);
         s.localPreviewUrl = null;
         syncGlobalsFromComposerSlot();
-        if (
-          CommunicationState.activeConversation &&
-          threadComposerKey(CommunicationState.activeConversation) === threadKey
-        ) {
-          updateAttachPreview();
-          render();
-        }
+        CommunicationState.error = null;
+        CommunicationState.statusMessage = 'Attachment ready — tap Send.';
+        setAttachStatus('Attachment ready — tap Send.', 'ok');
+        updateAttachPreview();
+        syncComposerAlert();
+        render();
         processAttachQueue(ac);
         if (
           s.pendingSendAfterUpload &&
@@ -2947,25 +3396,27 @@
         if (!s) return;
         s.uploading = false;
         s.uploadAbort = null;
+        s.localFile = null;
+        revokeLocalPreview(s.localPreviewUrl);
+        s.localPreviewUrl = null;
+        syncGlobalsFromComposerSlot();
         if (err && err.message === 'Upload cancelled') {
           s.pendingSendAfterUpload = false;
-          if (
-            CommunicationState.activeConversation &&
-            threadComposerKey(CommunicationState.activeConversation) === threadKey
-          ) {
-            updateAttachPreview();
-            render();
-          }
+          updateAttachPreview();
+          render();
           processAttachQueue(ac);
           return;
         }
         s.pendingSendAfterUpload = false;
-        if (
-          CommunicationState.activeConversation &&
-          threadComposerKey(CommunicationState.activeConversation) === threadKey
-        ) {
-          handleCe2Error(err);
-        }
+        var label =
+          (file && file.name) ||
+          (att && att.mediaKindForFile && att.mediaKindForFile(file) === 'video' ? 'Video' : 'Photo');
+        handleCe2Error(
+          err && err.message
+            ? new Error(label + ' upload failed: ' + err.message)
+            : new Error(label + ' upload failed.')
+        );
+        updateAttachPreview();
         processAttachQueue(ac);
       });
   }
@@ -3006,7 +3457,17 @@
         await joinGroupById(ac.id, gnameJoin);
         ac = CommunicationState.activeConversation;
       } catch (joinErr) {
-        handleCe2Error(joinErr);
+        handleCe2Error(joinErr, 'group');
+        return;
+      }
+    }
+
+    if (ac.type === 'group' && ac.id) {
+      try {
+        ac = await ensureGroupReadyToSend(ac, me);
+        me = CommunicationState.me || me;
+      } catch (prepErr) {
+        handleCe2Error(prepErr, prepErr.code === 'tier-mismatch' ? 'group' : 'group');
         return;
       }
     }
@@ -3029,7 +3490,19 @@
       }
     }
 
-    if (!text && !mediaList.length && !boardParsed) return;
+    if (!text && !mediaList.length && !boardParsed) {
+      if (slot && (slot.uploading || slot.attachQueue.length)) {
+        CommunicationState.statusMessage = 'Still uploading — wait for the preview, then tap Send.';
+        syncComposerAlert();
+        render();
+        return;
+      }
+      surfaceComposerError(
+        'Nothing to send. Attach a photo or video, wait for the preview to appear, then tap Send.'
+      );
+      render();
+      return;
+    }
 
     if (boardParsed && mediaList.length) {
       CommunicationState.error = 'Send a board link separately from photo/video attachments.';
@@ -3050,6 +3523,17 @@
 
     var classification = el('ce2ClassSelect').value || 'foundation';
     var shareable = el('ce2Shareable').checked;
+
+    if (ac.type === 'group' && ac.id) {
+      try {
+        var groupPolicy = await resolveGroupSendPolicy(ac.id, classification, me);
+        classification = groupPolicy.classification;
+        if (el('ce2ClassSelect')) el('ce2ClassSelect').value = classification;
+      } catch (policyErr) {
+        handleCe2Error(policyErr, 'group');
+        return;
+      }
+    }
 
     var gSend = gov();
     if (
@@ -3088,6 +3572,9 @@
           shareable: shareable,
         });
         el('ce2Input').value = '';
+        syncCe2ComposerInputHeight();
+        clearComposerDraft(ac);
+        if (root.Ce2Format) root.Ce2Format.syncInputMirror();
         CommunicationState.statusMessage =
           'Saved offline — will send when you reconnect.';
         render();
@@ -3177,7 +3664,6 @@
         }
       } else if (ac.type === 'group') {
         patch.conversationId = ac.id;
-        patch.receiverId = '';
       }
       return patch;
     }
@@ -3197,6 +3683,9 @@
       return pushOptimisticMessage(p);
     });
     el('ce2Input').value = '';
+    syncCe2ComposerInputHeight();
+    clearComposerDraft(ac);
+    if (root.Ce2Format) root.Ce2Format.syncInputMirror();
     if (boardUrlInput) boardUrlInput.value = '';
     if (mediaList.length) clearComposerPending();
     clearReply();
@@ -3216,6 +3705,7 @@
       pushConversationMetaAsync(ac, patches[patches.length - 1], me, now);
       triggerCe2Push(ac, patches[patches.length - 1].content || '', me);
       scheduleLoadThreads(me.uid);
+      scheduleLoadGroups(me.uid);
       if (patches.length > 1) {
         CommunicationState.statusMessage = patches.length + ' messages sent';
       }
@@ -3223,7 +3713,10 @@
       pendingIds.forEach(function (pid) {
         removeOptimisticMessage(pid);
       });
-      handleCe2Error(err, ac && ac.type === 'direct' ? 'send' : null);
+      handleCe2Error(
+        err,
+        ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
+      );
     } finally {
       CommunicationState.sending = false;
       updateComposerState();
@@ -3553,10 +4046,55 @@
     });
   }
 
+  function syncCe2ComposerInputHeight(target) {
+    var input = target || el('ce2Input');
+    if (!input) return;
+    input.style.height = 'auto';
+    var cs = window.getComputedStyle(input);
+    var max = parseInt(cs.maxHeight, 10);
+    if (!max || isNaN(max)) max = 132;
+    var min = parseInt(cs.minHeight, 10);
+    if (!min || isNaN(min)) min = 38;
+    var next = Math.min(Math.max(input.scrollHeight, min), max);
+    input.style.height = next + 'px';
+    input.style.overflowY = input.scrollHeight > max ? 'auto' : 'hidden';
+    var shell = input.closest && input.closest('.ce2-input-shell');
+    if (shell) shell.style.minHeight = next + 'px';
+    if (root.Ce2Format && root.Ce2Format.syncInputMirror) {
+      root.Ce2Format.syncInputMirror();
+    }
+  }
+
+  function onCe2ComposerInputChange() {
+    var input = el('ce2Input');
+    if (!input) return;
+    if (root.Ce2Format && root.Ce2Format.syncInputMirror) {
+      root.Ce2Format.syncInputMirror();
+    }
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (ac && me && root.Ce2Drafts) {
+      root.Ce2Drafts.scheduleSave(me.uid, threadComposerKey(ac), input.value);
+    }
+    var prev = input.__ce2ComposerHeightPx || 0;
+    syncCe2ComposerInputHeight(input);
+    var next = parseInt(input.style.height, 10) || 0;
+    input.__ce2ComposerHeightPx = next;
+    if (next > prev && document.activeElement === input) {
+      requestAnimationFrame(scrollMessagesToEnd);
+    }
+  }
+
   function bindCe2ComposerInput() {
     var input = el('ce2Input');
     if (!input || input.__ce2InputBound) return;
     input.__ce2InputBound = true;
+    syncCe2ComposerInputHeight(input);
+
+    input.addEventListener('input', onCe2ComposerInputChange);
+    input.addEventListener('paste', function () {
+      requestAnimationFrame(onCe2ComposerInputChange);
+    });
 
     input.addEventListener('focus', function () {
       dismissThreadSearch();
@@ -3568,6 +4106,7 @@
       });
     });
     input.addEventListener('blur', function () {
+      persistActiveComposerDraft();
       setTimeout(function () {
         syncCe2FocusableInputs();
         clearComposerKeyboardInset();
@@ -3578,8 +4117,9 @@
   function initCe2AudioPlayback() {
     if (!root.Ce2AudioPlayback) return;
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden' && root.Ce2AudioPlayback) {
-        root.Ce2AudioPlayback.pause();
+      if (document.visibilityState === 'hidden') {
+        persistActiveComposerDraft();
+        if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.pause();
       }
     });
   }
@@ -3593,9 +4133,17 @@
       requestRender: requestRender,
       onFileReady: function (file, meta) {
         CommunicationState.error = null;
+        setAttachStatus('', '');
         startVoiceNoteUpload(file, meta || {});
       },
-      onError: handleCe2Error,
+      onError: function (err) {
+        surfaceComposerError((err && err.message) || 'Voice recording failed.');
+        render();
+      },
+      onHint: function (msg) {
+        setAttachStatus(msg, 'ok');
+        syncComposerAlert();
+      },
     });
   }
 
@@ -3603,6 +4151,14 @@
     bindCe2ComposerKeyboard();
     bindCe2EditInput();
     bindCe2ComposerInput();
+    if (root.Ce2Format && typeof root.Ce2Format.init === 'function') {
+      root.Ce2Format.init({
+        getInput: function () {
+          return el('ce2Input');
+        },
+        onInputChange: onCe2ComposerInputChange,
+      });
+    }
     initCe2AudioPlayback();
     initCe2AudioRecorder();
     bindCe2VoiceUploadActions();
@@ -3651,25 +4207,32 @@
       });
     }
 
-    var attachBtn = el('ce2AttachBtn');
+    var attachWrap = el('ce2AttachWrap');
     var attachInput = el('ce2AttachInput');
-    if (attachBtn && attachInput) {
-      attachBtn.addEventListener('click', function () {
-        if (!CommunicationState.activeConversation || CommunicationState.activeConversation.needsJoin) {
-          CommunicationState.error = 'Open a thread before attaching a photo.';
+    if (attachWrap && attachInput) {
+      attachWrap.addEventListener('click', function (e) {
+        if (attachWrap.classList.contains('is-disabled')) {
+          e.preventDefault();
+          surfaceComposerError('Open a thread before attaching a photo or video.');
           render();
-          return;
         }
-        attachInput.click();
       });
       attachInput.addEventListener('change', function () {
         var files = attachInput.files;
+        if (!files || !files.length) {
+          attachInput.value = '';
+          return;
+        }
+        try {
+          addComposerFiles(files);
+        } catch (err) {
+          surfaceComposerError((err && err.message) || 'Could not attach file.');
+          render();
+        }
         attachInput.value = '';
-        if (!files || !files.length) return;
-        CommunicationState.statusMessage = null;
-        addComposerFiles(files);
       });
     }
+    syncAttachInputState();
 
     var replyCancel = el('ce2ReplyCancel');
     if (replyCancel) {
@@ -3730,6 +4293,7 @@
         };
         await commitCe2Message(patchAc, patch, me);
         pushConversationMetaAsync(patchAc, patch, me, now);
+        triggerCe2Push(patchAc, patch.content || '', me);
         q.remove(item.id);
         sent++;
       } catch (err) {
@@ -3745,6 +4309,7 @@
   }
 
   root.ce2FlushOfflineQueue = flushCe2OfflineQueue;
+  root.syncCe2ComposerInputHeight = syncCe2ComposerInputHeight;
 
   async function boot(user) {
     resetCe2UiBlockers();
@@ -3755,8 +4320,20 @@
     render();
 
     var uref = db.collection('users').doc(user.uid);
-    var udoc = await uref.get();
+    var udoc;
+    try {
+      udoc = await uref.get();
+    } catch (profileErr) {
+      handleCe2Error(profileErr, 'boot');
+      CommunicationState.loading = false;
+      render();
+      return;
+    }
     var data = udoc.exists ? udoc.data() : {};
+    if (!udoc.exists) {
+      CommunicationState.statusMessage =
+        'Your network profile is missing — some messenger features may be limited until an admin creates your users document.';
+    }
     CommunicationState.me = normalizeCe2User(user.uid, data);
     render();
 
@@ -3854,7 +4431,7 @@
       ce2BootedUid = user.uid;
       stopMessagesWatch();
       boot(user).catch(function (err) {
-        handleCe2Error(err);
+        handleCe2Error(err, 'boot');
         CommunicationState.loading = false;
         render();
       });

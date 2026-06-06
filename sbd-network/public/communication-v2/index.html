@@ -11,31 +11,33 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=50">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=63">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
   <script defer src="/js/firebase.js"></script>
-  <script defer src="/js/upload.js?v=2"></script>
+  <script defer src="/js/upload.js?v=5"></script>
   <script defer src="/communication-v2/ce2-governance.js?v=4"></script>
   <script defer src="/communication-v2/ce2-moderation.js?v=2"></script>
   <script defer src="/communication-v2/ce2-links.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-attachments.js?v=4"></script>
+  <script defer src="/communication-v2/ce2-attachments.js?v=9"></script>
   <script defer src="/communication-v2/ce2-share.js?v=1"></script>
   <script defer src="/communication-v2/ce2-presence.js?v=1"></script>
   <script defer src="/communication-v2/ce2-receipts.js?v=2"></script>
-  <script defer src="/communication-v2/ce2-reply.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-message-actions.js?v=16"></script>
+  <script defer src="/communication-v2/ce2-reply.js?v=2"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=17"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=1"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
   <script defer src="/communication-v2/ce2-pwa.js?v=3"></script>
   <script defer src="/communication-v2/ce2-audio-waveform.js?v=1"></script>
   <script defer src="/communication-v2/ce2-audio-playback.js?v=2"></script>
   <script defer src="/communication-v2/ce2-audio-outbox.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-audio-recorder.js?v=4"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=62"></script>
+  <script defer src="/communication-v2/ce2-audio-recorder.js?v=6"></script>
+  <script defer src="/communication-v2/ce2-drafts.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-format.js?v=3"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=77"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -49,7 +51,7 @@
     <header class="ce2-header" role="banner">
       <a class="ce2-back" href="/dashboard.html" aria-label="Back to home">←</a>
       <div class="ce2-header-text">
-        <h1 class="ce2-title">Messages</h1>
+        <h1 class="ce2-title">Messages<span id="ce2HubUnreadTotal" class="ce2-hub-unread-total" hidden aria-label="Unread messages"></span></h1>
         <p class="ce2-sub">Formation-gated · covenant-safe</p>
       </div>
       <span class="ce2-pill" id="ce2TierPill">…</span>
@@ -115,6 +117,7 @@
             <span id="ce2ReplyBannerText"></span>
             <button type="button" id="ce2ReplyCancel" class="ce2-reply-cancel" aria-label="Cancel reply">×</button>
           </div>
+          <p id="ce2AttachStatus" class="ce2-attach-status" hidden role="status" aria-live="polite"></p>
           <div id="ce2AttachPreview" class="ce2-attach-preview" hidden></div>
           <div id="ce2VoiceRecordBar" class="ce2-voice-record-bar" hidden role="status" aria-live="polite">
             <canvas id="ce2VoiceRecordWave" class="ce2-voice-record-wave" width="280" height="28" aria-hidden="true"></canvas>
@@ -126,29 +129,62 @@
             </div>
           </div>
           <div class="ce2-composer-bar">
-            <button type="button" class="ce2-composer-attach" id="ce2AttachBtn" title="Photo or video" aria-label="Attach photo or video">📷</button>
-            <input type="file" id="ce2AttachInput" class="ce2-sr-only" accept="image/*,video/*" multiple tabindex="-1">
-            <button type="button" class="ce2-composer-voice" id="ce2VoiceBtn" title="Hold to record voice" aria-label="Hold to record voice">🎙</button>
-            <button type="button" class="ce2-composer-more" id="ce2ComposerMore" aria-expanded="false" aria-controls="ce2ComposerDrawer" title="Classification and sharing">+</button>
-            <label class="ce2-sr-only" for="ce2Input">Message</label>
-            <textarea id="ce2Input" class="ce2-input" rows="1" placeholder="Message…" maxlength="8000" enterkeyhint="send" autocomplete="off" autocorrect="on"></textarea>
-            <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn" aria-label="Send">Send</button>
+            <label class="ce2-attach-wrap" id="ce2AttachWrap" for="ce2AttachInput" title="Photo or video">
+              <span class="ce2-composer-attach" id="ce2AttachBtn" aria-hidden="true">📷</span>
+            </label>
+            <input type="file" id="ce2AttachInput" class="ce2-attach-hidden-input" accept="image/*,video/*" multiple tabindex="-1" aria-label="Attach photo or video">
+            <button type="button" class="ce2-composer-voice" id="ce2VoiceBtn" title="Tap to record voice" aria-label="Tap to record voice">🎙</button>
+            <button type="button" class="ce2-composer-more" id="ce2ComposerMore" aria-expanded="false" aria-controls="ce2ComposerDrawer" title="Format, formation, and sharing">+</button>
+            <div class="ce2-input-shell">
+              <div id="ce2InputMirror" class="ce2-input-mirror" aria-hidden="true"></div>
+              <label class="ce2-sr-only" for="ce2Input">Message</label>
+              <textarea id="ce2Input" class="ce2-input ce2-input--rich" rows="1" placeholder="Message…" maxlength="8000" enterkeyhint="send" autocomplete="off" autocorrect="on"></textarea>
+            </div>
+            <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn" aria-label="Send"><span class="ce2-send-icon" aria-hidden="true">↑</span><span class="ce2-send-text">Send</span></button>
           </div>
           <div id="ce2ComposerDrawer" class="ce2-composer-drawer" hidden>
-            <label class="ce2-sr-only" for="ce2ClassSelect">Classification</label>
-            <select id="ce2ClassSelect" class="ce2-select" title="Message classification">
-              <option value="public">Public</option>
-              <option value="foundation">Foundation</option>
-              <option value="premium">Premium</option>
-              <option value="elite">Elite</option>
-              <option value="ambassador">Ambassador</option>
-              <option value="senior_ambassador">Senior Ambassador</option>
-              <option value="rd">Regional Director</option>
-              <option value="mentor">Mentor</option>
-            </select>
-            <label class="ce2-check"><input type="checkbox" id="ce2Shareable" checked> Shareable to boards</label>
-            <label class="ce2-sr-only" for="ce2BoardShareUrl">Board post URL</label>
-            <input type="url" id="ce2BoardShareUrl" class="ce2-input ce2-input-inline" placeholder="Paste board post link to share…" autocomplete="off">
+            <div class="ce2-drawer-section">
+              <span class="ce2-drawer-label">Formation</span>
+              <div class="ce2-drawer-row">
+                <label class="ce2-sr-only" for="ce2ClassSelect">Classification</label>
+                <select id="ce2ClassSelect" class="ce2-select" title="Message classification">
+                  <option value="public">Public</option>
+                  <option value="foundation">Foundation</option>
+                  <option value="premium">Premium</option>
+                  <option value="elite">Elite</option>
+                  <option value="ambassador">Ambassador</option>
+                  <option value="senior_ambassador">Senior Ambassador</option>
+                  <option value="rd">Regional Director</option>
+                  <option value="mentor">Mentor</option>
+                </select>
+                <label class="ce2-check"><input type="checkbox" id="ce2Shareable" checked> Shareable to boards</label>
+              </div>
+            </div>
+            <div class="ce2-drawer-section">
+              <span class="ce2-drawer-label">Format</span>
+              <div class="ce2-drawer-row">
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtBold" title="Bold" aria-label="Bold"><strong>B</strong></button>
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtItalic" title="Italic" aria-label="Italic"><em>I</em></button>
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtUnderline" title="Underline" aria-label="Underline"><span class="ce2-fmt-u">U</span></button>
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtEmoji" title="Emoji" aria-label="Insert emoji">😊</button>
+              </div>
+            </div>
+            <div class="ce2-drawer-section">
+              <span class="ce2-drawer-label">Style</span>
+              <div class="ce2-drawer-row">
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtStrike" title="Strikethrough">S̶</button>
+                <button type="button" class="ce2-drawer-style-btn" id="ce2FmtCode" title="Monospace"><span class="ce2-fmt-code">Code</span></button>
+                <span class="ce2-drawer-style-divider" aria-hidden="true"></span>
+                <button type="button" class="ce2-color-swatch ce2-color-swatch--gold" data-ce2-color="gold" title="Gold accent" aria-label="Gold accent"></button>
+                <button type="button" class="ce2-color-swatch ce2-color-swatch--blue" data-ce2-color="blue" title="Blue accent" aria-label="Blue accent"></button>
+                <button type="button" class="ce2-color-swatch ce2-color-swatch--green" data-ce2-color="green" title="Green accent" aria-label="Green accent"></button>
+              </div>
+            </div>
+            <div class="ce2-drawer-section">
+              <span class="ce2-drawer-label">Share</span>
+              <label class="ce2-sr-only" for="ce2BoardShareUrl">Board post URL</label>
+              <input type="url" id="ce2BoardShareUrl" class="ce2-input ce2-input-inline" placeholder="Paste board post link to share…" autocomplete="off">
+            </div>
           </div>
         </footer>
       </main>
@@ -185,7 +221,22 @@
     <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
     <div class="ce2-sheet-panel ce2-sheet-panel-edit">
       <h3 class="ce2-sheet-title">Edit message</h3>
-      <textarea id="ce2EditInput" class="ce2-input ce2-edit-input" rows="3" maxlength="8000"></textarea>
+      <div class="ce2-edit-tools" aria-label="Formatting">
+        <button type="button" class="ce2-edit-tool" id="ce2EditFmtBold" title="Bold"><strong>B</strong></button>
+        <button type="button" class="ce2-edit-tool" id="ce2EditFmtItalic" title="Italic"><em>I</em></button>
+        <button type="button" class="ce2-edit-tool" id="ce2EditFmtUnderline" title="Underline"><span class="ce2-fmt-u">U</span></button>
+        <button type="button" class="ce2-edit-tool" id="ce2EditFmtStrike" title="Strikethrough">S̶</button>
+        <button type="button" class="ce2-edit-tool" id="ce2EditFmtCode" title="Code"><span class="ce2-fmt-code">`</span></button>
+        <span class="ce2-edit-tool-divider" aria-hidden="true"></span>
+        <button type="button" class="ce2-color-swatch ce2-color-swatch--gold ce2-color-swatch--sm" data-ce2-edit-color="gold" title="Gold" aria-label="Gold accent"></button>
+        <button type="button" class="ce2-color-swatch ce2-color-swatch--blue ce2-color-swatch--sm" data-ce2-edit-color="blue" title="Blue" aria-label="Blue accent"></button>
+        <button type="button" class="ce2-color-swatch ce2-color-swatch--green ce2-color-swatch--sm" data-ce2-edit-color="green" title="Green" aria-label="Green accent"></button>
+        <button type="button" class="ce2-edit-tool ce2-edit-tool-emoji" id="ce2EditFmtEmoji" title="Emoji">😊</button>
+      </div>
+      <div class="ce2-input-shell ce2-input-shell--edit">
+        <div id="ce2EditMirror" class="ce2-input-mirror" aria-hidden="true"></div>
+        <textarea id="ce2EditInput" class="ce2-input ce2-input--rich ce2-edit-input" rows="3" maxlength="8000" placeholder="Edit message…"></textarea>
+      </div>
       <div class="ce2-sheet-actions">
         <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2EditCancel">Cancel</button>
         <button type="button" class="ce2-btn" id="ce2EditSave">Save</button>
@@ -219,5 +270,19 @@
       <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2MentionClose">Cancel</button>
     </div>
   </div>
+
+  <div id="ce2EmojiSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel ce2-sheet-panel-compact">
+      <h3 class="ce2-sheet-title">Emoji</h3>
+      <div class="ce2-emoji-tabs" role="tablist" aria-label="Emoji categories">
+        <button type="button" class="ce2-emoji-tab is-active" data-emoji-tab="reactions" role="tab" aria-selected="true">Reactions</button>
+        <button type="button" class="ce2-emoji-tab" data-emoji-tab="all" role="tab" aria-selected="false">All</button>
+      </div>
+      <div id="ce2EmojiGrid" class="ce2-emoji-grid" role="listbox" aria-label="Choose emoji"></div>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2EmojiClose">Close</button>
+    </div>
+  </div>
+
 </body>
 </html>

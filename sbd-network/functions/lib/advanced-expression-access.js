@@ -43,11 +43,12 @@ function hasEliteTier(userData) {
 
 function isAdminGrantedElite(userData) {
   if (!userData || !hasEliteTier(userData)) return false;
-  if (userData.staffAccess?.advancedExpression === true) return true;
-  const sub = userData.subscription;
-  if (sub?.source === 'admin') return true;
-  if (!sub || sub.status !== 'active' || normalizeTierSlug(sub.tier) !== 'elite') return false;
-  return subscriptionEndMs(sub) >= new Date('2090-01-01').getTime();
+  return userData.staffAccess?.advancedExpression === true;
+}
+
+function userHasAdvancedExpressionGroup(userData) {
+  const groups = Array.isArray(userData?.groups) ? userData.groups : [];
+  return ADVANCED_EXPRESSION_GROUP_IDS.some((id) => groups.includes(id));
 }
 
 function getCompletedCourses(userData) {
@@ -90,6 +91,7 @@ function computeFormationMilestoneMet(userData) {
 function hasAdvancedExpressionAccess(userData) {
   if (!userData) return false;
   if (userData.role === 'admin') return true;
+  if (!userHasAdvancedExpressionGroup(userData)) return false;
   if (isAdminGrantedElite(userData)) return true;
   if (userData.progress?.advancedExpressionUnlocked === true) return true;
   return computeFormationMilestoneMet(userData);
@@ -110,5 +112,6 @@ module.exports = {
   hasSchool4HalfComplete,
   computeFormationMilestoneMet,
   hasAdvancedExpressionAccess,
+  userHasAdvancedExpressionGroup,
   eliteBillingGroupsOnly,
 };
