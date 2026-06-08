@@ -265,9 +265,35 @@ auth.onAuthStateChanged(async (user) => {
       const _subTier = _subActive ? (_sub.tier || '') : '';
       const uTier = currentUserData.role === 'admin' ? 'elite' : (_subTier || currentUserData.tier || 'free');
       const boardData = _boardMeta.data();
+      const gid = boardData.groupId;
+      const assignedGroups = Array.isArray(currentUserData.groups) ? currentUserData.groups : [];
+
+      if (
+        currentUserData.role !== 'admin' &&
+        gid &&
+        !assignedGroups.includes(gid)
+      ) {
+        if (boardTitle) boardTitle.textContent = boardData.title || 'Board';
+        if (createPostBtn) createPostBtn.style.display = 'none';
+        if (postsContainer) {
+          postsContainer.innerHTML = `
+          <div style="text-align:center;padding:3rem 1.5rem;color:var(--text-sec)">
+            <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+            <h3 style="margin:0 0 .5rem;color:#fff">Group not assigned</h3>
+            <p style="margin:0 0 1.5rem;line-height:1.6">You are not a member of the community group for this board. Ask an administrator to assign the group in Admin → Manage user → Group Membership.</p>
+            <a href="/boards.html" style="display:inline-block;background:var(--gold,#c6a96b);color:#000;padding:.75rem 2rem;border-radius:8px;font-weight:700;text-decoration:none">← Back to Community</a>
+          </div>`;
+        }
+        showLoading(false);
+        return;
+      }
+
       const isAdvBoard =
         typeof AdvancedExpressionAccess !== 'undefined' &&
-        AdvancedExpressionAccess.isAdvancedExpressionBoard(boardId, boardData);
+        (
+          AdvancedExpressionAccess.isAdvancedExpressionBoard(boardId, boardData) ||
+          AdvancedExpressionAccess.isAdvancedExpressionGroupId(gid)
+        );
 
       if (isAdvBoard && typeof AdvancedExpressionAccess !== 'undefined') {
         const access = AdvancedExpressionAccess.getAdvancedExpressionAccess(currentUserData);

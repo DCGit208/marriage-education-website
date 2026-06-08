@@ -36,22 +36,45 @@ function createPendingPaymentFulfillment(deps) {
     }
 
     const payment = paymentDoc.data();
+    const isAmbassadorRegistration =
+      payment.product_id === 'ambassador-registration' || payment.type === 'ambassador';
+    const ambassadorCode = payment.ambassador_code || ref;
+    let ambassadorExists = false;
 
-    if (payment.status === 'approved' && options.skipIfApproved !== false) {
-      return {
-        success: true,
-        duplicate: true,
-        message: 'Payment already approved',
-        reference: ref
-      };
+    if (isAmbassadorRegistration) {
+      const ambSnap = await db.collection('ambassadors').doc(ambassadorCode).get();
+      ambassadorExists = ambSnap.exists;
     }
 
-    await paymentRef.update({
-      status: 'approved',
-      approved_at: admin.firestore.FieldValue.serverTimestamp(),
-      payment_channel: channel,
-      campay_reference: gatewayReference || payment.campay_reference || null
-    });
+    if (payment.status === 'approved' && options.skipIfApproved !== false) {
+      if (isAmbassadorRegistration && !ambassadorExists) {
+        console.warn(
+          `[fulfill] ${ref} approved but ambassador ${ambassadorCode} missing — retrying activation`
+        );
+      } else {
+        return {
+          success: true,
+          duplicate: true,
+          message: 'Payment already approved',
+          reference: ref
+        };
+      }
+    }
+
+    if (payment.status !== 'approved') {
+      await paymentRef.update({
+        status: 'approved',
+        approved_at: admin.firestore.FieldValue.serverTimestamp(),
+        payment_channel: channel,
+        campay_reference: gatewayReference || payment.campay_reference || null
+      });
+    } else if (gatewayReference || channel !== 'manual') {
+      await paymentRef.update({
+        payment_channel: channel,
+        campay_reference: gatewayReference || payment.campay_reference || null,
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
 
     await writeUnifiedPaymentRecord({
       source: channel === 'campay' ? 'campay_webhook' : 'manual_payment',

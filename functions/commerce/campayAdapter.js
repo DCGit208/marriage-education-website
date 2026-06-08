@@ -6,6 +6,16 @@ const crypto = require('crypto');
 const axios = require('axios');
 const { CAMPAY } = require('./config');
 
+/** CamPay expects 237XXXXXXXX (no + prefix). */
+function normalizeCampayPhone(phone) {
+  if (!phone) return undefined;
+  const digits = String(phone).replace(/\D/g, '');
+  if (!digits) return undefined;
+  if (digits.startsWith('237')) return digits;
+  if (digits.length === 9) return `237${digits}`;
+  return digits;
+}
+
 function headers() {
   const token = CAMPAY.accessToken;
   return {
@@ -51,10 +61,11 @@ async function processPayment(params) {
   }
 
   const token = await loginIfNeeded();
+  const from = normalizeCampayPhone(phone);
   const payload = {
     amount: String(amount),
     currency,
-    from: phone || undefined,
+    from: from || undefined,
     description,
     external_reference: externalReference
   };
@@ -164,10 +175,16 @@ function verifyWebhook({ headers: reqHeaders, rawBody }) {
 
 function parseWebhook({ body }) {
   const data = typeof body === 'string' ? JSON.parse(body) : body;
+  const gatewayReference = data.reference || data.uuid || data.transaction_id || null;
+  const externalReference =
+    data.external_reference ||
+    data.externalReference ||
+    data.ext_reference ||
+    null;
   return {
     gateway: 'campay',
-    gatewayReference: data.reference || data.external_reference || data.uuid,
-    externalReference: data.external_reference,
+    gatewayReference,
+    externalReference,
     status: mapCampayStatus(data.status),
     amount: Number(data.amount || 0),
     currency: data.currency || 'XAF',

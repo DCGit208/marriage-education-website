@@ -9,16 +9,31 @@ const UPLOAD_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
 
 function detectUploadContentType(file) {
   let contentType = file.type;
+  if (contentType) {
+    const lower = contentType.toLowerCase();
+    if (lower === 'image/x-png' || lower === 'image/apng') contentType = 'image/png';
+    else contentType = lower;
+  }
   if (!contentType) {
     const ext = file.name.split('.').pop().toLowerCase();
     const extMap = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-      webp: 'image/webp', heic: 'image/heic',
+      webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
+      gif: 'image/gif', bmp: 'image/bmp',
       mp4: 'video/mp4', webm: 'video/webm',
-      mov: 'video/quicktime', m4v: 'video/x-m4v',
-      m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav',
+      mov: 'video/quicktime', m4v: 'video/x-m4v', '3gp': 'video/3gpp',
+      m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
+      aac: 'audio/mp4', caf: 'audio/x-caf',
     };
-    contentType = extMap[ext] || 'application/octet-stream';
+    contentType = extMap[ext] || '';
+    if (!contentType) {
+      if (['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp'].includes(ext)) {
+        contentType = 'image/jpeg';
+      } else if (['mp4', 'webm', 'mov', 'm4v', '3gp'].includes(ext)) {
+        contentType = 'video/mp4';
+      }
+    }
+    if (!contentType) contentType = 'application/octet-stream';
   }
   return contentType;
 }
@@ -117,6 +132,65 @@ async function uploadToR2(file, folder, options) {
 
   const { publicUrl } = await res.json();
   return publicUrl;
+}
+
+/**
+ * Upload via Firebase Storage (same-origin auth — no cross-origin CORS).
+ * Used by CE2 Messages when the R2 worker is unreachable from the page origin.
+ * @param {File} file
+ * @param {string} folder  dm_attachments | dm_videos | dm_audio
+ * @param {{ onProgress?: function(number), signal?: AbortSignal }} [options]
+ */
+function uploadToFirebaseStorage(file, folder, options) {
+  options = options || {};
+  return new Promise(function (resolve, reject) {
+    const user = getCurrentUser();
+    if (!user) {
+      reject(new Error('Not authenticated'));
+      return;
+    }
+    if (typeof firebase === 'undefined' || !firebase.storage) {
+      reject(new Error('Storage SDK not loaded'));
+      return;
+    }
+    const contentType = detectUploadContentType(file);
+    const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path =
+      folder + '/' + user.uid + '/' + Date.now() + '_' +
+      Math.random().toString(36).slice(2, 8) + '_' + safeName;
+    const ref = firebase.storage().ref(path);
+    const task = ref.put(file, { contentType: contentType });
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        task.cancel();
+        reject(new Error('Upload cancelled'));
+        return;
+      }
+      options.signal.addEventListener('abort', function () {
+        task.cancel();
+      });
+    }
+
+    task.on(
+      'state_changed',
+      function (snap) {
+        if (options.onProgress && snap.totalBytes) {
+          options.onProgress(snap.bytesTransferred / snap.totalBytes);
+        }
+      },
+      function (err) {
+        if (err && err.code === 'storage/canceled') {
+          reject(new Error('Upload cancelled'));
+          return;
+        }
+        reject(new Error((err && err.message) || 'Storage upload failed'));
+      },
+      function () {
+        ref.getDownloadURL().then(resolve).catch(reject);
+      }
+    );
+  });
 }
 
 // Upload image → R2 (with optional editing)

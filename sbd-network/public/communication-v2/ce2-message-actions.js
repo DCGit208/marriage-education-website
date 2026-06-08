@@ -38,6 +38,10 @@
     return deps && deps.el ? deps.el(id) : document.getElementById(id);
   }
 
+  function syncComposerInputHeight(input) {
+    if (deps && deps.syncComposerInputHeight) deps.syncComposerInputHeight(input);
+  }
+
   function db() {
     return deps && deps.db;
   }
@@ -387,6 +391,7 @@
           if (moreBtn) moreBtn.classList.add('is-open');
           if (input) {
             input.value = (input.value ? input.value + '\n' : '') + (copyT || 'Shared from Messages');
+            syncComposerInputHeight(input);
             input.focus();
           }
           statusMsg('Add a board link in composer (+) to share');
@@ -1019,6 +1024,9 @@
   function showEditSheet(m, ac) {
     var ta = el('ce2EditInput');
     if (ta) ta.value = m.content || '';
+    if (typeof window !== 'undefined' && window.Ce2Format && window.Ce2Format.onEditOpen) {
+      window.Ce2Format.onEditOpen();
+    }
     showSheet('ce2EditSheet');
     activeCtx = { m: m, ac: ac };
     if (ta) {
@@ -1321,6 +1329,7 @@
         var input = el('ce2Input');
         if (input) {
           input.value = t.text;
+          syncComposerInputHeight(input);
           input.focus();
         }
         closeAllSheets();
@@ -1364,6 +1373,7 @@
                   var input = el('ce2Input');
                   if (input) {
                     input.value = (input.value ? input.value + ' ' : '') + '@' + name.split(' ')[0] + ' ';
+                    syncComposerInputHeight(input);
                     input.focus();
                   }
                   closeAllSheets();

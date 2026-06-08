@@ -6,7 +6,7 @@ compatibility_date = "2024-09-23"
 [vars]
 FIREBASE_API_KEY = "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc"
 R2_PUBLIC_URL    = "https://pub-6524d7976da94b11bb645c445abecb63.r2.dev"
-CORS_ORIGIN      = "https://sbd-network.web.app,https://marriage-education.web.app"
+CORS_ORIGIN      = "https://sbd-network.web.app,https://marriage-education.web.app,https://marriageducation.com,https://www.marriageducation.com"
 
 # R2 bucket binding — Worker writes directly to R2 (no S3 credentials needed)
 [[r2_buckets]]

@@ -46,6 +46,10 @@ function isAdminGrantedElite(userData) {
   return userData.staffAccess?.advancedExpression === true;
 }
 
+function isAdvancedExpressionRevoked(userData) {
+  return userData?.access?.advancedExpressionRevoked === true;
+}
+
 function userHasAdvancedExpressionGroup(userData) {
   const groups = Array.isArray(userData?.groups) ? userData.groups : [];
   return ADVANCED_EXPRESSION_GROUP_IDS.some((id) => groups.includes(id));
@@ -91,6 +95,7 @@ function computeFormationMilestoneMet(userData) {
 function hasAdvancedExpressionAccess(userData) {
   if (!userData) return false;
   if (userData.role === 'admin') return true;
+  if (isAdvancedExpressionRevoked(userData)) return false;
   if (!userHasAdvancedExpressionGroup(userData)) return false;
   if (isAdminGrantedElite(userData)) return true;
   if (userData.progress?.advancedExpressionUnlocked === true) return true;
@@ -107,6 +112,7 @@ module.exports = {
   ADVANCED_EXPRESSION_GROUP_SET,
   hasEliteTier,
   isAdminGrantedElite,
+  isAdvancedExpressionRevoked,
   hasPremiumArcComplete,
   hasSchool3Complete,
   hasSchool4HalfComplete,

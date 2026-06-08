@@ -1902,6 +1902,11 @@
         'Otherwise refresh the page and try again — if it persists, contact support with your account email.'
       );
     }
+    if (context === 'join') {
+      return (
+        'Could not join this group. Ask an admin to add you under Admin → Messages V2 → Manage members, and confirm your profile tier matches the group (e.g. elite for Elite groups).'
+      );
+    }
     if (context === 'group') {
       return (
         'Message was not saved. Join the group first (Join button if shown), open the composer drawer and set classification to Elite or lower, or ask an admin to confirm your profile tier matches this group.'
@@ -2431,13 +2436,29 @@
     var shareTitle = q.get('title') || '';
     var shareText = q.get('text') || '';
     var shareUrl = q.get('url') || '';
-    if (shareText || shareUrl || shareTitle) {
-      var prefill = [shareTitle, shareText, shareUrl].filter(Boolean).join('\n').trim();
-      CommunicationState.shareDraft = prefill;
+    var sharePrefill = [shareTitle, shareText, shareUrl].filter(Boolean).join('\n').trim();
+
+    if (peerUid) {
+      if (sharePrefill) {
+        CommunicationState.shareDraft = sharePrefill;
+      }
+      var peerDoc = await db.collection('users').doc(peerUid).get();
+      var peer = normalizeCe2User(
+        peerUid,
+        peerDoc.exists ? peerDoc.data() : { name: 'Member' }
+      );
+      if (canCommunicate(CommunicationState.me, peer)) {
+        await openDirectThread(directConvId(uid, peerUid), peerUid, peer.name);
+      }
+      return;
+    }
+
+    if (sharePrefill) {
+      CommunicationState.shareDraft = sharePrefill;
       CommunicationState.mobileHubPanel = 'discover';
       var shareInput = el('ce2Input');
-      if (shareInput && prefill) {
-        shareInput.value = prefill.slice(0, 4000);
+      if (shareInput && sharePrefill) {
+        shareInput.value = sharePrefill.slice(0, 4000);
         syncCe2ComposerInputHeight(shareInput);
       }
       CommunicationState.statusMessage = 'Shared content ready — pick a thread and send.';
@@ -2449,17 +2470,6 @@
         return g.id === groupId;
       });
       await openGroupThread(groupId, gmeta ? gmeta.name : 'Group');
-      return;
-    }
-    if (peerUid) {
-      var peerDoc = await db.collection('users').doc(peerUid).get();
-      var peer = normalizeCe2User(
-        peerUid,
-        peerDoc.exists ? peerDoc.data() : { name: 'Member' }
-      );
-      if (canCommunicate(CommunicationState.me, peer)) {
-        await openDirectThread(directConvId(uid, peerUid), peerUid, peer.name);
-      }
       return;
     }
     if (!conv) return;
@@ -3733,12 +3743,10 @@
       .collection('members')
       .doc(me.uid);
     var memberSnap = await memberRef.get();
-    var joinedAt = firebase.firestore.Timestamp.now();
     if (!memberSnap.exists) {
-      await memberRef.set({ joinedAt: joinedAt });
-    } else {
-      await memberRef.update({ joinedAt: joinedAt });
+      await memberRef.set({ joinedAt: firebase.firestore.Timestamp.now() });
     }
+    // Admin-added members already have a doc — skip joinedAt update (rules tier gate).
     CommunicationState.selectedGroupId = gid;
     await openGroupThread(gid, gname || 'Group');
     CommunicationState.error = null;
@@ -3760,7 +3768,7 @@
         }) || {}).name || 'Group';
       await joinGroupById(gid, gname);
     } catch (err) {
-      handleCe2Error(err);
+      handleCe2Error(err, 'join');
     }
     render();
   }

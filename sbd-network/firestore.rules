@@ -11,18 +11,23 @@ service cloud.firestore {
         : null;
     }
     function ce2IsAdmin(ud) {
-      return ud != null && (
-        (ud.role is string &&
-          (ud.role == 'admin' || ud.role == 'Admin' || ud.role == 'ADMIN')) ||
-        (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
-      );
+      return (request.auth != null && request.auth.token.admin == true) ||
+        (ud != null && (
+          (ud.role is string &&
+            (ud.role == 'admin' || ud.role == 'Admin' || ud.role == 'ADMIN')) ||
+          (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
+        ));
+    }
+    function ce2TierNorm(t) {
+      return t is string ? t.lower() : 'foundation';
     }
     function ce2TierRankFromString(t) {
-      return t == 'rd' ? 5
-        : t == 'senior_ambassador' ? 4
-        : t == 'ambassador' ? 3
-        : t == 'elite' ? 2
-        : t == 'premium' ? 1
+      let tier = ce2TierNorm(t);
+      return tier == 'rd' ? 5
+        : tier == 'senior_ambassador' ? 4
+        : tier == 'ambassador' ? 3
+        : tier == 'elite' ? 2
+        : tier == 'premium' ? 1
         : 0;
     }
     // Numeric rank: foundation → 0 … rd → 5; admin acts as highest for policy checks
@@ -47,11 +52,11 @@ service cloud.firestore {
     }
     // Default ON when field absent; only explicit messagingEnabled == false suspends
     function ce2MessagingEnabled(ud) {
-      return ud != null && (
-        ce2IsAdmin(ud) ||
-        !('messagingEnabled' in ud) ||
-        ud.messagingEnabled == true
-      );
+      return ce2IsAdmin(ud) ||
+        (ud != null && (
+          !('messagingEnabled' in ud) ||
+          ud.messagingEnabled == true
+        ));
     }
     // Lower → higher DM: blocked unless receiver is mentor (or admin involved handled by rank)
     function ce2CanOpenDirectBetween(senderUid, receiverUid) {
@@ -73,7 +78,7 @@ service cloud.firestore {
       return ce2FormationLevel(ud) >= ce2GroupFormationMin(gdata);
     }
     function ce2UserMeetsGroupTier(ud, gdata) {
-      return ce2TierRank(ud) >= ce2RequiredTierRank(gdata.requiredTier);
+      return ce2PolicyTierRank(ud) >= ce2RequiredTierRank(gdata.requiredTier);
     }
     function ce2IsGroupMember(groupId, uid) {
       return exists(/databases/$(database)/documents/communicationGroups/$(groupId)/members/$(uid));
@@ -200,7 +205,7 @@ service cloud.firestore {
       return ce2IsAdmin(ud)
         || c == 'public'
         || (c == 'mentor' && ce2IsMentor(ud))
-        || (c != 'mentor' && ce2TierRank(ud) >= ce2ClassRank(c));
+        || (c != 'mentor' && ce2PolicyTierRank(ud) >= ce2ClassRank(c));
     }
     // Governance v1: conversation content floor (-1 = legacy conv, no floor field)
     function ce2ConvSecurityLevel(convData) {
@@ -219,7 +224,8 @@ service cloud.firestore {
           );
     }
     function ce2MessageAllowedInGroup(classification, gdata) {
-      return ce2ClassRank(ce2MessageClassification(classification)) <= ce2GroupContentFloor(gdata);
+      return ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+        ce2ClassRank(ce2MessageClassification(classification)) <= ce2GroupContentFloor(gdata);
     }
 
     // Post owner can moderate comments on their own post.
@@ -447,6 +453,13 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Platform config (support DM routing, public settings)
+    match /platform/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
     }
 
     // Users (sbd-network profiles)
@@ -889,7 +902,11 @@ service cloud.firestore {
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
 
       match /members/{memberId} {
-        allow read: if request.auth != null && (
+        allow list: if request.auth != null && (
+          ce2IsGroupMember(groupId, request.auth.uid) ||
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+        );
+        allow get: if request.auth != null && (
           request.auth.uid == memberId ||
           ce2IsGroupMember(groupId, request.auth.uid) ||
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
@@ -905,10 +922,12 @@ service cloud.firestore {
             )
           )
         );
+        // Self-update: tier gate for first join; existing members may refresh joinedAt (admin-added users)
         allow update: if request.auth != null &&
           request.auth.uid == memberId &&
           (
             ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            ce2IsGroupMember(groupId, request.auth.uid) ||
             ce2UserMeetsGroupTier(
               ce2UserDataOrNull(request.auth.uid),
               get(/databases/$(database)/documents/communicationGroups/$(groupId)).data

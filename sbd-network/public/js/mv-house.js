@@ -108,6 +108,57 @@ function isSharedWardrobeView() {
     (typeof window.MvHouseShares !== 'undefined' && window.MvHouseShares.isSharedView?.());
 }
 
+/** MV House gate — formation tone; hide Elite paywall when user is already Elite but gated. */
+async function applyMvHouseGate(access) {
+  const gateEl = document.getElementById('mvGate');
+  if (!gateEl) return;
+
+  const gateTitle = gateEl.querySelector('.mv-gate-title');
+  const gateSub = gateEl.querySelector('.mv-gate-sub');
+  const gateFeats = gateEl.querySelector('.mv-gate-feats');
+  const gateBtn = gateEl.querySelector('.mv-upgrade-btn');
+  const supportBtn = gateEl.querySelector('.mv-support-btn');
+
+  const isPaywall = access.showPaywall === true;
+  const title = access.message || (isPaywall ? 'MV House is Elite' : 'MV House');
+  const detail = access.detail || access.reason || '';
+
+  if (gateTitle) gateTitle.textContent = title;
+  if (gateSub) gateSub.textContent = detail;
+
+  if (gateFeats) {
+    gateFeats.style.display = isPaywall ? '' : 'none';
+  }
+
+  if (gateBtn) {
+    if (isPaywall) {
+      gateBtn.textContent = 'Unlock MV House — Elite $50/mo →';
+      gateBtn.href = access.ctaUrl || '/payment?tier=elite';
+      gateBtn.style.display = '';
+    } else {
+      gateBtn.textContent = access.ctaLabel || 'Continue Formation →';
+      gateBtn.href = access.ctaUrl || '/courses.html';
+      gateBtn.style.display = detail ? '' : 'none';
+    }
+  }
+
+  if (supportBtn) {
+    if (!isPaywall && access.showSupportDm && window.SbdPlatform?.buildSupportDmUrl) {
+      const url = await SbdPlatform.buildSupportDmUrl({
+        prefill: access.supportPrefill || 'Hi — I need help with MV House access.',
+      });
+      if (url) {
+        supportBtn.href = url;
+        supportBtn.style.display = '';
+      } else {
+        supportBtn.style.display = 'none';
+      }
+    } else {
+      supportBtn.style.display = 'none';
+    }
+  }
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────
 
 firebase.auth().onAuthStateChanged(async (user) => {
@@ -147,15 +198,7 @@ async function init() {
       : { allowed: tier === 'elite' || currentUserData?.role === 'admin' };
 
     if (!access.allowed) {
-      const gateEl = document.getElementById('mvGate');
-      if (gateEl) {
-        const gateTitle = gateEl.querySelector('h2, h3, .gate-title');
-        const gateMsg   = gateEl.querySelector('p, .gate-msg');
-        if (gateTitle && access.message) gateTitle.textContent = access.message;
-        if (gateMsg && (access.detail || access.reason)) {
-          gateMsg.textContent = access.detail || access.reason;
-        }
-      }
+      await applyMvHouseGate(access);
       document.getElementById('mvGate').style.display = 'block';
       document.getElementById('mvLoading').style.display = 'none';
       return;

@@ -13,10 +13,12 @@
  *   SA_PRIVATE_KEY   — service_account.private_key from the downloaded JSON
  */
 
+import { parseFirestoreMap, userCanReceiveBoardNotification } from './notification-access.js';
+
 const ALLOWED_CONTENT_TYPES = new Set([
-  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic',
-  'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
-  'audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg',
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'image/bmp',
+  'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/3gpp',
+  'audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/x-caf',
 ]);
 const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', 'dm_videos', 'dm_audio']);
 
@@ -85,8 +87,12 @@ function b64urlBuf(buf) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
-    const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map(s => s.trim());
-    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+    const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+    const trustedOrigin =
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/([a-z0-9-]+\.(web\.app|firebaseapp\.com)|marriageducation\.com|www\.marriageducation\.com)$/i.test(origin) ||
+      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+    const corsOrigin = trustedOrigin && origin ? origin : (allowedOrigins[0] || '*');
     const corsHeaders = {
       'Access-Control-Allow-Origin':  corsOrigin,
       'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
@@ -133,21 +139,31 @@ export default {
       const { title, body, boardId, postId, url, groupId: bodyGroupId } = await request.json().catch(() => ({}));
       if (!title || !body) return respond({ error: 'Missing title or body' }, 400);
 
-      // ── Resolve groupId — use provided value or look up from boards collection ──
       let groupId = bodyGroupId || null;
-      if (!groupId && boardId) {
+
+      // ── Resolve board metadata for access filtering ──
+      let boardMeta = { groupId: null, requiredTier: 'free' };
+      if (boardId) {
         const boardRes = await fetch(
-          `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/boards/${boardId}?mask.fieldPaths=groupId`,
+          `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/boards/${boardId}?mask.fieldPaths=groupId&mask.fieldPaths=requiredTier`,
           { headers: { 'Authorization': `Bearer ${accessToken}` } }
         );
         const boardData = await boardRes.json().catch(() => ({}));
-        groupId = boardData.fields?.groupId?.stringValue || null;
+        boardMeta = {
+          groupId: boardData.fields?.groupId?.stringValue || groupId || null,
+          requiredTier: boardData.fields?.requiredTier?.stringValue || 'free',
+        };
+        if (!groupId) groupId = boardMeta.groupId;
       }
 
-      // ── Fetch FCM tokens — group members only if groupId known, else all ──
+      const USER_FIELD_MASKS = [
+        'fcmToken', 'tier', 'groups', 'role', 'subscription', 'progress', 'access', 'staffAccess',
+      ];
+      const selectFields = USER_FIELD_MASKS.map(f => ({ fieldPath: f }));
+
+      // ── Fetch FCM tokens — group members only; never broadcast to all users ──
       let tokens = [];
       if (groupId) {
-        // Firestore structuredQuery: users where groups array-contains groupId
         const queryRes = await fetch(
           `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery`,
           {
@@ -163,25 +179,21 @@ export default {
                     value: { stringValue: groupId },
                   },
                 },
-                select: { fields: [{ fieldPath: 'fcmToken' }] },
+                select: { fields: selectFields },
               },
             }),
           }
         );
         const queryData = await queryRes.json().catch(() => []);
         tokens = (Array.isArray(queryData) ? queryData : [])
-          .map(row => row.document?.fields?.fcmToken?.stringValue)
-          .filter(t => t && t.length > 10);
-      } else {
-        // Fallback: no group info — send to all users
-        const fsRes = await fetch(
-          `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users?pageSize=200&mask.fieldPaths=fcmToken`,
-          { headers: { 'Authorization': `Bearer ${accessToken}` } }
-        );
-        const fsData = await fsRes.json().catch(() => ({}));
-        tokens = (fsData.documents || [])
-          .map(doc => doc.fields?.fcmToken?.stringValue)
-          .filter(t => t && t.length > 10);
+          .map(row => {
+            const userData = parseFirestoreMap(row.document?.fields || {});
+            const token = userData.fcmToken;
+            if (!token || token.length <= 10) return null;
+            if (!userCanReceiveBoardNotification(userData, boardId, boardMeta)) return null;
+            return token;
+          })
+          .filter(Boolean);
       }
 
       if (tokens.length === 0) return respond({ ok: true, sent: 0 });

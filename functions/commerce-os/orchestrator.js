@@ -81,7 +81,7 @@ function createOrchestrator(deps) {
       channel: gateway,
       payment_method: 'campay_momo',
       gateway_reference: gatewayReference,
-      skipIfApproved: true
+      skipIfApproved: false
     });
 
     await campayRef.set({

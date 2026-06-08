@@ -32,6 +32,13 @@
     if (deps.requestRender) deps.requestRender(opts || { threadOnly: true });
   }
 
+  function isCoarseTouch() {
+    try {
+      if (global.matchMedia && global.matchMedia('(pointer: coarse)').matches) return true;
+    } catch (_) {}
+    return 'ontouchstart' in global;
+  }
+
   function isLockEnabled() {
     try {
       if (global.localStorage && global.localStorage.getItem('ce2_lock_record') === '0') {
@@ -68,9 +75,11 @@
     }
     if (hintNode) {
       if (!active) {
-        hintNode.textContent = isLockEnabled()
-          ? 'Slide left to cancel · slide up to lock'
-          : 'Slide left to cancel';
+        hintNode.textContent = isCoarseTouch()
+          ? 'Tap mic to record · tap Stop to send'
+          : isLockEnabled()
+            ? 'Slide left to cancel · slide up to lock'
+            : 'Slide left to cancel';
       } else if (locked) {
         hintNode.textContent = 'Recording locked — tap Stop to send';
       } else if (cancelArmed) {
@@ -149,6 +158,27 @@
     return !!(ac && !ac.needsJoin);
   }
 
+  function whyCantStart() {
+    var st = state();
+    if (!st) return 'Messages are still loading.';
+    if (st.voiceRecording || session) return null;
+    var ac = st.activeConversation;
+    if (!ac) return 'Open a conversation before recording a voice message.';
+    if (ac.needsJoin) return 'Join this conversation before recording a voice message.';
+    return null;
+  }
+
+  function surfaceHint(message) {
+    if (!message) return;
+    if (deps.onHint) deps.onHint(message);
+    else if (deps.onError) deps.onError(new Error(message));
+  }
+
+  function isPrimaryPress(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return false;
+    return true;
+  }
+
   function finishStop(shouldSend) {
     if (!session || session.finalized) return;
     session.finalized = true;
@@ -203,6 +233,9 @@
     var send = s.shouldSend && !s.cancelArmed && durationMs >= MIN_DURATION_MS;
 
     if (!send || !s.chunks.length) {
+      if (s.shouldSend && durationMs < MIN_DURATION_MS) {
+        surfaceHint('Hold the mic button while you speak, then release to send.');
+      }
       resetSession();
       return;
     }
@@ -281,7 +314,14 @@
 
     session.startedAt = Date.now();
     session.durationMs = 0;
-    setRecordingUi(true, false, false);
+
+    if (session.touchLock) {
+      session.locked = true;
+      session.cancelArmed = false;
+      setRecordingUi(true, false, true);
+    } else {
+      setRecordingUi(true, false, false);
+    }
 
     timerId = setInterval(function () {
       if (!session || !session.recorder) return;
@@ -295,11 +335,20 @@
     }, 200);
   }
 
-  function beginCapture(pointerId, clientX, clientY) {
-    if (!canStart()) return;
+  function beginCapture(pointerId, clientX, clientY, opts) {
+    if (!canStart()) {
+      var reason = whyCantStart();
+      if (reason && deps.onError) deps.onError(new Error(reason));
+      return;
+    }
     if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') {
       if (deps.onError) deps.onError(new Error('Voice notes are not supported in this browser.'));
       return;
+    }
+
+    var composerInput = el('ce2Input');
+    if (composerInput && document.activeElement === composerInput) {
+      composerInput.blur();
     }
 
     session = {
@@ -308,6 +357,7 @@
       startY: clientY,
       cancelArmed: false,
       locked: false,
+      touchLock: !!(opts && opts.touchLock),
       finalized: false,
       uploadDispatched: false,
       shouldSend: false,
@@ -377,13 +427,32 @@
     if (!voiceBtn || voiceBtn.dataset.ce2AudioRecorderBound) return;
     voiceBtn.dataset.ce2AudioRecorderBound = '1';
 
-    voiceBtn.addEventListener('pointerdown', function (e) {
-      if (e.button !== 0 && e.pointerType !== 'touch') return;
-      e.preventDefault();
+    function pressStart(pointerId, clientX, clientY, opts) {
+      beginCapture(pointerId, clientX, clientY, opts);
+    }
+
+    function shouldKeepRecordingAfterRelease() {
+      return !!(session && session.touchLock);
+    }
+
+    function pressEnd(pointerId, send) {
+      if (!session || session.finalized || pointerId !== session.pointerId) return;
+      if (session.locked) return;
       try {
-        voiceBtn.setPointerCapture(e.pointerId);
+        if (voiceBtn.releasePointerCapture) voiceBtn.releasePointerCapture(pointerId);
       } catch (_) {}
-      beginCapture(e.pointerId, e.clientX, e.clientY);
+      finishStop(send);
+    }
+
+    voiceBtn.addEventListener('pointerdown', function (e) {
+      if (!isPrimaryPress(e)) return;
+      var touchLock = e.pointerType === 'touch';
+      if (!touchLock) {
+        try {
+          voiceBtn.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      pressStart(e.pointerId, e.clientX, e.clientY, { touchLock: touchLock });
     });
 
     voiceBtn.addEventListener('pointermove', function (e) {
@@ -391,23 +460,64 @@
     });
 
     voiceBtn.addEventListener('pointerup', function (e) {
-      e.preventDefault();
+      if (!isPrimaryPress(e)) return;
+      if (shouldKeepRecordingAfterRelease()) return;
       onPointerEnd(e, true);
     });
 
     voiceBtn.addEventListener('pointercancel', function (e) {
-      e.preventDefault();
       if (session) session.cancelArmed = true;
       onPointerEnd(e, false);
+    });
+
+    voiceBtn.addEventListener(
+      'touchstart',
+      function (e) {
+        if (!e.touches || !e.touches.length) return;
+        var t = e.touches[0];
+        pressStart(t.identifier, t.clientX, t.clientY, { touchLock: true });
+      },
+      { passive: true }
+    );
+
+    voiceBtn.addEventListener('touchmove', function (e) {
+      if (!session || session.finalized || !e.touches || !e.touches.length) return;
+      var t = e.touches[0];
+      if (t.identifier !== session.pointerId) return;
+      onPointerMove({
+        pointerId: t.identifier,
+        clientX: t.clientX,
+        clientY: t.clientY,
+      });
+    });
+
+    voiceBtn.addEventListener('touchend', function (e) {
+      if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
+      var t = e.changedTouches[0];
+      if (t.identifier !== session.pointerId) return;
+      if (shouldKeepRecordingAfterRelease()) return;
+      pressEnd(t.identifier, !session.cancelArmed);
+    });
+
+    voiceBtn.addEventListener('touchcancel', function (e) {
+      if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
+      var t = e.changedTouches[0];
+      if (t.identifier !== session.pointerId) return;
+      session.cancelArmed = true;
+      pressEnd(t.identifier, false);
     });
 
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', function (e) {
       if (!session || session.finalized || e.pointerId !== session.pointerId) return;
-      if (session.locked) return;
+      if (session.locked || session.touchLock) return;
       if (e.target && e.target.closest && e.target.closest('#ce2VoiceBtn')) return;
       onPointerEnd(e, true);
     });
+
+    var voiceLabel = isCoarseTouch() ? 'Tap to record voice' : 'Hold to record voice';
+    voiceBtn.title = voiceLabel;
+    voiceBtn.setAttribute('aria-label', voiceLabel);
 
     var stopBtn = el('ce2VoiceRecordStop');
     if (stopBtn) {

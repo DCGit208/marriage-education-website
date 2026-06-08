@@ -4,6 +4,9 @@
 // Access: admin = elite. Only subscription grants tier above free.
 
 let userTier = 'free';
+let userData = null;
+
+const FORMATION_GATE_LABEL = 'Complete formation arc →';
 
 const TIER_ORDER  = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
@@ -39,12 +42,14 @@ async function loadUserTier(user) {
   try {
     const doc = await firebase.firestore().collection('users').doc(user.uid).get();
     if (doc.exists) {
-      const data = doc.data();
+      userData = doc.data();
+      const data = userData;
       const sub  = data.subscription || {};
       const now  = Date.now();
       const subEnd = sub.endDate?.toMillis ? sub.endDate.toMillis() : 0;
       const activeSub = sub.status === 'active' && subEnd > now ? (sub.tier || '') : '';
-      userTier = data.role === 'admin' ? 'elite' : (activeSub || 'free');
+      const docTier = (data.tier || 'free').toLowerCase();
+      userTier = data.role === 'admin' ? 'elite' : (activeSub || docTier || 'free');
     }
   } catch (e) { console.error('loadUserTier:', e); }
 }
@@ -405,9 +410,17 @@ const TIER_HUB = {
     {
       icon: '💬',
       title: 'Community',
-      sub: 'All boards including AMTS + Virility elite channels',
+      sub: 'Marriage Systems, Civilization Leadership, and standard elite discussion boards',
       href: '/boards.html',
       locked: false,
+    },
+    {
+      icon: '✨',
+      title: 'Advanced Muliebrity & Virility Boards',
+      sub: 'AMTS + Virility elite media boards — unlock after Schools 1–2, full School 3, and 4 of 8 School 4 courses',
+      href: '/boards.html',
+      locked: false,
+      formationGate: 'advancedExpression',
     },
     {
       icon: '🗂',
@@ -426,9 +439,10 @@ const TIER_HUB = {
     {
       icon: '🏠',
       title: 'MV House',
-      sub: 'Full MV House expression system — Corporate, Casual, Official, Night wardrobes',
+      sub: 'Identity expression wardrobes — Corporate, Casual, Official, Night',
       href: '/mv-house.html',
       locked: false,
+      formationGate: 'advancedExpression',
     },
     {
       icon: '👤',
@@ -447,10 +461,32 @@ const TIER_HUB = {
   ],
 };
 
+function resolveHubCard(card) {
+  if (!card.formationGate || card.locked) return card;
+  if (!userData || userData.role === 'admin') return card;
+  if (typeof AdvancedExpressionAccess === 'undefined') {
+    return Object.assign({}, card, {
+      locked: true,
+      lockLabel: FORMATION_GATE_LABEL,
+      href: '/courses.html',
+      pressure: true,
+    });
+  }
+  if (AdvancedExpressionAccess.hasAdvancedExpressionAccess(userData)) return card;
+  const access = AdvancedExpressionAccess.getAdvancedExpressionAccess(userData);
+  return Object.assign({}, card, {
+    locked: true,
+    lockLabel: access.message || FORMATION_GATE_LABEL,
+    sub: access.detail || card.sub,
+    href: access.ctaUrl || '/courses.html',
+    pressure: true,
+  });
+}
+
 function renderTierHub(tier) {
   const container = document.getElementById('tierPageContent');
-  const cards = TIER_HUB[tier];
-  if (!cards) { container.innerHTML = ''; return; }
+  const cards = (TIER_HUB[tier] || []).map(resolveHubCard);
+  if (!cards.length) { container.innerHTML = ''; return; }
 
   container.innerHTML = `
     <div class="tier-hub-grid">

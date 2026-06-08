@@ -19,6 +19,39 @@ const ADMIN_ADVANCED_EXPRESSION_GROUPS = [
   'advanced-muliebrity-training-school',
 ];
 
+function userHasAnyAdvancedExpressionGroup(groups) {
+  return ADMIN_ADVANCED_EXPRESSION_GROUPS.some(function (g) {
+    return (groups || []).includes(g);
+  });
+}
+
+function stripAdvancedExpressionGroups(groups) {
+  return (groups || []).filter(function (g) {
+    return !ADMIN_ADVANCED_EXPRESSION_GROUPS.includes(g);
+  });
+}
+
+function mergeAdvancedExpressionGroups(groups, includeAdvanced) {
+  var base = stripAdvancedExpressionGroups(groups);
+  if (!includeAdvanced) return base;
+  return Array.from(new Set(base.concat(ADMIN_ADVANCED_EXPRESSION_GROUPS)));
+}
+
+function advancedExpressionRevokeUpdate() {
+  return {
+    'staffAccess.advancedExpression': false,
+    'progress.advancedExpressionUnlocked': false,
+    'access.advancedExpressionRevoked': true,
+    'access.advancedExpressionRevokedAt': firebase.firestore.FieldValue.serverTimestamp(),
+  };
+}
+
+function advancedExpressionGrantUpdate() {
+  return {
+    'access.advancedExpressionRevoked': false,
+  };
+}
+
 let allGroups = [];
 let allBoards = [];
 let allUsers = [];
@@ -862,13 +895,11 @@ async function handleSetUserTier(userId, newTier) {
       const existing = userGroupsArray(snap.exists ? snap.data().groups : []);
       let merged = Array.from(new Set(existing.concat(tierGroups)));
       if (newTier !== 'elite') {
-        merged = merged.filter((g) => !ADMIN_ADVANCED_EXPRESSION_GROUPS.includes(g));
-      } else {
-        merged = Array.from(new Set(merged.concat(ADMIN_ADVANCED_EXPRESSION_GROUPS)));
-        subUpdate['progress.advancedExpressionUnlocked'] = true;
-        subUpdate['staffAccess.advancedExpression'] = true;
-        subUpdate['staffAccess.grantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
-        subUpdate['staffAccess.via'] = 'admin_tier_grant';
+        merged = stripAdvancedExpressionGroups(merged);
+        subUpdate['staffAccess.advancedExpression'] = false;
+        subUpdate['progress.advancedExpressionUnlocked'] = false;
+        subUpdate['access.advancedExpressionRevoked'] = true;
+        subUpdate['access.advancedExpressionRevokedAt'] = firebase.firestore.FieldValue.serverTimestamp();
       }
       subUpdate.groups = merged;
     }
@@ -878,7 +909,9 @@ async function handleSetUserTier(userId, newTier) {
     await userRef.update(subUpdate);
     closeAllModals();
     await loadUsers();
-    const staffNote = newTier === 'elite' ? ' Staff MV House / advanced board access included.' : '';
+    const staffNote = newTier === 'elite'
+      ? ' Advanced Muliebrity / MV House is NOT included — assign separately under Group Membership or Staff expression.'
+      : '';
     alert(`✅ Tier set to "${tierLabel[newTier]}" and ${tierGroups.length} group(s) assigned.${staffNote}`);
   } catch (err) {
     console.error('setUserTier:', err);
@@ -923,6 +956,7 @@ async function handleSaveStaffExpressionAccess(userId, enabled) {
     if (enabled) {
       update['staffAccess.grantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
       update['progress.advancedExpressionUnlocked'] = true;
+      update['access.advancedExpressionRevoked'] = false;
       update['subscription.source'] = 'admin';
       if (!data.subscription || data.subscription.status !== 'active') {
         update.tier = 'elite';
@@ -931,7 +965,7 @@ async function handleSaveStaffExpressionAccess(userId, enabled) {
         update['subscription.endDate'] = firebase.firestore.Timestamp.fromDate(new Date('2099-12-31'));
       }
     } else {
-      update['progress.advancedExpressionUnlocked'] = false;
+      Object.assign(update, advancedExpressionRevokeUpdate());
     }
 
     await userRef.update(update);
@@ -1021,13 +1055,14 @@ document.getElementById('saveUserGroupsBtn')?.addEventListener('click', async ()
     const update = { groups: selectedGroups };
     const stillHasAdv = ADMIN_ADVANCED_EXPRESSION_GROUPS.some((g) => selectedGroups.includes(g));
     if (!stillHasAdv) {
-      update['staffAccess.advancedExpression'] = false;
-      update['progress.advancedExpressionUnlocked'] = false;
+      Object.assign(update, advancedExpressionRevokeUpdate());
+    } else {
+      update['access.advancedExpressionRevoked'] = false;
     }
     await db.collection('users').doc(currentManagingUserId).update(update);
     closeAllModals();
     await loadUsers();
-    alert(stillHasAdv ? 'Community groups updated.' : 'Community groups updated — advanced Muliebrity / Virility access removed.');
+    alert('Community groups updated. The user only sees boards for checked groups.');
   } catch (err) {
     console.error('saveUserGroups:', err);
     alert('Error updating user groups');
@@ -1249,6 +1284,151 @@ async function loadAnalytics() {
 
 if (refreshAnalyticsBtn) refreshAnalyticsBtn.addEventListener('click', loadAnalytics);
 if (refreshUsersBtn) refreshUsersBtn.addEventListener('click', loadUsers);
+
+// ================================================================
+// AUTH EMAIL LOOKUP — find orphan Auth accounts (no Firestore profile)
+// ================================================================
+
+const adminAuthEmailLookup = document.getElementById('adminAuthEmailLookup');
+const adminAuthEmailLookupBtn = document.getElementById('adminAuthEmailLookupBtn');
+const adminAuthLookupResult = document.getElementById('adminAuthLookupResult');
+
+function adminFunctions() {
+  if (!firebase.apps.length) return null;
+  return firebase.app().functions('us-central1');
+}
+
+async function callAdminFunction(name, payload) {
+  const fn = adminFunctions();
+  if (!fn) throw new Error('Cloud Functions not loaded — hard-refresh Admin Panel.');
+  const callable = fn.httpsCallable(name);
+  const res = await callable(payload || {});
+  return res.data;
+}
+
+function renderAuthLookupResult(data) {
+  if (!adminAuthLookupResult) return;
+  if (!data || !data.found) {
+    adminAuthLookupResult.style.display = 'block';
+    adminAuthLookupResult.innerHTML =
+      '<p style="margin:0;color:var(--text-secondary);">No Firebase Auth account for that email.</p>';
+    return;
+  }
+
+  const auth = data.auth || {};
+  const fs = data.firestore || {};
+  const orphan = !!data.orphan;
+  const status = orphan
+    ? '<strong style="color:#fa0;">Orphan Auth account</strong> — login exists but no Firestore profile (invisible in user list below).'
+    : fs.exists
+      ? '<strong style="color:#6f6;">Profile OK</strong> — Auth + Firestore linked.'
+      : '<strong style="color:#f66;">Missing profile</strong>';
+
+  adminAuthLookupResult.style.display = 'block';
+  adminAuthLookupResult.innerHTML =
+    '<p style="margin:0 0 8px;">' + status + '</p>' +
+    '<p class="small-text" style="margin:0 0 4px;">UID: <code>' + escapeHtml(auth.uid || '') + '</code></p>' +
+    '<p class="small-text" style="margin:0 0 4px;">Email: ' + escapeHtml(auth.email || data.email || '') + '</p>' +
+    '<p class="small-text" style="margin:0 0 10px;">Name: ' + escapeHtml(auth.displayName || '—') +
+    ' · Created: ' + escapeHtml(auth.createdAt || '—') + '</p>' +
+    (orphan
+      ? '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">' +
+        '<div class="form-group" style="margin:0;min-width:160px;">' +
+        '<label for="adminRepairAmbassadorCode">Ambassador code</label>' +
+        '<input type="text" id="adminRepairAmbassadorCode" placeholder="AMB-JUE-1634" value="">' +
+        '</div>' +
+        '<div class="form-group" style="margin:0;min-width:120px;">' +
+        '<label for="adminRepairTier">Tier</label>' +
+        '<select id="adminRepairTier" class="admin-select"><option value="foundation">Foundation</option><option value="free">Free</option></select>' +
+        '</div>' +
+        '<button type="button" class="btn btn-sm btn-primary" id="adminRepairOrphanBtn">Repair profile + credit referral</button>' +
+        '<button type="button" class="btn btn-sm btn-danger" id="adminDeleteAuthOnlyBtn">Delete Auth only</button>' +
+        '</div>'
+      : fs.exists
+        ? '<button type="button" class="btn btn-sm btn-primary" id="adminOpenManageFromLookup">Open Manage User</button>'
+        : '');
+
+  if (orphan) {
+    document.getElementById('adminRepairOrphanBtn')?.addEventListener('click', async function () {
+      const code = (document.getElementById('adminRepairAmbassadorCode')?.value || '').trim();
+      const tier = document.getElementById('adminRepairTier')?.value || 'foundation';
+      if (!confirm('Create Firestore profile for ' + (auth.email || data.email) + '?\n\nTier: ' + tier +
+        (code ? '\nAmbassador: ' + code + ' (referral credited if Foundation)' : ''))) return;
+      try {
+        showLoading(true);
+        const result = await callAdminFunction('adminRepairOrphanUser', {
+          uid: auth.uid,
+          email: auth.email || data.email,
+          name: auth.displayName || '',
+          tier,
+          ambassadorCode: code,
+          creditReferral: tier === 'foundation' && !!code,
+        });
+        alert('Profile repaired.\nUID: ' + result.uid + (result.referredBy ? '\nReferral: ' + result.referredBy : ''));
+        await loadUsers();
+        renderAuthLookupResult(await callAdminFunction('adminLookupUserByEmail', { email: auth.email || data.email }));
+      } catch (err) {
+        console.error('repair orphan:', err);
+        alert('Repair failed: ' + (err.message || err));
+      } finally {
+        showLoading(false);
+      }
+    });
+
+    document.getElementById('adminDeleteAuthOnlyBtn')?.addEventListener('click', async function () {
+      if (!confirm('Delete Auth account for ' + (auth.email || data.email) + '?\n\nThey can register again with the same email. No Firestore profile exists.')) return;
+      if (!confirm('Second confirmation — delete Auth login only?')) return;
+      try {
+        showLoading(true);
+        await callAdminFunction('adminDeleteAuthUser', { uid: auth.uid });
+        alert('Auth account deleted. They can sign up again.');
+        adminAuthLookupResult.style.display = 'none';
+      } catch (err) {
+        alert('Delete failed: ' + (err.message || err));
+      } finally {
+        showLoading(false);
+      }
+    });
+  } else if (fs.exists) {
+    document.getElementById('adminOpenManageFromLookup')?.addEventListener('click', function () {
+      handleManageUser(fs.uid || auth.uid);
+    });
+  }
+}
+
+async function runAdminAuthEmailLookup() {
+  const email = (adminAuthEmailLookup?.value || '').trim().toLowerCase();
+  if (!email) {
+    alert('Enter an email address.');
+    return;
+  }
+  try {
+    showLoading(true);
+    const data = await callAdminFunction('adminLookupUserByEmail', { email });
+    renderAuthLookupResult(data);
+    if (adminUsersSearch) {
+      adminUsersSearch.value = email;
+      renderUsersList();
+    }
+  } catch (err) {
+    console.error('auth lookup:', err);
+    alert('Lookup failed: ' + (err.message || err));
+  } finally {
+    showLoading(false);
+  }
+}
+
+if (adminAuthEmailLookupBtn) {
+  adminAuthEmailLookupBtn.addEventListener('click', runAdminAuthEmailLookup);
+}
+if (adminAuthEmailLookup) {
+  adminAuthEmailLookup.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runAdminAuthEmailLookup();
+    }
+  });
+}
 
 // ================================================================
 // HELPERS
