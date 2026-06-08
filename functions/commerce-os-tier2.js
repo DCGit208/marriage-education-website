@@ -9,16 +9,165 @@ const {
   CAMPAY_AUTO_FULFILL,
   PILOT_PRODUCT_TYPES,
   COLLECTIONS,
-  TIER2_POLICY_VERSION
+  TIER2_POLICY_VERSION,
+  CAMPAY
 } = require('./commerce-os/config');
+
+/** CamPay demo API enforces 25 XAF max per collect (their message, not ours). */
+const CAMPAY_DEMO_MAX_XAF = 25;
 const {
   buildWalletSummary,
   DEFAULT_MIN_PAYOUT_FCFA
 } = require('./wallet-payout-tier1');
 
 function registerCommerceOsTier2(db, admin, exports, deps) {
-  const { fulfillPendingPayment, assertAdmin, markPayoutBatchPaidCore } = deps;
+  const {
+    fulfillPendingPayment,
+    assertAdmin,
+    markPayoutBatchPaidCore,
+    normalizeAmbassadorRecruiterPaymentFields,
+    writeUnifiedPaymentRecord
+  } = deps;
   const orchestrator = createOrchestrator({ db, admin, fulfillPendingPayment });
+
+  async function resolveCampayWebhookReference(event) {
+    let reference = String(event.externalReference || '').trim();
+    if (reference) return reference;
+
+    const gatewayReference = String(event.gatewayReference || '').trim();
+    if (!gatewayReference) return null;
+
+    const byGateway = await db
+      .collection(COLLECTIONS.campayPayments)
+      .where('gatewayReference', '==', gatewayReference)
+      .limit(1)
+      .get();
+    if (!byGateway.empty) {
+      return byGateway.docs[0].id;
+    }
+
+    const directDoc = await db.collection(COLLECTIONS.campayPayments).doc(gatewayReference).get();
+    if (directDoc.exists) {
+      return directDoc.id;
+    }
+
+    return null;
+  }
+
+  async function fulfillCampayIfPaid(reference, gatewayReference) {
+    const ref = String(reference || '').trim();
+    if (!ref) {
+      throw new Error('reference is required');
+    }
+
+    const paymentDoc = await db.collection('pending_payments').doc(ref).get();
+    if (!paymentDoc.exists) {
+      throw new Error(`pending_payments/${ref} not found`);
+    }
+    if (paymentDoc.data().status === 'approved') {
+      return { ok: true, action: 'already_approved', reference: ref };
+    }
+
+    const campayDoc = await db.collection(COLLECTIONS.campayPayments).doc(ref).get();
+    const gwRef =
+      gatewayReference ||
+      (campayDoc.exists ? campayDoc.data().gatewayReference : null);
+
+    if (!gwRef) {
+      return { ok: false, action: 'no_gateway_reference', reference: ref };
+    }
+
+    const verified = await campayGateway.verifyTransaction(gwRef);
+    if (verified.status !== 'SUCCESS') {
+      return {
+        ok: true,
+        action: 'awaiting_payment',
+        reference: ref,
+        campay_status: verified.status
+      };
+    }
+
+    const result = await orchestrator.paymentSucceeded({
+      reference: ref,
+      gatewayReference: gwRef,
+      gateway: 'campay',
+      webhookPayload: verified.raw || null
+    });
+
+    return { ok: true, action: 'fulfilled', reference: ref, result };
+  }
+
+  async function upsertCampayPendingPayment(data) {
+    const {
+      reference,
+      product_id,
+      product_name,
+      amount,
+      currency,
+      email,
+      phone,
+      type,
+      ambassador_code,
+      regional_director,
+      ambassador_data
+    } = data;
+
+    let paymentData = {
+      reference,
+      product_id: product_id || 'ambassador-registration',
+      product_name: product_name || `Ambassador Registration - ${reference}`,
+      amount,
+      currency: currency || 'XAF',
+      email,
+      phone,
+      type: type || 'ambassador',
+      status: 'pending',
+      payment_channel: 'campay',
+      campay_status: 'initiated',
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (type === 'ambassador' || product_id === 'ambassador-registration') {
+      paymentData.ambassador_code = ambassador_code || reference;
+      paymentData.regional_director =
+        regional_director ||
+        ambassador_data?.regional_director_code ||
+        ambassador_data?.recruitedBy ||
+        '';
+      paymentData.ambassador_data = ambassador_data || {
+        code: ambassador_code || reference,
+        recruitedBy: paymentData.regional_director
+      };
+      if (typeof normalizeAmbassadorRecruiterPaymentFields === 'function') {
+        paymentData = normalizeAmbassadorRecruiterPaymentFields(paymentData);
+      }
+    }
+
+    await db.collection('pending_payments').doc(reference).set(paymentData, { merge: true });
+
+    if (typeof writeUnifiedPaymentRecord === 'function') {
+      await writeUnifiedPaymentRecord({
+        source: 'campay_collect',
+        reference,
+        external_reference: reference,
+        record_type: 'customer_payment',
+        channel: 'campay',
+        payment_method: 'campay_momo',
+        payment_category: paymentData.type || 'ambassador',
+        product_id: paymentData.product_id,
+        product_name: paymentData.product_name,
+        amount: Number(amount || 0),
+        currency: paymentData.currency,
+        customer_email: email || '',
+        customer_phone: phone || '',
+        ambassador_code: paymentData.ambassador_code || '',
+        recruiter_code: paymentData.regional_director || '',
+        status: 'pending_collect',
+        action_required: false,
+        created_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }
 
   exports.getCampayPilotStatus = functions.https.onCall(async () => {
     return {
@@ -27,7 +176,9 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
       auto_fulfill: CAMPAY_AUTO_FULFILL,
       pilot_products: PILOT_PRODUCT_TYPES,
       policy_version: TIER2_POLICY_VERSION,
-      credentials_configured: campayGateway.hasCredentials()
+      credentials_configured: campayGateway.hasCredentials(),
+      api_base: CAMPAY.apiBase,
+      demo_amount_limit_xaf: CAMPAY_LIVE_ENABLED ? null : CAMPAY_DEMO_MAX_XAF
     };
   });
 
@@ -44,10 +195,14 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
 
     const reference = String(data.reference || '').trim();
     const phone = String(data.phone || '').trim();
+    const email = String(data.email || '').trim();
     const productType = String(data.product_type || 'ambassador_registration').trim();
 
     if (!reference || !phone) {
       throw new functions.https.HttpsError('invalid-argument', 'reference and phone are required');
+    }
+    if (!email) {
+      throw new functions.https.HttpsError('invalid-argument', 'email is required for ambassador activation');
     }
 
     if (!PILOT_PRODUCT_TYPES.includes(productType)) {
@@ -60,29 +215,81 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
     const pendingRef = db.collection('pending_payments').doc(reference);
     const pendingDoc = await pendingRef.get();
     if (!pendingDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'pending payment not found — submit registration first');
+      await upsertCampayPendingPayment({
+        reference,
+        product_id: data.product_id || 'ambassador-registration',
+        product_name: data.product_name,
+        amount: data.amount,
+        currency: data.currency || 'XAF',
+        email,
+        phone,
+        type: data.type || 'ambassador',
+        ambassador_code: data.ambassador_code || reference,
+        regional_director: data.regional_director || '',
+        ambassador_data: data.ambassador_data || null
+      });
+    } else if (email || phone) {
+      await pendingRef.set(
+        {
+          email: email || pendingDoc.data().email,
+          phone: phone || pendingDoc.data().phone,
+          payment_channel: 'campay',
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
     }
 
-    const pending = pendingDoc.data();
-    const amount = Number(pending.amount || data.amount || 0);
-    if (amount <= 0) {
+    const pendingSnap = await pendingRef.get();
+    const pending = pendingSnap.data() || {};
+    const listedAmount = Number(pending.amount || data.amount || 0);
+    if (listedAmount <= 0) {
       throw new functions.https.HttpsError('invalid-argument', 'invalid payment amount');
     }
 
-    const collect = await campayGateway.collectPayment({
-      amount,
-      currency: pending.currency || 'XAF',
-      externalReference: reference,
-      phone,
-      description: `${productType}:${reference}`
-    });
+    let collectAmount = listedAmount;
+    let demoCollectClamped = false;
+    if (!CAMPAY_LIVE_ENABLED && collectAmount > CAMPAY_DEMO_MAX_XAF) {
+      collectAmount = CAMPAY_DEMO_MAX_XAF;
+      demoCollectClamped = true;
+      await pendingRef.set(
+        {
+          campay_demo_collect_amount: collectAmount,
+          campay_demo_listed_amount: listedAmount,
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+    }
+
+    let collect;
+    try {
+      collect = await campayGateway.collectPayment({
+        amount: collectAmount,
+        currency: pending.currency || 'XAF',
+        externalReference: reference,
+        phone,
+        description: `${productType}:${reference}`
+      });
+    } catch (apiErr) {
+      console.error('[initiateCampayCheckout] CamPay collect failed:', apiErr.response?.data || apiErr.message);
+      const detail =
+        apiErr.response?.data?.detail ||
+        apiErr.response?.data?.message ||
+        apiErr.message ||
+        'CamPay collect request failed';
+      throw new functions.https.HttpsError('failed-precondition', detail);
+    }
 
     await db.collection(COLLECTIONS.campayPayments).doc(reference).set({
       reference,
       productType,
-      amount,
+      amount: collectAmount,
+      listedAmount,
+      demoCollectClamped,
       currency: pending.currency || 'XAF',
       phone,
+      email,
       gateway: 'campay',
       gatewayReference: collect.gatewayReference,
       status: collect.status || 'PENDING',
@@ -94,9 +301,19 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
     await pendingRef.update({
       payment_channel: 'campay',
       campay_reference: collect.gatewayReference,
-      campay_status: 'pending',
+      campay_status: collect.status === 'SUCCESS' ? 'paid' : 'pending',
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
+
+    let fulfillResult = null;
+    if (collect.status === 'SUCCESS' && CAMPAY_AUTO_FULFILL) {
+      fulfillResult = await orchestrator.paymentSucceeded({
+        reference,
+        gatewayReference: collect.gatewayReference,
+        gateway: 'campay',
+        webhookPayload: collect.raw || null
+      });
+    }
 
     return {
       success: true,
@@ -104,7 +321,12 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
       gatewayReference: collect.gatewayReference,
       status: collect.status,
       mode: collect.mode,
-      checkoutUrl: collect.checkoutUrl || null
+      checkoutUrl: collect.checkoutUrl || null,
+      fulfilled: collect.status === 'SUCCESS' && !!fulfillResult,
+      fulfillResult,
+      collectAmount,
+      listedAmount,
+      demoCollectClamped
     };
   });
 
@@ -142,8 +364,17 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
         return res.status(200).json({ ok: true, action: 'ignored', status: event.status });
       }
 
-      const reference = String(event.externalReference || '').trim();
+      const reference = await resolveCampayWebhookReference(event);
       if (!reference) {
+        await logRef.set(
+          {
+            verified: verification.valid,
+            error: 'missing_external_reference',
+            gatewayReference: event.gatewayReference || null,
+            bodyPreview: rawBody.slice(0, 800)
+          },
+          { merge: true }
+        );
         return res.status(400).json({ ok: false, error: 'missing_external_reference' });
       }
 
@@ -172,6 +403,23 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
     } catch (err) {
       console.error('[campayProductionWebhook]', err);
       return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  /**
+   * Poll CamPay + auto-fulfill when user paid on phone but webhook was delayed/missed.
+   */
+  exports.confirmCampayPayment = functions.https.onCall(async (data) => {
+    const reference = String(data.reference || '').trim();
+    if (!reference) {
+      throw new functions.https.HttpsError('invalid-argument', 'reference is required');
+    }
+    try {
+      const result = await fulfillCampayIfPaid(reference, data.gateway_reference || null);
+      return { success: true, ...result };
+    } catch (err) {
+      console.error('[confirmCampayPayment]', err);
+      throw new functions.https.HttpsError('internal', err.message);
     }
   });
 

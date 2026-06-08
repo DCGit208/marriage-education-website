@@ -669,6 +669,7 @@
     let cardElement = null;
     let currentPaymentMethod = 'momo';
     let campayPilotEnabled = false;
+    let campayDemoMaxXaf = null;
 
     // Initialize Stripe
     function initializeStripe() {
@@ -743,35 +744,40 @@
       btn.disabled = true;
       btn.textContent = 'Starting CamPay…';
       try {
-        const payAmount = document.getElementById('registration-price').dataset.amount || '15000';
+        let payAmount = parseInt(document.getElementById('registration-price').dataset.amount || '15000', 10);
+        if (campayDemoMaxXaf && payAmount > campayDemoMaxXaf) {
+          payAmount = campayDemoMaxXaf;
+        }
         const payCurrency = document.getElementById('registration-price').dataset.currency || 'XAF';
         let ambassadorData = null;
         const stored = sessionStorage.getItem('ambassadorData');
         if (stored) ambassadorData = JSON.parse(stored);
-        const submit = firebase.functions().httpsCallable('submitManualPayment');
-        await submit({
+        const campay = firebase.functions().httpsCallable('initiateCampayCheckout');
+        const res = await campay({
           reference: ref,
+          phone: phone.startsWith('+') ? phone : '+237' + phone.replace(/\D/g, ''),
+          email: email,
           product_id: 'ambassador-registration',
           product_name: 'Ambassador Registration - ' + code,
+          product_type: 'ambassador_registration',
           amount: payAmount,
           currency: payCurrency,
-          phone,
-          email,
           type: 'ambassador',
           ambassador_code: code,
           regional_director: ambassadorData?.recruitedBy || ambassadorData?.regional_director_code || '',
           ambassador_data: ambassadorData
         });
-        const campay = firebase.functions().httpsCallable('initiateCampayCheckout');
-        const res = await campay({
-          reference: ref,
-          phone: phone.startsWith('+') ? phone : '+237' + phone.replace(/\D/g, ''),
-          product_type: 'ambassador_registration',
-          amount: Number(payAmount)
-        });
-        showAlert('CamPay request sent. Approve the prompt on your phone. You will be redirected when payment completes.', 'success');
+        const payload = res.data || {};
+        if (payload.fulfilled || payload.status === 'SUCCESS') {
+          showAlert('Payment successful! Activating your ambassador account…', 'success');
+          setTimeout(function () {
+            window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email) + '&channel=campay';
+          }, 2000);
+          return;
+        }
+        showAlert('CamPay prompt sent to your phone. Approve the MoMo request to complete payment.', 'success');
         setTimeout(function () {
-          window.location.href = 'payment-pending.html?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email) + '&channel=campay';
+          window.location.href = 'payment-pending.html?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email) + '&channel=campay&code=' + encodeURIComponent(code);
         }, 2500);
       } catch (err) {
         console.error('CamPay checkout error:', err);
@@ -1007,8 +1013,20 @@
         firebase.functions().httpsCallable('getCampayPilotStatus')().then(function (res) {
           if (res.data && (res.data.campay_live_enabled || res.data.credentials_configured)) {
             campayPilotEnabled = true;
+            campayDemoMaxXaf = res.data.demo_amount_limit_xaf || null;
             var campayBtn = document.getElementById('btn-pay-campay');
             if (campayBtn) campayBtn.classList.remove('hidden');
+            var demoLimit = campayDemoMaxXaf;
+            if (demoLimit) {
+              var campaySec = document.getElementById('campay-payment-section');
+              if (campaySec && !document.getElementById('campay-demo-limit-note')) {
+                var note = document.createElement('p');
+                note.id = 'campay-demo-limit-note';
+                note.style.cssText = 'font-size:13px;color:#b45309;background:#fffbeb;padding:10px;border-radius:8px;margin-bottom:12px';
+                note.textContent = 'Demo CamPay: you will be charged ' + demoLimit + ' XAF on your phone (demo max). Full registration fee applies when live CamPay is enabled.';
+                campaySec.insertBefore(note, campaySec.querySelector('.form-group'));
+              }
+            }
           }
         }).catch(function () {});
       }

@@ -634,16 +634,7 @@ async function checkForVersionUpdate(uid) {
       localStorage.setItem('sbd-seen-version', current);
     });
 
-    // Write a Firestore notification for this user (fire-and-forget)
-    db.collection('notifications').add({
-      type: 'announcement',
-      title: `${entry.emoji || '🚀'} v${current} — ${entry.title}`,
-      body: (entry.changes || []).map(c => c.replace(/^[^\w\s]+\s*/, '')).join(' · '),
-      userId: uid,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false,
-    }).catch(() => {});
-
+    // Version detail lives in the What's New sheet — no duplicate bell entry.
   } catch (err) {
     console.warn('checkForVersionUpdate:', err);
   }

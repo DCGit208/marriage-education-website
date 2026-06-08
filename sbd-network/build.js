@@ -20,6 +20,13 @@ if (!fs.existsSync(path.join(__dirname, 'src/pages'))) {
   process.exit(1);
 }
 
+// ── Guardrail: syntax-check all public JS before stamp/deploy ─────
+const { spawnSync } = require('child_process');
+const validate = spawnSync(process.execPath, [path.join(__dirname, 'scripts/validate-public-js.js')], {
+  stdio: 'inherit',
+});
+if (validate.status !== 0) process.exit(validate.status || 1);
+
 const SRC_DIR      = path.join(__dirname, 'src/pages');
 const PARTIAL_PATH = path.join(__dirname, 'src/partials/nav.html');
 const PUBLIC_DIR   = path.join(__dirname, 'public');

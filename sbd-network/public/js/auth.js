@@ -177,12 +177,12 @@ if (signupForm) {
     showLoading(true);
     clearMessage();
     
+    let createdUser = null;
     try {
-      // Create user account
       const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-      const user = userCredential.user;
+      createdUser = userCredential.user;
       
-      console.log('Signup successful:', user.uid);
+      console.log('Signup successful:', createdUser.uid);
       
       // Optional: auto-enroll new free users into default free community groups
       let starterGroups = [];
@@ -200,23 +200,29 @@ if (signupForm) {
       // Capture ?ref= SBD ambassador referral code if present
       const refCode = new URLSearchParams(window.location.search).get('ref') || null;
 
-      await db.collection('users').doc(user.uid).set({
-        uid: user.uid,
-        name: name,
-        email: email,
-        signupApp: 'sbd-network',
-        tier: 'free',
-        subscription: {
+      try {
+        await db.collection('users').doc(createdUser.uid).set({
+          uid: createdUser.uid,
+          name: name,
+          email: email,
+          signupApp: 'sbd-network',
           tier: 'free',
-          status: 'inactive'
-        },
-        role: 'member',
-        groups: starterGroups,
-        ...(refCode ? { referredBy: refCode } : {}),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastActive: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      
+          subscription: {
+            tier: 'free',
+            status: 'inactive'
+          },
+          role: 'member',
+          groups: starterGroups,
+          ...(refCode ? { referredBy: refCode } : {}),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastActive: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (profileErr) {
+        console.error('Firestore profile creation failed — rolling back Auth user:', profileErr);
+        try { await createdUser.delete(); } catch (_) {}
+        throw profileErr;
+      }
+
       // If referred by an ambassador or RD, increment their signup count
       if (refCode) {
         db.collection('ambassadors').where('sbdReferralCode', '==', refCode).limit(1).get()
@@ -249,7 +255,7 @@ if (signupForm) {
       }
 
       // Update profile
-      await user.updateProfile({
+      await createdUser.updateProfile({
         displayName: name
       });
       
@@ -301,7 +307,7 @@ function getErrorMessage(errorCode) {
     'auth/wrong-password': 'Incorrect password. Please try again',
     'auth/invalid-login-credentials': 'Incorrect email or password. Please try again',
     'auth/invalid-credential': 'Incorrect email or password. Please try again',
-    'auth/email-already-in-use': 'Email already in use',
+    'auth/email-already-in-use': 'This email already has an account. Sign in instead, or use Forgot password. If signup never finished, ask an admin to look up the email in Admin → Find Auth account.',
     'auth/weak-password': 'Password is too weak',
     'auth/network-request-failed': 'Network error. Please check your connection',
     'auth/too-many-requests': 'Too many failed attempts. Please wait a few minutes or reset your password'

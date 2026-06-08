@@ -1,6 +1,30 @@
 {
-  "current": "264",
+  "current": "266",
   "versions": [
+    {
+      "version": "266",
+      "date": "2026-06-08",
+      "title": "Notification Inbox Controls",
+      "emoji": "🧹",
+      "changes": [
+        "🧹 Clear all — empty your notification panel in one tap",
+        "⚙️ Profile notification toggles now control posts, comments, reactions, and mentions",
+        "🗑️ Server-side cleanup — stale read alerts and old announcements purged daily",
+        "🔧 Admin can run a one-time ineligible-notification cleanup from the backend"
+      ]
+    },
+    {
+      "version": "265",
+      "date": "2026-06-08",
+      "title": "Notification Privacy & Inbox Limits",
+      "emoji": "🔔",
+      "changes": [
+        "🔒 Advanced board alerts only reach members with advanced expression access — no more wrong-tier notifications",
+        "📬 Notification panel shows your 15 most recent items; older read alerts auto-clear after 30 days",
+        "🔴 Badge counts only unread from the last 7 days — no stale red dots",
+        "🚀 What's New sheet is the home for version updates (no duplicate version spam in the bell)"
+      ]
+    },
     {
       "version": "264",
       "date": "2026-04-28",

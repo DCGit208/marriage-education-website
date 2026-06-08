@@ -79,6 +79,11 @@
     return userData.staffAccess?.advancedExpression === true;
   }
 
+  /** Set when admin removes advanced community groups — blocks formation/unlock bypasses. */
+  function isAdvancedExpressionRevoked(userData) {
+    return userData?.access?.advancedExpressionRevoked === true;
+  }
+
   function userHasAdvancedExpressionGroup(userData) {
     const groups = Array.isArray(userData?.groups) ? userData.groups : [];
     return ADVANCED_EXPRESSION_GROUP_IDS.some((id) => groups.includes(id));
@@ -138,6 +143,7 @@
   function hasAdvancedExpressionAccess(userData) {
     if (!userData) return false;
     if (userData.role === 'admin') return true;
+    if (isAdvancedExpressionRevoked(userData)) return false;
     if (!userHasAdvancedExpressionGroup(userData)) return false;
     if (isAdminGrantedElite(userData)) return true;
     if (userData.progress?.advancedExpressionUnlocked === true) return true;
@@ -151,14 +157,34 @@
     if (userData.role === 'admin') {
       return { allowed: true, reason: '', message: '', showPaywall: false };
     }
+    if (isAdvancedExpressionRevoked(userData)) {
+      return {
+        allowed: false,
+        reason: 'admin_revoked',
+        message: 'MV House is paused on your account',
+        detail:
+          'Advanced expression — MV House and Advanced Muliebrity / Virility boards — is not active for you right now. Your other formation schools and assigned community groups are still available.',
+        showPaywall: false,
+        showSupportDm: true,
+        supportPrefill:
+          'Hi — my MV House / advanced expression access is paused. Could you review my account?',
+        ctaUrl: '/learn.html',
+        ctaLabel: 'Go to Learning →',
+      };
+    }
     if (!userHasAdvancedExpressionGroup(userData)) {
       return {
         allowed: false,
         reason: 'group_revoked',
-        message: 'Advanced access not assigned',
-        detail: 'An administrator must assign Advanced Muliebrity / Virility training in Admin → Manage user → Community groups.',
+        message: 'MV House unlocks through formation',
+        detail:
+          'MV House opens when Advanced Muliebrity / Virility training is assigned to your profile and your formation milestones are met. Continue your schools in Learning, or message support to confirm your group membership.',
         showPaywall: false,
-        ctaUrl: '/dashboard.html',
+        showSupportDm: true,
+        supportPrefill:
+          'Hi — I need help with MV House access and my Advanced Muliebrity / Virility group membership.',
+        ctaUrl: '/courses.html',
+        ctaLabel: 'Continue Formation →',
       };
     }
     if (isAdminGrantedElite(userData)) {
@@ -179,6 +205,7 @@
         showPaywall: false,
         progress,
         ctaUrl: '/courses.html',
+        ctaLabel: 'Continue Formation →',
       };
     }
     if (!hasSchool3Complete(userData)) {
@@ -190,6 +217,7 @@
         showPaywall: false,
         progress,
         ctaUrl: '/courses.html',
+        ctaLabel: 'Continue Formation →',
       };
     }
     if (!hasSchool4HalfComplete(userData)) {
@@ -201,6 +229,7 @@
         showPaywall: false,
         progress,
         ctaUrl: '/courses.html',
+        ctaLabel: 'Continue Formation →',
       };
     }
 
@@ -213,6 +242,10 @@
     const gid = boardData?.groupId;
     if (gid && ADVANCED_EXPRESSION_GROUP_SET.has(gid)) return true;
     return false;
+  }
+
+  function isAdvancedExpressionGroupId(groupId) {
+    return !!groupId && ADVANCED_EXPRESSION_GROUP_SET.has(groupId);
   }
 
   function filterAdvancedExpressionGroups(groupIds) {
@@ -257,11 +290,13 @@
     getAdvancedExpressionAccess,
     userHasAdvancedExpressionGroup,
     isAdvancedExpressionBoard,
+    isAdvancedExpressionGroupId,
     filterAdvancedExpressionGroups,
     eliteBillingGroupsOnly,
     getSchoolProgress,
     maybePersistAdvancedExpressionUnlock,
     isAdminGrantedElite,
+    isAdvancedExpressionRevoked,
     hasEliteTier,
   };
 });

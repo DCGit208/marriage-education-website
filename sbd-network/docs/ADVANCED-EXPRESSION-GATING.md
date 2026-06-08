@@ -14,17 +14,32 @@
 
 School 4 threshold implies School 3 is complete.
 
+## Access chain (all required unless bypass)
+
+1. **Elite billing** — `tier === 'elite'` or active elite subscription
+2. **Community groups assigned** — both advanced expression group IDs in `users.groups` (auto-added by Cloud Function when milestone met, or admin checkbox)
+3. **Not admin-revoked** — `access.advancedExpressionRevoked !== true`
+4. **Unlock path** — formation milestone met, `progress.advancedExpressionUnlocked === true`, or explicit staff grant
+
 ## Bypasses
 
 - `role === 'admin'`
-- Admin-granted Elite (`subscription.source === 'admin'` or staff grant end date ≥ 2090)
-- **`staffAccess.advancedExpression === true`** — explicit toggle in Admin → Manage User (staff MV House / advanced boards)
-- `progress.advancedExpressionUnlocked === true` (set when formation milestone met)
+- **`staffAccess.advancedExpression === true`** — Admin → Manage User → Staff expression toggle
+
+## Admin revoke
+
+Unchecking **Advanced Muliebrity / Virility + MV House** in Admin → Manage User:
+
+- Removes both advanced group IDs from `users.groups`
+- Clears `staffAccess.advancedExpression` and `progress.advancedExpressionUnlocked`
+- Sets `access.advancedExpressionRevoked = true`
+
+The Cloud Function `onUserAdvancedExpressionUnlock` **will not re-grant** while revoked.
 
 ## Billing vs formation
 
-- **Elite subscribe**: Schools 3–4 training groups; **not** advanced expression groups until milestone.
-- **Ambassador / RD**: No automatic advanced access without Elite grant + milestone (or admin bypass).
+- **Elite subscribe**: Schools 3–4 training groups + standard elite boards; **not** advanced expression until milestone (or admin grant).
+- **Formation hub (`/learn?tier=elite`)**: MV House and AMTS tiles show locked until `hasAdvancedExpressionAccess()` passes.
 
 ## Course completion detection
 
@@ -34,3 +49,8 @@ Matches Firestore course doc IDs: `course-{no}-*` prefix in `users.progress.comp
 
 - `public/js/advanced-expression-access.js` — client
 - `functions/lib/advanced-expression-access.js` — Cloud Functions (keep in sync)
+
+## Enforced on
+
+- `boards.js`, `board.js`, `mv-house.js`, `tier-access.js`, `learn-v2.js` (formation hub tiles)
+- `onUserAdvancedExpressionUnlock` — auto-grant on milestone (respects revoke flag)

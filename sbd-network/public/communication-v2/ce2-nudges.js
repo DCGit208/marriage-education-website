@@ -34,6 +34,9 @@
       var input = document.getElementById('ce2Input');
       if (input) {
         input.value = 'Formation check-in: ';
+        if (typeof window.syncCe2ComposerInputHeight === 'function') {
+          window.syncCe2ComposerInputHeight(input);
+        }
         input.focus();
       }
       bar.remove();

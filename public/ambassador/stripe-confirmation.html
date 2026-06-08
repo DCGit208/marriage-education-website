@@ -273,8 +273,8 @@
         <div class="actions" style="margin-bottom: 0; margin-top: 14px;">
           <button id="copy-reference-btn" class="btn btn-ghost" type="button">Copy Payment Reference</button>
         </div>
-        <div class="reference-help">
-          Use this reference for support, Stripe follow-up, or any email delivery issue.
+        <div class="reference-help" id="reference-help">
+          Use this reference for support, payment follow-up, or any email delivery issue.
         </div>
       </div>
 
@@ -318,12 +318,61 @@
       return new Date().toLocaleString();
     }
 
-    function buildSupportReference(code, email, paymentIntentId) {
+    function buildSupportReference(code, email, paymentIntentId, channel, campayRef) {
+      if (channel === 'campay') {
+        return [
+          `Ambassador Code: ${code}`,
+          `Email: ${email}`,
+          `Payment: CamPay MoMo`,
+          `Reference: ${campayRef || code}`
+        ].join('\n');
+      }
       return [
         `Ambassador Code: ${code}`,
         `Email: ${email}`,
         `Stripe Payment ID: ${paymentIntentId || 'Not available'}`
       ].join('\n');
+    }
+
+    async function verifyCampayPayment(code, email, reference) {
+      const statusEl = document.getElementById('status');
+      const headerTitle = document.querySelector('.header h1');
+      const headerSub = document.querySelector('.header p');
+      const ref = reference || code;
+
+      if (headerTitle) headerTitle.textContent = 'CamPay Payment Confirmed';
+      if (headerSub) headerSub.textContent = 'Your ambassador access is being prepared.';
+
+      statusEl.className = 'notice notice-warning';
+      statusEl.textContent = 'Confirming your CamPay payment...';
+      updateTracker('Verifying...', 'CamPay check');
+
+      try {
+        const confirmFn = firebase.functions().httpsCallable('confirmCampayPayment');
+        const result = await confirmFn({ reference: ref });
+        const payload = result.data || {};
+        if (
+          payload.action === 'fulfilled' ||
+          payload.action === 'already_approved' ||
+          payload.ok
+        ) {
+          updateTracker('Confirmed', 'CamPay check');
+          return true;
+        }
+        if (payload.action === 'awaiting_payment') {
+          throw new Error('CamPay has not marked this payment successful yet. Wait a moment and refresh.');
+        }
+        throw new Error('CamPay payment could not be confirmed.');
+      } catch (error) {
+        console.error('CamPay verification error:', error);
+        statusEl.className = 'notice notice-error';
+        statusEl.textContent = (error.message || 'We could not verify your CamPay payment.') +
+          ' If you were charged, contact support with your ambassador code below.';
+        if (headerTitle) headerTitle.textContent = 'CamPay Verification Pending';
+        if (headerSub) headerSub.textContent = 'We are still confirming your MoMo payment.';
+        updateTracker('Not verified', 'CamPay check');
+        return false;
+      }
     }
 
     async function copySupportReference(referenceText) {
@@ -348,10 +397,11 @@
       document.getElementById('tracker-trigger').textContent = triggerLabel;
     }
 
-    async function resendStripeEmail(ambassadorCode, email, silent) {
+    async function resendAccessEmail(ambassadorCode, email, silent, channel) {
       const statusEl = document.getElementById('status');
       const resendBtn = document.getElementById('resend-btn');
       const triggerLabel = silent ? 'Auto verification' : 'Manual resend';
+      const isCampay = channel === 'campay';
 
       try {
         resendBtn.disabled = true;
@@ -362,7 +412,10 @@
           statusEl.textContent = 'Sending ambassador credentials and book access email...';
         }
 
-        const resend = firebase.functions().httpsCallable('resendAmbassadorStripeAccessEmail');
+        const fnName = isCampay
+          ? 'resendAmbassadorAccessEmail'
+          : 'resendAmbassadorStripeAccessEmail';
+        const resend = firebase.functions().httpsCallable(fnName);
         const result = await resend({ ambassadorCode, email });
 
         if (result.data && result.data.success) {
@@ -424,10 +477,45 @@
       }
     }
 
+    function applyChannelBranding(channel) {
+      const headerTitle = document.querySelector('.header h1');
+      const headerSub = document.querySelector('.header p');
+      const badge = document.querySelector('.badge');
+      const referenceHelp = document.getElementById('reference-help');
+
+      if (channel === 'campay') {
+        document.title = 'CamPay Payment Confirmed - Ambassador Access';
+        if (headerTitle) headerTitle.textContent = 'CamPay Payment Confirmed';
+        if (headerSub) {
+          headerSub.textContent = 'Your MoMo payment was successful. Your ambassador access is ready.';
+        }
+        if (badge) badge.textContent = 'CamPay MoMo Confirmation';
+        if (referenceHelp) {
+          referenceHelp.textContent =
+            'Use this reference for support, CamPay follow-up, or any email delivery issue.';
+        }
+      } else {
+        document.title = 'Stripe Payment Confirmed - Ambassador Access';
+        if (headerTitle) headerTitle.textContent = 'Payment Confirmed';
+        if (headerSub) {
+          headerSub.textContent = 'Your Stripe payment was successful. Your ambassador access is ready.';
+        }
+        if (badge) badge.textContent = 'Stripe Ambassador Confirmation';
+        if (referenceHelp) {
+          referenceHelp.textContent =
+            'Use this reference for support, Stripe follow-up, or any email delivery issue.';
+        }
+      }
+    }
+
     (async function initStripeConfirmation() {
       let code = getQueryParam('code');
       let email = getQueryParam('email');
+      const channel = (getQueryParam('channel') || '').toLowerCase();
+      const campayReference = getQueryParam('reference') || code;
       let paymentIntentId = getQueryParam('payment_intent') || getQueryParam('payment_intent_id');
+
+      applyChannelBranding(channel);
 
       if (!code || !email) {
         const storedContext = getStoredConfirmationContext();
@@ -444,16 +532,23 @@
         return;
       }
 
-      const verified = await verifyStripePayment(code, email, paymentIntentId);
+      const verified = channel === 'campay'
+        ? await verifyCampayPayment(code, email, campayReference)
+        : await verifyStripePayment(code, email, paymentIntentId);
       if (!verified) {
         document.getElementById('code-value').textContent = code;
         document.getElementById('email-value').textContent = email;
-        const supportReference = buildSupportReference(code, email, paymentIntentId);
+        const supportReference = buildSupportReference(code, email, paymentIntentId, channel, campayReference);
         document.getElementById('support-reference').textContent = supportReference;
         document.getElementById('copy-reference-btn').addEventListener('click', function() {
           copySupportReference(supportReference);
         });
-        document.getElementById('resend-btn').disabled = true;
+        document.getElementById('resend-btn').addEventListener('click', function() {
+          resendAccessEmail(code, email, false, channel);
+        });
+        if (channel !== 'campay') {
+          document.getElementById('resend-btn').disabled = true;
+        }
         return;
       }
 
@@ -465,21 +560,21 @@
       document.getElementById('dashboard-btn').href = dashboardUrl;
       document.getElementById('download-btn').href = downloadUrl;
 
-      const supportReference = buildSupportReference(code, email, paymentIntentId);
+      const supportReference = buildSupportReference(code, email, paymentIntentId, channel, campayReference);
       document.getElementById('support-reference').textContent = supportReference;
       document.getElementById('copy-reference-btn').addEventListener('click', function() {
         copySupportReference(supportReference);
       });
 
       document.getElementById('resend-btn').addEventListener('click', function() {
-        resendStripeEmail(code, email, false);
+        resendAccessEmail(code, email, false, channel);
       });
 
-      const onceKey = `stripe_email_resend_${code}`;
+      const onceKey = (channel === 'campay' ? 'campay' : 'stripe') + `_email_resend_${code}`;
       if (!sessionStorage.getItem(onceKey)) {
         sessionStorage.setItem(onceKey, '1');
         updateTracker('Queued', 'Auto verification');
-        resendStripeEmail(code, email, true);
+        resendAccessEmail(code, email, true, channel);
       } else {
         const statusEl = document.getElementById('status');
         statusEl.className = 'notice notice-success';

@@ -1,5 +1,5 @@
 // ================================================================
-// NOTIFICATIONS — In-app bell + FCM Web Push
+// NOTIFICATIONS — In-app bell + FCM Web Push (v2 group messages)
 // ================================================================
 
 const NOTIF_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
@@ -9,7 +9,18 @@ const NOTIF_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
 //   → Web push certificates → Generate key pair → copy the key
 const FCM_VAPID_KEY = 'BAlZ5xWEFm9mGl8b5osLULe4_fobt0vYNTypMJX8zumgU1nNsv95SN2HbbqAYrfuCZ7GkmPAoeT6yzuB0I7dlkI';
 
+/** In-panel list cap (Instagram/LinkedIn-style recent activity). */
+const NOTIF_PANEL_LIMIT = 15;
+/** Badge only reflects unread from this window — avoids stale red dots. */
+const NOTIF_BADGE_MAX_AGE_DAYS = 7;
+/** Read notifications older than this are purged on panel open. */
+const NOTIF_RETENTION_DAYS = 30;
+/** Version/admin announcements auto-expire — use What's New for detail. */
+const NOTIF_ANNOUNCEMENT_MAX_AGE_DAYS = 14;
+
 let _notifUserId    = null;
+let _notifUserData  = null;
+let _boardMetaCache = {};
 let _unsubNotif     = null;  // unread badge listener
 let _unsubPanel     = null;  // live panel list listener
 let _latestNotifId  = null;  // track newest seen doc to detect truly new arrivals
@@ -17,14 +28,124 @@ let _latestNotifId  = null;  // track newest seen doc to detect truly new arriva
 // ── Init ─────────────────────────────────────────────────────────
 async function initNotifications(userId) {
   _notifUserId = userId;
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    _notifUserData = userDoc.exists ? userDoc.data() : null;
+  } catch (_) {
+    _notifUserData = null;
+  }
   _startUnreadListener(userId);
   _setupBellListeners(userId);
+  _ensurePanelChrome();
+  _purgeStaleNotifications(userId);
   // Show a nudge banner if the user hasn't enabled push yet
   _maybeShowPushNudge(userId);
   // Silently refresh the FCM token on every login (fixes stale tokens after SW updates)
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     _initPush(userId);
   }
+}
+
+// ── Board-linked notification access filter ───────────────────────
+async function _getBoardMeta(boardId) {
+  if (!boardId) return null;
+  if (_boardMetaCache[boardId]) return _boardMetaCache[boardId];
+  try {
+    const boardDoc = await db.collection('boards').doc(boardId).get();
+    const meta = boardDoc.exists
+      ? {
+          groupId: boardDoc.data().groupId || null,
+          requiredTier: boardDoc.data().requiredTier || 'free',
+        }
+      : { groupId: null, requiredTier: 'free' };
+    _boardMetaCache[boardId] = meta;
+    return meta;
+  } catch (_) {
+    return { groupId: null, requiredTier: 'free' };
+  }
+}
+
+function _canViewBoardNotif(n) {
+  if (!n || !n.boardId) return true;
+  if (typeof NotificationAccess === 'undefined' || !_notifUserData) return false;
+  const meta = _boardMetaCache[n.boardId];
+  if (!meta) return false;
+  return NotificationAccess.userCanReceiveBoardNotification(_notifUserData, n.boardId, meta);
+}
+
+async function _prepareBoardMetaForDocs(docs) {
+  const boardIds = [...new Set(docs.map(d => d.data().boardId).filter(Boolean))];
+  await Promise.all(boardIds.map(id => _getBoardMeta(id)));
+}
+
+async function _filterVisibleNotifDocs(docs, purgeIneligible) {
+  const withBoard = docs.filter(d => d.data().boardId);
+  const withoutBoard = docs.filter(d => !d.data().boardId);
+  if (!withBoard.length) return docs;
+
+  await _prepareBoardMetaForDocs(withBoard);
+
+  const visible = [...withoutBoard];
+  const toDelete = [];
+
+  withBoard.forEach(doc => {
+    if (_canViewBoardNotif(doc.data())) visible.push(doc);
+    else if (purgeIneligible) toDelete.push(doc.ref);
+  });
+
+  if (toDelete.length) {
+    const batch = db.batch();
+    toDelete.forEach(ref => batch.delete(ref));
+    batch.commit().catch(() => {});
+  }
+
+  return visible;
+}
+
+function _notifTimestampMs(data) {
+  if (!data?.timestamp) return 0;
+  if (data.timestamp.toMillis) return data.timestamp.toMillis();
+  if (data.timestamp._seconds) return data.timestamp._seconds * 1000;
+  return 0;
+}
+
+function _sortNotifDocsNewestFirst(docs) {
+  return docs.slice().sort((a, b) => _notifTimestampMs(b.data()) - _notifTimestampMs(a.data()));
+}
+
+function _isRecentForBadge(data) {
+  const ts = _notifTimestampMs(data);
+  if (!ts) return true;
+  return ts >= Date.now() - NOTIF_BADGE_MAX_AGE_DAYS * 86400000;
+}
+
+async function _purgeStaleNotifications(userId) {
+  if (!userId) return;
+  const readCutoff = Date.now() - NOTIF_RETENTION_DAYS * 86400000;
+  const announceCutoff = Date.now() - NOTIF_ANNOUNCEMENT_MAX_AGE_DAYS * 86400000;
+  try {
+    const snap = await db.collection('notifications')
+      .where('userId', '==', userId)
+      .limit(120)
+      .get();
+    const toDelete = [];
+    snap.forEach(doc => {
+      const n = doc.data();
+      const ts = _notifTimestampMs(n);
+      if (!ts) return;
+      if (n.type === 'announcement' && ts < announceCutoff) {
+        toDelete.push(doc.ref);
+        return;
+      }
+      if (n.read === true && ts < readCutoff) toDelete.push(doc.ref);
+    });
+    if (!toDelete.length) return;
+    for (let i = 0; i < toDelete.length; i += 400) {
+      const batch = db.batch();
+      toDelete.slice(i, i + 400).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+  } catch (_) {}
 }
 
 // ── Real-time unread count + foreground toast ─────────────────────
@@ -37,13 +158,19 @@ function _startUnreadListener(userId) {
     _unsubNotif = db.collection('notifications')
       .where('userId', '==', userId)
       .where('read', '==', false)
-      .onSnapshot(snap => {
-        _setBadge(snap.size);
+      .onSnapshot(async snap => {
+        const visible = await _filterVisibleNotifDocs(snap.docs, true);
+        const recentUnread = visible.filter(d => _isRecentForBadge(d.data()));
+        _setBadge(recentUnread.length);
         // On subsequent snapshots (not the initial load), show a toast for each new doc
         if (!first) {
-          snap.docChanges().forEach(change => {
-            if (change.type === 'added') _showNotifToast(change.doc.data());
-          });
+          for (const change of snap.docChanges()) {
+            if (change.type !== 'added') continue;
+            const n = change.doc.data();
+            if (n.boardId) await _getBoardMeta(n.boardId);
+            if (_canViewBoardNotif(n)) _showNotifToast(n);
+            else change.doc.ref.delete().catch(() => {});
+          }
         }
         first = false;
       }, err => {
@@ -65,7 +192,7 @@ function _showNotifToast(n) {
   const panel = document.getElementById('notifPanel');
   if (panel && panel.classList.contains('open')) return;
 
-  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
+  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
   const toast = document.createElement('div');
   toast.className = 'notif-toast';
   toast.innerHTML = `<span class="notif-toast-icon">${icon}</span><div class="notif-toast-body"><div class="notif-toast-title">${_esc(n.title)}</div>${n.body ? `<div class="notif-toast-text">${_esc(n.body.substring(0, 80))}${n.body.length > 80 ? '…' : ''}</div>` : ''}</div>`;
@@ -100,6 +227,64 @@ function _setBadge(count) {
 
 // ── Bell & panel listeners ────────────────────────────────────────
 let _pushInitialised = false;
+let _clearAllBusy = false;
+
+function _ensurePanelChrome() {
+  const header = document.querySelector('#notifPanel .notif-panel-header');
+  if (!header || header.dataset.notifChrome === '1') return;
+  const closeBtn = document.getElementById('notifPanelClose');
+  if (!closeBtn) return;
+
+  header.dataset.notifChrome = '1';
+  const actions = document.createElement('div');
+  actions.className = 'notif-panel-header-actions';
+
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'notifClearAll';
+  clearBtn.type = 'button';
+  clearBtn.className = 'notif-clear-all-btn';
+  clearBtn.textContent = 'Clear all';
+  clearBtn.setAttribute('aria-label', 'Clear all notifications');
+  clearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    _clearAllNotifications();
+  });
+
+  actions.appendChild(clearBtn);
+  actions.appendChild(closeBtn);
+  header.appendChild(actions);
+}
+
+async function _clearAllNotifications() {
+  if (!_notifUserId || _clearAllBusy) return;
+  _clearAllBusy = true;
+  const clearBtn = document.getElementById('notifClearAll');
+  if (clearBtn) clearBtn.disabled = true;
+
+  try {
+    const snap = await db.collection('notifications')
+      .where('userId', '==', _notifUserId)
+      .limit(200)
+      .get();
+    const visible = await _filterVisibleNotifDocs(snap.docs, true);
+    const refs = visible.map((d) => d.ref);
+    for (let i = 0; i < refs.length; i += 400) {
+      const batch = db.batch();
+      refs.slice(i, i + 400).forEach((ref) => batch.delete(ref));
+      await batch.commit();
+    }
+    _setBadge(0);
+    const list = document.getElementById('notifList');
+    if (list) list.innerHTML = '<li class="notif-empty">No notifications yet</li>';
+    if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+  } catch (err) {
+    console.warn('[Notifications] Clear all failed:', err);
+  } finally {
+    _clearAllBusy = false;
+    if (clearBtn) clearBtn.disabled = false;
+  }
+}
+
 function _setupBellListeners(userId) {
   // Use event delegation on body — works even if bell is rendered late
   document.body.addEventListener('click', e => {
@@ -125,12 +310,14 @@ function openNotifPanel() {
   const panel   = document.getElementById('notifPanel');
   const overlay = document.getElementById('notifOverlay');
   if (!panel) return;
+  _ensurePanelChrome();
   panel.classList.add('open');
   if (overlay) overlay.style.display = 'block';
   document.body.style.overflow = 'hidden';
 
   // Start live listener for the panel list
   _startPanelListener();
+  _purgeStaleNotifications(_notifUserId);
 
   // Clear the PWA app icon badge when user opens the notification panel
   if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
@@ -155,7 +342,7 @@ function _startPanelListener() {
   const query = db.collection('notifications')
     .where('userId', '==', _notifUserId)
     .orderBy('timestamp', 'desc')
-    .limit(20);
+    .limit(NOTIF_PANEL_LIMIT + 10);
 
   _unsubPanel = query.onSnapshot(
     snap => _renderFromSnap(snap, list),
@@ -163,34 +350,48 @@ function _startPanelListener() {
     () => {
       _unsubPanel = db.collection('notifications')
         .where('userId', '==', _notifUserId)
-        .limit(20)
+        .limit(NOTIF_PANEL_LIMIT + 10)
         .onSnapshot(snap => _renderFromSnap(snap, list));
     }
   );
 }
 
 function _renderFromSnap(snap, list) {
-  if (snap.empty) {
-    list.innerHTML = '<li class="notif-empty">No notifications yet</li>';
-    return;
-  }
-  list.innerHTML = '';
+  _filterVisibleNotifDocs(snap.docs, true).then(visibleDocs => {
+    const sorted = _sortNotifDocsNewestFirst(visibleDocs).slice(0, NOTIF_PANEL_LIMIT);
+    if (!sorted.length) {
+      list.innerHTML = '<li class="notif-empty">No notifications yet</li>';
+      return;
+    }
+    list.innerHTML = '';
 
-  // Mark all as read (batch, fire-and-forget)
-  const unread = snap.docs.filter(d => !d.data().read);
-  if (unread.length) {
-    const batch = db.batch();
-    unread.forEach(d => batch.update(d.ref, { read: true }));
-    batch.commit().catch(() => {});
-  }
+    // Mark visible unread as read (batch, fire-and-forget)
+    const unread = sorted.filter(d => !d.data().read);
+    if (unread.length) {
+      const batch = db.batch();
+      unread.forEach(d => batch.update(d.ref, { read: true }));
+      batch.commit().catch(() => {});
+    }
 
-  snap.forEach(doc => {
-    const n  = doc.data();
+    sorted.forEach(doc => {
+      _appendNotifItem(doc.data(), list);
+    });
+
+    const footer = document.createElement('li');
+    footer.className = 'notif-empty notif-panel-footer';
+    footer.textContent = `Showing your ${NOTIF_PANEL_LIMIT} most recent alerts · read items clear after ${NOTIF_RETENTION_DAYS} days`;
+    list.appendChild(footer);
+  }).catch(() => {
+    list.innerHTML = '<li class="notif-empty">Could not load notifications</li>';
+  });
+}
+
+function _appendNotifItem(n, list) {
     const li = document.createElement('li');
     li.className = 'notif-item' + (n.read ? '' : ' unread');
     const ago  = n.timestamp?.toDate ? _timeAgo(n.timestamp.toDate()) : '';
-    const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
-    li.innerHTML = `
+  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
+  li.innerHTML = `
       <span class="ni-icon">${icon}</span>
       <div class="ni-body">
         <div class="ni-title">${_esc(n.title)}</div>
@@ -218,9 +419,15 @@ function _renderFromSnap(snap, list) {
         const vMatch = (n.title || '').match(/v(\d+)/);
         _openAnnouncementSheet(vMatch ? vMatch[1] : null, n);
       });
+    } else if (n.type === 'group_message' && (n.groupId || n.convId)) {
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => {
+        closeNotifPanel();
+        const gid = encodeURIComponent(n.groupId || n.convId);
+        window.location.href = `/communication-v2/?group=${gid}`;
+      });
     }
     list.appendChild(li);
-  });
 }
 
 async function _openAnnouncementSheet(version, notif) {

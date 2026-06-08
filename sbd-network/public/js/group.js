@@ -37,12 +37,10 @@ auth.onAuthStateChanged((user) => {
 async function loadGroupPage(user) {
   try {
     showLoading(true);
-    // Clear any previous error
     boardsContainer.innerHTML = '<div class="skel-card"><div class="skel-icon"></div><div class="skel-line w60"></div><div class="skel-line w80"></div></div><div class="skel-card"><div class="skel-icon"></div><div class="skel-line w80"></div><div class="skel-line w60"></div></div>';
 
     if (typeof initNotifications === 'function') initNotifications(user.uid);
     
-    // Verify user has tier access to this group
     const userDoc = await db.collection('users').doc(user.uid).get();
     const userData = userDoc.data() || {};
     const sub = userData.subscription || {};
@@ -67,6 +65,22 @@ async function loadGroupPage(user) {
       window.location.href = '/boards.html';
       return;
     }
+
+    const assignedGroups = Array.isArray(userData.groups) ? userData.groups : [];
+    if (!isAdminUser && !assignedGroups.includes(groupId)) {
+      showGroupMembershipLock(groupData);
+      return;
+    }
+
+    if (
+      typeof AdvancedExpressionAccess !== 'undefined' &&
+      AdvancedExpressionAccess.isAdvancedExpressionGroupId(groupId) &&
+      userData.role !== 'admin' &&
+      !AdvancedExpressionAccess.hasAdvancedExpressionAccess(userData)
+    ) {
+      showAdvancedExpressionGroupLock(userData, groupData);
+      return;
+    }
     
     // Load group info
     await loadGroupInfo();
@@ -89,6 +103,50 @@ async function loadGroupPage(user) {
   } finally {
     showLoading(false);
   }
+}
+
+function showGroupMembershipLock(groupData) {
+  if (groupTitle) groupTitle.textContent = groupData.title || 'Group';
+  if (groupName) groupName.textContent = groupData.title || 'Group';
+  if (groupDescription) {
+    groupDescription.textContent = 'You are not assigned to this community group.';
+  }
+  boardsContainer.innerHTML = `
+    <div class="empty-state" style="padding: 2.5rem 1.25rem; text-align: center;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔒</div>
+      <h3 style="margin: 0 0 0.5rem; color: #fff;">Group not assigned</h3>
+      <p style="margin: 0 0 1.25rem; color: var(--text-muted); line-height: 1.6;">An administrator must check this group under Admin → Manage user → Group Membership.</p>
+      <a href="/boards.html" class="btn btn-primary">← Back to Community</a>
+    </div>`;
+  if (recentActivityContainer) recentActivityContainer.innerHTML = '';
+  if (noActivityMessage) noActivityMessage.style.display = 'none';
+  showLoading(false);
+}
+
+function showAdvancedExpressionGroupLock(userData, groupData) {
+  const access = typeof AdvancedExpressionAccess !== 'undefined'
+    ? AdvancedExpressionAccess.getAdvancedExpressionAccess(userData)
+    : {
+        message: 'Formation Required',
+        detail: 'Complete your formation arc to unlock advanced boards.',
+        ctaUrl: '/courses.html',
+      };
+  if (groupTitle) groupTitle.textContent = groupData.title || 'Group';
+  if (groupName) groupName.textContent = groupData.title || 'Group';
+  if (groupDescription) {
+    groupDescription.textContent = access.detail || access.message || 'Advanced access required.';
+  }
+  boardsContainer.innerHTML = `
+    <div class="empty-state" style="padding: 2.5rem 1.25rem; text-align: center;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔒</div>
+      <h3 style="margin: 0 0 0.5rem; color: #fff;">${escapeHtml(access.message || 'Formation Required')}</h3>
+      <p style="margin: 0 0 1.25rem; color: var(--text-muted); line-height: 1.6;">${escapeHtml(access.detail || '')}</p>
+      <a href="${escapeHtml(access.ctaUrl || '/courses.html')}" class="btn btn-primary">Continue Formation →</a>
+      <br><a href="/boards.html" style="display:inline-block;margin-top:1rem;font-size:13px;color:var(--text-muted);text-decoration:none">← Back to Community</a>
+    </div>`;
+  if (recentActivityContainer) recentActivityContainer.innerHTML = '';
+  if (noActivityMessage) noActivityMessage.style.display = 'none';
+  showLoading(false);
 }
 
 // Load group information

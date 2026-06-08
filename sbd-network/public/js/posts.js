@@ -2,7 +2,51 @@
 // POSTS MANAGEMENT
 // ================================================================
 
-const _NOTIF_TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
+function _eligibleForBoardNotif(userData, boardId, boardMeta) {
+  if (typeof NotificationAccess !== 'undefined') {
+    return NotificationAccess.userCanReceiveBoardNotification(userData, boardId, boardMeta || {});
+  }
+  return false;
+}
+
+async function _fetchBoardMeta(boardId) {
+  if (!boardId) return { groupId: null, requiredTier: 'free', title: 'board' };
+  try {
+    const boardDoc = await db.collection('boards').doc(boardId).get();
+    if (!boardDoc.exists) return { groupId: null, requiredTier: 'free', title: 'board' };
+    const d = boardDoc.data();
+    return {
+      groupId: d.groupId || null,
+      requiredTier: d.requiredTier || 'free',
+      title: d.title || 'board',
+    };
+  } catch (_) {
+    return { groupId: null, requiredTier: 'free', title: 'board' };
+  }
+}
+
+function _wantsNotifType(prefs, type) {
+  const d = prefs || {};
+  if (type === 'new_post') return d.newPosts === true;
+  if (type === 'new_comment') return d.comments !== false;
+  if (type === 'new_reaction') return d.reactions !== false;
+  if (type === 'mention_post' || type === 'mention_comment') return d.mentions !== false;
+  return true;
+}
+
+async function _loadNotifPrefsMap(userIds) {
+  const map = {};
+  const unique = [...new Set((userIds || []).filter(Boolean))];
+  await Promise.all(unique.map(async (uid) => {
+    try {
+      const doc = await db.collection('users').doc(uid).collection('settings').doc('notifications').get();
+      map[uid] = doc.exists ? doc.data() : {};
+    } catch (_) {
+      map[uid] = {};
+    }
+  }));
+  return map;
+}
 
 function computeBoardRank(board) {
   const now = Date.now();
@@ -307,33 +351,27 @@ async function _writePostNotifications(postId, boardId, boardName, authorName, c
   const currentUid = getCurrentUser()?.uid;
   if (!currentUid) return;
 
-  // Resolve the groupId and requiredTier for this board
-  let groupId      = null;
-  let requiredTier = 'free';
-  try {
-    const boardDoc = await db.collection('boards').doc(boardId).get();
-    if (boardDoc.exists) {
-      groupId      = boardDoc.data().groupId      || null;
-      requiredTier = boardDoc.data().requiredTier || 'free';
-    }
-  } catch (_) {}
+  const boardMeta = await _fetchBoardMeta(boardId);
+  const groupId = boardMeta.groupId;
+  if (!groupId) return;
 
-  // Fetch only users who belong to this group; fall back to all users if groupId unknown
-  let usersSnap;
-  if (groupId) {
-    usersSnap = await db.collection('users').where('groups', 'array-contains', groupId).get();
-  } else {
-    usersSnap = await db.collection('users').get();
-  }
+  const usersSnap = await db.collection('users').where('groups', 'array-contains', groupId).get();
   if (!usersSnap || usersSnap.empty) return;
+
+  const eligibleIds = [];
+  usersSnap.forEach(userDoc => {
+    if (userDoc.id === currentUid) return;
+    if (!_eligibleForBoardNotif(userDoc.data(), boardId, boardMeta)) return;
+    eligibleIds.push(userDoc.id);
+  });
+  const prefsMap = await _loadNotifPrefsMap(eligibleIds);
 
   const batch = db.batch();
   const body  = `${authorName}: ${(content || 'Shared a photo or video').substring(0, 80)}`;
   usersSnap.forEach(userDoc => {
     if (userDoc.id === currentUid) return;
-    // Tier guard — never notify users who cannot access this board
-    const uTier = userDoc.data().tier || 'free';
-    if ((_NOTIF_TIER_ORDER[uTier] ?? 0) < (_NOTIF_TIER_ORDER[requiredTier] ?? 0)) return;
+    if (!_eligibleForBoardNotif(userDoc.data(), boardId, boardMeta)) return;
+    if (!_wantsNotifType(prefsMap[userDoc.id], 'new_post')) return;
     const ref = db.collection('notifications').doc();
     batch.set(ref, {
       userId:    userDoc.id,
@@ -368,46 +406,51 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
   const batch = db.batch();
   const notifiedUids = new Set();
 
-  // ── Step 1: always notify the post author directly (guaranteed delivery) ──
+  let boardMeta = { groupId: null, requiredTier: 'free', title: 'board' };
+  if (boardId) boardMeta = await _fetchBoardMeta(boardId);
+
+  const prefsMap = {};
+
+  // ── Step 1: notify the post author when they can access this board ──
   if (postAuthorId && postAuthorId !== currentUid) {
-    const ref = db.collection('notifications').doc();
-    batch.set(ref, {
-      userId:    postAuthorId,
-      type:      'new_comment',
-      title:     'New comment on your post',
-      body,
-      boardId:   boardId || null,
-      postId,
-      commentId,
-      read:      false,
-      timestamp: now,
-    });
-    notifiedUids.add(postAuthorId);
-    console.log('[Notif:comment] queued notification for post author:', postAuthorId);
+    let authorEligible = true;
+    if (boardId) {
+      try {
+        const authorDoc = await db.collection('users').doc(postAuthorId).get();
+        authorEligible = authorDoc.exists &&
+          _eligibleForBoardNotif(authorDoc.data(), boardId, boardMeta);
+      } catch (_) {
+        authorEligible = false;
+      }
+    }
+    Object.assign(prefsMap, await _loadNotifPrefsMap(authorEligible ? [postAuthorId] : []));
+    if (authorEligible && _wantsNotifType(prefsMap[postAuthorId], 'new_comment')) {
+      const ref = db.collection('notifications').doc();
+      batch.set(ref, {
+        userId:    postAuthorId,
+        type:      'new_comment',
+        title:     'New comment on your post',
+        body,
+        boardId:   boardId || null,
+        postId,
+        commentId,
+        read:      false,
+        timestamp: now,
+      });
+      notifiedUids.add(postAuthorId);
+      console.log('[Notif:comment] queued notification for post author:', postAuthorId);
+    }
   } else if (postAuthorId === currentUid) {
     console.log('[Notif:comment] commenter IS post author — skipping author notification');
   } else {
     console.warn('[Notif:comment] postAuthorId missing — cannot notify post author');
   }
 
-  // ── Step 2: notify all other group members (if we have a boardId) ──────────
+  // ── Step 2: notify other group members who can access this board ──────────
   if (boardId) {
-    let groupId          = null;
-    let boardName        = 'board';
-    let boardRequiredTier = 'free';
-    try {
-      const boardDoc = await db.collection('boards').doc(boardId).get();
-      if (boardDoc.exists) {
-        groupId           = boardDoc.data().groupId      || null;
-        boardName         = boardDoc.data().title        || 'board';
-        boardRequiredTier = boardDoc.data().requiredTier || 'free';
-        console.log('[Notif:comment] board resolved:', { boardName, groupId, boardRequiredTier });
-      } else {
-        console.warn('[Notif:comment] board doc not found:', boardId);
-      }
-    } catch (e) {
-      console.error('[Notif:comment] Failed to fetch board doc:', e);
-    }
+    const groupId = boardMeta.groupId;
+    const boardName = boardMeta.title;
+    console.log('[Notif:comment] board resolved:', { boardName, groupId, requiredTier: boardMeta.requiredTier });
 
     if (groupId) {
       let usersSnap;
@@ -419,12 +462,20 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
       }
 
       if (usersSnap && !usersSnap.empty) {
+        const memberIds = [];
+        usersSnap.forEach(userDoc => {
+          if (userDoc.id === currentUid) return;
+          if (notifiedUids.has(userDoc.id)) return;
+          if (!_eligibleForBoardNotif(userDoc.data(), boardId, boardMeta)) return;
+          memberIds.push(userDoc.id);
+        });
+        Object.assign(prefsMap, await _loadNotifPrefsMap(memberIds));
+
         usersSnap.forEach(userDoc => {
           if (userDoc.id === currentUid)    return; // don't notify commenter
           if (notifiedUids.has(userDoc.id)) return; // already notified (post author)
-          // Tier guard — skip users who cannot access this board
-          const uTier = userDoc.data().tier || 'free';
-          if ((_NOTIF_TIER_ORDER[uTier] ?? 0) < (_NOTIF_TIER_ORDER[boardRequiredTier] ?? 0)) return;
+          if (!_eligibleForBoardNotif(userDoc.data(), boardId, boardMeta)) return;
+          if (!_wantsNotifType(prefsMap[userDoc.id], 'new_comment')) return;
           const ref = db.collection('notifications').doc();
           batch.set(ref, {
             userId:    userDoc.id,
@@ -445,33 +496,7 @@ async function _writeCommentNotifications(commentId, postId, boardId, postAuthor
           '— Check that users have this groupId in their "groups" array (admin panel → Manage Groups)');
       }
     } else {
-      // No groupId on board — fall back to all users (same strategy as _writePostNotifications)
-      console.warn('[Notif:comment] board has no groupId — falling back to all-users notification');
-      let fallbackSnap;
-      try {
-        fallbackSnap = await db.collection('users').get();
-      } catch (e) {
-        console.error('[Notif:comment] Failed to fetch users for fallback:', e);
-      }
-      if (fallbackSnap && !fallbackSnap.empty) {
-        fallbackSnap.forEach(userDoc => {
-          if (userDoc.id === currentUid)    return;
-          if (notifiedUids.has(userDoc.id)) return;
-          const ref = db.collection('notifications').doc();
-          batch.set(ref, {
-            userId:    userDoc.id,
-            type:      'new_comment',
-            title:     `New comment in ${boardName}`,
-            body,
-            boardId,
-            postId,
-            commentId,
-            read:      false,
-            timestamp: now,
-          });
-          notifiedUids.add(userDoc.id);
-        });
-      }
+      console.warn('[Notif:comment] board has no groupId — skipping group broadcast');
     }
   }
 
@@ -494,13 +519,26 @@ async function _writeMentionNotifications(contentId, boardId, boardName, authorN
   const currentUid = getCurrentUser()?.uid;
   if (!currentUid || !mentionedUserIds || mentionedUserIds.length === 0) return;
 
+  const boardMeta = boardId ? await _fetchBoardMeta(boardId) : null;
+  const mentionType = type === 'comment' ? 'mention_comment' : 'mention_post';
+  const prefsMap = await _loadNotifPrefsMap(mentionedUserIds);
   const batch = db.batch();
   const now = firebase.firestore.FieldValue.serverTimestamp();
   const body = `${authorName} mentioned you: ${content.substring(0, 80)}`;
 
-  mentionedUserIds.forEach(userId => {
-    if (userId === currentUid) return; // Don't notify yourself
-    
+  for (const userId of mentionedUserIds) {
+    if (userId === currentUid) continue;
+
+    if (boardId && boardMeta) {
+      try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists || !_eligibleForBoardNotif(userDoc.data(), boardId, boardMeta)) continue;
+      } catch (_) {
+        continue;
+      }
+    }
+    if (!_wantsNotifType(prefsMap[userId], mentionType)) continue;
+
     const ref = db.collection('notifications').doc();
     const notifData = {
       userId: userId,
@@ -520,11 +558,11 @@ async function _writeMentionNotifications(contentId, boardId, boardName, authorN
     }
 
     batch.set(ref, notifData);
-  });
+  }
 
   try {
     await batch.commit();
-    console.log('[Notif:mention] notified', mentionedUserIds.length, 'users');
+    console.log('[Notif:mention] notified eligible users');
   } catch (e) {
     console.error('[Notif:mention] batch.commit FAILED:', e);
     throw e;
@@ -645,6 +683,14 @@ async function reactToPost(postId, emoji, userId) {
 
   // Notify post author when someone reacts (not on removal, not self-reaction)
   if (!already && postData.authorId && postData.authorId !== userId) {
+    const boardMeta = postData.boardId ? await _fetchBoardMeta(postData.boardId) : null;
+    const authorDoc = await db.collection('users').doc(postData.authorId).get();
+    if (postData.boardId && boardMeta &&
+        (!authorDoc.exists || !_eligibleForBoardNotif(authorDoc.data(), postData.boardId, boardMeta))) {
+      return;
+    }
+    const prefsMap = await _loadNotifPrefsMap([postData.authorId]);
+    if (!_wantsNotifType(prefsMap[postData.authorId], 'new_reaction')) return;
     const reactorDoc = await db.collection('users').doc(userId).get();
     const reactorName = reactorDoc.exists ? (reactorDoc.data().name || 'Someone') : 'Someone';
     db.collection('notifications').add({
@@ -689,6 +735,14 @@ async function reactToComment(commentId, emoji, userId) {
   }
 
   if (!already && commentData.authorId && commentData.authorId !== userId) {
+    const boardMeta = boardId ? await _fetchBoardMeta(boardId) : null;
+    const authorDoc = await db.collection('users').doc(commentData.authorId).get();
+    if (boardId && boardMeta &&
+        (!authorDoc.exists || !_eligibleForBoardNotif(authorDoc.data(), boardId, boardMeta))) {
+      return;
+    }
+    const prefsMap = await _loadNotifPrefsMap([commentData.authorId]);
+    if (!_wantsNotifType(prefsMap[commentData.authorId], 'new_reaction')) return;
     const reactorDoc = await db.collection('users').doc(userId).get();
     const reactorName = reactorDoc.exists ? (reactorDoc.data().name || 'Someone') : 'Someone';
     db.collection('notifications').add({

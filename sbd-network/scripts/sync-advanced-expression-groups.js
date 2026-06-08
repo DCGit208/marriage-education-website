@@ -35,7 +35,7 @@ async function main() {
     const eligible = adv.hasAdvancedExpressionAccess(data);
     const hasAdv = adv.ADVANCED_EXPRESSION_GROUP_IDS.some((g) => groups.includes(g));
 
-    if (eligible && !hasAdv) {
+    if (eligible && !hasAdv && !adv.isAdvancedExpressionRevoked(data)) {
       grant++;
       console.log(`GRANT ${doc.id} ${data.email || data.name || ''}`);
       if (!DRY) {

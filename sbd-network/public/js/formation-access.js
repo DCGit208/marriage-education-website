@@ -115,13 +115,20 @@ function getMvHouseAccess(userData) {
         detail: adv.detail || '',
         showPaywall: false,
         ctaUrl: adv.ctaUrl || '/courses.html',
+        ctaLabel: adv.ctaLabel || 'Continue Formation →',
+        showSupportDm: adv.showSupportDm === true,
+        supportPrefill: adv.supportPrefill || '',
         progress: adv.progress,
       };
     }
     return { allowed: true, reason: '', message: '', showPaywall: false, tier: 'elite' };
   }
 
-  if (isAdminGrantedElite(userData)) {
+  if (
+    typeof AdvancedExpressionAccess !== 'undefined' &&
+    AdvancedExpressionAccess.isAdminGrantedElite &&
+    AdvancedExpressionAccess.isAdminGrantedElite(userData)
+  ) {
     return { allowed: true, reason: '', message: '', showPaywall: false, tier: 'elite' };
   }
 

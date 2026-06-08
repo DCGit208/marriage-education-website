@@ -10,6 +10,7 @@ const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bo
 const {
   creditSbdSubscriptionCommissions
 } = require('./sbd-subscription-commission');
+const { registerAdminUserTools } = require('./admin-user-tools');
 
 // UUID - generate random tokens
 function uuidv4() {
@@ -954,8 +955,12 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       type,
       ambassador_code,
       regional_director,
-      ambassador_data
+      ambassador_data,
+      payment_channel: paymentChannelRaw
     } = data;
+
+    const paymentChannel = String(paymentChannelRaw || 'manual').toLowerCase();
+    const isCampayAutomated = paymentChannel === 'campay';
 
     const paymentData = {
       reference,
@@ -970,6 +975,7 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       rd_code: rd_code || '',
       type: type || 'book-purchase',
       status: 'pending',
+      payment_channel: paymentChannel,
       created_at: admin.firestore.FieldValue.serverTimestamp()
     };
 
@@ -999,12 +1005,12 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
     await db.collection('pending_payments').doc(reference).set(paymentData);
 
     await writeUnifiedPaymentRecord({
-      source: 'manual_payment',
+      source: isCampayAutomated ? 'campay_collect' : 'manual_payment',
       reference,
       external_reference: reference,
       record_type: 'customer_payment',
-      channel: 'manual',
-      payment_method: 'momo',
+      channel: isCampayAutomated ? 'campay' : 'manual',
+      payment_method: isCampayAutomated ? 'campay_momo' : 'momo',
       payment_category: type || 'book-purchase',
       product_id,
       product_name,
@@ -1014,50 +1020,52 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       customer_phone: phone || '',
       ambassador_code: ambassador_code || '',
       recruiter_code: regional_director || rd_code || '',
-      status: 'pending',
-      action_required: true,
+      status: isCampayAutomated ? 'pending_collect' : 'pending',
+      action_required: !isCampayAutomated,
       created_at: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Send admin notification email (non-blocking - don't fail payment if email fails)
-    try {
-      await sendAdminPaymentNotification(paymentData);
-      console.log('[EMAIL] Admin notification sent');
-    } catch (emailError) {
-      console.warn('[EMAIL] Admin notification failed (continuing anyway):', emailError.message);
-      // Don't throw - payment submission should succeed even if email fails
-    }
-
-    // Send Telegram notification for new pending payment (plain text, non-blocking)
-    try {
-      if (TELEGRAM_BOT_TOKEN) {
-        const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' : 
-                         type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
-        const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
-          `📋 Reference: ${reference}\n` +
-          `📚 Type: ${typeLabel}\n` +
-          `📦 Product: ${product_name}\n` +
-          `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
-          `👤 Customer: ${email}\n` +
-          `📱 Phone: ${phone || 'N/A'}\n` +
-          `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
-          `${regional_director ? `👑 Recruited By: ${regional_director}\n` : ''}` +
-          `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
-          `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
-          `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
-          `👉 Review: https://marriageducation.com/admin-dashboard.html`;
-        
-        await sendTelegram(pendingMsg, false);
-        console.log('[TELEGRAM] Notification sent');
+    if (!isCampayAutomated) {
+      // Send admin notification email (non-blocking - don't fail payment if email fails)
+      try {
+        await sendAdminPaymentNotification(paymentData);
+        console.log('[EMAIL] Admin notification sent');
+      } catch (emailError) {
+        console.warn('[EMAIL] Admin notification failed (continuing anyway):', emailError.message);
       }
-    } catch (telegramError) {
-      console.warn('[TELEGRAM] Notification failed (continuing anyway):', telegramError.message);
-      // Don't throw - payment submission should succeed even if Telegram fails
+
+      // Send Telegram notification for manual MoMo pending approval only
+      try {
+        if (TELEGRAM_BOT_TOKEN) {
+          const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' :
+            type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
+          const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
+            `📋 Reference: ${reference}\n` +
+            `📚 Type: ${typeLabel}\n` +
+            `📦 Product: ${product_name}\n` +
+            `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
+            `👤 Customer: ${email}\n` +
+            `📱 Phone: ${phone || 'N/A'}\n` +
+            `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
+            `${regional_director ? `👑 Recruited By: ${regional_director}\n` : ''}` +
+            `${ambassador_ref ? `🎯 Ambassador: ${ambassador_ref}\n` : ''}` +
+            `${referral_code ? `🔗 Referral: ${referral_code}\n` : ''}` +
+            `${rd_code ? `👑 RD: ${rd_code}\n` : ''}\n` +
+            `👉 Review: https://marriageducation.com/admin-dashboard.html`;
+
+          await sendTelegram(pendingMsg, false);
+          console.log('[TELEGRAM] Notification sent');
+        }
+      } catch (telegramError) {
+        console.warn('[TELEGRAM] Notification failed (continuing anyway):', telegramError.message);
+      }
     }
 
     return {
       success: true,
-      message: 'Payment submitted for approval'
+      message: isCampayAutomated
+        ? 'CamPay checkout prepared'
+        : 'Payment submitted for approval'
     };
   } catch (error) {
     console.error('submitManualPayment error:', error);
@@ -2474,9 +2482,33 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
       throw new functions.https.HttpsError('invalid-argument', 'Missing required fields: ambassadorCode, email');
     }
 
-    const ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+    let ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
     if (!ambassadorDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Ambassador account not found.');
+      const pendingDoc = await db.collection('pending_payments').doc(ambassadorCode).get();
+      if (pendingDoc.exists) {
+        const pending = pendingDoc.data();
+        const isCampay =
+          pending.payment_channel === 'campay' || !!pending.campay_reference;
+        if (
+          (pending.status === 'approved' || isCampay) &&
+          (pending.product_id === 'ambassador-registration' || pending.type === 'ambassador')
+        ) {
+          await getPaymentFulfillment().fulfillPendingPayment(ambassadorCode, {
+            channel: isCampay ? 'campay' : pending.payment_channel || 'manual',
+            payment_method: isCampay ? 'campay_momo' : 'momo',
+            gateway_reference: pending.campay_reference || null,
+            skipIfApproved: false
+          });
+          ambassadorDoc = await db.collection('ambassadors').doc(ambassadorCode).get();
+        }
+      }
+    }
+
+    if (!ambassadorDoc.exists) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'Ambassador account not found. Complete payment first or contact support.'
+      );
     }
 
     const ambassador = ambassadorDoc.data();
@@ -4313,10 +4345,16 @@ exports.syncSbdLifeShopEntitlement = functions.https.onCall(async (data, context
  * Grant advanced expression community groups when formation milestone is met.
  */
 async function grantAdvancedExpressionIfEligible(uid, userData) {
+  if (!userData || userData.role === 'admin') return false;
+  if (advExprLib.isAdvancedExpressionRevoked(userData)) {
+    console.log(`[SBD] Advanced expression grant skipped (admin revoked): uid=${uid}`);
+    return false;
+  }
   if (!advExprLib.computeFormationMilestoneMet(userData)) return false;
   const userRef = db.collection('users').doc(uid);
   const updates = {
     groups: admin.firestore.FieldValue.arrayUnion(...SBD_ADVANCED_EXPRESSION_GROUPS),
+    'access.advancedExpressionRevoked': false,
   };
   if (userData.progress?.advancedExpressionUnlocked !== true) {
     updates['progress.advancedExpressionUnlocked'] = true;
@@ -4335,6 +4373,7 @@ exports.onUserAdvancedExpressionUnlock = functions.firestore
     const beforeCourses = JSON.stringify(before.progress?.completedCourses || []);
     const afterCourses = JSON.stringify(after.progress?.completedCourses || []);
     if (beforeCourses === afterCourses) return null;
+    if (advExprLib.isAdvancedExpressionRevoked(after)) return null;
     if (!advExprLib.computeFormationMilestoneMet(after)) return null;
     if (after.progress?.advancedExpressionUnlocked === true) {
       const groups = after.groups || [];
@@ -7278,5 +7317,12 @@ registerCommerceOsTier2(db, admin, exports, {
     getPaymentFulfillment().fulfillPendingPayment(reference, options),
   assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
   markPayoutBatchPaidCore: (data, adminUser) =>
-    walletTier1Api.markPayoutBatchPaidCore(data, adminUser)
+    walletTier1Api.markPayoutBatchPaidCore(data, adminUser),
+  normalizeAmbassadorRecruiterPaymentFields,
+  writeUnifiedPaymentRecord
 });
+
+registerAdminUserTools(db, exports);
+
+const { registerNotificationMaintenance } = require('./notification-maintenance');
+registerNotificationMaintenance(db, exports);

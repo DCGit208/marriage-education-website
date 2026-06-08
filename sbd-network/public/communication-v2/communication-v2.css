@@ -38,6 +38,71 @@ body.ce2-body-root.ce2-kb-active {
   border: 0;
 }
 
+/* Label tap → hidden file input (iOS-safe; no overlay bleeding onto mic) */
+.ce2-attach-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--ce2-composer-control);
+  height: var(--ce2-composer-control);
+  margin: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-attach-wrap .ce2-composer-attach {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ce2-attach-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ce2-attach-wrap.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ce2-attach-status {
+  margin: 6px var(--ce2-chrome-pad-x) 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.ce2-attach-status[hidden] {
+  display: none !important;
+}
+
+.ce2-attach-status--ok {
+  background: rgba(40, 90, 50, 0.45);
+  color: #d8f0dc;
+  border: 1px solid rgba(120, 200, 120, 0.35);
+}
+
+.ce2-attach-status--err {
+  background: rgba(120, 40, 30, 0.5);
+  color: #f5d0c8;
+  border: 1px solid rgba(220, 100, 90, 0.4);
+}
+
 /* Header = flex child (never position:fixed). Keyboard: body vv counter + composer transform. */
 .ce2-shell {
   --ce2-chrome-pad-y: 8px;
@@ -127,6 +192,30 @@ body.ce2-body-root.ce2-kb-active {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce2-hub-unread-total {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #c9b892;
+  color: #0a0907;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+.ce2-hub-unread-total[hidden] {
+  display: none !important;
 }
 
 .ce2-sub {
@@ -201,6 +290,7 @@ body.ce2-body-root.ce2-kb-active {
   }
 
   .ce2-hub-tab {
+    position: relative;
     flex: 1;
     min-width: 0;
     padding: 10px 8px;
@@ -215,6 +305,27 @@ body.ce2-body-root.ce2-kb-active {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     pointer-events: auto;
+  }
+
+  .ce2-hub-tab-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #c9b892;
+    color: #0a0907;
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .ce2-hub-tab-badge[hidden] {
+    display: none !important;
   }
 
   .ce2-hub-tab.is-active {
@@ -875,11 +986,75 @@ body.ce2-msg-menu-open {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.ce2-composer-format {
+  flex-shrink: 0;
+  width: var(--ce2-composer-control);
+  height: var(--ce2-composer-control);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ce2-composer-surface);
+  color: #a89f8c;
+  font-size: 0.82rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-composer-format strong,
+.ce2-composer-format em {
+  font-size: 0.88rem;
+  color: inherit;
+}
+
+.ce2-composer-format:active,
+.ce2-composer-format:focus-visible {
+  border-color: rgba(201, 184, 146, 0.35);
+  color: #c9b892;
+  outline: none;
+}
+
+.ce2-composer-format-emoji {
+  font-size: 1.05rem;
+}
+
 .ce2-composer-bar {
   display: flex;
   align-items: flex-end;
   gap: 6px;
   padding: 6px var(--ce2-chrome-pad-x) 8px;
+}
+
+@media (max-width: 719px) {
+  .ce2-composer-bar {
+    gap: 5px;
+    --ce2-composer-control: 36px;
+  }
+
+  .ce2-composer-voice {
+    margin-left: 4px;
+  }
+
+  .ce2-input-shell {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+
+  .ce2-btn-send {
+    min-width: 52px;
+    width: auto;
+    padding: 0 11px;
+  }
+
+  .ce2-send-text {
+    display: inline;
+    font-size: 0.76rem;
+  }
+}
+
+.ce2-send-icon {
+  display: none;
 }
 
 .ce2-composer-more {
@@ -905,11 +1080,43 @@ body.ce2-msg-menu-open {
 
 .ce2-composer-drawer {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px var(--ce2-chrome-pad-x) 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  animation: ce2-drawer-in 0.18s ease-out;
+}
+
+@keyframes ce2-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ce2-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce2-drawer-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+  color: #c9b892;
+}
+
+.ce2-drawer-row {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  padding: 0 10px 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .ce2-reply-banner[hidden],
@@ -968,15 +1175,44 @@ body.ce2-msg-menu-open {
 
 .ce2-reply-banner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin: 6px var(--ce2-chrome-pad-x) 0;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(201, 184, 146, 0.1);
-  border-left: 2px solid rgba(201, 184, 146, 0.45);
+  background: rgba(0, 0, 0, 0.28);
+  border-left: 3px solid #c9b892;
   font-size: 0.75rem;
   line-height: 1.35;
+}
+
+#ce2ReplyBannerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ce2-reply-banner-kicker {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+.ce2-reply-banner-name {
+  font-weight: 650;
+  font-size: 0.76rem;
+  color: #c9b892;
+}
+
+.ce2-reply-banner-preview {
+  font-size: 0.72rem;
+  opacity: 0.72;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ce2-reply-cancel {
@@ -1008,6 +1244,12 @@ body.ce2-msg-menu-open {
   font-weight: 700;
   text-align: center;
   line-height: 18px;
+}
+
+.ce2-li-meta--draft {
+  font-style: italic;
+  opacity: 0.72;
+  color: #c9b892;
 }
 
 .ce2-load-older {
@@ -1210,6 +1452,19 @@ body.ce2-msg-menu-open {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+.ce2-composer-voice {
+  position: relative;
+  z-index: 4;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ce2-composer-bar {
+  -webkit-touch-callout: none;
+}
+
 
 .ce2-composer-voice.is-recording {
   background: rgba(180, 70, 70, 0.28);
@@ -1422,9 +1677,315 @@ body.ce2-msg-menu-open {
   margin-bottom: 6px;
 }
 
+.ce2-bubble--has-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ce2-reply-quote {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 7px 8px 7px 0;
+  border: none;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.28);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-reply-quote:focus-visible {
+  outline: 2px solid rgba(201, 184, 146, 0.55);
+  outline-offset: 1px;
+}
+
+.ce2-row.is-self .ce2-reply-quote {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce2-reply-quote-bar {
+  flex-shrink: 0;
+  width: 3px;
+  border-radius: 2px;
+  margin: 1px 8px 1px 0;
+  background: #7eb8d4;
+}
+
+.ce2-row.is-self .ce2-reply-quote-bar {
+  background: #c9b892;
+}
+
+.ce2-reply-quote-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ce2-reply-quote-name {
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: #7eb8d4;
+}
+
+.ce2-row.is-self .ce2-reply-quote-name {
+  color: #e8dcc4;
+}
+
+.ce2-reply-quote-text {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.68;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ce2-bubble--has-reply > .ce2-msg-text,
+.ce2-bubble--has-reply > .ce2-msg-caption {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ce2-row.is-self .ce2-bubble--has-reply > .ce2-msg-text,
+.ce2-row.is-self .ce2-bubble--has-reply > .ce2-msg-caption {
+  border-top-color: rgba(0, 0, 0, 0.18);
+}
+
+.ce2-bubble--has-reply > .ce2-msg-image,
+.ce2-bubble--has-reply > .ce2-msg-video,
+.ce2-bubble--has-reply > .ce2-msg-audio-wrap {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ce2-row.is-self .ce2-bubble--has-reply > .ce2-msg-image,
+.ce2-row.is-self .ce2-bubble--has-reply > .ce2-msg-video,
+.ce2-row.is-self .ce2-bubble--has-reply > .ce2-msg-audio-wrap {
+  border-top-color: rgba(0, 0, 0, 0.18);
+}
+
 .ce2-msg-text {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.ce2-msg-strong {
+  font-weight: 650;
+}
+
+.ce2-msg-em {
+  font-style: italic;
+}
+
+.ce2-msg-under {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ce2-msg-strike {
+  text-decoration: line-through;
+  opacity: 0.78;
+}
+
+.ce2-msg-color--gold {
+  color: #c9b892;
+}
+
+.ce2-msg-color--blue {
+  color: #8eb9d8;
+}
+
+.ce2-msg-color--green {
+  color: #8fbc8f;
+}
+
+.ce2-fmt-u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ce2-fmt-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+}
+
+.ce2-msg-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ce2-emoji-section-label {
+  grid-column: 1 / -1;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+  color: #c9b892;
+  padding: 4px 2px 0;
+}
+
+.ce2-drawer-style-btn {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a89f8c;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ce2-drawer-style-btn strong,
+.ce2-drawer-style-btn em {
+  font-size: 0.88rem;
+  color: inherit;
+}
+
+.ce2-drawer-style-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 2px;
+}
+
+.ce2-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.ce2-color-swatch--sm {
+  width: 24px;
+  height: 24px;
+}
+
+.ce2-color-swatch--gold {
+  background: #c9b892;
+}
+
+.ce2-color-swatch--blue {
+  background: #8eb9d8;
+}
+
+.ce2-color-swatch--green {
+  background: #8fbc8f;
+}
+
+.ce2-color-swatch:active,
+.ce2-color-swatch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(201, 184, 146, 0.45);
+}
+
+.ce2-edit-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ce2-edit-tool {
+  width: 32px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a89f8c;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ce2-edit-tool-emoji {
+  font-size: 1rem;
+}
+
+.ce2-edit-tool-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ce2-input-shell--edit {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.ce2-input-shell--edit .ce2-edit-input {
+  min-height: 72px;
+  max-height: 160px;
+}
+
+.ce2-emoji-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ce2-emoji-tab {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a89f8c;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ce2-emoji-tab.is-active {
+  border-color: rgba(201, 184, 146, 0.35);
+  background: rgba(201, 184, 146, 0.12);
+  color: #c9b892;
+}
+
+.ce2-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
+  max-height: 32vh;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.ce2-emoji-btn {
+  font-size: 1.45rem;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-emoji-btn:active {
+  background: rgba(201, 184, 146, 0.14);
+  border-color: rgba(201, 184, 146, 0.3);
 }
 
 .ce2-msg-caption {
@@ -1502,6 +2063,40 @@ body.ce2-msg-menu-open {
   opacity: 0.72;
 }
 
+.ce2-input-shell {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ce2-composer-surface);
+}
+
+.ce2-input-shell:focus-within {
+  border-color: rgba(201, 184, 146, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ce2-input-mirror {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: inherit;
+}
+
+.ce2-input-mirror-ph {
+  color: rgba(242, 240, 236, 0.38);
+}
+
 .ce2-input {
   flex: 1;
   min-width: 0;
@@ -1509,7 +2104,8 @@ body.ce2-msg-menu-open {
   resize: none;
   scroll-margin: 0;
   min-height: 38px;
-  max-height: 100px;
+  max-height: 132px;
+  overflow-y: hidden;
   padding: 9px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1518,6 +2114,26 @@ body.ce2-msg-menu-open {
   font: inherit;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.ce2-input--rich {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #f2f0ec;
+  -webkit-text-fill-color: transparent;
+}
+
+.ce2-input--rich::placeholder {
+  color: transparent;
+}
+
+.ce2-input-shell .ce2-input--rich:focus {
+  outline: none;
+  border: none;
+  background: transparent;
 }
 
 .ce2-input::placeholder {
