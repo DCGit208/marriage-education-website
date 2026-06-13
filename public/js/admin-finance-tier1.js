@@ -1,10 +1,12 @@
 /**
- * Admin Finance section — Tier 1 payout queue, Wise CSV, mark paid.
+ * Admin Finance section — Tier 1 payout queue, Wise CSV, mark paid, payout history.
  */
 (function () {
   'use strict';
 
   var queueCache = [];
+  var historyCache = [];
+  var historyPayeeFilter = '';
 
   function fcfa(n) {
     return (Number(n) || 0).toLocaleString() + ' FCFA';
@@ -12,6 +14,25 @@
 
   function esc(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  function dayKey(ts) {
+    if (!ts) return 'unknown';
+    try {
+      var d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toISOString().slice(0, 10);
+    } catch (e) {
+      return 'unknown';
+    }
+  }
+
+  function fmtWhen(ts) {
+    if (!ts) return '—';
+    try {
+      return ts.toDate ? ts.toDate().toLocaleString() : new Date(ts).toLocaleString();
+    } catch (e) {
+      return '—';
+    }
   }
 
   async function loadFinanceQueue() {
@@ -51,6 +72,7 @@
           '</tr>';
       }).join('');
       bindFinanceRowActions();
+      bindSelectAll();
     } catch (e) {
       var hint = (e.message || '').indexOf('Admin access') !== -1
         ? ' Sign in as admin@marriageducation.com or set users/{uid}.role=admin / custom claim admin:true.'
@@ -59,11 +81,22 @@
     }
   }
 
+  function bindSelectAll() {
+    var selectAll = document.getElementById('financeSelectAll');
+    if (!selectAll || selectAll.dataset.bound) return;
+    selectAll.dataset.bound = '1';
+    selectAll.addEventListener('change', function () {
+      document.querySelectorAll('.finance-row-check').forEach(function (cb) {
+        cb.checked = selectAll.checked;
+      });
+    });
+  }
+
   function bindFinanceRowActions() {
     document.querySelectorAll('.finance-mark-one').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var idx = Number(btn.getAttribute('data-idx'));
-        openMarkPaidModal(queueCache[idx]);
+        openMarkPaidModal([queueCache[idx]]);
       });
     });
   }
@@ -106,17 +139,13 @@
     URL.revokeObjectURL(url);
   }
 
-  function openMarkPaidModal(row) {
-    if (!row) return;
-    var ref = prompt('External reference (Wise transfer ID, MoMo ref):', 'WISE-');
-    if (!ref) return;
-    var key = 'payout-' + row.payee_code + '-' + Date.now();
+  function buildMarkPaidPayload(row, externalRef) {
     var b = row.sbd.pending_breakdown || {};
-    var payload = {
-      idempotency_key: key,
+    return {
+      idempotency_key: 'payout-' + row.payee_code + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       payee_code: row.payee_code,
       amount_fcfa: row.total_pending_fcfa,
-      external_reference: ref,
+      external_reference: externalRef,
       method: (row.payout_profile && row.payout_profile.method) || 'manual',
       breakdown: {
         recruitment: row.recruitment.pending_fcfa,
@@ -125,45 +154,182 @@
         sbd_rd_override: b.rdOverride || 0
       }
     };
-    markPaid(payload);
+  }
+
+  function openMarkPaidModal(payees) {
+    if (!payees || !payees.length) return;
+    var total = payees.reduce(function (s, r) { return s + (r.total_pending_fcfa || 0); }, 0);
+    var summary = payees.length === 1
+      ? payees[0].payee_code + ' · ' + fcfa(total)
+      : payees.length + ' payees · ' + fcfa(total) + ' total';
+    if (!confirm('Mark as PAID:\n' + summary + '\n\nOnly continue after funds are sent.')) return;
+
+    var ref = prompt('External reference (Wise ID, MoMo ref, batch note):', 'BATCH-' + new Date().toISOString().slice(0, 10));
+    if (!ref) return;
+    markMultiplePaid(payees, ref);
   }
 
   async function markPaid(payload) {
-    try {
-      var fn = firebase.functions().httpsCallable('markPayoutBatchPaid');
-      var res = await fn(payload);
-      alert(res.data && res.data.duplicate ? 'Already recorded.' : 'Marked paid successfully.');
-      loadFinanceQueue();
-      loadFinanceHistory();
-    } catch (e) {
-      alert('Mark paid failed: ' + (e.message || e));
+    var fn = firebase.functions().httpsCallable('markPayoutBatchPaid');
+    return fn(payload);
+  }
+
+  async function markMultiplePaid(payees, refBase) {
+    var ok = 0;
+    var fail = 0;
+    var errors = [];
+    for (var i = 0; i < payees.length; i++) {
+      var row = payees[i];
+      var ref = payees.length === 1
+        ? refBase
+        : refBase + '/' + row.payee_code;
+      try {
+        await markPaid(buildMarkPaidPayload(row, ref));
+        ok++;
+      } catch (e) {
+        fail++;
+        errors.push(row.payee_code + ': ' + (e.message || e));
+      }
     }
+    var msg = 'Marked paid: ' + ok + ' succeeded';
+    if (fail) msg += ', ' + fail + ' failed.\n' + errors.slice(0, 5).join('\n');
+    alert(msg);
+    loadFinanceQueue();
+    loadFinanceHistory();
+  }
+
+  function markSelectedPaid() {
+    var rows = selectedPayees();
+    if (!rows.length) {
+      alert('Select one or more payees in the queue first (checkboxes).');
+      return;
+    }
+    openMarkPaidModal(rows);
+  }
+
+  function markAllQueuedPaid() {
+    if (!queueCache.length) {
+      alert('Queue is empty. Refresh first.');
+      return;
+    }
+    openMarkPaidModal(queueCache.slice());
+  }
+
+  function historyDaysLimit() {
+    var el = document.getElementById('financeHistoryDays');
+    var v = el ? Number(el.value) : 30;
+    return v > 0 ? v : 365;
+  }
+
+  function filterHistoryByDays(events, days) {
+    if (!days || days >= 365) return events;
+    var cutoff;
+    if (days === 1) {
+      var start = new Date();
+      start.setHours(0, 0, 0, 0);
+      cutoff = start.getTime();
+    } else {
+      cutoff = Date.now() - days * 86400000;
+    }
+    return events.filter(function (ev) {
+      if (!ev.created_at) return false;
+      var t = ev.created_at.toDate ? ev.created_at.toDate().getTime() : new Date(ev.created_at).getTime();
+      return t >= cutoff;
+    });
+  }
+
+  function renderDailySummary(events) {
+    var el = document.getElementById('financeDailySummary');
+    if (!el) return;
+    var byDay = Object.create(null);
+    events.forEach(function (ev) {
+      var k = ev._dayKey || 'unknown';
+      if (!byDay[k]) byDay[k] = { count: 0, total: 0 };
+      byDay[k].count++;
+      byDay[k].total += Number(ev.amount_fcfa) || 0;
+    });
+    var days = Object.keys(byDay).sort().reverse();
+    if (!days.length) {
+      el.innerHTML = '<p style="font-size:14px;color:#636e72;margin:0">No payouts in selected period.</p>';
+      return;
+    }
+    var grandTotal = events.reduce(function (s, e) { return s + (Number(e.amount_fcfa) || 0); }, 0);
+    var rows = days.map(function (d) {
+      var g = byDay[d];
+      return '<tr><td><strong>' + esc(d) + '</strong></td><td>' + g.count + '</td><td><strong>' + fcfa(g.total) + '</strong></td></tr>';
+    }).join('');
+    el.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:8px">' +
+      '<p style="margin:0;font-size:14px;color:#636e72">' + events.length + ' payout(s) · <strong>' + fcfa(grandTotal) + '</strong> in period</p>' +
+      '</div>' +
+      '<div class="table-container"><table><thead><tr><th>Date</th><th>Payouts</th><th>Total sent</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>';
+  }
+
+  function populateHistoryPayeeFilter(events) {
+    var sel = document.getElementById('financeHistoryPayee');
+    if (!sel) return;
+    var codes = [];
+    events.forEach(function (ev) {
+      if (ev.payee_code && codes.indexOf(ev.payee_code) === -1) codes.push(ev.payee_code);
+    });
+    codes.sort();
+    var html = '<option value="">All payees</option>';
+    codes.forEach(function (c) {
+      html += '<option value="' + esc(c) + '"' + (historyPayeeFilter === c ? ' selected' : '') + '>' + esc(c) + '</option>';
+    });
+    sel.innerHTML = html;
+  }
+
+  function renderHistoryTable(events) {
+    var tbody = document.getElementById('financeHistoryBody');
+    if (!tbody) return;
+    var filtered = historyPayeeFilter
+      ? events.filter(function (ev) { return ev.payee_code === historyPayeeFilter; })
+      : events;
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="7">No payout events in selected period.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(function (ev) {
+      var d = ev;
+      var breakdown = d.breakdown || {};
+      var detail = [
+        breakdown.recruitment ? 'rec ' + fcfa(breakdown.recruitment) : '',
+        breakdown.sbd_direct ? 'sbd ' + fcfa(breakdown.sbd_direct) : ''
+      ].filter(Boolean).join(' · ');
+      return '<tr>' +
+        '<td>' + fmtWhen(d.created_at) + '</td>' +
+        '<td><code>' + esc(d.payee_code) + '</code></td>' +
+        '<td><strong>' + fcfa(d.amount_fcfa) + '</strong></td>' +
+        '<td style="font-size:12px;color:#64748b">' + esc(detail || '—') + '</td>' +
+        '<td>' + esc(d.method) + '</td>' +
+        '<td>' + esc(d.external_reference) + '</td>' +
+        '<td>' + esc(d.created_by_admin) + '</td></tr>';
+    }).join('');
   }
 
   async function loadFinanceHistory() {
     var tbody = document.getElementById('financeHistoryBody');
     if (!tbody || typeof db === 'undefined') return;
+    tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
     try {
-      var snap = await db.collection('payout_events').orderBy('created_at', 'desc').limit(50).get();
-      if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="6">No payout events yet.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = '';
+      var snap = await db.collection('payout_events').orderBy('created_at', 'desc').limit(300).get();
+      historyCache = [];
       snap.forEach(function (doc) {
         var d = doc.data();
-        var when = d.created_at && d.created_at.toDate
-          ? d.created_at.toDate().toLocaleString() : '—';
-        tbody.innerHTML += '<tr>' +
-          '<td>' + when + '</td>' +
-          '<td><code>' + esc(d.payee_code) + '</code></td>' +
-          '<td>' + fcfa(d.amount_fcfa) + '</td>' +
-          '<td>' + esc(d.method) + '</td>' +
-          '<td>' + esc(d.external_reference) + '</td>' +
-          '<td>' + esc(d.created_by_admin) + '</td></tr>';
+        d._id = doc.id;
+        d._dayKey = dayKey(d.created_at);
+        historyCache.push(d);
       });
+
+      var days = historyDaysLimit();
+      var periodEvents = filterHistoryByDays(historyCache, days);
+      populateHistoryPayeeFilter(periodEvents);
+      renderDailySummary(periodEvents);
+      renderHistoryTable(periodEvents);
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="6">Error loading history.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Error loading history.</td></tr>';
     }
   }
 
@@ -188,8 +354,17 @@
     document.getElementById('financeRefreshBtn')?.addEventListener('click', loadFinanceQueue);
     document.getElementById('financeExportWiseBtn')?.addEventListener('click', exportWiseCsv);
     document.getElementById('financeLoadHistoryBtn')?.addEventListener('click', loadFinanceHistory);
+    document.getElementById('financeMarkSelectedBtn')?.addEventListener('click', markSelectedPaid);
+    document.getElementById('financeMarkAllBtn')?.addEventListener('click', markAllQueuedPaid);
     document.getElementById('financeCampayDryBtn')?.addEventListener('click', function () { runCampayDisburse(true); });
     document.getElementById('financeCampayLiveBtn')?.addEventListener('click', function () { runCampayDisburse(false); });
+    document.getElementById('financeHistoryDays')?.addEventListener('change', loadFinanceHistory);
+    document.getElementById('financeHistoryPayee')?.addEventListener('change', function (e) {
+      historyPayeeFilter = e.target.value || '';
+      var days = historyDaysLimit();
+      var periodEvents = filterHistoryByDays(historyCache, days);
+      renderHistoryTable(periodEvents);
+    });
   }
 
   window.AdminFinanceTier1 = {

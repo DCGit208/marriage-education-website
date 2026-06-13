@@ -338,6 +338,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Ambassador payment inquiries — written by Cloud Functions only
+    match /payment_inquiries/{inquiryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Tier 2 CamPay production pilot
     match /campay_payments/{paymentId} {
       allow read: if true;

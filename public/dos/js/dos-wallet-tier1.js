@@ -62,14 +62,21 @@
       fmtXaf(w.recruitment_pending_fcfa) + '</div></div>' +
       '<div class="dos-kpi"><div class="dos-kpi-label">SBD pending</div><div class="dos-kpi-value">' +
       fmtXaf(w.sbd_pending_fcfa) + '</div></div>' +
+      '<div class="dos-kpi"><div class="dos-kpi-label">Recruitment paid (lifetime)</div><div class="dos-kpi-value">' +
+      fmtXaf(w.recruitment_paid_fcfa) + '</div></div>' +
       '<div class="dos-kpi"><div class="dos-kpi-label">Payout profile</div><div class="dos-kpi-value" style="font-size:14px">' +
       (profileOk ? '<span style="color:#16a34a">Complete</span>' : '<span style="color:#e11d48">Incomplete</span>') +
       '</div></div>' +
       '</div>' +
+      '<div id="dosWalletLedgerHost"></div>' +
       '<div id="dosPayoutProfileForm" class="dos-payout-profile-form" style="margin-top:16px"></div>' +
       '</div>';
 
     renderPayoutProfileForm(document.getElementById('dosPayoutProfileForm'), profile, payeeCode);
+
+    if (global.DOSPaymentSupport && global.DOSPaymentSupport.onWalletRendered) {
+      global.DOSPaymentSupport.onWalletRendered(stats, payeeCode, collection, w);
+    }
   }
 
   function renderPayoutProfileForm(el, profile, payeeCode) {
