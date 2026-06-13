@@ -7309,6 +7309,12 @@ exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
 const walletPayoutTier1 = require('./wallet-payout-tier1');
 const walletTier1Api = walletPayoutTier1.registerWalletPayoutTier1(db, exports);
 
+const { registerPaymentInquiries } = require('./payment-inquiries');
+registerPaymentInquiries(db, exports, {
+  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  sendTelegram
+});
+
 // ============================================
 // Commerce OS Tier 2 — CamPay production pilot
 // ============================================

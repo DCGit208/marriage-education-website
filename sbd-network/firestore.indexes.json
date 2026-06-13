@@ -283,13 +283,6 @@
       ]
     },
     {
-      "collectionGroup": "sbdLifeQuotes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "articleId", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "wardrobeShares",
       "queryScope": "COLLECTION",
       "fields": [
@@ -303,6 +296,30 @@
       "fields": [
         { "fieldPath": "ownerUid", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payout_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "payee_code", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payment_inquiries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "payee_code", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payment_inquiries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     }
   ],

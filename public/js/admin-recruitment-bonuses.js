@@ -194,6 +194,7 @@
           '<button type="button" class="rb-overlay-close" id="rbOverlayClose" aria-label="Close">&times;</button>' +
         '</div>' +
         '<div class="rb-overlay-actions">' +
+          '<button type="button" class="btn btn-success btn-sm" id="rbOverlayMarkAllPaid"><i class="fas fa-check-double"></i> Mark all for payee paid</button>' +
           '<button type="button" class="btn btn-primary btn-sm" id="rbOverlayPrint"><i class="fas fa-print"></i> Print</button>' +
           '<button type="button" class="btn btn-secondary btn-sm" id="rbOverlayCsv"><i class="fas fa-file-csv"></i> Save CSV</button>' +
           '<button type="button" class="btn btn-secondary btn-sm" id="rbOverlayCopyTotal"><i class="fas fa-copy"></i> Copy total</button>' +
@@ -211,6 +212,7 @@
       if (e.target === el) closeOverlay();
     });
     document.getElementById('rbOverlayClose').addEventListener('click', closeOverlay);
+    document.getElementById('rbOverlayMarkAllPaid').addEventListener('click', markAllForActivePayee);
     document.getElementById('rbOverlayPrint').addEventListener('click', printActiveStatement);
     document.getElementById('rbOverlayCsv').addEventListener('click', downloadActiveStatementCsv);
     document.getElementById('rbOverlayCopyTotal').addEventListener('click', copyActiveTotal);
@@ -490,8 +492,18 @@
     }).join('');
 
     tbody.querySelectorAll('.rb-pay-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        markRDPaymentPaid(btn.getAttribute('data-notification-id'), btn.getAttribute('data-rd-code'), Number(btn.getAttribute('data-amount') || 0));
+      btn.addEventListener('click', async function () {
+        var success = await markRDPaymentPaid(
+          btn.getAttribute('data-notification-id'),
+          btn.getAttribute('data-rd-code'),
+          Number(btn.getAttribute('data-amount') || 0)
+        );
+        if (success) {
+          if (typeof showAlert === 'function') showAlert('Payment marked as paid', 'success');
+          closeOverlay();
+          await loadRDPaymentsTable();
+          if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
+        }
       });
     });
     tbody.querySelectorAll('.rb-payee-name-btn').forEach(function (btn) {
@@ -573,8 +585,8 @@
     }
   }
 
-  async function markRDPaymentPaid(notificationId, rdCode, amount) {
-    if (!confirm('Mark ' + fcfa(amount) + ' payment to ' + rdCode + ' as PAID?')) return;
+  async function markRDPaymentPaid(notificationId, rdCode, amount, skipConfirm) {
+    if (!skipConfirm && !confirm('Mark ' + fcfa(amount) + ' payment to ' + rdCode + ' as PAID?')) return false;
     try {
       var result = await firebase.functions().httpsCallable('markRDPaymentPaid')({
         notification_id: notificationId,
@@ -582,16 +594,71 @@
         amount: amount
       });
       if (result.data && result.data.success) {
-        if (typeof showAlert === 'function') showAlert('Payment marked as paid', 'success');
         delete payeeContactCache[normCode(rdCode)];
-        closeOverlay();
-        await loadRDPaymentsTable();
-        if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
-      } else if (typeof showAlert === 'function') {
-        showAlert('Failed to mark payment as paid', 'error');
+        return true;
       }
+      if (typeof showAlert === 'function') showAlert('Failed to mark payment as paid', 'error');
+      return false;
     } catch (error) {
       if (typeof showAlert === 'function') showAlert('Error: ' + error.message, 'error');
+      return false;
+    }
+  }
+
+  async function markAllForActivePayee() {
+    var group = getActiveGroup();
+    if (!group || !group.items.length) {
+      if (typeof showAlert === 'function') showAlert('Open a payee statement first', 'warning');
+      return;
+    }
+    var lines = group.items.map(function (r) {
+      return '• ' + r.ambassadorCode + ' — ' + fcfa(r.amount);
+    }).join('\n');
+    if (!confirm(
+      'Mark ALL ' + group.items.length + ' recruitment bonus(es) as PAID for ' + group.name +
+      ' (' + group.code + ')?\n\nTotal: ' + fcfa(group.total) + '\n\n' + lines +
+      '\n\nOnly continue after MoMo is sent.'
+    )) return;
+
+    var ok = 0;
+    var fail = 0;
+    for (var i = 0; i < group.items.length; i++) {
+      var r = group.items[i];
+      var success = await markRDPaymentPaid(r.id, r.recruiterCode, r.amount, true);
+      if (success) ok++; else fail++;
+    }
+    closeOverlay();
+    await loadRDPaymentsTable();
+    if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
+    if (typeof showAlert === 'function') {
+      showAlert('Payee batch: ' + ok + ' marked paid' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warning' : 'success');
+    }
+  }
+
+  async function markAllPendingRecruitmentBonuses() {
+    if (!lastRows.length) {
+      if (typeof showAlert === 'function') showAlert('No pending recruitment bonuses', 'warning');
+      return;
+    }
+    var total = lastRows.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
+    if (!confirm(
+      'Mark ALL ' + lastRows.length + ' pending recruitment bonus line(s) as PAID?\n\n' +
+      lastPayeeGroups.length + ' payee(s) · Grand total: ' + fcfa(total) +
+      '\n\nOnly continue after all MoMo transfers are complete.'
+    )) return;
+
+    var ok = 0;
+    var fail = 0;
+    var rows = lastRows.slice();
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var success = await markRDPaymentPaid(r.id, r.recruiterCode, r.amount, true);
+      if (success) ok++; else fail++;
+    }
+    await loadRDPaymentsTable();
+    if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
+    if (typeof showAlert === 'function') {
+      showAlert('All pending: ' + ok + ' marked paid' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warning' : 'success');
     }
   }
 
@@ -645,6 +712,11 @@
     if (refresh && !refresh.dataset.bound) {
       refresh.dataset.bound = '1';
       refresh.addEventListener('click', loadRDPaymentsTable);
+    }
+    var markAll = document.getElementById('rbMarkAllPendingBtn');
+    if (markAll && !markAll.dataset.bound) {
+      markAll.dataset.bound = '1';
+      markAll.addEventListener('click', markAllPendingRecruitmentBonuses);
     }
   }
 

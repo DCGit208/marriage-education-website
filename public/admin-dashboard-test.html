@@ -1707,6 +1707,9 @@
                         <button type="button" class="btn btn-secondary btn-sm" id="rbCopyAllPhones" title="Copy all payee numbers">
                             <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
                         </button>
+                        <button type="button" class="btn btn-success btn-sm" id="rbMarkAllPendingBtn" title="Mark every pending recruitment bonus line as paid">
+                            <i class="fas fa-check-double" aria-hidden="true"></i> Mark all pending paid
+                        </button>
                         <button type="button" class="btn btn-success btn-sm" id="rbRefreshBtn">
                             <i class="fas fa-sync" aria-hidden="true"></i> Refresh
                         </button>
@@ -1788,7 +1791,9 @@
                     </label>
                     <button class="btn btn-primary btn-sm" id="financeRefreshBtn"><i class="fas fa-sync"></i> Refresh queue</button>
                     <button class="btn btn-success btn-sm" id="financeExportWiseBtn"><i class="fas fa-file-csv"></i> Export Wise CSV</button>
-                    <button class="btn btn-secondary btn-sm" id="financeLoadHistoryBtn"><i class="fas fa-history"></i> Load history</button>
+                    <button class="btn btn-success btn-sm" id="financeMarkSelectedBtn"><i class="fas fa-check"></i> Mark selected paid</button>
+                    <button class="btn btn-success btn-sm" id="financeMarkAllBtn"><i class="fas fa-check-double"></i> Mark all in queue paid</button>
+                    <button class="btn btn-secondary btn-sm" id="financeLoadHistoryBtn"><i class="fas fa-history"></i> Refresh history</button>
                     <button class="btn btn-warning btn-sm" id="financeCampayDryBtn" title="Tier 2 CamPay"><i class="fas fa-mobile-alt"></i> CamPay dry run</button>
                     <button class="btn btn-danger btn-sm" id="financeCampayLiveBtn" title="Sends real MoMo"><i class="fas fa-mobile-alt"></i> CamPay disburse</button>
                     <span id="financeQueueStatus" style="margin-left:12px;font-size:14px;color:#636e72"></span>
@@ -1799,7 +1804,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th></th><th>Code</th><th>Name</th><th>Country</th><th>Method</th>
+                                    <th><input type="checkbox" id="financeSelectAll" title="Select all payees"></th><th>Code</th><th>Name</th><th>Country</th><th>Method</th>
                                     <th>Recruitment</th><th>SBD</th><th>Total</th><th>Profile</th><th>Actions</th>
                                 </tr>
                             </thead>
@@ -1810,14 +1815,60 @@
                     </div>
                 </div>
                 <div class="table-card" style="margin-top:2rem">
-                    <div class="table-header"><h2>Payout history</h2></div>
+                    <div class="table-header">
+                        <h2>Payout history</h2>
+                        <div class="table-actions" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                            <label style="font-size:14px">Period
+                                <select id="financeHistoryDays" style="margin-left:6px">
+                                    <option value="1">Today</option>
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">All loaded</option>
+                                </select>
+                            </label>
+                            <label style="font-size:14px">Payee
+                                <select id="financeHistoryPayee" style="margin-left:6px"><option value="">All payees</option></select>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="financeDailySummary" style="margin:0 1rem 1rem"></div>
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>When</th><th>Payee</th><th>Amount</th><th>Method</th><th>Reference</th><th>Admin</th></tr>
+                                <tr><th>When</th><th>Payee</th><th>Amount</th><th>Breakdown</th><th>Method</th><th>Reference</th><th>Admin</th></tr>
                             </thead>
                             <tbody id="financeHistoryBody">
-                                <tr><td colspan="6">Click Load history.</td></tr>
+                                <tr><td colspan="7">Opens automatically when you visit Finance.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="table-card" style="margin-top:2rem">
+                    <div class="table-header">
+                        <h2>Payment inquiries</h2>
+                        <div class="table-actions">
+                            <label style="font-size:14px;margin-right:8px">Show
+                                <select id="paymentInquiriesFilter" style="margin-left:6px">
+                                    <option value="open">Open</option>
+                                    <option value="all">All recent</option>
+                                    <option value="resolved">Resolved / closed</option>
+                                </select>
+                            </label>
+                            <button class="btn btn-primary btn-sm" id="paymentInquiriesRefreshBtn"><i class="fas fa-sync"></i> Refresh</button>
+                            <span id="paymentInquiriesStatus" style="margin-left:12px;font-size:14px;color:#636e72"></span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>When</th><th>Payee</th><th>Type</th><th>Notes</th>
+                                    <th>Expected</th><th>Pending snap.</th><th>Status</th><th>Admin note</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentInquiriesBody">
+                                <tr><td colspan="9">Open Finance to load inquiries.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2824,6 +2875,9 @@
                         AdminFinanceTier1.loadFinanceQueue();
                         AdminFinanceTier1.loadFinanceHistory();
                     }
+                    if (window.AdminPaymentInquiries) {
+                        AdminPaymentInquiries.load();
+                    }
                     break;
                 case 'crm':
                     loadCRMTable();
@@ -3584,6 +3638,7 @@
     </div> <!-- Close main-dashboard -->
 
   <script src="js/admin-finance-tier1.js"></script>
+  <script src="js/admin-payment-inquiries.js"></script>
   <script src="js/admin-recruitment-bonuses.js"></script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>
