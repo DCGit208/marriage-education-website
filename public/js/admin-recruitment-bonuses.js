@@ -8,7 +8,10 @@
   var payeeContactCache = Object.create(null);
   var lastRows = [];
   var lastPayeeGroups = [];
+  var lastPaidRows = [];
   var activeStatementCode = null;
+  var rbPaidPayeeFilter = '';
+  var rbView = 'pending';
 
   function esc(s) {
     return String(s || '')
@@ -24,6 +27,73 @@
 
   function fcfa(n) {
     return (Number(n) || 0).toLocaleString() + ' FCFA';
+  }
+
+  function fmtWhen(ts) {
+    if (!ts) return 'N/A';
+    try {
+      return ts.toDate ? ts.toDate().toLocaleString() : new Date(ts).toLocaleString();
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  function dayKeyFromTs(ts) {
+    if (!ts) return 'unknown';
+    try {
+      var d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toISOString().slice(0, 10);
+    } catch (e) {
+      return 'unknown';
+    }
+  }
+
+  function filterRowsByDays(rows, days, dateField) {
+    if (!days || days >= 365) return rows;
+    var cutoff;
+    if (days === 1) {
+      var start = new Date();
+      start.setHours(0, 0, 0, 0);
+      cutoff = start.getTime();
+    } else {
+      cutoff = Date.now() - days * 86400000;
+    }
+    return rows.filter(function (r) {
+      var ts = r[dateField];
+      if (!ts) return false;
+      var t = ts.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
+      return t >= cutoff;
+    });
+  }
+
+  function mapNotificationToRow(item) {
+    var data = item.data;
+    var recruiterCode = normCode(data.rd_code || data.recruiter_code || 'N/A');
+    var created = data.created_at && data.created_at.toDate ? data.created_at.toDate() : null;
+    var paid = data.paid_at && data.paid_at.toDate ? data.paid_at.toDate() : null;
+    var contact = payeeContactCache[recruiterCode] || { phone: '', momo: '', source: '', email: '' };
+    return {
+      id: item.id,
+      recruiterCode: recruiterCode,
+      recruiterName: data.rd_name || data.recruiter_name || 'Unknown',
+      recruiterType: data.recruiter_type || (recruiterCode.startsWith('RD-') ? 'regional_director' : 'ambassador'),
+      ambassadorCode: data.ambassador_code || 'N/A',
+      ambassadorName: data.ambassador_name || 'N/A',
+      amount: data.amount || 0,
+      bonusTier: data.bonus_tier,
+      directRecruiter: data.direct_recruiter_code,
+      recruitingAmbassador: data.recruiting_ambassador_code,
+      policyVersion: data.policy_version,
+      dateLabel: created ? created.toLocaleString() : 'N/A',
+      isoDate: created ? created.toISOString() : '',
+      paidAt: data.paid_at || data.created_at || null,
+      paidLabel: paid ? paid.toLocaleString() : (created ? created.toLocaleString() : 'N/A'),
+      paidDayKey: dayKeyFromTs(data.paid_at || data.created_at),
+      contact: contact,
+      phone: contact.momo || contact.phone,
+      email: contact.email,
+      status: data.status || 'pending'
+    };
   }
 
   function digitsOnly(phone) {
@@ -194,6 +264,7 @@
           '<button type="button" class="rb-overlay-close" id="rbOverlayClose" aria-label="Close">&times;</button>' +
         '</div>' +
         '<div class="rb-overlay-actions">' +
+          '<button type="button" class="btn btn-success btn-sm" id="rbOverlayMarkSelectedPaid"><i class="fas fa-check"></i> Mark selected paid</button>' +
           '<button type="button" class="btn btn-success btn-sm" id="rbOverlayMarkAllPaid"><i class="fas fa-check-double"></i> Mark all for payee paid</button>' +
           '<button type="button" class="btn btn-primary btn-sm" id="rbOverlayPrint"><i class="fas fa-print"></i> Print</button>' +
           '<button type="button" class="btn btn-secondary btn-sm" id="rbOverlayCsv"><i class="fas fa-file-csv"></i> Save CSV</button>' +
@@ -212,6 +283,7 @@
       if (e.target === el) closeOverlay();
     });
     document.getElementById('rbOverlayClose').addEventListener('click', closeOverlay);
+    document.getElementById('rbOverlayMarkSelectedPaid').addEventListener('click', markSelectedFromOverlay);
     document.getElementById('rbOverlayMarkAllPaid').addEventListener('click', markAllForActivePayee);
     document.getElementById('rbOverlayPrint').addEventListener('click', printActiveStatement);
     document.getElementById('rbOverlayCsv').addEventListener('click', downloadActiveStatementCsv);
@@ -221,12 +293,20 @@
     });
   }
 
-  function statementHtmlForGroup(group, title) {
+  function statementHtmlForGroup(group, title, selectable) {
     var rows = group.items.map(function (r) {
-      return '<tr><td>' + esc(r.ambassadorCode) + '</td><td>' + esc(r.ambassadorName) + '</td>' +
+      var chk = selectable
+        ? '<td><input type="checkbox" class="rb-stmt-check" data-rb-id="' + esc(r.id) + '" checked aria-label="Select ' + esc(r.ambassadorCode) + '"></td>'
+        : '';
+      return '<tr>' + chk +
+        '<td>' + esc(r.ambassadorCode) + '</td><td>' + esc(r.ambassadorName) + '</td>' +
         '<td>' + esc(roleLabelPlain(r.recruiterType)) + '</td><td>' + fcfa(r.amount) + '</td>' +
         '<td>' + esc(r.dateLabel) + '</td></tr>';
     }).join('');
+
+    var headChk = selectable
+      ? '<th><input type="checkbox" id="rbStmtSelectAll" checked title="Select all lines" aria-label="Select all"></th>'
+      : '';
 
     return '<div class="rb-statement-doc">' +
       '<p style="margin:0 0 0.5rem;color:#64748b;font-size:0.85rem">' + esc(title) + ' · ' + new Date().toLocaleString() + '</p>' +
@@ -240,9 +320,22 @@
         '<span class="rb-statement-total-label">Total owed to ' + esc(group.name) + '</span>' +
         '<span class="rb-statement-total-amt">' + fcfa(group.total) + '</span>' +
       '</div>' +
+      (selectable ? '<p style="font-size:13px;color:#64748b;margin:8px 0">Check the lines you have paid, then use <strong>Mark selected paid</strong>.</p>' : '') +
       '<table class="rb-statement-table"><thead><tr>' +
+        headChk +
         '<th>Recruit code</th><th>Recruit name</th><th>Role</th><th>Amount</th><th>Date</th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function bindStatementCheckboxes() {
+    var all = document.getElementById('rbStmtSelectAll');
+    if (all) {
+      all.addEventListener('change', function () {
+        document.querySelectorAll('.rb-stmt-check').forEach(function (cb) {
+          cb.checked = all.checked;
+        });
+      });
+    }
   }
 
   function allPayeesHtml(groups) {
@@ -276,7 +369,12 @@
     var overlay = document.getElementById('rbPayeeOverlay');
     document.getElementById('rbOverlayTitle').textContent = 'Owed to ' + group.name;
     document.getElementById('rbOverlaySub').textContent = group.code + ' · ' + group.items.length + ' pending bonus(es)';
-    document.getElementById('rbOverlayBody').innerHTML = statementHtmlForGroup(group, 'Recruitment bonus statement');
+    document.getElementById('rbOverlayBody').innerHTML = statementHtmlForGroup(group, 'Recruitment bonus statement', true);
+    bindStatementCheckboxes();
+    var markAllBtn = document.getElementById('rbOverlayMarkAllPaid');
+    var markSelBtn = document.getElementById('rbOverlayMarkSelectedPaid');
+    if (markAllBtn) markAllBtn.hidden = false;
+    if (markSelBtn) markSelBtn.hidden = false;
     overlay.hidden = false;
     document.getElementById('rbOverlayClose').focus();
   }
@@ -288,6 +386,10 @@
     document.getElementById('rbOverlayTitle').textContent = 'All payee totals';
     document.getElementById('rbOverlaySub').textContent = lastPayeeGroups.length + ' payee(s) with pending recruitment bonuses';
     document.getElementById('rbOverlayBody').innerHTML = allPayeesHtml(lastPayeeGroups);
+    var markAllBtn = document.getElementById('rbOverlayMarkAllPaid');
+    var markSelBtn = document.getElementById('rbOverlayMarkSelectedPaid');
+    if (markAllBtn) markAllBtn.hidden = true;
+    if (markSelBtn) markSelBtn.hidden = true;
     overlay.hidden = false;
 
     document.querySelectorAll('.rb-open-payee').forEach(function (btn) {
@@ -414,6 +516,20 @@
     }
   }
 
+  function updatePaidTodaySummary() {
+    var el = document.getElementById('rbPaidTodayTotal');
+    if (!el) return;
+    var start = new Date();
+    start.setHours(0, 0, 0, 0);
+    var cutoff = start.getTime();
+    var todayTotal = lastPaidRows.filter(function (r) {
+      if (!r.paidAt) return false;
+      var t = r.paidAt.toDate ? r.paidAt.toDate().getTime() : new Date(r.paidAt).getTime();
+      return t >= cutoff;
+    }).reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
+    el.textContent = fcfa(todayTotal);
+  }
+
   function updateSummary(rows, groups) {
     var countEl = document.getElementById('rbPendingCount');
     var totalEl = document.getElementById('rbPendingTotal');
@@ -462,7 +578,7 @@
       : rows;
 
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="rb-empty">' +
+      tbody.innerHTML = '<tr><td colspan="10" class="rb-empty">' +
         (q ? 'No matches for “' + esc(query) + '”' : 'No pending recruitment bonus payments') +
         '</td></tr>';
       return;
@@ -477,6 +593,7 @@
       var policyTag = r.policyVersion ? '<br><small class="rb-meta">' + esc(r.policyVersion) + '</small>' : '';
 
       return '<tr data-rb-id="' + esc(r.id) + '">' +
+        '<td><input type="checkbox" class="rb-row-check" data-rb-id="' + esc(r.id) + '" aria-label="Select ' + esc(r.recruiterCode) + '"></td>' +
         '<td><strong class="rb-code">' + esc(r.recruiterCode) + '</strong></td>' +
         '<td><button type="button" class="rb-payee-name-btn" data-code="' + esc(r.recruiterCode) + '" title="View total owed to ' + esc(r.recruiterName) + '">' +
         esc(r.recruiterName) + '</button></td>' +
@@ -512,6 +629,162 @@
       });
     });
     bindCopyPhoneHandlers(tbody);
+    bindPendingSelectAll();
+  }
+
+  function bindPendingSelectAll() {
+    var selectAll = document.getElementById('rbSelectAll');
+    if (!selectAll || selectAll.dataset.bound) return;
+    selectAll.dataset.bound = '1';
+    selectAll.addEventListener('change', function () {
+      document.querySelectorAll('.rb-row-check').forEach(function (cb) {
+        cb.checked = selectAll.checked;
+      });
+    });
+  }
+
+  function getSelectedPendingRows() {
+    var ids = [];
+    document.querySelectorAll('.rb-row-check:checked').forEach(function (cb) {
+      ids.push(cb.getAttribute('data-rb-id'));
+    });
+    return lastRows.filter(function (r) { return ids.indexOf(r.id) !== -1; });
+  }
+
+  function renderPaidDailySummary(rows) {
+    var el = document.getElementById('rbPaidDailySummary');
+    if (!el) return;
+    var byDay = Object.create(null);
+    rows.forEach(function (r) {
+      var k = r.paidDayKey || 'unknown';
+      if (!byDay[k]) byDay[k] = { count: 0, total: 0 };
+      byDay[k].count++;
+      byDay[k].total += Number(r.amount) || 0;
+    });
+    var days = Object.keys(byDay).sort().reverse();
+    if (!days.length) {
+      el.innerHTML = '<p style="font-size:14px;color:#64748b;margin:0">No paid recruitment bonuses in this period.</p>';
+      return;
+    }
+    var grand = rows.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
+    var body = days.map(function (d) {
+      var g = byDay[d];
+      return '<tr><td><strong>' + esc(d) + '</strong></td><td>' + g.count + '</td><td><strong style="color:#059669">' + fcfa(g.total) + '</strong></td></tr>';
+    }).join('');
+    el.innerHTML =
+      '<p style="font-size:14px;color:#64748b;margin:0 0 8px">' + rows.length + ' payment(s) · <strong>' + fcfa(grand) + '</strong> marked paid</p>' +
+      '<div class="table-container"><table><thead><tr><th>Date</th><th>Payments</th><th>Total paid</th></tr></thead><tbody>' +
+      body + '</tbody></table></div>';
+  }
+
+  function populatePaidPayeeFilter(rows) {
+    var sel = document.getElementById('rbPaidPayeeFilter');
+    if (!sel) return;
+    var codes = [];
+    rows.forEach(function (r) {
+      if (r.recruiterCode && codes.indexOf(r.recruiterCode) === -1) codes.push(r.recruiterCode);
+    });
+    codes.sort();
+    var html = '<option value="">All payees</option>';
+    codes.forEach(function (c) {
+      html += '<option value="' + esc(c) + '"' + (rbPaidPayeeFilter === c ? ' selected' : '') + '>' + esc(c) + '</option>';
+    });
+    sel.innerHTML = html;
+  }
+
+  function renderPaidHistoryTable(rows) {
+    var tbody = document.getElementById('rbPaidHistoryBody');
+    if (!tbody) return;
+    var filtered = rbPaidPayeeFilter
+      ? rows.filter(function (r) { return r.recruiterCode === rbPaidPayeeFilter; })
+      : rows;
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="6">No paid bonuses in this period.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(function (r) {
+      return '<tr>' +
+        '<td>' + esc(r.paidLabel) + '</td>' +
+        '<td><code>' + esc(r.recruiterCode) + '</code><br><small>' + esc(r.recruiterName) + '</small></td>' +
+        '<td><code>' + esc(r.ambassadorCode) + '</code><br><small>' + esc(r.ambassadorName) + '</small></td>' +
+        '<td><strong>' + fcfa(r.amount) + '</strong></td>' +
+        '<td>' + roleBadge(r.recruiterType, r.recruiterCode) + '</td>' +
+        '<td><time datetime="' + esc(r.isoDate) + '">' + esc(r.dateLabel) + '</time></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  async function loadPaidHistory() {
+    var tbody = document.getElementById('rbPaidHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6">Loading paid history…</td></tr>';
+    try {
+      var snapshot;
+      try {
+        snapshot = await firebase.firestore().collection('admin_notifications')
+          .where('type', '==', 'rd_recruitment_bonus')
+          .where('status', '==', 'paid')
+          .orderBy('paid_at', 'desc')
+          .limit(300)
+          .get();
+      } catch (indexErr) {
+        snapshot = await firebase.firestore().collection('admin_notifications')
+          .where('type', '==', 'rd_recruitment_bonus')
+          .where('status', '==', 'paid')
+          .orderBy('created_at', 'desc')
+          .limit(300)
+          .get();
+      }
+
+      lastPaidRows = [];
+      if (snapshot.empty) {
+        renderPaidDailySummary([]);
+        renderPaidHistoryTable([]);
+        updatePaidTodaySummary();
+        tbody.innerHTML = '<tr><td colspan="6">No recruitment bonuses marked paid yet.</td></tr>';
+        return;
+      }
+
+      var docs = [];
+      snapshot.forEach(function (doc) { docs.push({ id: doc.id, data: doc.data() }); });
+      var uniqueCodes = [];
+      docs.forEach(function (item) {
+        var code = normCode(item.data.rd_code || item.data.recruiter_code);
+        if (code && uniqueCodes.indexOf(code) === -1) uniqueCodes.push(code);
+      });
+      await Promise.all(uniqueCodes.map(fetchPayeeContact));
+      lastPaidRows = docs.map(mapNotificationToRow);
+
+      var daysEl = document.getElementById('rbPaidDays');
+      var days = daysEl ? Number(daysEl.value) || 30 : 30;
+      var periodRows = filterRowsByDays(lastPaidRows, days, 'paidAt');
+      populatePaidPayeeFilter(periodRows);
+      renderPaidDailySummary(periodRows);
+      renderPaidHistoryTable(periodRows);
+      updatePaidTodaySummary();
+    } catch (error) {
+      console.error('[RecruitmentBonuses] paid history error:', error);
+      tbody.innerHTML = '<tr><td colspan="6">Error loading paid history. Try Refresh.</td></tr>';
+    }
+  }
+
+  function switchRbView(view) {
+    rbView = view;
+    var pendingView = document.getElementById('rbPendingView');
+    var paidView = document.getElementById('rbPaidView');
+    var tabPending = document.getElementById('rbTabPending');
+    var tabPaid = document.getElementById('rbTabPaid');
+    if (pendingView) pendingView.hidden = view !== 'pending';
+    if (paidView) paidView.hidden = view !== 'paid';
+    if (tabPending) {
+      tabPending.className = view === 'pending' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      tabPending.setAttribute('aria-selected', view === 'pending' ? 'true' : 'false');
+    }
+    if (tabPaid) {
+      tabPaid.className = view === 'paid' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+      tabPaid.setAttribute('aria-selected', view === 'paid' ? 'true' : 'false');
+    }
+    if (view === 'paid') loadPaidHistory();
   }
 
   async function loadRDPaymentsTable() {
@@ -520,7 +793,7 @@
 
     var panel = document.getElementById('recruitmentBonusPanel');
     if (panel) panel.setAttribute('aria-busy', 'true');
-    tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div><p>Loading…</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="loading"><div class="spinner"></div><p>Loading…</p></td></tr>';
 
     try {
       var snapshot = await firebase.firestore().collection('admin_notifications')
@@ -534,7 +807,8 @@
         lastPayeeGroups = [];
         updateSummary(lastRows, lastPayeeGroups);
         renderPayeeTotalsStrip(lastPayeeGroups);
-        tbody.innerHTML = '<tr><td colspan="9" class="rb-empty rb-empty-success">No pending recruitment bonus payments</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="rb-empty rb-empty-success">No pending recruitment bonus payments</td></tr>';
+        loadPaidHistory();
         return;
       }
 
@@ -548,38 +822,16 @@
       });
       await Promise.all(uniqueCodes.map(fetchPayeeContact));
 
-      lastRows = docs.map(function (item) {
-        var data = item.data;
-        var recruiterCode = normCode(data.rd_code || data.recruiter_code || 'N/A');
-        var created = data.created_at && data.created_at.toDate ? data.created_at.toDate() : null;
-        var contact = payeeContactCache[recruiterCode] || { phone: '', momo: '', source: '', email: '' };
-        return {
-          id: item.id,
-          recruiterCode: recruiterCode,
-          recruiterName: data.rd_name || data.recruiter_name || 'Unknown',
-          recruiterType: data.recruiter_type || (recruiterCode.startsWith('RD-') ? 'regional_director' : 'ambassador'),
-          ambassadorCode: data.ambassador_code || 'N/A',
-          ambassadorName: data.ambassador_name || 'N/A',
-          amount: data.amount || 0,
-          bonusTier: data.bonus_tier,
-          directRecruiter: data.direct_recruiter_code,
-          recruitingAmbassador: data.recruiting_ambassador_code,
-          policyVersion: data.policy_version,
-          dateLabel: created ? created.toLocaleString() : 'N/A',
-          isoDate: created ? created.toISOString() : '',
-          contact: contact,
-          phone: contact.momo || contact.phone,
-          email: contact.email
-        };
-      });
+      lastRows = docs.map(mapNotificationToRow);
 
       lastPayeeGroups = buildPayeeGroups(lastRows);
       updateSummary(lastRows, lastPayeeGroups);
       renderPayeeTotalsStrip(lastPayeeGroups);
       renderTable(lastRows);
+      loadPaidHistory();
     } catch (error) {
       console.error('[RecruitmentBonuses] load error:', error);
-      tbody.innerHTML = '<tr><td colspan="9" class="rb-empty rb-empty-error">Error loading recruitment bonuses.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="rb-empty rb-empty-error">Error loading recruitment bonuses.</td></tr>';
     } finally {
       if (panel) panel.setAttribute('aria-busy', 'false');
     }
@@ -605,34 +857,63 @@
     }
   }
 
-  async function markAllForActivePayee() {
-    var group = getActiveGroup();
-    if (!group || !group.items.length) {
-      if (typeof showAlert === 'function') showAlert('Open a payee statement first', 'warning');
+  async function markSelectedRows(rows, contextLabel) {
+    if (!rows.length) {
+      if (typeof showAlert === 'function') showAlert('Select at least one payment', 'warning');
       return;
     }
-    var lines = group.items.map(function (r) {
-      return '• ' + r.ambassadorCode + ' — ' + fcfa(r.amount);
+    var total = rows.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
+    var payeeCodes = [];
+    rows.forEach(function (r) {
+      if (payeeCodes.indexOf(r.recruiterCode) === -1) payeeCodes.push(r.recruiterCode);
+    });
+    var lines = rows.slice(0, 12).map(function (r) {
+      return '• ' + r.recruiterCode + ' / ' + r.ambassadorCode + ' — ' + fcfa(r.amount);
     }).join('\n');
+    var more = rows.length > 12 ? '\n… and ' + (rows.length - 12) + ' more' : '';
     if (!confirm(
-      'Mark ALL ' + group.items.length + ' recruitment bonus(es) as PAID for ' + group.name +
-      ' (' + group.code + ')?\n\nTotal: ' + fcfa(group.total) + '\n\n' + lines +
+      'Mark ' + rows.length + ' recruitment bonus payment(s) as PAID?\n\n' +
+      (contextLabel ? contextLabel + '\n\n' : '') +
+      payeeCodes.length + ' payee(s) · Total: ' + fcfa(total) + '\n\n' + lines + more +
       '\n\nOnly continue after MoMo is sent.'
     )) return;
 
     var ok = 0;
     var fail = 0;
-    for (var i = 0; i < group.items.length; i++) {
-      var r = group.items[i];
-      var success = await markRDPaymentPaid(r.id, r.recruiterCode, r.amount, true);
+    for (var i = 0; i < rows.length; i++) {
+      var success = await markRDPaymentPaid(rows[i].id, rows[i].recruiterCode, rows[i].amount, true);
       if (success) ok++; else fail++;
     }
     closeOverlay();
     await loadRDPaymentsTable();
     if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
     if (typeof showAlert === 'function') {
-      showAlert('Payee batch: ' + ok + ' marked paid' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warning' : 'success');
+      showAlert(ok + ' marked paid' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warning' : 'success');
     }
+  }
+
+  async function markSelectedFromOverlay() {
+    var group = getActiveGroup();
+    if (!group) return;
+    var ids = [];
+    document.querySelectorAll('#rbOverlayBody .rb-stmt-check:checked').forEach(function (cb) {
+      ids.push(cb.getAttribute('data-rb-id'));
+    });
+    var rows = group.items.filter(function (r) { return ids.indexOf(r.id) !== -1; });
+    await markSelectedRows(rows, 'Payee: ' + group.name + ' (' + group.code + ')');
+  }
+
+  function markSelectedPending() {
+    markSelectedRows(getSelectedPendingRows(), 'From pending queue');
+  }
+
+  async function markAllForActivePayee() {
+    var group = getActiveGroup();
+    if (!group || !group.items.length) {
+      if (typeof showAlert === 'function') showAlert('Open a payee statement first', 'warning');
+      return;
+    }
+    await markSelectedRows(group.items.slice(), 'All lines for ' + group.name + ' (' + group.code + ')');
   }
 
   async function markAllPendingRecruitmentBonuses() {
@@ -640,26 +921,7 @@
       if (typeof showAlert === 'function') showAlert('No pending recruitment bonuses', 'warning');
       return;
     }
-    var total = lastRows.reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
-    if (!confirm(
-      'Mark ALL ' + lastRows.length + ' pending recruitment bonus line(s) as PAID?\n\n' +
-      lastPayeeGroups.length + ' payee(s) · Grand total: ' + fcfa(total) +
-      '\n\nOnly continue after all MoMo transfers are complete.'
-    )) return;
-
-    var ok = 0;
-    var fail = 0;
-    var rows = lastRows.slice();
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      var success = await markRDPaymentPaid(r.id, r.recruiterCode, r.amount, true);
-      if (success) ok++; else fail++;
-    }
-    await loadRDPaymentsTable();
-    if (typeof loadPaymentParitySummary === 'function') loadPaymentParitySummary();
-    if (typeof showAlert === 'function') {
-      showAlert('All pending: ' + ok + ' marked paid' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warning' : 'success');
-    }
+    await markSelectedRows(lastRows.slice(), 'Entire pending queue');
   }
 
   function copyAllPhones() {
@@ -718,6 +980,50 @@
       markAll.dataset.bound = '1';
       markAll.addEventListener('click', markAllPendingRecruitmentBonuses);
     }
+    var markSelected = document.getElementById('rbMarkSelectedBtn');
+    if (markSelected && !markSelected.dataset.bound) {
+      markSelected.dataset.bound = '1';
+      markSelected.addEventListener('click', markSelectedPending);
+    }
+    var tabPending = document.getElementById('rbTabPending');
+    if (tabPending && !tabPending.dataset.bound) {
+      tabPending.dataset.bound = '1';
+      tabPending.addEventListener('click', function () { switchRbView('pending'); });
+    }
+    var tabPaid = document.getElementById('rbTabPaid');
+    if (tabPaid && !tabPaid.dataset.bound) {
+      tabPaid.dataset.bound = '1';
+      tabPaid.addEventListener('click', function () { switchRbView('paid'); });
+    }
+    var paidRefresh = document.getElementById('rbPaidRefreshBtn');
+    if (paidRefresh && !paidRefresh.dataset.bound) {
+      paidRefresh.dataset.bound = '1';
+      paidRefresh.addEventListener('click', loadPaidHistory);
+    }
+    var paidDays = document.getElementById('rbPaidDays');
+    if (paidDays && !paidDays.dataset.bound) {
+      paidDays.dataset.bound = '1';
+      paidDays.addEventListener('change', function () {
+        if (rbView === 'paid') {
+          var days = Number(paidDays.value) || 30;
+          var periodRows = filterRowsByDays(lastPaidRows, days, 'paidAt');
+          populatePaidPayeeFilter(periodRows);
+          renderPaidDailySummary(periodRows);
+          renderPaidHistoryTable(periodRows);
+        }
+      });
+    }
+    var paidPayee = document.getElementById('rbPaidPayeeFilter');
+    if (paidPayee && !paidPayee.dataset.bound) {
+      paidPayee.dataset.bound = '1';
+      paidPayee.addEventListener('change', function (e) {
+        rbPaidPayeeFilter = e.target.value || '';
+        var daysEl = document.getElementById('rbPaidDays');
+        var days = daysEl ? Number(daysEl.value) || 30 : 30;
+        var periodRows = filterRowsByDays(lastPaidRows, days, 'paidAt');
+        renderPaidHistoryTable(periodRows);
+      });
+    }
   }
 
   window.loadRDPaymentsTable = loadRDPaymentsTable;
@@ -728,6 +1034,7 @@
 
   window.AdminRecruitmentBonuses = {
     load: loadRDPaymentsTable,
+    loadPaidHistory: loadPaidHistory,
     markPaid: markRDPaymentPaid,
     openPayeeStatement: openPayeeStatement,
     openAllPayees: openAllPayeesOverlay
