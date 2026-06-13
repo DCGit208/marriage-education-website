@@ -893,6 +893,22 @@
         .rb-empty-success { color: var(--success); }
         .rb-empty-error { color: var(--danger); }
         .rb-pay-btn:focus-visible { outline: 3px solid #059669; outline-offset: 2px; }
+        .rb-payee-lookup { max-width: 220px; flex: 0 1 220px; }
+        .rb-payee-totals-strip { padding: 0.75rem 1.5rem 1rem; background: #fff; border-bottom: 1px solid rgba(245,158,11,0.15); }
+        .rb-payee-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .rb-payee-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.75rem; border: 1px solid rgba(245,158,11,0.35); border-radius: 999px; background: #fffbeb; cursor: pointer; font: inherit; }
+        .rb-payee-name-btn { background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--primary); cursor: pointer; text-decoration: underline; }
+        .rb-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(15,23,42,0.55); }
+        .rb-overlay[hidden] { display: none !important; }
+        .rb-overlay-dialog { background: #fff; border-radius: 16px; width: min(720px,100%); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+        .rb-overlay-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: #fff7ed; display: flex; justify-content: space-between; }
+        .rb-overlay-actions { padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .rb-overlay-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; }
+        .rb-statement-total { display: flex; justify-content: space-between; padding: 1rem; background: #ecfdf5; border: 2px solid #6ee7b7; border-radius: 12px; margin-bottom: 1rem; }
+        .rb-statement-total-amt { font-size: 1.75rem; font-weight: 800; color: #047857; }
+        .rb-statement-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .rb-statement-table th, .rb-statement-table td { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--border); text-align: left; }
+        @media print { body.rb-printing * { visibility: hidden; } body.rb-printing #rbPrintRoot, body.rb-printing #rbPrintRoot * { visibility: visible; } body.rb-printing #rbPrintRoot { position: absolute; left: 0; top: 0; width: 100%; } }
 
         .parity-detail-row {
             display: grid;
@@ -1675,11 +1691,19 @@
                             <div class="rb-summary-label">Total to send</div>
                             <div class="rb-summary-value rb-total" id="rbPendingTotal">—</div>
                         </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Unique payees</div>
+                            <div class="rb-summary-value" id="rbPayeeCount">—</div>
+                        </div>
                     </div>
 
                     <div class="rb-toolbar">
                         <label class="sr-only" for="rbSearchInput">Search recruitment bonuses</label>
                         <input type="search" id="rbSearchInput" class="rb-search" placeholder="Search code, name, or phone…" autocomplete="off">
+                        <label class="sr-only" for="rbPayeeLookup">Look up payee total owed</label>
+                        <input type="search" id="rbPayeeLookup" class="rb-search rb-payee-lookup" placeholder="Payee name → total owed…" autocomplete="off" list="rbPayeeLookupList">
+                        <datalist id="rbPayeeLookupList"></datalist>
+                        <button type="button" class="btn btn-primary btn-sm" id="rbPayeeTotalsBtn"><i class="fas fa-users"></i> Payee totals</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="rbCopyAllPhones" title="Copy all payee numbers">
                             <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
                         </button>
@@ -1687,6 +1711,8 @@
                             <i class="fas fa-sync" aria-hidden="true"></i> Refresh
                         </button>
                     </div>
+
+                    <div id="rbPayeeTotalsStrip" class="rb-payee-totals-strip" hidden aria-label="Totals owed by payee"></div>
 
                     <div class="table-container">
                         <table aria-describedby="rbPanelTitle">

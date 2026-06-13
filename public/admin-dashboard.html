@@ -1071,9 +1071,235 @@
             outline-offset: 2px;
         }
 
+        .rb-payee-lookup { max-width: 220px; flex: 0 1 220px; }
+
+        .rb-payee-totals-strip {
+            padding: 0.75rem 1.5rem 1rem;
+            background: #fff;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .rb-payee-totals-strip h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #92400e;
+            margin: 0 0 0.65rem;
+        }
+
+        .rb-payee-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .rb-payee-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.75rem;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 999px;
+            background: #fffbeb;
+            cursor: pointer;
+            font: inherit;
+            color: #1f2937;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .rb-payee-chip:hover,
+        .rb-payee-chip:focus-visible {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            outline: none;
+        }
+
+        .rb-payee-chip-name { font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rb-payee-chip-amt { color: #059669; font-weight: 700; white-space: nowrap; }
+
+        .rb-payee-name-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            text-align: left;
+            text-decoration: underline;
+            text-decoration-color: rgba(102, 126, 234, 0.35);
+        }
+
+        .rb-payee-name-btn:hover,
+        .rb-payee-name-btn:focus-visible {
+            text-decoration-color: var(--primary);
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        .rb-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+        }
+
+        .rb-overlay[hidden] { display: none !important; }
+
+        .rb-overlay-dialog {
+            background: #fff;
+            border-radius: 16px;
+            width: min(720px, 100%);
+            max-height: min(90vh, 900px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .rb-overlay-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            background: #fff7ed;
+        }
+
+        .rb-overlay-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: #92400e;
+        }
+
+        .rb-overlay-sub {
+            margin: 0.35rem 0 0;
+            color: #57534e;
+            font-size: 0.9rem;
+        }
+
+        .rb-overlay-close {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .rb-overlay-close:hover,
+        .rb-overlay-close:focus-visible {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            outline: none;
+        }
+
+        .rb-overlay-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #fafafa;
+        }
+
+        .rb-overlay-body {
+            padding: 1.25rem 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .rb-statement-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.15rem;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 2px solid #6ee7b7;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .rb-statement-total-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .rb-statement-total-amt {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #047857;
+        }
+
+        .rb-statement-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+
+        .rb-statement-meta dt { color: #78716c; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
+        .rb-statement-meta dd { margin: 0.15rem 0 0; font-weight: 600; color: #1f2937; }
+
+        .rb-statement-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .rb-statement-table th,
+        .rb-statement-table td {
+            padding: 0.65rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .rb-statement-table th {
+            background: #f8fafc;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .rb-all-payees-table .rb-statement-table tbody tr {
+            cursor: pointer;
+        }
+
+        .rb-all-payees-table .rb-statement-table tbody tr:hover {
+            background: #fffbeb;
+        }
+
         @media (max-width: 768px) {
             .rb-panel-header { flex-direction: column; }
             .rb-toolbar { flex-direction: column; align-items: stretch; }
+            .rb-payee-lookup { max-width: none; flex: 1; }
+        }
+
+        @media print {
+            body.rb-printing * { visibility: hidden; }
+            body.rb-printing #rbPrintRoot,
+            body.rb-printing #rbPrintRoot * { visibility: visible; }
+            body.rb-printing #rbPrintRoot {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 1rem;
+            }
         }
 
         .parity-detail-row {
@@ -1851,11 +2077,21 @@
                             <div class="rb-summary-label">Total to send</div>
                             <div class="rb-summary-value rb-total" id="rbPendingTotal">—</div>
                         </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Unique payees</div>
+                            <div class="rb-summary-value" id="rbPayeeCount">—</div>
+                        </div>
                     </div>
 
                     <div class="rb-toolbar">
                         <label class="sr-only" for="rbSearchInput">Search recruitment bonuses</label>
                         <input type="search" id="rbSearchInput" class="rb-search" placeholder="Search code, name, or phone…" autocomplete="off">
+                        <label class="sr-only" for="rbPayeeLookup">Look up payee total owed</label>
+                        <input type="search" id="rbPayeeLookup" class="rb-search rb-payee-lookup" placeholder="Payee name → total owed…" autocomplete="off" list="rbPayeeLookupList">
+                        <datalist id="rbPayeeLookupList"></datalist>
+                        <button type="button" class="btn btn-primary btn-sm" id="rbPayeeTotalsBtn" title="View all payee totals">
+                            <i class="fas fa-users" aria-hidden="true"></i> Payee totals
+                        </button>
                         <button type="button" class="btn btn-secondary btn-sm" id="rbCopyAllPhones" title="Copy all payee numbers">
                             <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
                         </button>
@@ -1863,6 +2099,8 @@
                             <i class="fas fa-sync" aria-hidden="true"></i> Refresh
                         </button>
                     </div>
+
+                    <div id="rbPayeeTotalsStrip" class="rb-payee-totals-strip" hidden aria-label="Totals owed by payee"></div>
 
                     <div class="table-container">
                         <table aria-describedby="rbPanelTitle">
