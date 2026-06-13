@@ -168,7 +168,13 @@
 
   window.getBoardFieldMarkdown = function (field) {
     if (!field) return '';
-    if (field._boardRichEditor) return field._boardRichEditor.getMarkdown().trim();
-    return (field.value || '').trim();
+    let md = '';
+    if (field._boardRichEditor) {
+      field._boardRichEditor.sync();
+      md = field._boardRichEditor.getMarkdown();
+    } else {
+      md = field.value || '';
+    }
+    return md.replace(/\u200b/g, '').trim();
   };
 })();

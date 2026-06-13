@@ -13,7 +13,7 @@
     _nuking = true;
     const go = () => caches.keys()
       .then(keys => Promise.all(keys.map(k => caches.delete(k))))
-      .then(() => window.location.reload(true));
+      .then(() => window.location.reload());
     if (navigator.serviceWorker) {
       navigator.serviceWorker.getRegistrations()
         .then(regs => Promise.all(regs.map(r => r.unregister())))
@@ -30,11 +30,6 @@
         const stored = localStorage.getItem('sbd-build-version');
         if (!stored) {
           localStorage.setItem('sbd-build-version', fresh);
-          // If SW already controlling, nuke so we start clean
-          if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-            console.log('[SW] First run — nuking stale cache…');
-            _nukeAndReload();
-          }
           return;
         }
         if (stored === fresh) return;
@@ -45,10 +40,15 @@
       .catch(() => { /* offline — skip */ });
   }
 
-  // Run on load and every time the PWA comes to foreground
-  _checkVersionFromNetwork();
+  // Run on load and when returning to foreground (debounced — iOS fires visibility often)
+  let _versionCheckTimer = null;
+  function scheduleVersionCheck() {
+    clearTimeout(_versionCheckTimer);
+    _versionCheckTimer = setTimeout(_checkVersionFromNetwork, 600);
+  }
+  scheduleVersionCheck();
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') _checkVersionFromNetwork();
+    if (document.visibilityState === 'visible') scheduleVersionCheck();
   });
 
   if (!('serviceWorker' in navigator)) return;

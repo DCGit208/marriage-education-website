@@ -10,6 +10,7 @@ const {
   normalizeReferralCode,
   POLICY_VERSION
 } = require('../functions/recruitment-bonus-policy');
+const { isExcludedUplineCode } = require('../functions/upline-exclusions');
 
 let passed = 0;
 let failed = 0;
@@ -27,6 +28,7 @@ function ok(name, cond, detail) {
 ok('policy version set', POLICY_VERSION === '2026-03-v3');
 ok('normalize underscores', normalizeReferralCode('AMB_KONI_8321') === 'AMB-KONI-8321');
 ok('normalize lowercase', normalizeReferralCode('rd-gust-4230') === 'RD-GUST-4230');
+ok('RD-GUST excluded from uplines', isExcludedUplineCode('RD-GUST-4230'));
 
 const n0 = computeUplineShareAmounts(0);
 ok('N=0 org retains 1500', n0.orgRetained === 1500 && n0.totalUpline === 0);

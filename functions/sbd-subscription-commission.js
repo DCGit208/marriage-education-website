@@ -4,6 +4,8 @@
  * See docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md
  */
 
+const { isExcludedUplineCode } = require('./upline-exclusions');
+
 const POLICY_VERSION = '2026-04-v1';
 const REVENUE_BASE_FCFA = 5000;
 const DIRECT_COMMISSION_FCFA = 500;
@@ -22,7 +24,7 @@ function normalizeCode(raw) {
 function pickRdCode(...candidates) {
   for (const code of candidates) {
     const n = normalizeCode(code);
-    if (n.startsWith('RD-')) return n;
+    if (n.startsWith('RD-') && !isExcludedUplineCode(n)) return n;
   }
   return null;
 }
@@ -76,7 +78,7 @@ async function resolveRdOverrideCode(db, seller) {
   const seen = new Set([seller.id]);
   while (current && !seen.has(current)) {
     seen.add(current);
-    if (current.startsWith('RD-')) return current;
+    if (current.startsWith('RD-') && !isExcludedUplineCode(current)) return current;
     if (!current.startsWith('AMB-') && !current.startsWith('SNR-')) break;
     const snap = await db.collection('ambassadors').doc(current).get();
     if (!snap.exists) break;
