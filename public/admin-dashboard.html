@@ -2081,9 +2081,19 @@
                             <div class="rb-summary-label">Unique payees</div>
                             <div class="rb-summary-value" id="rbPayeeCount">—</div>
                         </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Paid today</div>
+                            <div class="rb-summary-value" id="rbPaidTodayTotal" style="color:#059669">—</div>
+                        </div>
                     </div>
 
-                    <div class="rb-toolbar">
+                    <div class="rb-view-tabs" role="tablist" aria-label="Recruitment bonus views" style="display:flex;gap:8px;margin:0 0 12px">
+                        <button type="button" role="tab" id="rbTabPending" class="btn btn-primary btn-sm" aria-selected="true">Pending queue</button>
+                        <button type="button" role="tab" id="rbTabPaid" class="btn btn-secondary btn-sm" aria-selected="false">Paid history</button>
+                    </div>
+
+                    <div id="rbPendingView">
+                    <div class="rb-toolbar" id="rbPendingToolbar">
                         <label class="sr-only" for="rbSearchInput">Search recruitment bonuses</label>
                         <input type="search" id="rbSearchInput" class="rb-search" placeholder="Search code, name, or phone…" autocomplete="off">
                         <label class="sr-only" for="rbPayeeLookup">Look up payee total owed</label>
@@ -2095,8 +2105,11 @@
                         <button type="button" class="btn btn-secondary btn-sm" id="rbCopyAllPhones" title="Copy all payee numbers">
                             <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
                         </button>
-                        <button type="button" class="btn btn-success btn-sm" id="rbMarkAllPendingBtn" title="Mark every pending recruitment bonus line as paid">
-                            <i class="fas fa-check-double" aria-hidden="true"></i> Mark all pending paid
+                        <button type="button" class="btn btn-success btn-sm" id="rbMarkSelectedBtn" title="Mark checked rows as paid">
+                            <i class="fas fa-check" aria-hidden="true"></i> Mark selected paid
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" id="rbMarkAllPendingBtn" title="Mark every line in the pending queue as paid">
+                            <i class="fas fa-check-double" aria-hidden="true"></i> Mark entire queue paid
                         </button>
                         <button type="button" class="btn btn-success btn-sm" id="rbRefreshBtn">
                             <i class="fas fa-sync" aria-hidden="true"></i> Refresh
@@ -2109,6 +2122,7 @@
                         <table aria-describedby="rbPanelTitle">
                             <thead>
                                 <tr>
+                                    <th scope="col"><input type="checkbox" id="rbSelectAll" title="Select all rows" aria-label="Select all"></th>
                                     <th scope="col">Payee code</th>
                                     <th scope="col">Payee name</th>
                                     <th scope="col">Role</th>
@@ -2122,13 +2136,48 @@
                             </thead>
                             <tbody id="rdPaymentsTableBody">
                                 <tr>
-                                    <td colspan="9" class="loading">
+                                    <td colspan="10" class="loading">
                                         <div class="spinner"></div>
                                         <p>Loading recruitment bonus payments…</p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    </div>
+
+                    <div id="rbPaidView" hidden>
+                        <p style="font-size:14px;color:#64748b;margin:0 0 12px">Bonuses you marked as paid from this panel — grouped by day below.</p>
+                        <div class="rb-toolbar" style="margin-bottom:12px">
+                            <label style="font-size:14px">Period
+                                <select id="rbPaidDays" style="margin-left:6px">
+                                    <option value="1">Today</option>
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">All loaded</option>
+                                </select>
+                            </label>
+                            <label style="font-size:14px;margin-left:12px">Payee
+                                <select id="rbPaidPayeeFilter" style="margin-left:6px"><option value="">All payees</option></select>
+                            </label>
+                            <button type="button" class="btn btn-secondary btn-sm" id="rbPaidRefreshBtn" style="margin-left:12px">
+                                <i class="fas fa-sync"></i> Refresh paid history
+                            </button>
+                        </div>
+                        <div id="rbPaidDailySummary" style="margin-bottom:1rem"></div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Paid when</th><th>Payee</th><th>Recruit</th><th>Amount</th><th>Role</th><th>Credited</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rbPaidHistoryBody">
+                                    <tr><td colspan="6">Switch to Paid history to load.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
                 
