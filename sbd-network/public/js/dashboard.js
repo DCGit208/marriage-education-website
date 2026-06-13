@@ -653,10 +653,21 @@ function showWhatsNew(entry, onDismiss) {
   titleEl.textContent = `v${entry.version} — ${entry.title}`;
 
   list.innerHTML = (entry.changes || []).map(c => {
-    // Extract the leading emoji (if any) and the rest of the text
-    const match = c.match(/^([\p{Emoji}\p{Emoji_Presentation}]+)\s*(.*)/u);
-    const icon = match ? match[1] : '✦';
-    const text = match ? match[2] : c;
+    let icon = '✦';
+    let text = c;
+    try {
+      const match = c.match(/^([\p{Emoji}\p{Emoji_Presentation}]+)\s*(.*)/u);
+      if (match) {
+        icon = match[1];
+        text = match[2];
+      }
+    } catch (_) {
+      const space = c.indexOf(' ');
+      if (space > 0) {
+        icon = c.slice(0, space);
+        text = c.slice(space + 1);
+      }
+    }
     return `<li style="display:flex;gap:12px;align-items:flex-start;">
       <span style="flex-shrink:0;font-size:1.1rem;line-height:1.4;">${escapeHtml(icon)}</span>
       <span style="font-size:0.9rem;color:var(--text-secondary);line-height:1.5;">${escapeHtml(text)}</span>
@@ -684,19 +695,10 @@ if (typeof initPTR === 'function') {
   initPTR(function () { window.location.reload(); });
 }
 
-// Network connectivity monitoring
-window.addEventListener('online', () => {
-  console.log('Connection restored');
-  // Auto-reload if user was stuck on error
-  if (loadingOverlay && loadingOverlay.style.display === 'none') {
-    window.location.reload();
-  }
-});
-
+// Network connectivity — do not auto-reload on iOS (flapping online events loop-crash the PWA)
 window.addEventListener('offline', () => {
   console.warn('Connection lost');
   if (loadingOverlay) showLoading(false);
-  alert('You are offline. Please check your internet connection.');
 });
 // Force-remove Teleios from dashboard
 setTimeout(() => {

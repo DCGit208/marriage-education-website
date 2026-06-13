@@ -912,6 +912,15 @@
   cursor: not-allowed;
 }
 
+.comment-item.comment-pending {
+  opacity: 0.72;
+}
+
+.comment-item.comment-pending .comment-date::after {
+  content: ' · sending';
+  font-style: italic;
+}
+
 .comment-send-btn:focus-visible {
   outline: 2px solid rgba(255,255,255,0.4);
   outline-offset: 2px;

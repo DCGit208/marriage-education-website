@@ -88,15 +88,13 @@ Example: N=4 → 375+375+375+375=1500. N=5 → 300×5=1500.
 | # | Code | Name |
 |---|------|------|
 | 1 | AMB-GLOR-1135 | Glory Koni |
-| 2 | AMB-EVEL-6730 | Evelyn Ngen |
-| 3 | RD-GUST-4230 | Achu Gustave |
+| 2 | AMB-EVEL-6730 | Evelyn Ngen (top upline — no parent above) |
 
 | Payee | Pool | FCFA |
 |-------|------|------|
 | AMB-KONI-8321 | A direct | 1,500 |
 | AMB-GLOR-1135 | B ÷ 3 | 500 |
 | AMB-EVEL-6730 | B ÷ 3 | 500 |
-| RD-GUST-4230 | B ÷ 3 | 500 |
 | **Total** | | **3,000** |
 
 ```
@@ -104,8 +102,7 @@ AMB-NYUY-6017
     │ 1,500 direct
 AMB-KONI-8321
     ├── AMB-GLOR-1135   500
-    ├── AMB-EVEL-6730   500
-    └── RD-GUST-4230    500
+    └── AMB-EVEL-6730   500
 ```
 
 ### 5.2 One upline only
@@ -126,15 +123,11 @@ AMB-KONI-8321
 | Upline 2 | 750 |
 | **Total** | **3,000** |
 
-### 5.4 RD at top of chain (Executive gets nothing)
+### 5.4 RD at top of chain (when a real RD exists)
 
-If `RD-GUST-4230` has Executive sponsor `AMB-EXEC-XXXX`:
+When the upline walk reaches a production `RD-…` code, that RD receives an upline share and the walk **stops** (Executive sponsor above RD gets **0**).
 
-| Payee | FCFA |
-|-------|------|
-| Direct recruiter | 1,500 |
-| Uplines (Amb · Senior · RD only) | Same as §5.1 — **3 uplines max in example** |
-| Executive sponsor | **0** |
+Test / inactive RD codes (e.g. `RD-GUST-4230`) are excluded in `functions/upline-exclusions.js` and must not appear in payout chains.
 
 Executive economics come from **replicating RD infrastructure**, not signup upline shares.
 

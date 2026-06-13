@@ -261,14 +261,17 @@ async function editPost(postId, newContent) {
 }
 
 // Add a comment to a post
-async function addComment(postId, text, replyTo = null) {
+async function addComment(postId, text, replyTo = null, options = {}) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not authenticated');
   
   try {
-    // Get user data
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const userData = userDoc.data();
+    let authorName = options.authorName || null;
+    if (!authorName) {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      const userData = userDoc.data();
+      authorName = userData.name || user.displayName || 'Anonymous';
+    }
     
     // Parse mentions and hashtags
     const mentionUsernames = typeof parseMentions === 'function' ? parseMentions(text) : [];
@@ -281,7 +284,7 @@ async function addComment(postId, text, replyTo = null) {
     const commentData = {
       postId: postId,
       authorId: user.uid,
-      authorName: userData.name || user.displayName || 'Anonymous',
+      authorName,
       text: text,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       ...(mentionedUserIds.length > 0 ? { mentions: mentionedUserIds } : {}),
@@ -289,12 +292,14 @@ async function addComment(postId, text, replyTo = null) {
       ...(replyTo ? { replyTo } : {}),
     };
     
-    // Add comment to Firestore
-    const commentRef = await db.collection('comments').add(commentData);
+    // Write comment + read post metadata in parallel
+    const postRef = db.collection('posts').doc(postId);
+    const [commentRef, postDoc] = await Promise.all([
+      db.collection('comments').add(commentData),
+      postRef.get(),
+    ]);
 
-    // Fetch post data first, then update commentCount
-    const postDoc = await db.collection('posts').doc(postId).get();
-    await db.collection('posts').doc(postId).update({
+    await postRef.update({
       commentCount: firebase.firestore.FieldValue.increment(1)
     });
 
@@ -319,10 +324,10 @@ async function addComment(postId, text, replyTo = null) {
 
       // Notify mentioned users (fire-and-forget)
       if (mentionedUserIds.length > 0 && boardId) {
-        const boardDoc = await db.collection('boards').doc(boardId).get();
-        const boardName = boardDoc.exists ? (boardDoc.data().title || boardId) : boardId;
-        _writeMentionNotifications(commentRef.id, boardId, boardName, commentData.authorName, text, mentionedUserIds, 'comment', postId)
-          .catch(e => console.warn('[Notifications] Mention notification error:', e));
+        db.collection('boards').doc(boardId).get().then((boardDoc) => {
+          const boardName = boardDoc.exists ? (boardDoc.data().title || boardId) : boardId;
+          return _writeMentionNotifications(commentRef.id, boardId, boardName, commentData.authorName, text, mentionedUserIds, 'comment', postId);
+        }).catch(e => console.warn('[Notifications] Mention notification error:', e));
       }
 
       // FCM push to all group members

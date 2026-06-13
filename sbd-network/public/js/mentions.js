@@ -176,11 +176,32 @@ function initMentionAutocomplete(textarea, boardId = null) {
   function positionAutocomplete() {
     if (!autocompleteDiv) return;
     
-    const rect = textarea.getBoundingClientRect();
+    const rich = textarea._boardRichEditor;
+    const rect = rich?.surface
+      ? rich.surface.getBoundingClientRect()
+      : textarea.getBoundingClientRect();
     autocompleteDiv.style.position = 'fixed';
     autocompleteDiv.style.left = rect.left + 'px';
     autocompleteDiv.style.top = (rect.bottom + 5) + 'px';
     autocompleteDiv.style.width = Math.min(300, rect.width) + 'px';
+  }
+
+  function getTextAndCursor() {
+    const rich = textarea._boardRichEditor;
+    if (rich) {
+      rich.sync();
+      const text = textarea.value || '';
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && rich.surface.contains(sel.anchorNode)) {
+        const range = sel.getRangeAt(0);
+        const pre = range.cloneRange();
+        pre.selectNodeContents(rich.surface);
+        pre.setEnd(range.endContainer, range.endOffset);
+        return { text, cursorPos: pre.toString().length };
+      }
+      return { text, cursorPos: text.length };
+    }
+    return { text: textarea.value || '', cursorPos: textarea.selectionStart };
   }
   
   // Show autocomplete with results
@@ -231,21 +252,26 @@ function initMentionAutocomplete(textarea, boardId = null) {
     if (!currentResults[index]) return;
     
     const user = currentResults[index];
-    const text = textarea.value;
+    const rich = textarea._boardRichEditor;
+    const { text, cursorPos } = getTextAndCursor();
     const beforeMention = text.substring(0, mentionStartPos);
-    const afterMention = text.substring(textarea.selectionStart);
-    
-    textarea.value = beforeMention + '@' + user.username + ' ' + afterMention;
-    textarea.selectionStart = textarea.selectionEnd = beforeMention.length + user.username.length + 2;
+    const afterMention = text.substring(cursorPos);
+    const next = beforeMention + '@' + user.username + ' ' + afterMention;
+
+    if (rich) {
+      rich.setMarkdown(next);
+      rich.focus();
+    } else {
+      textarea.value = next;
+      textarea.selectionStart = textarea.selectionEnd = beforeMention.length + user.username.length + 2;
+      textarea.focus();
+    }
     
     hideAutocomplete();
-    textarea.focus();
   }
   
-  // Handle input
-  textarea.addEventListener('input', async (e) => {
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
+  async function handleMentionInput() {
+    const { text, cursorPos } = getTextAndCursor();
     
     // Find @ before cursor
     let atPos = -1;
@@ -278,26 +304,53 @@ function initMentionAutocomplete(textarea, boardId = null) {
     // Search for users
     const results = await searchUsersForMention(query, boardId);
     showAutocomplete(results);
-  });
-  
-  // Handle keyboard navigation
-  textarea.addEventListener('keydown', (e) => {
-    if (!autocompleteDiv || autocompleteDiv.style.display === 'none') return;
+  }
+
+  function handleMentionKeydown(e) {
+    if (!autocompleteDiv || autocompleteDiv.style.display === 'none') return false;
     
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       selectedIndex = Math.min(selectedIndex + 1, currentResults.length - 1);
       updateSelection();
-    } else if (e.key === 'ArrowUp') {
+      return true;
+    }
+    if (e.key === 'ArrowUp') {
       e.preventDefault();
       selectedIndex = Math.max(selectedIndex - 1, 0);
       updateSelection();
-    } else if (e.key === 'Enter' && currentResults.length > 0) {
+      return true;
+    }
+    if (e.key === 'Enter' && currentResults.length > 0) {
       e.preventDefault();
       selectMention(selectedIndex);
-    } else if (e.key === 'Escape') {
-      hideAutocomplete();
+      return true;
     }
+    if (e.key === 'Escape') {
+      hideAutocomplete();
+      return true;
+    }
+    return false;
+  }
+  
+  // Handle input (rich editor syncs textarea — listen on one source only)
+  const richSurface = textarea._boardRichEditor?.surface;
+  if (richSurface) {
+    richSurface.addEventListener('input', () => {
+      handleMentionInput();
+    });
+    richSurface.addEventListener('keydown', (e) => {
+      handleMentionKeydown(e);
+    });
+  } else {
+    textarea.addEventListener('input', () => {
+      handleMentionInput();
+    });
+  }
+  
+  // Handle keyboard navigation
+  textarea.addEventListener('keydown', (e) => {
+    handleMentionKeydown(e);
   });
   
   // Update selected item styling
@@ -311,7 +364,11 @@ function initMentionAutocomplete(textarea, boardId = null) {
   
   // Hide autocomplete when clicking outside
   document.addEventListener('click', (e) => {
-    if (e.target !== textarea && !autocompleteDiv?.contains(e.target)) {
+    const rich = textarea._boardRichEditor;
+    const inField = e.target === textarea ||
+      rich?.surface?.contains(e.target) ||
+      rich?.host?.contains(e.target);
+    if (!inField && !autocompleteDiv?.contains(e.target)) {
       hideAutocomplete();
     }
   });

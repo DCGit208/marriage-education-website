@@ -24,6 +24,7 @@ let _boardMetaCache = {};
 let _unsubNotif     = null;  // unread badge listener
 let _unsubPanel     = null;  // live panel list listener
 let _latestNotifId  = null;  // track newest seen doc to detect truly new arrivals
+let _notifPurging   = false; // prevent delete → snapshot → delete loops on iOS
 
 // ── Init ─────────────────────────────────────────────────────────
 async function initNotifications(userId) {
@@ -37,7 +38,8 @@ async function initNotifications(userId) {
   _startUnreadListener(userId);
   _setupBellListeners(userId);
   _ensurePanelChrome();
-  _purgeStaleNotifications(userId);
+  // Defer heavy purge — running during dashboard boot caused iOS listener churn
+  setTimeout(() => _purgeStaleNotifications(userId).catch(() => {}), 4000);
   // Show a nudge banner if the user hasn't enabled push yet
   _maybeShowPushNudge(userId);
   // Silently refresh the FCM token on every login (fixes stale tokens after SW updates)
@@ -90,13 +92,20 @@ async function _filterVisibleNotifDocs(docs, purgeIneligible) {
 
   withBoard.forEach(doc => {
     if (_canViewBoardNotif(doc.data())) visible.push(doc);
-    else if (purgeIneligible) toDelete.push(doc.ref);
+    else if (purgeIneligible && !_notifPurging) toDelete.push(doc.ref);
   });
 
-  if (toDelete.length) {
-    const batch = db.batch();
-    toDelete.forEach(ref => batch.delete(ref));
-    batch.commit().catch(() => {});
+  if (toDelete.length && !_notifPurging) {
+    _notifPurging = true;
+    try {
+      const batch = db.batch();
+      toDelete.forEach(ref => batch.delete(ref));
+      await batch.commit();
+    } catch (_) {
+      /* ignore */
+    } finally {
+      setTimeout(() => { _notifPurging = false; }, 800);
+    }
   }
 
   return visible;
@@ -158,21 +167,24 @@ function _startUnreadListener(userId) {
     _unsubNotif = db.collection('notifications')
       .where('userId', '==', userId)
       .where('read', '==', false)
-      .onSnapshot(async snap => {
-        const visible = await _filterVisibleNotifDocs(snap.docs, true);
-        const recentUnread = visible.filter(d => _isRecentForBadge(d.data()));
-        _setBadge(recentUnread.length);
-        // On subsequent snapshots (not the initial load), show a toast for each new doc
-        if (!first) {
-          for (const change of snap.docChanges()) {
-            if (change.type !== 'added') continue;
-            const n = change.doc.data();
-            if (n.boardId) await _getBoardMeta(n.boardId);
-            if (_canViewBoardNotif(n)) _showNotifToast(n);
-            else change.doc.ref.delete().catch(() => {});
+      .onSnapshot(async (snap) => {
+        try {
+          // Badge only — never delete here (deletes re-fire snapshot and freeze iOS)
+          const visible = await _filterVisibleNotifDocs(snap.docs, false);
+          const recentUnread = visible.filter(d => _isRecentForBadge(d.data()));
+          _setBadge(recentUnread.length);
+          if (!first) {
+            for (const change of snap.docChanges()) {
+              if (change.type !== 'added') continue;
+              const n = change.doc.data();
+              if (n.boardId) await _getBoardMeta(n.boardId);
+              if (_canViewBoardNotif(n)) _showNotifToast(n);
+            }
           }
+          first = false;
+        } catch (err) {
+          console.warn('[Notifications] Unread snapshot handler failed:', err);
         }
-        first = false;
       }, err => {
         console.error('[Notifications] Unread listener failed:', err);
         // If permission denied, user might not be fully authenticated yet - retry once

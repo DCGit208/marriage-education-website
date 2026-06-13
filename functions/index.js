@@ -7,6 +7,7 @@ const axios = require('axios');
 const { jsPDF } = require('jspdf');
 const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
 const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
+const { isExcludedUplineCode } = require('./upline-exclusions');
 const {
   creditSbdSubscriptionCommissions
 } = require('./sbd-subscription-commission');
@@ -1985,8 +1986,8 @@ function normalizeAmbassadorRecruiterPaymentFields(payment) {
 
 function pickRdCode(...candidates) {
   for (const code of candidates) {
-    const normalized = String(code || '').trim();
-    if (normalized.startsWith('RD-')) return normalized;
+    const normalized = String(code || '').trim().toUpperCase();
+    if (normalized.startsWith('RD-') && !isExcludedUplineCode(normalized)) return normalized;
   }
   return null;
 }

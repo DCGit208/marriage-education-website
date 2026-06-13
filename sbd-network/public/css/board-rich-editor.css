@@ -88,4 +88,7 @@
 .comment-input-wrap .comment-send-btn {
   flex-shrink: 0;
   align-self: flex-end;
+  position: relative;
+  z-index: 2;
+  touch-action: manipulation;
 }

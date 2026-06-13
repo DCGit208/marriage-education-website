@@ -194,7 +194,7 @@ function uploadToFirebaseStorage(file, folder, options) {
 }
 
 // Upload image → R2 (with optional editing)
-async function uploadImage(file, _userId, allowEdit = false) {
+async function uploadImage(file, _userId, allowEdit = false, options = null) {
   if (!file) return null;
 
   const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic'];
@@ -217,11 +217,11 @@ async function uploadImage(file, _userId, allowEdit = false) {
     // If editedBlob is null, user cancelled, simply continue with original file
   }
 
-  return uploadToR2(file, 'ugc-photos');
+  return uploadToR2(file, 'ugc-photos', options || undefined);
 }
 
 // Upload video → R2
-async function uploadVideo(file, _userId) {
+async function uploadVideo(file, _userId, options = null) {
   if (!file) return null;
 
   // Allow empty MIME type — iOS camera roll sometimes reports '' for valid .mov/.mp4 files
@@ -234,7 +234,7 @@ async function uploadVideo(file, _userId) {
     throw new Error('File too large. Maximum size is 100 MB.');
   }
 
-  return uploadToR2(file, 'ugc-videos');
+  return uploadToR2(file, 'ugc-videos', options || undefined);
 }
 
 /**

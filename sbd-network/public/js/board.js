@@ -35,7 +35,9 @@ let lastLongPress     = 0;     // timestamp — stops media click from firing af
 let pinnedPosts           = [];    // pinned posts for this board
 let pinnedBannerIndex     = 0;    // which pinned post the banner currently shows
 let pinnedBannerDismissed = false;
-let isSubmitting          = false; // prevents double-submit on Post button
+let isSubmitting          = false; // prevents double-submit on Post button (same form only)
+let _bgPostJobs           = 0;     // concurrent background post uploads
+let _bgPostProgress       = {};    // jobId -> 0..1 upload progress
 let pendingLinkPreview    = null;  // populated by URL detection in caption textarea
 let currentUserBookmarks  = new Set();
 let bulkSelectMode    = false;         // true while select mode is active
@@ -986,12 +988,11 @@ function buildPostCard(post) {
   const quoteTextEl    = card.querySelector('.quote-reply-text');
   const quoteCancelBtn = card.querySelector('.quote-reply-cancel');
 
-  // Initialize mention autocomplete for comment input
-  if (commentInput && typeof initMentionAutocomplete === 'function') {
-    initMentionAutocomplete(commentInput, boardId);
-  }
   if (commentInput && typeof initBoardRichEditor === 'function') {
     initBoardRichEditor(commentInput, { compact: true, placeholder: 'Add a comment…' });
+  }
+  if (commentInput && typeof initMentionAutocomplete === 'function') {
+    initMentionAutocomplete(commentInput, boardId);
   }
 
   setReplyTo = (replyData) => {
@@ -1064,35 +1065,79 @@ function buildPostCard(post) {
     });
   }
 
+  let commentSendInFlight = false;
+
   const sendComment = async () => {
+    if (commentInput._boardRichEditor) commentInput._boardRichEditor.sync();
     const text = getBoardFieldMarkdown(commentInput);
     if (!text) return;
+    if (commentSendInFlight) return;
+    commentSendInFlight = true;
+
+    const savedReplyTo = activeReplyTo;
+    const authorName = currentUserData.name || getCurrentUser()?.displayName || 'Member';
+    const prevCount = parseInt(toggleBtn?.dataset.count || '0', 10);
+
     sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+
+    if (commentInput._boardRichEditor) {
+      commentInput._boardRichEditor.setMarkdown('');
+    } else {
+      commentInput.value = '';
+      commentInput.style.height = 'auto';
+    }
+    activeReplyTo = null;
+    if (quotePreview) quotePreview.style.display = 'none';
+
+    const emptyEl = commentList.querySelector('.comment-empty');
+    if (emptyEl) emptyEl.remove();
+    const optimisticLi = renderComment({
+      id: 'pending-' + Date.now(),
+      authorId: currentUserId,
+      authorName,
+      text,
+      replyTo: savedReplyTo || null,
+    }, setReplyTo);
+    optimisticLi.classList.add('comment-pending');
+    commentList.appendChild(optimisticLi);
+    commentList.scrollTop = commentList.scrollHeight;
+    updateCommentToggleLabel(toggleBtn, prevCount + 1);
+
     try {
-      await addComment(post.id, text, activeReplyTo);
-      if (commentInput._boardRichEditor) {
-        commentInput._boardRichEditor.setMarkdown('');
-      } else {
-        commentInput.value = '';
-        commentInput.style.height = 'auto';
-      }
-      activeReplyTo = null;
-      quotePreview.style.display = 'none';
-      commentsLoaded = false;
-      await loadComments(post.id, commentList, toggleBtn, setReplyTo);
-      commentsLoaded = true;
-    } catch (err) {
-      alert('Could not post comment: ' + err.message);
-    } finally {
+      await addComment(post.id, text, savedReplyTo, { authorName });
+      sendBtn.textContent = 'Send';
       sendBtn.disabled = false;
+      commentSendInFlight = false;
+      loadComments(post.id, commentList, toggleBtn, setReplyTo, { silent: true }).catch(() => {});
+    } catch (err) {
+      optimisticLi.remove();
+      updateCommentToggleLabel(toggleBtn, prevCount);
+      if (commentInput._boardRichEditor) {
+        commentInput._boardRichEditor.setMarkdown(text);
+      } else {
+        commentInput.value = text;
+      }
+      activeReplyTo = savedReplyTo;
+      if (savedReplyTo && quotePreview) quotePreview.style.display = 'block';
+      alert('Could not post comment: ' + err.message);
+      sendBtn.textContent = 'Send';
+      sendBtn.disabled = false;
+      commentSendInFlight = false;
     }
   };
+
+  sendBtn.addEventListener('pointerdown', () => {
+    if (commentInput._boardRichEditor) commentInput._boardRichEditor.sync();
+  }, { passive: true });
 
   sendBtn.addEventListener('click', () => {
     if ('vibrate' in navigator) navigator.vibrate(15);
     sendComment();
   });
   const onCommentEnter = (e) => {
+    const mentionDrop = document.querySelector('.mention-autocomplete');
+    if (mentionDrop && mentionDrop.style.display !== 'none') return;
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); }
   };
   commentInput.addEventListener('keydown', onCommentEnter);
@@ -1665,33 +1710,46 @@ if (createPostForm) {
     closeModal();
     isSubmitting = false;
 
-    // ── Show persistent "uploading" indicator ──
-    const _toastEl = document.getElementById('appToast');
-    if (_toastEl) {
-      clearTimeout(_toastEl._timer);
-      _toastEl.textContent = '⬆ Uploading…';
-      _toastEl.classList.add('show');
-    }
+    const _jobId = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    _beginBgPostJob(_jobId);
 
     // ── Background fire-and-forget — does NOT block the UI ──
     (async () => {
       try {
         const user = getCurrentUser();
+        if (!user) throw new Error('Not authenticated');
 
-        const uploadJobs = allFiles.map(file => {
+        const uploadJobs = allFiles.map((file, fileIdx) => {
+          const fileKey = _jobId + '_' + fileIdx;
+          _bgPostProgress[fileKey] = 0;
+          const onProgress = (ratio) => {
+            _bgPostProgress[fileKey] = ratio;
+            _syncBgPostToast();
+          };
           if (file.type.startsWith('image/')) {
-            return uploadImage(file, user.uid).then(url => ({ type: 'image', url }));
-          } else {
-            const thumbP = generateVideoThumbnail(file).catch(() => null);
-            const vidP   = uploadVideo(file, user.uid);
-            return Promise.all([vidP, thumbP]).then(async ([vidUrl, thumbBlob]) => {
-              const thumbUrl = thumbBlob ? await uploadImage(thumbBlob, user.uid).catch(() => null) : null;
-              return { type: 'video', url: vidUrl, thumbUrl };
-            });
+            return uploadImage(file, user.uid, false, { onProgress })
+              .then(url => ({ type: 'image', url }))
+              .finally(() => { delete _bgPostProgress[fileKey]; });
           }
+          const thumbP = generateVideoThumbnail(file).catch(() => null);
+          const vidP   = uploadVideo(file, user.uid, { onProgress });
+          return Promise.all([vidP, thumbP]).then(async ([vidUrl, thumbBlob]) => {
+            let thumbUrl = null;
+            if (thumbBlob) {
+              _setBgPostPhase(_jobId, 'Uploading thumbnail…');
+              thumbUrl = await uploadImage(thumbBlob, user.uid).catch(() => null);
+            }
+            return { type: 'video', url: vidUrl, thumbUrl };
+          }).finally(() => { delete _bgPostProgress[fileKey]; });
         });
 
-        const allMedia   = allFiles.length ? await Promise.all(uploadJobs) : [];
+        let allMedia = [];
+        if (allFiles.length) {
+          _setBgPostPhase(_jobId, null);
+          allMedia = await Promise.all(uploadJobs);
+        }
+
+        _setBgPostPhase(_jobId, 'Publishing…');
         const firstImage = allMedia.find(m => m.type === 'image');
         const firstVideo = allMedia.find(m => m.type === 'video');
         const imageUrl   = firstImage?.url || null;
@@ -1730,10 +1788,10 @@ if (createPostForm) {
           }
         }
 
-        showToast('✓ Posted!');
-        await Promise.all([loadPosts(true), loadStories()]);
+        _finishBgPostJob(_jobId, true);
+        Promise.all([loadPosts(true), loadStories()]).catch(() => {});
       } catch (err) {
-        showToast('Post failed: ' + err.message);
+        _finishBgPostJob(_jobId, false, err.message || 'Post failed');
       }
     })();
   });
@@ -1941,8 +1999,11 @@ logoutBtn && logoutBtn.addEventListener('click', async () => {
 });
 
 // ── Comments ──────────────────────────────────────────────────────
-async function loadComments(postId, commentList, toggleBtn, onReply) {
-  commentList.innerHTML = '<li class="comment-loading">Loading…</li>';
+async function loadComments(postId, commentList, toggleBtn, onReply, options = {}) {
+  const { silent = false } = options;
+  if (!silent) {
+    commentList.innerHTML = '<li class="comment-loading">Loading…</li>';
+  }
   try {
     const snap = await db.collection('comments')
       .where('postId', '==', postId)
@@ -3520,6 +3581,67 @@ function openBulkForwardModal()   {
   openForwardSheet(posts);
 }
 
+
+// ── Background post upload queue (supports concurrent posts) ───────
+const _bgPostPhases = {}; // jobId -> optional status string override
+
+function _beginBgPostJob(jobId) {
+  _bgPostJobs += 1;
+  _bgPostPhases[jobId] = null;
+  _syncBgPostToast();
+}
+
+function _setBgPostPhase(jobId, phase) {
+  _bgPostPhases[jobId] = phase;
+  _syncBgPostToast();
+}
+
+function _finishBgPostJob(jobId, ok, errMsg) {
+  delete _bgPostPhases[jobId];
+  Object.keys(_bgPostProgress).forEach(k => {
+    if (k.startsWith(jobId + '_')) delete _bgPostProgress[k];
+  });
+  _bgPostJobs = Math.max(0, _bgPostJobs - 1);
+  if (_bgPostJobs === 0) {
+    showToast(ok ? '✓ Posted!' : ('Post failed: ' + (errMsg || 'Unknown error')));
+  } else {
+    _syncBgPostToast();
+    if (!ok) showToast('Post failed: ' + (errMsg || 'Unknown error'));
+  }
+}
+
+function _syncBgPostToast() {
+  const toast = document.getElementById('appToast');
+  if (!toast) return;
+  if (_bgPostJobs <= 0) return;
+
+  clearTimeout(toast._timer);
+  toast.classList.remove('app-toast--actionable');
+  toast.innerHTML = '';
+
+  const phaseOverride = Object.values(_bgPostPhases).find(p => p);
+  let label;
+  if (phaseOverride) {
+    label = phaseOverride;
+  } else {
+    const ratios = Object.values(_bgPostProgress);
+    if (ratios.length === 1) {
+      label = `Uploading ${Math.round(ratios[0] * 100)}%…`;
+    } else if (ratios.length > 1) {
+      const avg = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+      label = `Uploading ${Math.round(avg * 100)}% (${ratios.length} files)…`;
+    } else {
+      label = 'Uploading…';
+    }
+  }
+
+  if (_bgPostJobs > 1) {
+    label = `${label} · ${_bgPostJobs} posts queued`;
+  }
+
+  toast.textContent = '⬆ ' + label;
+  toast.classList.add('show');
+}
 
 // ── Toast ─────────────────────────────────────────────────────────
 function showToast(msg) {

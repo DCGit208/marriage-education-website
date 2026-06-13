@@ -1,6 +1,17 @@
 {
-  "current": "266",
+  "current": "267",
   "versions": [
+    {
+      "version": "267",
+      "date": "2026-06-02",
+      "title": "Snappier Board Comments",
+      "emoji": "💬",
+      "changes": [
+        "💬 Comments appear instantly while posting — no more frozen Send button",
+        "⚡ Faster comment saves with optimistic UI and background refresh",
+        "📱 Better mobile typing — rich editor syncs before send on tap"
+      ]
+    },
     {
       "version": "266",
       "date": "2026-06-08",

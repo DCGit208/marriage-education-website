@@ -3,6 +3,8 @@
  * See docs/RECRUITMENT-BONUS-POLICY.md and docs/COMMISSION-MASTER-PRINCIPLES.md
  */
 
+const { isExcludedUplineCode } = require('./upline-exclusions');
+
 const POLICY_VERSION = '2026-03-v3';
 
 const DIRECT_RECRUITMENT_BONUS_FCFA = 1500;
@@ -84,6 +86,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
   );
 
   while (nextCode && !seen.has(nextCode)) {
+    if (isExcludedUplineCode(nextCode)) break;
     seen.add(nextCode);
 
     if (nextCode.startsWith('AMB-') || nextCode.startsWith('SNR-')) {
@@ -97,6 +100,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
         collection: 'ambassadors'
       });
       const following = normalizeReferralCode(data.recruitedBy || data.recruited_by || '');
+      if (isExcludedUplineCode(following)) break;
       if (following.startsWith('RD-')) {
         await appendRdUpline(db, uplines, following, seen);
         break;
@@ -119,7 +123,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
 /** Append RD to upline list; stop — Executive is not a recruitment payee (v2026-03-v3). */
 async function appendRdUpline(db, uplines, rdCode, seen) {
   const rd = normalizeReferralCode(rdCode);
-  if (!rd || seen.has(rd)) return;
+  if (!rd || seen.has(rd) || isExcludedUplineCode(rd)) return;
   seen.add(rd);
 
   const rdSnap = await db.collection('regional_directors').doc(rd).get();
