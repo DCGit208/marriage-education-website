@@ -809,6 +809,273 @@
             margin-top: 0.3rem;
         }
 
+        /* ── Recruitment Bonuses (priority panel) ── */
+        .recruitment-bonus-panel {
+            background: linear-gradient(180deg, #fff9f0 0%, #ffffff 120px);
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .recruitment-bonus-panel:focus-within {
+            outline: 3px solid rgba(245, 158, 11, 0.35);
+            outline-offset: 2px;
+        }
+
+        .rb-panel-header {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .rb-panel-title-wrap h2 {
+            font-size: 1.35rem;
+            color: #92400e;
+            margin: 0 0 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .rb-urgent-tag {
+            display: inline-block;
+            background: #dc2626;
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+        }
+
+        .rb-panel-subtitle {
+            margin: 0;
+            color: #78350f;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            max-width: 640px;
+        }
+
+        .rb-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .rb-summary-card {
+            background: #fff;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+        }
+
+        .rb-summary-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .rb-summary-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 0.15rem;
+        }
+
+        .rb-summary-value.rb-total {
+            color: #059669;
+        }
+
+        #rbPanelStatus {
+            font-size: 0.88rem;
+            color: #57534e;
+            margin-top: 0.5rem;
+        }
+
+        .rb-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.85rem 1.5rem;
+            background: #fffbeb;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+        }
+
+        .rb-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.55rem 0.85rem;
+            border: 2px solid #fcd34d;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .rb-search:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .recruitment-bonus-panel .table-container {
+            overflow-x: auto;
+        }
+
+        .recruitment-bonus-panel table {
+            min-width: 960px;
+        }
+
+        .recruitment-bonus-panel th {
+            background: #fff7ed;
+            color: #78350f;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .rb-code { color: var(--primary); }
+
+        .rb-amount {
+            color: var(--success);
+            font-size: 1.05rem;
+            white-space: nowrap;
+        }
+
+        .rb-date {
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        .rb-meta { color: #636e72; }
+
+        .rb-badge {
+            display: inline-block;
+            padding: 0.22rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .rb-badge-direct { background: #d1fae5; color: #065f46; }
+        .rb-badge-upline { background: #dbeafe; color: #1e40af; }
+        .rb-badge-rd { background: #ede9fe; color: #5b21b6; }
+        .rb-badge-senior { background: #e0e7ff; color: #3730a3; }
+        .rb-badge-amb { background: #ecfdf5; color: #047857; }
+        .rb-badge-recruit { background: #d1f2eb; color: var(--success); }
+        .rb-badge-legacy { background: #f3e8ff; color: #7e22ce; }
+        .rb-badge-exec { background: #e0f2fe; color: #0c4a6e; }
+
+        .rb-phone-col { min-width: 170px; }
+
+        .rb-phone-number {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #0f766e;
+            text-decoration: none;
+        }
+
+        .rb-phone-number:hover,
+        .rb-phone-number:focus-visible {
+            text-decoration: underline;
+            outline: 2px solid #14b8a6;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .rb-phone-source {
+            display: block;
+            color: #78716c;
+            font-size: 0.72rem;
+            margin-top: 0.15rem;
+        }
+
+        .rb-phone-actions {
+            display: flex;
+            gap: 0.35rem;
+            margin-top: 0.35rem;
+        }
+
+        .rb-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            color: #57534e;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .rb-icon-btn:hover,
+        .rb-icon-btn:focus-visible {
+            background: #fff7ed;
+            border-color: #f59e0b;
+            outline: none;
+        }
+
+        .rb-phone-missing {
+            color: #b45309;
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+
+        .rb-phone-missing small {
+            display: block;
+            color: #78716c;
+        }
+
+        .rb-empty {
+            text-align: center;
+            padding: 2rem 1rem !important;
+            color: #636e72;
+        }
+
+        .rb-empty-success { color: var(--success); }
+        .rb-empty-error { color: var(--danger); }
+
+        .rb-pay-btn:focus-visible {
+            outline: 3px solid #059669;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .rb-panel-header { flex-direction: column; }
+            .rb-toolbar { flex-direction: column; align-items: stretch; }
+        }
+
         .parity-detail-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1558,41 +1825,71 @@
                     </div>
                 </div>
                 
-                <!-- Recruitment Bonuses -->
-                <div class="table-card" style="margin-bottom: 2rem;">
-                    <div class="table-header">
-                        <h2>🎯 Recruitment Bonuses (Immediate Payment Required)</h2>
-                        <div class="table-actions">
-                            <button class="btn btn-success btn-sm" onclick="loadRDPaymentsTable()">
-                                <i class="fas fa-sync"></i> Refresh
-                            </button>
+                <!-- Recruitment Bonuses (priority — immediate MoMo payment) -->
+                <section class="recruitment-bonus-panel" id="recruitmentBonusPanel" aria-labelledby="rbPanelTitle" aria-busy="false">
+                    <div class="rb-panel-header">
+                        <div class="rb-panel-title-wrap">
+                            <h2 id="rbPanelTitle">
+                                <span aria-hidden="true">🎯</span>
+                                Recruitment Bonuses
+                                <span class="rb-urgent-tag">Immediate payment required</span>
+                            </h2>
+                            <p class="rb-panel-subtitle">
+                                Send MoMo to each payee below, then tap <strong>Mark paid</strong>.
+                                Phone numbers come from registration or payout profile — copy or tap to call/WhatsApp.
+                            </p>
+                            <p id="rbPanelStatus" role="status" aria-live="polite">Loading…</p>
                         </div>
                     </div>
+
+                    <div class="rb-summary-grid" aria-label="Recruitment bonus summary">
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Pending payments</div>
+                            <div class="rb-summary-value" id="rbPendingCount">—</div>
+                        </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Total to send</div>
+                            <div class="rb-summary-value rb-total" id="rbPendingTotal">—</div>
+                        </div>
+                    </div>
+
+                    <div class="rb-toolbar">
+                        <label class="sr-only" for="rbSearchInput">Search recruitment bonuses</label>
+                        <input type="search" id="rbSearchInput" class="rb-search" placeholder="Search code, name, or phone…" autocomplete="off">
+                        <button type="button" class="btn btn-secondary btn-sm" id="rbCopyAllPhones" title="Copy all payee numbers">
+                            <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" id="rbRefreshBtn">
+                            <i class="fas fa-sync" aria-hidden="true"></i> Refresh
+                        </button>
+                    </div>
+
                     <div class="table-container">
-                        <table>
+                        <table aria-describedby="rbPanelTitle">
                             <thead>
                                 <tr>
-                                    <th>Recruiter Code</th>
-                                    <th>Recruiter Name</th>
-                                    <th>Role</th>
-                                    <th>New Ambassador</th>
-                                    <th>Ambassador Name</th>
-                                    <th>Bonus Amount</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
+                                    <th scope="col">Payee code</th>
+                                    <th scope="col">Payee name</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">MoMo / phone</th>
+                                    <th scope="col">New recruit</th>
+                                    <th scope="col">Recruit name</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="rdPaymentsTableBody">
                                 <tr>
-                                    <td colspan="8" class="loading">
+                                    <td colspan="9" class="loading">
                                         <div class="spinner"></div>
-                                        <p>Loading recruitment bonus payments...</p>
+                                        <p>Loading recruitment bonus payments…</p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
                 
                 <div class="table-card">
                     <div class="table-header">
@@ -2512,104 +2809,7 @@
             }
         }
 
-        // Load Recruitment Bonus Payments Table (RD + Senior + Ambassador)
-        async function loadRDPaymentsTable() {
-            try {
-                console.log('[Dashboard] Loading recruitment bonus payments table...');
-                const snapshot = await db.collection('admin_notifications')
-                    .where('type', '==', 'rd_recruitment_bonus')
-                    .where('status', '==', 'pending')
-                    .orderBy('created_at', 'desc')
-                    .get();
-                
-                const tbody = document.getElementById('rdPaymentsTableBody');
-                
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#636e72;"><i class="fas fa-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>No pending recruitment bonus payments</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.created_at ? data.created_at.toDate().toLocaleString() : 'N/A';
-                    const recruiterCode = data.rd_code || data.recruiter_code || 'N/A';
-                    const recruiterName = data.rd_name || data.recruiter_name || 'N/A';
-                    const recruiterType = data.recruiter_type || (String(recruiterCode).startsWith('RD-') ? 'regional_director' : 'ambassador');
-                    const roleLabel = recruiterType === 'executive_upline'
-                        ? '<span class="badge" style="background:#1e3a5f;">Executive upline</span>'
-                        : recruiterType === 'upline_share'
-                        ? '<span class="badge" style="background:#0984e3;">Upline share</span>'
-                        : recruiterType === 'direct_recruiter'
-                        ? '<span class="badge" style="background:#00b894;">Direct 1,500</span>'
-                        : recruiterType === 'rd_network_override'
-                        ? '<span class="badge" style="background:#9333ea;">RD Override (legacy)</span>'
-                        : recruiterType === 'regional_director'
-                        ? '<span class="badge" style="background:#9333ea;">RD</span>'
-                        : (recruiterType === 'senior'
-                            ? '<span class="badge" style="background:#6c5ce7;">Senior</span>'
-                            : '<span class="badge" style="background:#00b894;">Ambassador</span>');
-                    const viaTeam = data.recruiting_ambassador_code
-                        ? `<br><small style="color:#636e72;">via ${data.recruiting_ambassador_code}</small>`
-                        : (data.direct_recruiter_code && data.bonus_tier === 'upline'
-                            ? `<br><small style="color:#636e72;">team: ${data.direct_recruiter_code}</small>`
-                            : '');
-                    const policyTag = data.policy_version
-                        ? `<br><small style="color:#b2bec3;">${data.policy_version}</small>`
-                        : '';
-                    
-                    html += `
-                        <tr>
-                            <td><strong style="color:var(--primary);">${recruiterCode}</strong></td>
-                            <td>${recruiterName}</td>
-                            <td>${roleLabel}</td>
-                            <td><span class="badge badge-success">${data.ambassador_code || 'N/A'}</span>${viaTeam}${policyTag}</td>
-                            <td>${data.ambassador_name || 'N/A'}</td>
-                            <td><strong style="color:var(--success);font-size:1.1rem;">${(data.amount || 0).toLocaleString()} FCFA</strong></td>
-                            <td style="font-size:0.85rem;color:#636e72;">${date}</td>
-                            <td>
-                                <button class="btn btn-success btn-sm" onclick="markRDPaymentPaid('${doc.id}', '${recruiterCode}', ${data.amount || 0})" title="Mark as Paid">
-                                    <i class="fas fa-check"></i> Pay
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                tbody.innerHTML = html;
-                console.log('[Dashboard] Recruitment bonus payments table loaded:', snapshot.size);
-            } catch (error) {
-                console.error('[Dashboard] Error loading recruitment bonus payments:', error);
-                const tbody = document.getElementById('rdPaymentsTableBody');
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> Error loading recruitment bonus payments</td></tr>';
-            }
-        }
-
-        async function markRDPaymentPaid(notificationId, rdCode, amount) {
-            if (!confirm(`Mark ${amount.toLocaleString()} FCFA payment to ${rdCode} as PAID?`)) {
-                return;
-            }
-            
-            try {
-                // Call Cloud Function to mark as paid
-                const markRDPaymentPaidFn = firebase.functions().httpsCallable('markRDPaymentPaid');
-                const result = await markRDPaymentPaidFn({ 
-                    notification_id: notificationId,
-                    rd_code: rdCode,
-                    amount: amount
-                });
-                
-                if (result.data.success) {
-                    showAlert('✅ Payment marked as paid!', 'success');
-                    loadRDPaymentsTable();
-                } else {
-                    showAlert('❌ Failed to mark payment as paid', 'error');
-                }
-            } catch (error) {
-                console.error('Error marking payment as paid:', error);
-                showAlert('❌ Error: ' + error.message, 'error');
-            }
-        }
+        // Recruitment bonus table — js/admin-recruitment-bonuses.js
 
         // Load Payments Table
         async function loadPaymentsTable() {
@@ -3488,6 +3688,7 @@
     </div> <!-- Close main-dashboard -->
 
   <script src="js/admin-finance-tier1.js"></script>
+  <script src="js/admin-recruitment-bonuses.js"></script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>
 </body>
