@@ -1706,6 +1706,7 @@
       createdAt: data.lastMessageAt || firebase.firestore.Timestamp.now(),
       conversationId: ac.id,
       messageType: data.lastMessageType || 'text',
+      _fromMeta: true,
     };
     forceAppendIncomingMessage(preview, ac, true);
     patchThreadPreviewLocal(ac, preview.content);
@@ -1782,6 +1783,7 @@
   }
 
   function ingestIncomingNotif(n) {
+    if (CE2_DELIVERY_EXPERIMENTAL) return;
     if (!n) return;
     var type = n.type;
     if (!type) return;
@@ -1826,7 +1828,7 @@
   }
 
   function fetchAndShowMessage(messageId, ac) {
-    if (!messageId || !ac || isMessageAlreadyRendered(messageId)) return;
+    if (!messageId || !ac) return;
     var col =
       ac.type === 'direct'
         ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
@@ -1842,6 +1844,11 @@
         CommunicationState._metaLastMessageId = messageId;
         CommunicationState.typingLabel = null;
         updateTypingLineOnly();
+        if (isMessageAlreadyRendered(messageId)) {
+          mergeMessageIntoState(msg);
+          reconcileRenderedMessage(msg, acNow);
+          return;
+        }
         forceAppendIncomingMessage(msg, acNow, true);
       })
       .catch(function () {});
@@ -2651,7 +2658,7 @@
       .onSnapshot(
         function (snap) {
           var me = CommunicationState.me;
-          if (!firstSnap && me && ac) {
+          if (!firstSnap && me && ac && !CE2_DELIVERY_EXPERIMENTAL) {
             snap.docChanges().forEach(function (change) {
               if (change.type !== 'added') return;
               var data = change.doc.data();
@@ -2684,7 +2691,9 @@
           (CommunicationState.lastServerMessages || []).forEach(function (m) {
             reconcileRenderedMessage(m, ac);
           });
-          syncMessagePanelFromSnap(ac);
+          if (firstSnap || !CE2_DELIVERY_EXPERIMENTAL) {
+            syncMessagePanelFromSnap(ac);
+          }
         },
         function (err) {
           stopMessagesWatch();
@@ -5245,7 +5254,7 @@
       CE2_DELIVERY_STABLE_VERSION +
       ' rollback=' +
       CE2_DELIVERY_ROLLBACK +
-      (CE2_DELIVERY_EXPERIMENTAL ? ' experimental=on' : '')
+      (CE2_DELIVERY_EXPERIMENTAL ? ' experimental=on pass=A-meta-primary' : '')
   );
   console.log(
     '[CE2] communication-v2.js ' +

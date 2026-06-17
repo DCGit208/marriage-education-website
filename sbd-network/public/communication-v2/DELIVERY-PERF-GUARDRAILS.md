@@ -92,10 +92,24 @@ Rollback immediately if:
 
 ---
 
-## Planned passes (not started until baseline tagged)
+## Pass A — Meta-primary (started, experimental only)
 
-1. **Meta-primary** — render new text only from conv meta listener; query for history  
+**Flag:** `?ce2_delivery_fast=1` · **Asset:** `communication-v2.js?v=92`
+
+| Path | Experimental on | Default (v90) |
+|------|-----------------|---------------|
+| New incoming text | Conv meta listener only (`handleMetaMessageDelivery`) | Meta fast path + subcollection append |
+| History | Subcollection `limitToLast` first snapshot | Same |
+| Open-thread notifications | Skipped (meta wins) | Notification ingest still runs |
+| Subcollection `docChanges` | Reconcile meta preview only | Append new rows |
+| `syncMessagePanelFromSnap` | First snapshot only | Every snapshot |
+
+**Regression:** Same gate as Rule 4, but test URL must include `ce2_delivery_fast=1` on both devices.
+
+---
+
+## Planned passes
+
+1. ~~**Meta-primary**~~ — Pass A (above)  
 2. **Recent messages on conv doc** — optional schema; requires rules + migration  
 3. **Transport** — WebSocket vs long-poll profiling per platform  
-
-Each pass gets its own subsection in this file when started.
