@@ -1,7 +1,8 @@
 /**
  * Communication Engine V2 — isolated shell (legacy /dm + /conversations untouched).
  * State-driven single render pipeline; Firestore rules enforce tier + classification.
- * STABLE_ROLLBACK: ce2-keyboard-v60 + ce2-audio-stable-1d — see ROLLBACK-KEYBOARD-v60.md, ROLLBACK-AUDIO-1D.md
+ * STABLE_ROLLBACK: ce2-keyboard-v60 + ce2-audio-stable-1d + ce2-delivery-stable-v90
+ * See ROLLBACK-KEYBOARD-v60.md, ROLLBACK-AUDIO-1D.md, ROLLBACK-DELIVERY-v90.md
  */
 (function () {
   'use strict';
@@ -9,6 +10,20 @@
   /** iPhone PWA keyboard stable rollback (header A + gap closed, May 2026) */
   var CE2_KEYBOARD_ROLLBACK = 'ce2-keyboard-stable-v60';
   var CE2_KEYBOARD_STABLE_VERSION = 'v60';
+  var CE2_DELIVERY_ROLLBACK = 'ce2-delivery-stable-v90';
+  var CE2_DELIVERY_STABLE_VERSION = 'v90';
+
+  function ce2DeliveryExperimentalFromUrl() {
+    try {
+      if (/ce2_delivery_fast=0/i.test(window.location.search || '')) return false;
+      return /ce2_delivery_fast=1/i.test(window.location.search || '');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /** New delivery experiments only when ?ce2_delivery_fast=1 — see DELIVERY-PERF-GUARDRAILS.md */
+  var CE2_DELIVERY_EXPERIMENTAL = ce2DeliveryExperimentalFromUrl();
 
   var root =
     typeof globalThis !== 'undefined'
@@ -20,12 +35,15 @@
   /** @type {firebase.firestore.Unsubscribe | null} */
   let messagesUnsub = null;
   var convMetaUnsub = null;
-  var typingUnsub = null;
   var typingInputUnsub = null;
+  var messengerNotifUnsub = null;
+  var messengerNotifFirst = true;
   var ce2BootedUid = null;
   var ce2UiWired = false;
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
+  /** Off until real-time delivery is stable — stale typing pulses confuse users. */
+  var CE2_TYPING_INDICATOR_ENABLED = false;
   var MAX_COMPOSER_ATTACHMENTS = 6;
   /** How long senders can remove their own messages (soft delete). */
   var UNSEND_WINDOW_MS = 60 * 60 * 1000;
@@ -75,6 +93,8 @@
     offline: false,
     discoveryLoaded: false,
     shareDraft: null,
+    _renderedMsgIds: null,
+    _metaLastMessageId: null,
   };
 
   function threadComposerKey(ac) {
@@ -92,7 +112,43 @@
     var input = el('ce2Input');
     var me = CommunicationState.me;
     if (!ac || !me || !input || !root.Ce2Drafts) return;
-    root.Ce2Drafts.save(me.uid, threadComposerKey(ac), input.value);
+    var key = threadComposerKey(ac);
+    root.Ce2Drafts.flush(me.uid, key);
+    root.Ce2Drafts.save(me.uid, key, input.value);
+  }
+
+  function initComposerDraftPersistence() {
+    if (root.__ce2DraftPersistenceBound) return;
+    root.__ce2DraftPersistenceBound = true;
+    function flushDrafts() {
+      persistActiveComposerDraft();
+      if (root.Ce2Drafts && root.Ce2Drafts.flushAll) root.Ce2Drafts.flushAll();
+    }
+    window.addEventListener('pagehide', flushDrafts);
+    window.addEventListener('beforeunload', flushDrafts);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') flushDrafts();
+    });
+  }
+
+  function syncCe2ThreadUrl(ac) {
+    if (!ac || ac.needsJoin || typeof history === 'undefined' || !history.replaceState) return;
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.delete('uid');
+      url.searchParams.delete('msg');
+      url.searchParams.delete('title');
+      url.searchParams.delete('text');
+      url.searchParams.delete('url');
+      if (ac.type === 'direct' && ac.id) {
+        url.searchParams.set('conv', ac.id);
+        url.searchParams.delete('group');
+      } else if (ac.type === 'group' && ac.id) {
+        url.searchParams.set('group', ac.id);
+        url.searchParams.delete('conv');
+      }
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
+    } catch (_) {}
   }
 
   function clearComposerDraft(ac) {
@@ -318,16 +374,118 @@
       convMetaUnsub();
       convMetaUnsub = null;
     }
-    if (typingUnsub) {
-      typingUnsub();
-      typingUnsub = null;
-    }
     if (typingInputUnsub) {
       typingInputUnsub();
       typingInputUnsub = null;
     }
     CommunicationState.convMeta = null;
     CommunicationState.typingLabel = null;
+  }
+
+  function stopMessengerNotifWatch() {
+    if (messengerNotifUnsub) {
+      messengerNotifUnsub();
+      messengerNotifUnsub = null;
+    }
+    messengerNotifFirst = true;
+  }
+
+  function isNotifForOpenThread(n) {
+    var ac = CommunicationState.activeConversation;
+    if (!ac || ac.needsJoin || !n) return false;
+    if (n.type === 'direct_message') {
+      if (ac.type !== 'direct') return false;
+      if (n.convId && ac.id && n.convId === ac.id) return true;
+      if (n.senderId && ac.otherUid && n.senderId === ac.otherUid) return true;
+      return false;
+    }
+    if (n.type === 'group_message') {
+      var gid = n.groupId || n.convId;
+      return ac.type === 'group' && !!gid && ac.id === gid;
+    }
+    return false;
+  }
+
+  function hideTypingIndicator() {
+    CommunicationState.typingLabel = null;
+    updateTypingLineOnly();
+  }
+
+  function updateTypingFromMeta(data, ac) {
+    if (!CE2_TYPING_INDICATOR_ENABLED) {
+      hideTypingIndicator();
+      return;
+    }
+    var pr = presence();
+    var me = CommunicationState.me;
+    if (!pr || !me || !data) {
+      hideTypingIndicator();
+      return;
+    }
+    var input = el('ce2Input');
+    if (
+      CommunicationState.sending ||
+      (input &&
+        (document.activeElement === input || (input.value || '').trim().length > 0))
+    ) {
+      hideTypingIndicator();
+      return;
+    }
+    var rc = receipts();
+    var typing = data.typing || {};
+    var nowSec = Date.now() / 1000;
+    var activeUids = Object.keys(typing).filter(function (uid) {
+      if (uid === me.uid) return false;
+      var ts = typing[uid];
+      if (!ts || !pr.isTypingActive(ts)) return false;
+      var typSec = rc ? rc.tsSeconds(ts) : 0;
+      if (!typSec || nowSec - typSec > 3) return false;
+      if (data.lastSenderId === uid && data.lastMessageAt) {
+        var msgSec = rc.tsSeconds(data.lastMessageAt);
+        if (typSec <= msgSec) return false;
+      }
+      return true;
+    });
+    CommunicationState.typingLabel = formatTypingLabel(activeUids, ac);
+    updateTypingLineOnly();
+  }
+
+  function watchMessengerNotifs() {
+    stopMessengerNotifWatch();
+    var me = CommunicationState.me;
+    if (!me) return;
+    messengerNotifUnsub = db
+      .collection('notifications')
+      .where('userId', '==', me.uid)
+      .where('read', '==', false)
+      .onSnapshot(
+        function (snap) {
+          if (messengerNotifFirst) {
+            messengerNotifFirst = false;
+            return;
+          }
+          snap.docChanges().forEach(function (change) {
+            if (change.type !== 'added') return;
+            ingestIncomingNotif(change.doc.data());
+          });
+        },
+        function () {}
+      );
+  }
+
+  function formatTypingLabel(activeUids, ac) {
+    if (!activeUids || !activeUids.length) return null;
+    if (ac && ac.type === 'direct' && activeUids.length === 1) {
+      var peerName = (ac.title || '').trim() || 'They';
+      return peerName + ' is typing…';
+    }
+    if (activeUids.length === 1) {
+      return 'Someone is typing…';
+    }
+    if (activeUids.length === 2) {
+      return '2 people are typing…';
+    }
+    return activeUids.length + ' people are typing…';
   }
 
   function watchConvMeta(ac) {
@@ -339,24 +497,28 @@
     var rc = receipts();
     convMetaUnsub = ref.onSnapshot(
       function (snap) {
-        CommunicationState.convMeta = snap.exists ? snap.data() : null;
-        if (ac.type === 'group' && snap.exists) {
-          syncVisibleGroupMeta(ac.id, snap.data());
-          requestRender({ throttle: true });
+        var data = snap.exists ? snap.data() : null;
+        CommunicationState.convMeta = data;
+        var acNow = CommunicationState.activeConversation;
+        if (data && acNow && !acNow.needsJoin) {
+          handleMetaMessageDelivery(data);
+          updateTypingFromMeta(data, acNow);
         } else {
-          requestRender({ throttle: true, threadOnly: true });
+          CommunicationState.typingLabel = null;
+          updateTypingLineOnly();
+        }
+        if (!acNow || acNow.needsJoin) return;
+        if (acNow.type === 'group' && snap.exists) {
+          syncVisibleGroupMeta(acNow.id, snap.data());
+          requestRender({ throttle: true });
+        } else if (acNow.type === 'direct') {
+          updateReadReceiptFooters(acNow);
         }
       },
       function () {}
     );
-    if (pr) {
-      typingUnsub = pr.watchTyping(ref, me.uid, function (label) {
-        CommunicationState.typingLabel = label;
-        requestRender({ throttle: true, threadOnly: true });
-      });
-    }
     var input = el('ce2Input');
-    if (pr && input) {
+    if (CE2_TYPING_INDICATOR_ENABLED && pr && input) {
       typingInputUnsub = pr.bindTypingInput(input, ref, me.uid, 5000);
     }
   }
@@ -1021,7 +1183,7 @@
   function requestRender(opts) {
     opts = opts || {};
     if (opts.threadOnly) CommunicationState._pendingThreadOnly = true;
-    if (opts.throttle) {
+    if (opts.throttle && !opts.threadOnly) {
       if (CommunicationState._throttleRenderTimer) return;
       CommunicationState._throttleRenderTimer = setTimeout(function () {
         CommunicationState._throttleRenderTimer = null;
@@ -1104,13 +1266,68 @@
 
   function mergeServerAndPending(serverMsgs) {
     var pending = CommunicationState.pendingMessages || [];
+    var strip =
+      root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+        ? function (t) {
+            return root.Ce2Format.stripFormattingForPreview(t || '');
+          }
+        : function (t) {
+            return t || '';
+          };
     var stillPending = pending.filter(function (p) {
       return !serverMsgs.some(function (s) {
-        return s.senderId === p.senderId && s.content === p.content;
+        if (s.senderId !== p.senderId) return false;
+        if (s.content === p.content) return true;
+        return strip(s.content) === strip(p.content);
       });
     });
     CommunicationState.pendingMessages = stillPending;
     return sortMessagesByTime(serverMsgs.concat(stillPending));
+  }
+
+  function confirmSentMessage(pendingId, serverId, patch, ac) {
+    if (!pendingId || !serverId || !ac) return;
+    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).filter(
+      function (p) {
+        return p.id !== pendingId;
+      }
+    );
+    var msg = Object.assign({}, patch, {
+      id: serverId,
+      createdAt: firebase.firestore.Timestamp.now(),
+    });
+    delete msg._pending;
+    var list = (CommunicationState.lastServerMessages || []).slice();
+    if (!list.some(function (m) {
+      return m.id === serverId;
+    })) {
+      list.push(msg);
+      list = sortMessagesByTime(list);
+    }
+    CommunicationState.lastServerMessages = list;
+    CommunicationState.messages = mergeServerAndPending(list);
+    CommunicationState._metaLastMessageId = serverId;
+
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) {
+      requestRender({ threadOnly: true });
+      return;
+    }
+    var oldRow = scroll.querySelector('[data-message-id="' + pendingId + '"]');
+    if (oldRow) {
+      var newRow = buildMessageRow(msg, ac);
+      oldRow.replaceWith(newRow);
+      if (CommunicationState._renderedMsgIds) {
+        CommunicationState._renderedMsgIds = CommunicationState._renderedMsgIds.map(
+          function (id) {
+            return id === pendingId ? serverId : id;
+          }
+        );
+      }
+      updateReadReceiptFooters(ac);
+    } else {
+      requestRender({ threadOnly: true });
+    }
   }
 
   function pushOptimisticMessage(patch) {
@@ -1123,6 +1340,20 @@
     CommunicationState.messages = mergeServerAndPending(
       CommunicationState.lastServerMessages || []
     );
+    var scroll = el('ce2MessageScroll');
+    var ac = CommunicationState.activeConversation;
+    var visible = ac ? getVisibleMessages(ac) : [];
+    var stickBottom =
+      scroll &&
+      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
+    if (
+      scroll &&
+      ac &&
+      tryIncrementalMessageRender(scroll, ac, visible, stickBottom)
+    ) {
+      return opt.id;
+    }
+    requestRender({ threadOnly: true });
     return opt.id;
   }
 
@@ -1407,6 +1638,513 @@
     }
   }
 
+  function invalidateMessageRenderCache() {
+    CommunicationState._renderedMsgIds = null;
+  }
+
+  function patchThreadPreviewLocal(ac, preview) {
+    if (!ac || !preview) return;
+    var text = String(preview).slice(0, 140);
+    if (ac.type === 'direct') {
+      var threads = CommunicationState.threads || [];
+      for (var i = 0; i < threads.length; i++) {
+        if (threads[i].convId === ac.id || threads[i].id === ac.id) {
+          threads[i].sub = text;
+          return;
+        }
+      }
+      return;
+    }
+    if (ac.type === 'group') {
+      var groups = CommunicationState.visibleGroups || [];
+      for (var j = 0; j < groups.length; j++) {
+        if (groups[j].id === ac.id) {
+          groups[j].lastPreview = text;
+          return;
+        }
+      }
+    }
+  }
+
+  function clearComposerTyping(ac) {
+    var pr = presence();
+    var me = CommunicationState.me;
+    var ref = getMetaDocRef(ac);
+    if (pr) {
+      if (pr.setTypingMuted) pr.setTypingMuted(5000);
+      if (CE2_TYPING_INDICATOR_ENABLED && ref && me) pr.clearTyping(ref, me.uid);
+    }
+    hideTypingIndicator();
+  }
+
+  function handleMetaMessageDelivery(data) {
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me || ac.needsJoin || !data || !data.lastMessageId) return;
+
+    if (data.lastSenderId === me.uid) {
+      CommunicationState._metaLastMessageId = data.lastMessageId;
+      return;
+    }
+
+    var msgId = data.lastMessageId;
+    if (isMessageAlreadyRendered(msgId)) {
+      CommunicationState._metaLastMessageId = msgId;
+      CommunicationState.typingLabel = null;
+      updateTypingLineOnly();
+      return;
+    }
+
+    CommunicationState._metaLastMessageId = msgId;
+    CommunicationState.typingLabel = null;
+    updateTypingLineOnly();
+
+    var preview = {
+      id: msgId,
+      senderId: data.lastSenderId,
+      content: data.lastPreview || '',
+      createdAt: data.lastMessageAt || firebase.firestore.Timestamp.now(),
+      conversationId: ac.id,
+      messageType: data.lastMessageType || 'text',
+    };
+    forceAppendIncomingMessage(preview, ac, true);
+    patchThreadPreviewLocal(ac, preview.content);
+    fetchAndShowMessage(msgId, ac);
+  }
+
+  function reconcileRenderedMessage(msg, ac) {
+    var scroll = el('ce2MessageScroll');
+    if (!scroll || !msg || !msg.id) return;
+    var row = scroll.querySelector('[data-message-id="' + msg.id + '"]');
+    if (!row || !row.classList.contains('is-meta-preview')) return;
+    row.replaceWith(buildMessageRow(msg, ac));
+    if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+  }
+
+  function isMessageAlreadyRendered(msgId) {
+    if (!msgId) return true;
+    if (
+      CommunicationState._renderedMsgIds &&
+      CommunicationState._renderedMsgIds.indexOf(msgId) >= 0
+    ) {
+      return true;
+    }
+    var scroll = el('ce2MessageScroll');
+    return !!(
+      scroll && scroll.querySelector('[data-message-id="' + msgId + '"]')
+    );
+  }
+
+  function mergeMessageIntoState(msg) {
+    var list = (CommunicationState.lastServerMessages || []).slice();
+    var found = false;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === msg.id) {
+        list[i] = Object.assign({}, list[i], msg);
+        found = true;
+        break;
+      }
+    }
+    if (!found) list = sortMessagesByTime(list.concat([msg]));
+    CommunicationState.lastServerMessages = list;
+    CommunicationState.messages = mergeServerAndPending(list);
+  }
+
+  function forceAppendIncomingMessage(msg, ac, scrollToEnd) {
+    var scroll = el('ce2MessageScroll');
+    if (!scroll || !msg || !msg.id || !ac) return false;
+    if (isMessageAlreadyRendered(msg.id)) return true;
+
+    mergeMessageIntoState(msg);
+
+    var stickBottom =
+      scrollToEnd !== false &&
+      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
+
+    if (CommunicationState._renderedMsgIds && scroll.querySelector('.ce2-row')) {
+      var row = buildMessageRow(msg, ac);
+      if (msg._fromMeta || msg._fromNotif) row.classList.add('is-meta-preview');
+      scroll.appendChild(row);
+      CommunicationState._renderedMsgIds =
+        CommunicationState._renderedMsgIds.concat([msg.id]);
+    } else {
+      var visible = getVisibleMessages(ac);
+      if (!tryIncrementalMessageRender(scroll, ac, visible, stickBottom)) {
+        renderMessagePanel();
+        return true;
+      }
+    }
+
+    if (stickBottom) scroll.scrollTop = scroll.scrollHeight;
+    updateTypingLineOnly();
+    if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+    return true;
+  }
+
+  function ingestIncomingNotif(n) {
+    if (!n) return;
+    var type = n.type;
+    if (!type) return;
+    if (type !== 'direct_message' && type !== 'group_message') return;
+    if (!isNotifForOpenThread(n)) return;
+
+    var ac = CommunicationState.activeConversation;
+    if (!ac) return;
+
+    var msgId = n.messageId;
+    if (!msgId) {
+      msgId =
+        'notif-' +
+        String(n.senderId || 'x') +
+        '-' +
+        messageTimeMs({ createdAt: n.timestamp });
+    }
+    if (isMessageAlreadyRendered(msgId)) return;
+
+    CommunicationState.typingLabel = null;
+    updateTypingLineOnly();
+
+    var content = n.body || '';
+    if (type === 'group_message') {
+      var colon = content.indexOf(': ');
+      if (colon > 0 && colon < 48) content = content.slice(colon + 2);
+    }
+
+    var preview = {
+      id: msgId,
+      senderId: n.senderId || (ac.type === 'direct' ? ac.otherUid : ''),
+      content: content,
+      createdAt: n.timestamp || firebase.firestore.Timestamp.now(),
+      conversationId: ac.id,
+      messageType: n.messageType || 'text',
+      _fromNotif: true,
+    };
+
+    CommunicationState._metaLastMessageId = msgId;
+    forceAppendIncomingMessage(preview, ac, true);
+    patchThreadPreviewLocal(ac, content);
+  }
+
+  function fetchAndShowMessage(messageId, ac) {
+    if (!messageId || !ac || isMessageAlreadyRendered(messageId)) return;
+    var col =
+      ac.type === 'direct'
+        ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
+        : db.collection('communicationGroups').doc(ac.id).collection('ce2_messages');
+    col
+      .doc(messageId)
+      .get()
+      .then(function (doc) {
+        if (!doc.exists) return;
+        var acNow = CommunicationState.activeConversation;
+        if (!acNow || acNow.id !== ac.id) return;
+        var msg = Object.assign({ id: doc.id }, doc.data());
+        CommunicationState._metaLastMessageId = messageId;
+        CommunicationState.typingLabel = null;
+        updateTypingLineOnly();
+        forceAppendIncomingMessage(msg, acNow, true);
+      })
+      .catch(function () {});
+  }
+
+  function tryShowMessageFromMeta(meta) {
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me || ac.needsJoin || !meta) return;
+    if (!meta.lastMessageId || !meta.lastSenderId) return;
+    if (meta.lastSenderId === me.uid) return;
+
+    var msgId = meta.lastMessageId;
+    if (isMessageAlreadyRendered(msgId)) {
+      CommunicationState._metaLastMessageId = msgId;
+      return;
+    }
+    if (CommunicationState._metaLastMessageId === msgId) {
+      fetchAndShowMessage(msgId, ac);
+      return;
+    }
+
+    var preview = {
+      id: msgId,
+      senderId: meta.lastSenderId,
+      content: meta.lastPreview || '',
+      createdAt: meta.lastMessageAt,
+      conversationId: ac.id,
+      messageType: meta.lastMessageType || 'text',
+      _fromMeta: true,
+    };
+
+    CommunicationState._metaLastMessageId = msgId;
+    CommunicationState.typingLabel = null;
+    updateTypingLineOnly();
+    forceAppendIncomingMessage(preview, ac, true);
+    patchThreadPreviewLocal(ac, preview.content);
+    fetchAndShowMessage(msgId, ac);
+  }
+
+  function applyIncomingMessageChanges(snap, ac, me) {
+    if (!snap || !ac || !me) return false;
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) return false;
+    var handled = false;
+    var stickBottom =
+      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
+
+    snap.docChanges().forEach(function (change) {
+      if (change.type !== 'added') return;
+      if (change.doc.metadata.hasPendingWrites) return;
+      var data = change.doc.data();
+      if (!data.senderId || data.senderId === me.uid) return;
+
+      var msgId = change.doc.id;
+      CommunicationState._metaLastMessageId = msgId;
+      CommunicationState.typingLabel = null;
+      updateTypingLineOnly();
+
+      var msg = Object.assign({ id: msgId }, data);
+      mergeMessageIntoState(msg);
+      forceAppendIncomingMessage(msg, ac, true);
+      patchThreadPreviewLocal(ac, data.content || '');
+      handled = true;
+    });
+    return handled;
+  }
+
+  function syncMessagePanelFromSnap(ac) {
+    var scroll = el('ce2MessageScroll');
+    if (!scroll || !ac) return;
+    var visible = getVisibleMessages(ac);
+    var stickBottom =
+      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
+    if (tryIncrementalMessageRender(scroll, ac, visible, stickBottom)) {
+      return;
+    }
+    renderMessagePanel();
+  }
+
+  function getVisibleMessages(ac) {
+    var ma = msgActions();
+    return (CommunicationState.messages || []).filter(function (m) {
+      if (
+        m._pending &&
+        m.conversationId &&
+        ac &&
+        ac.id &&
+        m.conversationId !== ac.id
+      ) {
+        return false;
+      }
+      if (ma && ma.isMessageHidden(m, ac)) return false;
+      return true;
+    });
+  }
+
+  function updateTypingLineOnly() {
+    var ac = CommunicationState.activeConversation;
+    var typingEl = el('ce2TypingLine');
+    if (!typingEl) return;
+    var typingText = typingEl.querySelector('.ce2-typing-text');
+    var show =
+      CE2_TYPING_INDICATOR_ENABLED &&
+      CommunicationState.typingLabel &&
+      ac &&
+      !ac.needsJoin;
+    if (show) {
+      typingEl.hidden = false;
+      if (typingText) typingText.textContent = CommunicationState.typingLabel;
+      else typingEl.textContent = CommunicationState.typingLabel;
+    } else {
+      typingEl.hidden = true;
+      if (typingText) typingText.textContent = '';
+      else typingEl.textContent = '';
+    }
+  }
+
+  function updateReadReceiptFooters(ac) {
+    if (!ac || ac.type !== 'direct' || !CommunicationState.me) return;
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) return;
+    var rc = receipts();
+    if (!rc) return;
+    var otherRead =
+      CommunicationState.convMeta && CommunicationState.convMeta.lastRead
+        ? CommunicationState.convMeta.lastRead[ac.otherUid]
+        : null;
+    scroll.querySelectorAll('.ce2-row.is-self').forEach(function (row) {
+      var mid = row.dataset.messageId;
+      if (!mid || String(mid).indexOf('pending-') === 0) return;
+      var m = CommunicationState.messages.find(function (x) {
+        return x.id === mid;
+      });
+      if (!m) return;
+      var footMeta = row.querySelector('.ce2-msg-foot-meta');
+      if (!footMeta) return;
+      var status = rc.deliveryStatus(m, CommunicationState.me.uid, otherRead);
+      footMeta.textContent =
+        (status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
+    });
+  }
+
+  function buildMessageRow(m, ac) {
+    var ma = msgActions();
+    const self = CommunicationState.me && m.senderId === CommunicationState.me.uid;
+    var searchQ = CommunicationState.threadSearchQuery || '';
+    var searchHit = searchQ && ma && ma.messageMatchesSearch(m, searchQ);
+    var isHighlight =
+      CommunicationState.highlightMessageId &&
+      m.id === CommunicationState.highlightMessageId;
+    const row = document.createElement('div');
+    row.className =
+      'ce2-row' +
+      (self ? ' is-self' : '') +
+      (m._pending ? ' is-pending' : '') +
+      (m.uploadState === 'failed' ? ' is-voice-failed' : '') +
+      (searchHit ? ' is-search-hit' : '') +
+      (isHighlight ? ' is-highlighted' : '');
+    row.dataset.messageId = m.id || '';
+    const reader = CommunicationState.me;
+    const canRead = canReadMessageContent(reader, m, ac);
+    const bubble = document.createElement('div');
+    bubble.className =
+      'ce2-bubble' +
+      (canRead ? '' : ' ce2-bubble-locked') +
+      (canRead && m.replyTo ? ' ce2-bubble--has-reply' : '');
+    if (ma && canRead) {
+      ma.renderForwardQuote(bubble, m);
+      ma.renderFormationBadge(bubble, m);
+    }
+    if (showDebugUi()) {
+      const tags = document.createElement('div');
+      tags.className = 'ce2-bubble-tags';
+      tags.innerHTML =
+        '<span class="ce2-tag">' +
+        escapeHtml(m.classification) +
+        '</span>' +
+        '<span class="ce2-tag">' +
+        (m.shareable ? 'shareable' : 'private') +
+        '</span>';
+      bubble.appendChild(tags);
+    }
+    if (canRead) {
+      appendMessageBody(bubble, m);
+      if (ma) ma.appendReactionsRow(bubble, m);
+    } else {
+      bubble.appendChild(
+        document.createTextNode('This space unlocks through formation progression.')
+      );
+    }
+    row.appendChild(bubble);
+    const foot = document.createElement('div');
+    foot.className = 'ce2-msg-foot';
+    var rc = receipts();
+    var otherRead =
+      ac && ac.type === 'direct' && CommunicationState.convMeta
+        ? (CommunicationState.convMeta.lastRead || {})[ac.otherUid]
+        : null;
+    var status =
+      rc && self && !m._pending
+        ? rc.deliveryStatus(m, CommunicationState.me.uid, otherRead)
+        : m._pending
+          ? 'pending'
+          : '';
+    var footMeta = document.createElement('span');
+    footMeta.className = 'ce2-msg-foot-meta';
+    if (m._voiceLocalId && m.uploadState === 'uploading') {
+      footMeta.textContent =
+        'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
+    } else if (m._voiceLocalId && m.uploadState === 'retrying') {
+      footMeta.textContent = 'Retrying upload…';
+    } else if (m._voiceLocalId && m.uploadState === 'failed') {
+      footMeta.textContent = 'Failed to send';
+    } else {
+      footMeta.textContent = m._pending
+        ? 'Sending…'
+        : (rc && status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
+    }
+    if (ma && ma.isMessageSaved(m)) {
+      var star = document.createElement('span');
+      star.className = 'ce2-msg-star';
+      star.textContent = ' ★';
+      star.title = 'Starred';
+      footMeta.appendChild(star);
+    }
+    foot.appendChild(footMeta);
+    if (ma) ma.renderEditedLabel(foot, m);
+    row.appendChild(foot);
+    wireMessageRowMenu(row, m, ac, self, canRead);
+    return row;
+  }
+
+  function tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom) {
+    if (
+      !scroll ||
+      !ac ||
+      CommunicationState.loadingOlder ||
+      CommunicationState.threadSearchQuery ||
+      CommunicationState.highlightMessageId
+    ) {
+      return false;
+    }
+    var prev = CommunicationState._renderedMsgIds;
+    if (!prev || !prev.length || !scroll.querySelector('.ce2-row')) {
+      return false;
+    }
+    var nextIds = visibleMsgs.map(function (m) {
+      return m.id;
+    });
+
+    if (
+      nextIds.length === prev.length &&
+      prev.length > 0 &&
+      prev[prev.length - 1] !== nextIds[nextIds.length - 1] &&
+      String(prev[prev.length - 1]).indexOf('pending-') === 0
+    ) {
+      var prefixOk = true;
+      for (var p = 0; p < prev.length - 1; p++) {
+        if (prev[p] !== nextIds[p]) {
+          prefixOk = false;
+          break;
+        }
+      }
+      if (prefixOk) {
+        var oldRow = scroll.querySelector(
+          '[data-message-id="' + prev[prev.length - 1] + '"]'
+        );
+        if (oldRow) oldRow.remove();
+        scroll.appendChild(buildMessageRow(visibleMsgs[visibleMsgs.length - 1], ac));
+        CommunicationState._renderedMsgIds = nextIds;
+        if (stickBottom) {
+          scroll.scrollTop = scroll.scrollHeight;
+        }
+        updateTypingLineOnly();
+        return true;
+      }
+    }
+
+    if (nextIds.length > prev.length) {
+      var samePrefix = true;
+      for (var i = 0; i < prev.length; i++) {
+        if (prev[i] !== nextIds[i]) {
+          samePrefix = false;
+          break;
+        }
+      }
+      if (samePrefix) {
+        for (var j = prev.length; j < visibleMsgs.length; j++) {
+          scroll.appendChild(buildMessageRow(visibleMsgs[j], ac));
+        }
+        CommunicationState._renderedMsgIds = nextIds;
+        if (stickBottom) {
+          scroll.scrollTop = scroll.scrollHeight;
+        }
+        updateTypingLineOnly();
+        if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+        return true;
+      }
+    }
+    return false;
+  }
+
   function renderMessagePanel() {
     const ac = CommunicationState.activeConversation;
     const scroll = el('ce2MessageScroll');
@@ -1415,140 +2153,52 @@
     var stickBottom =
       scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
 
-    closeMessageMenu();
-    scroll.innerHTML = '';
     if (!ac) {
+      invalidateMessageRenderCache();
+      closeMessageMenu();
       scroll.innerHTML = CommunicationState.loading
         ? '<div class="ce2-placeholder ce2-placeholder-loading">Loading messages…</div>'
         : '<div class="ce2-placeholder">Choose a formation group or direct thread.</div>';
-    } else if (!CommunicationState.messages.length) {
-      scroll.innerHTML = '<div class="ce2-placeholder">No messages yet.</div>';
-    } else {
-      if (CommunicationState.hasMoreMessages) {
-        var olderBtn = document.createElement('button');
-        olderBtn.type = 'button';
-        olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
-        olderBtn.id = 'ce2LoadOlder';
-        olderBtn.textContent = CommunicationState.loadingOlder
-          ? 'Loading…'
-          : 'Load older messages';
-        olderBtn.disabled = CommunicationState.loadingOlder;
-        scroll.appendChild(olderBtn);
-      }
-      var ma = msgActions();
-      if (ma) ma.renderPinnedBanner(scroll, ac);
-      CommunicationState.messages.forEach(function (m) {
-        if (
-          m._pending &&
-          m.conversationId &&
-          ac.id &&
-          m.conversationId !== ac.id
-        ) {
-          return;
-        }
-        if (ma && ma.isMessageHidden(m, ac)) return;
-        const row = document.createElement('div');
-        const self = CommunicationState.me && m.senderId === CommunicationState.me.uid;
-        var searchQ = CommunicationState.threadSearchQuery || '';
-        var searchHit = searchQ && ma && ma.messageMatchesSearch(m, searchQ);
-        var isHighlight =
-          CommunicationState.highlightMessageId &&
-          m.id === CommunicationState.highlightMessageId;
-        row.className =
-          'ce2-row' +
-          (self ? ' is-self' : '') +
-          (m._pending ? ' is-pending' : '') +
-          (m.uploadState === 'failed' ? ' is-voice-failed' : '') +
-          (searchHit ? ' is-search-hit' : '') +
-          (isHighlight ? ' is-highlighted' : '');
-        row.dataset.messageId = m.id || '';
-        const reader = CommunicationState.me;
-        const canRead = canReadMessageContent(reader, m, ac);
-        const bubble = document.createElement('div');
-        bubble.className =
-          'ce2-bubble' +
-          (canRead ? '' : ' ce2-bubble-locked') +
-          (canRead && m.replyTo ? ' ce2-bubble--has-reply' : '');
-        if (ma && canRead) {
-          ma.renderForwardQuote(bubble, m);
-          ma.renderFormationBadge(bubble, m);
-        }
-        if (showDebugUi()) {
-          const tags = document.createElement('div');
-          tags.className = 'ce2-bubble-tags';
-          tags.innerHTML =
-            '<span class="ce2-tag">' +
-            escapeHtml(m.classification) +
-            '</span>' +
-            '<span class="ce2-tag">' +
-            (m.shareable ? 'shareable' : 'private') +
-            '</span>';
-          bubble.appendChild(tags);
-        }
-        if (canRead) {
-          appendMessageBody(bubble, m);
-          if (ma) ma.appendReactionsRow(bubble, m);
-        } else {
-          bubble.appendChild(
-            document.createTextNode(
-              'This space unlocks through formation progression.'
-            )
-          );
-        }
+      updateTypingLineOnly();
+      return;
+    }
 
-        row.appendChild(bubble);
-        const foot = document.createElement('div');
-        foot.className = 'ce2-msg-foot';
-        var rc = receipts();
-        var otherRead =
-          ac && ac.type === 'direct' && CommunicationState.convMeta
-            ? (CommunicationState.convMeta.lastRead || {})[ac.otherUid]
-            : null;
-        var status =
-          rc && self && !m._pending
-            ? rc.deliveryStatus(m, CommunicationState.me.uid, otherRead)
-            : m._pending
-              ? 'pending'
-              : '';
-        foot.textContent = '';
-        var footMeta = document.createElement('span');
-        footMeta.className = 'ce2-msg-foot-meta';
-        if (m._voiceLocalId && m.uploadState === 'uploading') {
-          footMeta.textContent =
-            'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
-        } else if (m._voiceLocalId && m.uploadState === 'retrying') {
-          footMeta.textContent = 'Retrying upload…';
-        } else if (m._voiceLocalId && m.uploadState === 'failed') {
-          footMeta.textContent = 'Failed to send';
-        } else {
-          footMeta.textContent = m._pending
-            ? 'Sending…'
-            : (rc && status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
-        }
-        if (ma && ma.isMessageSaved(m)) {
-          var star = document.createElement('span');
-          star.className = 'ce2-msg-star';
-          star.textContent = ' ★';
-          star.title = 'Starred';
-          footMeta.appendChild(star);
-        }
-        foot.appendChild(footMeta);
-        if (ma) ma.renderEditedLabel(foot, m);
-        row.appendChild(foot);
-        wireMessageRowMenu(row, m, ac, self, canRead);
-        scroll.appendChild(row);
-      });
+    if (!CommunicationState.messages.length) {
+      invalidateMessageRenderCache();
+      closeMessageMenu();
+      scroll.innerHTML = '<div class="ce2-placeholder">No messages yet.</div>';
+      updateTypingLineOnly();
+      return;
     }
-    var typingEl = el('ce2TypingLine');
-    if (typingEl) {
-      if (CommunicationState.typingLabel && ac && !ac.needsJoin) {
-        typingEl.hidden = false;
-        typingEl.textContent = CommunicationState.typingLabel;
-      } else {
-        typingEl.hidden = true;
-        typingEl.textContent = '';
-      }
+
+    var visibleMsgs = getVisibleMessages(ac);
+    if (tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom)) {
+      return;
     }
+
+    invalidateMessageRenderCache();
+    closeMessageMenu();
+    scroll.innerHTML = '';
+    if (CommunicationState.hasMoreMessages) {
+      var olderBtn = document.createElement('button');
+      olderBtn.type = 'button';
+      olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
+      olderBtn.id = 'ce2LoadOlder';
+      olderBtn.textContent = CommunicationState.loadingOlder
+        ? 'Loading…'
+        : 'Load older messages';
+      olderBtn.disabled = CommunicationState.loadingOlder;
+      scroll.appendChild(olderBtn);
+    }
+    var ma = msgActions();
+    if (ma) ma.renderPinnedBanner(scroll, ac);
+    visibleMsgs.forEach(function (m) {
+      scroll.appendChild(buildMessageRow(m, ac));
+    });
+    CommunicationState._renderedMsgIds = visibleMsgs.map(function (m) {
+      return m.id;
+    });
+    updateTypingLineOnly();
     if (stickBottom) {
       scroll.scrollTop = scroll.scrollHeight;
     }
@@ -1976,6 +2626,7 @@
       root.Ce2AudioPlayback.stop();
     }
     stopConvMetaWatch();
+    stopMessengerNotifWatch();
     if (messagesUnsub) {
       messagesUnsub();
       messagesUnsub = null;
@@ -1985,17 +2636,41 @@
     CommunicationState.messages = [];
     CommunicationState.hasMoreMessages = false;
     CommunicationState.oldestMessageDoc = null;
+    CommunicationState._renderedMsgIds = null;
+    CommunicationState._metaLastMessageId = null;
     clearReply();
   }
 
   function attachMessagesListener(messagesCol) {
     var ac = CommunicationState.activeConversation;
     var errContext = ac && ac.type === 'group' ? 'group' : 'messages';
+    var firstSnap = true;
     messagesUnsub = messagesCol
       .orderBy('createdAt', 'asc')
       .limitToLast(MESSAGE_PAGE)
       .onSnapshot(
         function (snap) {
+          var me = CommunicationState.me;
+          if (!firstSnap && me && ac) {
+            snap.docChanges().forEach(function (change) {
+              if (change.type !== 'added') return;
+              var data = change.doc.data();
+              if (!data.senderId || data.senderId === me.uid) return;
+              var msgId = change.doc.id;
+              if (isMessageAlreadyRendered(msgId)) return;
+              CommunicationState._metaLastMessageId = msgId;
+              CommunicationState.typingLabel = null;
+              updateTypingLineOnly();
+              var msg = Object.assign({ id: msgId }, data);
+              mergeMessageIntoState(msg);
+              forceAppendIncomingMessage(msg, ac, true);
+            });
+          }
+          if (firstSnap && snap.docs.length) {
+            CommunicationState._metaLastMessageId = snap.docs[snap.docs.length - 1].id;
+          }
+          firstSnap = false;
+
           CommunicationState.hasMoreMessages = snap.docs.length >= MESSAGE_PAGE;
           if (snap.docs.length) {
             CommunicationState.oldestMessageDoc = snap.docs[0];
@@ -2006,16 +2681,10 @@
           CommunicationState.messages = mergeServerAndPending(
             CommunicationState.lastServerMessages
           );
-          var me = CommunicationState.me;
-          if (me && ac && snap.docs.length) {
-            var lastDoc = snap.docs[snap.docs.length - 1];
-            var lastData = lastDoc.data();
-            if (lastData.senderId && lastData.senderId !== me.uid) {
-              if (ac.type === 'group') scheduleLoadGroups(me.uid);
-              scheduleLoadThreads(me.uid);
-            }
-          }
-          requestRender({ throttle: true, threadOnly: true });
+          (CommunicationState.lastServerMessages || []).forEach(function (m) {
+            reconcileRenderedMessage(m, ac);
+          });
+          syncMessagePanelFromSnap(ac);
         },
         function (err) {
           stopMessagesWatch();
@@ -2174,6 +2843,7 @@
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
+    syncCe2ThreadUrl(CommunicationState.activeConversation);
     render();
   }
 
@@ -2244,6 +2914,7 @@
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
+    syncCe2ThreadUrl(CommunicationState.activeConversation);
     render();
   }
 
@@ -2638,6 +3309,30 @@
     CommunicationState.activeConversation.securityLevel = security.level;
   }
 
+  async function writeDirectMessageNotification(recipientUid, preview, me, convId, messageId) {
+    if (!recipientUid || !me || recipientUid === me.uid) return;
+    try {
+      var senderName = ((me && me.name) || 'Someone').trim() || 'Someone';
+      var plainPreview =
+        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+          ? root.Ce2Format.stripFormattingForPreview(preview || 'New message')
+          : preview || 'New message';
+      await db.collection('notifications').add({
+        userId: recipientUid,
+        type: 'direct_message',
+        title: senderName,
+        body: plainPreview.slice(0, 80),
+        senderId: me.uid,
+        convId: convId || '',
+        messageId: messageId || '',
+        read: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn('[CE2 DM Notif]', e);
+    }
+  }
+
   async function writeGroupMessageNotifications(ac, preview, me) {
     if (!ac || ac.type !== 'group' || !ac.id || !me) return;
     try {
@@ -2676,8 +3371,13 @@
     }
   }
 
-  async function triggerCe2Push(ac, preview, me) {
+  async function triggerCe2Push(ac, preview, me, messageId) {
     if (!ac || !me) return;
+    if (ac.type === 'direct') {
+      if (!ac.otherUid || ac.otherUid === me.uid) return;
+    } else if (ac.type !== 'group' || !ac.id) {
+      return;
+    }
     try {
       var user = firebase.auth().currentUser;
       if (!user) return;
@@ -2693,29 +3393,32 @@
         var recipDoc = await db.collection('users').doc(ac.otherUid).get();
         if (!recipDoc.exists) return;
         var token = recipDoc.data().fcmToken;
-        if (!token) return;
-        var convId = ac.id || '';
-        await fetch(
-          'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: 'Bearer ' + idToken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              senderId: user.uid,
-              recipientId: ac.otherUid,
-              message: messageText,
-              recipientToken: token,
-              senderName: senderName,
-              title: senderName,
-              body: messageText,
-              url: '/communication-v2/?conv=' + encodeURIComponent(convId),
-              convId: convId,
-            }),
-          }
-        );
+        var convId = ac.id || directConvId(me.uid, ac.otherUid);
+        if (token) {
+          await fetch(
+            'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + idToken,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                senderId: user.uid,
+                recipientId: ac.otherUid,
+                message: messageText,
+                recipientToken: token,
+                senderName: senderName,
+                title: senderName,
+                body: messageText,
+                url: '/communication-v2/?conv=' + encodeURIComponent(convId),
+                convId: convId,
+                messageId: messageId || '',
+              }),
+            }
+          );
+        }
+        writeDirectMessageNotification(ac.otherUid, preview, me, convId, messageId);
         return;
       }
 
@@ -2746,55 +3449,103 @@
     }
   }
 
-  function pushConversationMetaAsync(ac, patch, me, now) {
+  function buildConversationMetaPatch(ac, patch, me, messageId, now) {
     var rc = receipts();
-    if (!rc || !ac) return;
-    var metaRef = getMetaDocRef(ac);
-    if (!metaRef) return;
+    if (!rc || !ac) return null;
+    now = now || firebase.firestore.Timestamp.now();
     var unreadMap =
       CommunicationState.convMeta && CommunicationState.convMeta.unreadCount
         ? CommunicationState.convMeta.unreadCount
         : {};
-    var recipients = ac.type === 'direct' ? [ac.otherUid] : CommunicationState.memberIds || [];
+    var recipients =
+      ac.type === 'direct' ? [ac.otherUid] : CommunicationState.memberIds || [];
+    var preview = (
+      root.Ce2Format && root.Ce2Format.stripFormattingForPreview
+        ? root.Ce2Format.stripFormattingForPreview(patch.content || '')
+        : patch.content || ''
+    ).slice(0, 140);
     var metaPatch = {
       lastMessageAt: now,
-      lastPreview: (
-        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
-          ? root.Ce2Format.stripFormattingForPreview(patch.content || '')
-          : patch.content || ''
-      ).slice(0, 140),
+      lastPreview: preview,
+      lastSenderId: me.uid,
+      lastMessageId: messageId,
+      lastMessageType: patch.messageType || 'text',
     };
     Object.assign(metaPatch, rc.markReadPatch(me.uid));
     Object.assign(metaPatch, rc.incrementUnreadPatch(me.uid, recipients, unreadMap));
+    metaPatch['typing.' + me.uid] = firebase.firestore.FieldValue.delete();
+    return metaPatch;
+  }
+
+  function pushConversationMetaAsync(ac, patch, me, messageId) {
+    var metaRef = getMetaDocRef(ac);
+    if (!metaRef) return;
+    var metaPatch = buildConversationMetaPatch(ac, patch, me, messageId);
+    if (!metaPatch) return;
     metaRef.set(metaPatch, { merge: true }).catch(function () {});
   }
 
+  function firestoreWriteTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_resolve, reject) {
+        setTimeout(function () {
+          reject(new Error('Send timed out — check your connection and try again.'));
+        }, ms || 25000);
+      }),
+    ]);
+  }
+
   async function commitCe2Message(ac, patch, me) {
+    var now = firebase.firestore.Timestamp.now();
+    var stored = Object.assign({}, patch);
+    stored.createdAt = now;
+
     if (ac.type === 'direct') {
       if (!ac.otherUid) {
         throw new Error('Missing recipient — reopen this thread from Discovery.');
       }
-      patch.receiverId = ac.otherUid;
+      stored.receiverId = ac.otherUid;
       if (!ac.id || !ac.convReady) {
         var convId = await ensureDirectConv(ac.otherUid);
         ac.id = convId;
         ac.convReady = true;
       }
-      patch.conversationId = ac.id;
-      await db
+      stored.conversationId = ac.id;
+      var dCol = db
         .collection('ce2_conversations')
         .doc(ac.id)
-        .collection('ce2_messages')
-        .add(patch);
-      return;
+        .collection('ce2_messages');
+      var dRef = dCol.doc();
+      await firestoreWriteTimeout(dRef.set(stored), 25000);
+
+      var dMetaRef = getMetaDocRef(ac);
+      var dMetaPatch = buildConversationMetaPatch(ac, patch, me, dRef.id, now);
+      if (dMetaRef && dMetaPatch) {
+        dMetaRef.set(dMetaPatch, { merge: true }).catch(function (metaErr) {
+          console.warn('[CE2] conversation meta update failed', metaErr);
+        });
+      }
+      return dRef.id;
     }
-    patch.conversationId = ac.id;
-    delete patch.receiverId;
-    await db
+
+    stored.conversationId = ac.id;
+    delete stored.receiverId;
+    var gCol = db
       .collection('communicationGroups')
       .doc(ac.id)
-      .collection('ce2_messages')
-      .add(patch);
+      .collection('ce2_messages');
+    var gRef = gCol.doc();
+    await firestoreWriteTimeout(gRef.set(stored), 25000);
+
+    var gMetaRef = getMetaDocRef(ac);
+    var gMetaPatch = buildConversationMetaPatch(ac, patch, me, gRef.id, now);
+    if (gMetaRef && gMetaPatch) {
+      gMetaRef.set(gMetaPatch, { merge: true }).catch(function (metaErr) {
+        console.warn('[CE2] group meta update failed', metaErr);
+      });
+    }
+    return gRef.id;
   }
 
   function canUnsendMessage(m) {
@@ -3118,10 +3869,9 @@
         voiceUploadCommitted[localId] = true;
         updatePendingVoiceMessage(localId, { uploadState: 'sent', uploadProgress: 1 });
 
-        return commitCe2Message(ac, patch, me).then(function () {
-          pushConversationMetaAsync(ac, patch, me, now);
-          triggerCe2Push(ac, 'Voice message', me);
-          scheduleLoadThreads(me.uid);
+        return commitCe2Message(ac, patch, me).then(function (messageId) {
+          triggerCe2Push(ac, 'Voice message', me, messageId);
+          patchThreadPreviewLocal(ac, 'Voice message');
           if (root.Ce2AudioOutbox) {
             root.Ce2AudioOutbox.remove(localId).catch(function () {});
           }
@@ -3582,9 +4332,12 @@
           shareable: shareable,
         });
         el('ce2Input').value = '';
-        syncCe2ComposerInputHeight();
-        clearComposerDraft(ac);
         if (root.Ce2Format) root.Ce2Format.syncInputMirror();
+        syncCe2ComposerInputHeight();
+        requestAnimationFrame(function () {
+          syncCe2ComposerInputHeight();
+        });
+        clearComposerDraft(ac);
         CommunicationState.statusMessage =
           'Saved offline — will send when you reconnect.';
         render();
@@ -3689,11 +4442,17 @@
       patches.push(buildPatch(text, null));
     }
 
+    clearComposerTyping(ac);
+
     var pendingIds = patches.map(function (p) {
       return pushOptimisticMessage(p);
     });
     el('ce2Input').value = '';
+    if (root.Ce2Format) root.Ce2Format.syncInputMirror();
     syncCe2ComposerInputHeight();
+    requestAnimationFrame(function () {
+      syncCe2ComposerInputHeight();
+    });
     clearComposerDraft(ac);
     if (root.Ce2Format) root.Ce2Format.syncInputMirror();
     if (boardUrlInput) boardUrlInput.value = '';
@@ -3702,20 +4461,19 @@
     CommunicationState.error = null;
     CommunicationState.statusMessage = null;
     CommunicationState.sending = true;
-    render();
+    updateComposerState();
 
     var sendBtn = el('ce2SendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
     try {
+      var lastMessageId = null;
       for (var i = 0; i < patches.length; i++) {
-        await commitCe2Message(ac, patches[i], me);
-        removeOptimisticMessage(pendingIds[i]);
+        lastMessageId = await commitCe2Message(ac, patches[i], me);
+        confirmSentMessage(pendingIds[i], lastMessageId, patches[i], ac);
       }
-      pushConversationMetaAsync(ac, patches[patches.length - 1], me, now);
-      triggerCe2Push(ac, patches[patches.length - 1].content || '', me);
-      scheduleLoadThreads(me.uid);
-      scheduleLoadGroups(me.uid);
+      triggerCe2Push(ac, patches[patches.length - 1].content || '', me, lastMessageId);
+      patchThreadPreviewLocal(ac, patches[patches.length - 1].content || '');
       if (patches.length > 1) {
         CommunicationState.statusMessage = patches.length + ' messages sent';
       }
@@ -3730,7 +4488,7 @@
     } finally {
       CommunicationState.sending = false;
       updateComposerState();
-      requestRender();
+      requestRender({ threadOnly: true });
     }
   }
 
@@ -3922,6 +4680,10 @@
     document.documentElement.style.setProperty('--ce2-composer-kb', lift + 'px');
     document.body.classList.toggle('ce2-composer-kb-active', composerFocused && lift > 0);
 
+    if (composerFocused) {
+      requestAnimationFrame(scrollMessagesToEnd);
+    }
+
     if (ce2KbDebugEnabled()) {
       console.log('[CE2 kb] lift=' + lift + ' occluded=' + kbOccluded + ' legacy=' + ce2UseLegacyComposerLift());
     }
@@ -4054,29 +4816,40 @@
     });
   }
 
-  function syncCe2ComposerInputHeight(target) {
+  var composerInputRaf = 0;
+
+  function syncCe2ComposerInputHeight(target, opts) {
+    opts = opts || {};
     var input = target || el('ce2Input');
     if (!input) return;
-    input.style.height = 'auto';
     var cs = window.getComputedStyle(input);
     var max = parseInt(cs.maxHeight, 10);
     if (!max || isNaN(max)) max = 132;
     var min = parseInt(cs.minHeight, 10);
     if (!min || isNaN(min)) min = 38;
+    var shell = input.closest && input.closest('.ce2-input-shell');
+    var empty = !String(input.value || '').length;
+    input.style.overflowY = 'hidden';
+    input.style.height = '0px';
     var next = Math.min(Math.max(input.scrollHeight, min), max);
     input.style.height = next + 'px';
     input.style.overflowY = input.scrollHeight > max ? 'auto' : 'hidden';
-    var shell = input.closest && input.closest('.ce2-input-shell');
-    if (shell) shell.style.minHeight = next + 'px';
-    if (root.Ce2Format && root.Ce2Format.syncInputMirror) {
+    input.__ce2ComposerHeightPx = next;
+    if (shell) {
+      if (empty && next <= min) shell.style.minHeight = '';
+      else shell.style.minHeight = next + 'px';
+    }
+    if (!opts.skipMirror && root.Ce2Format && root.Ce2Format.syncInputMirror) {
       root.Ce2Format.syncInputMirror();
     }
   }
 
-  function onCe2ComposerInputChange() {
+  function runComposerInputChange() {
     var input = el('ce2Input');
     if (!input) return;
-    if (root.Ce2Format && root.Ce2Format.syncInputMirror) {
+    if (root.Ce2Format && root.Ce2Format.syncInputMirrorFast) {
+      root.Ce2Format.syncInputMirrorFast();
+    } else if (root.Ce2Format && root.Ce2Format.syncInputMirror) {
       root.Ce2Format.syncInputMirror();
     }
     var ac = CommunicationState.activeConversation;
@@ -4085,7 +4858,7 @@
       root.Ce2Drafts.scheduleSave(me.uid, threadComposerKey(ac), input.value);
     }
     var prev = input.__ce2ComposerHeightPx || 0;
-    syncCe2ComposerInputHeight(input);
+    syncCe2ComposerInputHeight(input, { skipMirror: true });
     var next = parseInt(input.style.height, 10) || 0;
     input.__ce2ComposerHeightPx = next;
     if (next > prev && document.activeElement === input) {
@@ -4093,7 +4866,16 @@
     }
   }
 
+  function onCe2ComposerInputChange() {
+    if (composerInputRaf) return;
+    composerInputRaf = requestAnimationFrame(function () {
+      composerInputRaf = 0;
+      runComposerInputChange();
+    });
+  }
+
   function bindCe2ComposerInput() {
+    initComposerDraftPersistence();
     var input = el('ce2Input');
     if (!input || input.__ce2InputBound) return;
     input.__ce2InputBound = true;
@@ -4115,6 +4897,9 @@
     });
     input.addEventListener('blur', function () {
       persistActiveComposerDraft();
+      if (root.Ce2Format && root.Ce2Format.flushInputMirrorFormat) {
+        root.Ce2Format.flushInputMirrorFormat();
+      }
       setTimeout(function () {
         syncCe2FocusableInputs();
         clearComposerKeyboardInset();
@@ -4125,9 +4910,8 @@
   function initCe2AudioPlayback() {
     if (!root.Ce2AudioPlayback) return;
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') {
-        persistActiveComposerDraft();
-        if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.pause();
+      if (document.visibilityState === 'hidden' && root.Ce2AudioPlayback) {
+        root.Ce2AudioPlayback.pause();
       }
     });
   }
@@ -4299,9 +5083,9 @@
           createdAt: now,
           messageType: 'text',
         };
-        await commitCe2Message(patchAc, patch, me);
-        pushConversationMetaAsync(patchAc, patch, me, now);
-        triggerCe2Push(patchAc, patch.content || '', me);
+        var messageId = await commitCe2Message(patchAc, patch, me);
+        triggerCe2Push(patchAc, patch.content || '', me, messageId);
+        patchThreadPreviewLocal(patchAc, patch.content || '');
         q.remove(item.id);
         sent++;
       } catch (err) {
@@ -4318,9 +5102,21 @@
 
   root.ce2FlushOfflineQueue = flushCe2OfflineQueue;
   root.syncCe2ComposerInputHeight = syncCe2ComposerInputHeight;
+  root.CommunicationState = CommunicationState;
+  root.Ce2Runtime = {
+    isMessengerThreadOpen: function (notif) {
+      return isNotifForOpenThread(notif);
+    },
+    ingestIncomingNotif: function (notif) {
+      ingestIncomingNotif(notif);
+    },
+  };
 
   async function boot(user) {
     resetCe2UiBlockers();
+    if (typeof db.enableNetwork === 'function') {
+      db.enableNetwork().catch(function () {});
+    }
     CommunicationState.loading = true;
     CommunicationState.visibleGroups = [];
     CommunicationState.threads = [];
@@ -4343,6 +5139,7 @@
         'Your network profile is missing — some messenger features may be limited until an admin creates your users document.';
     }
     CommunicationState.me = normalizeCe2User(user.uid, data);
+    CommunicationState.loading = false;
     render();
 
     if (isMessagingSuspended()) {
@@ -4356,30 +5153,19 @@
         ? window.Ce2MessageActions.loadUserPrefs(user.uid, { lite: true })
         : Promise.resolve();
 
-    try {
-      await promiseWithTimeout(
-        Promise.all([
-          loadGroupsForUser(CommunicationState.me),
-          loadThreads(user.uid),
-          prefs,
-        ]),
-        15000,
-        'CE2 boot'
-      );
-    } catch (bootErr) {
+    var listsPromise = promiseWithTimeout(
+      Promise.all([
+        loadGroupsForUser(CommunicationState.me),
+        loadThreads(user.uid),
+        prefs,
+      ]),
+      15000,
+      'CE2 boot'
+    ).catch(function (bootErr) {
       console.warn('CE2 boot partial failure', bootErr);
       CommunicationState.statusMessage =
         'Some lists loaded slowly — pull to refresh or switch tabs again.';
-    }
-
-    CommunicationState.discoveryLoaded = false;
-    var menteesTab = document.querySelector('.ce2-tab-mentees');
-    if (menteesTab && (CommunicationState.me.mentor || CommunicationState.me.isAdmin)) {
-      menteesTab.hidden = false;
-    }
-
-    CommunicationState.loading = false;
-    render();
+    });
 
     if (window.Ce2Pwa && typeof window.Ce2Pwa.init === 'function') {
       try {
@@ -4392,12 +5178,21 @@
       window.Ce2Nudges.init(CommunicationState.me);
     }
 
-    try {
-      await applyCe2EntryParams(user.uid);
-      render();
-    } catch (linkErr) {
-      console.warn('applyCe2EntryParams', linkErr);
+    CommunicationState.discoveryLoaded = false;
+    var menteesTab = document.querySelector('.ce2-tab-mentees');
+    if (menteesTab && (CommunicationState.me.mentor || CommunicationState.me.isAdmin)) {
+      menteesTab.hidden = false;
     }
+
+    try {
+      await Promise.all([
+        listsPromise,
+        applyCe2EntryParams(user.uid).catch(function (linkErr) {
+          console.warn('applyCe2EntryParams', linkErr);
+        }),
+      ]);
+    } catch (_) {}
+    render();
 
     if (!CommunicationState.offline) {
       flushCe2OfflineQueue().catch(function (e) {
@@ -4445,6 +5240,13 @@
       });
     });
   });
+  console.log(
+    '[CE2] delivery stable ' +
+      CE2_DELIVERY_STABLE_VERSION +
+      ' rollback=' +
+      CE2_DELIVERY_ROLLBACK +
+      (CE2_DELIVERY_EXPERIMENTAL ? ' experimental=on' : '')
+  );
   console.log(
     '[CE2] communication-v2.js ' +
       CE2_KEYBOARD_STABLE_VERSION +

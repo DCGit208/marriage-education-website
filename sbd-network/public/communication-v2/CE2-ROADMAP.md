@@ -13,10 +13,11 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 | **Keyboard / header / composer gap** | **Stable** | `ce2-keyboard-stable-v60` · `e2e0e7f1` |
 | **UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` · `0ac45906` · CSS **v46** |
 | **Audio Phase 1 (1A–1D + lock)** | **Stable** | `ce2-audio-stable-1d` · `5fe0740e` · recorder **v4** |
-| Core messaging beta | Shipped | `communication-v2.js` v60 + `ce2-*.js` |
+| **Message delivery** | **Stable** | `ce2-delivery-stable-v90` · `communication-v2.js?v=90` |
+| Core messaging beta | Shipped | `communication-v2.js` + `ce2-*.js` |
 | Media upload | Shipped | R2 · `dm_audio` |
 
-**Console check:** `[CE2] communication-v2.js v60` · `rollback=ce2-keyboard-stable-v60` · `audio rollback=ce2-audio-stable-1d`
+**Console check:** `[CE2] delivery stable v90` · `rollback=ce2-delivery-stable-v90` · `audio rollback=ce2-audio-stable-1d`
 
 ---
 
@@ -30,10 +31,13 @@ Central index for **planned and frozen** CE2 work. Use this when requesting feat
 ce2-keyboard-stable-v60  → e2e0e7f1
 └── ce2-ui-composure-stable  → 0ac45906  (UI-1, UI-2, UI-3)
     └── ce2-audio-stable-1d  → 5fe0740e  (Audio 1A–1D, lock on)
+        └── ce2-delivery-stable-v90  (message send/receive baseline)
         ├── ROLLBACK-FRAMEWORK.md
         ├── ROLLBACK-KEYBOARD-v60.md
         ├── ROLLBACK-UI-COMPOSURE.md
-        └── ROLLBACK-AUDIO-1D.md
+        ├── ROLLBACK-AUDIO-1D.md
+        ├── ROLLBACK-DELIVERY-v90.md
+        └── DELIVERY-PERF-GUARDRAILS.md
 ```
 
 ---

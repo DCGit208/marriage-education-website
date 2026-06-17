@@ -157,6 +157,25 @@ async function _purgeStaleNotifications(userId) {
   } catch (_) {}
 }
 
+function _shouldSuppressMessengerToast(n) {
+  if (!n || (n.type !== 'direct_message' && n.type !== 'group_message')) return false;
+  if (typeof window === 'undefined') return false;
+  if (!/\/communication-v2\/?/i.test(window.location.pathname || '')) return false;
+  if (window.Ce2Runtime && typeof window.Ce2Runtime.isMessengerThreadOpen === 'function') {
+    return window.Ce2Runtime.isMessengerThreadOpen(n);
+  }
+  const ac = window.CommunicationState && window.CommunicationState.activeConversation;
+  if (!ac || ac.needsJoin) return false;
+  if (n.type === 'direct_message') {
+    if (ac.type !== 'direct') return false;
+    if (n.convId && ac.id && n.convId === ac.id) return true;
+    if (n.senderId && ac.otherUid && n.senderId === ac.otherUid) return true;
+    return false;
+  }
+  const gid = n.groupId || n.convId;
+  return n.type === 'group_message' && ac.type === 'group' && !!gid && ac.id === gid;
+}
+
 // ── Real-time unread count + foreground toast ─────────────────────
 function _startUnreadListener(userId) {
   if (_unsubNotif) { _unsubNotif(); _unsubNotif = null; }
@@ -178,7 +197,16 @@ function _startUnreadListener(userId) {
               if (change.type !== 'added') continue;
               const n = change.doc.data();
               if (n.boardId) await _getBoardMeta(n.boardId);
-              if (_canViewBoardNotif(n)) _showNotifToast(n);
+              if (
+                (n.type === 'direct_message' || n.type === 'group_message') &&
+                window.Ce2Runtime &&
+                typeof window.Ce2Runtime.ingestIncomingNotif === 'function'
+              ) {
+                window.Ce2Runtime.ingestIncomingNotif(
+                  Object.assign({ messageId: n.messageId || '' }, n)
+                );
+              }
+              if (_canViewBoardNotif(n) && !_shouldSuppressMessengerToast(n)) _showNotifToast(n);
             }
           }
           first = false;
@@ -204,7 +232,7 @@ function _showNotifToast(n) {
   const panel = document.getElementById('notifPanel');
   if (panel && panel.classList.contains('open')) return;
 
-  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
+  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : n.type === 'direct_message' ? '✉️' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
   const toast = document.createElement('div');
   toast.className = 'notif-toast';
   toast.innerHTML = `<span class="notif-toast-icon">${icon}</span><div class="notif-toast-body"><div class="notif-toast-title">${_esc(n.title)}</div>${n.body ? `<div class="notif-toast-text">${_esc(n.body.substring(0, 80))}${n.body.length > 80 ? '…' : ''}</div>` : ''}</div>`;
@@ -402,7 +430,7 @@ function _appendNotifItem(n, list) {
     const li = document.createElement('li');
     li.className = 'notif-item' + (n.read ? '' : ' unread');
     const ago  = n.timestamp?.toDate ? _timeAgo(n.timestamp.toDate()) : '';
-  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
+  const icon = n.type === 'new_post' ? '📝' : n.type === 'new_comment' ? '💬' : n.type === 'new_reaction' ? '❤️' : n.type === 'announcement' ? '📢' : n.type === 'group_message' ? '👥' : n.type === 'direct_message' ? '✉️' : (n.type === 'mention_post' || n.type === 'mention_comment') ? '🔔' : '💬';
   li.innerHTML = `
       <span class="ni-icon">${icon}</span>
       <div class="ni-body">
@@ -437,6 +465,12 @@ function _appendNotifItem(n, list) {
         closeNotifPanel();
         const gid = encodeURIComponent(n.groupId || n.convId);
         window.location.href = `/communication-v2/?group=${gid}`;
+      });
+    } else if (n.type === 'direct_message' && n.convId) {
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => {
+        closeNotifPanel();
+        window.location.href = `/communication-v2/?conv=${encodeURIComponent(n.convId)}`;
       });
     }
     list.appendChild(li);

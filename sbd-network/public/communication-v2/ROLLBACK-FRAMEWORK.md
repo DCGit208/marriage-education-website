@@ -13,8 +13,9 @@ Quick reference for restoring stable CE2 behavior before and during **UI**, **au
 | **1 — Keyboard / gap** | **Stable** | `ce2-keyboard-stable-v60` | `e2e0e7f1` |
 | **2 — UI composure (1–3)** | **Stable** | `ce2-ui-composure-stable` | `0ac45906` |
 | **3 — Audio (1A–1D + lock)** | **Stable** | `ce2-audio-stable-1d` | `5fe0740e` |
+| **4 — Message delivery** | **Stable** | `ce2-delivery-stable-v90` | *(tag when committed)* |
 
-**Rule:** Changes after this tag must not break layers 1–2 without full iPhone PWA re-test.
+**Rule:** Changes after this tag must not break layers 1–3 without full iPhone PWA re-test. **Layer 4** changes require `DELIVERY-PERF-GUARDRAILS.md` + `?ce2_delivery_fast=1` until regression passes.
 
 ---
 
@@ -96,12 +97,44 @@ cd sbd-network && firebase deploy --only hosting:sbd-network
 
 ---
 
+## Layer 4 — Message delivery (frozen at v90)
+
+| Item | Value |
+|------|--------|
+| Tag | `ce2-delivery-stable-v90` |
+| Doc | `ROLLBACK-DELIVERY-v90.md` · `DELIVERY-STABLE.lock` · `DELIVERY-PERF-GUARDRAILS.md` |
+| Console | `[CE2] delivery stable v90 rollback=ce2-delivery-stable-v90` |
+| JS | `communication-v2.js?v=90` |
+
+### Restore delivery only
+
+```bash
+git checkout ce2-delivery-stable-v90 -- \
+  sbd-network/public/communication-v2/communication-v2.js \
+  sbd-network/public/communication-v2/ce2-presence.js \
+  sbd-network/public/communication-v2/ce2-pwa.js \
+  sbd-network/public/communication-v2/communication-v2.css \
+  sbd-network/public/communication-v2/index.html \
+  sbd-network/public/js/firebase.js \
+  sbd-network/public/js/notifications.js
+cd sbd-network && firebase deploy --only hosting:sbd-network
+```
+
+Or: `./sbd-network/scripts/rollback-ce2-delivery-v90.sh`
+
+### Experimental delivery (dev only)
+
+`?ce2_delivery_fast=1` — see `DELIVERY-PERF-GUARDRAILS.md`. Default users: **off**.
+
+---
+
 ## Regression gate (after every deploy)
 
 1. Console **v60** + keyboard rollback id  
 2. Header **A**, gap **C**  
 3. UI-1–3 visual smoke (header, search, composer, messages)  
 4. Phase-specific test (voice 1A–1D — see `ROLLBACK-AUDIO-1D.md`)
+5. **Delivery:** DM send/receive — see `DELIVERY-PERF-GUARDRAILS.md` regression gate
 
 ---
 
@@ -112,6 +145,7 @@ cd sbd-network && firebase deploy --only hosting:sbd-network
 | `ce2-keyboard-stable-v60` | Keyboard + gap |
 | `ce2-ui-composure-stable` | UI-1 + UI-2 + UI-3 on top of v60 |
 | `ce2-audio-stable-1d` | Audio 1A–1D on top of v60 + UI |
+| `ce2-delivery-stable-v90` | Message delivery baseline (June 2026) |
 
 ```bash
 git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable ce2-audio-stable-1d ce2-audio-stable-1d-lockoff
@@ -125,5 +159,6 @@ git push origin ce2-keyboard-stable-v60 ce2-ui-composure-stable ce2-audio-stable
 - `ROLLBACK-KEYBOARD-v60.md`
 - `ROLLBACK-UI-COMPOSURE.md`
 - `PHASE-UI-COMPOSURE-REFINEMENT.md`
-- `PHASE-1-AUDIO-MESSAGING.md`
-- `AUDIO-PHASE-1A-GUARDRAILS.md`
+- `ROLLBACK-AUDIO-1D.md`
+- `ROLLBACK-DELIVERY-v90.md`
+- `DELIVERY-PERF-GUARDRAILS.md`

@@ -6,6 +6,7 @@
 
   var MAX_LEN = 8000;
   var saveTimers = {};
+  var pendingText = {};
 
   function storageKey(uid, threadKey) {
     return 'ce2_draft_' + String(uid || '') + '_' + String(threadKey || '');
@@ -53,11 +54,41 @@
   function scheduleSave(uid, threadKey, text, delayMs) {
     if (!uid || !threadKey) return;
     var id = storageKey(uid, threadKey);
+    pendingText[id] = text;
     if (saveTimers[id]) clearTimeout(saveTimers[id]);
     saveTimers[id] = setTimeout(function () {
       saveTimers[id] = null;
-      save(uid, threadKey, text);
-    }, typeof delayMs === 'number' ? delayMs : 400);
+      save(uid, threadKey, pendingText[id]);
+      delete pendingText[id];
+    }, typeof delayMs === 'number' ? delayMs : 80);
+  }
+
+  function flush(uid, threadKey) {
+    if (!uid || !threadKey) return;
+    var id = storageKey(uid, threadKey);
+    if (saveTimers[id]) {
+      clearTimeout(saveTimers[id]);
+      saveTimers[id] = null;
+    }
+    if (Object.prototype.hasOwnProperty.call(pendingText, id)) {
+      save(uid, threadKey, pendingText[id]);
+      delete pendingText[id];
+    }
+  }
+
+  function flushAll() {
+    Object.keys(saveTimers).forEach(function (id) {
+      clearTimeout(saveTimers[id]);
+      saveTimers[id] = null;
+    });
+    Object.keys(pendingText).forEach(function (id) {
+      var rest = id.slice('ce2_draft_'.length);
+      var marker = rest.indexOf('_d:');
+      if (marker < 0) marker = rest.indexOf('_g:');
+      if (marker < 0) return;
+      save(rest.slice(0, marker), rest.slice(marker + 1), pendingText[id]);
+      delete pendingText[id];
+    });
   }
 
   global.Ce2Drafts = {
@@ -67,7 +98,9 @@
     has: has,
     preview: preview,
     scheduleSave: scheduleSave,
-    VERSION: 1,
+    flush: flush,
+    flushAll: flushAll,
+    VERSION: 2,
   };
 })(
   typeof globalThis !== 'undefined'

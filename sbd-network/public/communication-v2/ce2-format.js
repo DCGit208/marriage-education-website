@@ -122,6 +122,41 @@
     });
   }
 
+  var mirrorFormatTimer = null;
+
+  function syncMirrorFast(field) {
+    if (!field || !field.input || !field.mirror) return;
+    var val = field.input.value || '';
+    if (!val) {
+      field.mirror.innerHTML =
+        '<span class="ce2-input-mirror-ph">' + escapeHtml(field.placeholder) + '</span>';
+      return;
+    }
+    field.mirror.textContent = val;
+    field.mirror.scrollTop = field.input.scrollTop;
+  }
+
+  function syncInputMirrorFast() {
+    syncMirrorFast({
+      input: composerInput || document.getElementById('ce2Input'),
+      mirror: composerMirror || document.getElementById('ce2InputMirror'),
+      placeholder: PLACEHOLDER,
+    });
+    if (mirrorFormatTimer) clearTimeout(mirrorFormatTimer);
+    mirrorFormatTimer = setTimeout(function () {
+      mirrorFormatTimer = null;
+      syncInputMirror();
+    }, 180);
+  }
+
+  function flushInputMirrorFormat() {
+    if (mirrorFormatTimer) {
+      clearTimeout(mirrorFormatTimer);
+      mirrorFormatTimer = null;
+    }
+    syncInputMirror();
+  }
+
   function syncEditMirror() {
     syncMirrorFor({
       input: document.getElementById('ce2EditInput'),
@@ -361,10 +396,12 @@
     formatMessageHtml: formatMessageHtml,
     stripFormattingForPreview: stripFormattingForPreview,
     syncInputMirror: syncInputMirror,
+    syncInputMirrorFast: syncInputMirrorFast,
+    flushInputMirrorFormat: flushInputMirrorFormat,
     syncEditMirror: syncEditMirror,
     onEditOpen: onEditOpen,
     init: init,
-    VERSION: 3,
+    VERSION: 4,
   };
 })(
   typeof globalThis !== 'undefined'
