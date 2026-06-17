@@ -1,0 +1,33 @@
+{
+  "rollbackId": "ce2-delivery-stable-v90",
+  "version": "v90",
+  "verified": {
+    "delivery": "acceptable",
+    "typingIndicator": "disabled",
+    "date": "2026-06"
+  },
+  "artifacts": {
+    "js": "communication-v2.js?v=90",
+    "css": "communication-v2.css?v=65",
+    "presence": "ce2-presence.js?v=4",
+    "pwa": "ce2-pwa.js?v=5",
+    "firebase": "firebase.js?v=rt2",
+    "notifications": "notifications.js (ingest hook, dashboard pages)"
+  },
+  "doc": "ROLLBACK-DELIVERY-v90.md",
+  "guardrails": "DELIVERY-PERF-GUARDRAILS.md",
+  "supersedes": null,
+  "frozenFlags": {
+    "CE2_TYPING_INDICATOR_ENABLED": false,
+    "CE2_DELIVERY_EXPERIMENTAL": false,
+    "firestoreIndexedDbPersistence": false
+  },
+  "frozenFunctions": [
+    "commitCe2Message",
+    "confirmSentMessage",
+    "handleMetaMessageDelivery",
+    "attachMessagesListener",
+    "forceAppendIncomingMessage",
+    "clearComposerTyping"
+  ]
+}

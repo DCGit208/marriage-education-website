@@ -140,11 +140,51 @@
     });
   }
 
+  function bindForegroundPushSuppress() {
+    if (root.__ce2ForegroundPushBound) return;
+    root.__ce2ForegroundPushBound = true;
+    if (typeof firebase === 'undefined' || typeof firebase.messaging !== 'function') return;
+    try {
+      var messaging = firebase.messaging();
+      messaging.onMessage(function (payload) {
+        var data = (payload && payload.data) || {};
+        var notif = {
+          type:
+            data.type === 'dm'
+              ? 'direct_message'
+              : data.type === 'group_message'
+                ? 'group_message'
+                : '',
+          convId: data.convId || '',
+          senderId: data.senderId || '',
+          groupId: data.groupId || '',
+          messageId: data.messageId || '',
+          body:
+            (payload.notification && payload.notification.body) ||
+            data.body ||
+            '',
+        };
+        if (
+          notif.type &&
+          root.Ce2Runtime &&
+          typeof root.Ce2Runtime.isMessengerThreadOpen === 'function' &&
+          root.Ce2Runtime.isMessengerThreadOpen(notif)
+        ) {
+          if (typeof root.Ce2Runtime.ingestIncomingNotif === 'function') {
+            root.Ce2Runtime.ingestIncomingNotif(notif);
+          }
+          return;
+        }
+      });
+    } catch (_) {}
+  }
+
   function init(userId) {
     if (!userId) return;
     try {
       bindOffline();
       bindInstallPrompt();
+      bindForegroundPushSuppress();
       if (hasNotificationApi()) {
         maybePushNudge(userId);
         if (NotifApi.permission === 'granted') initPush(userId);

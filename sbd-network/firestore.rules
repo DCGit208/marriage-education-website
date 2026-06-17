@@ -183,14 +183,16 @@ service cloud.firestore {
     }
     function ce2ConvMetaUpdateKeysOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'lastMessageAt', 'lastPreview', 'securityTier', 'securityLevel', 'participantIds', 'type',
+        'lastMessageAt', 'lastPreview', 'lastMessageId', 'lastMessageType',
+        'securityTier', 'securityLevel', 'participantIds', 'type',
         'typing', 'lastRead', 'unreadCount', 'lastSenderId',
         'pinnedMessageId', 'pinnedAt', 'pinnedBy'
       ]);
     }
     function ce2GroupMetaUpdateKeysOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'lastMessageAt', 'lastPreview', 'typing', 'lastRead', 'unreadCount', 'lastSenderId',
+        'lastMessageAt', 'lastPreview', 'lastMessageId', 'lastMessageType',
+        'typing', 'lastRead', 'unreadCount', 'lastSenderId',
         'pinnedMessageId', 'pinnedAt', 'pinnedBy'
       ]);
     }

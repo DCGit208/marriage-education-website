@@ -57,6 +57,43 @@ function buildPushMessage({
   };
 }
 
+function directConvId(a, b) {
+  const sorted = [a, b].sort();
+  return `d_${sorted[0]}_${sorted[1]}`;
+}
+
+async function verifyDirectDmParticipants(senderId, recipientId, convId) {
+  if (!senderId || !recipientId || senderId === recipientId) {
+    return false;
+  }
+
+  const expectedConvId = directConvId(senderId, recipientId);
+  const resolvedConvId =
+    typeof convId === "string" && convId.trim() ? convId.trim() : expectedConvId;
+
+  if (resolvedConvId !== expectedConvId) {
+    return false;
+  }
+
+  const convDoc = await admin
+    .firestore()
+    .collection("ce2_conversations")
+    .doc(resolvedConvId)
+    .get();
+
+  if (!convDoc.exists) {
+    return true;
+  }
+
+  const data = convDoc.data() || {};
+  if (data.type && data.type !== "direct") {
+    return false;
+  }
+
+  const participants = Array.isArray(data.participantIds) ? data.participantIds : [];
+  return participants.includes(senderId) && participants.includes(recipientId);
+}
+
 async function verifyBearer(req) {
   const authHeader = req.headers.authorization || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -101,6 +138,16 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
     return res.status(403).json({ error: "Forbidden" });
   }
 
+  if (senderId === recipientId) {
+    return res.status(400).json({ error: "Cannot notify yourself" });
+  }
+
+  const convId = typeof body.convId === "string" ? body.convId : "";
+  const isDirectDm = await verifyDirectDmParticipants(senderId, recipientId, convId);
+  if (!isDirectDm) {
+    return res.status(403).json({ error: "Not a direct message recipient" });
+  }
+
   try {
     const recipientToken = await resolveRecipientToken(recipientId, body.recipientToken);
 
@@ -118,8 +165,6 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
       typeof body.url === "string" && body.url.trim()
         ? body.url.trim()
         : `/communication-v2/?conv=${encodeURIComponent(body.convId || "")}`;
-    const convId = typeof body.convId === "string" ? body.convId : "";
-
     await admin.messaging().send(
       buildPushMessage({
         token: recipientToken,

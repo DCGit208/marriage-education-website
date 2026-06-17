@@ -1,43 +1,44 @@
 <!DOCTYPE html>
-<!-- STABLE_ROLLBACK: ce2-keyboard-v60 + ce2-audio-stable-1d — see ROLLBACK-KEYBOARD-v60.md, ROLLBACK-AUDIO-1D.md -->
+<!-- STABLE_ROLLBACK: ce2-keyboard-v60 + ce2-audio-stable-1d + ce2-delivery-stable-v90 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="build-version" content="1779262000000">
   <meta name="ce2-keyboard-stable" content="ce2-keyboard-stable-v60">
   <meta name="ce2-audio-stable" content="ce2-audio-stable-1d">
+  <meta name="ce2-delivery-stable" content="ce2-delivery-stable-v90">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no, interactive-widget=overlays-content">
   <meta name="theme-color" content="#08080a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=63">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=65">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
-  <script defer src="/js/firebase.js"></script>
+  <script defer src="/js/firebase.js?v=rt2"></script>
   <script defer src="/js/upload.js?v=5"></script>
   <script defer src="/communication-v2/ce2-governance.js?v=4"></script>
   <script defer src="/communication-v2/ce2-moderation.js?v=2"></script>
   <script defer src="/communication-v2/ce2-links.js?v=1"></script>
   <script defer src="/communication-v2/ce2-attachments.js?v=9"></script>
   <script defer src="/communication-v2/ce2-share.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-presence.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-presence.js?v=4"></script>
   <script defer src="/communication-v2/ce2-receipts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=2"></script>
   <script defer src="/communication-v2/ce2-message-actions.js?v=17"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=1"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-pwa.js?v=3"></script>
+  <script defer src="/communication-v2/ce2-pwa.js?v=5"></script>
   <script defer src="/communication-v2/ce2-audio-waveform.js?v=1"></script>
   <script defer src="/communication-v2/ce2-audio-playback.js?v=2"></script>
   <script defer src="/communication-v2/ce2-audio-outbox.js?v=1"></script>
   <script defer src="/communication-v2/ce2-audio-recorder.js?v=6"></script>
-  <script defer src="/communication-v2/ce2-drafts.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-format.js?v=3"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=79"></script>
+  <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
+  <script defer src="/communication-v2/ce2-format.js?v=4"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=91"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -111,7 +112,10 @@
           <button type="button" id="ce2ThreadSearchClose" class="ce2-thread-search-close" aria-label="Close search">×</button>
         </div>
         <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite"></div>
-        <p id="ce2TypingLine" class="ce2-typing-line" hidden aria-live="polite"></p>
+        <p id="ce2TypingLine" class="ce2-typing-line" hidden aria-live="polite">
+          <span class="ce2-typing-text"></span>
+          <span class="ce2-typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </p>
         <footer class="ce2-composer" role="form" aria-label="Compose message">
           <div id="ce2ReplyBanner" class="ce2-reply-banner" hidden>
             <span id="ce2ReplyBannerText"></span>

@@ -1110,8 +1110,9 @@ async function _doSend(text, imageUrl, replyTo, videoUrl, audioUrl) {
 
   // Fire DM push notifications
   if (activeIsGroup) {
-    // Notify all group members
+    // Notify all group members except the sender
     activeParticipants.forEach(p => {
+      if (p.uid === currentUserId) return;
       _triggerDmPush(activeConvId, p.uid, text || (audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : '📎 Photo'))).catch(() => {});
     });
   } else {

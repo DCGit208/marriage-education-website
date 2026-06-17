@@ -27,6 +27,9 @@ db.settings({
   merge: true
 });
 
+// Persistence disabled for messenger latency — cached listeners were delivering
+// messages tens of seconds late. CE2 offline queue handles send retries.
+
 // ── Session persistence (Remember Me) ───────────────────────────
 // Default to LOCAL so auth survives browser restarts.
 // auth.js overrides to SESSION when the user unchecks "Remember Me".
