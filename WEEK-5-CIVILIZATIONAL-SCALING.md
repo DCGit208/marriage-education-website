@@ -604,7 +604,7 @@ You cannot give what you do not possess. Formation precedes service.
 ### 6.3 Error #3: "The State Can Replace the Family"
 
 **Culture says:** "Government can provide what families once did."  
-**Scripture says:** "The family is the natural and fundamental group unit of society" (UDHR 16:3).
+**UDHR says:** "The family is the natural and fundamental group unit of society" (UDHR 16:3).
 
 **Teleios response:**  
 When the family fails, the State expands — but no bureaucracy can out-govern a disintegrating moral ecology.
@@ -612,7 +612,7 @@ When the family fails, the State expands — but no bureaucracy can out-govern a
 ### 6.4 Error #4: "Education Is About Job Training"
 
 **Culture says:** "Education = career preparation."  
-**Scripture says:** "Education shall be directed to the full development of the human personality" (UDHR 26:2).
+**UDHR says:** "Education shall be directed to the full development of the human personality" (UDHR 26:2).
 
 **Teleios response:**  
 Education is formation, not information. The goal is teleios persons, not merely skilled workers.
