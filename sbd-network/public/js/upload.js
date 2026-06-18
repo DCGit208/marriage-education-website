@@ -135,6 +135,36 @@ async function uploadToR2(file, folder, options) {
 }
 
 /**
+ * Delete one R2 object by its public URL (dm_attachments, dm_videos, dm_audio, etc.).
+ * Best-effort — failures are swallowed so Firestore unsend can still proceed.
+ * @param {string} url
+ */
+async function deleteFromR2(url) {
+  if (!url || typeof url !== 'string') return;
+  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if (!user) return;
+  const idToken = await user.getIdToken().catch(() => null);
+  if (!idToken) return;
+  await fetch(`${UPLOAD_WORKER_URL}/delete`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ url }),
+  }).catch(() => {});
+}
+
+/**
+ * @param {string[]} urls
+ */
+async function deleteMediaUrlsFromR2(urls) {
+  const list = (urls || []).filter(Boolean);
+  if (!list.length) return;
+  await Promise.all(list.map(deleteFromR2));
+}
+
+/**
  * Upload via Firebase Storage (same-origin auth — no cross-origin CORS).
  * Used by CE2 Messages when the R2 worker is unreachable from the page origin.
  * @param {File} file

@@ -175,11 +175,12 @@
   function canEditMessage(m, self) {
     if (!self || !m || m.deleted || m._pending) return false;
     if (!m.id || String(m.id).indexOf('pending-') === 0) return false;
-    var content = String(m.content || '').trim();
-    if (!content) return false;
     var st = state();
     var me = st && st.me;
-    if (me && me.isAdmin) return true;
+    if (!me || m.senderId !== me.uid) return false;
+    var content = String(m.content || '').trim();
+    if (!content) return false;
+    if (me.isAdmin) return true;
     if (deps.messageTimeMs) {
       var ms = deps.messageTimeMs(m);
       if (ms && Date.now() - ms > EDIT_WINDOW_MS) return false;
@@ -1022,17 +1023,29 @@
   }
 
   function showEditSheet(m, ac) {
+    var composer = el('ce2Input');
+    if (composer && typeof composer.blur === 'function') composer.blur();
     var ta = el('ce2EditInput');
-    if (ta) ta.value = m.content || '';
+    if (ta) {
+      ta.disabled = false;
+      ta.removeAttribute('tabindex');
+      ta.value = m.content || '';
+    }
     if (typeof window !== 'undefined' && window.Ce2Format && window.Ce2Format.onEditOpen) {
       window.Ce2Format.onEditOpen();
     }
     showSheet('ce2EditSheet');
     activeCtx = { m: m, ac: ac };
+    if (deps.syncFocusableInputs) deps.syncFocusableInputs();
     if (ta) {
       window.setTimeout(function () {
+        if (deps.syncFocusableInputs) deps.syncFocusableInputs();
+        ta.disabled = false;
+        ta.removeAttribute('tabindex');
         ta.focus();
-        ta.setSelectionRange(ta.value.length, ta.value.length);
+        try {
+          ta.setSelectionRange(ta.value.length, ta.value.length);
+        } catch (_) {}
         if (deps.syncViewport) {
           deps.syncViewport();
           window.setTimeout(deps.syncViewport, 120);
@@ -1159,7 +1172,9 @@
     };
 
     if (m.imageUrl) patch.imageUrl = m.imageUrl;
+    if (m.imageThumbUrl) patch.imageThumbUrl = m.imageThumbUrl;
     if (m.videoUrl) patch.videoUrl = m.videoUrl;
+    if (m.videoPosterUrl) patch.videoPosterUrl = m.videoPosterUrl;
     if (m.audioUrl) patch.audioUrl = m.audioUrl;
 
     if (target.type === 'direct') {

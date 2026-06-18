@@ -1302,10 +1302,111 @@ body.ce2-msg-menu-open {
   margin: 8px 10px;
 }
 
-.ce2-msg-video {
+.ce2-msg-video-wrap {
   display: block;
   max-width: min(280px, 100%);
+  margin-bottom: 6px;
+}
+
+.ce2-msg-video {
+  display: block;
+  width: 100%;
+  max-width: min(280px, 100%);
   border-radius: 10px;
+  margin-bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  min-height: 120px;
+  object-fit: cover;
+}
+
+/* Data-light media: thumbnail in thread, full file only on tap */
+.ce2-media-tap {
+  display: block;
+  position: relative;
+  width: min(280px, 100%);
+  margin: 0 0 6px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-media-tap--image .ce2-media-thumb,
+.ce2-media-full {
+  display: block;
+  width: 100%;
+  max-width: min(280px, 100%);
+  border-radius: 10px;
+  object-fit: cover;
+  vertical-align: top;
+}
+
+.ce2-media-video-poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.ce2-media-video-placeholder,
+.ce2-attach-thumb-vid-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 120px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(232, 220, 196, 0.55);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ce2-media-play-icon::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 14px 0 14px 22px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+
+.ce2-media-tap-hint {
+  display: block;
+  padding: 6px 10px 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(232, 220, 196, 0.45);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.ce2-media-tap--video .ce2-media-tap-hint {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+}
+
+.ce2-media-tap:active {
+  opacity: 0.92;
+}
+
+.ce2-msg-video-wrap.is-playing {
   margin-bottom: 6px;
 }
 
@@ -2324,6 +2425,9 @@ body.ce2-msg-menu-open {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 0 1 auto;
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: manipulation;
 }
 
 .ce2-sheet-panel-edit .ce2-sheet-title {

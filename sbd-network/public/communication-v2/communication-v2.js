@@ -699,6 +699,7 @@
       syncViewport: function () {
         syncCe2VisualViewport();
       },
+      syncFocusableInputs: syncCe2FocusableInputs,
       syncComposerInputHeight: syncCe2ComposerInputHeight,
       isCoarsePointer: function () {
         return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -2124,6 +2125,9 @@
           scroll.scrollTop = scroll.scrollHeight;
         }
         updateTypingLineOnly();
+        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+          root.Ce2MediaView.afterMessagePanelRender(scroll);
+        }
         return true;
       }
     }
@@ -2146,6 +2150,9 @@
         }
         updateTypingLineOnly();
         if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+          root.Ce2MediaView.afterMessagePanelRender(scroll);
+        }
         return true;
       }
     }
@@ -2180,6 +2187,9 @@
 
     var visibleMsgs = getVisibleMessages(ac);
     if (tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom)) {
+      if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+        root.Ce2MediaView.afterMessagePanelRender(scroll);
+      }
       return;
     }
 
@@ -2214,6 +2224,9 @@
     }
     if (root.Ce2AudioPlayback) {
       root.Ce2AudioPlayback.syncAll();
+    }
+    if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+      root.Ce2MediaView.afterMessagePanelRender(scroll);
     }
   }
 
@@ -2250,6 +2263,40 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  function appendMessageVideo(bubble, m) {
+    if (root.Ce2MediaView && root.Ce2MediaView.appendChatVideo) {
+      root.Ce2MediaView.appendChatVideo(bubble, m);
+      return;
+    }
+    if (!bubble || !m || !m.videoUrl) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'ce2-msg-video-wrap';
+    var vid = document.createElement('video');
+    vid.className = 'ce2-msg-video';
+    vid.controls = true;
+    vid.preload = 'none';
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    if (m.videoPosterUrl) vid.poster = m.videoPosterUrl;
+    wrap.appendChild(vid);
+    bubble.appendChild(wrap);
+  }
+
+  function appendMessageImage(bubble, m) {
+    if (root.Ce2MediaView && root.Ce2MediaView.appendChatImage) {
+      root.Ce2MediaView.appendChatImage(bubble, m);
+      return;
+    }
+    if (!bubble || !m || !m.imageUrl) return;
+    var img = document.createElement('img');
+    img.className = 'ce2-msg-image';
+    img.alt = 'Attachment';
+    img.loading = 'lazy';
+    if (m.imageThumbUrl) img.src = m.imageThumbUrl;
+    img.dataset.fullUrl = m.imageUrl;
+    bubble.appendChild(img);
+  }
+
   function appendMessageBody(bubble, m) {
     if (m.deleted) {
       var removed = document.createElement('p');
@@ -2275,20 +2322,10 @@
       return;
     }
     if (m.imageUrl) {
-      var img = document.createElement('img');
-      img.className = 'ce2-msg-image';
-      img.alt = 'Attachment';
-      img.loading = 'lazy';
-      img.src = m.imageUrl;
-      bubble.appendChild(img);
+      appendMessageImage(bubble, m);
     }
     if (m.videoUrl) {
-      var vid = document.createElement('video');
-      vid.className = 'ce2-msg-video';
-      vid.controls = true;
-      vid.preload = 'metadata';
-      vid.src = m.videoUrl;
-      bubble.appendChild(vid);
+      appendMessageVideo(bubble, m);
     }
     if (m.messageType === 'voice' || m.audioUrl || m._localAudioUrl) {
       var audioWrap = document.createElement('div');
@@ -2394,12 +2431,19 @@
     list.forEach(function (pm, idx) {
       var src = pm.url || '';
       var kind = pm.kind || 'image';
+      var thumbSrc = pm.thumbUrl || pm.posterUrl || '';
       var cell =
         kind === 'video'
-          ? '<video src="' + escapeHtml(src) + '" class="ce2-attach-thumb-vid" muted playsinline></video>'
+          ? thumbSrc
+            ? '<img src="' +
+              escapeHtml(thumbSrc) +
+              '" alt="" class="ce2-attach-thumb-img ce2-attach-thumb-vid-poster">'
+            : '<span class="ce2-attach-thumb-vid-ph">Video</span>'
           : kind === 'audio'
             ? '<span class="ce2-attach-thumb-aud">🎙</span>'
-            : '<img src="' + escapeHtml(src) + '" alt="" class="ce2-attach-thumb-img">';
+            : thumbSrc
+              ? '<img src="' + escapeHtml(thumbSrc) + '" alt="" class="ce2-attach-thumb-img">'
+              : '<img src="' + escapeHtml(src) + '" alt="" class="ce2-attach-thumb-img">';
       html +=
         '<div class="ce2-attach-cell">' +
         cell +
@@ -2414,9 +2458,7 @@
         slot.localFile && attMod && attMod.isVideoFile && attMod.isVideoFile(slot.localFile);
       var uploadingCell =
         uploadingVideo
-          ? '<video src="' +
-            escapeHtml(slot.localPreviewUrl) +
-            '" class="ce2-attach-thumb-vid" muted playsinline></video>'
+          ? '<span class="ce2-attach-thumb-vid-ph">Video…</span>'
           : '<img src="' +
             escapeHtml(slot.localPreviewUrl) +
             '" alt="" class="ce2-attach-thumb-img">';
@@ -3568,6 +3610,114 @@
     return Date.now() - ms <= UNSEND_WINDOW_MS;
   }
 
+  function messageMediaUrls(m) {
+    if (!m) return [];
+    return [m.imageUrl, m.imageThumbUrl, m.videoUrl, m.audioUrl, m.videoPosterUrl].filter(Boolean);
+  }
+
+  async function purgeMessageMediaFromR2(m) {
+    var urls = messageMediaUrls(m);
+    if (!urls.length) return;
+    if (typeof deleteMediaUrlsFromR2 === 'function') {
+      await deleteMediaUrlsFromR2(urls);
+      return;
+    }
+    var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user || typeof UPLOAD_WORKER_URL === 'undefined') return;
+    var idToken = await user.getIdToken().catch(function () {
+      return null;
+    });
+    if (!idToken) return;
+    await Promise.all(
+      urls.map(function (url) {
+        return fetch(UPLOAD_WORKER_URL + '/delete', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + idToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: url }),
+        }).catch(function () {});
+      })
+    );
+  }
+
+  function buildUnsendPatch(m) {
+    var del = firebase.firestore.FieldValue.delete();
+    var patch = {
+      deleted: true,
+      deletedAt: firebase.firestore.Timestamp.now(),
+      content: 'Message removed',
+      messageType: 'text',
+      imageUrl: del,
+      imageThumbUrl: del,
+      videoUrl: del,
+      videoPosterUrl: del,
+      audioUrl: del,
+      boardShare: del,
+      audioDurationMs: del,
+      audioMime: del,
+      audioWaveformPeaks: del,
+      durationMs: del,
+    };
+    return patch;
+  }
+
+  function applyLocalUnsend(mId) {
+    var deletedAt = firebase.firestore.Timestamp.now();
+    function mapList(list) {
+      if (!list || !list.length) return list;
+      var changed = false;
+      var next = list.map(function (msg) {
+        if (msg.id !== mId) return msg;
+        changed = true;
+        var out = Object.assign({}, msg, {
+          deleted: true,
+          deletedAt: deletedAt,
+          content: 'Message removed',
+          messageType: 'text',
+        });
+        delete out.imageUrl;
+        delete out.imageThumbUrl;
+        delete out.videoUrl;
+        delete out.videoPosterUrl;
+        delete out.audioUrl;
+        delete out.boardShare;
+        delete out.audioDurationMs;
+        delete out.audioMime;
+        delete out.audioWaveformPeaks;
+        delete out.durationMs;
+        return out;
+      });
+      return changed ? next : list;
+    }
+    CommunicationState.messages = mapList(CommunicationState.messages) || CommunicationState.messages;
+    CommunicationState.lastServerMessages =
+      mapList(CommunicationState.lastServerMessages) || CommunicationState.lastServerMessages;
+  }
+
+  async function refreshMetaAfterUnsend(m, ac) {
+    var meta = CommunicationState.convMeta;
+    if (!meta || !m || meta.lastMessageId !== m.id) return;
+    var metaRef = getMetaDocRef(ac);
+    if (!metaRef) return;
+    try {
+      await metaRef.set(
+        {
+          lastPreview: 'Message removed',
+          lastMessageType: 'text',
+        },
+        { merge: true }
+      );
+      CommunicationState.convMeta = Object.assign({}, meta, {
+        lastPreview: 'Message removed',
+        lastMessageType: 'text',
+      });
+    } catch (e) {
+      console.warn('[CE2] meta after unsend', e);
+    }
+  }
+
   async function unsendMessage(m, ac) {
     if (!m || !ac) return;
     if (!canUnsendMessage(m)) {
@@ -3585,11 +3735,11 @@
       ac.type === 'direct'
         ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
         : db.collection('communicationGroups').doc(ac.id).collection('ce2_messages');
-    await col.doc(m.id).update({
-      deleted: true,
-      deletedAt: firebase.firestore.Timestamp.now(),
-      content: 'Message removed',
-    });
+    await purgeMessageMediaFromR2(m);
+    var patch = buildUnsendPatch(m);
+    await col.doc(m.id).update(patch);
+    applyLocalUnsend(m.id);
+    await refreshMetaAfterUnsend(m, ac);
     CommunicationState.statusMessage = 'Message deleted';
     requestRender({ threadOnly: true });
   }
@@ -4423,8 +4573,16 @@
         messageType: messageType,
         createdAt: now,
       };
-      if (mediaItem && mediaItem.kind === 'image') patch.imageUrl = mediaItem.url;
-      if (mediaItem && mediaItem.kind === 'video') patch.videoUrl = mediaItem.url;
+      if (mediaItem && mediaItem.kind === 'image') {
+        patch.imageUrl = mediaItem.url;
+        if (mediaItem.thumbUrl) patch.imageThumbUrl = mediaItem.thumbUrl;
+      }
+      if (mediaItem && mediaItem.kind === 'video') {
+        patch.videoUrl = mediaItem.url;
+        if (mediaItem.posterUrl || mediaItem.thumbUrl) {
+          patch.videoPosterUrl = mediaItem.posterUrl || mediaItem.thumbUrl;
+        }
+      }
       if (mediaItem && mediaItem.kind === 'audio') patch.audioUrl = mediaItem.url;
       if (boardShare) patch.boardShare = boardShare;
       if (CommunicationState.replyTo) patch.replyTo = CommunicationState.replyTo;
@@ -4758,7 +4916,15 @@
     var editFocused = !!(active && active.closest && active.closest('.ce2-sheet--edit'));
 
     document.querySelectorAll('.ce2-sheet').forEach(function (sheet) {
-      var off = sheet.hidden || (composerFocused && !editFocused) || (searchFocused && !editFocused);
+      var off;
+      if (sheet.id === 'ce2EditSheet') {
+        off = sheet.hidden;
+      } else {
+        off =
+          sheet.hidden ||
+          (composerFocused && !editFocused) ||
+          (searchFocused && !editFocused);
+      }
       sheet.querySelectorAll('input, textarea, select').forEach(function (node) {
         node.disabled = off;
         if (off) node.setAttribute('tabindex', '-1');
@@ -4818,10 +4984,14 @@
     if (!editInput || editInput.__ce2EditKbBound) return;
     editInput.__ce2EditKbBound = true;
     editInput.addEventListener('focus', function () {
+      syncCe2FocusableInputs();
       requestAnimationFrame(syncCe2VisualViewport);
     });
     editInput.addEventListener('blur', function () {
-      window.setTimeout(syncCe2VisualViewport, 200);
+      window.setTimeout(function () {
+        syncCe2FocusableInputs();
+        syncCe2VisualViewport();
+      }, 200);
     });
   }
 
