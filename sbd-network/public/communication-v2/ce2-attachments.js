@@ -7,6 +7,8 @@
   var MAX_BYTES = 10 * 1024 * 1024;
   var COMPRESS_MIN_BYTES = 350000;
   var COMPRESS_MAX_DIM = 1920;
+  var THUMB_MAX_DIM = 480;
+  var THUMB_JPEG_QUALITY = 0.72;
 
   var IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp'];
   var VIDEO_EXTS = ['mp4', 'webm', 'mov', 'm4v', '3gp'];
@@ -209,11 +211,170 @@
     });
   }
 
+  function createImageThumbBlob(file) {
+    if (!file || !isImageFile(file) || isVideoFile(file) || isAudioFile(file)) {
+      return Promise.resolve(null);
+    }
+    if (file.type === 'image/gif' || fileExt(file) === 'gif') {
+      return Promise.resolve(null);
+    }
+    return loadImageElement(file)
+      .then(function (img) {
+        var w = img.width;
+        var h = img.height;
+        if (!w || !h) return null;
+        var scale = Math.min(1, THUMB_MAX_DIM / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        return new Promise(function (resolve) {
+          canvas.toBlob(
+            function (blob) {
+              resolve(blob || null);
+            },
+            'image/jpeg',
+            THUMB_JPEG_QUALITY
+          );
+        });
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
+  async function uploadChatThumb(file, baseName, options) {
+    if (!file) return null;
+    try {
+      var thumbFile = new File([file], (baseName || 'thumb') + '_thumb.jpg', {
+        type: 'image/jpeg',
+      });
+      return await withUploadTimeout(
+        uploadMediaFile(thumbFile, 'dm_attachments', options || {}),
+        60000
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   function uploadMediaFile(file, folder, options) {
     if (!r2Ready()) {
       return Promise.reject(new Error('R2 upload service not available.'));
     }
     return uploadToR2(file, folder, options || {});
+  }
+
+  function captureVideoPosterBlob(file) {
+    return new Promise(function (resolve) {
+      if (!file || !isVideoFile(file)) {
+        resolve(null);
+        return;
+      }
+      var blobUrl = URL.createObjectURL(file);
+      var video = document.createElement('video');
+      var settled = false;
+      function finish(blob) {
+        if (settled) return;
+        settled = true;
+        URL.revokeObjectURL(blobUrl);
+        video.removeAttribute('src');
+        try {
+          video.load();
+        } catch (_) {}
+        resolve(blob || null);
+      }
+      function snapFrame() {
+        try {
+          var w = video.videoWidth || 0;
+          var h = video.videoHeight || 0;
+          if (!w || !h) {
+            finish(null);
+            return;
+          }
+          var max = 640;
+          if (w > max) {
+            h = Math.round(h * (max / w));
+            w = max;
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+          canvas.toBlob(
+            function (blob) {
+              finish(blob);
+            },
+            'image/jpeg',
+            0.82
+          );
+        } catch (_) {
+          finish(null);
+        }
+      }
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.setAttribute('playsinline', '');
+      video.addEventListener(
+        'error',
+        function () {
+          finish(null);
+        },
+        { once: true }
+      );
+      video.addEventListener(
+        'loadeddata',
+        function () {
+          try {
+            if (video.videoWidth > 0) {
+              snapFrame();
+              return;
+            }
+            var t = Math.min(0.12, Math.max(0.01, (video.duration || 1) * 0.05));
+            video.currentTime = t;
+          } catch (_) {
+            snapFrame();
+          }
+        },
+        { once: true }
+      );
+      video.addEventListener(
+        'seeked',
+        function () {
+          snapFrame();
+        },
+        { once: true }
+      );
+      video.src = blobUrl;
+    });
+  }
+
+  /** Best-effort first-frame preview for <video> thumbs (composer + legacy messages). */
+  function primeVideoThumbnail(video, url) {
+    if (!video) return;
+    var src = url || video.getAttribute('src') || video.src || '';
+    if (!src) return;
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    if (src.indexOf('#') < 0) {
+      video.src = src + '#t=0.001';
+    } else if (!video.src) {
+      video.src = src;
+    }
+    video.addEventListener(
+      'loadeddata',
+      function () {
+        try {
+          video.currentTime = 0.01;
+        } catch (_) {}
+      },
+      { once: true }
+    );
   }
 
   async function uploadCe2Media(file, options) {
@@ -229,7 +390,35 @@
       180000
     );
     if (!url) throw new Error('Upload returned no URL.');
-    return { url: url, kind: kindForFile(file) };
+    var result = { url: url, kind: kindForFile(file) };
+    if (isImageFile(file)) {
+      try {
+        var imageThumb = await createImageThumbBlob(uploadFile);
+        if (imageThumb) {
+          var imgBase = (file.name || 'photo').replace(/\.[^.]+$/, '');
+          var thumbUrl = await uploadChatThumb(imageThumb, imgBase, options || {});
+          if (thumbUrl) result.thumbUrl = thumbUrl;
+        }
+      } catch (_) {}
+    }
+    if (isVideoFile(file)) {
+      try {
+        var posterBlob = await captureVideoPosterBlob(file);
+        if (posterBlob) {
+          var base = (file.name || 'video').replace(/\.[^.]+$/, '');
+          var posterFile = new File([posterBlob], base + '_thumb.jpg', { type: 'image/jpeg' });
+          var posterUrl = await withUploadTimeout(
+            uploadMediaFile(posterFile, 'dm_attachments', options || {}),
+            60000
+          );
+          if (posterUrl) {
+            result.posterUrl = posterUrl;
+            result.thumbUrl = posterUrl;
+          }
+        }
+      } catch (_) {}
+    }
+    return result;
   }
 
   global.Ce2Attachments = {
@@ -240,7 +429,8 @@
     isVideoFile: isVideoFile,
     isImageFile: isImageFile,
     r2Ready: r2Ready,
+    primeVideoThumbnail: primeVideoThumbnail,
     MAX_BYTES: MAX_BYTES,
-    VERSION: 9,
+    VERSION: 11,
   };
 })(typeof window !== 'undefined' ? window : global);

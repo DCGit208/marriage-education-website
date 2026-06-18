@@ -105,6 +105,9 @@ service cloud.firestore {
           (request.resource.data.imageUrl is string &&
             request.resource.data.imageUrl.size() > 0 &&
             request.resource.data.imageUrl.size() < 2048)) &&
+        (!('imageThumbUrl' in request.resource.data) ||
+          (request.resource.data.imageThumbUrl is string &&
+            request.resource.data.imageThumbUrl.size() < 2048)) &&
         (!('boardShare' in request.resource.data) ||
           (request.resource.data.boardShare is map &&
             request.resource.data.boardShare.keys().hasAll(['boardId', 'postId', 'token']) &&
@@ -120,6 +123,9 @@ service cloud.firestore {
         (!('videoUrl' in request.resource.data) ||
           (request.resource.data.videoUrl is string &&
             request.resource.data.videoUrl.size() < 2048)) &&
+        (!('videoPosterUrl' in request.resource.data) ||
+          (request.resource.data.videoPosterUrl is string &&
+            request.resource.data.videoPosterUrl.size() < 2048)) &&
         (!('audioUrl' in request.resource.data) ||
           (request.resource.data.audioUrl is string &&
             request.resource.data.audioUrl.size() < 2048)) &&
@@ -170,6 +176,31 @@ service cloud.firestore {
         request.resource.data.deletedAt is timestamp &&
         request.resource.data.content == 'Message removed';
     }
+    function ce2MessageUnsendPurgeKeysOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'deleted', 'deletedAt', 'content', 'messageType',
+        'imageUrl', 'videoUrl', 'audioUrl', 'boardShare', 'videoPosterUrl', 'imageThumbUrl',
+        'audioDurationMs', 'audioMime', 'audioWaveformPeaks', 'durationMs'
+      ]);
+    }
+    function ce2MessageUnsendMediaPurged() {
+      return (!('imageUrl' in resource.data) || !('imageUrl' in request.resource.data)) &&
+        (!('videoUrl' in resource.data) || !('videoUrl' in request.resource.data)) &&
+        (!('audioUrl' in resource.data) || !('audioUrl' in request.resource.data)) &&
+        (!('boardShare' in resource.data) || !('boardShare' in request.resource.data)) &&
+        (!('audioDurationMs' in resource.data) || !('audioDurationMs' in request.resource.data)) &&
+        (!('audioMime' in resource.data) || !('audioMime' in request.resource.data)) &&
+        (!('audioWaveformPeaks' in resource.data) || !('audioWaveformPeaks' in request.resource.data)) &&
+        (!('videoPosterUrl' in resource.data) || !('videoPosterUrl' in request.resource.data)) &&
+        (!('imageThumbUrl' in resource.data) || !('imageThumbUrl' in request.resource.data)) &&
+        (!('durationMs' in resource.data) || !('durationMs' in request.resource.data));
+    }
+    function ce2MessageUnsendPurgeValid() {
+      return ce2MessageUnsendValid() &&
+        ce2MessageUnsendPurgeKeysOnly() &&
+        ce2MessageUnsendMediaPurged() &&
+        request.resource.data.messageType == 'text';
+    }
     function ce2WithinUnsendWindow() {
       return resource.data.createdAt is timestamp &&
         request.time < resource.data.createdAt + duration.value(60, 'm');
@@ -177,9 +208,7 @@ service cloud.firestore {
     function ce2CanUnsendMessage() {
       return resource.data.senderId == request.auth.uid &&
         ce2WithinUnsendWindow() &&
-        ce2MessageUnsendValid() &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['deleted', 'deletedAt', 'content']);
+        ce2MessageUnsendPurgeValid();
     }
     function ce2ConvMetaUpdateKeysOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -981,9 +1010,7 @@ service cloud.firestore {
             ce2CanUnsendMessage() ||
             (
               ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
-              ce2MessageUnsendValid() &&
-              request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['deleted', 'deletedAt', 'content'])
+              ce2MessageUnsendPurgeValid()
             ) ||
             ce2MessageEditValid() ||
             ce2AdminMessageEditValid() ||
@@ -1063,9 +1090,7 @@ service cloud.firestore {
             ce2CanUnsendMessage() ||
             (
               ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
-              ce2MessageUnsendValid() &&
-              request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['deleted', 'deletedAt', 'content'])
+              ce2MessageUnsendPurgeValid()
             ) ||
             ce2MessageEditValid() ||
             ce2AdminMessageEditValid() ||
