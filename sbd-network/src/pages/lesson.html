@@ -1300,6 +1300,16 @@
 
             const discussBlock = `<a href="/board.html?id=board-teleios-weekly" class="week-complete-discuss-link">💬 Share your Week ${weekNum} reflection in Teleios Formation Circle →</a>`;
 
+            let challengeBlock = '';
+            if (moduleId === 'wwm-week-13' || (isCourseEnd && courseId === 'the-woman-the-wife-the-mother')) {
+                challengeBlock = `
+                <div class="week-complete-links wwm-challenge-cta">
+                    <p style="font-size:14px;color:var(--text-sec);margin-bottom:12px;line-height:1.5">Launch your <strong>30-Day Muliebrity Formation Challenge</strong> within seven days of course completion.</p>
+                    <a href="/downloads/wwm-30-day-challenge-scorecard.html" target="_blank" rel="noopener" class="btn-upgrade">Open 30-Day Scorecard →</a>
+                    <p style="font-size:12px;color:var(--text-sec);margin-top:10px">Day 0 rehearsal: score all four pillars before Day 1 begins.</p>
+                </div>`;
+            }
+
             document.getElementById('lessonBody').innerHTML = `
                 <div class="week-complete-block">
                     <div class="week-complete-icon">🏆</div>
@@ -1307,6 +1317,7 @@
                     <p>${isCourseEnd
                         ? `You've finished all ${totalModules} weeks. Your course is done.`
                         : `You've finished both tracks for Week ${weekNum}. Your formation path continues.`}</p>
+                    ${challengeBlock}
                     ${nextWeekBlock}
                     ${discussBlock}
                     <a href="/learn.html" style="display:block;font-size:13px;color:var(--text-sec);text-decoration:none;margin-top:20px;text-align:center">← Back to Formation Hub</a>

@@ -61,11 +61,7 @@ You must see what you have called "modesty" may sometimes be **desexualization**
 
 You must see **§F1 marriage ontology** in cloth: **Marriage = Sexuality = Nakedness**. Attire stewards the body that belongs to one flesh. **Sex** is fruit; **sexuality** is lifestyle; wardrobe is a daily branch of that tree (Week 5).
 
-You must see **motherhood decay pattern** in dress: maternal output rises while @Home presentation collapses—fragmentation in cloth, not virtue.
-
-You must see **meritorious attraction** applied to wardrobe—disciplined presentation for one man, not market comparison or entitlement without maintenance.
-
-You must see three witnesses: **Scripture**, **design** (nakedness genre), **fruit** (conjugal atmosphere, children's inheritance). Mood is data—not doctrine.
+When maternal output rises while @Home presentation collapses, you are watching the **motherhood decay pattern**—fragmentation in cloth, not virtue. **Meritorious attraction** in wardrobe means disciplined presentation for one covenant man, not market comparison or entitlement without maintenance. Judge progress by three witnesses—**Scripture**, **design** (nakedness genre), and **fruit** (conjugal atmosphere, children's inheritance). Mood is data, not doctrine.
 
 ### Attire markers (concrete, readable)
 

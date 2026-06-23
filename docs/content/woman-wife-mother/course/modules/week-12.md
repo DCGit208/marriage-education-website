@@ -92,11 +92,9 @@ You must see **seasonal failure** differently from **structural failure**. Seaso
 
 You must see that **restoration honors the nakedness genre** again — not by rushing conjugal acts before atmosphere heals, but by rebuilding the lifestyle tree: attire @Home, scent, voice, form, covenant priority. Sex as product returns as fruit when sexuality as lifestyle has been replanted.
 
-You must see **§F1 marriage ontology** in drift: **Marriage = Sexuality = Nakedness**. Structural collapse often means tree died while occasional fruit was demanded—crisis sex on flat atmosphere, duty without friendship.
+You must see **§F1 marriage ontology** in drift: **Marriage = Sexuality = Nakedness**. Structural collapse often means the tree died while occasional fruit was still demanded—crisis sex on flat atmosphere, duty without friendship.
 
-You must see **A³ memory vs A³ life** — attitude, attire, allure trained in Weeks 7–9 but abandoned in drift; restoration reinstalls **practice**, not nostalgia.
-
-You must see three witnesses: **Scripture** (Joel, Hosea, Rev 2), **design** (integration law, restoration sequence), **fruit** (atmosphere, children's inheritance). Mood is data—not doctrine.
+You must see **A³ memory vs A³ life**—attitude, attire, and allure trained in Weeks 7–9 but abandoned in drift; restoration reinstalls **practice**, not nostalgia. Name drift with three witnesses: **Scripture** (Joel, Hosea, Rev 2), **design** (integration law, restoration sequence), and **fruit** (atmosphere, what your children inherit). Mood is data, not doctrine.
 
 ### Drift markers (concrete, readable)
 

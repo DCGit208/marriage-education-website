@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1782217555421">
+  <meta name="build-version" content="1782218119763">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>Course Studio - SBD Network</title>
@@ -64,12 +64,13 @@
                             <li class="done">Doctrine linter + metadata rail</li>
                             <li class="done">Drag reorder parts</li>
                             <li class="done">Repo sync — export + drift vs manifest</li>
+                            <li class="done">Publish history + restore to draft</li>
                         </ul>
                     </div>
                     <div class="acs-roadmap-col acs-roadmap-col--next">
                         <h3>Phase 4–5 (next)</h3>
                         <ul>
-                            <li class="soon">Version history UI + rollback</li>
+                            <li class="soon">Version diff view (side-by-side)</li>
                             <li class="soon">Issue-cover art picker</li>
                             <li class="soon">Collaboration & review queue</li>
                             <li class="soon">Learner analytics in studio</li>
@@ -151,6 +152,10 @@
                     <p class="acs-meta-rail-title">Doctrine linter</p>
                     <div id="acsLintPanel" class="acs-lint-panel"><p class="acs-lint-muted">Open a part to lint</p></div>
                 </div>
+                <div class="acs-meta-rail-section">
+                    <p class="acs-meta-rail-title">Publish history</p>
+                    <div id="acsVersionPanel" class="acs-version-panel"><p class="acs-lint-muted">Open a part to view history</p></div>
+                </div>
                 <button type="button" id="acsPublishWeekBtn" class="acs-btn acs-btn--gold acs-btn--block" disabled>Publish whole week</button>
             </aside>
         </div>
@@ -178,6 +183,19 @@
             <div class="acs-modal-actions">
                 <button type="button" class="acs-btn" data-close-modal>Cancel</button>
                 <button type="button" id="acsPartSaveBtn" class="acs-btn acs-btn--gold">Create part</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version preview modal -->
+    <div id="acsVersionModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal acs-modal--wide acs-modal--tall" role="dialog" aria-labelledby="acsVersionPreviewTitle">
+            <h3 id="acsVersionPreviewTitle">Publish snapshot</h3>
+            <p id="acsVersionPreviewMeta" class="acs-sync-status"></p>
+            <div id="acsVersionPreviewBody" class="acs-version-preview-body formation-reader lesson-editorial"></div>
+            <div class="acs-modal-actions">
+                <button type="button" id="acsVersionModalRestore" class="acs-btn acs-btn--gold">Restore to draft</button>
+                <button type="button" class="acs-btn" data-close-version>Close</button>
             </div>
         </div>
     </div>
@@ -239,6 +257,7 @@
     <script defer src="/js/studio-doctrine-linter.js"></script>
     <script defer src="/js/studio-toolbar.js"></script>
     <script defer src="/js/studio-repo-sync.js"></script>
+    <script defer src="/js/studio-version-history.js"></script>
     <script defer src="/js/admin-courses.js"></script>
 </body>
 </html>

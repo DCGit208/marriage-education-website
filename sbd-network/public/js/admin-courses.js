@@ -263,6 +263,9 @@
       renderPreview(ta.value);
       runLinter(ta.value);
       updateMetaRail(ta.value, doc);
+      if (window.StudioVersionHistory) {
+        StudioVersionHistory.renderPanel(moduleId, partId);
+      }
     } catch (err) {
       status.textContent = 'Load failed: ' + (err.message || err);
     }
@@ -348,6 +351,9 @@
       status.textContent = 'Published ' + new Date().toLocaleTimeString();
       updateMetaRail(md, { hasDraft: false });
       runLinter(md);
+      if (window.StudioVersionHistory) {
+        StudioVersionHistory.renderPanel(editorCtx.moduleId, editorCtx.partId);
+      }
     } catch (err) {
       status.textContent = 'Publish failed: ' + (err.message || err);
     } finally {
@@ -928,6 +934,26 @@
       StudioRepoSync.init({
         db: db,
         getModulesForCourse: function (courseId) { return modulesByCourse[courseId] || []; },
+      });
+    }
+
+    if (window.StudioVersionHistory) {
+      StudioVersionHistory.init({
+        db: db,
+        onRestoreDraft: function (content) {
+          if (!editorCtx) return;
+          const ta = document.getElementById('acsEditorTextarea');
+          const status = document.getElementById('acsEditorStatus');
+          if (ta) {
+            ta.value = content;
+            editorDirty = true;
+            lastSavedDraft = content;
+          }
+          if (status) status.textContent = 'Snapshot restored to draft — Publish to go live';
+          renderPreview(content);
+          runLinter(content);
+          updateMetaRail(content, { hasDraft: true });
+        },
       });
     }
 

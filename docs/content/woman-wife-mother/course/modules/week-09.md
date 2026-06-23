@@ -76,11 +76,7 @@ You must see integration law: allure that is only "for him" without womanhood un
 
 You must see **§F1 marriage ontology** in atmosphere: **Marriage = Sexuality**. Allure stewards the tree daily; **sex** is fruit. A home that functions but does not **breathe** erotically has split fruit from tree (Week 5).
 
-You must see **motherhood decay pattern** in allure: maternal logistics rise while voice goes flat, touch becomes transactional, evenings collapse into exhaustion signaling *you are last* — fragmentation in atmosphere, not virtue.
-
-You must see **meritorious attraction** at atmospheric level — disciplined cultivation of desirable field for one man, not market comparison or entitlement without effort.
-
-You must see three witnesses: **Scripture** (Song, 1 Cor 7), **design** (A³, nakedness genre), **fruit** (conjugal friendship, children's inheritance of warmth). Mood is data—not doctrine.
+When evenings go flat while logistics dominate, the **motherhood decay pattern** is stealing allure—not because children are wrong, but because the woman disappeared inside the manager. **Meritorious attraction** here means sustained atmospheric effort for one husband, not performance for an undefined audience. Reason with three witnesses—**Scripture** (Song, 1 Cor 7), **design** (A³, nakedness genre), and **fruit** (conjugal friendship, warmth your children inherit). Mood is data, not doctrine.
 
 ### Allure markers (concrete, readable)
 
