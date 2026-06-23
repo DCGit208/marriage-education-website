@@ -11,6 +11,10 @@ let userProgress = null;
 let allCourses = [];
 let _unlockedCourses  = [];   // users/{uid}.progress.unlockedCourses
 let _completedCourses = [];   // users/{uid}.progress.completedCourses
+let _ownedCourses     = [];
+let _userData         = null;
+
+const WWM_COURSE_ID = 'the-woman-the-wife-the-mother';
 
 const _TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
@@ -53,20 +57,60 @@ function _sortCourses(courses) {
   });
 }
 
-// Returns access result using TierAccess progression logic.
-// When a viewTier filter is active, access is evaluated AS IF the user is on that tier —
-// so Elite users viewing the Foundation path see exactly what a Foundation user sees.
+function _userOwnsCourse(courseId) {
+  if (!window.CourseAccess || !_userData) return false;
+  return CourseAccess.userOwnsCourse(_userData, courseId);
+}
+
 function _accessResult(course) {
-  const effectiveTier = _viewTier || userTier;
-  if (window.TierAccess) {
-    return TierAccess.canAccessCourse(course.id, effectiveTier, _unlockedCourses, _completedCourses, course.accessLevel);
+  if (!window.CourseAccess || !_userData) {
+    const effectiveTier = _viewTier || userTier;
+    if (window.TierAccess) {
+      return TierAccess.canAccessCourse(course.id, effectiveTier, _unlockedCourses, _completedCourses, course.accessLevel);
+    }
+    const required = course.accessLevel || 'foundation';
+    const ok = (_TIER_ORDER[effectiveTier] ?? 0) >= (_TIER_ORDER[required] ?? 0);
+    return { canAccess: ok };
   }
-  // Fallback: simple tier check
-  const required = course.accessLevel || 'foundation';
-  const ok = (_TIER_ORDER[effectiveTier] ?? 0) >= (_TIER_ORDER[required] ?? 0);
-  return { canAccess: ok };
+  return CourseAccess.getCourseAccess(_userData, course, {
+    viewTier: _viewTier,
+    unlockedCourses: _unlockedCourses,
+    completedCourses: _completedCourses,
+  });
 }
 function _canAccess(course) { return _accessResult(course).canAccess; }
+
+function _purchaseOnlyLockedCourses() {
+  return allCourses.filter(function (c) {
+    if (_completedCourses.includes(c.id)) return false;
+    if (_canAccess(c)) return false;
+    return window.CourseAccess && CourseAccess.isPurchaseOnlyCourse(c);
+  });
+}
+
+async function tryOpenCourseFromUrl() {
+  const openCourseId = new URLSearchParams(window.location.search).get('course');
+  if (!openCourseId) return;
+
+  const course = allCourses.find(function (c) { return c.id === openCourseId; });
+  if (!course) {
+    console.warn('[Courses] Unknown course in URL:', openCourseId);
+    return;
+  }
+
+  if (_canAccess(course)) {
+    await showCourseSheet(openCourseId, course);
+    return;
+  }
+
+  const access = _accessResult(course);
+  if (access.purchaseRequired) {
+    await showCoursePaywall(openCourseId);
+    return;
+  }
+
+  await showCoursePaywall(openCourseId);
+}
 
 // ==================================================================
 // INITIALIZATION
@@ -102,6 +146,18 @@ async function loadData() {
     userProgress = await FormationAccess.getUserProgress(currentUserId);
     _unlockedCourses  = userProgress?.unlockedCourses  || [];
     _completedCourses = userProgress?.completedCourses || [];
+
+    const userDoc = await db.collection('users').doc(currentUserId).get();
+    if (userDoc.exists) {
+      _userData = userDoc.data();
+      _ownedCourses = Array.isArray(_userData.ownedCourses) ? _userData.ownedCourses : [];
+      if (window.CourseAccess) {
+        userTier = CourseAccess.resolveEffectiveTier(_userData);
+      }
+    } else {
+      _userData = null;
+      _ownedCourses = [];
+    }
 
     // Load courses — filter by school if URL param present
     const schoolId = params.get('school');
@@ -205,9 +261,11 @@ async function renderDashboard() {
   // ── Elite full view → Formation Roadmap ─────────────────────
   if (effectiveTier === 'elite' && !_viewTier) {
     renderEliteRoadmap(sortedActive);
+    renderShopPurchaseSection(_purchaseOnlyLockedCourses());
     document.getElementById('progressionSection').style.display = 'none';
     document.getElementById('upgradeSection').style.display     = 'none';
     renderCompletedCourses(sortedCompleted);
+    await tryOpenCourseFromUrl();
     return;
   }
 
@@ -215,7 +273,10 @@ async function renderDashboard() {
   renderActiveCourses(sortedActive, effectiveTier);
   renderProgressionLockedCourses(sortedProgLocked);
   renderTierLockedCourses(sortedTierLocked);
+  renderShopPurchaseSection(_purchaseOnlyLockedCourses());
   renderCompletedCourses(sortedCompleted);
+
+  await tryOpenCourseFromUrl();
 }
 
 async function renderContinueLearning() {
@@ -361,9 +422,13 @@ function _applyTierUX(tier) {
 function renderEliteRoadmap(activeCourses) {
   const container = document.getElementById('activeCoursesContainer');
 
-  // SBD Dummies (schoolId: null) — feature at top; rest grouped by school
-  const sbdDummies    = activeCourses.find(c => c.schoolId == null || c.schoolId === 'standalone');
-  const schoolCourses = activeCourses.filter(c => c.schoolId != null && c.schoolId !== 'standalone');
+  // Standalone flagships (SBD Dummies, WWM, etc.) — all featured at top
+  const standaloneCourses = activeCourses.filter(
+    (c) => c.schoolId == null || c.schoolId === 'standalone'
+  );
+  const schoolCourses = activeCourses.filter(
+    (c) => c.schoolId != null && c.schoolId !== 'standalone'
+  );
 
   const schools   = [];
   const schoolMap = new Map();
@@ -394,20 +459,33 @@ function renderEliteRoadmap(activeCourses) {
       </div>
     </div>`;
 
-  // SBD Dummies — Featured Entry Card
-  if (sbdDummies) {
-    const progress = userProgress?.progressPercent?.[sbdDummies.id] || 0;
-    const progressEl = progress > 0
-      ? `<div class="fec-progress"><div class="fec-progress-bar" style="width:${progress}%"></div></div>
-         <p class="fec-progress-label">${Math.round(progress)}% complete</p>`
-      : `<button class="fec-cta">Start Now →</button>`;
-    html += `
-      <div class="featured-entry-card" onclick="openCourse('${sbdDummies.id}')">
-        <div class="fec-badge">📖 SBD Flagship Course</div>
-        <h3 class="fec-title">${escHtml(sbdDummies.title)}</h3>
-        <p class="fec-sub">${sbdDummies.totalModules ? sbdDummies.totalModules + ' modules' : '13 weeks'} · Foundation of the SBD formation</p>
-        ${progressEl}
-      </div>`;
+  // Standalone flagships — compact list (scales when many shop courses exist)
+  if (standaloneCourses.length) {
+    html += `<div class="school-group-header" style="margin-bottom:12px"><span class="school-group-icon">📖</span>Flagship &amp; shop courses</div>`;
+    html += `<div class="compact-course-list school-group">`;
+    for (const course of standaloneCourses) {
+      const isWwm = course.id === WWM_COURSE_ID;
+      const owned = _userOwnsCourse(course.id);
+      const purchaseOnly = window.CourseAccess && CourseAccess.isPurchaseOnlyCourse(course);
+      const progress = userProgress?.progressPercent?.[course.id] || 0;
+      const progressEl = progress > 0
+        ? `<div class="progress-circle" style="--progress:${progress}%"><span class="progress-text">${Math.round(progress)}%</span></div>`
+        : `<div class="start-btn">${purchaseOnly && !owned ? 'Shop →' : 'Start →'}</div>`;
+      const tag = purchaseOnly ? (owned ? 'Owned' : 'Shop') : 'Flagship';
+      const thumb = window.CourseAccess
+        ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖')
+        : '<div class="course-icon">' + (isWwm ? '👗' : '📖') + '</div>';
+      html += `
+        <div class="course-card" onclick="openCourse('${course.id}')" id="course-${course.id}">
+          ${thumb}
+          <div class="course-info">
+            <h3 class="course-name">${escHtml(course.title)} <span style="font-size:0.65rem;opacity:0.7">${tag}</span></h3>
+            <p class="course-meta">${course.totalModules || 13} weeks · ${purchaseOnly ? 'purchased program' : 'formation entry'}</p>
+          </div>
+          <div class="course-progress">${progressEl}</div>
+        </div>`;
+    }
+    html += `</div>`;
   }
 
   // School sections — School 1 expanded by default, Schools 2–4 collapsed
@@ -452,6 +530,37 @@ function renderEliteRoadmap(activeCourses) {
   }
 
   container.innerHTML = html;
+}
+
+/** Shop / purchase-only courses not yet owned — shown on all tiers */
+function renderShopPurchaseSection(courses) {
+  if (!courses.length) return;
+
+  const host = document.getElementById('shopPurchaseSection');
+  if (!host) return;
+
+  host.style.display = 'block';
+  host.innerHTML = `
+    <div class="school-group-header" style="margin-bottom:12px">
+      <span class="school-group-icon">🛒</span>Shop courses — add to your library
+    </div>
+    <div class="compact-course-list school-group">
+      ${courses.map(function (course) {
+        const isWwm = course.id === WWM_COURSE_ID;
+        const thumb = window.CourseAccess
+          ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖')
+          : '<div class="course-icon">' + (isWwm ? '👗' : '📖') + '</div>';
+        return `
+        <div class="course-card" onclick="openCourse('${course.id}')" id="shop-course-${course.id}">
+          ${thumb}
+          <div class="course-info">
+            <h3 class="course-name">${escHtml(course.title)} <span style="font-size:0.65rem;color:#c6a96b">Shop</span></h3>
+            <p class="course-meta">${course.totalModules || 13} weeks · purchase to unlock</p>
+          </div>
+          <div class="course-progress"><div class="start-btn">Shop →</div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 function toggleSchoolSection(sKey) {
@@ -851,7 +960,20 @@ function showCompletionLockMsg(weekNum) {
 async function showCoursePaywall(courseId) {
   const course = allCourses.find(c => c.id === courseId);
   if (!course) return;
-  
+
+  const access = _accessResult(course);
+  if (access.purchaseRequired) {
+    FormationAccess.showPaywallModal({
+      title: `Add ${course.title} to your library`,
+      message: access.reason || 'Purchase this course in the Shop to unlock all weeks.',
+      requiredTier: access.requiredTier || 'elite',
+      currentTier: userTier,
+      ctaUrl: '/shop.html',
+      ctaLabel: 'View in Shop →',
+    });
+    return;
+  }
+
   FormationAccess.showPaywallModal({
     title: `Unlock ${course.title}`,
     message: `This course requires a ${course.accessLevel} subscription.`,

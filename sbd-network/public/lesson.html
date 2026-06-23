@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1782218494046">
+  <meta name="build-version" content="1782219274208">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>Lesson | SBD Network</title>
@@ -11,8 +11,8 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1782218494046">
-    <link rel="stylesheet" href="/css/lesson-reader.css?v=1782218494046">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1782219274208">
+    <link rel="stylesheet" href="/css/lesson-reader.css?v=1782219274208">
 
     <style>
         :root {
@@ -113,6 +113,45 @@
         }
         .wwm-challenge-link:hover { color: #fff; border-color: var(--gold); }
         .wwm-challenge-hint { font-size: 12px; color: var(--text-sec); }
+
+        .wwm-challenge-nudge {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 24px 12px;
+        }
+        .wwm-challenge-nudge-inner {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(198, 169, 107, 0.45);
+            background: linear-gradient(135deg, rgba(198, 169, 107, 0.12), rgba(0, 0, 0, 0.2));
+        }
+        .wwm-challenge-nudge-title {
+            margin: 0 0 6px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .wwm-challenge-nudge-text {
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--text-sec);
+            line-height: 1.45;
+        }
+        .wwm-challenge-nudge-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .wwm-challenge-nudge-dismiss {
+            background: transparent;
+            border: none;
+            color: var(--text-sec);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
 
         /* ——— CONTENT BODY ——— */
         .lesson-body {
@@ -646,13 +685,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=1782218494046"></script>
-    <script src="/js/course-access.js?v=1782218494046"></script>
-    <script src="/js/scripture-passages.js?v=1782218494046"></script>
-    <script src="/js/lesson-renderer.js?v=1782218494046"></script>
-    <script src="/js/lesson-chrome.js?v=1782218494046"></script>
-    <script src="/js/lesson-chapter-transitions.js?v=1782218494046"></script>
-    <script src="/js/upgrade-tracker.js?v=1782218494046" defer></script>
+    <script src="/js/firebase.js?v=1782219274208"></script>
+    <script src="/js/course-access.js?v=1782219274208"></script>
+    <script src="/js/scripture-passages.js?v=1782219274208"></script>
+    <script src="/js/lesson-renderer.js?v=1782219274208"></script>
+    <script src="/js/lesson-chrome.js?v=1782219274208"></script>
+    <script src="/js/lesson-chapter-transitions.js?v=1782219274208"></script>
+    <script src="/js/lesson-challenge-nudge.js?v=1782219274208"></script>
+    <script src="/js/upgrade-tracker.js?v=1782219274208" defer></script>
 
     <script>
         const params   = new URLSearchParams(location.search);
@@ -674,6 +714,10 @@
             if (!bar) return;
             const show = moduleId === 'wwm-week-13';
             bar.style.display = show ? 'flex' : 'none';
+            if (show && window.WwmChallengeNudge) {
+                const completedMods = (_uData?.progress?.completedModules) || [];
+                WwmChallengeNudge.maybeShow(moduleId, completedMods, currentMod?.courseId);
+            }
         }
 
         function showContentSkeleton() {
@@ -1161,6 +1205,7 @@
                 },
             });
             bindChapterTransitions();
+            updateWwmChallengeBar();
         }
 
         // ── MARK COMPLETE ───────────────────────────────────────
@@ -1222,6 +1267,9 @@
         // ── WEEK COMPLETE ───────────────────────────────────────
         async function showWeekComplete() {
             teardownChapterTransitions();
+            if (window.WwmChallengeNudge && (moduleId === 'wwm-week-13' || currentMod?.courseId === 'the-woman-the-wife-the-mother')) {
+                WwmChallengeNudge.markEligible();
+            }
             const weekNum  = currentMod.week || 1;
             const courseId = currentMod.courseId || null;
             const totalModules = currentMod.totalModules || 6;
@@ -1608,7 +1656,7 @@
         </a>
     </nav>
     <link rel="stylesheet" href="/css/ham-drawer.css">
-    <script defer src="/js/ham-nav.js?v=1782218494046"></script>
+    <script defer src="/js/ham-nav.js?v=1782219274208"></script>
 
 
 </body>

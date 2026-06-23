@@ -215,10 +215,48 @@
     return total;
   }
 
+  function isMobileStudio() {
+    return window.matchMedia && window.matchMedia('(max-width: 1100px)').matches;
+  }
+
+  function closeMobileRail() {
+    const rail = document.getElementById('acsMetaRail');
+    const backdrop = document.getElementById('acsMobileRailBackdrop');
+    if (rail) {
+      rail.classList.remove('acs-meta-rail--sheet-open');
+      if (isMobileStudio()) rail.style.display = 'none';
+    }
+    if (backdrop) backdrop.classList.remove('open');
+  }
+
+  function openMobileRail() {
+    const rail = document.getElementById('acsMetaRail');
+    const backdrop = document.getElementById('acsMobileRailBackdrop');
+    if (rail) {
+      rail.style.display = 'block';
+      rail.classList.add('acs-meta-rail--sheet-open');
+    }
+    if (backdrop) {
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+    }
+  }
+
   function showEditorShell(show) {
     document.getElementById('acsStudioEmpty').style.display = show ? 'none' : 'flex';
     document.getElementById('acsStudioEditor').style.display = show ? 'flex' : 'none';
-    document.getElementById('acsMetaRail').style.display = show ? 'block' : 'none';
+    const rail = document.getElementById('acsMetaRail');
+    const fab = document.getElementById('acsMobileToolsBtn');
+    if (rail) {
+      if (show && !isMobileStudio()) {
+        rail.style.display = 'block';
+        rail.classList.remove('acs-meta-rail--sheet-open');
+      } else {
+        rail.style.display = 'none';
+        closeMobileRail();
+      }
+    }
+    if (fab) fab.classList.toggle('is-visible', show && isMobileStudio());
   }
 
   function setPreviewLinks(moduleId, partId) {
@@ -957,7 +995,15 @@
       });
     }
 
+    const mobileFab = document.getElementById('acsMobileToolsBtn');
+    const mobileBackdrop = document.getElementById('acsMobileRailBackdrop');
+    if (mobileFab) mobileFab.onclick = openMobileRail;
+    if (mobileBackdrop) {
+      mobileBackdrop.onclick = closeMobileRail;
+    }
+
     document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMobileRail();
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         saveEditor(false);

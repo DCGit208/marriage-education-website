@@ -125,6 +125,23 @@
             font-size: 2.5rem;
             flex-shrink: 0;
         }
+
+        .course-thumb {
+            flex-shrink: 0;
+            width: 56px;
+            height: 84px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(198, 169, 107, 0.35);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        }
+
+        .course-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
         
         .course-info {
             flex: 1;
@@ -340,6 +357,7 @@
             <h1 class="page-title">My Learning</h1>
         </div>
         <div class="header-right">
+            <a href="/library.html" class="section-link" style="margin-right:12px;font-size:0.85rem">Library</a>
             <button class="notif-bell-btn btn btn-icon" aria-label="Notifications">
                 🔔<span class="notif-badge" style="display:none;"></span>
             </button>
@@ -369,10 +387,14 @@
         <section class="learning-section">
             <div class="section-header">
                 <h2 class="section-title">Active Courses</h2>
+                <a href="/library.html" class="section-link">My Library →</a>
             </div>
             
             <div id="activeCoursesContainer"></div>
         </section>
+
+        <!-- Shop / purchase-only courses (not in subscription) -->
+        <section class="learning-section" id="shopPurchaseSection" style="display:none"></section>
         
         <!-- Coming Up Next (progression-locked: same tier, finish prev course) -->
         <section class="learning-section" id="progressionSection" style="display: none;">
@@ -424,6 +446,7 @@
     <!-- App Scripts -->
     <script defer src="/js/firebase.js?v=75"></script>
     <script defer src="/js/tier-access.js?v=106"></script>
+    <script defer src="/js/course-access.js?v=1"></script>
     <script defer src="/js/formation-access.js?v=105"></script>
     <script defer src="/js/advanced-expression-access.js?v=105"></script>
     <script defer src="/js/sw-update-checker.js?v=98"></script>
