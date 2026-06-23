@@ -1,0 +1,190 @@
+.library-page {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.library-hero {
+  padding: 20px 20px 8px;
+}
+
+.library-hero h1 {
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+}
+
+.library-hero p {
+  margin: 0;
+  color: var(--text-secondary, #aaa);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.library-search-wrap {
+  padding: 0 20px 12px;
+}
+
+.library-search {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #333);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #fff);
+  font-size: 0.95rem;
+}
+
+.library-section {
+  padding: 16px 20px 8px;
+  border-top: 1px solid var(--border-color, #2a2a2a);
+}
+
+.library-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.library-section-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #999);
+  margin: 0 0 12px;
+}
+
+.library-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.library-card:hover {
+  border-color: rgba(0, 188, 212, 0.35);
+  transform: translateY(-1px);
+}
+
+.library-card-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.library-card-thumb {
+  flex-shrink: 0;
+  width: 48px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(198, 169, 107, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  display: block;
+}
+
+.library-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.library-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.library-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.library-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #999);
+  margin: 0;
+}
+
+.library-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+}
+
+.library-badge--owned {
+  background: rgba(0, 200, 100, 0.15);
+  color: #00c864;
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+
+.library-badge--plan {
+  background: rgba(0, 188, 212, 0.12);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.25);
+}
+
+.library-badge--shop {
+  background: rgba(198, 169, 107, 0.15);
+  color: #c6a96b;
+  border: 1px solid rgba(198, 169, 107, 0.3);
+}
+
+.library-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-secondary, #888);
+  font-size: 0.9rem;
+}
+
+.library-cta-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.library-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  color: #00bcd4;
+}
+
+.library-designer-banner {
+  margin: 0 20px 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(198, 169, 107, 0.12), rgba(0, 188, 212, 0.08));
+  border: 1px solid rgba(198, 169, 107, 0.25);
+}
+
+.library-designer-banner a {
+  color: #c6a96b;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.compact-course-list .course-card {
+  margin-bottom: 8px;
+}
+
+.compact-course-list .course-card .course-icon {
+  font-size: 1.2rem;
+}
+
+.compact-course-list .course-card .course-name {
+  font-size: 0.92rem;
+}
