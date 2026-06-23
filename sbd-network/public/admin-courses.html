@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/admin-courses.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+  <meta name="build-version" content="1782217555421">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Course Studio - SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/lesson-reader.css">
+    <link rel="stylesheet" href="/css/admin-courses.css">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body class="admin-courses-page">
+
+    <header class="acs-app-header">
+        <div class="acs-brand">
+            <button type="button" class="acs-btn" onclick="window.location.href='/admin.html'" aria-label="Back">←</button>
+            <div>
+                <h1>Course Studio</h1>
+                <span class="acs-brand-badge">Content Designer</span>
+            </div>
+        </div>
+        <div class="acs-header-actions">
+            <button type="button" id="acsNewCourseBtn" class="acs-btn acs-btn--gold">+ New Course</button>
+            <button type="button" id="acsRepoSyncBtn" class="acs-btn acs-btn--primary">Repo sync</button>
+            <button type="button" id="acsVisionToggle" class="acs-btn">Roadmap</button>
+            <a href="/library.html" class="acs-btn">My Library</a>
+        </div>
+    </header>
+
+    <div id="acsDenied" class="acs-denied" style="display:none">
+        <h2>Content Designer access required</h2>
+        <p>Grant yourself <strong>Content Designer</strong> in Admin Panel → Users.</p>
+        <p><a href="/admin.html">Admin Panel</a></p>
+    </div>
+
+    <div id="acsApp" style="display:none">
+        <div id="acsDraftBanner" class="acs-draft-banner" role="status">
+            <div class="acs-draft-banner-text">
+                <strong>Draft ≠ live.</strong> Save draft stores your work safely. Learners only see changes after you click <strong>Publish</strong> (or Publish whole week). Existing courses open with published content until you edit.
+            </div>
+            <button type="button" id="acsDraftBannerDismiss" class="acs-btn acs-btn--sm" aria-label="Dismiss">Got it</button>
+        </div>
+        <section id="acsVision" class="acs-vision open">
+            <div class="acs-vision-head" id="acsVisionHead">
+                <h2>Studio roadmap — live now vs world-class premium</h2>
+                <span id="acsVisionChevron">▼</span>
+            </div>
+            <div class="acs-vision-body">
+                <p>You're on <strong>Phase 4</strong>: Phase 3 <em>plus</em> repo sync export + drift compare for WWM. Media library and collaboration remain on the roadmap. <a href="/docs/course-studio-spec.md" target="_blank" rel="noopener">Full spec →</a></p>
+                <div class="acs-roadmap">
+                    <div class="acs-roadmap-col acs-roadmap-col--live">
+                        <h3>Live now (Phase 2–4)</h3>
+                        <ul>
+                            <li class="done">Full catalog — edit any existing course/week/part</li>
+                            <li class="done">Split editor + live preview</li>
+                            <li class="done">Add / duplicate week or part</li>
+                            <li class="done">New course wizard</li>
+                            <li class="done">Markdown toolbar + templates</li>
+                            <li class="done">Draft save + Publish to LMS</li>
+                            <li class="done">Doctrine linter + metadata rail</li>
+                            <li class="done">Drag reorder parts</li>
+                            <li class="done">Repo sync — export + drift vs manifest</li>
+                        </ul>
+                    </div>
+                    <div class="acs-roadmap-col acs-roadmap-col--next">
+                        <h3>Phase 4–5 (next)</h3>
+                        <ul>
+                            <li class="soon">Version history UI + rollback</li>
+                            <li class="soon">Issue-cover art picker</li>
+                            <li class="soon">Collaboration & review queue</li>
+                            <li class="soon">Learner analytics in studio</li>
+                            <li class="soon">Ambient chapter transitions preview</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="acs-workspace">
+            <aside class="acs-catalog">
+                <input type="search" id="acsSearch" class="acs-search" placeholder="Search courses, weeks…" autocomplete="off">
+                <p id="acsMeta" class="acs-meta"></p>
+                <div id="acsTree"></div>
+            </aside>
+
+            <main class="acs-studio" id="acsStudio">
+                <div id="acsStudioEmpty" class="acs-studio-empty">
+                    <h2>Select a part to edit</h2>
+                    <p>Or expand a course → <strong>+ Week</strong> / <strong>+ Part</strong></p>
+                    <p style="margin-top:16px;font-size:0.8rem">Formatting is Markdown — preview updates as you type.</p>
+                </div>
+                <div id="acsStudioEditor" style="display:none;flex:1;flex-direction:column;">
+                    <div class="acs-editor-toolbar">
+                        <h2 id="acsEditorTitle" class="acs-editor-title">Edit part</h2>
+                        <div class="acs-editor-tabs">
+                            <button type="button" class="acs-tab active" data-view="split">Split</button>
+                            <button type="button" class="acs-tab" data-view="source">Source</button>
+                            <button type="button" class="acs-tab" data-view="preview">Preview</button>
+                        </div>
+                        <div class="acs-editor-actions">
+                            <button type="button" id="acsDupPartBtn" class="acs-btn acs-btn--sm">Duplicate</button>
+                            <a id="acsLmsPreviewLink" class="acs-btn acs-btn--primary" href="#" target="_blank" rel="noopener">Published in LMS</a>
+                            <a id="acsDraftPreviewLink" class="acs-btn acs-btn--sm" href="#" target="_blank" rel="noopener" style="display:none">Preview draft</a>
+                            <button type="button" id="acsEditorSaveBtn" class="acs-btn">Save draft</button>
+                            <button type="button" id="acsEditorPublishBtn" class="acs-btn acs-btn--gold">Publish</button>
+                        </div>
+                    </div>
+                    <div id="acsMdToolbar" class="acs-md-toolbar" role="toolbar" aria-label="Formatting">
+                        <button type="button" class="acs-md-btn" data-md-action="bold" title="Bold"><b>B</b></button>
+                        <button type="button" class="acs-md-btn" data-md-action="italic" title="Italic"><i>I</i></button>
+                        <button type="button" class="acs-md-btn" data-md-action="h2" title="Heading">H2</button>
+                        <button type="button" class="acs-md-btn" data-md-action="ul" title="List">• List</button>
+                        <button type="button" class="acs-md-btn" data-md-action="table" title="Table">Table</button>
+                        <button type="button" class="acs-md-btn" data-md-action="scripture" title="Scripture block">✦ Scripture</button>
+                        <button type="button" class="acs-md-btn" data-md-action="code" title="Code fence">{ }</button>
+                        <button type="button" class="acs-md-btn" data-md-action="ontology" title="Ontology section">Ontology</button>
+                        <button type="button" class="acs-md-btn" data-md-action="reflection" title="Reflection">Reflection</button>
+                    </div>
+                    <div id="acsCheat" class="acs-cheat">
+                        <code>**bold**</code> · <code>*italic*</code> · <code>## Heading</code> · blank line = paragraph ·
+                        <code>| A | B |</code> table · <code>```</code> diagram · scripture refs auto-expand in Scripture Study
+                    </div>
+                    <div id="acsSplit" class="acs-split">
+                        <div class="acs-source-pane">
+                            <textarea id="acsEditorTextarea" class="acs-editor-textarea" spellcheck="true" placeholder="## I. Ontology — What This Week Is&#10;&#10;Your formation markdown…"></textarea>
+                        </div>
+                        <div id="acsPreviewPane" class="acs-preview-pane lesson-editorial formation-reader"></div>
+                    </div>
+                    <div class="acs-editor-foot">
+                        <span id="acsEditorStatus">Ready</span>
+                        <span id="acsEditorHint">Draft saves locally to Firestore · Publish updates what learners see</span>
+                    </div>
+                </div>
+            </main>
+
+            <aside id="acsMetaRail" class="acs-meta-rail" aria-label="Part metadata" style="display:none">
+                <p class="acs-meta-rail-title">Part details</p>
+                <dl class="acs-meta-dl">
+                    <dt>Status</dt><dd id="acsRailStatus">—</dd>
+                    <dt>Words</dt><dd id="acsRailWords">—</dd>
+                    <dt>Read time</dt><dd id="acsRailRead">—</dd>
+                    <dt>Course</dt><dd id="acsRailCourse" class="acs-mono">—</dd>
+                    <dt>Module</dt><dd id="acsRailModule" class="acs-mono">—</dd>
+                    <dt>Part</dt><dd id="acsRailPart" class="acs-mono">—</dd>
+                </dl>
+                <div class="acs-meta-rail-section">
+                    <p class="acs-meta-rail-title">Doctrine linter</p>
+                    <div id="acsLintPanel" class="acs-lint-panel"><p class="acs-lint-muted">Open a part to lint</p></div>
+                </div>
+                <button type="button" id="acsPublishWeekBtn" class="acs-btn acs-btn--gold acs-btn--block" disabled>Publish whole week</button>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Add week modal -->
+    <div id="acsWeekModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal" role="dialog">
+            <h3>Add week</h3>
+            <div class="acs-field"><label>Week title</label><input type="text" id="acsWeekTitle" placeholder="Week 14: …"></div>
+            <div class="acs-field"><label>Module ID (auto if blank)</label><input type="text" id="acsWeekModuleId" placeholder="wwm-week-14"></div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-modal>Cancel</button>
+                <button type="button" id="acsWeekSaveBtn" class="acs-btn acs-btn--gold">Create week</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add part modal -->
+    <div id="acsPartModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal" role="dialog">
+            <h3>Add part</h3>
+            <div class="acs-field"><label>Part title</label><input type="text" id="acsPartTitle" placeholder="New section — …"></div>
+            <div class="acs-field"><label>Part ID</label><input type="text" id="acsPartId" placeholder="part-8"></div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-modal>Cancel</button>
+                <button type="button" id="acsPartSaveBtn" class="acs-btn acs-btn--gold">Create part</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repo sync modal (WWM) -->
+    <div id="acsSyncModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal acs-modal--wide" role="dialog" aria-labelledby="acsSyncTitle">
+            <h3 id="acsSyncTitle">Repo sync — The Woman, The Wife, The Mother</h3>
+            <p class="acs-sync-intro">Compare <strong>published</strong> Firestore content to repo markdown (<code>docs/content/woman-wife-mother/course/modules/</code>). Export downloads files for git commit. Re-import remains CLI: <code>node sbd-network/scripts/seed-wwm-course.js</code>.</p>
+            <label class="acs-sync-draft-toggle"><input type="checkbox" id="acsSyncUseDraft"> Compare drafts instead of published</label>
+            <p id="acsSyncStatus" class="acs-sync-status">Open to compare…</p>
+            <div id="acsSyncTable" class="acs-sync-table-wrap"></div>
+            <div class="acs-modal-actions">
+                <button type="button" id="acsSyncRefresh" class="acs-btn">Refresh</button>
+                <button type="button" id="acsSyncExportAll" class="acs-btn acs-btn--gold">Export all weeks</button>
+                <button type="button" class="acs-btn" data-close-modal>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New course modal -->
+    <div id="acsCourseModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal" role="dialog" style="max-width:520px">
+            <h3>New course</h3>
+            <div class="acs-field"><label>Course ID (slug)</label><input type="text" id="acsCourseId" placeholder="my-flagship-course"></div>
+            <div class="acs-field"><label>Title</label><input type="text" id="acsCourseTitle" placeholder="Course title"></div>
+            <div class="acs-field"><label>School</label>
+                <select id="acsCourseSchool">
+                    <option value="standalone">Flagship / Shop</option>
+                    <option value="school-1-teleios">School 1 — Teleios</option>
+                    <option value="school-2-sexual-literacy">School 2 — Sexual Literacy</option>
+                    <option value="school-3-marriage-systems">School 3 — Marriage Systems</option>
+                    <option value="school-4-civilization-leadership">School 4 — Civilization</option>
+                </select>
+            </div>
+            <div class="acs-field"><label>Access</label>
+                <select id="acsCourseAccess">
+                    <option value="foundation">Foundation</option>
+                    <option value="premium">Premium</option>
+                    <option value="elite">Elite</option>
+                </select>
+            </div>
+            <div class="acs-field"><label><input type="checkbox" id="acsCoursePurchaseOnly"> Purchase-only (Shop, not subscription)</label></div>
+            <div class="acs-field"><label>Initial weeks (blank formation shell)</label><input type="number" id="acsCourseWeeks" value="1" min="1" max="52"></div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-modal>Cancel</button>
+                <button type="button" id="acsCourseSaveBtn" class="acs-btn acs-btn--gold">Create course</button>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="/js/firebase.js"></script>
+    <script defer src="/js/course-access.js"></script>
+    <script defer src="/js/scripture-passages.js"></script>
+    <script defer src="/js/lesson-renderer.js"></script>
+    <script defer src="/js/studio-doctrine-linter.js"></script>
+    <script defer src="/js/studio-toolbar.js"></script>
+    <script defer src="/js/studio-repo-sync.js"></script>
+    <script defer src="/js/admin-courses.js"></script>
+</body>
+</html>

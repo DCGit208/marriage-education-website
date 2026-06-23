@@ -64,8 +64,9 @@ for (const file of files) {
   let content = fs.readFileSync(srcPath, 'utf8');
 
   if (!content.includes('<!-- NAV_INJECT -->')) {
-    console.log(`⚠  ${file} — no NAV_INJECT marker, skipped`);
-    skipped++;
+    fs.writeFileSync(destPath, content, 'utf8');
+    built++;
+    console.log(`✓  ${file}  (standalone — no nav)`);
     continue;
   }
 
@@ -91,6 +92,13 @@ try {
   console.log(`🔧 Shop images synced (${imgSync.total} files, ${imgSync.copied} updated)`);
 } catch (err) {
   console.error('❌ shop asset sync failed:', err.message);
+  process.exit(1);
+}
+
+try {
+  require('./scripts/generate-wwm-repo-manifest');
+} catch (err) {
+  console.error('❌ WWM repo manifest failed:', err.message);
   process.exit(1);
 }
 
