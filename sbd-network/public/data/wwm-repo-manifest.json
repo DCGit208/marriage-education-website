@@ -1,0 +1,84 @@
+{
+  "courseId": "the-woman-the-wife-the-mother",
+  "generatedAt": "2026-06-23T12:25:55.421Z",
+  "weeks": {
+    "1": {
+      "file": "week-01.md",
+      "words": 4533,
+      "hash": "djb2-faab3a8b",
+      "mtime": "2026-06-23T12:21:19.552Z"
+    },
+    "2": {
+      "file": "week-02.md",
+      "words": 3722,
+      "hash": "djb2-a2f517fe",
+      "mtime": "2026-06-23T12:21:23.116Z"
+    },
+    "3": {
+      "file": "week-03.md",
+      "words": 4222,
+      "hash": "djb2-769b411f",
+      "mtime": "2026-06-23T12:21:26.612Z"
+    },
+    "4": {
+      "file": "week-04.md",
+      "words": 3749,
+      "hash": "djb2-1e5ab3d",
+      "mtime": "2026-06-23T12:21:30.135Z"
+    },
+    "5": {
+      "file": "week-05.md",
+      "words": 3539,
+      "hash": "djb2-eebf1bdf",
+      "mtime": "2026-06-23T12:21:33.697Z"
+    },
+    "6": {
+      "file": "week-06.md",
+      "words": 3570,
+      "hash": "djb2-d89fcb10",
+      "mtime": "2026-06-23T12:21:36.514Z"
+    },
+    "7": {
+      "file": "week-07.md",
+      "words": 3540,
+      "hash": "djb2-5b937b91",
+      "mtime": "2026-06-23T12:21:39.247Z"
+    },
+    "8": {
+      "file": "week-08.md",
+      "words": 3853,
+      "hash": "djb2-75c3daf0",
+      "mtime": "2026-06-23T12:21:41.976Z"
+    },
+    "9": {
+      "file": "week-09.md",
+      "words": 3779,
+      "hash": "djb2-b15df5e4",
+      "mtime": "2026-06-23T12:21:44.802Z"
+    },
+    "10": {
+      "file": "week-10.md",
+      "words": 3540,
+      "hash": "djb2-f112f72f",
+      "mtime": "2026-06-23T12:21:47.612Z"
+    },
+    "11": {
+      "file": "week-11.md",
+      "words": 3606,
+      "hash": "djb2-e75ea4c5",
+      "mtime": "2026-06-23T12:21:50.352Z"
+    },
+    "12": {
+      "file": "week-12.md",
+      "words": 3517,
+      "hash": "djb2-4b87967c",
+      "mtime": "2026-06-23T12:21:53.117Z"
+    },
+    "13": {
+      "file": "week-13.md",
+      "words": 3658,
+      "hash": "djb2-fee8a5ab",
+      "mtime": "2026-06-23T12:21:55.872Z"
+    }
+  }
+}

@@ -8,7 +8,10 @@
     <title>Lesson | SBD Network</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="/css/bottom-nav.css?v=41">
+    <link rel="stylesheet" href="/css/lesson-reader.css?v=3">
 
     <style>
         :root {
@@ -84,6 +87,31 @@
             color: var(--text-sec);
             line-height: 1.5;
         }
+
+        .wwm-challenge-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 16px;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 12px 24px 0;
+        }
+        .wwm-challenge-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: var(--gold-dim);
+            border: 1px solid rgba(198,169,107,0.35);
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .wwm-challenge-link:hover { color: #fff; border-color: var(--gold); }
+        .wwm-challenge-hint { font-size: 12px; color: var(--text-sec); }
 
         /* ——— CONTENT BODY ——— */
         .lesson-body {
@@ -563,7 +591,9 @@
         .week-complete-discuss-link:hover { opacity: 1; text-decoration: underline; }
     </style>
 </head>
-<body data-page="learn" class="bottom-nav-page">
+<body data-page="learn" class="bottom-nav-page formation-reader-body">
+
+    <div id="readProgress" class="formation-read-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Reading progress"></div>
 
     <!-- TOP BAR -->
     <div class="lesson-topbar">
@@ -572,14 +602,32 @@
     </div>
 
     <!-- HERO -->
-    <div class="lesson-hero">
-        <div class="lesson-meta" id="lessonMeta">Teleios Blueprint · Week 1 · Free</div>
-        <h1 class="lesson-title" id="lessonTitle">Loading…</h1>
-        <p class="lesson-subtitle" id="lessonSubtitle"></p>
+    <div class="lesson-hero formation-hero">
+        <div class="formation-hero-glow" aria-hidden="true"></div>
+        <div class="formation-hero-inner">
+            <p class="formation-kicker" id="lessonMeta">Formation · Week 1</p>
+            <h1 class="formation-title" id="lessonTitle">Loading…</h1>
+            <p class="formation-dek" id="lessonSubtitle"></p>
+            <div class="formation-meta-row" id="lessonReadMeta" style="display:none"></div>
+            <div class="formation-week-progress" id="weekProgressBlock" style="display:none">
+                <div class="formation-week-progress-label">
+                    <span>Week progress</span>
+                    <span id="weekProgressLabel">0 of 7</span>
+                </div>
+                <div class="formation-week-progress-bar">
+                    <div class="formation-week-progress-fill" id="weekProgressFill" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- PART INDEX NAV (shown inside part view) -->
     <div class="part-breadcrumb" id="partBreadcrumb" style="display:none"></div>
+
+    <div id="wwmChallengeBar" class="wwm-challenge-bar" style="display:none" role="region" aria-label="Capstone tools">
+        <a href="/downloads/wwm-30-day-challenge-scorecard.html" target="_blank" rel="noopener" class="wwm-challenge-link">📋 30-Day Challenge Scorecard</a>
+        <span class="wwm-challenge-hint">Print or track daily — 25/30 pass days completes the Challenge</span>
+    </div>
 
     <!-- LESSON CONTENT -->
     <div class="lesson-body" id="lessonBody">
@@ -598,7 +646,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="/js/firebase.js?v=75"></script>
-    <script src="/js/upgrade-tracker.js?v=248"></script>
+    <script src="/js/course-access.js?v=1"></script>
+    <script src="/js/scripture-passages.js?v=3"></script>
+    <script src="/js/lesson-renderer.js?v=3"></script>
+    <script src="/js/lesson-chrome.js?v=2"></script>
+    <script src="/js/upgrade-tracker.js?v=248" defer></script>
 
     <script>
         const params   = new URLSearchParams(location.search);
@@ -613,6 +665,37 @@
         let completedParts = [];
         let _uData         = null; // full user doc, set on auth
 
+        let _partContentCache = Object.create(null);
+
+        function updateWwmChallengeBar() {
+            const bar = document.getElementById('wwmChallengeBar');
+            if (!bar) return;
+            const show = moduleId === 'wwm-week-13';
+            bar.style.display = show ? 'flex' : 'none';
+        }
+
+        function showContentSkeleton() {
+            const body = document.getElementById('lessonBody');
+            body.classList.add('is-loading');
+            body.innerHTML = `
+                <div class="lesson-skeleton" aria-hidden="true">
+                    <div class="lesson-skeleton-line lesson-skeleton-line--med"></div>
+                    <div class="lesson-skeleton-line"></div>
+                    <div class="lesson-skeleton-line"></div>
+                    <div class="lesson-skeleton-line lesson-skeleton-line--short"></div>
+                </div>`;
+        }
+
+        function paintEarlyShell() {
+            const weekNum = parseWeekFromModuleId(moduleId);
+            if (weekNum) {
+                document.getElementById('lessonMeta').textContent = 'Muliebrity Formation · Week ' + weekNum;
+                document.getElementById('lessonTitle').textContent = 'Week ' + weekNum;
+            }
+            showContentSkeleton();
+        }
+        paintEarlyShell();
+
         firebase.auth().onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '/auth?next=' + encodeURIComponent(location.pathname + location.search);
@@ -620,37 +703,60 @@
             }
             _lessonUser = user;
 
-            // ── Load user tier ──────────────────────────────────
             let uData = null;
+            let mDoc = null;
             try {
-                const uDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-                if (uDoc.exists) {
-                    uData   = uDoc.data();
-                    _uData  = uData;
-                    const sub    = uData.subscription || {};
-                    const now    = Date.now();
+                const [uSnap, mSnap] = await Promise.all([
+                    firebase.firestore().collection('users').doc(user.uid).get(),
+                    firebase.firestore().collection('modules').doc(moduleId).get(),
+                ]);
+                if (uSnap.exists) {
+                    uData = uSnap.data();
+                    _uData = uData;
+                    const sub = uData.subscription || {};
+                    const now = Date.now();
                     const subEnd = sub.endDate?.toMillis ? sub.endDate.toMillis() : 0;
                     const active = sub.status === 'active' && subEnd > now ? sub.tier : '';
-                    userTier = uData.role === 'admin' ? 'elite' : (active || 'free');
+                    userTier = window.CourseAccess
+                        ? CourseAccess.resolveEffectiveTier(uData)
+                        : (uData.role === 'admin' ? 'elite' : (active || 'free'));
                 }
-            } catch (e) { console.error('tier load', e); }
-            // ── Load module ─────────────────────────────────────
-            try {
-                const mDoc = await firebase.firestore().collection('modules').doc(moduleId).get();
-                if (!mDoc.exists) { showError('Module not found.'); return; }
-                currentMod = mDoc.data();
-            } catch (e) { showError('Failed to load content. Please refresh.'); return; }
+                mDoc = mSnap;
+            } catch (e) {
+                console.error('lesson load', e);
+                showError('Failed to load content. Please refresh.');
+                return;
+            }
 
-            // ── Module-level tier check ──────────────────────────
+            if (!mDoc.exists) { showError('Module not found.'); return; }
+            currentMod = mDoc.data();
+
+            const ownsCourse = window.CourseAccess
+                ? CourseAccess.userOwnsCourse(uData, currentMod.courseId)
+                : false;
+
+            if (window.CourseAccess && currentMod.courseId) {
+                const purchaseCheck = CourseAccess.getCourseAccess(uData, {
+                    id: currentMod.courseId,
+                    purchaseOnly: currentMod.purchaseOnly,
+                    accessLevel: currentMod.accessLevel,
+                }, {});
+                if (!ownsCourse && purchaseCheck.purchaseRequired) {
+                    showPurchaseWall(currentMod.courseId, currentMod.title);
+                    return;
+                }
+            }
+
             const requiredTier = currentMod.requiredTier || currentMod.accessLevel || 'free';
-            if (TIER_ORDER[userTier] < TIER_ORDER[requiredTier]) {
+            if (!ownsCourse && TIER_ORDER[userTier] < TIER_ORDER[requiredTier]) {
                 showUpgradeWall(requiredTier, currentMod.title);
                 return;
             }
 
             // ── Drip gate check (v245) ───────────────────────────
             // Elite & admin bypass drip entirely — instant access
-            if (userTier !== 'elite' && uData?.role !== 'admin') {
+            if (!ownsCourse && userTier !== 'elite' && uData?.role !== 'admin' &&
+                !(window.CourseAccess && CourseAccess.isContentDesigner(uData))) {
                 const sub        = uData?.subscription || {};
                 const dripStartMs = sub.dripStartDate?.toMillis ? sub.dripStartDate.toMillis() : null;
                 const weekNum     = currentMod.week || currentMod.weekNumber || null;
@@ -689,13 +795,108 @@
             }
 
             // ── Route ───────────────────────────────────────────
-            const hasParts = Array.isArray(currentMod.parts) && currentMod.parts.length > 0;
-            if (hasParts) {
-                partId ? renderPart(partId) : renderPartsIndex();
-            } else {
-                renderLegacyContent();
+            updateWwmChallengeBar();
+            try {
+                const hasParts = Array.isArray(currentMod.parts) && currentMod.parts.length > 0;
+                if (hasParts) {
+                    if (partId) await renderPart(partId);
+                    else await renderPartsIndex();
+                } else if (currentMod.hasPartSubcollection) {
+                    showError('This week uses split parts but metadata is missing. Re-run the course seed script.');
+                } else {
+                    await renderLegacyContent();
+                }
+            } catch (renderErr) {
+                console.error('[lesson] render failed:', renderErr);
+                showError('Failed to load lesson: ' + (renderErr.message || 'unknown error'));
             }
         });
+
+        async function fetchPartContent(part) {
+            if (part.content) return part.content;
+            const cacheKey = moduleId + ':' + part.id;
+            if (_partContentCache[cacheKey]) return _partContentCache[cacheKey];
+
+            const snap = await firebase.firestore()
+                .collection('modules').doc(moduleId)
+                .collection('parts').doc(part.id)
+                .get();
+            const data = snap.exists ? snap.data() : {};
+            const previewDraft = new URLSearchParams(window.location.search).get('preview') === 'draft';
+            const canPreviewDraft = previewDraft && window.CourseAccess && _uData &&
+                CourseAccess.isContentDesigner(_uData);
+            let content = '';
+            if (canPreviewDraft && data.hasDraft && data.draftContent != null) {
+                content = data.draftContent;
+            } else {
+                content = data.content || '';
+            }
+            _partContentCache[cacheKey] = content;
+            return content;
+        }
+
+        function estimateReadMin(text) {
+            if (window.FormationReaderChrome) return window.FormationReaderChrome.estimateReadMinutes(text);
+            const w = String(text || '').split(/\s+/).filter(Boolean).length;
+            return Math.max(1, Math.round(w / 220));
+        }
+
+        function updateWeekProgress(parts) {
+            const block = document.getElementById('weekProgressBlock');
+            if (!block || !parts || !parts.length) return;
+            const done = parts.filter(p => completedParts.includes(p.id)).length;
+            const pct = Math.round((done / parts.length) * 100);
+            document.getElementById('weekProgressLabel').textContent = done + ' of ' + parts.length;
+            document.getElementById('weekProgressFill').style.width = pct + '%';
+            block.style.display = 'block';
+        }
+
+        function removeReadNav() {
+            const nav = document.getElementById('formationReadNav');
+            if (nav) nav.remove();
+        }
+
+        function buildReadNav(parts, idx, moduleId) {
+            removeReadNav();
+            const prev = parts[idx - 1];
+            const next = parts[idx + 1];
+            const dots = parts.map((p, i) => {
+                let cls = 'formation-read-nav-dot';
+                if (completedParts.includes(p.id)) cls += ' formation-read-nav-dot--done';
+                if (i === idx) cls += ' formation-read-nav-dot--active';
+                return `<span class="${cls}" title="Part ${p.order}"></span>`;
+            }).join('');
+
+            const nav = document.createElement('nav');
+            nav.id = 'formationReadNav';
+            nav.className = 'formation-read-nav';
+            nav.setAttribute('aria-label', 'Part navigation');
+            nav.innerHTML = `
+                ${prev ? `<a class="formation-read-nav-btn" href="/lesson.html?moduleId=${moduleId}&part=${prev.id}">← Prev</a>` : '<span class="formation-read-nav-btn" style="opacity:0.3">← Prev</span>'}
+                <div class="formation-read-nav-dots">${dots}</div>
+                ${next ? `<a class="formation-read-nav-btn formation-read-nav-btn--primary" href="/lesson.html?moduleId=${moduleId}&part=${next.id}">Next →</a>` : '<a class="formation-read-nav-btn" href="/lesson.html?moduleId=${moduleId}">Parts</a>'}`;
+            document.body.appendChild(nav);
+        }
+
+        function initReaderChrome(opts) {
+            if (window.FormationReaderChrome) {
+                window.FormationReaderChrome.initAfterRender(opts || {});
+            }
+        }
+
+        function weekTotalFor(mod) {
+            if (!mod) return 13;
+            return mod.totalWeeks || mod.total_weeks || 13;
+        }
+
+        function isLessonDesigner() {
+            return window.CourseAccess && _uData && CourseAccess.isContentDesigner(_uData);
+        }
+
+        function parseWeekFromModuleId(id) {
+            const m = String(id || '').match(/(?:^|[-_])week-(\d+)/i);
+            return m ? parseInt(m[1], 10) : null;
+        }
 
         // ── PARTS INDEX ─────────────────────────────────────────
         async function renderPartsIndex() {
@@ -705,26 +906,57 @@
 
             document.getElementById('lessonBackBtn').href      = '/courses.html';
             document.getElementById('topbarTitle').textContent = currentMod.title || 'Lesson';
+            const weekTotal = weekTotalFor(currentMod);
             document.getElementById('lessonMeta').textContent  = allDone
-                ? 'Week ' + weekNum + ' of 6 · Complete ✓'
-                : 'Week ' + weekNum + ' of 6 · ' + parts.length + ' parts';
+                ? 'Week ' + weekNum + ' of ' + weekTotal + ' · Complete'
+                : 'Muliebrity Formation · Week ' + weekNum;
             document.getElementById('lessonTitle').textContent    = currentMod.title || 'Week ' + weekNum;
             document.getElementById('lessonSubtitle').textContent = allDone
-                ? 'All parts complete. Ready for the next week.'
-                : 'Complete each part in sequence to finish this week.';
+                ? 'Every part complete. Your formation continues.'
+                : 'Seven focused readings. One integrated woman.';
 
-            const teleiosParts  = parts.filter(p => p.track === 'teleios');
-            const advocacyParts = parts.filter(p => p.track === 'advocacy');
+            const isFormation = currentMod.courseFormat === 'formation' ||
+                (parts.length > 0 && parts.every(p => p.track === 'formation'));
+
+            updateWeekProgress(parts);
+            removeReadNav();
+
+            const teleiosParts  = isFormation ? parts : parts.filter(p => p.track === 'teleios');
+            const advocacyParts = isFormation ? [] : parts.filter(p => p.track === 'advocacy');
+
+            function formationPartCard(p) {
+                const idx         = parts.findIndex(x => x.id === p.id);
+                const prev        = parts[idx - 1];
+                const isDone      = completedParts.includes(p.id);
+                const isAvailable = isLessonDesigner() || idx === 0 || completedParts.includes(prev.id);
+                const isLocked    = !isDone && !isAvailable;
+                const mins        = p.estimatedMinutes || 20;
+                const num         = String(p.order).padStart(2, '0');
+                const href        = `/lesson.html?moduleId=${moduleId}&part=${p.id}`;
+                const status      = isDone ? 'Complete' : (isLocked ? 'Locked' : mins + ' min read');
+                return `
+                    <a class="formation-part-card${isDone ? ' formation-part-card--done' : ''}${isLocked ? ' formation-part-card--locked' : ''}"
+                       href="${isLocked ? '#' : escHtml(href)}">
+                        <div class="formation-part-num">${isDone ? '✓' : num}</div>
+                        <div>
+                            <h3 class="formation-part-title">${escHtml(p.title)}</h3>
+                            <div class="formation-part-meta">${status}</div>
+                        </div>
+                        ${isDone ? '<span class="formation-part-check">✓</span>' : '<span class="formation-part-arrow">→</span>'}
+                    </a>`;
+            }
 
             function partRow(p) {
                 const idx         = parts.findIndex(x => x.id === p.id);
                 const prev        = parts[idx - 1];
                 const isDone      = completedParts.includes(p.id);
-                const isAvailable = idx === 0 || completedParts.includes(prev.id);
+                const isAvailable = isLessonDesigner() || idx === 0 || completedParts.includes(prev.id);
                 const isLocked    = !isDone && !isAvailable;
 
-                const badgeClass  = p.track === 'teleios' ? 'part-track-badge--teleios' : 'part-track-badge--advocacy';
-                const badgeLabel  = p.track === 'teleios' ? '📚 Teleios' : '🎯 Advocacy';
+                const badgeClass  = p.track === 'formation' ? 'part-track-badge--formation'
+                    : p.track === 'teleios' ? 'part-track-badge--teleios' : 'part-track-badge--advocacy';
+                const badgeLabel  = p.track === 'formation' ? '◈ Formation'
+                    : p.track === 'teleios' ? '📚 Teleios' : '🎯 Advocacy';
 
                 let statusHtml;
                 if (isDone)           statusHtml = `<div class="part-status part-status--done">✓</div>`;
@@ -781,23 +1013,47 @@
                 } catch (e) { console.warn('[lesson] completion banner:', e); }
             }
 
+            if (isFormation) {
+                const doneCount = parts.filter(p => completedParts.includes(p.id)).length;
+                initReaderChrome({
+                    readMeta: {
+                        weekLabel: 'Week ' + weekNum,
+                        progressLabel: doneCount + ' of ' + parts.length + ' parts',
+                    },
+                });
+                document.getElementById('lessonBody').innerHTML =
+                    completionBannerHtml + `
+                    <div class="parts-index parts-index--formation">
+                        <div class="formation-index-header">
+                            <h2>This week's formation</h2>
+                            <p>Read in sequence. Each part unlocks the next. Scripture, doctrine, and discipline — designed to be read, not dumped.</p>
+                        </div>
+                        <div class="formation-parts-grid">
+                            ${parts.map(p => formationPartCard(p)).join('')}
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            const indexIntro = 'This week has two tracks. Complete each part in sequence — finish a part to unlock the next.';
             document.getElementById('lessonBody').innerHTML =
                 completionBannerHtml + `
                 <div class="parts-index">
-                    <p class="parts-index-intro">This week has two tracks. Complete each part in sequence — finish a part to unlock the next.</p>
+                    <p class="parts-index-intro">${indexIntro}</p>
                     <div class="parts-track-group">
                         <span class="parts-track-label">📚 Teleios Track — Personal Formation</span>
                         ${teleiosParts.map(p => partRow(p)).join('')}
                     </div>
+                    ${advocacyParts.length ? `
                     <div class="parts-track-group">
                         <span class="parts-track-label">🎯 Advocacy Track — Deployment Training</span>
                         ${advocacyParts.map(p => partRow(p)).join('')}
-                    </div>
+                    </div>` : ''}
                 </div>`;
         }
 
         // ── SINGLE PART VIEW ────────────────────────────────────
-        function renderPart(pid) {
+        async function renderPart(pid) {
             const parts   = currentMod.parts;
             const idx     = parts.findIndex(p => p.id === pid);
             if (idx === -1) { showError('Part not found.'); return; }
@@ -824,17 +1080,18 @@
             const isDone   = completedParts.includes(pid);
             const isLast   = idx === parts.length - 1;
             const nextPart = !isLast ? parts[idx + 1] : null;
-            const track    = part.track === 'teleios' ? '📚 Teleios Track' : '🎯 Advocacy Track';
 
-            // Hero
+            const weekNum = currentMod.week || 1;
+            const trackLabel = part.track === 'formation' ? 'Formation Reading'
+                : part.track === 'teleios' ? 'Teleios Track' : 'Advocacy Track';
+
             document.getElementById('lessonBackBtn').href = `/lesson.html?moduleId=${moduleId}`;
             document.getElementById('topbarTitle').textContent = currentMod.title || 'Lesson';
-            document.getElementById('lessonMeta').textContent  =
-                'Week ' + (currentMod.week || 1) + ' · Part ' + part.order + ' of ' + parts.length;
+            document.getElementById('lessonMeta').textContent  = 'Week ' + weekNum + ' · Part ' + part.order + ' of ' + parts.length;
             document.getElementById('lessonTitle').textContent    = part.title;
-            document.getElementById('lessonSubtitle').textContent = track;
+            document.getElementById('lessonSubtitle').textContent = trackLabel;
 
-            // Breadcrumb
+            updateWeekProgress(parts);
             const bc = document.getElementById('partBreadcrumb');
             bc.style.display = 'flex';
             bc.innerHTML = `
@@ -842,15 +1099,27 @@
                 <span class="part-breadcrumb-label">Part ${part.order} / ${parts.length}</span>
                 <span style="width:60px"></span>`;
 
-            // Content
+            // Content — fetch body only when opening this part (fast index load)
             const body = document.getElementById('lessonBody');
-            body.innerHTML = renderMarkdown(part.content || '');
+            showContentSkeleton();
 
-            // Completion footer
+            let partMarkdown = '';
+            try {
+                partMarkdown = await fetchPartContent(part);
+            } catch (e) {
+                console.error('part load', e);
+                body.classList.remove('is-loading');
+                body.innerHTML = '<p class="lesson-loading">Could not load this part. Please try again.</p>';
+                return;
+            }
+
+            body.classList.remove('is-loading');
+            body.innerHTML = renderLessonMarkdown(partMarkdown);
+
+            const mins = part.estimatedMinutes || estimateReadMin(partMarkdown);
             const footer = document.createElement('div');
             footer.className = 'part-complete-section';
 
-            const weekNum = currentMod.week || 1;
             if (isDone) {
                 footer.innerHTML = `
                     <p class="completion-done-note">✅ Part complete</p>
@@ -866,6 +1135,15 @@
                     <button class="btn-back-index" onclick="nav(null)">← Back to all parts</button>`;
             }
             body.appendChild(footer);
+
+            buildReadNav(parts, idx, moduleId);
+            initReaderChrome({
+                readMeta: {
+                    weekLabel: 'Week ' + weekNum,
+                    partLabel: 'Part ' + part.order + ' of ' + parts.length,
+                    minutes: mins,
+                },
+            });
         }
 
         // ── MARK COMPLETE ───────────────────────────────────────
@@ -1055,7 +1333,7 @@
             document.getElementById('lessonTitle').textContent    = mod.title || 'Lesson';
             document.getElementById('lessonSubtitle').textContent = '';
 
-            const contentHtml = renderMarkdown(mod.content || '_Content coming soon._');
+            const contentHtml = renderLessonMarkdown(mod.content || '_Content coming soon._');
 
             const footerHtml = isDone
                 ? `<div class="legacy-week-footer">
@@ -1069,6 +1347,13 @@
                    </div>`;
 
             document.getElementById('lessonBody').innerHTML = contentHtml + footerHtml;
+            removeReadNav();
+            initReaderChrome({
+                readMeta: {
+                    weekLabel: 'Week ' + weekNum,
+                    minutes: estimateReadMin(mod.content || ''),
+                },
+            });
         }
 
         async function markWeekComplete() {
@@ -1116,6 +1401,20 @@
                 </div>`;
         }
 
+        // ── PURCHASE WALL (shop / owned library) ────────────────
+        function showPurchaseWall(courseId, title) {
+            document.getElementById('lessonBody').innerHTML = '';
+            document.getElementById('upgradeWall').style.display = 'block';
+            document.getElementById('upgradeWall').querySelector('h3').textContent = 'Add to your library';
+            document.getElementById('upgradeWall').querySelector('p').textContent =
+                'This flagship course is purchased separately from your subscription. Buy it in the Shop — it will appear in My Library.';
+            const btn = document.getElementById('upgradeWall').querySelector('a');
+            btn.href = '/shop.html';
+            btn.textContent = 'View in Shop →';
+            document.getElementById('topbarTitle').textContent = 'Purchase required';
+            document.getElementById('lessonTitle').textContent = '🔒 ' + (title || 'Locked');
+        }
+
         // ── UPGRADE WALL ────────────────────────────────────────
         function showUpgradeWall(tier, title) {
             document.getElementById('lessonBody').innerHTML = '';
@@ -1134,8 +1433,20 @@
                 `<p style="color:var(--text-sec);padding:1.5rem;text-align:center">${escHtml(msg)}</p>`;
         }
 
-        // ── MARKDOWN RENDERER ───────────────────────────────────
-        function renderMarkdown(md) {
+        // ── MARKDOWN RENDERER (LessonRenderer + scripture enrichment) ──
+        function renderLessonMarkdown(md) {
+            if (window.LessonRenderer) {
+                if (typeof window.LessonRenderer.renderMarkdownCached === 'function') {
+                    return window.LessonRenderer.renderMarkdownCached(md);
+                }
+                if (typeof window.LessonRenderer.renderMarkdown === 'function') {
+                    return window.LessonRenderer.renderMarkdown(md);
+                }
+            }
+            return renderMarkdownLegacy(md);
+        }
+
+        function renderMarkdownLegacy(md) {
             // Strip inline "Next: Week N..." navigation text — the UI footer handles navigation
             md = md.replace(/^\*{0,2}Next:\*{0,2}[^\n]*→[^\n]*/gm, '').trim();
             return md

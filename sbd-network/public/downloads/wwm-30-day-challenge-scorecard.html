@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30-Day Muliebrity Formation Challenge — Scorecard</title>
+    <style>
+        :root {
+            --gold: #8b7355;
+            --ink: #2c3e50;
+            --muted: #5a6a7a;
+            --pass: #2e7d32;
+            --border: #d0d4d8;
+            --bg: #faf9f7;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            max-width: 11in;
+            margin: 0 auto;
+            padding: 0.45in;
+            color: var(--ink);
+            background: var(--bg);
+            line-height: 1.45;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.45rem;
+            color: var(--ink);
+            margin: 0 0 6px;
+            letter-spacing: 0.02em;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 18px;
+        }
+        .instructions {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 0.85rem;
+        }
+        .instructions h2 { font-size: 0.95rem; margin: 0 0 8px; color: var(--gold); }
+        .instructions ul { margin: 0; padding-left: 1.2rem; }
+        .instructions li { margin-bottom: 4px; }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 0.82rem;
+        }
+        .toolbar label { display: flex; align-items: center; gap: 6px; }
+        .toolbar input[type="date"] {
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        .btn {
+            padding: 7px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        .btn--primary {
+            background: var(--gold);
+            color: #fff;
+            border-color: var(--gold);
+        }
+        .summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 14px;
+            font-size: 0.85rem;
+        }
+        .summary strong { color: var(--pass); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.72rem;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background: var(--ink);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.68rem;
+        }
+        th.pillar { width: 52px; }
+        td.day-label { font-weight: 600; text-align: left; padding-left: 8px; white-space: nowrap; }
+        td.note { text-align: left; min-width: 120px; }
+        input.pillar {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+        input.note-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.72rem;
+            padding: 2px 4px;
+        }
+        .day-pass { background: rgba(46, 125, 50, 0.08); }
+        .day-fail { background: rgba(0,0,0,0.02); }
+        .score-cell { font-weight: 700; }
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+        .signature {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            font-size: 0.85rem;
+        }
+        .signature p { border-top: 1px solid var(--ink); padding-top: 6px; margin: 28px 0 0; }
+        @media print {
+            body { padding: 0.25in; background: #fff; }
+            .toolbar, .btn { display: none !important; }
+            input.note-input { border-bottom: 1px dotted #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <h1>30-Day Muliebrity Formation Challenge</h1>
+    <p class="subtitle">The Woman, The Wife, The Mother — Week 13 Capstone · Score each pillar 0 or 1 · Daily pass = 3/4+</p>
+
+    <div class="instructions">
+        <h2>How to use this scorecard</h2>
+        <ul>
+            <li><strong>Womanhood (W):</strong> 10+ min movement; form drill; integration checkpoint ×4</li>
+            <li><strong>A³ (A):</strong> Attitude intention stated; attire for MV context; allure transition if husband home</li>
+            <li><strong>Wifehood (Wi):</strong> One conjugal atmosphere act; priority law honored</li>
+            <li><strong>Motherhood (M):</strong> Tasks nested in integration — no identity-collapse language</li>
+            <li><strong>Daily pass:</strong> 3 or 4 pillars checked · <strong>Challenge complete:</strong> 25 of 30 days pass</li>
+        </ul>
+    </div>
+
+    <div class="toolbar">
+        <label>Challenge start: <input type="date" id="startDate"></label>
+        <button type="button" class="btn" id="clearBtn">Clear all</button>
+        <button type="button" class="btn btn--primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <div class="summary" id="summary">
+        <span>Days passed: <strong id="passCount">0</strong> / 30</span>
+        <span>Challenge status: <strong id="challengeStatus">In progress</strong></span>
+    </div>
+
+    <table id="scoreTable">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th class="pillar">W</th>
+                <th class="pillar">A³</th>
+                <th class="pillar">Wi</th>
+                <th class="pillar">M</th>
+                <th>Score</th>
+                <th>Pass?</th>
+                <th>Drift note (one sentence)</th>
+            </tr>
+        </thead>
+        <tbody id="scoreBody"></tbody>
+    </table>
+
+    <p class="footer-note">On completion (25+ pass days): draft your ninety-day Continuation Charter with your husband. Formation does not graduate — it walks.</p>
+
+    <div class="signature">
+        <p>Learner signature / date</p>
+        <p>Husband witness / date</p>
+    </div>
+
+    <script>
+    (function () {
+        const STORAGE_KEY = 'wwm-30day-challenge-v1';
+        const PILLARS = ['w', 'a', 'wi', 'm'];
+        const body = document.getElementById('scoreBody');
+        const startDate = document.getElementById('startDate');
+
+        function load() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+            catch (e) { return {}; }
+        }
+
+        function save(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function dayScore(data, day) {
+            let n = 0;
+            PILLARS.forEach(function (p) { if (data['d' + day + '_' + p]) n++; });
+            return n;
+        }
+
+        function updateSummary(data) {
+            let passed = 0;
+            for (let d = 1; d <= 30; d++) {
+                if (dayScore(data, d) >= 3) passed++;
+            }
+            document.getElementById('passCount').textContent = String(passed);
+            const status = document.getElementById('challengeStatus');
+            if (passed >= 25) {
+                status.textContent = 'Complete — draft Continuation Charter';
+                status.style.color = '#2e7d32';
+            } else {
+                status.textContent = 'In progress (' + (25 - passed) + ' more pass days needed)';
+                status.style.color = '';
+            }
+        }
+
+        function paintRow(day, data) {
+            const tr = document.createElement('tr');
+            const score = dayScore(data, day);
+            const pass = score >= 3;
+            tr.className = pass ? 'day-pass' : 'day-fail';
+            tr.dataset.day = String(day);
+
+            let html = '<td class="day-label">Day ' + day + '</td>';
+            PILLARS.forEach(function (p) {
+                const checked = data['d' + day + '_' + p] ? ' checked' : '';
+                html += '<td><input type="checkbox" class="pillar" data-day="' + day + '" data-p="' + p + '"' + checked + ' aria-label="Day ' + day + ' ' + p + '"></td>';
+            });
+            html += '<td class="score-cell">' + score + '/4</td>';
+            html += '<td>' + (pass ? '✓' : '—') + '</td>';
+            const note = data['d' + day + '_note'] || '';
+            html += '<td class="note"><input type="text" class="note-input" data-day="' + day + '" placeholder="Evening drift note…" value="' + escAttr(note) + '"></td>';
+            tr.innerHTML = html;
+            return tr;
+        }
+
+        function escAttr(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        }
+
+        function render() {
+            const data = load();
+            if (data.startDate && startDate) startDate.value = data.startDate;
+            body.innerHTML = '';
+            for (let d = 1; d <= 30; d++) {
+                body.appendChild(paintRow(d, data));
+            }
+            bindEvents();
+            updateSummary(data);
+        }
+
+        function bindEvents() {
+            body.querySelectorAll('.pillar').forEach(function (cb) {
+                cb.onchange = function () {
+                    const data = load();
+                    const day = cb.getAttribute('data-day');
+                    const p = cb.getAttribute('data-p');
+                    data['d' + day + '_' + p] = cb.checked;
+                    save(data);
+                    render();
+                };
+            });
+            body.querySelectorAll('.note-input').forEach(function (inp) {
+                inp.onchange = inp.onblur = function () {
+                    const data = load();
+                    data['d' + inp.getAttribute('data-day') + '_note'] = inp.value.trim();
+                    save(data);
+                };
+            });
+        }
+
+        if (startDate) {
+            startDate.onchange = function () {
+                const data = load();
+                data.startDate = startDate.value;
+                save(data);
+            };
+        }
+
+        document.getElementById('clearBtn').onclick = function () {
+            if (!confirm('Clear all scores and notes? This cannot be undone.')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            render();
+        };
+
+        render();
+    })();
+    </script>
+</body>
+</html>
