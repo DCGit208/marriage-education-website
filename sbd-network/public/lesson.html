@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1782218119763">
+  <meta name="build-version" content="1782218494046">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>Lesson | SBD Network</title>
@@ -11,8 +11,8 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1782218119763">
-    <link rel="stylesheet" href="/css/lesson-reader.css?v=1782218119763">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1782218494046">
+    <link rel="stylesheet" href="/css/lesson-reader.css?v=1782218494046">
 
     <style>
         :root {
@@ -646,17 +646,18 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="/js/firebase.js?v=1782218119763"></script>
-    <script src="/js/course-access.js?v=1782218119763"></script>
-    <script src="/js/scripture-passages.js?v=1782218119763"></script>
-    <script src="/js/lesson-renderer.js?v=1782218119763"></script>
-    <script src="/js/lesson-chrome.js?v=1782218119763"></script>
-    <script src="/js/upgrade-tracker.js?v=1782218119763" defer></script>
+    <script src="/js/firebase.js?v=1782218494046"></script>
+    <script src="/js/course-access.js?v=1782218494046"></script>
+    <script src="/js/scripture-passages.js?v=1782218494046"></script>
+    <script src="/js/lesson-renderer.js?v=1782218494046"></script>
+    <script src="/js/lesson-chrome.js?v=1782218494046"></script>
+    <script src="/js/lesson-chapter-transitions.js?v=1782218494046"></script>
+    <script src="/js/upgrade-tracker.js?v=1782218494046" defer></script>
 
     <script>
         const params   = new URLSearchParams(location.search);
         const moduleId = params.get('moduleId') || 'teleios-week-1';
-        const partId   = params.get('part'); // null = show parts index
+        let partId     = params.get('part'); // null = show parts index
 
         const TIER_ORDER = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
@@ -857,6 +858,19 @@
             if (nav) nav.remove();
         }
 
+        function bindChapterTransitions() {
+            const article = document.querySelector('#lessonBody .lesson-article');
+            if (window.FormationChapterTransitions && article) {
+                FormationChapterTransitions.bind(article);
+            }
+        }
+
+        function teardownChapterTransitions() {
+            if (window.FormationChapterTransitions) {
+                FormationChapterTransitions.teardown();
+            }
+        }
+
         function buildReadNav(parts, idx, moduleId) {
             removeReadNav();
             const prev = parts[idx - 1];
@@ -873,9 +887,9 @@
             nav.className = 'formation-read-nav';
             nav.setAttribute('aria-label', 'Part navigation');
             nav.innerHTML = `
-                ${prev ? `<a class="formation-read-nav-btn" href="/lesson.html?moduleId=${moduleId}&part=${prev.id}">← Prev</a>` : '<span class="formation-read-nav-btn" style="opacity:0.3">← Prev</span>'}
+                ${prev ? `<button type="button" class="formation-read-nav-btn" data-part-nav="${prev.id}">← Prev</button>` : '<span class="formation-read-nav-btn" style="opacity:0.3">← Prev</span>'}
                 <div class="formation-read-nav-dots">${dots}</div>
-                ${next ? `<a class="formation-read-nav-btn formation-read-nav-btn--primary" href="/lesson.html?moduleId=${moduleId}&part=${next.id}">Next →</a>` : '<a class="formation-read-nav-btn" href="/lesson.html?moduleId=${moduleId}">Parts</a>'}`;
+                ${next ? `<button type="button" class="formation-read-nav-btn formation-read-nav-btn--primary" data-part-nav="${next.id}">Next →</button>` : `<button type="button" class="formation-read-nav-btn" data-part-nav="">Parts</button>`}`;
             document.body.appendChild(nav);
         }
 
@@ -901,6 +915,7 @@
 
         // ── PARTS INDEX ─────────────────────────────────────────
         async function renderPartsIndex() {
+            teardownChapterTransitions();
             const parts   = currentMod.parts;
             const weekNum = currentMod.week || 1;
             const allDone = parts.length > 0 && parts.every(p => completedParts.includes(p.id));
@@ -937,7 +952,7 @@
                 const status      = isDone ? 'Complete' : (isLocked ? 'Locked' : mins + ' min read');
                 return `
                     <a class="formation-part-card${isDone ? ' formation-part-card--done' : ''}${isLocked ? ' formation-part-card--locked' : ''}"
-                       href="${isLocked ? '#' : escHtml(href)}">
+                       href="${isLocked ? '#' : escHtml(href)}"${isLocked ? '' : ` data-part-nav="${escHtml(p.id)}"`}>
                         <div class="formation-part-num">${isDone ? '✓' : num}</div>
                         <div>
                             <h3 class="formation-part-title">${escHtml(p.title)}</h3>
@@ -1145,6 +1160,7 @@
                     minutes: mins,
                 },
             });
+            bindChapterTransitions();
         }
 
         // ── MARK COMPLETE ───────────────────────────────────────
@@ -1179,18 +1195,33 @@
             if (isLast) {
                 showWeekComplete();
             } else {
-                window.location.href = `/lesson.html?moduleId=${moduleId}&part=${parts[idx + 1].id}`;
+                nav(parts[idx + 1].id);
             }
         }
 
-        function nav(pid) {
-            window.location.href = pid
+        async function nav(pid) {
+            partId = pid;
+            const url = pid
                 ? `/lesson.html?moduleId=${moduleId}&part=${pid}`
                 : `/lesson.html?moduleId=${moduleId}`;
+            history.pushState({ moduleId: moduleId, part: pid }, '', url);
+
+            const body = document.getElementById('lessonBody');
+            const run = async function () {
+                if (pid) await renderPart(pid);
+                else await renderPartsIndex();
+            };
+
+            if (window.FormationChapterTransitions) {
+                await FormationChapterTransitions.partTransition(body, run);
+            } else {
+                await run();
+            }
         }
 
         // ── WEEK COMPLETE ───────────────────────────────────────
         async function showWeekComplete() {
+            teardownChapterTransitions();
             const weekNum  = currentMod.week || 1;
             const courseId = currentMod.courseId || null;
             const totalModules = currentMod.totalModules || 6;
@@ -1366,6 +1397,7 @@
                     minutes: estimateReadMin(mod.content || ''),
                 },
             });
+            bindChapterTransitions();
         }
 
         async function markWeekComplete() {
@@ -1483,6 +1515,28 @@
             return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
         function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+        document.addEventListener('click', function (e) {
+            const el = e.target.closest('[data-part-nav]');
+            if (!el || el.classList.contains('formation-part-card--locked')) return;
+            e.preventDefault();
+            nav(el.getAttribute('data-part-nav') || null);
+        });
+
+        window.addEventListener('popstate', function () {
+            partId = new URLSearchParams(location.search).get('part');
+            if (!currentMod) return;
+            const body = document.getElementById('lessonBody');
+            const run = async function () {
+                if (partId) await renderPart(partId);
+                else await renderPartsIndex();
+            };
+            if (window.FormationChapterTransitions) {
+                FormationChapterTransitions.partTransition(body, run);
+            } else {
+                run();
+            }
+        });
     </script>
 
 
@@ -1554,7 +1608,7 @@
         </a>
     </nav>
     <link rel="stylesheet" href="/css/ham-drawer.css">
-    <script defer src="/js/ham-nav.js?v=1782218119763"></script>
+    <script defer src="/js/ham-nav.js?v=1782218494046"></script>
 
 
 </body>
