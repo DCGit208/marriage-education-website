@@ -179,7 +179,7 @@ The Challenge begins the day after you complete this week's capstone assessment.
 - **Days 15–21:** Atmosphere audit maintenance; teach children one integration truth age-appropriately
 - **Days 22–30:** Full integration — all pillars plus Sunday audit; draft ninety-day continuation plan
 
-**Challenge tracking:** Use journal or provided scorecard grid. Each evening record: date, four pillar scores, one-sentence drift note, tomorrow's re-anchor. No gaps — if you miss a day, next day executes double re-anchor without shame spirals.
+**Challenge tracking:** Use the [30-Day Challenge Scorecard](/downloads/wwm-30-day-challenge-scorecard.html) (print or digital) or your journal. Each evening record: date, four pillar scores, one-sentence drift note, tomorrow's re-anchor. No gaps — if you miss a day, next day executes double re-anchor without shame spirals.
 
 **Challenge completion reward:** Not sentiment — **ninety-day Continuation Charter** signed with husband, scheduling next quarterly Structural Infidelity audit.
 

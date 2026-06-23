@@ -75,11 +75,7 @@ You must see difference between **ordered stewardship** and **obsession** — sc
 
 You must see **§F1 marriage ontology** in flesh: **Marriage = Sexuality = Nakedness**. The unveiled body in covenant must be a body **trained** in covenant — not abandoned while conjugal duty is demanded (Week 4).
 
-You must see **motherhood decay pattern** in form: maternal output rises while body disappears — self-erasure as virtue, children learning woman equals neglect. Integration law demands the **woman remain in the mother** bodily.
-
-You must see **meritorious attraction** at psychomotor level — disciplined bodily effort for covenant longevity, not entitlement that expects desire without training.
-
-You must see three witnesses: **Scripture** (1 Cor 6, 1 Tim 4), **design** (four faculties, nakedness genre), **fruit** (energy, allure credibility, children's inheritance). Mood is data—not doctrine.
+Mothers especially: when the body disappears inside caretaking, children learn woman equals self-erasure—the **motherhood decay pattern** in form. **Meritorious attraction** at the psychomotor level is disciplined bodily effort for covenant longevity, not entitlement that expects desire without training. Hold yourself to three witnesses—**Scripture** (1 Cor 6, 1 Tim 4), **design** (four faculties, nakedness genre), and **fruit** (energy, credible allure, inheritance of health). Mood is data, not doctrine.
 
 ### Psychomotor markers (concrete, readable)
 

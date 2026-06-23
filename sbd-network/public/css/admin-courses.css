@@ -551,3 +551,43 @@
 .acs-sync-pill--err { background: rgba(244,67,54,0.15); color: #e57373; }
 
 .acs-sync-delta { color: #888; font-size: 0.72rem; }
+
+.acs-version-panel { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+
+.acs-version-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--acs-border);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+
+.acs-version-meta { font-size: 0.72rem; color: #aaa; line-height: 1.4; }
+.acs-version-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.acs-version-latest {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(0,188,212,0.15);
+  color: var(--acs-teal);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.acs-modal--tall { max-height: 92vh; display: flex; flex-direction: column; }
+.acs-version-preview-body {
+  flex: 1;
+  overflow: auto;
+  max-height: 55vh;
+  border: 1px solid var(--acs-border);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 10px 0;
+  background: #0a0a0a;
+  font-size: 0.85rem;
+}
