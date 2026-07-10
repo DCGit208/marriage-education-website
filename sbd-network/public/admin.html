@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1780967014753">
+  <meta name="build-version" content="1782228083592">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>Admin Panel - SBD Network</title>
     
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/admin-panel.css?v=1780967014753">
+    <link rel="stylesheet" href="/css/admin-panel.css?v=52">
+    <link rel="stylesheet" href="/css/sbd-life-reader.css?v=phase7">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
 <body class="admin-page has-header">
@@ -21,12 +22,21 @@
             <h1 class="page-title">Admin Panel</h1>
         </div>
         <div class="header-right">
+            <a href="/admin-courses.html" id="adminCourseStudioLink" class="btn btn-secondary btn-sm" style="display:none;text-decoration:none;margin-right:8px">Course Studio</a>
             <button id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
         </div>
     </header>
     
     <!-- Main Content -->
     <main class="admin-main">
+
+        <div id="adminDesignerSelfGrant" class="admin-card" style="display:none;margin:12px;padding:14px;border-color:rgba(198,169,107,0.4)">
+            <p style="margin:0 0 10px;font-size:13px;line-height:1.5">
+                <strong>Content Designer</strong> — Platform admin does not include full LMS catalog access.
+                Grant yourself <em>Content Designer</em> to open every course in Course Studio (for building and QA).
+            </p>
+            <button type="button" id="grantSelfDesignerBtn" class="btn btn-primary btn-sm">Grant myself Content Designer</button>
+        </div>
         
         <!-- Tab Navigation -->
         <div class="admin-tabs">
@@ -38,6 +48,7 @@
             <button class="tab-btn" data-tab="match">&#128145; Match</button>
             <button class="tab-btn" data-tab="sales">&#128176; SBD Sales</button>
             <button class="tab-btn" data-tab="ce2">&#9993; Messages V2</button>
+            <button class="tab-btn" data-tab="sbdLife">&#9673; SBD Life</button>
         </div>
         
         <!-- Groups Tab -->
@@ -249,6 +260,69 @@
             </p>
             <div id="ce2GroupsList" class="admin-list"></div>
         </section>
+
+        <!-- SBD Life Tab -->
+        <section id="sbdLifeTab" class="admin-tab admin-sbd-life-tab">
+            <div class="admin-section-header">
+                <h3>SBD Life — publish &amp; catalog</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <a href="/sbd-life/" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open SBD Life home</a>
+                    <a href="/labs/sbd-life/" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Full labs sandbox</a>
+                </div>
+            </div>
+
+            <div class="admin-list" style="padding:12px;">
+                <div class="admin-sbd-life-block">
+                    <h4 class="admin-manage-label">Member rollout</h4>
+                    <p class="small-text" style="color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        When enabled, signed-in members see SBD Life in Lifestyle and can open <code>/sbd-life/</code>.
+                        Admins always have access for QA.
+                    </p>
+                    <div class="admin-sbd-life-actions">
+                        <button type="button" id="enableProductionBtn" class="btn btn-primary btn-sm">Enable member rollout</button>
+                        <button type="button" id="disableProductionBtn" class="btn btn-secondary btn-sm">Disable rollout</button>
+                    </div>
+                    <p id="productionFlagStatus" class="small-text" style="color:var(--text-secondary);margin:8px 0 0;">Checking flags…</p>
+                </div>
+
+                <div class="admin-sbd-life-block">
+                    <h4 class="admin-manage-label">The Woman, The Wife, The Mother</h4>
+                    <p class="small-text" style="color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        Publish Issue #2 to Firestore (public tier). Updates discovery rails and the $50 book+course CTA.
+                        Safe to re-run — replaces the prior version.
+                    </p>
+                    <div class="admin-sbd-life-actions">
+                        <button type="button" id="publishWwmBtn" class="btn btn-primary btn-sm">Publish issue</button>
+                        <a href="/sbd-life/issue.html?slug=issue-woman-wife-mother-2026" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open issue</a>
+                        <a href="/sbd-life/article.html?slug=the-woman-the-wife-the-mother" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open article</a>
+                        <a href="/courses.html?course=the-woman-the-wife-the-mother" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open LMS course</a>
+                    </div>
+                    <p id="publishWwmStatus" class="small-text" style="color:var(--gold);margin:8px 0 0;"></p>
+                </div>
+
+                <div class="admin-sbd-life-block">
+                    <h4 class="admin-manage-label">The Crisis of Modern Attraction</h4>
+                    <p class="small-text" style="color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        Publish Issue #1 or re-sync member discovery rails to the crisis editorial.
+                    </p>
+                    <div class="admin-sbd-life-actions">
+                        <button type="button" id="publishCrisisBtn" class="btn btn-secondary btn-sm">Publish crisis issue</button>
+                        <button type="button" id="syncDiscoveryBtn" class="btn btn-secondary btn-sm">Sync discovery rails</button>
+                        <a href="/sbd-life/article.html?slug=crisis-of-modern-attraction" class="btn btn-secondary btn-sm" style="text-decoration:none;line-height:2;">Open article</a>
+                    </div>
+                    <p id="publishCrisisStatus" class="small-text" style="color:var(--gold);margin:8px 0 0;"></p>
+                    <p id="syncDiscoveryStatus" class="small-text" style="color:var(--text-secondary);margin:4px 0 0;"></p>
+                </div>
+
+                <div class="admin-sbd-life-block">
+                    <h4 class="admin-manage-label">Published catalog</h4>
+                    <p class="small-text" style="color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        All issues and articles currently in Firestore (admin view).
+                    </p>
+                    <div id="lifeCatalog" class="life-catalog-wrap"></div>
+                </div>
+            </div>
+        </section>
                 
     </main>
     
@@ -429,8 +503,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="boardCoverFile">Cover Image <span style="font-weight:400;color:var(--text-muted);">(optional, JPG/PNG/WebP)</span></label>
-                    <input type="file" id="boardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <label for="boardCoverFile">Cover Image <span style="font-weight:400;color:var(--text-muted);">(optional, JPG/PNG/WebP/HEIC)</span></label>
+                    <input type="file" id="boardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif">
                     <div id="boardCoverPreview" style="margin-top:8px;display:none;">
                         <img id="boardCoverPreviewImg" src="" alt="Cover preview" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
                     </div>
@@ -477,7 +551,7 @@
                 </div>
                 <div class="form-group">
                     <label for="editBoardCoverFile">Cover Image <span style="font-weight:400;color:var(--text-muted);">(optional — replaces existing)</span></label>
-                    <input type="file" id="editBoardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <input type="file" id="editBoardCoverFile" accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif">
                     <div id="editBoardCoverPreview" style="margin-top:8px;">
                         <img id="editBoardCoverPreviewImg" src="" alt="Cover preview" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;display:none;">
                     </div>
@@ -542,6 +616,38 @@
 
                 <!-- Role -->
                 <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Platform role</h4>
+                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        <strong>Admin</strong> — panel, users, moderation. <strong>Designer</strong> — full LMS catalog (Course Studio).
+                        These are separate from subscription tier.
+                    </p>
+                    <div class="admin-manage-row" style="gap:10px;flex-wrap:wrap;">
+                        <select id="setUserRoleSelect" class="admin-select">
+                            <option value="member">Member</option>
+                            <option value="admin">Platform Admin</option>
+                            <option value="designer">Content Designer</option>
+                        </select>
+                        <button type="button" id="setUserRoleBtn" class="btn btn-sm btn-primary">Save role</button>
+                    </div>
+                </div>
+
+                <!-- Content designer grant (for admins who also build courses) -->
+                <div class="admin-manage-section">
+                    <h4 class="admin-manage-label">Content Designer access</h4>
+                    <p style="font-size:12px;color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                        Grants <strong>Course Studio</strong> — open every course week and part without purchasing.
+                        Use for coders and curriculum designers. Does not replace Shop purchases for members.
+                    </p>
+                    <label class="checkbox-label" style="display:block;margin-bottom:8px;">
+                        <input type="checkbox" id="manageUserContentDesigner">
+                        <span>Grant Content Designer (full LMS catalog)</span>
+                    </label>
+                    <p id="manageUserContentDesignerStatus" style="font-size:12px;color:var(--text-secondary);margin:0 0 8px;"></p>
+                    <button type="button" id="saveContentDesignerBtn" class="btn btn-sm btn-primary">Save designer access</button>
+                </div>
+
+                <!-- Legacy role display removed — use selects above -->
+                <div class="admin-manage-section" style="display:none">
                     <h4 class="admin-manage-label">Role</h4>
                     <div class="admin-manage-row">
                         <span id="manageUserRole" style="font-size:14px"></span>
@@ -629,10 +735,18 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     
     <!-- App Scripts -->
-    <script defer src="/js/firebase.js?v=1780967014753"></script>
-    <script defer src="/js/sw-update-checker.js?v=1780967014753"></script>
-    <script defer src="/js/upload.js?v=1780967014753"></script>
-    <script defer src="/js/admin.js?v=1780967014753orphan1"></script>
-    <script defer src="/js/admin-formation.js?v=1780967014753"></script>
+    <script defer src="/js/firebase.js?v=1782228083592"></script>
+    <script defer src="/js/course-access.js?v=1782228083592"></script>
+    <script defer src="/js/sw-update-checker.js?v=1782228083592"></script>
+    <script defer src="/js/upload.js?v=52"></script>
+    <script defer src="/js/admin.js?v=52"></script>
+    <script defer src="/js/admin-formation.js?v=1782228083592"></script>
+    <script defer src="/js/sbd-life-routes.js?v=phase7"></script>
+    <script defer src="/js/sbd-life-editorial-crisis.js?v=1782228083592"></script>
+    <script defer src="/js/sbd-life-editorial-woman-wife-mother.js?v=1782228083592"></script>
+    <script defer src="/js/sbd-life-data.js?v=phase7"></script>
+    <script defer src="/js/sbd-life-entitlements.js?v=phase7"></script>
+    <script defer src="/js/sbd-life-hub.js?v=phase7"></script>
+    <script defer src="/js/sbd-life-flags-admin.js?v=1782228083592"></script>
 </body>
 </html>

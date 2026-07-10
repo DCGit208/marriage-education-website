@@ -1,5 +1,5 @@
 // ================================================================
-// ADMIN PANEL LOGIC  —  v51 (iOS manage-user fixes)
+// ADMIN PANEL LOGIC  —  v52 (iOS board/group tap + clearer errors)
 // ================================================================
 
 // Tier → community group mapping (mirrors checkout.js — keep in sync)
@@ -121,6 +121,77 @@ const movePostModal = document.getElementById('movePostModal');
 const broadcastModal = document.getElementById('broadcastModal');
 const loadingOverlay = document.getElementById('loadingOverlay');
 
+let _adminIosTapKey = '';
+let _adminIosTapAt = 0;
+
+/** iOS Safari / PWA: click is often dropped after scroll — touchend is reliable. */
+function bindAdminPrimaryButton(el, handler, key) {
+  if (!el || el.dataset.adminIosBound) return;
+  el.dataset.adminIosBound = '1';
+  const tapKey = key || el.id || 'admin-btn';
+  function invoke(e) {
+    if (e && e.type === 'click' && _adminIosTapKey === tapKey && Date.now() - _adminIosTapAt < 500) {
+      return;
+    }
+    if (e && e.type === 'touchend') {
+      _adminIosTapKey = tapKey;
+      _adminIosTapAt = Date.now();
+      e.preventDefault();
+    }
+    handler(e);
+  }
+  el.addEventListener('click', invoke);
+  el.addEventListener('touchend', invoke, { passive: false });
+}
+
+function bindAdminListTap(listEl, handler) {
+  if (!listEl || listEl.dataset.adminListTapBound) return;
+  listEl.dataset.adminListTapBound = '1';
+  function run(e, btn) {
+    if (!btn || !listEl.contains(btn)) return;
+    const id = btn.dataset.id || btn.id || 'list-btn';
+    if (e.type === 'click' && _adminIosTapKey === id && Date.now() - _adminIosTapAt < 500) return;
+    if (e.type === 'touchend') {
+      _adminIosTapKey = id;
+      _adminIosTapAt = Date.now();
+      e.preventDefault();
+    }
+    handler(e, btn);
+  }
+  listEl.addEventListener('click', function (e) {
+    run(e, e.target.closest('button[data-id]'));
+  });
+  listEl.addEventListener('touchend', function (e) {
+    run(e, e.target.closest('button[data-id]'));
+  }, { passive: false });
+}
+
+function adminErrorMessage(err, fallback) {
+  const code = err && (err.code || '');
+  const msg = err && (err.message || String(err));
+  if (code === 'permission-denied' || /permission/i.test(msg)) {
+    return 'Permission denied. Your Firestore user profile needs role: "admin". If you only have roles: ["admin"], ask support to add the role field.';
+  }
+  if (/invalid file type/i.test(msg)) {
+    return 'Cover image type not supported. Use JPG, PNG, WebP, or HEIC — or leave cover blank.';
+  }
+  if (/too large/i.test(msg)) {
+    return msg;
+  }
+  if (/network|failed to fetch|load failed/i.test(msg)) {
+    return 'Network error while uploading the cover image. Try again without a cover, or on Wi‑Fi.';
+  }
+  return (fallback || 'Something went wrong') + (msg ? ': ' + msg : '');
+}
+
+function openCreateBoardModal() {
+  if (allGroups.length === 0) {
+    alert('Please create a group first. Boards must belong to a group.');
+    return;
+  }
+  openModal(createBoardModal);
+}
+
 // ── Auth guard ────────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
   if (!user) { window.location.href = '/auth'; return; }
@@ -131,6 +202,32 @@ auth.onAuthStateChanged(async (user) => {
       alert('Access denied. Admin privileges required.');
       window.location.href = 'dashboard.html';
       return;
+    }
+    if (typeof isUserContentDesigner === 'function') {
+      const isDesigner = await isUserContentDesigner();
+      const studioLink = document.getElementById('adminCourseStudioLink');
+      if (studioLink && isDesigner) studioLink.style.display = 'inline-flex';
+      const selfGrant = document.getElementById('adminDesignerSelfGrant');
+      const selfBtn = document.getElementById('grantSelfDesignerBtn');
+      if (selfGrant && !isDesigner) {
+        selfGrant.style.display = 'block';
+        if (selfBtn) {
+          selfBtn.onclick = async function () {
+            try {
+              showLoading(true);
+              await db.collection('users').doc(user.uid).update({
+                'staffAccess.contentDesigner': true,
+                'staffAccess.contentDesignerGrantedAt': firebase.firestore.FieldValue.serverTimestamp(),
+              });
+              selfGrant.style.display = 'none';
+              if (studioLink) studioLink.style.display = 'inline-flex';
+              alert('Content Designer access granted. Open Course Studio from the header.');
+            } catch (e) {
+              alert('Error: ' + (e.message || e));
+            } finally { showLoading(false); }
+          };
+        }
+      }
     }
     await Promise.all([loadGroups(), loadBoards(), loadUsers()]);
   } catch (err) {
@@ -154,6 +251,7 @@ tabBtns.forEach(btn => {
     if (tabName === 'analytics') loadAnalytics();
     if (tabName === 'sales') loadSbdSales();
     if (tabName === 'ce2') loadCe2Groups();
+    if (tabName === 'sbdLife' && window.SbdLifeHub) window.SbdLifeHub.refreshCatalog();
   });
 });
 
@@ -185,9 +283,6 @@ async function loadGroups() {
         </div>`;
       groupsList.appendChild(card);
     });
-    groupsList.querySelectorAll('.edit-group-btn').forEach(b => b.addEventListener('click', () => handleEditGroup(b.dataset.id)));
-    groupsList.querySelectorAll('.archive-group-btn').forEach(b => b.addEventListener('click', () => handleArchiveGroup(b.dataset.id, b.dataset.archived === 'true')));
-    groupsList.querySelectorAll('.delete-group-btn').forEach(b => b.addEventListener('click', () => handleDeleteGroup(b.dataset.id)));
     updateGroupSelects();
   } catch (err) {
     console.error('loadGroups:', err);
@@ -219,7 +314,7 @@ document.getElementById('editGroupForm')?.addEventListener('submit', async (e) =
     await loadGroups();
   } catch (err) {
     console.error('editGroup:', err);
-    alert('Error saving group');
+    alert(adminErrorMessage(err, 'Error saving group'));
   } finally { showLoading(false); }
 });
 
@@ -232,7 +327,7 @@ async function handleArchiveGroup(groupId, isArchived) {
     await loadGroups();
   } catch (err) {
     console.error('archiveGroup:', err);
-    alert('Error updating group');
+    alert(adminErrorMessage(err, 'Error updating group'));
   } finally { showLoading(false); }
 }
 
@@ -244,11 +339,13 @@ async function handleDeleteGroup(groupId) {
     await loadGroups();
   } catch (err) {
     console.error('deleteGroup:', err);
-    alert('Error deleting group');
+    alert(adminErrorMessage(err, 'Error deleting group'));
   } finally { showLoading(false); }
 }
 
-if (createGroupBtn) createGroupBtn.addEventListener('click', () => openModal(createGroupModal));
+bindAdminPrimaryButton(createGroupBtn, function () {
+  openModal(createGroupModal);
+}, 'create-group');
 
 document.getElementById('createGroupForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -264,8 +361,16 @@ document.getElementById('createGroupForm')?.addEventListener('submit', async (e)
     await loadGroups();
   } catch (err) {
     console.error('createGroup:', err);
-    alert('Error creating group');
+    alert(adminErrorMessage(err, 'Error creating group'));
   } finally { showLoading(false); }
+});
+
+bindAdminListTap(groupsList, function (_e, btn) {
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.classList.contains('edit-group-btn')) handleEditGroup(id);
+  else if (btn.classList.contains('archive-group-btn')) handleArchiveGroup(id, btn.dataset.archived === 'true');
+  else if (btn.classList.contains('delete-group-btn')) handleDeleteGroup(id);
 });
 
 // ================================================================
@@ -323,10 +428,6 @@ async function loadBoards() {
       });
     });
 
-    boardsList.querySelectorAll('.edit-board-btn').forEach(b => b.addEventListener('click', () => handleEditBoard(b.dataset.id)));
-    boardsList.querySelectorAll('.archive-board-btn').forEach(b => b.addEventListener('click', () => handleArchiveBoard(b.dataset.id, b.dataset.archived === 'true')));
-    boardsList.querySelectorAll('.clear-board-btn').forEach(b => b.addEventListener('click', () => handleClearBoard(b.dataset.id)));
-    boardsList.querySelectorAll('.delete-board-btn').forEach(b => b.addEventListener('click', () => handleDeleteBoard(b.dataset.id)));
   } catch (err) {
     console.error('loadBoards:', err);
     boardsList.innerHTML = '<div class="error-text">Error loading boards</div>';
@@ -384,7 +485,7 @@ document.getElementById('editBoardForm')?.addEventListener('submit', async (e) =
     await loadBoards();
   } catch (err) {
     console.error('editBoard:', err);
-    alert('Error saving board');
+    alert(adminErrorMessage(err, 'Error saving board'));
   } finally { showLoading(false); }
 });
 
@@ -397,7 +498,7 @@ async function handleArchiveBoard(boardId, isArchived) {
     await loadBoards();
   } catch (err) {
     console.error('archiveBoard:', err);
-    alert('Error updating board');
+    alert(adminErrorMessage(err, 'Error updating board'));
   } finally { showLoading(false); }
 }
 
@@ -414,7 +515,7 @@ async function handleClearBoard(boardId) {
     alert(`Deleted ${postsSnap.size} post(s).`);
   } catch (err) {
     console.error('clearBoard:', err);
-    alert('Error clearing board');
+    alert(adminErrorMessage(err, 'Error clearing board'));
   } finally { showLoading(false); }
 }
 
@@ -426,13 +527,19 @@ async function handleDeleteBoard(boardId) {
     await loadBoards();
   } catch (err) {
     console.error('deleteBoard:', err);
-    alert('Error deleting board');
+    alert(adminErrorMessage(err, 'Error deleting board'));
   } finally { showLoading(false); }
 }
 
-if (createBoardBtn) createBoardBtn.addEventListener('click', () => {
-  if (allGroups.length === 0) { alert('Please create a group first'); return; }
-  openModal(createBoardModal);
+bindAdminPrimaryButton(createBoardBtn, openCreateBoardModal, 'create-board');
+
+bindAdminListTap(boardsList, function (_e, btn) {
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.classList.contains('edit-board-btn')) handleEditBoard(id);
+  else if (btn.classList.contains('archive-board-btn')) handleArchiveBoard(id, btn.dataset.archived === 'true');
+  else if (btn.classList.contains('clear-board-btn')) handleClearBoard(id);
+  else if (btn.classList.contains('delete-board-btn')) handleDeleteBoard(id);
 });
 
 // Live cover preview — Create Board
@@ -493,7 +600,7 @@ document.getElementById('createBoardForm')?.addEventListener('submit', async (e)
     await loadBoards();
   } catch (err) {
     console.error('createBoard:', err);
-    alert('Error creating board');
+    alert(adminErrorMessage(err, 'Error creating board'));
   } finally { showLoading(false); }
 });
 
@@ -766,8 +873,40 @@ async function handleManageUser(userId) {
     }
 
     const roleNorm = normalizeUserRole(u.role);
+    const roleSelect = document.getElementById('setUserRoleSelect');
+    const roleBtn = document.getElementById('setUserRoleBtn');
+    if (roleSelect) {
+      roleSelect.value = ['admin', 'designer', 'member'].includes(roleNorm) ? roleNorm : 'member';
+    }
+    if (roleBtn) {
+      roleBtn.onclick = function () {
+        handleSetUserRole(userId, roleSelect ? roleSelect.value : 'member');
+      };
+    }
+
+    const designerCb = document.getElementById('manageUserContentDesigner');
+    const designerStatus = document.getElementById('manageUserContentDesignerStatus');
+    const saveDesignerBtn = document.getElementById('saveContentDesignerBtn');
+    const hasDesigner = roleNorm === 'designer' ||
+      !!(u.staffAccess && u.staffAccess.contentDesigner) ||
+      (Array.isArray(u.roles) && u.roles.some(function (r) { return String(r).toLowerCase() === 'designer'; }));
+    if (designerCb) designerCb.checked = hasDesigner;
+    if (designerStatus) {
+      designerStatus.textContent = hasDesigner
+        ? '✓ Content Designer — full Course Studio and catalog access.'
+        : 'Off — user sees only purchased + subscription courses.';
+    }
+    if (saveDesignerBtn) {
+      saveDesignerBtn.onclick = function () {
+        handleSaveContentDesignerAccess(userId, !!(designerCb && designerCb.checked), roleSelect ? roleSelect.value : roleNorm);
+      };
+    }
+
     const roleEl = document.getElementById('manageUserRole');
     if (roleEl) roleEl.textContent = roleNorm.charAt(0).toUpperCase() + roleNorm.slice(1);
+
+    const toggleBtn = document.getElementById('toggleRoleBtn');
+    if (toggleBtn) toggleBtn.style.display = 'none';
 
     var mentorCb = document.getElementById('manageUserMentor');
     var saveMentorBtn = document.getElementById('saveUserMentorBtn');
@@ -787,17 +926,6 @@ async function handleManageUser(userId) {
           showLoading(false);
         }
       };
-    }
-
-    const toggleBtn = document.getElementById('toggleRoleBtn');
-    if (toggleBtn) {
-      if (roleNorm === 'admin') {
-        toggleBtn.textContent = 'Demote to Member';
-        toggleBtn.onclick = function () { handleToggleRole(userId, 'member'); };
-      } else {
-        toggleBtn.textContent = 'Promote to Admin';
-        toggleBtn.onclick = function () { handleToggleRole(userId, 'admin'); };
-      }
     }
 
     const resetBtn = document.getElementById('resetPasswordBtn');
@@ -864,6 +992,52 @@ async function handleManageUser(userId) {
   } finally {
     endManageUserOpen();
   }
+}
+
+async function handleSetUserRole(userId, newRole) {
+  const allowed = ['member', 'admin', 'designer'];
+  if (!allowed.includes(newRole)) return;
+  if (!confirm('Set this user\'s platform role to "' + newRole + '"?')) return;
+  try {
+    showLoading(true);
+    const update = { role: newRole };
+    if (newRole === 'designer') {
+      update['staffAccess.contentDesigner'] = true;
+      update['staffAccess.contentDesignerGrantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    await db.collection('users').doc(userId).update(update);
+    closeAllModals();
+    await loadUsers();
+  } catch (err) {
+    console.error('setUserRole:', err);
+    alert('Error updating role');
+  } finally { showLoading(false); }
+}
+
+async function handleSaveContentDesignerAccess(userId, enabled, currentRole) {
+  try {
+    showLoading(true);
+    const update = {
+      'staffAccess.contentDesigner': enabled,
+    };
+    if (enabled) {
+      update['staffAccess.contentDesignerGrantedAt'] = firebase.firestore.FieldValue.serverTimestamp();
+      if (currentRole === 'member') {
+        update.role = 'designer';
+      }
+    } else if (currentRole === 'designer') {
+      update.role = 'member';
+    }
+    await db.collection('users').doc(userId).update(update);
+    alert(enabled
+      ? '✅ Content Designer access granted — Course Studio unlocked.'
+      : 'Content Designer access removed.');
+    closeAllModals();
+    await loadUsers();
+  } catch (err) {
+    console.error('saveContentDesigner:', err);
+    alert('Error: ' + (err.message || err));
+  } finally { showLoading(false); }
 }
 
 async function handleToggleRole(userId, newRole) {
@@ -1167,11 +1341,15 @@ async function handleDeletePost(postId) {
   if (!confirm('Permanently delete this post?')) return;
   try {
     showLoading(true);
-    await db.collection('posts').doc(postId).delete();
+    if (typeof deletePost === 'function') {
+      await deletePost(postId);
+    } else {
+      await db.collection('posts').doc(postId).delete();
+    }
     await loadContent();
   } catch (err) {
     console.error('deletePost:', err);
-    alert('Error deleting post');
+    alert('Error deleting post: ' + (err.message || 'permission denied'));
   } finally { showLoading(false); }
 }
 

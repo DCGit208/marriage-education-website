@@ -224,12 +224,30 @@ function uploadToFirebaseStorage(file, folder, options) {
 }
 
 // Upload image → R2 (with optional editing)
+function normalizeImageMimeType(file) {
+  if (!file) return '';
+  const t = String(file.type || '').toLowerCase();
+  if (t) return t;
+  const name = String(file.name || '').toLowerCase();
+  if (name.endsWith('.heic') || name.endsWith('.heif')) return 'image/heic';
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+  if (name.endsWith('.png')) return 'image/png';
+  if (name.endsWith('.webp')) return 'image/webp';
+  return '';
+}
+
 async function uploadImage(file, _userId, allowEdit = false, options = null) {
   if (!file) return null;
 
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic'];
-  if (!validTypes.includes(file.type)) {
+  const mime = normalizeImageMimeType(file);
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/heic', 'image/heif'];
+  if (!validTypes.includes(mime)) {
     throw new Error('Invalid file type. Only JPG, PNG, WebP, and HEIC are allowed.');
+  }
+
+  // iOS camera roll often reports type === '' — normalize before upload
+  if (!file.type && mime) {
+    file = new File([file], file.name || 'photo.jpg', { type: mime });
   }
 
   const maxSize = 10 * 1024 * 1024; // 10 MB
