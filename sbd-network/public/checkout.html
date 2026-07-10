@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1780967014753">
+  <meta name="build-version" content="1782228083592">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Checkout - SBD Network">
     <meta name="theme-color" content="#000000">
@@ -78,6 +78,41 @@
             justify-content: center;
             background: var(--bg-tertiary, #2a2a2a);
             border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .checkout-cover-icon {
+            padding: 0;
+        }
+
+        .checkout-cover-front {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .checkout-cover-wrap {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-color, #333);
+        }
+
+        .checkout-cover-wrap-label {
+            margin: 0 0 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text-secondary, #aaa);
+        }
+
+        .checkout-cover-wrap-img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-color, #333);
         }
         
         .product-details {
@@ -297,6 +332,19 @@
                 You'll be taken to Stripe's secure checkout page to enter your card details.
                 Your payment is processed by Stripe — we never see your card number.
             </p>
+
+            <details style="margin:0 0 20px 0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.03)">
+              <summary style="cursor:pointer;font-weight:600;color:#7dd3c0;font-size:0.9rem">
+                Don't have a Visa/Mastercard? Use an MTN MoMo Virtual Card
+              </summary>
+              <ol style="margin:12px 0 0;padding-left:18px;color:var(--text-secondary,#aaa);font-size:0.85rem;line-height:1.55">
+                <li>Dial <strong>*126#</strong> on your MTN phone.</li>
+                <li>Select <strong>MoMo Pay &amp; Services</strong> → <strong>MoMo Virtual Card</strong> → <strong>Create Card</strong>.</li>
+                <li>Enter your MoMo PIN and receive card number, expiry, and CVV by SMS.</li>
+                <li>Use those details on the Stripe checkout page (works for shop and subscriptions).</li>
+              </ol>
+              <p style="margin:10px 0 0;font-size:0.8rem;color:#888"><em>Ensure your MoMo balance covers the charge. Virtual-card fees may apply.</em></p>
+            </details>
 
             <div id="checkout-error" style="color:#ff4444;font-size:0.85rem;margin-bottom:16px;min-height:20px"></div>
 

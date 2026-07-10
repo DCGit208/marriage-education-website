@@ -12,6 +12,7 @@ const {
   creditSbdSubscriptionCommissions
 } = require('./sbd-subscription-commission');
 const { registerAdminUserTools } = require('./admin-user-tools');
+const { registerStudioCanonAi } = require('./studio-canon-ai');
 
 // UUID - generate random tokens
 function uuidv4() {
@@ -957,11 +958,18 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       ambassador_code,
       regional_director,
       ambassador_data,
-      payment_channel: paymentChannelRaw
+      payment_channel: paymentChannelRaw,
+      momo_network,
+      payment_method,
+      payee_number,
+      payee_name
     } = data;
 
     const paymentChannel = String(paymentChannelRaw || 'manual').toLowerCase();
     const isCampayAutomated = paymentChannel === 'campay';
+    const resolvedMomoNetwork = String(momo_network || '').toLowerCase() === 'orange' ? 'orange' : 'mtn';
+    const resolvedPaymentMethod = payment_method
+      || (isCampayAutomated ? 'campay_momo' : (resolvedMomoNetwork === 'orange' ? 'orange_money' : 'momo'));
 
     const paymentData = {
       reference,
@@ -977,6 +985,10 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       type: type || 'book-purchase',
       status: 'pending',
       payment_channel: paymentChannel,
+      momo_network: isCampayAutomated ? 'campay' : resolvedMomoNetwork,
+      payment_method: resolvedPaymentMethod,
+      payee_number: payee_number || (resolvedMomoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100'),
+      payee_name: payee_name || 'Achu Gustave Mokom',
       created_at: admin.firestore.FieldValue.serverTimestamp()
     };
 
@@ -1011,7 +1023,9 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       external_reference: reference,
       record_type: 'customer_payment',
       channel: isCampayAutomated ? 'campay' : 'manual',
-      payment_method: isCampayAutomated ? 'campay_momo' : 'momo',
+      payment_method: isCampayAutomated
+        ? 'campay_momo'
+        : (resolvedMomoNetwork === 'orange' ? 'orange_money' : 'momo'),
       payment_category: type || 'book-purchase',
       product_id,
       product_name,
@@ -1040,11 +1054,14 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
         if (TELEGRAM_BOT_TOKEN) {
           const typeLabel = type === 'ambassador' ? '🎯 Ambassador Registration' :
             type === 'rd' ? '👑 RD Registration' : '📚 Book Purchase';
+          const networkLabel = resolvedMomoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
           const pendingMsg = `🔔 NEW PAYMENT PENDING APPROVAL\n\n` +
             `📋 Reference: ${reference}\n` +
             `📚 Type: ${typeLabel}\n` +
             `📦 Product: ${product_name}\n` +
             `💰 Amount: ${amount} ${currency || 'XAF'}\n` +
+            `🏦 Network: ${networkLabel}\n` +
+            `📥 Payee: ${paymentData.payee_number} (${paymentData.payee_name})\n` +
             `👤 Customer: ${email}\n` +
             `📱 Phone: ${phone || 'N/A'}\n` +
             `${ambassador_code ? `🎯 Ambassador Code: ${ambassador_code}\n` : ''}` +
@@ -3756,6 +3773,10 @@ const SBD_STRIPE_PRICE_IDS = {
   'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
   'elite-bundle': process.env.SBD_PRICE_ELITE_BUNDLE || '',
   'sbd-dummies': process.env.SBD_PRICE_SBD_DUMMIES || '',
+  'the-woman-the-wife-the-mother': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BUNDLE || process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER || '',
+  'the-woman-the-wife-the-mother-book': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BOOK || '',
+  'the-woman-the-wife-the-mother-course': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_COURSE || '',
+  'the-woman-the-wife-the-mother-bundle': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BUNDLE || '',
   'the-sex-by-design-compendium': process.env.SBD_PRICE_THE_SEX_BY_DESIGN_COMPENDIUM || '',
   'sbd-dummies-digital-print': process.env.SBD_PRICE_SBD_DUMMIES_DIGITAL_PRINT || '',
   'sbd-canonical': process.env.SBD_PRICE_SBD_CANONICAL || '',
@@ -3853,6 +3874,10 @@ const SBD_CATALOG_SERVER = {
   'teleios-bundle': { name: 'Teleios Bundle', amount: 29700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-bundle'] },
   'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
   'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
+  'the-woman-the-wife-the-mother-book': { name: 'The Woman, The Wife, The Mother — Book', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-book'] },
+  'the-woman-the-wife-the-mother-course': { name: 'The Woman, The Wife, The Mother — 13-Week Formation', amount: 25000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-course'] },
+  'the-woman-the-wife-the-mother-bundle': { name: 'The Woman, The Wife, The Mother — Book + Course', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-bundle'] },
+  'the-woman-the-wife-the-mother': { name: 'The Woman, The Wife, The Mother — Book + Course', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-bundle'] },
   'the-sex-by-design-compendium': { name: 'The Sex by Design Compendium', amount: 3499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-sex-by-design-compendium'] },
   'sbd-dummies-digital-print': { name: 'SBD for Dummies — Digital + Print', amount: 4000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies-digital-print'] },
   'sbd-canonical': { name: 'SBD Canonical', amount: 2999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-canonical'] },
@@ -3950,6 +3975,24 @@ const SBD_UNLOCK_RULES = {
   'teleios-bundle': { products: ['teleios-bundle'] },
   'elite-bundle': { products: ['elite-bundle'] },
   'sbd-dummies': { courses: ['sbd-dummies-course'] },
+  'the-woman-the-wife-the-mother-book': {
+    products: ['the-woman-the-wife-the-mother-book'],
+    issueIds: ['issue-woman-wife-mother-2026'],
+  },
+  'the-woman-the-wife-the-mother-course': {
+    courses: ['the-woman-the-wife-the-mother'],
+    products: ['the-woman-the-wife-the-mother-course'],
+  },
+  'the-woman-the-wife-the-mother-bundle': {
+    courses: ['the-woman-the-wife-the-mother'],
+    products: ['the-woman-the-wife-the-mother-book', 'the-woman-the-wife-the-mother-course', 'the-woman-the-wife-the-mother-bundle'],
+    issueIds: ['issue-woman-wife-mother-2026'],
+  },
+  'the-woman-the-wife-the-mother': {
+    courses: ['the-woman-the-wife-the-mother'],
+    products: ['the-woman-the-wife-the-mother-book', 'the-woman-the-wife-the-mother-course', 'the-woman-the-wife-the-mother-bundle'],
+    issueIds: ['issue-woman-wife-mother-2026'],
+  },
   'the-sex-by-design-compendium': { products: ['the-sex-by-design-compendium'] },
   'sbd-dummies-digital-print': { products: ['sbd-dummies-digital-print'] },
   'sbd-canonical': { products: ['sbd-canonical'] },
@@ -4264,6 +4307,29 @@ async function unlockSbdContent(uid, productId, session) {
 
   if (rule.products && rule.products.length > 0) {
     await userRef.update({ ownedProducts: admin.firestore.FieldValue.arrayUnion(...rule.products) });
+  }
+
+  if (rule.issueIds && rule.issueIds.length > 0) {
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    for (const issueId of rule.issueIds) {
+      await db
+        .collection('users')
+        .doc(uid)
+        .collection('sbdLifePurchasedIssues')
+        .doc(issueId)
+        .set(
+          {
+            userId: uid,
+            issueId,
+            productId: canonicalProductId,
+            status: 'active',
+            source: 'shop_stripe',
+            stripeSessionId: session?.id || null,
+            purchasedAt: now,
+          },
+          { merge: true }
+        );
+    }
   }
 
   // Audit trail
@@ -7330,6 +7396,7 @@ registerCommerceOsTier2(db, admin, exports, {
 });
 
 registerAdminUserTools(db, exports);
+registerStudioCanonAi(db, exports);
 
 const { registerNotificationMaintenance } = require('./notification-maintenance');
 registerNotificationMaintenance(db, exports);
