@@ -352,6 +352,9 @@
             <button id="pay-button" class="pay-button" onclick="startStripeCheckout(currentProductId)">
                 💳 Pay with Card
             </button>
+            <p class="payment-wa-support payment-wa-support--dark">
+              Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="SBD Network checkout" data-wa-method="Card (Stripe)">WhatsApp Support</a>
+            </p>
 
             <button type="button" class="cancel-button" onclick="window.location.href='/shop.html'">
                 Cancel
@@ -375,6 +378,20 @@
     <!-- Checkout Script -->
     <script src="/js/shop-product-ids.js" defer></script>
     <script src="/js/checkout.js" defer></script>
+    <script src="/js/payment-whatsapp-support.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (!window.PaymentWhatsAppSupport) return;
+        PaymentWhatsAppSupport.wire('.js-wa-payment-support', function () {
+          var params = new URLSearchParams(window.location.search);
+          return {
+            page: 'SBD Network checkout',
+            product: (typeof currentProductId !== 'undefined' && currentProductId) ? currentProductId : (params.get('product') || ''),
+            method: 'Card (Stripe)'
+          };
+        });
+      });
+    </script>
     
 </body>
 </html>

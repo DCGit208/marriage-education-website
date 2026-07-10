@@ -262,6 +262,9 @@
         <a class="btn btn-ghost" href="/ambassador-login.html">Go to Login Page</a>
         <button id="resend-btn" class="btn btn-ghost" type="button">Resend Access Email</button>
       </div>
+      <p class="payment-wa-support">
+        Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Ambassador Stripe confirmation">WhatsApp Support</a>
+      </p>
 
       <div id="status" class="notice notice-warning">
         We are confirming your email delivery now. If you do not see it, check Spam/Junk and click "Resend Access Email".
@@ -296,6 +299,7 @@
     </div>
   </div>
 
+  <script src="/js/payment-whatsapp-support.js"></script>
   <script>
     function getQueryParam(name) {
       const params = new URLSearchParams(window.location.search);
@@ -580,6 +584,18 @@
         statusEl.className = 'notice notice-success';
         statusEl.textContent = 'Payment confirmed. Use the links above for immediate dashboard and book access.';
         updateTracker('Ready', 'Page reload');
+      }
+
+      if (window.PaymentWhatsAppSupport) {
+        PaymentWhatsAppSupport.wire('.js-wa-payment-support', function () {
+          return {
+            page: 'Ambassador payment confirmation',
+            code: code,
+            email: email,
+            reference: paymentIntentId || campayReference || code,
+            method: channel === 'campay' ? 'CamPay' : 'Card (Stripe)'
+          };
+        });
       }
     })();
   </script>
