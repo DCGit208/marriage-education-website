@@ -4,6 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment Pending - Marriage Education</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
   <link rel="stylesheet" href="style.css" />
   <style>
     .pending-container {
@@ -187,11 +203,27 @@
     <div class="container">
       <div class="pending-container">
         <div class="pending-icon">⏳</div>
-        <h1 class="pending-title">Payment Being Verified</h1>
-        <p class="pending-message">
+        <h1 class="pending-title" id="pending-title">Payment Being Verified</h1>
+        <p class="pending-message" id="pending-message">
           Thank you for submitting your payment! We're verifying your MTN Mobile Money transaction.
-          You'll receive confirmation via email and SMS within <strong>5 minutes</strong>.
+          You'll receive confirmation via email within <strong>15 minutes</strong>.
         </p>
+        
+        <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: left;">
+          <h3 style="color: #155724; margin: 0 0 10px 0; font-size: 18px;">✅ Payment Submitted Successfully!</h3>
+          <p style="color: #155724; margin: 5px 0; font-size: 15px;">
+            Your activation email will be sent to <strong id="user-email-display">your email</strong> once your payment is approved.
+          </p>
+          <p style="color: #155724; margin: 10px 0; font-size: 14px;">
+            You should receive it within <strong>15 minutes</strong> (typically 2-5 seconds after approval).
+          </p>
+          <p style="color: #666; margin: 15px 0 5px 0; font-size: 13px;">
+            💡 <strong>Quick tip:</strong> If you don't see the email in your inbox, check your spam folder just in case.
+          </p>
+          <p style="color: #666; margin: 5px 0; font-size: 13px;">
+            Email subject: <strong>"Account Activated: [Your Code]"</strong>
+          </p>
+        </div>
 
         <div class="reference-box">
           <strong>Your Payment Reference:</strong>
@@ -199,11 +231,12 @@
           <small>Save this reference for your records</small>
         </div>
 
-        <div class="reference-box" style="text-align: left; border-left-color: #00695c;">
-          <strong>MTN MoMo payee (for your records):</strong>
-          <p style="margin: 10px 0 4px; color: #333;">Number: <strong>237 677 604 100</strong></p>
+        <div class="reference-box" id="manual-momo-box" style="text-align: left; border-left-color: #00695c;">
+          <strong id="manual-payee-heading">Mobile Money payee (for your records):</strong>
+          <p style="margin: 10px 0 4px; color: #333;">Network: <strong id="manual-network-label">MTN MoMo</strong></p>
+          <p style="margin: 4px 0; color: #333;">Number: <strong id="manual-payee-number">237 677 604 100</strong></p>
           <p style="margin: 4px 0; color: #333;">Account name: <strong>Achu Gustave Mokom</strong></p>
-          <small style="color: #666;">If the name in your MoMo app did not match, contact support before waiting for approval.</small>
+          <small style="color: #666;">If the name in your app did not match, contact support before waiting for approval.</small>
         </div>
 
         <div class="timeline">
@@ -218,7 +251,7 @@
 
           <div class="timeline-item pending">
             <div>
-              <div>Verifying MTN transaction</div>
+              <div id="verify-step-label">Verifying Mobile Money transaction</div>
               <div class="time">In progress (2-5 minutes)</div>
             </div>
           </div>
@@ -245,7 +278,7 @@
 
         <div class="help-box">
           <h4>💡 Verification Process</h4>
-          <p>We verify each payment against our MTN Mobile Money records to ensure:</p>
+          <p>We verify each payment against our Mobile Money records to ensure:</p>
           <ul>
             <li id="amount-check">Correct amount received</li>
             <li>Valid transaction ID</li>
@@ -270,54 +303,126 @@
   </footer>
 
   <script>
-    // Get reference from URL
     const urlParams = new URLSearchParams(window.location.search);
     const reference = urlParams.get('reference') || urlParams.get('ref');
-    const productId = urlParams.get('product');
-    
+    const channel = (urlParams.get('channel') || '').toLowerCase();
+    const network = (urlParams.get('network') || 'mtn').toLowerCase();
+    const email = urlParams.get('email') || '';
+    const ambassadorCode = urlParams.get('code') || reference;
+    const isCampay = channel === 'campay';
+    const isOrange = network === 'orange';
+
     if (reference) {
       document.getElementById('reference-display').textContent = reference;
     } else {
       document.getElementById('reference-display').textContent = 'No reference provided';
     }
+    if (email) {
+      const emailEl = document.getElementById('user-email-display');
+      if (emailEl) emailEl.textContent = email;
+    }
 
-    // Auto-check verification status every 10 seconds
+    if (!isCampay) {
+      const networkLabel = isOrange ? 'Orange Money' : 'MTN MoMo';
+      const payeeNumber = isOrange ? '237 699 651 555' : '237 677 604 100';
+      const heading = document.getElementById('manual-payee-heading');
+      const networkEl = document.getElementById('manual-network-label');
+      const numberEl = document.getElementById('manual-payee-number');
+      const verifyEl = document.getElementById('verify-step-label');
+      if (heading) heading.textContent = networkLabel + ' payee (for your records):';
+      if (networkEl) networkEl.textContent = networkLabel;
+      if (numberEl) numberEl.textContent = payeeNumber;
+      if (verifyEl) verifyEl.textContent = 'Verifying ' + networkLabel + ' transaction';
+      const pendingMsg = document.getElementById('pending-message');
+      if (pendingMsg) {
+        pendingMsg.innerHTML =
+          'Thank you for submitting your payment! We\'re verifying your <strong>' + networkLabel +
+          '</strong> transaction. You\'ll receive confirmation via email within <strong>15 minutes</strong>.';
+      }
+    }
+
+    function redirectIfApproved(data) {
+      if (!data || data.status !== 'approved') return false;
+      if (data.product_id === 'ambassador-registration' || data.type === 'ambassador') {
+        window.location.href =
+          '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(ambassadorCode) +
+          '&email=' + encodeURIComponent(email || data.email || '') +
+          '&reference=' + encodeURIComponent(reference || ambassadorCode);
+        return true;
+      }
+      if (data.download_url) {
+        window.location.href = 'payment-success.html?ref=' + encodeURIComponent(reference);
+        return true;
+      }
+      return false;
+    }
+
+    if (isCampay) {
+      document.getElementById('pending-title').textContent = 'Confirming your CamPay payment';
+      document.getElementById('pending-message').innerHTML =
+        'If you already approved <strong>25 XAF</strong> on your phone, stay on this page — we are confirming with CamPay and activating your account automatically. <strong>No admin approval.</strong>';
+      const manualBox = document.getElementById('manual-momo-box');
+      if (manualBox) manualBox.style.display = 'none';
+      const timeline = document.querySelector('.timeline');
+      if (timeline) timeline.style.display = 'none';
+      const helpBox = document.querySelector('.help-box');
+      if (helpBox) helpBox.style.display = 'none';
+      const greenBox = document.querySelector('.pending-container > div[style*="d4edda"]');
+      if (greenBox) {
+        greenBox.querySelector('h3').textContent = '📲 CamPay payment received';
+        greenBox.querySelectorAll('p')[0].textContent =
+          'Activating your ambassador account now. You will be redirected when ready.';
+      }
+    }
+
     let checkCount = 0;
-    const maxChecks = 60; // Check for 10 minutes (60 * 10 seconds)
+    const maxChecks = 90;
 
+    async function checkPaymentStatus() {
+      if (!reference) return;
+
+      if (isCampay) {
+        try {
+          const confirmFn = firebase.functions().httpsCallable('confirmCampayPayment');
+          const confirmRes = await confirmFn({ reference: reference });
+          const payload = confirmRes.data || {};
+          if (payload.action === 'fulfilled' || payload.action === 'already_approved') {
+            const paymentDoc = await firebase.firestore().collection('pending_payments').doc(reference).get();
+            if (paymentDoc.exists && redirectIfApproved(paymentDoc.data())) return;
+          }
+        } catch (err) {
+          console.warn('confirmCampayPayment:', err.message || err);
+        }
+      }
+
+      try {
+        const paymentDoc = await firebase.firestore().collection('pending_payments').doc(reference).get();
+        if (!paymentDoc.exists) return;
+
+        const data = paymentDoc.data();
+        if (redirectIfApproved(data)) return;
+
+        if (data.status === 'rejected') {
+          window.location.href =
+            'payment-failed.html?ref=' + encodeURIComponent(reference) +
+            '&reason=' + encodeURIComponent(data.reason || 'Payment verification failed');
+        }
+      } catch (error) {
+        console.warn('Checking payment status:', error.message);
+      }
+    }
+
+    checkPaymentStatus();
     const checkInterval = setInterval(async () => {
       if (!reference || checkCount >= maxChecks) {
         clearInterval(checkInterval);
         return;
       }
-
       checkCount++;
-
-      try {
-        // Check main server for payment approval status
-        const apiUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:4567'
-          : 'https://marriageducation.com';
-        
-        const response = await fetch(`${apiUrl}/check-payment-status?reference=${reference}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.status === 'approved' && data.download_url) {
-            // Payment approved! Redirect to success page with download link
-            window.location.href = `payment-success.html?ref=${reference}&token=${data.token}`;
-          } else if (data.status === 'rejected') {
-            // Payment rejected
-            window.location.href = `payment-failed.html?ref=${reference}&reason=${encodeURIComponent(data.reason || 'Payment verification failed')}`;
-          }
-          // If still pending, continue polling
-        }
-      } catch (error) {
-        console.error('Error checking payment status:', error);
-        // Continue polling even on error
-      }
-    }, 10000); // Check every 10 seconds
+      await checkPaymentStatus();
+    }, 5000);
   </script>
+  <!-- Marriage Education Chatbot -->
+  <script src="marriage-chatbot.js"></script>
 </body>
 </html>

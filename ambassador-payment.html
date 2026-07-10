@@ -30,6 +30,7 @@
       firebase.initializeApp(firebaseConfig);
     }
   </script>
+  <script src="js/ambassador-referral-code.js"></script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -211,6 +212,53 @@
       color: #6b7280;
       font-size: 13px;
       line-height: 1.4;
+    }
+    .payment-method-btn.hidden {
+      display: none !important;
+    }
+    .virtual-card-hint {
+      margin-top: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .virtual-card-hint-toggle {
+      width: 100%;
+      border: none;
+      background: #f9fafb;
+      color: #0f766e;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+    .virtual-card-hint-toggle:hover {
+      background: #f0fdfa;
+    }
+    .virtual-card-hint-body {
+      display: none;
+      padding: 0 16px 16px;
+      color: #374151;
+      font-size: 14px;
+      line-height: 1.55;
+      border-top: 1px solid #e5e7eb;
+    }
+    .virtual-card-hint-body.open {
+      display: block;
+    }
+    .virtual-card-hint-body ol {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+    .virtual-card-hint-body li {
+      margin-bottom: 8px;
+    }
+    .virtual-card-hint-note {
+      margin-top: 12px;
+      color: #6b7280;
+      font-size: 13px;
     }
     .form-section {
       background: #f9fafb;
@@ -459,17 +507,22 @@
       </div>
 
       <!-- Payment Method Selector -->
-      <div class="payment-method-selector">
-        <h3>📱 Select Payment Method</h3>
+      <div class="payment-method-selector" id="payment-method-selector">
+        <h3 id="payment-method-heading">📱 Select Payment Method</h3>
         <div class="payment-methods">
-          <button class="payment-method-btn active" onclick="selectPaymentMethod('momo')">
-            <span>🇨🇲</span> MTN MOMO
+          <button type="button" class="payment-method-btn active" data-method="momo" id="btn-pay-momo" onclick="selectPaymentMethod('momo', this)">
+            <span>🟡</span> MTN MoMo
           </button>
-          <button class="payment-method-btn" onclick="selectPaymentMethod('stripe')">
-            <span>💳</span> Credit Card
+          <button type="button" class="payment-method-btn" data-method="orange" id="btn-pay-orange" onclick="selectPaymentMethod('orange', this)">
+            <span>🟠</span> Orange Money
+          </button>
+          <button type="button" class="payment-method-btn" data-method="stripe" id="btn-pay-stripe" onclick="selectPaymentMethod('stripe', this)">
+            <span>💳</span> Card
           </button>
         </div>
       </div>
+
+      <div id="payment-alert" class="alert" role="alert" aria-live="polite" style="margin-bottom:20px"></div>
 
       <!-- Benefits -->
       <div class="benefits">
@@ -488,9 +541,9 @@
               <td class="benefit-name">🎯 CRLA Credential Pathway</td>
               <td class="benefit-detail">6-week Foundation School + certification</td>
             </tr>
-            <tr>
+            <tr id="benefit-earnings-row">
               <td class="benefit-name">💰 10% Advocacy Earnings</td>
-              <td class="benefit-detail">1,500 FCFA per deployment (10% of 15,000 FCFA)</td>
+              <td class="benefit-detail" id="benefit-earnings-detail">1,500 FCFA per deployment (10% of 15,000 FCFA)</td>
             </tr>
             <tr>
               <td class="benefit-name">📊 Personal Dashboard</td>
@@ -519,7 +572,7 @@
       <div class="stripe-section" id="stripe-payment-section">
         <div class="stripe-form">
           <h3>💳 Card Payment</h3>
-          <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">Pay securely with your credit or debit card. Your payment is processed by Stripe.</p>
+          <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">Pay securely with your credit, debit, or MTN MoMo Virtual Card. Processed by Stripe.</p>
           
           <div id="card-element"></div>
           <div id="card-errors" role="alert"></div>
@@ -539,6 +592,24 @@
             💳 Pay <span id="stripe-amount-display">$30 USD</span>
           </button>
 
+          <div class="virtual-card-hint" id="virtual-card-hint">
+            <button type="button" class="virtual-card-hint-toggle" id="virtual-card-hint-toggle" aria-expanded="false" aria-controls="virtual-card-hint-body">
+              Don't have a Visa/Mastercard? Get an MTN MoMo Virtual Card in ~2 minutes ▾
+            </button>
+            <div id="virtual-card-hint-body" class="virtual-card-hint-body" hidden>
+              <h4 style="margin:14px 0 0;font-size:15px;color:#111827;">How to get your MTN MoMo Virtual Card</h4>
+              <ol>
+                <li>Dial <strong>*126#</strong> on your MTN phone.</li>
+                <li>Select <strong>MoMo Pay &amp; Services</strong>.</li>
+                <li>Choose <strong>MoMo Virtual Card</strong>.</li>
+                <li>Select <strong>Create Card</strong> and enter your MoMo PIN.</li>
+                <li>You will receive your <strong>16-digit card number, expiry, and CVV</strong> by SMS.</li>
+                <li>Enter those details in the card form above to pay with Stripe.</li>
+              </ol>
+              <p class="virtual-card-hint-note"><em>Ensure your MoMo account has enough balance. Standard virtual-card creation fees may apply. This is for the Card / Stripe path — not a MoMo transfer.</em></p>
+            </div>
+          </div>
+
           <div class="secure-badge" style="margin-top: 20px;">
             <span class="secure-badge-icon">🔒</span>
             <span class="secure-badge-text">Secure checkout powered by Stripe</span>
@@ -546,7 +617,7 @@
         </div>
       </div>
 
-      <!-- MOMO Payment Section -->
+      <!-- Manual MoMo / Orange Payment Section -->
       <div class="momo-section" id="momo-payment-section">
       <!-- Instructions -->
       <div class="instructions">
@@ -555,8 +626,8 @@
         <div class="step">
           <div class="step-number">1</div>
           <div class="step-content">
-            <div class="step-title">Open MTN MOMO App</div>
-            <div class="step-text">Launch your MTN Mobile Money app or dial <strong>*126#</strong></div>
+            <div class="step-title" id="manual-step1-title">Open MTN MoMo App</div>
+            <div class="step-text" id="manual-step1-text">Launch your MTN Mobile Money app or dial <strong>*126#</strong></div>
           </div>
         </div>
 
@@ -567,9 +638,9 @@
             <div class="step-text">
               Send <strong id="amount-text">15,000 FCFA</strong> to<br>
               <div class="momo-recipient">
-                <span class="momo-number">237 677 604 100</span>
-                <div class="momo-name">Account name: <strong>Achu Gustave Mokom</strong></div>
-                <small class="momo-name-hint">This name must match what MTN MoMo shows before you confirm the transfer.</small>
+                <span class="momo-number" id="manual-payee-number">237 677 604 100</span>
+                <div class="momo-name">Account name: <strong id="manual-payee-name">Achu Gustave Mokom</strong></div>
+                <small class="momo-name-hint" id="manual-payee-hint">This name must match what MTN MoMo shows before you confirm the transfer.</small>
               </div>
             </div>
           </div>
@@ -603,12 +674,12 @@
 
         <form id="confirmation-form">
           <div class="form-group">
-            <label for="phone">Your MTN MOMO Phone Number</label>
+            <label for="phone" id="manual-phone-label">Your MTN MoMo Phone Number</label>
             <input 
               type="tel" 
               id="phone" 
               name="phone" 
-              placeholder="237670000000" 
+              placeholder="670000000" 
               required
               pattern="[0-9]{9,12}"
             >
@@ -645,6 +716,57 @@
     let elements = null;
     let cardElement = null;
     let currentPaymentMethod = 'momo';
+    let currentManualNetwork = 'mtn';
+
+    const MANUAL_PAYEES = {
+      mtn: {
+        network: 'mtn',
+        label: 'MTN MoMo',
+        number: '237 677 604 100',
+        name: 'Achu Gustave Mokom',
+        step1Title: 'Open MTN MoMo App',
+        step1Text: 'Launch your MTN Mobile Money app or dial <strong>*126#</strong>',
+        phoneLabel: 'Your MTN MoMo Phone Number',
+        hint: 'This name must match what MTN MoMo shows before you confirm the transfer.'
+      },
+      orange: {
+        network: 'orange',
+        label: 'Orange Money',
+        number: '237 699 651 555',
+        name: 'Achu Gustave Mokom',
+        step1Title: 'Open Orange Money App',
+        step1Text: 'Launch your Orange Money app or dial <strong>#150#</strong>',
+        phoneLabel: 'Your Orange Money Phone Number',
+        hint: 'This name must match what Orange Money shows before you confirm the transfer.'
+      }
+    };
+
+    function applyManualNetwork(network) {
+      const payee = MANUAL_PAYEES[network] || MANUAL_PAYEES.mtn;
+      currentManualNetwork = payee.network;
+      const step1Title = document.getElementById('manual-step1-title');
+      const step1Text = document.getElementById('manual-step1-text');
+      const numberEl = document.getElementById('manual-payee-number');
+      const nameEl = document.getElementById('manual-payee-name');
+      const hintEl = document.getElementById('manual-payee-hint');
+      const phoneLabel = document.getElementById('manual-phone-label');
+      if (step1Title) step1Title.textContent = payee.step1Title;
+      if (step1Text) step1Text.innerHTML = payee.step1Text;
+      if (numberEl) numberEl.textContent = payee.number;
+      if (nameEl) nameEl.textContent = payee.name;
+      if (hintEl) hintEl.textContent = payee.hint;
+      if (phoneLabel) phoneLabel.textContent = payee.phoneLabel;
+    }
+
+    function toggleVirtualCardHint() {
+      const body = document.getElementById('virtual-card-hint-body');
+      const toggle = document.getElementById('virtual-card-hint-toggle');
+      if (!body || !toggle) return;
+      const open = !body.classList.contains('open');
+      body.classList.toggle('open', open);
+      body.hidden = !open;
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
 
     // Initialize Stripe
     function initializeStripe() {
@@ -656,26 +778,35 @@
     }
 
     // Switch payment method
-    function selectPaymentMethod(method) {
+    function selectPaymentMethod(method, clickedBtn) {
       currentPaymentMethod = method;
-      
-      // Update button states
+
       document.querySelectorAll('.payment-method-btn').forEach(btn => {
-        btn.classList.remove('active');
+        btn.classList.toggle('active', btn.dataset.method === method);
       });
-      event.target.closest('.payment-method-btn').classList.add('active');
+
+      const momoSec = document.getElementById('momo-payment-section');
+      const stripeSec = document.getElementById('stripe-payment-section');
 
       if (method === 'stripe') {
-        document.getElementById('momo-payment-section').classList.add('hidden');
-        document.getElementById('stripe-payment-section').classList.add('active');
+        if (momoSec) momoSec.classList.add('hidden');
+        if (stripeSec) stripeSec.classList.add('active');
         initializeStripe();
-        if (!cardElement.parentElement) {
+        if (cardElement && !document.querySelector('#card-element .StripeElement')) {
           cardElement.mount('#card-element');
         }
       } else {
-        document.getElementById('momo-payment-section').classList.remove('hidden');
-        document.getElementById('stripe-payment-section').classList.remove('active');
+        if (stripeSec) stripeSec.classList.remove('active');
+        if (momoSec) momoSec.classList.remove('hidden');
+        applyManualNetwork(method === 'orange' ? 'orange' : 'mtn');
       }
+    }
+
+    function callableErrorMessage(err) {
+      if (!err) return 'Request failed';
+      if (typeof err.details === 'string' && err.details) return err.details;
+      if (err.message) return err.message;
+      return 'Request failed';
     }
 
     // Process Stripe payment
@@ -713,7 +844,8 @@
       const submitBtn = document.getElementById('stripe-submit-btn');
       const cardErrors = document.getElementById('card-errors');
       const code = document.getElementById('registration-code').textContent;
-      const amount = parseInt(document.getElementById('registration-price').textContent) || 15000;
+      const priceEl = document.getElementById('registration-price');
+      const payCurrency = priceEl.dataset.currency || 'XAF';
 
       if (!email) {
         cardErrors.textContent = 'Please enter your email address.';
@@ -807,14 +939,6 @@
       }
     }
 
-    // Get URL parameters
-    function getUrlParameter(name) {
-      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-      const results = regex.exec(location.search);
-      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-    }
-
     // Copy reference to clipboard
     function copyReference() {
       const reference = document.getElementById('reference-code').textContent;
@@ -828,30 +952,117 @@
       });
     }
 
-    // Show alert
+    // Show alert (payment-alert stays visible on CamPay tab)
     function showAlert(message, type) {
-      const alert = document.getElementById('alert');
-      alert.textContent = message;
-      alert.className = `alert ${type} show`;
-      setTimeout(() => {
-        alert.classList.remove('show');
-      }, 5000);
+      ['payment-alert', 'alert'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'alert ' + type + ' show';
+      });
+      const primary = document.getElementById('payment-alert') || document.getElementById('alert');
+      if (primary) {
+        primary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      setTimeout(function () {
+        ['payment-alert', 'alert'].forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('show');
+        });
+      }, 8000);
+    }
+
+    function getUrlParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function loadAmbassadorSession() {
+      try {
+        const raw = sessionStorage.getItem('ambassadorData');
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function resolvePaymentContext() {
+      const session = loadAmbassadorSession();
+      const urlCurrency = (getUrlParameter('currency') || '').toUpperCase();
+      const urlCountry = (getUrlParameter('country') || '').toUpperCase();
+      const urlAmount = getUrlParameter('amount');
+
+      const country = urlCountry || session?.country || 'CM';
+      const currency = urlCurrency || session?.currency || (country === 'CM' ? 'XAF' : 'USD');
+      const isCameroon = country === 'CM' || currency === 'XAF';
+
+      let amount;
+      let priceLabel;
+      if (isCameroon) {
+        amount = parseInt(urlAmount, 10) || session?.entryAmount || 15000;
+        priceLabel = amount.toLocaleString() + ' FCFA';
+      } else {
+        amount = parseInt(urlAmount, 10) || session?.entryAmount || 30;
+        priceLabel = '$' + amount + ' USD';
+      }
+
+      return { country, currency, amount, priceLabel, isCameroon, session };
     }
 
     // Initialize page
-    const code = getUrlParameter('code') || 'AMB-UNKNOWN';
-    const amount = getUrlParameter('amount') || '15000';
+    const payCtx = resolvePaymentContext();
+    const code = getUrlParameter('code') || payCtx.session?.code || 'AMB-UNKNOWN';
     const reference = code;
     const stripeTestMode = getUrlParameter('stripe_test') === '1usd';
     const stripeDisplayAmount = stripeTestMode ? '$1 USD (Live Test)' : '$30 USD';
 
-    // Update page content
+    const priceEl = document.getElementById('registration-price');
+    priceEl.textContent = payCtx.priceLabel;
+    priceEl.dataset.amount = String(payCtx.amount);
+    priceEl.dataset.currency = payCtx.currency;
+    priceEl.dataset.country = payCtx.country;
+
     document.getElementById('registration-code').textContent = code;
-    document.getElementById('registration-price').textContent = `${amount} FCFA`;
     document.getElementById('reference-code').textContent = reference;
     document.getElementById('reference-text').textContent = reference;
-    document.getElementById('amount-text').textContent = `${amount} FCFA`;
-    document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
+
+    if (payCtx.isCameroon) {
+      document.getElementById('amount-text').textContent = payCtx.amount.toLocaleString() + ' FCFA';
+      document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
+      selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
+    } else {
+      document.getElementById('payment-method-heading').textContent = '💳 International payment';
+      document.getElementById('btn-pay-momo').style.display = 'none';
+      const orangeBtn = document.getElementById('btn-pay-orange');
+      if (orangeBtn) orangeBtn.style.display = 'none';
+      document.getElementById('benefit-earnings-detail').textContent =
+        '$3 USD per deployment (10% of $30 USD entry)';
+      document.querySelector('.header p').textContent =
+        'Complete your registration — $30 USD entry fee (secure card payment)';
+      selectPaymentMethod('stripe', document.getElementById('btn-pay-stripe'));
+    }
+
+    document.getElementById('stripe-amount-display').textContent =
+      payCtx.isCameroon ? stripeDisplayAmount : (stripeTestMode ? '$1 USD (Live Test)' : payCtx.priceLabel);
+
+    const virtualCardToggle = document.getElementById('virtual-card-hint-toggle');
+    if (virtualCardToggle) {
+      virtualCardToggle.addEventListener('click', toggleVirtualCardHint);
+    }
+
+    const sessionEmail = payCtx.session?.email;
+    if (sessionEmail) {
+      const stripeEmail = document.getElementById('stripe-email');
+      const momoEmail = document.getElementById('email');
+      if (stripeEmail) stripeEmail.value = sessionEmail;
+      if (momoEmail) momoEmail.value = sessionEmail;
+    }
+    const sessionPhone = payCtx.session?.phoneE164 || payCtx.session?.phone;
+    if (sessionPhone && payCtx.isCameroon) {
+      const localPhone = sessionPhone.replace(/\D/g, '').replace(/^237/, '');
+      const phoneField = document.getElementById('phone');
+      if (phoneField) phoneField.value = localPhone;
+    }
 
     // Handle form submission
     document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
@@ -872,39 +1083,72 @@
           ambassadorData = JSON.parse(storedData);
           console.log('📝 Retrieved ambassador data:', ambassadorData);
         }
-        const urlRef = getUrlParameter('ref');
+        const urlRefRaw = getUrlParameter('ref') || '';
+        const urlRef = window.MEAmbassadorReferralCode
+          ? window.MEAmbassadorReferralCode.normalizeReferralCode(urlRefRaw)
+          : String(urlRefRaw || '').trim().toUpperCase();
         if (urlRef && (!ambassadorData || !ambassadorData.recruitedBy)) {
           ambassadorData = ambassadorData || {};
-          ambassadorData.recruitedBy = urlRef;
-          if (urlRef.startsWith('RD-')) {
-            ambassadorData.regional_director_code = urlRef;
-          } else if (urlRef.startsWith('AMB-')) {
-            ambassadorData.senior_code = urlRef;
+          if (window.MEAmbassadorReferralCode) {
+            ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(ambassadorData, urlRef);
+          } else {
+            ambassadorData.recruitedBy = urlRef;
+            if (urlRef.startsWith('RD-')) {
+              ambassadorData.regional_director_code = urlRef;
+            } else if (urlRef.startsWith('AMB-')) {
+              ambassadorData.senior_code = urlRef;
+            }
+            ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
+              ? 'regional_director'
+              : 'senior_ambassador';
           }
-          ambassadorData.recruited_by_type = urlRef.startsWith('RD-')
-            ? 'regional_director'
-            : 'senior_ambassador';
           sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
           console.log('🔗 Recruiter restored from URL ref:', urlRef);
+        }
+
+        if (ambassadorData && window.MEAmbassadorReferralCode) {
+          ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(
+            ambassadorData,
+            ambassadorData.recruitedBy || ambassadorData.regional_director_code || urlRef
+          );
+          sessionStorage.setItem('ambassadorData', JSON.stringify(ambassadorData));
         }
 
         const recruitedBy =
           ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || urlRef || '';
 
+        const payCurrency = document.getElementById('registration-price').dataset.currency || 'XAF';
+        const payAmount = document.getElementById('registration-price').dataset.amount || '15000';
+
         // Prepare payment data
+        const payee = MANUAL_PAYEES[currentManualNetwork] || MANUAL_PAYEES.mtn;
         const paymentData = {
           reference: reference,
           product_id: 'ambassador-registration',
           product_name: `Ambassador Registration - ${code}`,
-          amount: amount,
-          currency: 'XAF',
+          amount: payAmount,
+          currency: payCurrency,
           phone: phone,
           email: email,
           type: 'ambassador',
           ambassador_code: code,
           regional_director: recruitedBy,
+          momo_network: payee.network,
+          payment_method: payee.network === 'orange' ? 'orange_money' : 'momo',
+          payee_number: payee.number,
+          payee_name: payee.name,
           ambassador_data: ambassadorData ? JSON.parse(JSON.stringify(ambassadorData)) : null
         };
+        if (window.MEAmbassadorReferralCode && paymentData.ambassador_data) {
+          paymentData.ambassador_data = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(
+            paymentData.ambassador_data,
+            paymentData.regional_director
+          );
+          paymentData.regional_director =
+            paymentData.ambassador_data.recruitedBy ||
+            paymentData.ambassador_data.regional_director_code ||
+            paymentData.regional_director;
+        }
         
         console.log('💳 Payment data being submitted:', {
           reference,
@@ -926,7 +1170,7 @@
           
           // Redirect to pending page after 3 seconds
           setTimeout(() => {
-            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=ambassador-registration`;
+            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=ambassador-registration&network=${encodeURIComponent(payee.network)}`;
           }, 3000);
         } else {
           showAlert('❌ ' + (result.data.message || 'Failed to submit payment. Please try again.'), 'error');

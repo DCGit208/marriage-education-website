@@ -213,6 +213,53 @@
       font-size: 13px;
       line-height: 1.4;
     }
+    .payment-method-btn.hidden {
+      display: none !important;
+    }
+    .virtual-card-hint {
+      margin-top: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .virtual-card-hint-toggle {
+      width: 100%;
+      border: none;
+      background: #f9fafb;
+      color: #0f766e;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+    .virtual-card-hint-toggle:hover {
+      background: #f0fdfa;
+    }
+    .virtual-card-hint-body {
+      display: none;
+      padding: 0 16px 16px;
+      color: #374151;
+      font-size: 14px;
+      line-height: 1.55;
+      border-top: 1px solid #e5e7eb;
+    }
+    .virtual-card-hint-body.open {
+      display: block;
+    }
+    .virtual-card-hint-body ol {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+    .virtual-card-hint-body li {
+      margin-bottom: 8px;
+    }
+    .virtual-card-hint-note {
+      margin-top: 12px;
+      color: #6b7280;
+      font-size: 13px;
+    }
     .form-section {
       background: #f9fafb;
       padding: 30px;
@@ -464,13 +511,13 @@
         <h3 id="payment-method-heading">📱 Select Payment Method</h3>
         <div class="payment-methods">
           <button type="button" class="payment-method-btn active" data-method="momo" id="btn-pay-momo" onclick="selectPaymentMethod('momo', this)">
-            <span>🇨🇲</span> MTN MOMO
+            <span>🟡</span> MTN MoMo
+          </button>
+          <button type="button" class="payment-method-btn" data-method="orange" id="btn-pay-orange" onclick="selectPaymentMethod('orange', this)">
+            <span>🟠</span> Orange Money
           </button>
           <button type="button" class="payment-method-btn" data-method="stripe" id="btn-pay-stripe" onclick="selectPaymentMethod('stripe', this)">
-            <span>💳</span> Credit Card
-          </button>
-          <button type="button" class="payment-method-btn hidden" data-method="campay" id="btn-pay-campay" onclick="selectPaymentMethod('campay', this)">
-            <span>📲</span> CamPay MoMo
+            <span>💳</span> Card
           </button>
         </div>
       </div>
@@ -525,7 +572,7 @@
       <div class="stripe-section" id="stripe-payment-section">
         <div class="stripe-form">
           <h3>💳 Card Payment</h3>
-          <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">Pay securely with your credit or debit card. Your payment is processed by Stripe.</p>
+          <p style="color: #4b5563; font-size: 14px; margin-bottom: 20px;">Pay securely with your credit, debit, or MTN MoMo Virtual Card. Processed by Stripe.</p>
           
           <div id="card-element"></div>
           <div id="card-errors" role="alert"></div>
@@ -545,6 +592,24 @@
             💳 Pay <span id="stripe-amount-display">$30 USD</span>
           </button>
 
+          <div class="virtual-card-hint" id="virtual-card-hint">
+            <button type="button" class="virtual-card-hint-toggle" id="virtual-card-hint-toggle" aria-expanded="false" aria-controls="virtual-card-hint-body">
+              Don't have a Visa/Mastercard? Get an MTN MoMo Virtual Card in ~2 minutes ▾
+            </button>
+            <div id="virtual-card-hint-body" class="virtual-card-hint-body" hidden>
+              <h4 style="margin:14px 0 0;font-size:15px;color:#111827;">How to get your MTN MoMo Virtual Card</h4>
+              <ol>
+                <li>Dial <strong>*126#</strong> on your MTN phone.</li>
+                <li>Select <strong>MoMo Pay &amp; Services</strong>.</li>
+                <li>Choose <strong>MoMo Virtual Card</strong>.</li>
+                <li>Select <strong>Create Card</strong> and enter your MoMo PIN.</li>
+                <li>You will receive your <strong>16-digit card number, expiry, and CVV</strong> by SMS.</li>
+                <li>Enter those details in the card form above to pay with Stripe.</li>
+              </ol>
+              <p class="virtual-card-hint-note"><em>Ensure your MoMo account has enough balance. Standard virtual-card creation fees may apply. This is for the Card / Stripe path — not a MoMo transfer.</em></p>
+            </div>
+          </div>
+
           <div class="secure-badge" style="margin-top: 20px;">
             <span class="secure-badge-icon">🔒</span>
             <span class="secure-badge-text">Secure checkout powered by Stripe</span>
@@ -552,24 +617,7 @@
         </div>
       </div>
 
-      <!-- CamPay automated MoMo (Tier 2 pilot — Cameroon) -->
-      <div class="momo-section hidden" id="campay-payment-section" style="margin-bottom:24px;padding:20px;background:#ecfdf5;border-radius:12px;border:1px solid #6ee7b7">
-        <h3>📲 Pay with CamPay (automated MoMo)</h3>
-        <p style="font-size:14px;color:#047857;margin-bottom:16px">Enter your MoMo number and email, then tap pay. Confirm on your phone when prompted.</p>
-        <div class="form-group">
-          <label for="campay-phone">MTN MoMo phone (Cameroon)</label>
-          <input type="tel" id="campay-phone" name="campay-phone" placeholder="670000000" pattern="[0-9]{9,12}" required>
-        </div>
-        <div class="form-group">
-          <label for="campay-email">Email (for login credentials)</label>
-          <input type="email" id="campay-email" name="campay-email" placeholder="your@email.com" required>
-        </div>
-        <button type="button" class="submit-btn" id="campay-submit-btn" onclick="processCampayPayment()">
-          Pay with CamPay MoMo
-        </button>
-      </div>
-
-      <!-- MOMO Payment Section -->
+      <!-- Manual MoMo / Orange Payment Section -->
       <div class="momo-section" id="momo-payment-section">
       <!-- Instructions -->
       <div class="instructions">
@@ -578,8 +626,8 @@
         <div class="step">
           <div class="step-number">1</div>
           <div class="step-content">
-            <div class="step-title">Open MTN MOMO App</div>
-            <div class="step-text">Launch your MTN Mobile Money app or dial <strong>*126#</strong></div>
+            <div class="step-title" id="manual-step1-title">Open MTN MoMo App</div>
+            <div class="step-text" id="manual-step1-text">Launch your MTN Mobile Money app or dial <strong>*126#</strong></div>
           </div>
         </div>
 
@@ -590,9 +638,9 @@
             <div class="step-text">
               Send <strong id="amount-text">15,000 FCFA</strong> to<br>
               <div class="momo-recipient">
-                <span class="momo-number">237 677 604 100</span>
-                <div class="momo-name">Account name: <strong>Achu Gustave Mokom</strong></div>
-                <small class="momo-name-hint">This name must match what MTN MoMo shows before you confirm the transfer.</small>
+                <span class="momo-number" id="manual-payee-number">237 677 604 100</span>
+                <div class="momo-name">Account name: <strong id="manual-payee-name">Achu Gustave Mokom</strong></div>
+                <small class="momo-name-hint" id="manual-payee-hint">This name must match what MTN MoMo shows before you confirm the transfer.</small>
               </div>
             </div>
           </div>
@@ -626,12 +674,12 @@
 
         <form id="confirmation-form">
           <div class="form-group">
-            <label for="phone">Your MTN MOMO Phone Number</label>
+            <label for="phone" id="manual-phone-label">Your MTN MoMo Phone Number</label>
             <input 
               type="tel" 
               id="phone" 
               name="phone" 
-              placeholder="237670000000" 
+              placeholder="670000000" 
               required
               pattern="[0-9]{9,12}"
             >
@@ -668,8 +716,57 @@
     let elements = null;
     let cardElement = null;
     let currentPaymentMethod = 'momo';
-    let campayPilotEnabled = false;
-    let campayDemoMaxXaf = null;
+    let currentManualNetwork = 'mtn';
+
+    const MANUAL_PAYEES = {
+      mtn: {
+        network: 'mtn',
+        label: 'MTN MoMo',
+        number: '237 677 604 100',
+        name: 'Achu Gustave Mokom',
+        step1Title: 'Open MTN MoMo App',
+        step1Text: 'Launch your MTN Mobile Money app or dial <strong>*126#</strong>',
+        phoneLabel: 'Your MTN MoMo Phone Number',
+        hint: 'This name must match what MTN MoMo shows before you confirm the transfer.'
+      },
+      orange: {
+        network: 'orange',
+        label: 'Orange Money',
+        number: '237 699 651 555',
+        name: 'Achu Gustave Mokom',
+        step1Title: 'Open Orange Money App',
+        step1Text: 'Launch your Orange Money app or dial <strong>#150#</strong>',
+        phoneLabel: 'Your Orange Money Phone Number',
+        hint: 'This name must match what Orange Money shows before you confirm the transfer.'
+      }
+    };
+
+    function applyManualNetwork(network) {
+      const payee = MANUAL_PAYEES[network] || MANUAL_PAYEES.mtn;
+      currentManualNetwork = payee.network;
+      const step1Title = document.getElementById('manual-step1-title');
+      const step1Text = document.getElementById('manual-step1-text');
+      const numberEl = document.getElementById('manual-payee-number');
+      const nameEl = document.getElementById('manual-payee-name');
+      const hintEl = document.getElementById('manual-payee-hint');
+      const phoneLabel = document.getElementById('manual-phone-label');
+      if (step1Title) step1Title.textContent = payee.step1Title;
+      if (step1Text) step1Text.innerHTML = payee.step1Text;
+      if (numberEl) numberEl.textContent = payee.number;
+      if (nameEl) nameEl.textContent = payee.name;
+      if (hintEl) hintEl.textContent = payee.hint;
+      if (phoneLabel) phoneLabel.textContent = payee.phoneLabel;
+    }
+
+    function toggleVirtualCardHint() {
+      const body = document.getElementById('virtual-card-hint-body');
+      const toggle = document.getElementById('virtual-card-hint-toggle');
+      if (!body || !toggle) return;
+      const open = !body.classList.contains('open');
+      body.classList.toggle('open', open);
+      body.hidden = !open;
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
 
     // Initialize Stripe
     function initializeStripe() {
@@ -688,26 +785,20 @@
         btn.classList.toggle('active', btn.dataset.method === method);
       });
 
-      const campaySec = document.getElementById('campay-payment-section');
       const momoSec = document.getElementById('momo-payment-section');
       const stripeSec = document.getElementById('stripe-payment-section');
 
       if (method === 'stripe') {
         if (momoSec) momoSec.classList.add('hidden');
-        if (campaySec) campaySec.classList.add('hidden');
         if (stripeSec) stripeSec.classList.add('active');
         initializeStripe();
         if (cardElement && !document.querySelector('#card-element .StripeElement')) {
           cardElement.mount('#card-element');
         }
-      } else if (method === 'campay') {
-        if (stripeSec) stripeSec.classList.remove('active');
-        if (momoSec) momoSec.classList.add('hidden');
-        if (campaySec) campaySec.classList.remove('hidden');
       } else {
         if (stripeSec) stripeSec.classList.remove('active');
-        if (campaySec) campaySec.classList.add('hidden');
         if (momoSec) momoSec.classList.remove('hidden');
+        applyManualNetwork(method === 'orange' ? 'orange' : 'mtn');
       }
     }
 
@@ -716,76 +807,6 @@
       if (typeof err.details === 'string' && err.details) return err.details;
       if (err.message) return err.message;
       return 'Request failed';
-    }
-
-    function getCampayContactFields() {
-      const phoneEl = document.getElementById('campay-phone');
-      const emailEl = document.getElementById('campay-email');
-      const phone = (phoneEl && phoneEl.value ? phoneEl.value : document.getElementById('phone').value || '').trim();
-      const email = (emailEl && emailEl.value ? emailEl.value : document.getElementById('email').value || '').trim();
-      return { phone, email };
-    }
-
-    async function processCampayPayment() {
-      const contact = getCampayContactFields();
-      const phone = contact.phone;
-      const email = contact.email;
-      const code = document.getElementById('registration-code').textContent;
-      const ref = document.getElementById('reference-code').textContent;
-      const btn = document.getElementById('campay-submit-btn');
-      if (!phone || !email) {
-        showAlert('Enter your MoMo phone number and email in the CamPay section.', 'error');
-        return;
-      }
-      if (ref === 'Loading...' || code === 'Loading...') {
-        showAlert('Payment page is still loading. Wait a moment and try again.', 'error');
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Starting CamPay…';
-      try {
-        let payAmount = parseInt(document.getElementById('registration-price').dataset.amount || '15000', 10);
-        if (campayDemoMaxXaf && payAmount > campayDemoMaxXaf) {
-          payAmount = campayDemoMaxXaf;
-        }
-        const payCurrency = document.getElementById('registration-price').dataset.currency || 'XAF';
-        let ambassadorData = null;
-        const stored = sessionStorage.getItem('ambassadorData');
-        if (stored) ambassadorData = JSON.parse(stored);
-        const campay = firebase.functions().httpsCallable('initiateCampayCheckout');
-        const res = await campay({
-          reference: ref,
-          phone: phone.startsWith('+') ? phone : '+237' + phone.replace(/\D/g, ''),
-          email: email,
-          product_id: 'ambassador-registration',
-          product_name: 'Ambassador Registration - ' + code,
-          product_type: 'ambassador_registration',
-          amount: payAmount,
-          currency: payCurrency,
-          type: 'ambassador',
-          ambassador_code: code,
-          regional_director: ambassadorData?.recruitedBy || ambassadorData?.regional_director_code || '',
-          ambassador_data: ambassadorData
-        });
-        const payload = res.data || {};
-        if (payload.fulfilled || payload.status === 'SUCCESS') {
-          showAlert('Payment successful! Activating your ambassador account…', 'success');
-          setTimeout(function () {
-            window.location.href = '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(code) + '&email=' + encodeURIComponent(email) + '&channel=campay';
-          }, 2000);
-          return;
-        }
-        showAlert('CamPay prompt sent to your phone. Approve the MoMo request to complete payment.', 'success');
-        setTimeout(function () {
-          window.location.href = 'payment-pending.html?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email) + '&channel=campay&code=' + encodeURIComponent(code);
-        }, 2500);
-      } catch (err) {
-        console.error('CamPay checkout error:', err);
-        showAlert(callableErrorMessage(err), 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Pay with CamPay MoMo';
-      }
     }
 
     // Process Stripe payment
@@ -1009,30 +1030,11 @@
       document.getElementById('amount-text').textContent = payCtx.amount.toLocaleString() + ' FCFA';
       document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
       selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
-      if (typeof firebase !== 'undefined' && firebase.functions) {
-        firebase.functions().httpsCallable('getCampayPilotStatus')().then(function (res) {
-          if (res.data && (res.data.campay_live_enabled || res.data.credentials_configured)) {
-            campayPilotEnabled = true;
-            campayDemoMaxXaf = res.data.demo_amount_limit_xaf || null;
-            var campayBtn = document.getElementById('btn-pay-campay');
-            if (campayBtn) campayBtn.classList.remove('hidden');
-            var demoLimit = campayDemoMaxXaf;
-            if (demoLimit) {
-              var campaySec = document.getElementById('campay-payment-section');
-              if (campaySec && !document.getElementById('campay-demo-limit-note')) {
-                var note = document.createElement('p');
-                note.id = 'campay-demo-limit-note';
-                note.style.cssText = 'font-size:13px;color:#b45309;background:#fffbeb;padding:10px;border-radius:8px;margin-bottom:12px';
-                note.textContent = 'Demo CamPay: you will be charged ' + demoLimit + ' XAF on your phone (demo max). Full registration fee applies when live CamPay is enabled.';
-                campaySec.insertBefore(note, campaySec.querySelector('.form-group'));
-              }
-            }
-          }
-        }).catch(function () {});
-      }
     } else {
       document.getElementById('payment-method-heading').textContent = '💳 International payment';
       document.getElementById('btn-pay-momo').style.display = 'none';
+      const orangeBtn = document.getElementById('btn-pay-orange');
+      if (orangeBtn) orangeBtn.style.display = 'none';
       document.getElementById('benefit-earnings-detail').textContent =
         '$3 USD per deployment (10% of $30 USD entry)';
       document.querySelector('.header p').textContent =
@@ -1043,22 +1045,23 @@
     document.getElementById('stripe-amount-display').textContent =
       payCtx.isCameroon ? stripeDisplayAmount : (stripeTestMode ? '$1 USD (Live Test)' : payCtx.priceLabel);
 
+    const virtualCardToggle = document.getElementById('virtual-card-hint-toggle');
+    if (virtualCardToggle) {
+      virtualCardToggle.addEventListener('click', toggleVirtualCardHint);
+    }
+
     const sessionEmail = payCtx.session?.email;
     if (sessionEmail) {
       const stripeEmail = document.getElementById('stripe-email');
       const momoEmail = document.getElementById('email');
-      const campayEmail = document.getElementById('campay-email');
       if (stripeEmail) stripeEmail.value = sessionEmail;
       if (momoEmail) momoEmail.value = sessionEmail;
-      if (campayEmail) campayEmail.value = sessionEmail;
     }
     const sessionPhone = payCtx.session?.phoneE164 || payCtx.session?.phone;
     if (sessionPhone && payCtx.isCameroon) {
       const localPhone = sessionPhone.replace(/\D/g, '').replace(/^237/, '');
       const phoneField = document.getElementById('phone');
-      const campayPhone = document.getElementById('campay-phone');
       if (phoneField) phoneField.value = localPhone;
-      if (campayPhone) campayPhone.value = localPhone;
     }
 
     // Handle form submission
@@ -1118,6 +1121,7 @@
         const payAmount = document.getElementById('registration-price').dataset.amount || '15000';
 
         // Prepare payment data
+        const payee = MANUAL_PAYEES[currentManualNetwork] || MANUAL_PAYEES.mtn;
         const paymentData = {
           reference: reference,
           product_id: 'ambassador-registration',
@@ -1129,6 +1133,10 @@
           type: 'ambassador',
           ambassador_code: code,
           regional_director: recruitedBy,
+          momo_network: payee.network,
+          payment_method: payee.network === 'orange' ? 'orange_money' : 'momo',
+          payee_number: payee.number,
+          payee_name: payee.name,
           ambassador_data: ambassadorData ? JSON.parse(JSON.stringify(ambassadorData)) : null
         };
         if (window.MEAmbassadorReferralCode && paymentData.ambassador_data) {
@@ -1162,7 +1170,7 @@
           
           // Redirect to pending page after 3 seconds
           setTimeout(() => {
-            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=ambassador-registration`;
+            window.location.href = `payment-pending.html?reference=${reference}&email=${encodeURIComponent(email)}&type=ambassador-registration&network=${encodeURIComponent(payee.network)}`;
           }, 3000);
         } else {
           showAlert('❌ ' + (result.data.message || 'Failed to submit payment. Please try again.'), 'error');

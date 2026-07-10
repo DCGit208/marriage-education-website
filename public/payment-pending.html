@@ -232,10 +232,11 @@
         </div>
 
         <div class="reference-box" id="manual-momo-box" style="text-align: left; border-left-color: #00695c;">
-          <strong>MTN MoMo payee (for your records):</strong>
-          <p style="margin: 10px 0 4px; color: #333;">Number: <strong>237 677 604 100</strong></p>
+          <strong id="manual-payee-heading">Mobile Money payee (for your records):</strong>
+          <p style="margin: 10px 0 4px; color: #333;">Network: <strong id="manual-network-label">MTN MoMo</strong></p>
+          <p style="margin: 4px 0; color: #333;">Number: <strong id="manual-payee-number">237 677 604 100</strong></p>
           <p style="margin: 4px 0; color: #333;">Account name: <strong>Achu Gustave Mokom</strong></p>
-          <small style="color: #666;">If the name in your MoMo app did not match, contact support before waiting for approval.</small>
+          <small style="color: #666;">If the name in your app did not match, contact support before waiting for approval.</small>
         </div>
 
         <div class="timeline">
@@ -250,7 +251,7 @@
 
           <div class="timeline-item pending">
             <div>
-              <div>Verifying MTN transaction</div>
+              <div id="verify-step-label">Verifying Mobile Money transaction</div>
               <div class="time">In progress (2-5 minutes)</div>
             </div>
           </div>
@@ -277,7 +278,7 @@
 
         <div class="help-box">
           <h4>💡 Verification Process</h4>
-          <p>We verify each payment against our MTN Mobile Money records to ensure:</p>
+          <p>We verify each payment against our Mobile Money records to ensure:</p>
           <ul>
             <li id="amount-check">Correct amount received</li>
             <li>Valid transaction ID</li>
@@ -305,9 +306,11 @@
     const urlParams = new URLSearchParams(window.location.search);
     const reference = urlParams.get('reference') || urlParams.get('ref');
     const channel = (urlParams.get('channel') || '').toLowerCase();
+    const network = (urlParams.get('network') || 'mtn').toLowerCase();
     const email = urlParams.get('email') || '';
     const ambassadorCode = urlParams.get('code') || reference;
     const isCampay = channel === 'campay';
+    const isOrange = network === 'orange';
 
     if (reference) {
       document.getElementById('reference-display').textContent = reference;
@@ -319,13 +322,32 @@
       if (emailEl) emailEl.textContent = email;
     }
 
+    if (!isCampay) {
+      const networkLabel = isOrange ? 'Orange Money' : 'MTN MoMo';
+      const payeeNumber = isOrange ? '237 699 651 555' : '237 677 604 100';
+      const heading = document.getElementById('manual-payee-heading');
+      const networkEl = document.getElementById('manual-network-label');
+      const numberEl = document.getElementById('manual-payee-number');
+      const verifyEl = document.getElementById('verify-step-label');
+      if (heading) heading.textContent = networkLabel + ' payee (for your records):';
+      if (networkEl) networkEl.textContent = networkLabel;
+      if (numberEl) numberEl.textContent = payeeNumber;
+      if (verifyEl) verifyEl.textContent = 'Verifying ' + networkLabel + ' transaction';
+      const pendingMsg = document.getElementById('pending-message');
+      if (pendingMsg) {
+        pendingMsg.innerHTML =
+          'Thank you for submitting your payment! We\'re verifying your <strong>' + networkLabel +
+          '</strong> transaction. You\'ll receive confirmation via email within <strong>15 minutes</strong>.';
+      }
+    }
+
     function redirectIfApproved(data) {
       if (!data || data.status !== 'approved') return false;
-      if (data.product_id === 'ambassador-registration' || data.type === 'ambassador' || isCampay) {
+      if (data.product_id === 'ambassador-registration' || data.type === 'ambassador') {
         window.location.href =
           '/ambassador/stripe-confirmation.html?code=' + encodeURIComponent(ambassadorCode) +
           '&email=' + encodeURIComponent(email || data.email || '') +
-          '&channel=campay&reference=' + encodeURIComponent(reference || ambassadorCode);
+          '&reference=' + encodeURIComponent(reference || ambassadorCode);
         return true;
       }
       if (data.download_url) {
