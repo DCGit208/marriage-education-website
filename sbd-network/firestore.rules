@@ -18,6 +18,21 @@ service cloud.firestore {
           (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
         ));
     }
+    function lmsUserData(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data
+        : null;
+    }
+    function isLmsContentDesigner(ud) {
+      return ud != null && (
+        (ud.role is string && (ud.role == 'designer' || ud.role == 'Designer')) ||
+        (ud.roles is list && ud.roles.hasAny(['designer', 'Designer'])) ||
+        (ud.staffAccess is map && ud.staffAccess.contentDesigner == true)
+      );
+    }
+    function isLmsEditor(ud) {
+      return ce2IsAdmin(ud) || isLmsContentDesigner(ud);
+    }
     function ce2TierNorm(t) {
       return t is string ? t.lower() : 'foundation';
     }
@@ -266,6 +281,20 @@ service cloud.firestore {
         request.auth != null &&
         get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid;
     }
+    function siteUserData(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data
+        : null;
+    }
+    function siteIsAdmin(uid) {
+      let ud = siteUserData(uid);
+      return (request.auth != null && request.auth.token.admin == true) ||
+        (ud != null && (
+          (ud.role is string &&
+            (ud.role == 'admin' || ud.role == 'Admin' || ud.role == 'ADMIN')) ||
+          (ud.roles is list && ud.roles.hasAny(['admin', 'Admin', 'ADMIN']))
+        ));
+    }
 
     // ============================================================
     // MARRIAGE EDUCATION SITE COLLECTIONS (marriageducation.com)
@@ -475,14 +504,40 @@ service cloud.firestore {
     match /courses/{courseId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        isLmsEditor(lmsUserData(request.auth.uid));
     }
 
     // Modules (Phase 0 - Course Content)
     match /modules/{moduleId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        isLmsEditor(lmsUserData(request.auth.uid));
+
+      match /parts/{partId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null &&
+          isLmsEditor(lmsUserData(request.auth.uid));
+
+        match /versions/{versionId} {
+          allow read: if request.auth != null &&
+            isLmsEditor(lmsUserData(request.auth.uid));
+          allow write: if request.auth != null &&
+            isLmsEditor(lmsUserData(request.auth.uid));
+        }
+      }
+    }
+
+    // SBD Canon AI vector index (server writes only)
+    match /canon_chunks/{chunkId} {
+      allow read: if request.auth != null &&
+        isLmsEditor(lmsUserData(request.auth.uid));
+      allow write: if false;
+    }
+
+    match /canon_index/{document=**} {
+      allow read: if request.auth != null &&
+        isLmsEditor(lmsUserData(request.auth.uid));
+      allow write: if false;
     }
 
     // Products (Phase 0 - MV House)
@@ -533,14 +588,27 @@ service cloud.firestore {
     match /groups/{groupId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
     }
     
     // Modules
     match /modules/{moduleId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        isLmsEditor(lmsUserData(request.auth.uid));
+
+      match /parts/{partId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null &&
+          isLmsEditor(lmsUserData(request.auth.uid));
+
+        match /versions/{versionId} {
+          allow read: if request.auth != null &&
+            isLmsEditor(lmsUserData(request.auth.uid));
+          allow write: if request.auth != null &&
+            isLmsEditor(lmsUserData(request.auth.uid));
+        }
+      }
     }
     
     // Assignments
@@ -554,7 +622,7 @@ service cloud.firestore {
     match /boards/{boardId} {
       allow read: if request.auth != null;
       allow create, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
       allow update: if request.auth != null && (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'lastActivityAt',
@@ -568,7 +636,7 @@ service cloud.firestore {
           'rankScore',
           'updatedAt'
         ]) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
       );
     }
     
@@ -580,11 +648,11 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']) ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
         request.auth.uid == resource.data.authorId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        siteIsAdmin(request.auth.uid)
       );
       allow delete: if request.auth != null && (
         request.auth.uid == resource.data.authorId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        siteIsAdmin(request.auth.uid)
       );
     }
 
@@ -595,12 +663,12 @@ service cloud.firestore {
       allow update: if request.auth != null && (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
         request.auth.uid == resource.data.authorId ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        siteIsAdmin(request.auth.uid)
       );
       allow delete: if request.auth != null && (
         request.auth.uid == resource.data.authorId ||
         isPostOwner(resource.data.postId) ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        siteIsAdmin(request.auth.uid)
       );
     }
 
