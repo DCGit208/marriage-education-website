@@ -290,7 +290,9 @@
         <div class="contact-info">
           <p><strong>Questions or Issues?</strong></p>
           <p>Contact us: <a href="mailto:support@marriageeducation.com">support@marriageeducation.com</a></p>
-          <p>WhatsApp: <a href="https://wa.me/237677604100">+237 677 604 100</a></p>
+          <p class="payment-wa-support payment-wa-support--left" style="margin-top:8px">
+            Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Payment pending">WhatsApp Support</a>
+          </p>
         </div>
       </div>
     </div>
@@ -421,6 +423,22 @@
       checkCount++;
       await checkPaymentStatus();
     }, 5000);
+  </script>
+  <script src="/js/payment-whatsapp-support.js"></script>
+  <script>
+    if (window.PaymentWhatsAppSupport) {
+      PaymentWhatsAppSupport.wire('.js-wa-payment-support', function () {
+        var params = new URLSearchParams(window.location.search);
+        var network = (params.get('network') || 'mtn').toLowerCase();
+        return {
+          page: 'Payment pending',
+          reference: params.get('reference') || params.get('ref') || '',
+          code: params.get('code') || params.get('reference') || '',
+          email: params.get('email') || '',
+          method: network === 'orange' ? 'Orange Money' : 'MTN MoMo'
+        };
+      });
+    }
   </script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>

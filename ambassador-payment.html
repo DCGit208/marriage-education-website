@@ -591,6 +591,9 @@
           <button type="button" class="submit-btn" onclick="processStripePayment()" id="stripe-submit-btn">
             💳 Pay <span id="stripe-amount-display">$30 USD</span>
           </button>
+          <p class="payment-wa-support">
+            Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Ambassador payment — Card">WhatsApp Support</a>
+          </p>
 
           <div class="virtual-card-hint" id="virtual-card-hint">
             <button type="button" class="virtual-card-hint-toggle" id="virtual-card-hint-toggle" aria-expanded="false" aria-controls="virtual-card-hint-body">
@@ -698,6 +701,9 @@
           <button type="submit" class="submit-btn" id="submit-btn">
             ✓ I've Sent the Payment
           </button>
+          <p class="payment-wa-support">
+            Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Ambassador payment — Mobile Money">WhatsApp Support</a>
+          </p>
         </form>
 
         <div class="note">
@@ -709,6 +715,7 @@
     </div>
   </div>
 
+  <script src="/js/payment-whatsapp-support.js"></script>
   <script>
     // Stripe instance
     let stripe = null;
@@ -1047,6 +1054,27 @@
     const virtualCardToggle = document.getElementById('virtual-card-hint-toggle');
     if (virtualCardToggle) {
       virtualCardToggle.addEventListener('click', toggleVirtualCardHint);
+    }
+
+    if (window.PaymentWhatsAppSupport) {
+      PaymentWhatsAppSupport.wire('.js-wa-payment-support', function () {
+        const email =
+          (document.getElementById('stripe-email') && document.getElementById('stripe-email').value) ||
+          (document.getElementById('email') && document.getElementById('email').value) ||
+          '';
+        const method =
+          currentPaymentMethod === 'stripe'
+            ? 'Card (Stripe)'
+            : (currentManualNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo');
+        return {
+          page: 'Ambassador payment',
+          code: code,
+          reference: reference,
+          email: email,
+          method: method,
+          amount: payCtx.priceLabel
+        };
+      });
     }
 
     const sessionEmail = payCtx.session?.email;
