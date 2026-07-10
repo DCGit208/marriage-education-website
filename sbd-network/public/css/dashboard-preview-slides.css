@@ -265,10 +265,6 @@
   overflow: hidden;
   z-index: 0;
   background-color: #0a0a0a;
-  background-image: url('/assets/background/slide1.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .dashboard-page .slide-card[data-card="intro-1"] > .intro-bg .intro-slide-video {
@@ -308,10 +304,6 @@
   overflow: hidden;
   z-index: 0;
   background-color: #0a0a0a;
-  background-image: url('/assets/background/slide-2.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .dashboard-page .slide-card[data-card="intro-2"] > .intro-bg .intro-slide-video {
@@ -351,10 +343,6 @@
   overflow: hidden;
   z-index: 0;
   background-color: #0a0a0a;
-  background-image: url('/assets/background/slide-3.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .dashboard-page .slide-card[data-card="intro-3"] > .intro-bg .intro-slide-video {
@@ -394,10 +382,6 @@
   overflow: hidden;
   z-index: 0;
   background-color: #0a0a0a;
-  background-image: url('/assets/background/slide-4.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .dashboard-page .slide-card[data-card="intro-4"] > .intro-bg .intro-slide-video {
