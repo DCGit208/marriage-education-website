@@ -21,18 +21,21 @@ jobs:
     name: Build & deploy
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Require FIREBASE_TOKEN
-        if: ${{ env.FIREBASE_TOKEN == '' }}
+      - name: Require FIREBASE_SERVICE_ACCOUNT
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo "::error::Add repository secret FIREBASE_TOKEN (run: firebase login:ci)"
-          exit 1
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Add repository secret FIREBASE_SERVICE_ACCOUNT (service account JSON)"
+            exit 1
+          fi
         working-directory: .
 
       - name: Detect changed paths
@@ -51,6 +54,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Install site dependencies
         run: npm install
