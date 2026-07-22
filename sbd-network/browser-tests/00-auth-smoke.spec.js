@@ -11,7 +11,7 @@ test.describe('Auth page smoke', () => {
 
     await page.goto('/auth.html', { waitUntil: 'networkidle' });
 
-    await expect(page.locator('#loginForm, form')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#loginForm')).toBeVisible({ timeout: 10000 });
 
     const authReady = await page.evaluate(() => {
       return typeof firebase !== 'undefined' &&
