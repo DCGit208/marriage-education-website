@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "marriage-education"
+  },
+  "targets": {
+    "marriage-education": {
+      "hosting": {
+        "sbd-network": [
+          "sbd-network"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
