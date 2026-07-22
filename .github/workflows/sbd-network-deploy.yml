@@ -53,7 +53,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -84,4 +84,4 @@ jobs:
             ONLY="${ONLY},functions"
           fi
           echo "Deploying: --only ${ONLY}"
-          firebase deploy --only "${ONLY}" --project marriage-education --non-interactive
+          firebase deploy --only "${ONLY}" --project marriage-education --non-interactive --force
