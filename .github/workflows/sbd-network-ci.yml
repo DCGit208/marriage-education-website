@@ -20,14 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No npm cache: package-lock.json is gitignored in sbd-network/
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: sbd-network/package-lock.json
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: JS syntax check (all public/**/*.js)
         run: npm run validate
@@ -43,12 +42,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: sbd-network/package-lock.json
+          node-version: '22'
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: Install Playwright
         run: npx playwright install chromium --with-deps
