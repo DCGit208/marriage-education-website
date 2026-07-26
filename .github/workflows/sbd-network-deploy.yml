@@ -78,7 +78,10 @@ jobs:
         run: |
           ONLY="hosting"
           if [ "${{ steps.filter.outputs.rules }}" = "true" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ONLY="${ONLY},firestore:rules,firestore:indexes,storage"
+            # storage omitted: the deploy SA lacks serviceusage permission for
+            # firebasestorage.googleapis.com; hosting + Firestore are enough
+            # for site restores. Deploy storage.rules manually when needed.
+            ONLY="${ONLY},firestore:rules,firestore:indexes"
           fi
           if [ "${{ steps.filter.outputs.functions }}" = "true" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ONLY="${ONLY},functions"

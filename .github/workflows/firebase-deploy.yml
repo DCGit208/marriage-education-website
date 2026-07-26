@@ -16,8 +16,6 @@ on:
       - '.firebaserc'
       - 'scripts/copy-canon-bundle.js'
       - '.github/workflows/firebase-deploy.yml'
-    paths-ignore:
-      - 'sbd-network/**'
   workflow_dispatch:
 
 concurrency:
