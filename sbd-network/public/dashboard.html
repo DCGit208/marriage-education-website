@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1782228083592">
+  <meta name="build-version" content="1785064899585">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="description" content="A system of formation">
     <meta name="theme-color" content="#0D0D0D">
@@ -14,29 +14,20 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Boards slide pulls portraits from Unsplash; preconnect saves the TLS handshake -->
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    <link rel="dns-prefetch" href="https://images.unsplash.com">
-    <!-- Preload the boards hero photo during idle so it's already cached
-         when the user swipes past the intro slides. Low-priority so it
-         doesn't compete with above-the-fold first-paint assets. -->
-    <link rel="preload"
-          as="image"
-          href="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=72&auto=format&fit=crop"
-          imagesrcset="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=480&q=70&auto=format&fit=crop 480w, https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=72&auto=format&fit=crop 600w"
-          imagesizes="(max-width: 520px) 92vw, 480px"
-          fetchpriority="low">
+    <!-- Boards slide uses same-origin assets (Unsplash fails in iOS PWA / transform sliders) -->
+    <link rel="preload" as="image" href="/assets/images/mv/female-1.jpg" fetchpriority="low">
+    <link rel="preload" as="image" href="/assets/images/mv/male-1.jpg" fetchpriority="low">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Elegant serif for intro slides -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="css/home-premium.css?v=1782228083592">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1782228083592">
-    <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/slider.css?v=1782228083592">
-<link rel="stylesheet" href="/css/ham-drawer.css?v=1782228083592">
-<link rel="stylesheet" href="/css/onboarding-ui.css?v=1782228083592">
-    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=53">
+    <link rel="stylesheet" href="/css/styles.css?v=1785064899585">
+    <link rel="stylesheet" href="css/home-premium.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/dashboard.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/slider.css?v=1785064899585">
+<link rel="stylesheet" href="/css/ham-drawer.css?v=1785064899585">
+<link rel="stylesheet" href="/css/onboarding-ui.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1785064899585">
     
 
     <!-- Firebase SDK -->
@@ -46,19 +37,19 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- App scripts -->
-    <script defer src="/js/firebase.js?v=1782228083592"></script>
-    <script defer src="/js/auth-guard.js?v=1782228083592"></script>
-    <script defer src="/js/sw-update-checker.js?v=1782228083592"></script>
-    <script defer src="/js/notification-access.js?v=1782228083592notifgate1"></script>
-    <script defer src="/js/notifications.js?v=1782228083592notifgate1"></script>
-    <script defer src="/js/dm-badge.js?v=1782228083592"></script>
-    <script defer src="/js/ptr.js?v=1782228083592"></script>
-    <script defer src="/js/dashboard.js?v=1782228083592"></script>
-    <script defer src="/js/dashboard-marketing-ui.js?v=1782228083592"></script>
-    <script defer src="/js/dashboard-slider.js?v=1782228083592"></script>
-    <script defer src="/js/transitions.js?v=1782228083592"></script>
-    <script defer src="/js/swipe-back.js?v=1782228083592"></script>
-    <script defer src="/js/install-prompt.js?v=1782228083592"></script>
+    <script defer src="/js/firebase.js?v=1785064899585"></script>
+    <script defer src="/js/auth-guard.js?v=1785064899585"></script>
+    <script defer src="/js/sw-update-checker.js?v=1785064899585"></script>
+    <script defer src="/js/notification-access.js?v=1785064899585notifgate1"></script>
+    <script defer src="/js/notifications.js?v=1785064899585notifgate1"></script>
+    <script defer src="/js/dm-badge.js?v=1785064899585"></script>
+    <script defer src="/js/ptr.js?v=1785064899585"></script>
+    <script defer src="/js/dashboard.js?v=1785064899585"></script>
+    <script defer src="/js/dashboard-marketing-ui.js?v=1785064899585"></script>
+    <script defer src="/js/dashboard-slider.js?v=1785064899585"></script>
+    <script defer src="/js/transitions.js?v=1785064899585"></script>
+    <script defer src="/js/swipe-back.js?v=1785064899585"></script>
+    <script defer src="/js/install-prompt.js?v=1785064899585"></script>
 
 </head>
 <body class="home-cinematic bottom-nav-page auth-guest dashboard-page">
@@ -152,7 +143,7 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="none"
+                  preload="metadata"
                   aria-hidden="true"
                 >
                   <source src="/assets/background/slide-1.mp4" type="video/mp4" />
@@ -182,7 +173,7 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="none"
+                  preload="metadata"
                   aria-hidden="true"
                 >
                   <source src="/assets/background/slide-2.mp4" type="video/mp4" />
@@ -212,7 +203,7 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="none"
+                  preload="metadata"
                   aria-hidden="true"
                 >
                   <source src="/assets/background/slide-3.mp4" type="video/mp4" />
@@ -241,7 +232,7 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="none"
+                  preload="metadata"
                   disablepictureinpicture
                   controlslist="nodownload noplaybackrate"
                   aria-hidden="true"
@@ -281,11 +272,11 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                             </div>
                         </div>
                         
-                        <!-- FOUNDATION ($9) -->
+                        <!-- FOUNDATION ($9.77) -->
                         <div class="membership-card opacity-88" data-tier="foundation">
                             <div class="membership-card-header mb-2">
                                 <div class="membership-tier-name">Foundation</div>
-                                <div class="membership-tier-price">$9<span>/mo</span></div>
+                                <div class="membership-tier-price">$9.77<span>/mo</span></div>
                             </div>
                             <div class="membership-card-features membership-features-compact">
                                 <div class="membership-feature">✓ Access to core courses in School 1 & 2</div>
@@ -329,11 +320,11 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                 </div>
             </div>
             
-            <!-- CARD 6: DISCUSSION BOARDS (LIVE PREVIEW) -->
+            <!-- CARD 6: DISCUSSION BOARDS (LIVE PREVIEW) — signed-in index 6 -->
             <div class="slide-card" data-card="boards">
-<div class="card-bg bg-dark-boards"
-style="background-image:url('/assets/background/boards-bg.jpg');">
-</div>                <div class="card-overlay"></div>
+                <!-- boards-bg.jpg is missing from hosting; use local CSS gradient instead -->
+                <div class="card-bg bg-dark-boards" aria-hidden="true"></div>
+                <div class="card-overlay"></div>
 
                 <div class="card-content" data-bb-board>
                     <!-- IDENTITY: kicker + live indicator + display title + stat line -->
@@ -363,25 +354,25 @@ style="background-image:url('/assets/background/boards-bg.jpg');">
                       <button type="button" class="bb-chip" role="tab">Text</button>
                     </div>
 
-                    <!-- STORY RAIL — gold-ringed portraits -->
+                    <!-- STORY RAIL — same-origin portraits (no Unsplash / no lazy) -->
                     <div class="bb-stories" aria-label="Stories">
                       <span class="bb-story bb-story-add" aria-label="Add your story">
                         <span class="bb-story-plus" aria-hidden="true">+</span>
                       </span>
                       <span class="bb-story">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=88&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" fetchpriority="low" width="88" height="88" />
+                        <img src="/assets/images/mv/female-1.jpg" alt="" width="88" height="88" decoding="async" />
                       </span>
                       <span class="bb-story">
-                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=88&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" fetchpriority="low" width="88" height="88" />
+                        <img src="/assets/images/mv/male-1.jpg" alt="" width="88" height="88" decoding="async" />
                       </span>
                       <span class="bb-story">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=88&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" fetchpriority="low" width="88" height="88" />
+                        <img src="/assets/images/mv/female-2.jpg" alt="" width="88" height="88" decoding="async" />
                       </span>
                       <span class="bb-story">
-                        <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=88&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" fetchpriority="low" width="88" height="88" />
+                        <img src="/assets/images/mv/male-2.jpg" alt="" width="88" height="88" decoding="async" />
                       </span>
                       <span class="bb-story">
-                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=88&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" fetchpriority="low" width="88" height="88" />
+                        <img src="/assets/images/mv/female-3.jpg" alt="" width="88" height="88" decoding="async" />
                       </span>
                     </div>
 
@@ -389,7 +380,7 @@ style="background-image:url('/assets/background/boards-bg.jpg');">
                     <article class="bb-post" aria-label="Featured post">
                       <header class="bb-post-head">
                         <span class="bb-post-avatar">
-                          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=72&q=70&auto=format&fit=crop" alt="" loading="lazy" decoding="async" width="72" height="72" />
+                          <img src="/assets/images/mv/female-2.jpg" alt="" width="72" height="72" decoding="async" />
                         </span>
                         <span class="bb-post-meta">
                           <span class="bb-post-name">Administration</span>
@@ -400,15 +391,9 @@ style="background-image:url('/assets/background/boards-bg.jpg');">
 
                       <figure class="bb-post-figure">
                         <img class="bb-post-img"
-                             src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=72&auto=format&fit=crop"
-                             srcset="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=480&q=70&auto=format&fit=crop 480w,
-                                     https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=72&auto=format&fit=crop 600w,
-                                     https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=72&auto=format&fit=crop 800w"
-                             sizes="(max-width: 520px) 92vw, 480px"
+                             src="/assets/images/mv/female-1.jpg"
                              alt=""
-                             loading="lazy"
                              decoding="async"
-                             fetchpriority="high"
                              width="600"
                              height="376" />
                         <span class="bb-post-badge">FEATURED</span>
@@ -673,7 +658,7 @@ style="background-image:url('/assets/background/progress-bg.jpg');">
       <p class="signup-prompt-footer">Already have an account? <a href="/auth?next=/learn&src=slide9-signin">Sign in</a></p>
     </div>
 
-  <script defer src="/js/offline.js?v=1782228083592"></script>
+  <script defer src="/js/offline.js?v=1785064899585"></script>
 
   <!-- Notification Panel -->
   <div id="notifOverlay" class="notif-overlay notif-hidden"></div>
@@ -685,6 +670,6 @@ style="background-image:url('/assets/background/progress-bg.jpg');">
       <ul id="notifList" class="notif-list"></ul>
   </div>
 
-    <script defer src="/js/ham-nav.js?v=1782228083592"></script>
+    <script defer src="/js/ham-nav.js?v=1785064899585"></script>
 </body>
 </html>

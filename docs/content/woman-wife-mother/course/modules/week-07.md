@@ -19,9 +19,17 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 Weeks 1–6 established ontology, teleios identity, muliebrity layers, bodily stewardship, lifestyle sexuality, and meritorious attraction. **Attitude** integrates them **inwardly**—because fragmentation often hides in disposition while outward roles still perform.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. **Without woman, there is no wife. Without wife, there is no mother. Period.** Attitude is trained at the **womanhood layer**—the inward orientation that governs whether wifehood and motherhood expressions carry conjugal life or functional exhaustion.
+[[integration-law]]
+
+**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. Attitude is trained at the **womanhood layer**—the inward orientation that governs whether wifehood and motherhood expressions carry conjugal life or functional exhaustion.
 
 When a woman speaks to her husband as task-manager, corrects him as extra child, or stores resentment as default identity, **wifehood runs without womanhood**—mother-role or manager-role replaces conjugal disposition. Integration law violated. **Marital infidelity has occurred at the level of structure** when sexual-feminine orientation toward one flesh is replaced by logistics, contempt, or maternal management—before any affair.
 

@@ -82,6 +82,13 @@
     }
     mount.innerHTML =
       '<section class="blueprint-card life-featured-issue">' +
+      (issue.data.coverImage
+        ? '<div class="life-cover-frame life-cover-frame--compact"><img class="life-cover-img" src="' +
+          esc(issue.data.coverImage) +
+          '" alt="' +
+          esc(issue.data.title) +
+          ' cover" /></div>'
+        : '') +
       '<p class="kicker">Current issue</p>' +
       '<h2>' +
       esc(issue.data.title) +

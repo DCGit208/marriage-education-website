@@ -5,8 +5,84 @@
   var SHOP_PRODUCTS = {
     annual: 'sbd-magazine-annual-subscription',
     singleIssue: 'sbd-magazine-single-issue',
-    archive: 'sbd-digital-archive-access'
+    archive: 'sbd-digital-archive-access',
+    womanWifeMotherBook: 'the-woman-the-wife-the-mother-book',
+    womanWifeMotherCourse: 'the-woman-the-wife-the-mother-course',
+    womanWifeMotherBundle: 'the-woman-the-wife-the-mother-bundle',
   };
+
+  var WWM_ACCESS_PRODUCT_IDS = [
+    'the-woman-the-wife-the-mother-book',
+    'the-woman-the-wife-the-mother-course',
+    'the-woman-the-wife-the-mother-bundle',
+    'the-woman-the-wife-the-mother',
+  ];
+
+  var WWM_ISSUE_ID = 'issue-woman-wife-mother-2026';
+  var WWM_ARTICLE_SLUG = 'the-woman-the-wife-the-mother';
+
+  function hasWwmProductAccess(entitlements) {
+    var owned = (entitlements && entitlements.ownedProducts) || [];
+    for (var i = 0; i < WWM_ACCESS_PRODUCT_IDS.length; i++) {
+      if (owned.indexOf(WWM_ACCESS_PRODUCT_IDS[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function isWwmEditorial(articleOrIssue) {
+    if (!articleOrIssue) return false;
+    return (
+      articleOrIssue.slug === WWM_ARTICLE_SLUG ||
+      articleOrIssue.id === WWM_ARTICLE_SLUG ||
+      articleOrIssue.issueId === WWM_ISSUE_ID ||
+      articleOrIssue.slug === WWM_ISSUE_ID ||
+      articleOrIssue.id === WWM_ISSUE_ID
+    );
+  }
+
+  function renderBookCta(data, esc) {
+    if (!data || !data.bookProductId) return '';
+    var escFn =
+      typeof esc === 'function'
+        ? esc
+        : function (s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+          };
+    var label = data.bookCtaLabel || 'The Woman, The Wife, The Mother';
+    var desc = data.bookCtaDescription || '';
+    var bundlePrice = data.bookCtaBundlePrice || '$300';
+    var coursePrice = data.bookCtaCoursePrice || '$250';
+    var bookPrice = data.bookCtaBookPrice || '$50';
+    var bundleId = data.bookProductId || SHOP_PRODUCTS.womanWifeMotherBundle;
+    return (
+      '<section class="life-book-cta">' +
+      '<div class="life-book-cta-body">' +
+      '<p class="kicker">Formation</p>' +
+      '<h2 class="life-book-cta-title">' +
+      escFn(label) +
+      '</h2>' +
+      (desc ? '<p class="life-book-cta-desc">' + escFn(desc) + '</p>' : '') +
+      '<div class="life-book-cta-actions">' +
+      '<a class="btn-primary life-book-cta-btn" href="' +
+      checkoutUrl(bundleId) +
+      '">Book + Course — ' +
+      escFn(bundlePrice) +
+      '</a>' +
+      '<a class="btn-secondary life-book-cta-btn" href="' +
+      checkoutUrl(SHOP_PRODUCTS.womanWifeMotherCourse) +
+      '">Course — ' +
+      escFn(coursePrice) +
+      '</a>' +
+      '<a class="btn-secondary life-book-cta-btn" href="' +
+      checkoutUrl(SHOP_PRODUCTS.womanWifeMotherBook) +
+      '">Book — ' +
+      escFn(bookPrice) +
+      '</a>' +
+      '</div></div></section>'
+    );
+  }
 
   function tierRank(tier) {
     var map = { public: 0, foundation: 1, premium: 2, elite: 3, admin: 4 };
@@ -88,6 +164,15 @@
     if (article.status !== 'published' || article.visibility === 'hidden') {
       return { allowed: false, reason: 'unpublished' };
     }
+    if (isWwmEditorial(article)) {
+      if (hasWwmProductAccess(entitlements)) {
+        return { allowed: true, reason: 'product' };
+      }
+      if (article.issueId && entitlements.purchasedIssueIds[article.issueId]) {
+        return { allowed: true, reason: 'issue_purchase' };
+      }
+      return { allowed: false, reason: 'purchase_required' };
+    }
     if (canAccessByTier(article.tierRequired, ctx.tier, false)) {
       return { allowed: true, reason: 'tier' };
     }
@@ -104,6 +189,15 @@
     if (!issue) return { allowed: false, reason: 'missing' };
     if (ctx.isAdmin) return { allowed: true, reason: 'admin' };
     if (issue.archived) return { allowed: false, reason: 'archived' };
+    if (isWwmEditorial(issue)) {
+      if (hasWwmProductAccess(entitlements)) {
+        return { allowed: true, reason: 'product' };
+      }
+      if (entitlements.purchasedIssueIds[issue.id || issue.slug]) {
+        return { allowed: true, reason: 'issue_purchase' };
+      }
+      return { allowed: false, reason: 'purchase_required' };
+    }
     if (canAccessByTier(issue.tierRequired, ctx.tier, false)) {
       return { allowed: true, reason: 'tier' };
     }
@@ -166,6 +260,7 @@
     canAccessArticle: canAccessArticle,
     canAccessIssue: canAccessIssue,
     checkoutUrl: checkoutUrl,
+    renderBookCta: renderBookCta,
     syncFromCheckoutSession: syncFromCheckoutSession,
     grantAnnualSubscription: grantAnnualSubscription,
     grantIssuePurchase: grantIssuePurchase

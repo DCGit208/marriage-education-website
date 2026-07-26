@@ -14,9 +14,17 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 Teleios identity (Week 2), muliebrity layers (Week 3), bodily stewardship (Week 4), lifestyle sexuality (Week 5)—all converge here. **Attraction discipline is womanhood duty** that serves wifehood—not vanity divorced from covenant, not entitlement without effort.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. **Without woman, there is no wife. Without wife, there is no mother. Period.** Meritorious attraction is trained at the **womanhood layer**—not reserved for date night, not postponed until children age, not treated as optional garnish on functional marriage.
+[[integration-law]]
+
+**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. Meritorious attraction is trained at the **womanhood layer**—not reserved for date night, not postponed until children age, not treated as optional garnish on functional marriage.
 
 When motherhood decay sacrifices **womanhood** while performing mother role at high output, husbands often stop seeing **woman**—they see children's manager. Integration law violated. Structural drift follows—even when the home is orderly and the certificate intact.
 

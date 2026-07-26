@@ -1,9 +1,9 @@
 # SBD Unified Canon
 ## Single Source of Truth — Doctrine, Product, Platform & Voice
 
-**Version:** 2.2  
+**Version:** 2.3  
 **Status:** AUTHORITATIVE — supersedes all prior drafts, Copilot notes, and conflicting page copy unless explicitly amended here.  
-**Date:** May 30, 2026 (amended: institutional architecture + Maturation School definition)  
+**Date:** June 2, 2026 (amended: *The Woman, The Wife, The Mother* flagship registration)  
 **Maintainer:** Dr. Coach Achu Gustave / Marriage Education
 
 > **Who must obey this document:** Writers, editors, ambassadors, AI systems, course builders, shop copy, SBD Life, MV House, Maturation School marketing, and all platform code comments marked "canonical."
@@ -19,7 +19,8 @@ When sources conflict, resolve in this order:
 | Priority | Source | Governs |
 |----------|--------|---------|
 | 1 | **This document** (`SBD-UNIFIED-CANON.md`) | All conflicts |
-| 2 | *Sex By Design For Dummies* (157 pp, 2025) | Theology & doctrine |
+| 2 | *Sex By Design For Dummies* (157 pp, 2025) | General theology & doctrine spine |
+| 2a | `docs/canon/THE-WOMAN-THE-WIFE-THE-MOTHER.md` | **Muliebrity Baron flagship** — integrated womanhood / wife / mother; supersedes Dummies Ch.6 for depth on feminine doctrine; subordinate to Part V here |
 | 3 | `tier-access.js` + `SBD-ACADEMY-LEARNING-SYSTEM.md` | Tiers, schools, drip |
 | 4 | `schoolcourses.json` | 44-course master list |
 | 5 | `shop-catalog.json` | Commerce SKUs |
@@ -50,9 +51,10 @@ Every prior conflict is resolved below. **Do not revert** without updating this 
 |---|----------|-------------------|
 | B1 | 18 shop books vs 1 real PDF | **Delivered now:** only *SBD For Dummies* (157 pp). All other book PDFs are **PLACEHOLDER** until replaced. Shop may list them; marketing must not imply all are published. |
 | B2 | "Complete SBD Library" = 10 vs 12 books | **46 unique titles** across 9 series (§3.3). Shop currently lists **16** of these. "Complete Library" bundle = subset of Series 1+4, not all 46. |
-| B3 | Baron books standalone vs chapters | **Now:** Muliebrity Baron = Dummies Ch.6; Virility Baron = Dummies Ch.7. **Planned:** standalone extracted editions. Until PDF exists, refer to Dummies chapters. |
-| B4 | "All books have courses" | **Rule:** Every *published* SBD book SHOULD have a course pathway. **Reality:** Only Dummies has full course today. Art of Nakedness has course, no book. Roadmap item — not current fact. |
-| B5 | Baron content in three places | **One doctrine, three expressions:** (1) Dummies chapters → (2) future standalone books → (3) Elite MV/boards. Same canon, different depth/medium. |
+| B3 | Baron books standalone vs chapters | **Now:** Muliebrity Baron = Dummies Ch.6; Virility Baron = Dummies Ch.7. **In development:** *The Woman, The Wife, The Mother* = standalone Muliebrity Baron (book + 13-wk course) — fulfills Global #14. Until PDF ships, Dummies Ch.6 remains intro reference. |
+| B4 | "All books have courses" | **Rule:** Every *published* SBD book SHOULD have a course pathway. **Reality:** Only Dummies has full course today. **In development:** `the-woman-the-wife-the-mother` course. Art of Nakedness has course, no book. |
+| B5 | Baron content in three places | **One doctrine, three expressions:** (1) Dummies chapters → (2) standalone Baron books (*Woman/Wife/Mother* = Muliebrity Baron) → (3) Elite MV/boards. Same canon, different depth/medium. |
+| B6 | WWM vs Muliebrity Baron vs Art of Woman/Wife | ***The Woman, The Wife, The Mother*** = **public title** (SBD Life Issue #2, shop, LMS). **Muliebrity Baron** = series identity (Global #14). **Art of the Woman / Wife** (#22–23) = downstream applied conjugal arts — not substitutes for this treatise. |
 
 ---
 
@@ -276,7 +278,7 @@ MARRIAGE EDUCATION  ← Umbrella (marriageducation.com)
 │   ├── Subscription tiers (Free / Foundation / Premium / Elite)
 │   ├── Boards (Muliebrity / Virility; Advanced at Elite)
 │   ├── MV House™ — brand (Elite expression + wardrobe service/commerce)
-│   ├── SBD Life — editorial magazine
+│   ├── SBD Life — editorial magazine (*The Woman, The Wife, The Mother* = Issue #2 flagship)
 │   ├── SBD Dating — formation-gated (Elite)
 │   └── Shop / ambassador tooling tied to digital platform
 │
@@ -407,7 +409,7 @@ Marriage Education — Publication Universe (46 unique book titles)
 
 | Global # | Title | Status | Shop | Notes |
 |----------|-------|--------|------|-------|
-| **14** | The Muliebrity Baron | PLANNED | — | **In Dummies Ch. 6 now**; standalone extraction planned |
+| **14** | The Muliebrity Baron | **IN DEVELOPMENT** | — | **Fulfilled by** *The Woman, The Wife, The Mother* (book + 13-wk course). Public title; SBD Life Issue #2. Dummies Ch.6 = intro until PDF ships. See `docs/canon/THE-WOMAN-THE-WIFE-THE-MOTHER.md`. |
 | **15** | The Virility Baron | PLANNED | — | **In Dummies Ch. 7 now**; standalone extraction planned |
 
 ### SERIES 4 — Arts of Marriage (Applied Conjugal Arts)
@@ -492,9 +494,12 @@ Marriage Education — Publication Universe (46 unique book titles)
 
 Complete SBD Library · SBD for Dummies Complete Package · Arts of Marriage Collection · Marriage Foundation Bundle · Newlywed Special · Anniversary Celebration · SBD Starter + Magazine · Starter/Teleios/Elite tier bundles.
 
-## 3.6 Standalone Flagship Course (not a book)
+## 3.6 Standalone Flagship Courses (not school-assigned)
 
-**Sex By Design For Dummies — 13-Week Course** (`sex-by-design-for-dummies`) — outside 4 schools; included in Foundation tier+.
+| Course ID | Title | Status | Notes |
+|-----------|-------|--------|-------|
+| `sex-by-design-for-dummies` | SBD For Dummies — 13-Week Course | **DELIVERED** | Foundation tier+; general marriage handbook |
+| `the-woman-the-wife-the-mother` | *The Woman, The Wife, The Mother* — 13-Week Formation | **IN DEVELOPMENT** | Muliebrity Baron flagship; SBD Life Issue #2 bundle ($50). **Shop currently unlocks Dummies as interim — replace on ship.** |
 
 ---
 
@@ -600,7 +605,8 @@ Complete SBD Library · SBD for Dummies Complete Package · Arts of Marriage Col
 - Design fulfilled, not performance (Dummies Ch.6)
 - **Three layers:** Outward, Inward, Conjugal
 - Proverbs 31 = mature power, not girlish performance
-- Deformations: masculinization, infantilization, survival mode
+- Deformations: masculinization, infantilization, survival mode, **functionalism** (wife/mother without womanhood)
+- **Integration law (flagship):** Womanhood is foundation; wife lives in woman; mother lives in wife. Lose womanhood → lose all three expressions. Man bound to wife through womanhood (one flesh). **Womanhood makes covenant and family operational** — never framed as opposed to marriage, home, or generative labor. Full treatise + courseware guardrails: `docs/canon/THE-WOMAN-THE-WIFE-THE-MOTHER.md`
 
 ## V.5 Attraction
 
@@ -753,6 +759,7 @@ Same doctrine, three registers — never mix without intent:
 - [ ] Nakedness genre language consistent with §VI
 - [ ] Design reasoning default; sermon language only in worship context
 - [ ] MV House = service + embodiment, not generic fashion
+- [ ] **WWM / Muliebrity Baron:** integration law — womanhood **foundation of** covenant expressions, never **against** covenant, family, or home; no "domestic reduction," "identity before roles," or role-strip exercises (`docs/canon/THE-WOMAN-THE-WIFE-THE-MOTHER.md` § Integration Doctrine Guardrails)
 
 ---
 
@@ -760,6 +767,8 @@ Same doctrine, three registers — never mix without intent:
 
 | Version | Date | Change |
 |---------|------|--------|
+| 2.4 | 2026-06-02 | WWM integration doctrine guardrails; womanhood as operational foundation of covenant/family (not anti-covenant framing) |
+| 2.3 | 2026-06-02 | *The Woman, The Wife, The Mother* registered: Muliebrity Baron (#14), treatise canon doc, standalone course ID, B6 conflict, V.4 integration law |
 | 2.2 | 2026-05-30 | Institutional architecture: ME umbrella, Maturation School distinct, Q4Life removed as brand, MV House branding |
 | 2.1 | 2026-05-30 | 46-title series map; 43-conflict index; §F1 Sex/Marriage ontology corrected per author |
 | 2.0 | 2026-05-30 | Unified canon: conflict resolutions + doctrine + product + platform |

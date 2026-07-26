@@ -149,9 +149,31 @@
     return html;
   }
 
+  function normalizeLegacyF1Blocks(text) {
+    return String(text).replace(
+      /```[^\n]*\n([\s\S]*?DESIGN:\s+Sexuality\s*=\s*TREE[\s\S]*?MOTHER:[^\n`]+)\n```/gi,
+      '\n\n[[f1-spine]]\n\n'
+    );
+  }
+
+  function expandFormationShortcodes(text) {
+    let out = normalizeLegacyF1Blocks(text);
+    if (global.CanonF1Spine && typeof global.CanonF1Spine.expandShortcodes === 'function') {
+      out = global.CanonF1Spine.expandShortcodes(out);
+    }
+    return out;
+  }
+
+  function renderShortcodeLine(trimmed) {
+    if (global.CanonF1Spine && typeof global.CanonF1Spine.renderShortcodeLine === 'function') {
+      return global.CanonF1Spine.renderShortcodeLine(trimmed);
+    }
+    return null;
+  }
+
   function renderMarkdown(md) {
     if (!md) return '';
-    md = String(md).replace(/^\*{0,2}Next:\*{0,2}[^\n]*→[^\n]*/gm, '').trim();
+    md = expandFormationShortcodes(md).replace(/^\*{0,2}Next:\*{0,2}[^\n]*→[^\n]*/gm, '').trim();
 
     const lines = md.split('\n');
     const out = [];
@@ -278,6 +300,13 @@
       }
 
       if (!trimmed) {
+        i++;
+        continue;
+      }
+
+      const shortcodeHtml = renderShortcodeLine(trimmed);
+      if (shortcodeHtml) {
+        out.push(shortcodeHtml);
         i++;
         continue;
       }

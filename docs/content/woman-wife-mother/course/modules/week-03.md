@@ -32,15 +32,15 @@ Muliebrity cannot be named without what **keeps it meritoriously attractive** an
 
 This is **femininity by design**—womanliness conscious and covenant-deployed. **Wifehood**—womanhood in one-flesh matrimony—is **previewed** here and taught exhaustively in **Week 11**. This is the **positive architecture** of integrated womanhood—and the operational grammar Weeks 4–10 train in body, sexuality, A³, and form.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law and muliebrity
 
-```
-WOMANHOOD  →  foundation (teleios female design)
-WIFEHOOD   →  womanhood in one-flesh conjugal union
-MOTHERHOOD →  wifehood in the generative family unit
-```
-
-**Without woman, there is no wife. Without wife, there is no mother. Period.**
+[[integration-law]]
 
 **Muliebrity** is the quality of **integrated wholeness** when one teleios woman governs all covenant expressions from womanhood outward. Her **function** in marriage, home, and motherhood is **tight to her design**—homemaking, nurturing, conjugal life, and covenant helper as Scripture assigns flow from muliebrity.
 
@@ -52,11 +52,7 @@ Lose **conjugal muliebrity** and wifehood loses covenant meaning—womanliness e
 
 **Muliebrity is the basis for marrying.** Only teleios muliebrity—conscious femininity trained through Attitude, Attire, Allure, Fitness, Nutrition—should enter covenant. You do not marry to become a woman; you marry to **deploy** muliebrity in **matrimony**.
 
-The chain (§F1):
-
-```
-Muliebrity → Wife (womanhood in one-flesh matrimony) → Marriage = Sexuality → Sex as fruit
-```
+The chain (§F1): **Muliebrity → Wife** (womanhood in one-flesh matrimony) → **Marriage = Sexuality** → **Sex as fruit**.
 
 - **Conjugal layer** of muliebrity is the **root** of lifestyle sexuality (Week 5) and meritorious attraction (Week 6).
 - **Wife** is womanhood in matrimony—conjugal sexuality, due benevolence, covenant helper (Genesis 2:18), and what Week 11 teaches exhaustively (Ephesians 5, *Matrimonial Order*).

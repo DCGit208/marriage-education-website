@@ -14,11 +14,19 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 You already know teleios identity (Week 2) and muliebrity architecture (Week 3). Now you confront where most covenant drift **begins in flesh**: **body abandonment**—treating the body as tool for productivity while expecting meritorious attraction to survive on sentiment or marriage certificate.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
+
+[[integration-law]]
 
 **Womanhood** is foundation. The **wife** lives in the woman; the **mother** lives in the wife. Body stewardship is **womanhood duty**—not vanity escape, not pre-marriage hobby resumed "someday," not reward for finishing mother-tasks. When a mother sacrifices womanhood to maternal function and abandons bodily discipline, she loses conjugal ground with her husband. He is bound to her through **womanhood and one-flesh biology**—not through childcare output alone.
 
-**Without woman, there is no wife. Without wife, there is no mother. Period.** A body that performs wife and mother functions while evacuating sexual-feminine stewardship from covenant flesh is **fragmentation in material form**—wholeness broken while the calendar stays full.
+A body that performs wife and mother functions while evacuating sexual-feminine stewardship from covenant flesh is **fragmentation in material form**—wholeness broken while the calendar stays full.
 
 ### Marriage is conjugal-sexual in basis
 

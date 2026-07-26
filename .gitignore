@@ -14,6 +14,13 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+firepit-log.txt
+
+# Local caches / snapshots (never deployed)
+.npm-cache/
+.wrangler/
+sbd-network/rollback/
+venv/
 
 # Runtime data
 pids
@@ -35,6 +42,7 @@ temp/
 # Firebase credentials (NEVER COMMIT)
 serviceAccountKey.json
 functions/serviceAccountKey.json
+functions/.runtimeconfig.json
 
 # Payment configuration (keep secure)
 # Note: Make sure to keep payment credentials secure

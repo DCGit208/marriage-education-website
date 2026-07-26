@@ -12,7 +12,7 @@ const TIER_ORDER  = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
 const TIER_META = {
   free:       { label: 'Free',       price: '$0',      icon: '🌱', priceLabel: 'Free forever' },
-  foundation: { label: 'Foundation', price: '$9',      icon: '🏗',  priceLabel: '$9 / month' },
+  foundation: { label: 'Foundation', price: '$9.77',   icon: '🏗',  priceLabel: '$9.77 / month · $118 / year' },
   premium:    { label: 'Premium',    price: '$20',     icon: '⚡',  priceLabel: '$20 / month' },
   elite:      { label: 'Elite',      price: '$50',     icon: '👑',  priceLabel: '$50 / month' },
 };
@@ -49,7 +49,9 @@ async function loadUserTier(user) {
       const subEnd = sub.endDate?.toMillis ? sub.endDate.toMillis() : 0;
       const activeSub = sub.status === 'active' && subEnd > now ? (sub.tier || '') : '';
       const docTier = (data.tier || 'free').toLowerCase();
-      userTier = data.role === 'admin' ? 'elite' : (activeSub || docTier || 'free');
+      userTier = window.CourseAccess
+        ? CourseAccess.resolveEffectiveTier(userData)
+        : (data.role === 'admin' ? 'elite' : (activeSub || docTier || 'free'));
     }
   } catch (e) { console.error('loadUserTier:', e); }
 }
@@ -222,7 +224,7 @@ const TIER_HUB = {
       sub: 'Teleios Blueprint (6 weeks) + SBD For Dummies (13 weeks) — dripped weekly',
       href: '/payment?tier=foundation',
       locked: true,
-      lockLabel: '$9/mo — Unlock →',
+      lockLabel: '$9.77/mo or $118/yr — Unlock →',
       pressure: true,
     },
     {
@@ -244,6 +246,13 @@ const TIER_HUB = {
   ],
 
   foundation: [
+    {
+      icon: '📚',
+      title: 'My Library',
+      sub: 'Purchased programs and courses included in your plan',
+      href: '/library.html',
+      locked: false,
+    },
     {
       icon: '📖',
       title: 'Learning',
@@ -327,6 +336,13 @@ const TIER_HUB = {
 
   premium: [
     {
+      icon: '📚',
+      title: 'My Library',
+      sub: 'Purchased programs and courses included in your plan',
+      href: '/library.html',
+      locked: false,
+    },
+    {
       icon: '📖',
       title: 'Learning',
       sub: 'Full School 1 (13 courses) + Full School 2 (15 courses) — dripped weekly',
@@ -401,6 +417,13 @@ const TIER_HUB = {
 
   elite: [
     {
+      icon: '📚',
+      title: 'My Library',
+      sub: 'Purchased flagship programs and courses in your formation plan',
+      href: '/library.html',
+      locked: false,
+    },
+    {
       icon: '📖',
       title: 'Learning',
       sub: 'All 4 schools — 44 courses across every formation discipline',
@@ -463,7 +486,7 @@ const TIER_HUB = {
 
 function resolveHubCard(card) {
   if (!card.formationGate || card.locked) return card;
-  if (!userData || userData.role === 'admin') return card;
+  if (!userData || userData.role === 'admin' || (window.CourseAccess && CourseAccess.isContentDesigner(userData))) return card;
   if (typeof AdvancedExpressionAccess === 'undefined') {
     return Object.assign({}, card, {
       locked: true,
@@ -485,7 +508,16 @@ function resolveHubCard(card) {
 
 function renderTierHub(tier) {
   const container = document.getElementById('tierPageContent');
-  const cards = (TIER_HUB[tier] || []).map(resolveHubCard);
+  let cards = (TIER_HUB[tier] || []).map(resolveHubCard);
+  if (userData && window.CourseAccess && CourseAccess.isContentDesigner(userData)) {
+    cards = [{
+      icon: '🛠',
+      title: 'Course Studio',
+      sub: 'Full LMS catalog — search every course, week, and part',
+      href: '/admin-courses.html',
+      locked: false,
+    }].concat(cards);
+  }
   if (!cards.length) { container.innerHTML = ''; return; }
 
   container.innerHTML = `

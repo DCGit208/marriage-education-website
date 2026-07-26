@@ -38,7 +38,7 @@ body.life-reader-body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  padding: max(10px, env(safe-area-inset-top)) 60px 10px 16px;
   background: linear-gradient(180deg, rgba(5,5,5,0.95), rgba(5,5,5,0.6));
   backdrop-filter: blur(8px);
 }
@@ -164,6 +164,107 @@ body.life-reader-body {
   margin-top: 40px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
+}
+
+.life-book-cta {
+  margin-top: 48px;
+  padding: 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(199, 164, 91, 0.08), rgba(139, 94, 75, 0.06));
+}
+
+.life-book-cta-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+
+.life-book-cta-desc {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+  max-width: 52ch;
+}
+
+.life-book-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.life-book-cta-btn {
+  text-decoration: none;
+}
+
+.life-cover-frame {
+  max-width: min(320px, 88vw);
+  margin: 0 auto 28px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line);
+}
+
+.life-cover-frame--compact {
+  max-width: 220px;
+  margin-bottom: 16px;
+}
+
+.life-cover-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.life-book-cta--has-cover {
+  display: grid;
+  grid-template-columns: minmax(120px, 140px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.life-book-cta-cover {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.life-catalog-card--cover {
+  padding: 0;
+  overflow: hidden;
+}
+
+.life-catalog-cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.life-hero--text-only .life-hero-overlay {
+  background: transparent;
+}
+
+.life-hero--text-only {
+  min-height: 0;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 560px) {
+  .life-book-cta--has-cover {
+    grid-template-columns: 1fr;
+  }
+
+  .life-book-cta-cover {
+    max-width: 180px;
+    margin: 0 auto;
+  }
 }
 
 .btn-secondary {

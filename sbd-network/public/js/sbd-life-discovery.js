@@ -91,10 +91,17 @@
     if (!articles.length) return '';
     var cards = articles
       .map(function (a) {
+        var cover = a.data.coverImage || '';
         return (
-          '<a class="life-catalog-card" href="' +
+          '<a class="life-catalog-card' +
+          (cover ? ' life-catalog-card--cover' : '') +
+          '" href="' +
           (window.SbdLifeRoutes ? window.SbdLifeRoutes.article(a.id) : '/labs/sbd-life/article.html?slug=' + encodeURIComponent(a.id)) +
-          '"><span class="life-catalog-kicker">' +
+          '">' +
+          (cover
+            ? '<img class="life-catalog-cover" src="' + esc(cover) + '" alt="" />'
+            : '') +
+          '<span class="life-catalog-kicker">' +
           esc(a.data.contentType) +
           '</span><span class="life-catalog-title">' +
           esc(a.data.title) +

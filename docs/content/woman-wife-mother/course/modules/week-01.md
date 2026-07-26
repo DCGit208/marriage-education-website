@@ -6,33 +6,23 @@ This is not a lifestyle book, a "wife tips" pamphlet, or therapeutic self-help. 
 
 ### The integration law (non-negotiable)
 
-```
-WOMANHOOD is the foundation.
-The WIFE lives in the WOMAN.
-The MOTHER lives in the WIFE.
-
-Lose womanhood to "wife"     → lose woman AND wife.
-Lose womanhood to "mother"   → lose woman, wife, AND mother.
-```
+[[integration-law]]
 
 The man is bound to his wife through **womanhood**—through her teleios female design made flesh in **one-flesh biology**—not through her household output, her maternal labor, or her emotional availability alone. This is ontology (design), not sentiment. Marriage is the **conjugal-sexual basis** of the family system. Feelings, conjecture, and cultural hearsay do not govern sexuality—**design, discipline, and training** do.
 
 ### SBD marriage ontology (§F1 — program spine)
 
-This program is **Sex by Design**. Every week returns to this chain—reason from design (Isaiah 1:18):
+This program is **Sex by Design**. Every week returns to the same chain—read **top to bottom**: what you are by design, what marriage is, then how womanhood deploys in covenant. Reason from design (Isaiah 1:18).
 
-```
-DESIGN:     Sexuality = TREE  →  Sex = FRUIT  (sexuality donates sex)
-MARRIAGE:   Marriage IS conjugal-sexual covenant — not cohabitation, not certificate + sex later
-EQUATIONS:  Marriage = Sexuality = Nakedness  |  Sex = Marriage enacted (Gen 2:24; 1 Cor 6:16)
-MULIEBRITY: Teleios woman in full conscious female operation — fit for covenant
-WIFE:       Womanhood in one-flesh matrimony — conjugal sexuality, due benevolence, covenant life as design assigns (Gen 2:18; 1 Cor 7:3–4)
-MOTHER:     Wifehood extended in the generative family unit
-```
+[[f1-spine]]
+
+**Layer 0 — Design.** **Sexuality** is the tree: identity, body, and covenant lifestyle. **Sex** is the fruit—the conjugal act. Identity donates the act; never the reverse.
+
+**Layer 1 — Marriage.** Marriage **is** conjugal-sexual covenant from the start—not roommates with a certificate, not a partnership “completed” later by sex. The certificate **witnesses**; it does not invent marriage. **Marriage = Sexuality = Nakedness** names total sharing of sexual life; **Sex = Marriage enacted** names one flesh in the body (Gen 2:24; 1 Cor 6:16).
+
+**Layer 2 — Integration.** **Muliebrity** is teleios womanhood in full operation—fit for covenant before vows, deployed in vows. The **wife** is that womanhood in one-flesh matrimony. The **mother** is wifehood extended in the generative family. One woman; three expressions—not three competing identities.
 
 **Only teleios muliebrity is fit to engage and marry**—wholeness in design trained before vows, **deployed** in covenant at vows, not invented by certificate. Marriage does not complete her; it is where muliebrity **lives** in one flesh.
-
-**The wife** is **womanhood in one-flesh matrimony**—conjugal-sexual covenant (lifestyle sexuality, due benevolence), covenant helper (Genesis 2:18), and every expression wifehood carries by design. One teleios woman; wife lives in woman. **Fragmentation** is when wifehood runs **without** womanhood governing—not when design expressions operate in their fullness.
 
 ### Systems ontology (Person → Civilization)
 

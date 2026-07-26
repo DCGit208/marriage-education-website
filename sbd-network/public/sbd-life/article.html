@@ -4,12 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>SBD Life | Article</title>
-  <link rel="stylesheet" href="/css/sbd-life-reader.css?v=phase6" />
+  <link rel="stylesheet" href="/css/sbd-life-reader.css?v=phase8" />
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=phase6" />
   <link rel="stylesheet" href="/css/ham-drawer.css" />
 </head>
 <body class="life-reader-body">
   <div class="life-read-progress" id="readProgress" aria-hidden="true"></div>
-  <div id="menuBtn" class="menu-btn" aria-label="Open menu">☰</div>
+  <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
   <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
   <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
     <div class="ham-drawer-head">
@@ -18,12 +19,38 @@
     </div>
     <nav class="menu-links ham-drawer-body" aria-label="Main menu">
       <div class="ham-section">
+        <div class="ham-section-label">Formation</div>
+        <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+        <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+        <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">Community</div>
+        <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+        <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
+      </div>
+      <div class="ham-section">
         <div class="ham-section-label">Lifestyle</div>
         <a href="/sbd-life/"><span class="menu-icon">◑</span> SBD Life</a>
         <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
         <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
       </div>
+      <div class="ham-section">
+        <div class="ham-section-label">System</div>
+        <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
+      </div>
+      <div class="ham-section">
+        <div class="ham-section-label">Account</div>
+        <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
+        <div id="adminSection" class="hidden-admin-section">
+          <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
+        </div>
+        <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+      </div>
     </nav>
+    <div class="ham-drawer-foot">
+      <div id="versionPill"></div>
+    </div>
   </div>
   <header class="life-reader-top">
     <a href="/sbd-life/">← SBD Life</a>
@@ -39,13 +66,13 @@
   <script defer src="/js/firebase.js"></script>
   <script defer src="/js/sbd-life-routes.js?v=phase6"></script>
   <script defer src="/js/sbd-life-data.js?v=phase6"></script>
-  <script defer src="/js/sbd-life-entitlements.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-entitlements.js?v=phase7"></script>
   <script defer src="/js/sbd-life-tts.js?v=human-cal"></script>
   <script defer src="/js/sbd-life-audio.js?v=phase6"></script>
   <script defer src="/js/sbd-life-quotes.js?v=phase6"></script>
   <script defer src="/js/sbd-life-reflections.js?v=phase6"></script>
   <script defer src="/js/sbd-life-production.js?v=phase6"></script>
-  <script defer src="/js/sbd-life-reader.js?v=phase6"></script>
+  <script defer src="/js/sbd-life-reader.js?v=phase7"></script>
   <script defer src="/js/ham-nav.js?v=phase6"></script>
 </body>
 </html>

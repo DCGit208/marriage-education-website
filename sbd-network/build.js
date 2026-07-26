@@ -110,6 +110,8 @@ const cssVer = Date.now();
 
 function stampVersions(html) {
   let result = html
+    // Inject ?v= on bare local /css|/js assets (admin-courses and similar)
+    .replace(/(href|src)="(\/(?:css|js)\/[^"?]+\.(?:css|js))"/g, `$1="$2?v=${cssVer}"`)
     .replace(/\.css\?v=\d+/g, `.css?v=${cssVer}`)
     .replace(/\.js\?v=\d+/g,  `.js?v=${cssVer}`);
   // Inject/update build-version meta tag so sw-update-checker can self-heal

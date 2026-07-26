@@ -26,6 +26,10 @@ const STRIPE_READY_IDS = new Set([
   'teleios-bundle',
   'elite-bundle',
   'sbd-dummies',
+  'the-woman-the-wife-the-mother',
+  'the-woman-the-wife-the-mother-book',
+  'the-woman-the-wife-the-mother-course',
+  'the-woman-the-wife-the-mother-bundle',
   'the-sex-by-design-compendium',
   'sbd-dummies-digital-print',
   'sbd-canonical',
@@ -187,6 +191,7 @@ const BOOK_COVERS = {
   'sbd-digital-archive-access': '/images/Sex-by-design-magazine.jpg',
   'complete-sbd-library': '/images/sbd-standard.jpg',
   'sbd-complete-package': '/images/sbd-dummies.jpg',
+  'the-woman-the-wife-the-mother': '/images/the-woman-the-wife-the-mother-cover.png',
   'arts-of-marriage-collection': '/images/sbd-the-art-of-seduction.jpg',
   'marriage-foundation-bundle': '/images/sbd-dummies.jpg',
   'sbd-starter-magazine': '/images/Sex-by-design-magazine.jpg',
@@ -280,6 +285,7 @@ function p(id, name, category, priceUsd, opts = {}) {
     status: 'active',
     source: opts.source || 'marriageducation.com',
     unlocks: opts.unlocks || null,
+    coverWrapImage: opts.coverWrapImage || null,
   };
 }
 
@@ -322,6 +328,32 @@ const PRODUCTS = [
     phase: 1, icon: '📗', sortOrder: 8,
     description: 'Entry-level guide to sexual design and covenant intimacy.',
     unlocks: { type: 'course', courseIds: ['sbd-dummies-course'] },
+  }),
+  p('the-woman-the-wife-the-mother-book', 'The Woman, The Wife, The Mother — Book', 'books_sbd_series', 50, {
+    phase: 1, type: 'book', icon: '📕', sortOrder: 9,
+    coverImage: '/images/the-woman-the-wife-the-mother-cover.png',
+    description: 'Full Muliebrity Baron treatise — integrated womanhood, wifehood, and motherhood in covenant.',
+    unlocks: { type: 'product', products: ['the-woman-the-wife-the-mother-book'], issueIds: ['issue-woman-wife-mother-2026'] },
+  }),
+  p('the-woman-the-wife-the-mother-course', 'The Woman, The Wife, The Mother — 13-Week Formation', 'course_bundles', 250, {
+    phase: 1, type: 'course', icon: '📗', sortOrder: 10,
+    coverImage: '/images/the-woman-the-wife-the-mother-cover.png',
+    description: 'Flagship Muliebrity formation course — 13 weeks of drills, Scripture, assessment, and embodied practice. No video.',
+    unlocks: { type: 'course', courseIds: ['the-woman-the-wife-the-mother'] },
+  }),
+  p('the-woman-the-wife-the-mother-bundle', 'The Woman, The Wife, The Mother — Book + Course', 'course_bundles', 300, {
+    phase: 1, type: 'bundle', icon: '📘', sortOrder: 11,
+    originalPriceUsd: 300,
+    coverImage: '/images/the-woman-the-wife-the-mother-cover.png',
+    coverWrapImage: '/images/the-woman-the-wife-the-mother-cover-wrap.png',
+    legacyAliases: ['sex-by-design-complete-edition', 'the-woman-the-wife-the-mother'],
+    description: 'Complete flagship: full book + 13-week Muliebrity Formation course + SBD Life Issue #2 access.',
+    unlocks: {
+      type: 'bundle',
+      products: ['the-woman-the-wife-the-mother-book', 'the-woman-the-wife-the-mother-course', 'the-woman-the-wife-the-mother-bundle'],
+      courseIds: ['the-woman-the-wife-the-mother'],
+      issueIds: ['issue-woman-wife-mother-2026'],
+    },
   }),
 
   // ── Phase 2 — Books & magazine (shop.html) ────────────────────────

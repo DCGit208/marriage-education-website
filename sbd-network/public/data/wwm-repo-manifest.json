@@ -1,84 +1,84 @@
 {
   "courseId": "the-woman-the-wife-the-mother",
-  "generatedAt": "2026-06-23T12:35:19.762Z",
+  "generatedAt": "2026-07-26T11:21:39.584Z",
   "weeks": {
     "1": {
       "file": "week-01.md",
-      "words": 4533,
-      "hash": "djb2-faab3a8b",
-      "mtime": "2026-06-23T12:21:19.552Z"
+      "words": 4514,
+      "hash": "djb2-c782155c",
+      "mtime": "2026-07-14T07:49:13.156Z"
     },
     "2": {
       "file": "week-02.md",
-      "words": 3722,
-      "hash": "djb2-a2f517fe",
-      "mtime": "2026-06-23T12:21:23.116Z"
+      "words": 3739,
+      "hash": "djb2-63c7a248",
+      "mtime": "2026-07-14T07:49:13.158Z"
     },
     "3": {
       "file": "week-03.md",
-      "words": 4222,
-      "hash": "djb2-769b411f",
-      "mtime": "2026-06-23T12:21:26.612Z"
+      "words": 4201,
+      "hash": "djb2-d5a0e4cb",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "4": {
       "file": "week-04.md",
-      "words": 3749,
-      "hash": "djb2-1e5ab3d",
-      "mtime": "2026-06-23T12:21:30.135Z"
+      "words": 3753,
+      "hash": "djb2-69b213d1",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "5": {
       "file": "week-05.md",
-      "words": 3539,
-      "hash": "djb2-eebf1bdf",
-      "mtime": "2026-06-23T12:21:33.697Z"
+      "words": 3550,
+      "hash": "djb2-8b622816",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "6": {
       "file": "week-06.md",
-      "words": 3570,
-      "hash": "djb2-d89fcb10",
-      "mtime": "2026-06-23T12:21:36.514Z"
+      "words": 3574,
+      "hash": "djb2-3af7516",
+      "mtime": "2026-07-14T07:49:13.156Z"
     },
     "7": {
       "file": "week-07.md",
-      "words": 3540,
-      "hash": "djb2-5b937b91",
-      "mtime": "2026-06-23T12:21:39.247Z"
+      "words": 3544,
+      "hash": "djb2-145da57",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "8": {
       "file": "week-08.md",
-      "words": 3853,
-      "hash": "djb2-7bbf6a43",
-      "mtime": "2026-06-23T12:34:30.972Z"
+      "words": 3857,
+      "hash": "djb2-6040d009",
+      "mtime": "2026-07-14T07:49:13.156Z"
     },
     "9": {
       "file": "week-09.md",
-      "words": 3765,
-      "hash": "djb2-64b517da",
-      "mtime": "2026-06-23T12:34:59.191Z"
+      "words": 3769,
+      "hash": "djb2-92764fd4",
+      "mtime": "2026-07-14T07:49:13.156Z"
     },
     "10": {
       "file": "week-10.md",
-      "words": 3525,
-      "hash": "djb2-2a161fb9",
-      "mtime": "2026-06-23T12:34:39.606Z"
+      "words": 3529,
+      "hash": "djb2-9fa08a51",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "11": {
       "file": "week-11.md",
-      "words": 3606,
-      "hash": "djb2-e75ea4c5",
-      "mtime": "2026-06-23T12:21:50.352Z"
+      "words": 3612,
+      "hash": "djb2-bb473476",
+      "mtime": "2026-07-14T07:49:13.157Z"
     },
     "12": {
       "file": "week-12.md",
       "words": 3522,
       "hash": "djb2-e31b28a6",
-      "mtime": "2026-06-23T12:34:43.872Z"
+      "mtime": "2026-06-27T09:30:36.865Z"
     },
     "13": {
       "file": "week-13.md",
       "words": 3663,
       "hash": "djb2-eb0254f6",
-      "mtime": "2026-06-23T12:34:44.690Z"
+      "mtime": "2026-06-27T09:30:36.857Z"
     }
   }
 }

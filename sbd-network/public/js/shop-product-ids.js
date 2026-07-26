@@ -4,7 +4,8 @@
  */
 (function (global) {
   var ALIASES = {
-  "sbd-for-dummies": "sbd-dummies"
+  "sbd-for-dummies": "sbd-dummies",
+  "sex-by-design-complete-edition": "the-woman-the-wife-the-mother"
 };
 
   function resolveShopProductId(productId) {

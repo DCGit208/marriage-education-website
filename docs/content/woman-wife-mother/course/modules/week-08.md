@@ -16,9 +16,17 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 Weeks 6–7 established meritorious attraction and **Attitude**. **Attire** makes muliebrity **legible** before Week 9 **Allure** completes the atmospheric grammar. Week 10 **Fitness, Form, and Shape** supplies the psychomotor substrate that makes attire credible on the body you steward.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. **Without woman, there is no wife. Without wife, there is no mother. Period.** Attire is trained at the **womanhood layer**—visible evidence that conjugal femininity governs when roles are active. A wardrobe that dresses only as worker, caretaker, or schedule-manager while wifehood hours stay high is **fragmentation in cloth**—roles without woman visible.
+[[integration-law]]
+
+**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. Attire is trained at the **womanhood layer**—visible evidence that conjugal femininity governs when roles are active. A wardrobe that dresses only as worker, caretaker, or schedule-manager while wifehood hours stay high is **fragmentation in cloth**—roles without woman visible.
 
 When @Home attire communicates disappearance, bitterness, or body hatred while conjugal duty is still expected, **marital infidelity has occurred at the level of structure**—design union desexualized before any affair. Name this without drama; return to training.
 

@@ -14,9 +14,17 @@ This week sits in the **A³ arc** before Week 11 integration summit. Formation f
 Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 ```
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. **Without woman, there is no wife. Without wife, there is no mother. Period.** Allure is trained at the **womanhood layer** — erotic atmosphere flowing from integrated teleios person, not performance divorced from foundation.
+[[integration-law]]
+
+**Womanhood** is foundation; **wife** lives in woman; **mother** lives in wife. Allure is trained at the **womanhood layer** — erotic atmosphere flowing from integrated teleios person, not performance divorced from foundation.
 
 ### Guard the foundation (Psalm 11:3)
 

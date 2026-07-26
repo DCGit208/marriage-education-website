@@ -73,6 +73,13 @@
     }
     root.innerHTML =
       '<article class="life-issue">' +
+      (data.coverImage
+        ? '<div class="life-cover-frame"><img class="life-cover-img" src="' +
+          esc(data.coverImage) +
+          '" alt="' +
+          esc(data.title) +
+          ' cover" /></div>'
+        : '') +
       '<header class="life-issue-cover">' +
       '<p class="kicker">SBD Life Quarterly · Issue ' + esc(String(data.issueNumber)) + '</p>' +
       '<h1>' + esc(data.title) + '</h1>' +
@@ -84,6 +91,9 @@
       '</section>' +
       (featuredHtml
         ? '<section class="life-issue-section"><h2>In this issue</h2><div class="life-issue-grid">' + featuredHtml + '</div></section>'
+        : '') +
+      (window.SbdLifeEntitlements
+        ? window.SbdLifeEntitlements.renderBookCta(data, esc)
         : '') +
       '<div class="life-actions-row">' +
       '<button type="button" class="btn-secondary" disabled>Print edition (Phase 4)</button>' +

@@ -1,0 +1,327 @@
+/**
+ * §F1 Ontology spine — layered formation diagrams (lesson + Course Studio).
+ */
+.f1-spine {
+  margin: 2rem 0 2.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.f1-spine-header {
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.f1-spine-kicker {
+  display: block;
+  font-family: var(--reader-sans, system-ui, sans-serif);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--reader-gold, #c7a45b);
+  margin-bottom: 0.35rem;
+}
+
+.f1-spine-title {
+  display: block;
+  font-family: var(--reader-serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--reader-text, #f5efe3);
+  line-height: 1.25;
+}
+
+.f1-spine-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.f1-layer {
+  position: relative;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border-radius: 14px;
+  border: 1px solid rgba(199, 164, 91, 0.28);
+  background: linear-gradient(165deg, rgba(199, 164, 91, 0.1) 0%, rgba(12, 12, 12, 0.95) 55%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.f1-layer-badge {
+  display: inline-block;
+  font-family: var(--reader-sans, system-ui, sans-serif);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(199, 164, 91, 0.85);
+  margin-bottom: 0.5rem;
+}
+
+.f1-layer-title {
+  margin: 0 0 0.85rem;
+  font-family: var(--reader-serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff8eb;
+  line-height: 1.3;
+}
+
+.f1-layer-body {
+  font-family: var(--reader-sans, 'Source Serif 4', Georgia, serif);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--reader-muted, #c8bfb0);
+}
+
+.f1-layer-body p {
+  margin: 0 0 0.65rem;
+}
+
+.f1-layer-body p:last-child {
+  margin-bottom: 0;
+}
+
+.f1-lead {
+  color: var(--reader-text, #f5efe3) !important;
+  font-size: 1rem !important;
+}
+
+.f1-connector {
+  display: flex;
+  justify-content: center;
+  height: 1.5rem;
+  align-items: center;
+}
+
+.f1-connector span {
+  display: block;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(199, 164, 91, 0.5), rgba(199, 164, 91, 0.15));
+  border-radius: 2px;
+}
+
+/* Tree metaphor */
+.f1-tree-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.f1-tree-svg {
+  flex: 0 0 88px;
+  width: 88px;
+  height: auto;
+}
+
+.f1-tree-trunk,
+.f1-tree-stem {
+  fill: none;
+  stroke: rgba(199, 164, 91, 0.55);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.f1-tree-crown {
+  fill: rgba(199, 164, 91, 0.18);
+  stroke: var(--reader-gold, #c7a45b);
+  stroke-width: 2;
+}
+
+.f1-tree-fruit {
+  fill: var(--reader-gold, #c7a45b);
+  stroke: #fff8eb;
+  stroke-width: 1.5;
+}
+
+.f1-term {
+  color: var(--reader-gold, #c7a45b);
+  font-weight: 600;
+}
+
+.f1-rule {
+  font-style: italic;
+  color: #fff8eb !important;
+}
+
+/* Marriage equations */
+.f1-equation-grid {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.f1-eq-card {
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(199, 164, 91, 0.2);
+}
+
+.f1-eq-card--wide {
+  grid-column: 1 / -1;
+}
+
+.f1-eq-label {
+  display: block;
+  font-weight: 600;
+  color: var(--reader-gold, #c7a45b);
+  font-size: 0.92rem;
+  margin-bottom: 0.2rem;
+}
+
+.f1-eq-desc {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--reader-muted, #c8bfb0);
+}
+
+.f1-equations {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.f1-equations li {
+  padding: 0.45rem 0;
+  border-top: 1px solid rgba(199, 164, 91, 0.15);
+  font-size: 0.9rem;
+}
+
+.f1-equations li span {
+  color: var(--reader-gold, #c7a45b);
+  font-weight: 600;
+}
+
+/* Integration stack */
+.f1-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.f1-stack-item {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(199, 164, 91, 0.22);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.f1-stack-item--woman {
+  border-left: 3px solid #c7a45b;
+}
+
+.f1-stack-item--wife {
+  border-left: 3px solid #a8894a;
+}
+
+.f1-stack-item--mother {
+  border-left: 3px solid #7a6538;
+}
+
+.f1-stack-label {
+  display: block;
+  font-family: var(--reader-serif, Georgia, serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff8eb;
+  margin-bottom: 0.2rem;
+}
+
+.f1-stack-desc {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--reader-muted, #c8bfb0);
+}
+
+.f1-stack-arrow {
+  text-align: center;
+  color: var(--reader-gold, #c7a45b);
+  font-size: 1rem;
+  line-height: 1.2;
+  padding: 0.15rem 0;
+}
+
+.f1-footnote {
+  margin-top: 0.85rem !important;
+  font-size: 0.88rem !important;
+  font-style: italic;
+}
+
+.f1-law-warning {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(199, 164, 91, 0.08);
+  border: 1px solid rgba(199, 164, 91, 0.25);
+  font-size: 0.92rem;
+  color: #fff8eb;
+  text-align: center;
+}
+
+/* Author reference (collapsible) */
+.f1-author-ref {
+  margin-top: 1.25rem;
+  border-radius: 10px;
+  border: 1px dashed rgba(199, 164, 91, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.f1-author-ref summary {
+  cursor: pointer;
+  padding: 0.65rem 1rem;
+  font-family: var(--reader-sans, system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(199, 164, 91, 0.75);
+  list-style: none;
+}
+
+.f1-author-ref summary::-webkit-details-marker {
+  display: none;
+}
+
+.f1-author-ref summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.f1-author-ref[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.f1-ref-pre {
+  margin: 0;
+  padding: 0.85rem 1rem 1rem;
+  border-top: 1px solid rgba(199, 164, 91, 0.12);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: rgba(199, 164, 91, 0.85);
+  background: transparent;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .f1-tree-row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .f1-layer {
+    padding: 1rem 1.05rem 1.1rem;
+  }
+}
+
+/* Course Studio preview — light-on-dark already matches */
+.admin-courses-page .f1-spine {
+  max-width: 100%;
+}

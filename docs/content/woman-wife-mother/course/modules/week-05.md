@@ -14,9 +14,17 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 **Womanhood** remains foundation; **wife** lives in woman; **mother** lives in wife. **Lifestyle sexuality** is womanhood expression in covenant—not a compartment activated when calendar allows. Lose sexuality at the woman layer and wife/mother layers become **functional shells**—efficient, tired, respectable, structurally unfaithful to design.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Without woman, there is no wife. Without wife, there is no mother. Period.** Lifestyle sexuality is not "wife skill" bolted onto exhausted motherhood. It is **muliebrity in conjugal operation**—sexual-feminine design governing one-flesh life daily. When motherhood atmosphere displaces conjugal intention until husband becomes coworker and children become sole emotional center, **mother lives outside wife lives outside woman**—fragmentation with a full refrigerator.
+[[integration-law]]
+
+Lifestyle sexuality is not "wife skill" bolted onto exhausted motherhood. It is **muliebrity in conjugal operation**—sexual-feminine design governing one-flesh life daily. When motherhood atmosphere displaces conjugal intention until husband becomes coworker and children become sole emotional center, **mother lives outside wife lives outside woman**—fragmentation with a full refrigerator.
 
 The man is bound through **womanhood**—sexual-feminine presence in one flesh—not through admiration of your scheduling, meal planning, or school logistics.
 
@@ -26,10 +34,7 @@ The man is bound through **womanhood**—sexual-feminine presence in one flesh�
 
 ### Tree and fruit (structural metaphor)
 
-```
-SEXUALITY (lifestyle) = root, trunk, branches — daily trained life
-SEX (product)         = fruit — periodic harvest from healthy tree
-```
+**Sexuality** (lifestyle) is the tree — root, trunk, branches: daily trained life. **Sex** (product) is the fruit — periodic harvest from a healthy tree. (See §F1 Layer 0 above.)
 
 Prune the tree and wonder why fruit fails. Water only at harvest season and the tree dies. Reason from fruit (Isaiah 1:18): if conjugal act is rare or dutiful, trace the **lifestyle** that preceded it—neglect is never mysterious when named honestly.
 

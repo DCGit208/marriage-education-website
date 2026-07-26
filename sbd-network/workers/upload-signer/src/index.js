@@ -20,7 +20,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
   'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/3gpp',
   'audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/x-caf',
 ]);
-const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', 'dm_videos', 'dm_audio']);
+const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', 'dm_videos', 'dm_audio', 'course-covers']);
 
 const FIREBASE_PROJECT_ID = 'marriage-education';
 

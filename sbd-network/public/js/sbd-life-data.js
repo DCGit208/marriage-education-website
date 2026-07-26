@@ -48,6 +48,25 @@
     if (!ctx.isAdmin && !isPublishedArticle(data)) {
       return { error: 'unpublished', ctx: ctx };
     }
+    if (!data.bookProductId && data.issueId) {
+      try {
+        var issueSnap = await firebase
+          .firestore()
+          .collection('sbdLifeIssues')
+          .doc(data.issueId)
+          .get();
+        if (issueSnap.exists) {
+          var issueData = issueSnap.data();
+          ['bookProductId', 'bookCtaLabel', 'bookCtaDescription', 'bookCtaBundlePrice', 'bookCtaCoursePrice', 'bookCtaBookPrice', 'coverImage'].forEach(
+            function (key) {
+              if (!data[key] && issueData[key]) data[key] = issueData[key];
+            }
+          );
+        }
+      } catch (mergeErr) {
+        console.warn('[SbdLifeData] issue book CTA merge:', mergeErr.message || mergeErr);
+      }
+    }
     var entitlements = null;
     if (global.SbdLifeEntitlements) {
       entitlements = await global.SbdLifeEntitlements.loadEntitlements(ctx.user.uid);
@@ -326,7 +345,8 @@
       title: data.title || articleId,
       contentType: data.contentType || 'feature_article',
       tierRequired: data.tierRequired || 'public',
-      issueId: data.issueId || null
+      issueId: data.issueId || null,
+      coverImage: data.coverImage || ''
     };
   }
 
@@ -374,11 +394,11 @@
     return { articleId: editorial.ARTICLE_ID, issueId: editorial.ISSUE_ID };
   }
 
-  async function publishCrisisEditorial(authorId) {
-    if (!global.SbdLifeEditorialCrisis) {
-      throw new Error('Editorial module not loaded');
+  async function publishEditorialModule(editorial, authorId, options) {
+    options = options || {};
+    if (!editorial || !editorial.ARTICLE_ID || !editorial.ISSUE_ID) {
+      throw new Error('Invalid editorial module');
     }
-    var editorial = global.SbdLifeEditorialCrisis;
     var articleId = editorial.ARTICLE_ID;
     var issueId = editorial.ISSUE_ID;
     var now = firebase.firestore.Timestamp.now();
@@ -400,38 +420,46 @@
       narrationMode: 'browser',
       audioUrl: '',
       narrator: 'SBD Life Editorial Voice',
-      tierRequired: 'public',
+      tierRequired: article.tierRequired || 'public',
       updatedAt: now,
       generatedBy: 'browser-tts-v3-editorial',
-      cost: 'free'
+      cost: 'free',
     });
 
-    await db.collection('sbdLifeQuotes').doc(articleId + '-q1').set({
-      articleId: articleId,
-      quote: 'Attention became mistaken for value.',
-      shareCount: 0,
-      engagementScore: 12,
-      createdAt: now
-    });
-    await db.collection('sbdLifeQuotes').doc(articleId + '-q2').set({
-      articleId: articleId,
-      quote: 'Attraction without formation eventually becomes instability.',
-      shareCount: 0,
-      engagementScore: 10,
-      createdAt: now
-    });
-    await db.collection('sbdLifeQuotes').doc(articleId + '-q3').set({
-      articleId: articleId,
-      quote:
-        'Many people learned how to be seen — before they ever learned how to become.',
-      shareCount: 0,
-      engagementScore: 14,
-      createdAt: now
-    });
+    var quoteList =
+      typeof editorial.quotes === 'function'
+        ? editorial.quotes()
+        : options.quotes || [];
+    for (var i = 0; i < quoteList.length; i++) {
+      var q = quoteList[i];
+      await db.collection('sbdLifeQuotes').doc(articleId + '-' + (q.id || 'q' + (i + 1))).set({
+        articleId: articleId,
+        quote: q.text || q.quote,
+        shareCount: 0,
+        engagementScore: q.engagementScore || 10 - i,
+        createdAt: now,
+      });
+    }
 
-    await writeMemberDiscoveryRails([catalogEntryFromArticle(articleId, article)], issueId, now);
+    if (options.updateDiscovery !== false) {
+      await writeMemberDiscoveryRails([catalogEntryFromArticle(articleId, article)], issueId, now);
+    }
 
     return { articleId: articleId, issueId: issueId };
+  }
+
+  async function publishCrisisEditorial(authorId) {
+    if (!global.SbdLifeEditorialCrisis) {
+      throw new Error('Editorial module not loaded');
+    }
+    return publishEditorialModule(global.SbdLifeEditorialCrisis, authorId);
+  }
+
+  async function publishWomanWifeMotherEditorial(authorId) {
+    if (!global.SbdLifeEditorialWomanWifeMother) {
+      throw new Error('Editorial module not loaded');
+    }
+    return publishEditorialModule(global.SbdLifeEditorialWomanWifeMother, authorId);
   }
 
   global.SbdLifeData = {
@@ -444,6 +472,7 @@
     listIssuesAdmin: listIssuesAdmin,
     seedDemoContent: seedDemoContent,
     publishCrisisEditorial: publishCrisisEditorial,
+    publishWomanWifeMotherEditorial: publishWomanWifeMotherEditorial,
     syncMemberDiscoveryRails: syncMemberDiscoveryRails
   };
 })(window);

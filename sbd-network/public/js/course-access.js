@@ -33,20 +33,21 @@
     'the-woman-the-wife-the-mother': '/images/the-woman-the-wife-the-mother-cover.png',
   };
 
-  function getCourseCoverImage(courseId) {
+  function getCourseCoverImage(courseId, coverImage) {
+    if (coverImage) return String(coverImage);
     return COURSE_COVER_IMAGES[courseId] || '';
   }
 
-  function courseThumbHtml(courseId, fallbackIcon) {
-    const src = getCourseCoverImage(courseId);
+  function courseThumbHtml(courseId, fallbackIcon, coverImage) {
+    const src = getCourseCoverImage(courseId, coverImage);
     if (!src) {
       return '<div class="course-icon">' + (fallbackIcon || '📖') + '</div>';
     }
     return '<div class="course-thumb"><img src="' + src + '" alt="" loading="lazy" width="56" height="84"></div>';
   }
 
-  function libraryThumbHtml(courseId, fallbackIcon) {
-    const src = getCourseCoverImage(courseId);
+  function libraryThumbHtml(courseId, fallbackIcon, coverImage) {
+    const src = getCourseCoverImage(courseId, coverImage);
     if (!src) {
       return '<span class="library-card-icon">' + (fallbackIcon || '📖') + '</span>';
     }

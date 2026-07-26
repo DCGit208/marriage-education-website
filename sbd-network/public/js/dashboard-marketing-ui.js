@@ -81,12 +81,134 @@
       }
 
       if (activeCard === cardId) {
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(function () {});
-        }
+        playIntroSlideVideo(video);
       } else {
         video.pause();
+        try {
+          video.currentTime = 0;
+        } catch (eSeek) {
+          /* ignore */
+        }
+      }
+    });
+  }
+
+  function playIntroSlideVideo(video, opts) {
+    if (!video) return;
+
+    const fromUserGesture = !!(opts && opts.fromUserGesture);
+
+    try {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.setAttribute('muted', '');
+      try {
+        video.volume = 0;
+      } catch (eVol) {
+        /* ignore */
+      }
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+    } catch (e) {
+      /* ignore */
+    }
+
+    function armCanPlayRetry() {
+      video.addEventListener(
+        'canplay',
+        function retry() {
+          video.removeEventListener('canplay', retry);
+          const p2 = video.play();
+          if (p2 && typeof p2.catch === 'function') {
+            p2.catch(function () {});
+          }
+        },
+        { once: true }
+      );
+    }
+
+    function attemptPlay() {
+      const p = video.play();
+      if (p && typeof p.then === 'function') {
+        p.catch(function () {
+          armCanPlayRetry();
+        });
+      } else {
+        armCanPlayRetry();
+      }
+    }
+
+    if (fromUserGesture) {
+      attemptPlay();
+    } else if (isLikelyIOSWebKit()) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(attemptPlay);
+      });
+    } else {
+      attemptPlay();
+    }
+  }
+
+  function playActiveIntroSlideVideo(opts) {
+    if (prefersReducedMotion()) return;
+    const getSlides = window.__sbdSliderGetVisibleSlides;
+    const getCurrent = window.__sbdSliderGetCurrent;
+    if (typeof getSlides !== 'function' || typeof getCurrent !== 'function') return;
+    const slides = getSlides();
+    const slide = slides[getCurrent()];
+    if (!slide || slide.dataset.type !== 'intro') return;
+    const video = slide.querySelector('video.intro-slide-video');
+    playIntroSlideVideo(video, opts);
+  }
+
+  function prepareIntroSlideWords() {
+    document.querySelectorAll('.slide-card[data-type="intro"] .word').forEach(function (w) {
+      w.classList.add('intro-word-hidden');
+      w.classList.remove('intro-word-visible');
+    });
+  }
+
+  /** Force same-origin boards images to paint inside CSS-transform sliders (iOS PWA). */
+  function warmBoardsSlideImages(slide) {
+    if (!slide || slide.dataset.card !== 'boards') return;
+    slide.classList.add('bb-images-ready');
+    slide.querySelectorAll('img').forEach(function (img) {
+      try {
+        img.removeAttribute('loading');
+        img.loading = 'eager';
+        const src = img.getAttribute('data-src') || img.getAttribute('src');
+        if (!src) return;
+        // Re-assign src to kick Safari if the first paint was deferred off-screen
+        if (!img.complete || img.naturalWidth === 0) {
+          img.setAttribute('src', src);
+        }
+        if (typeof img.decode === 'function') {
+          img.decode().then(function () {
+            img.classList.add('bb-img-loaded');
+          }).catch(function () {
+            img.classList.add('bb-img-loaded');
+          });
+        } else {
+          img.classList.add('bb-img-loaded');
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    });
+  }
+
+  function preloadBoardsSlideImages() {
+    const slide = document.querySelector('.slide-card[data-card="boards"]');
+    if (!slide) return;
+    warmBoardsSlideImages(slide);
+    // Also warm via Image() so files are in HTTP cache before the user reaches slide 6
+    slide.querySelectorAll('img[src]').forEach(function (img) {
+      try {
+        const warm = new Image();
+        warm.src = img.getAttribute('src');
+      } catch (e) {
+        /* ignore */
       }
     });
   }
@@ -311,7 +433,7 @@
     function unlock() {
       /* Synchronously inside the gesture: prime ALL background videos on the page,
          not only the MV one. Cheap and idempotent. */
-      const all = document.querySelectorAll('video.video-bg');
+      const all = document.querySelectorAll('video.video-bg, video.intro-slide-video');
       all.forEach(function (v) {
         try {
           v.muted = true;
@@ -327,6 +449,7 @@
         }
       });
       tryPlayMvHouseSlide({ fromUserGesture: true });
+      playActiveIntroSlideVideo({ fromUserGesture: true });
     }
 
     document.addEventListener('touchstart', unlock, { capture: true, passive: true });
@@ -583,7 +706,11 @@
 
     syncIntroSlideVideos(currentSlide);
 
-    if (index <= 3) {
+    if (currentSlide && currentSlide.dataset.card === 'boards') {
+      warmBoardsSlideImages(currentSlide);
+    }
+
+    if (currentSlide && currentSlide.dataset.type === 'intro') {
       animateIntroSlide(currentSlide);
     }
 
@@ -599,6 +726,8 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    prepareIntroSlideWords();
+    preloadBoardsSlideImages();
     armMvGlobalPlaybackUnlock();
 
     function resumeMvVideoIfPaused() {
@@ -660,7 +789,9 @@
     }
 
     function applyAuthUi(user) {
-      isAuthenticated = !!user;
+      const nextAuthenticated = !!user;
+      const authChanged = nextAuthenticated !== isAuthenticated;
+      isAuthenticated = nextAuthenticated;
       document.body.classList.toggle('auth-user', isAuthenticated);
       document.body.classList.toggle('auth-guest', !isAuthenticated);
 
@@ -678,6 +809,12 @@
 
       if (isAuthenticated && promptSheet) {
         promptSheet.classList.remove('open');
+      }
+
+      if (authChanged && typeof window.refreshSliderLayout === 'function') {
+        window.requestAnimationFrame(function () {
+          window.refreshSliderLayout(isAuthenticated ? 0 : undefined);
+        });
       }
     }
 

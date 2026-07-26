@@ -2,6 +2,11 @@
 .firebase/
 firebase-debug.log
 
+# Local caches / snapshots (never deployed)
+.npm-cache/
+.wrangler/
+rollback/
+
 # Environment
 .env
 .env.local

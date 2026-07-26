@@ -547,6 +547,26 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // Shop catalog (static seed + Course Studio book products)
+    match /shopProducts/{productId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        isLmsEditor(lmsUserData(request.auth.uid));
+    }
+
+    match /shopMeta/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        isLmsEditor(lmsUserData(request.auth.uid));
+    }
+
+    // Studio-authored books (manuscript + metadata)
+    match /books/{bookId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        isLmsEditor(lmsUserData(request.auth.uid));
+    }
+
     // Platform config (support DM routing, public settings)
     match /platform/{docId} {
       allow read: if request.auth != null;
@@ -1197,6 +1217,11 @@ service cloud.firestore {
     }
 
     match /users/{userId}/ce2_formation_notes/{noteId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Book Reader — position + saved places (Milestone 7)
+    match /users/{userId}/bookReader/{bookId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 

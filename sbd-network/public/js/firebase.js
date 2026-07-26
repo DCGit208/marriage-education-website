@@ -104,10 +104,40 @@ async function isUserAdmin() {
   try {
     const userDoc = await db.collection('users').doc(user.uid).get();
     if (!userDoc.exists) return false;
-    const role = String((userDoc.data().role || '')).toLowerCase();
-    return role === 'admin';
+    const data = userDoc.data();
+    const role = String((data.role || '')).toLowerCase();
+    if (role === 'admin') return true;
+    const roles = Array.isArray(data.roles) ? data.roles : [];
+    return roles.some(function (r) {
+      return String(r || '').toLowerCase() === 'admin';
+    });
   } catch (error) {
     console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+function isContentDesignerFromData(data) {
+  if (!data) return false;
+  const role = String(data.role || '').toLowerCase();
+  if (role === 'designer') return true;
+  const roles = Array.isArray(data.roles) ? data.roles : [];
+  if (roles.some(function (r) { return String(r || '').toLowerCase() === 'designer'; })) {
+    return true;
+  }
+  return !!(data.staffAccess && data.staffAccess.contentDesigner);
+}
+
+async function isUserContentDesigner() {
+  const user = getCurrentUser();
+  if (!user) return false;
+  try {
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    if (!userDoc.exists) return false;
+    if (window.CourseAccess) return CourseAccess.isContentDesigner(userDoc.data());
+    return isContentDesignerFromData(userDoc.data());
+  } catch (error) {
+    console.error('Error checking content designer status:', error);
     return false;
   }
 }

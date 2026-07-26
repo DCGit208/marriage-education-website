@@ -1529,14 +1529,35 @@ body.auth-user [data-card="continue-journey"]{
 
 @media (max-width:768px){
 
-  [data-card="boards"]{
+  /* Dashboard PWA: do NOT force 100vh + huge padding — that clips the
+     Salon Floor preview and makes the boards slide look forever incomplete. */
+  .dashboard-page [data-card="boards"]{
+    align-items:stretch !important;
+    justify-content:flex-start !important;
+    overflow:hidden !important;
+  }
+
+  .dashboard-page [data-card="boards"] .card-content{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    max-height:100% !important;
+    margin:0 auto !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Legacy non-dashboard boards markup only */
+  body:not(.dashboard-page) [data-card="boards"]{
     align-items:flex-start !important;
     justify-content:flex-start !important;
 
     overflow:hidden !important;
   }
 
-  [data-card="boards"] .card-content{
+  body:not(.dashboard-page) [data-card="boards"] .card-content{
     width:100% !important;
     max-width:100% !important;
 

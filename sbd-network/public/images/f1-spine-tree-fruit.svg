@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="f1svg-title f1svg-desc">
+  <title id="f1svg-title">SBD §F1 — Sexuality tree, sex fruit</title>
+  <desc id="f1svg-desc">Sexuality is the tree; sex is the fruit. Identity donates the act.</desc>
+  <defs>
+    <linearGradient id="crown" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3d5c45"/>
+      <stop offset="100%" stop-color="#2a4030"/>
+    </linearGradient>
+    <linearGradient id="fruit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c7a45b"/>
+      <stop offset="100%" stop-color="#9a7a3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="12" fill="#121210"/>
+  <text x="160" y="28" text-anchor="middle" fill="#c7a45b" font-family="Georgia, serif" font-size="13" font-weight="600">Layer 0 — Design</text>
+  <rect x="24" y="40" width="272" height="148" rx="10" fill="none" stroke="rgba(199,164,91,0.25)" stroke-width="1"/>
+  <line x1="160" y1="148" x2="160" y2="108" stroke="#8b7355" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="160" cy="88" r="34" fill="url(#crown)" stroke="rgba(199,164,91,0.45)" stroke-width="1.5"/>
+  <text x="160" y="84" text-anchor="middle" fill="#e8dcc8" font-family="Georgia, serif" font-size="12" font-weight="600">Sexuality</text>
+  <text x="160" y="100" text-anchor="middle" fill="#a89a82" font-family="system-ui, sans-serif" font-size="9">the tree</text>
+  <path d="M178 118 Q205 124 228 138" fill="none" stroke="#8b7355" stroke-width="2"/>
+  <circle cx="236" cy="142" r="14" fill="url(#fruit)"/>
+  <text x="236" y="146" text-anchor="middle" fill="#1a1408" font-family="system-ui, sans-serif" font-size="8" font-weight="700">Sex</text>
+  <text x="236" y="168" text-anchor="middle" fill="#c7a45b" font-family="system-ui, sans-serif" font-size="9">fruit</text>
+  <text x="48" y="176" fill="#a89a82" font-family="system-ui, sans-serif" font-size="10">Sexuality donates sex — not the reverse.</text>
+</svg>

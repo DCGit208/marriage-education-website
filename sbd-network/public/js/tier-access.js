@@ -32,7 +32,7 @@ const COURSE_TIER_MAP = {
   // Both short and full Firestore doc IDs supported
   'the-teleios-blueprint-full-human-maturity':          { minTier: 'free', freeWeeks: [1] },
   'course-1-the-teleios-blueprint-full-human-maturity': { minTier: 'free', freeWeeks: [1] },
-  'sex-by-design-for-dummies':                          { minTier: 'free', freeWeeks: [1] },
+  'the-woman-the-wife-the-mother':                          { minTier: 'elite', purchaseOnly: true },
   'course-14-sex-by-design-for-dummies':                { minTier: 'free', freeWeeks: [1] }, // legacy alias
   // Foundation dripped
   'foundation-school':                        { minTier: 'foundation',  drip: true },

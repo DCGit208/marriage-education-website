@@ -66,6 +66,18 @@
       <p id="profileEmail" class="profile-static-value"></p>
     </section>
 
+    <!-- Subscription billing (shown only when a Stripe customer exists) -->
+    <section class="profile-section profile-card" id="billingSection" style="display:none;">
+      <h3 class="profile-section-title">Subscription &amp; Billing</h3>
+      <p id="billingSummary" class="profile-hint" style="margin-bottom:14px;"></p>
+      <button id="manageBillingBtn" class="btn btn-primary" type="button" style="width:100%;">
+        Manage subscription
+      </button>
+      <p class="profile-hint" style="margin-top:10px;">
+        Update your payment method, view invoices, or cancel renewal. Cancelling keeps your access active until the end of the period already paid for.
+      </p>
+    </section>
+
     <!-- Analytics Link -->
     <section class="profile-section">
       <a href="/analytics.html" class="btn btn-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -259,6 +271,7 @@
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
   <!-- App Scripts -->
@@ -268,7 +281,7 @@
   <script defer src="/js/upload.js?v=74"></script>
   <script defer src="/js/notifications.js?v=74"></script>
   <script defer src="/js/dm-badge.js?v=40"></script>
-  <script defer src="/js/profile.js?v=74"></script>
+  <script defer src="/js/profile.js?v=billing-portal-1"></script>
   <script defer src="/js/transitions.js?v=40"></script>
   <script defer src="/js/swipe-back.js?v=40"></script>
   <script defer src="/js/install-prompt.js?v=40"></script>

@@ -43,17 +43,66 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1780967014767';
+const CACHE_VERSION = 'sbd-network-v1785064899595';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
 // NOTE: JS/CSS files in this project use ?v=TIMESTAMP versioned URLs.
 // Precaching bare paths (/js/foo.js) would never match those versioned URLs
 // (cache lookup is exact URL match). Only precache unversioned assets.
+// Do NOT precache .html paths — Firebase cleanUrls redirects /page.html → /page,
+// and Safari rejects "Response served by service worker has redirections".
 const PRECACHE_URLS = [
   '/manifest.json',
   '/changelog.json',
 ];
+
+/**
+ * Safari (WebKit) throws if a SW returns a Response with redirected === true.
+ * Rebuild the body so navigations remain valid after Firebase Hosting redirects.
+ */
+function asSameOriginResponse(response) {
+  if (!response || response.type === 'opaqueredirect') {
+    return null;
+  }
+  if (!response.redirected) {
+    return response;
+  }
+  const headers = new Headers(response.headers);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: headers,
+  });
+}
+
+/** With cleanUrls, fetch /page instead of /page.html to avoid a 301. */
+function cleanHtmlRequest(request, url) {
+  const path = (url.pathname.endsWith('.html')
+    ? url.pathname.replace(/\.html$/i, '')
+    : url.pathname) + url.search;
+  return new Request(path, {
+    method: 'GET',
+    headers: request.headers,
+    credentials: request.credentials,
+    redirect: 'follow',
+    cache: 'no-store',
+  });
+}
+
+async function matchHtmlCache(request, url) {
+  const direct = await caches.match(request);
+  if (direct) return asSameOriginResponse(direct) || direct;
+  if (url.pathname.endsWith('.html')) {
+    const cleanPath = url.pathname.replace(/\.html$/i, '') + url.search;
+    const cleanHit = await caches.match(cleanPath);
+    if (cleanHit) return asSameOriginResponse(cleanHit) || cleanHit;
+  } else {
+    const htmlHit = await caches.match(url.pathname + '.html' + url.search);
+    if (htmlHit) return asSameOriginResponse(htmlHit) || htmlHit;
+  }
+  return null;
+}
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
@@ -152,21 +201,25 @@ self.addEventListener('fetch', (event) => {
   // HTML — Network-first, bypass all caches.
   // Cache successful responses so we can fall back if the network returns
   // a 503/500 or is unreachable on the next visit.
+  // Critical for Safari: never return a redirected Response from the SW
+  // (Firebase cleanUrls: /library.html → /library).
   const isHtml = request.headers.get('accept')?.includes('text/html') || url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '';
   if (isHtml) {
     event.respondWith(
-      fetch(new Request(request, { cache: 'no-store' }))
-        .then(response => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            // Store a fresh copy so offline / 503 fallback works
+      fetch(cleanHtmlRequest(request, url))
+        .then((raw) => {
+          const response = asSameOriginResponse(raw);
+          if (response && response.status === 200 && (response.type === 'basic' || response.type === 'default')) {
+            const cacheKey = url.pathname.endsWith('.html')
+              ? new Request(url.pathname.replace(/\.html$/i, '') + url.search)
+              : request;
             const toCache = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, toCache));
+            caches.open(CACHE_NAME).then((cache) => cache.put(cacheKey, toCache));
             return response;
           }
-          // Non-200 from server (e.g. 503) — try cached version first
-          return caches.match(request).then(cached => cached || response);
+          return matchHtmlCache(request, url).then((cached) => cached || response);
         })
-        .catch(() => caches.match(request))
+        .catch(() => matchHtmlCache(request, url))
     );
     return;
   }
