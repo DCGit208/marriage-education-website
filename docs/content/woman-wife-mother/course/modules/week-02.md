@@ -14,7 +14,15 @@ Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 
 Every subsequent module assumes teleios womanhood as **already true** in ontology—and already demanding practice in psychomotor, conjugal, and covenant life.
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
+
+[[integration-law]]
 
 **Womanhood** is foundation. The **wife** lives in the woman; the **mother** lives in the wife. Teleios womanhood is the **operational base** without which wifehood and motherhood collapse into **fragmentation**—wholeness broken while titles remain. If womanhood is forgotten in the home, neither wife nor mother can stand in covenant meaning.
 

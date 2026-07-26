@@ -54,10 +54,31 @@ async function loadCheckoutProduct() {
     currentProductId = productId;
     const suffix = raw.priceSuffix || '';
     const priceStr = '$' + (Number(raw.priceUsd) % 1 === 0 ? raw.priceUsd : raw.priceUsd.toFixed(2)) + suffix;
-    document.getElementById('product-icon').textContent = raw.icon || '📘';
     document.getElementById('product-name').textContent = raw.name;
     document.getElementById('product-description').textContent = raw.description || '';
     document.getElementById('order-total').textContent = priceStr;
+    var iconEl = document.getElementById('product-icon');
+    if (iconEl && raw.coverImage) {
+      iconEl.innerHTML =
+        '<img class="checkout-cover-front" src="' + raw.coverImage + '" alt="' + (raw.name || '') + ' cover" />';
+      iconEl.classList.add('checkout-cover-icon');
+    } else if (iconEl) {
+      iconEl.textContent = raw.icon || '📘';
+    }
+    var existingWrap = document.getElementById('checkout-cover-wrap');
+    if (existingWrap) existingWrap.remove();
+    if (raw.coverWrapImage) {
+      var summary = document.querySelector('.order-summary');
+      if (summary) {
+        var wrap = document.createElement('div');
+        wrap.id = 'checkout-cover-wrap';
+        wrap.className = 'checkout-cover-wrap';
+        wrap.innerHTML =
+          '<p class="checkout-cover-wrap-label">Front &amp; back cover</p>' +
+          '<img class="checkout-cover-wrap-img" src="' + raw.coverWrapImage + '" alt="' + (raw.name || '') + ' full cover" />';
+        summary.appendChild(wrap);
+      }
+    }
   } catch (err) {
     console.error('[Checkout] catalog load failed:', err);
     window.location.href = '/shop.html';

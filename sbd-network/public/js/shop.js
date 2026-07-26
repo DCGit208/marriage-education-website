@@ -22,6 +22,7 @@ const MEMBERSHIP_TIER_META = {
     slug: 'foundation',
     icon: '🟢',
     featured: false,
+    yearlyId: 'foundation-yearly',
     features: [
       'Partial Teleios Identity (Weeks 1–4)',
       'Partial Sexual Literacy intro',
@@ -165,7 +166,38 @@ async function loadShopCatalog() {
   SHOP_PRODUCTS.forEach(function (p) {
     PRODUCT_CATALOG[p.id] = normalizeCatalogProduct(p);
   });
+  await mergeStudioShopProducts();
   console.log('[Shop] Catalog loaded: phase', SHOP_ACTIVE_PHASE, '→', SHOP_PRODUCTS.length, 'visible products');
+}
+
+/** Merge Course Studio–published books from Firestore into the static catalog. */
+async function mergeStudioShopProducts() {
+  if (typeof db === 'undefined' || !db) return;
+  try {
+    const snap = await db.collection('shopProducts')
+      .where('studioPublished', '==', true)
+      .limit(200)
+      .get();
+    if (snap.empty) return;
+    snap.forEach(function (doc) {
+      const raw = doc.data() || {};
+      if (raw.status === 'inactive') return;
+      if (!raw.studioManaged && !raw.studioPublished) return;
+      const p = Object.assign({}, raw, { id: doc.id });
+      if ((p.phase || 1) > SHOP_ACTIVE_PHASE) return;
+      const normalized = normalizeCatalogProduct(p);
+      const existingIdx = SHOP_PRODUCTS.findIndex(function (x) { return x.id === normalized.id; });
+      if (existingIdx >= 0) {
+        SHOP_PRODUCTS[existingIdx] = Object.assign({}, SHOP_PRODUCTS[existingIdx], normalized);
+      } else {
+        SHOP_PRODUCTS.push(normalized);
+      }
+      PRODUCT_CATALOG[normalized.id] = normalized;
+    });
+    console.log('[Shop] Merged studio products from Firestore');
+  } catch (err) {
+    console.warn('[Shop] Studio product merge skipped:', err.message || err);
+  }
 }
 
 function normalizeCatalogProduct(p) {
@@ -189,6 +221,7 @@ function normalizeCatalogProduct(p) {
     section: p.section || inferSectionFromCategory(p.category),
     subcategory: p.subcategory || null,
     coverImage: p.coverImage || '',
+    coverWrapImage: p.coverWrapImage || '',
     visualKey: p.visualKey || '',
     sourceUrl: p.sourceUrl || '',
     requiredTier: p.requiredTier || 'free',
@@ -726,6 +759,11 @@ function buildTierCard(product) {
   var featuresHtml = meta.features.map(function (f) {
     return '<li>' + escapeShopHtml(f) + '</li>';
   }).join('');
+  var yearly = meta.yearlyId ? PRODUCT_CATALOG[meta.yearlyId] : null;
+  var yearlyHtml = yearly && yearly.stripeReady
+    ? '<button type="button" class="product-btn-yearly btn btn-secondary">Pay yearly — ' +
+      escapeShopHtml(formatPrice(yearly)) + '</button>'
+    : '';
   card.innerHTML =
     badge +
     '<div class="tier-card__icon">' + escapeShopHtml(meta.icon || product.icon) + '</div>' +
@@ -733,7 +771,8 @@ function buildTierCard(product) {
     '<p class="tier-card__desc">' + escapeShopHtml(product.description) + '</p>' +
     '<ul class="tier-card__features">' + featuresHtml + '</ul>' +
     '<p class="tier-card__price">' + escapeShopHtml(formatPrice(product)) + '</p>' +
-    '<button type="button" class="product-btn btn btn-primary">Subscribe</button>';
+    '<button type="button" class="product-btn btn btn-primary">Subscribe</button>' +
+    yearlyHtml;
 
   if (product.stripeReady) {
     function go() { buyProduct(product.id); }
@@ -745,6 +784,13 @@ function buildTierCard(product) {
       e.stopPropagation();
       go();
     });
+    var yearlyBtn = card.querySelector('.product-btn-yearly');
+    if (yearlyBtn) {
+      yearlyBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        buyProduct(meta.yearlyId);
+      });
+    }
   }
   return card;
 }
@@ -1055,7 +1101,15 @@ function buildProductCard(p) {
     escapeShopHtml(btnLabel) + '</button>' +
     '</div>';
 
-  card.innerHTML = imageHtml + '<div class="product-card__body">' + bodyHtml + '</div>';
+  card.innerHTML = imageHtml + '<div class="product-card__body">' + bodyHtml + '</div>' +
+    (p.coverWrapImage
+      ? '<div class="product-cover-wrap">' +
+        '<p class="product-cover-wrap-label">Front &amp; back cover</p>' +
+        '<img class="product-cover-wrap-img" loading="lazy" src="' +
+        escapeShopHtml(encodeCoverPath(p.coverWrapImage)) +
+        '" alt="' + escapeShopHtml(p.name) + ' — full cover wrap" />' +
+        '</div>'
+      : '');
 
   if (canCheckout) {
     function go() { buyProduct(p.id); }

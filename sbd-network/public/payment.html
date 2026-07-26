@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1780967014753">
+  <meta name="build-version" content="1785064899585">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Upgrade your SBD Network tier">
     <meta name="theme-color" content="#667eea">
     <title>Upgrade - SBD Network</title>
     
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/learn.css">
+    <link rel="stylesheet" href="/css/styles.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/learn.css?v=1785064899585">
     
     <style>
         body {
@@ -132,13 +132,14 @@
         <button class="btn-upgrade" onclick="proceedToCheckout()">
             Continue to Checkout
         </button>
+        <button class="btn-upgrade" id="yearlyCheckoutBtn" style="display:none" onclick="proceedToYearlyCheckout()"></button>
         
         <a href="/learn.html" class="back-link">← Back to Learn</a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="/js/firebase.js?v=1780967014753"></script>
+    <script src="/js/firebase.js?v=1785064899585"></script>
     
     <script>
         // Get tier from URL parameter
@@ -149,7 +150,8 @@
         const tierConfigs = {
             foundation: {
                 name: 'Foundation',
-                price: '$9/month',
+                price: '$9.77/month',
+                yearly: { productId: 'foundation-yearly', label: 'Pay for a full year — $118' },
                 icon: '🟢',
                 color: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)',
                 features: [
@@ -204,10 +206,27 @@
             `<li>${feature}</li>`
         ).join('');
         
+        if (config.yearly) {
+            const yearlyBtn = document.getElementById('yearlyCheckoutBtn');
+            yearlyBtn.textContent = config.yearly.label;
+            yearlyBtn.style.display = '';
+        }
+        
         function proceedToCheckout() {
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     window.location.href = `/checkout.html?product=${requestedTier}-monthly`;
+                } else {
+                    window.location.href = '/auth?next=/payment&tier=' + requestedTier + '&src=payment';
+                }
+            });
+        }
+        
+        function proceedToYearlyCheckout() {
+            if (!config.yearly) return;
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    window.location.href = `/checkout.html?product=${config.yearly.productId}`;
                 } else {
                     window.location.href = '/auth?next=/payment&tier=' + requestedTier + '&src=payment';
                 }

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!-- TEMPLATE: Edit this file in src/pages/library.html — run: node build.js -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+  <meta name="build-version" content="1785064899585">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="My Library — courses and bookshelf">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>My Library - SBD Network</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/library.css?v=1785064899585">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+</head>
+<body data-page="learn" class="library-page bottom-nav-page has-header">
+
+    <header class="app-header">
+        <div class="header-left">
+            <button type="button" class="back-btn btn btn-icon" onclick="history.back()" aria-label="Back">←</button>
+            <h1 class="page-title">My Library</h1>
+        </div>
+    </header>
+
+    <main id="libraryApp">
+        <div class="library-hero">
+            <p class="library-hero-kicker">SBD Network</p>
+            <h1 id="libraryHeroTitle">Your library</h1>
+            <p id="libraryHeroSub">Courses for formation. Books for the shelf.</p>
+        </div>
+
+        <div class="library-tabs" role="tablist" aria-label="Library sections">
+            <button type="button" class="library-tab is-active" role="tab" aria-selected="true" data-lib-tab="all">All</button>
+            <button type="button" class="library-tab" role="tab" aria-selected="false" data-lib-tab="courses">Courses</button>
+            <button type="button" class="library-tab" role="tab" aria-selected="false" data-lib-tab="books">Books</button>
+        </div>
+
+        <div class="library-search-wrap">
+            <input type="search" id="librarySearch" class="library-search" placeholder="Search your library…" autocomplete="off">
+        </div>
+
+        <div id="libraryDesignerBanner" style="display:none"></div>
+        <div id="libraryOfflineBanner" class="library-offline-banner" hidden>
+            You’re offline — showing downloaded books on your bookshelf.
+        </div>
+
+        <div id="libraryPanelAll" class="library-panel" data-lib-panel="all">
+            <div id="libraryContinue"></div>
+            <section class="library-section library-bookshelf-section" id="libraryBooksPreviewSection">
+                <div class="library-section-head">
+                    <div>
+                        <h2 class="library-section-title">Bookshelf</h2>
+                        <p class="library-section-sub">Owned books — tap Books for the full shelf.</p>
+                    </div>
+                    <button type="button" class="library-link-btn" data-goto-tab="books">Open shelf →</button>
+                </div>
+                <div id="libraryBooksPreview" class="bookshelf-rail"></div>
+            </section>
+            <section class="library-section" id="libraryPurchasedSection">
+                <h2 class="library-section-title">Purchased &amp; owned courses</h2>
+                <p class="library-section-sub">Formation programs you bought — yours to keep.</p>
+                <div id="libraryPurchased"></div>
+            </section>
+            <section class="library-section" id="libraryPlanSection">
+                <h2 class="library-section-title">Included in your plan</h2>
+                <p class="library-section-sub">Unlocked through your subscription tier.</p>
+                <div id="libraryPlan"></div>
+            </section>
+            <section class="library-section" id="libraryShopSection">
+                <h2 class="library-section-title">Available to buy</h2>
+                <p class="library-section-sub">Flagship programs — add from the Shop.</p>
+                <div id="libraryShop"></div>
+            </section>
+        </div>
+
+        <div id="libraryPanelCourses" class="library-panel" data-lib-panel="courses" hidden>
+            <div id="libraryContinueCourses"></div>
+            <section class="library-section" id="libraryPurchasedSectionC">
+                <h2 class="library-section-title">Purchased &amp; owned</h2>
+                <p class="library-section-sub">Courses you bought — LMS only (no offline download).</p>
+                <div id="libraryPurchasedC"></div>
+            </section>
+            <section class="library-section" id="libraryPlanSectionC">
+                <h2 class="library-section-title">Included in your plan</h2>
+                <p class="library-section-sub">Unlocked through your subscription.</p>
+                <div id="libraryPlanC"></div>
+            </section>
+            <section class="library-section" id="libraryShopSectionC">
+                <h2 class="library-section-title">Available to buy</h2>
+                <div id="libraryShopC"></div>
+            </section>
+            <div class="library-section">
+                <div class="library-cta-row">
+                    <a href="/courses.html" class="library-cta">Browse formation catalog →</a>
+                    <a href="/shop.html" class="library-cta">Visit Shop →</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="libraryPanelBooks" class="library-panel" data-lib-panel="books" hidden>
+            <section class="library-section library-bookshelf-section library-bookshelf-section--full">
+                <div class="bookshelf-hero">
+                    <h2 class="bookshelf-hero-title">Your bookshelf</h2>
+                    <p class="bookshelf-hero-sub">Purchased and owned titles. Save a book for offline — courses never download.</p>
+                </div>
+                <div id="bookshelfOwned" class="bookshelf"></div>
+                <div id="bookshelfOwnedPager" class="bookshelf-pager" hidden></div>
+                <p id="bookshelfOwnedEmpty" class="library-empty" hidden>No owned books yet. Purchases land here after Shop checkout.</p>
+            </section>
+            <section class="library-section" id="bookshelfShopSection">
+                <h2 class="library-section-title">More books in the Shop</h2>
+                <p class="library-section-sub">Titles not yet on your shelf.</p>
+                <div id="bookshelfShop" class="bookshelf bookshelf--compact"></div>
+                <div id="bookshelfShopPager" class="bookshelf-pager" hidden></div>
+            </section>
+            <div class="library-section">
+                <div class="library-cta-row">
+                    <a href="/shop.html" class="library-cta">Browse books in Shop →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="/js/firebase.js?v=1785064899585"></script>
+    <script defer src="/js/tier-access.js?v=1785064899585"></script>
+    <script defer src="/js/course-access.js?v=1785064899585"></script>
+    <script defer src="/js/book-offline.js?v=1785064899585"></script>
+    <script defer src="/js/book-covers.js?v=1785064899585"></script>
+    <script defer src="/js/library.js?v=1785064899585"></script>
+
+        <!-- HAMBURGER -->
+    <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
+    <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+    <div id="sideMenu" class="side-menu ham-drawer" aria-hidden="true">
+      <div class="ham-drawer-head">
+        <span class="ham-drawer-title">Menu</span>
+        <button type="button" class="ham-drawer-close" id="hamDrawerClose" aria-label="Close menu">×</button>
+      </div>
+      <nav class="menu-links ham-drawer-body" aria-label="Main menu">
+        <div class="ham-section">
+          <div class="ham-section-label">Formation</div>
+          <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/library.html"><span class="menu-icon">📚</span> My Library</a>
+          <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
+          <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Community</div>
+          <a href="/boards.html"><span class="menu-icon">◫</span> Boards</a>
+          <a href="/communication-v2/"><span class="menu-icon">◷</span> Messages</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Lifestyle</div>
+          <a href="/mv-house.html"><span class="menu-icon">◆</span> MV House</a>
+          <a href="/dating.html"><span class="menu-icon">◌</span> Dating</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">System</div>
+          <a href="/what-is.html"><span class="menu-icon">◉</span> What This System Is</a>
+        </div>
+        <div class="ham-section">
+          <div class="ham-section-label">Account</div>
+          <a href="/profile.html"><span class="menu-icon">◯</span> Profile &amp; Settings</a>
+          <div id="adminSection" class="hidden-admin-section">
+            <a href="/admin.html"><span class="menu-icon">◈</span> Admin Panel</a>
+          </div>
+          <button type="button" id="logoutMenuBtn"><span class="menu-icon">→</span> Sign Out</button>
+        </div>
+      </nav>
+      <div class="ham-drawer-foot">
+        <div id="versionPill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" data-tab="home" aria-label="Home">
+            <span class="bn-icon">⌂</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab active" data-tab="learn" aria-label="Learn">
+            <span class="bn-icon">◎</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" data-tab="boards" aria-label="Boards">
+            <span class="bn-icon">◫</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" data-tab="shop" aria-label="Shop">
+            <span class="bn-icon">◇</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" data-tab="you" aria-label="You">
+            <span class="bn-icon">◯</span>
+            <span class="bn-label">You</span>
+        </a>
+    </nav>
+    <link rel="stylesheet" href="/css/ham-drawer.css?v=1785064899585">
+    <script defer src="/js/ham-nav.js?v=1785064899585"></script>
+
+</body>
+</html>

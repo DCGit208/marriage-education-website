@@ -14,22 +14,21 @@ Weeks 1–10 trained the arc toward this summit:
 
 Week 11 **names the whole** — one muliebrity across kitchen, bedroom, boardroom, and nursery. She does not desexualize when children appear. She does not disappear as woman when tasks call. She does not perform wife only in crisis. **One woman, three expressions.**
 
+[[integration-law]]
+
 Formation flow (mandatory):
 
 ```
 Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 ```
 
+**The wife** is **womanhood in one-flesh matrimony**—conjugal-sexual covenant (lifestyle sexuality, due benevolence), covenant helper (Genesis 2:18), and every expression wifehood carries by design. One teleios woman; wife lives in woman. **Fragmentation** is when wifehood runs **without** womanhood governing—not when design expressions operate in their fullness.
+
 ### §F1 marriage ontology (summit recall)
 
-```
-DESIGN:     Sexuality = TREE  →  Sex = FRUIT
-MARRIAGE:   Marriage IS conjugal-sexual covenant
-EQUATIONS:  Marriage = Sexuality = Nakedness  |  Sex = Marriage enacted
-MULIEBRITY: Teleios woman in full conscious female operation
-WIFE:       Womanhood in one-flesh matrimony — integrated expression (below)
-MOTHER:     Wifehood extended in the generative family unit
-```
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
 
 **Only teleios muliebrity is fit to engage and marry.** Marriage deploys sexuality already in design; certificate witnesses covenant — it does not invent womanhood at vows.
 

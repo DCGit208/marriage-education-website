@@ -65,6 +65,18 @@ function classifyAmbassadorRole(data) {
 }
 
 /**
+ * Resolve the next upline code from an ambassador-like record.
+ * Prefer explicit recruiter fields, then fall back to known RD fields.
+ */
+function resolveNextUplineCode(data) {
+  const recruiter = normalizeReferralCode(data?.recruitedBy || data?.recruited_by || '');
+  if (recruiter) return recruiter;
+  return normalizeReferralCode(
+    data?.recruited_by_rd || data?.regional_director_code || data?.rdCode || data?.regional_director || ''
+  );
+}
+
+/**
  * Walk uplines above direct recruiter (closest first).
  * @param {FirebaseFirestore.Firestore} db
  * @param {string} directRecruiterCode
@@ -81,17 +93,15 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
 
   const firstAmb = await db.collection('ambassadors').doc(current).get();
   if (!firstAmb.exists) return [];
-  let nextCode = normalizeReferralCode(
-    firstAmb.data().recruitedBy || firstAmb.data().recruited_by || ''
-  );
+  let nextCode = resolveNextUplineCode(firstAmb.data());
 
   while (nextCode && !seen.has(nextCode)) {
     if (isExcludedUplineCode(nextCode)) break;
-    seen.add(nextCode);
 
     if (nextCode.startsWith('AMB-') || nextCode.startsWith('SNR-')) {
       const snap = await db.collection('ambassadors').doc(nextCode).get();
       if (!snap.exists) break;
+      seen.add(nextCode);
       const data = snap.data();
       uplines.push({
         code: nextCode,
@@ -99,7 +109,7 @@ async function resolveRecruitmentUplines(db, directRecruiterCode) {
         role: classifyAmbassadorRole(data),
         collection: 'ambassadors'
       });
-      const following = normalizeReferralCode(data.recruitedBy || data.recruited_by || '');
+      const following = resolveNextUplineCode(data);
       if (isExcludedUplineCode(following)) break;
       if (following.startsWith('RD-')) {
         await appendRdUpline(db, uplines, following, seen);
@@ -192,6 +202,7 @@ module.exports = {
   UPLINE_POOL_FCFA,
   UPLINE_SINGLE_SHARE_FCFA,
   normalizeReferralCode,
+  resolveNextUplineCode,
   computeUplineShareAmounts,
   resolveRecruitmentUplines,
   buildRecruitmentBonusPlan,

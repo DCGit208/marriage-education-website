@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="build-version" content="1780967014753">
+  <meta name="build-version" content="1785064899585">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="What SBD Network Is — A structured formation system for sexual intelligence and identity development.">
   <meta name="theme-color" content="#000000">
@@ -11,8 +11,8 @@
 
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/bottom-nav.css?v=1780967014753">
+  <link rel="stylesheet" href="/css/styles.css?v=1785064899585">
+  <link rel="stylesheet" href="/css/bottom-nav.css?v=1785064899585">
 
   <style>
     /* ── Page Layout ─────────────────────────────────────────── */
@@ -479,7 +479,7 @@
       <li>
         <span class="tier-name foundation">Foundation</span>
         <span class="tier-desc">Core formation system — Teleios Blueprint + SBD Courseware</span>
-        <span class="tier-price">$9 / month</span>
+        <span class="tier-price">$9.77 / month</span>
       </li>
       <li>
         <span class="tier-name premium">Premium</span>
@@ -549,7 +549,7 @@
       It is a system you enter.
     </p>
     <div class="wis-cta-group">
-      <a href="/shop.html" class="btn-primary-wis" id="finalCTA">Start Formation — $9/month</a>
+      <a href="/shop.html" class="btn-primary-wis" id="finalCTA">Start Formation — $9.77/month</a>
       <a href="/learn.html" class="btn-secondary-wis">View System Structure</a>
     </div>
   </section>
@@ -567,7 +567,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <script src="/js/firebase.js?v=1780967014753"></script>
+  <script src="/js/firebase.js?v=1785064899585"></script>
 
   <script>
   (function () {
@@ -594,8 +594,8 @@
     // ── Conditional upgrade bar + CTA text ───────────────────
     function onAuthReady(user) {
       if (!user) {
-        // Not signed in — show "Start at $9"
-        showUpgradeBar('Access begins at $9/month — Foundation Tier', 'Start Formation — $9/month', '/shop.html');
+        // Not signed in — show "Start at $9.77"
+        showUpgradeBar('Access begins at $9.77/month — Foundation Tier', 'Start Formation — $9.77/month', '/shop.html');
         return;
       }
 
@@ -616,10 +616,10 @@
         if (data.role === 'admin') tier = 'elite';
 
         if (tier === 'free' || tier === 'foundation' && sub.status !== 'active') {
-          showUpgradeBar('Access begins at $9/month — Foundation Tier', 'Start Formation — $9/month', '/shop.html');
+          showUpgradeBar('Access begins at $9.77/month — Foundation Tier', 'Start Formation — $9.77/month', '/shop.html');
           // Also update final CTA
           var fc = document.getElementById('finalCTA');
-          if (fc) { fc.textContent = 'Start Formation — $9/month'; fc.href = '/shop.html'; }
+          if (fc) { fc.textContent = 'Start Formation — $9.77/month'; fc.href = '/shop.html'; }
         } else if (tier === 'foundation') {
           showUpgradeBar('You are in Foundation. Unlock deeper levels.', 'Upgrade to Premium', '/shop.html?upgrade=premium');
           var fc = document.getElementById('finalCTA');
@@ -666,6 +666,7 @@
         <div class="ham-section">
           <div class="ham-section-label">Formation</div>
           <a href="/learn.html"><span class="menu-icon">◈</span> My Learning</a>
+          <a href="/library.html"><span class="menu-icon">📚</span> My Library</a>
           <a href="/schools.html"><span class="menu-icon">◉</span> Schools</a>
           <a href="/certificates.html"><span class="menu-icon">◎</span> Certifications</a>
         </div>
@@ -720,8 +721,8 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <link rel="stylesheet" href="/css/ham-drawer.css">
-    <script defer src="/js/ham-nav.js?v=1780967014753"></script>
+    <link rel="stylesheet" href="/css/ham-drawer.css?v=1785064899585">
+    <script defer src="/js/ham-nav.js?v=1785064899585"></script>
 
 </body>
 </html>

@@ -3,13 +3,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+  <meta name="build-version" content="1782228083592">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>Course Studio - SBD Network</title>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/lesson-reader.css">
-    <link rel="stylesheet" href="/css/admin-courses.css">
+    <link rel="stylesheet" href="/css/styles.css?v=1">
+    <link rel="stylesheet" href="/css/lesson-reader.css?v=1">
+    <link rel="stylesheet" href="/css/admin-courses.css?v=1">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
 <body class="admin-courses-page">
@@ -23,57 +24,69 @@
             </div>
         </div>
         <div class="acs-header-actions">
-            <button type="button" id="acsNewCourseBtn" class="acs-btn acs-btn--gold">+ New Course</button>
-            <button type="button" id="acsRepoSyncBtn" class="acs-btn acs-btn--primary">Repo sync</button>
-            <button type="button" id="acsVisionToggle" class="acs-btn">Roadmap</button>
-            <a href="/library.html" class="acs-btn">My Library</a>
+            <div class="acs-header-group" role="group" aria-label="Create">
+                <button type="button" id="acsNewCourseBtn" class="acs-btn acs-btn--gold">+ Course</button>
+                <button type="button" id="acsBookBtn" class="acs-btn acs-btn--gold">+ Book</button>
+            </div>
+            <div class="acs-header-group" role="group" aria-label="Workflow">
+                <button type="button" id="acsReviewQueueBtn" class="acs-btn">Review queue</button>
+                <button type="button" id="acsAnalyticsBtn" class="acs-btn">Analytics</button>
+                <button type="button" id="acsRepoSyncBtn" class="acs-btn acs-btn--primary">Repo sync</button>
+            </div>
+            <div class="acs-header-group" role="group" aria-label="Navigate">
+                <button type="button" id="acsVisionToggle" class="acs-btn">Roadmap</button>
+                <a href="/library.html" class="acs-btn">Library</a>
+            </div>
         </div>
     </header>
 
     <div id="acsDenied" class="acs-denied" style="display:none">
-        <h2>Content Designer access required</h2>
-        <p>Grant yourself <strong>Content Designer</strong> in Admin Panel → Users.</p>
+        <h2>Course Studio access required</h2>
+        <p>Studio is only for people granted <strong>Content Designer</strong> — platform Admin alone is not enough.</p>
+        <p>Ask a main admin to open <strong>Admin Panel → Users → Content Designer access</strong> (or set role to Content Designer).</p>
         <p><a href="/admin.html">Admin Panel</a></p>
     </div>
 
-    <div id="acsApp" style="display:none">
+    <div id="acsApp" class="acs-app" hidden>
         <div id="acsDraftBanner" class="acs-draft-banner" role="status">
             <div class="acs-draft-banner-text">
                 <strong>Draft ≠ live.</strong> Save draft stores your work safely. Learners only see changes after you click <strong>Publish</strong> (or Publish whole week). Existing courses open with published content until you edit.
             </div>
             <button type="button" id="acsDraftBannerDismiss" class="acs-btn acs-btn--sm" aria-label="Dismiss">Got it</button>
         </div>
-        <section id="acsVision" class="acs-vision open">
+        <section id="acsVision" class="acs-vision">
             <div class="acs-vision-head" id="acsVisionHead">
                 <h2>Studio roadmap — live now vs world-class premium</h2>
-                <span id="acsVisionChevron">▼</span>
+                <span id="acsVisionChevron">▶</span>
             </div>
             <div class="acs-vision-body">
-                <p>You're on <strong>Phase 4</strong>: Phase 3 <em>plus</em> repo sync export + drift compare for WWM. Media library and collaboration remain on the roadmap. <a href="/docs/course-studio-spec.md" target="_blank" rel="noopener">Full spec →</a></p>
+                <p>You're on <strong>Phase 5</strong>: authoring, Canon AI, review queue, learner analytics, and book-as-product publish to Network shop/Firebase are live. Parent-site (marriageducation.com) placement is next. <a href="/docs/course-studio-spec.md" target="_blank" rel="noopener">Full spec →</a></p>
                 <div class="acs-roadmap">
                     <div class="acs-roadmap-col acs-roadmap-col--live">
-                        <h3>Live now (Phase 2–4)</h3>
+                        <h3>Live now</h3>
                         <ul>
                             <li class="done">Full catalog — edit any existing course/week/part</li>
                             <li class="done">Split editor + live preview</li>
                             <li class="done">Add / duplicate week or part</li>
-                            <li class="done">New course wizard</li>
+                            <li class="done">New course wizard + cover art</li>
                             <li class="done">Markdown toolbar + templates</li>
                             <li class="done">Draft save + Publish to LMS</li>
                             <li class="done">Doctrine linter + metadata rail</li>
                             <li class="done">Drag reorder parts</li>
                             <li class="done">Repo sync — export + drift vs manifest</li>
-                            <li class="done">Publish history + restore to draft</li>
+                            <li class="done">Publish history + restore + version diff</li>
+                            <li class="done">SBD Canon AI writing agent</li>
                             <li class="done">Ambient chapter transitions (reader)</li>
+                            <li class="done">Collaboration &amp; review queue</li>
+                            <li class="done">Learner analytics in Studio</li>
+                            <li class="done">Book-as-product → Network shop + Firebase</li>
                         </ul>
                     </div>
                     <div class="acs-roadmap-col acs-roadmap-col--next">
-                        <h3>Phase 4–5 (next)</h3>
+                        <h3>Still next</h3>
                         <ul>
-                            <li class="soon">Version diff view (side-by-side)</li>
-                            <li class="soon">Issue-cover art picker</li>
-                            <li class="soon">Collaboration & review queue</li>
-                            <li class="soon">Learner analytics in studio</li>
+                            <li class="soon">Publish books/courses onto marriageducation.com parent pages</li>
+                            <li class="soon">Full media library browser</li>
                         </ul>
                     </div>
                 </div>
@@ -90,10 +103,10 @@
             <main class="acs-studio" id="acsStudio">
                 <div id="acsStudioEmpty" class="acs-studio-empty">
                     <h2>Select a part to edit</h2>
-                    <p>Or expand a course → <strong>+ Week</strong> / <strong>+ Part</strong></p>
-                    <p style="margin-top:16px;font-size:0.8rem">Formatting is Markdown — preview updates as you type.</p>
+                    <p>Or expand a <strong>Book</strong> / <strong>Course</strong> → add chapters or weeks</p>
+                    <p style="margin-top:16px;font-size:0.8rem">Formatting is Markdown — Canon AI and preview live in the right rail.</p>
                 </div>
-                <div id="acsStudioEditor" style="display:none;flex:1;flex-direction:column;">
+                <div id="acsStudioEditor" class="acs-studio-editor" hidden>
                     <div class="acs-editor-toolbar">
                         <h2 id="acsEditorTitle" class="acs-editor-title">Edit part</h2>
                         <div class="acs-editor-tabs">
@@ -119,10 +132,13 @@
                         <button type="button" class="acs-md-btn" data-md-action="code" title="Code fence">{ }</button>
                         <button type="button" class="acs-md-btn" data-md-action="ontology" title="Ontology section">Ontology</button>
                         <button type="button" class="acs-md-btn" data-md-action="reflection" title="Reflection">Reflection</button>
+                        <button type="button" class="acs-md-btn" data-md-action="f1Spine" title="§F1 spine diagram">§F1 Spine</button>
+                        <button type="button" class="acs-md-btn" data-md-action="f1Recall" title="Compact §F1 recall">F1 Recall</button>
+                        <button type="button" class="acs-md-btn" data-md-action="integrationLaw" title="Integration law diagram">Integration</button>
                     </div>
                     <div id="acsCheat" class="acs-cheat">
                         <code>**bold**</code> · <code>*italic*</code> · <code>## Heading</code> · blank line = paragraph ·
-                        <code>| A | B |</code> table · <code>```</code> diagram · scripture refs auto-expand in Scripture Study
+                        <code>| A | B |</code> table · <code>[[f1-spine]]</code> · <code>[[integration-law]]</code> · scripture refs auto-expand in Scripture Study
                     </div>
                     <div id="acsSplit" class="acs-split">
                         <div class="acs-source-pane">
@@ -131,31 +147,84 @@
                         <div id="acsPreviewPane" class="acs-preview-pane lesson-editorial formation-reader"></div>
                     </div>
                     <div class="acs-editor-foot">
-                        <span id="acsEditorStatus">Ready</span>
-                        <span id="acsEditorHint">Draft saves locally to Firestore · Publish updates what learners see</span>
+                        <div class="acs-editor-foot-nav" role="navigation" aria-label="Part navigation">
+                            <button type="button" id="acsPartPrevBtn" class="acs-btn acs-btn--sm" disabled>← Prev part</button>
+                            <span id="acsPartNavLabel" class="acs-part-nav-label">Part — / —</span>
+                            <button type="button" id="acsPartNextBtn" class="acs-btn acs-btn--sm" disabled>Next part →</button>
+                        </div>
+                        <div class="acs-editor-foot-status">
+                            <span id="acsEditorStatus">Ready</span>
+                            <span id="acsEditorHint">Scroll stays inside each pane · Draft saves to Firestore · Publish updates learners</span>
+                        </div>
                     </div>
                 </div>
             </main>
 
             <aside id="acsMetaRail" class="acs-meta-rail" aria-label="Part metadata" style="display:none">
-                <p class="acs-meta-rail-title">Part details</p>
-                <dl class="acs-meta-dl">
-                    <dt>Status</dt><dd id="acsRailStatus">—</dd>
-                    <dt>Words</dt><dd id="acsRailWords">—</dd>
-                    <dt>Read time</dt><dd id="acsRailRead">—</dd>
-                    <dt>Course</dt><dd id="acsRailCourse" class="acs-mono">—</dd>
-                    <dt>Module</dt><dd id="acsRailModule" class="acs-mono">—</dd>
-                    <dt>Part</dt><dd id="acsRailPart" class="acs-mono">—</dd>
-                </dl>
-                <div class="acs-meta-rail-section">
+                <div class="acs-panel-card">
+                    <p class="acs-meta-rail-title">Part details</p>
+                    <dl class="acs-meta-dl">
+                        <dt>Status</dt><dd id="acsRailStatus">—</dd>
+                        <dt>Words</dt><dd id="acsRailWords">—</dd>
+                        <dt>Read time</dt><dd id="acsRailRead">—</dd>
+                        <dt>Course</dt><dd id="acsRailCourse" class="acs-mono">—</dd>
+                        <dt>Module</dt><dd id="acsRailModule" class="acs-mono">—</dd>
+                        <dt>Part</dt><dd id="acsRailPart" class="acs-mono">—</dd>
+                    </dl>
+                </div>
+                <div class="acs-meta-rail-section acs-panel-card acs-canon-section">
+                    <p class="acs-meta-rail-title">✦ Canon AI</p>
+                    <p id="acsCanonIndexMeta" class="acs-canon-index-meta">Loading index…</p>
+                    <textarea id="acsCanonInstruction" class="acs-canon-instruction" rows="2" placeholder="Optional: tone, emphasis, week theme…"></textarea>
+                    <div class="acs-canon-actions">
+                        <button type="button" class="acs-btn acs-btn--sm acs-btn--gold" data-canon-action="draft">Draft part</button>
+                        <button type="button" class="acs-btn acs-btn--sm" data-canon-action="expand">Expand</button>
+                        <button type="button" class="acs-btn acs-btn--sm" data-canon-action="rewrite">Rewrite</button>
+                        <button type="button" class="acs-btn acs-btn--sm" data-canon-action="align">Align canon</button>
+                        <button type="button" class="acs-btn acs-btn--sm" data-canon-action="suggest">Outline</button>
+                    </div>
+                    <p id="acsCanonStatus" class="acs-canon-status">Draft only — review &amp; Publish yourself.</p>
+                    <ul id="acsCanonCitations" class="acs-canon-citations"></ul>
+                    <button type="button" id="acsCanonReindexBtn" class="acs-btn acs-btn--sm acs-btn--block" style="margin-top:8px">Reindex corpus</button>
+                </div>
+                <div class="acs-meta-rail-section acs-panel-card">
+                    <p class="acs-meta-rail-title">Editorial review</p>
+                    <p class="acs-panel-help"><strong>Purpose:</strong> collaboration among Content Designers only (people granted Studio access). Members and plain Admins without Designer cannot edit here. Use this when a second designer should check a part before you Publish.</p>
+                    <ol class="acs-review-steps">
+                        <li><strong>Submit</strong> — “I’m done; please check this part”</li>
+                        <li><strong>Approve</strong> — “Looks good” (still draft for learners)</li>
+                        <li><strong>Publish</strong> — the only action that updates the LMS</li>
+                    </ol>
+                    <p class="acs-panel-help">Working alone? Ignore this panel — Save draft → Publish. Grant Studio access from Admin Panel → Users → Content Designer.</p>
+                    <label class="acs-field acs-field--compact">
+                        <span class="acs-field-label">Status</span>
+                        <select id="acsReviewStatus" class="acs-select">
+                            <option value="draft">Draft</option>
+                            <option value="in_review">In review</option>
+                            <option value="approved">Approved</option>
+                        </select>
+                    </label>
+                    <p id="acsReviewMeta" class="acs-panel-status">Open a part to manage review.</p>
+                    <div class="acs-review-actions">
+                        <button type="button" id="acsReviewSubmitBtn" class="acs-btn acs-btn--sm">Submit for review</button>
+                        <button type="button" id="acsReviewApproveBtn" class="acs-btn acs-btn--sm acs-btn--gold">Approve</button>
+                    </div>
+                    <label class="acs-field acs-field--compact">
+                        <span class="acs-field-label">Note</span>
+                        <textarea id="acsReviewNoteInput" class="acs-canon-instruction" rows="2" placeholder="Feedback for the author…"></textarea>
+                    </label>
+                    <button type="button" id="acsReviewAddNoteBtn" class="acs-btn acs-btn--sm acs-btn--block">Add note</button>
+                    <div id="acsReviewNotes" class="acs-review-notes"></div>
+                </div>
+                <div class="acs-meta-rail-section acs-panel-card">
                     <p class="acs-meta-rail-title">Doctrine linter</p>
                     <div id="acsLintPanel" class="acs-lint-panel"><p class="acs-lint-muted">Open a part to lint</p></div>
                 </div>
-                <div class="acs-meta-rail-section">
+                <div class="acs-meta-rail-section acs-panel-card">
                     <p class="acs-meta-rail-title">Publish history</p>
                     <div id="acsVersionPanel" class="acs-version-panel"><p class="acs-lint-muted">Open a part to view history</p></div>
                 </div>
-                <button type="button" id="acsPublishWeekBtn" class="acs-btn acs-btn--gold acs-btn--block" disabled>Publish whole week</button>
+                <button type="button" id="acsPublishWeekBtn" class="acs-btn acs-btn--gold acs-btn--block acs-publish-week" disabled>Publish whole week</button>
             </aside>
         </div>
 
@@ -196,6 +265,7 @@
             <p id="acsVersionPreviewMeta" class="acs-sync-status"></p>
             <div id="acsVersionPreviewBody" class="acs-version-preview-body formation-reader lesson-editorial"></div>
             <div class="acs-modal-actions">
+                <button type="button" id="acsVersionModalDiff" class="acs-btn">Diff vs draft</button>
                 <button type="button" id="acsVersionModalRestore" class="acs-btn acs-btn--gold">Restore to draft</button>
                 <button type="button" class="acs-btn" data-close-version>Close</button>
             </div>
@@ -242,6 +312,20 @@
             </div>
             <div class="acs-field"><label><input type="checkbox" id="acsCoursePurchaseOnly"> Purchase-only (Shop, not subscription)</label></div>
             <div class="acs-field"><label>Initial weeks (blank formation shell)</label><input type="number" id="acsCourseWeeks" value="1" min="1" max="52"></div>
+            <div class="acs-field">
+                <label>Cover art</label>
+                <div class="acs-cover-picker">
+                    <div id="acsCourseCoverPreview" class="acs-cover-preview" aria-hidden="true"></div>
+                    <input type="file" id="acsCourseCoverFile" class="acs-file-input" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <input type="hidden" id="acsCourseCoverUrl" value="">
+                    <div class="acs-cover-actions">
+                        <label for="acsCourseCoverFile" id="acsCourseCoverPickBtn" class="acs-btn acs-btn--sm acs-btn--file">Upload cover</label>
+                        <button type="button" id="acsCourseCoverClearBtn" class="acs-btn acs-btn--sm" style="display:none">Remove</button>
+                    </div>
+                    <p id="acsCourseCoverStatus" class="acs-cover-status"></p>
+                    <p class="acs-lint-muted">JPG / PNG / WebP · max 8 MB · portrait recommended</p>
+                </div>
+            </div>
             <div class="acs-modal-actions">
                 <button type="button" class="acs-btn" data-close-modal>Cancel</button>
                 <button type="button" id="acsCourseSaveBtn" class="acs-btn acs-btn--gold">Create course</button>
@@ -249,17 +333,152 @@
         </div>
     </div>
 
+    <!-- Course settings (cover) modal -->
+    <div id="acsCourseSettingsModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal" role="dialog" style="max-width:480px">
+            <h3>Course cover</h3>
+            <p id="acsCourseSettingsTitle" class="acs-sync-status"></p>
+            <div class="acs-field">
+                <div class="acs-cover-picker">
+                    <div id="acsSettingsCoverPreview" class="acs-cover-preview" aria-hidden="true"></div>
+                    <input type="file" id="acsSettingsCoverFile" class="acs-file-input" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <input type="hidden" id="acsSettingsCoverUrl" value="">
+                    <input type="hidden" id="acsSettingsCourseId" value="">
+                    <div class="acs-cover-actions">
+                        <label for="acsSettingsCoverFile" id="acsSettingsCoverPickBtn" class="acs-btn acs-btn--sm acs-btn--file">Upload cover</label>
+                        <button type="button" id="acsSettingsCoverClearBtn" class="acs-btn acs-btn--sm" style="display:none">Remove</button>
+                    </div>
+                    <p id="acsSettingsCoverStatus" class="acs-cover-status"></p>
+                </div>
+            </div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-modal>Cancel</button>
+                <button type="button" id="acsCourseSettingsSaveBtn" class="acs-btn acs-btn--gold">Save cover</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version diff modal -->
+    <div id="acsDiffModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal acs-modal--wide acs-modal--tall" role="dialog" aria-labelledby="acsDiffTitle">
+            <h3 id="acsDiffTitle">Version diff</h3>
+            <p id="acsDiffMeta" class="acs-sync-status"></p>
+            <div class="acs-diff-grid">
+                <div>
+                    <p class="acs-diff-label">Snapshot</p>
+                    <pre id="acsDiffLeft" class="acs-diff-pane"></pre>
+                </div>
+                <div>
+                    <p class="acs-diff-label">Current draft</p>
+                    <pre id="acsDiffRight" class="acs-diff-pane"></pre>
+                </div>
+            </div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-diff>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review queue modal -->
+    <div id="acsReviewQueueModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal acs-modal--wide" role="dialog" aria-labelledby="acsReviewQueueTitle">
+            <h3 id="acsReviewQueueTitle">Review queue</h3>
+            <p class="acs-sync-intro">Parts marked <strong>In review</strong>. Opening one loads it in the editor so you can leave notes, Approve, then Publish separately.</p>
+            <p id="acsReviewQueueStatus" class="acs-sync-status">Parts marked In review</p>
+            <div id="acsReviewQueueBody" class="acs-queue-list"></div>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-review-queue>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learner analytics modal -->
+    <div id="acsAnalyticsModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal acs-modal--wide" role="dialog" aria-labelledby="acsAnalyticsTitle">
+            <h3 id="acsAnalyticsTitle">Learner analytics</h3>
+            <div class="acs-field">
+                <label for="acsAnalyticsCourse">Course</label>
+                <select id="acsAnalyticsCourse" class="acs-select"></select>
+            </div>
+            <p id="acsAnalyticsStatus" class="acs-sync-status"></p>
+            <div id="acsAnalyticsGrid" class="acs-analytics-grid"></div>
+            <div id="acsAnalyticsSample"></div>
+            <div class="acs-modal-actions">
+                <button type="button" id="acsAnalyticsRefresh" class="acs-btn">Refresh</button>
+                <button type="button" class="acs-btn" data-close-analytics>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New book wizard (prelim only — writing is in the main Studio editor) -->
+    <div id="acsBookModal" class="acs-modal-backdrop" aria-hidden="true">
+        <div class="acs-modal" role="dialog" aria-labelledby="acsBookTitleHeading" style="max-width:520px">
+            <h3 id="acsBookTitleHeading">New book</h3>
+            <p class="acs-sync-intro">This collects title, cover, and shop price only. After you create it, the book opens in the <strong>main Studio editor</strong> — same Markdown tools, Canon AI, preview, and review as courses.</p>
+            <div class="acs-field"><label>Title</label><input type="text" id="acsBookTitle" placeholder="e.g. The Woman, The Wife, The Mother"></div>
+            <div class="acs-field"><label>Subtitle (optional)</label><input type="text" id="acsBookSubtitle" placeholder="Short line under the title"></div>
+            <div class="acs-field"><label>Book ID (slug)</label><input type="text" id="acsBookId" placeholder="auto-from-title"></div>
+            <div class="acs-field"><label>Shop blurb</label><textarea id="acsBookDesc" rows="2" placeholder="What buyers see in the shop"></textarea></div>
+            <div class="acs-field"><label>Price (USD)</label><input type="number" id="acsBookPrice" min="0" step="0.01" value="24.99"></div>
+            <div class="acs-field">
+                <label>Cover</label>
+                <div class="acs-cover-picker">
+                    <div id="acsBookCoverPreview" class="acs-cover-preview" aria-hidden="true"></div>
+                    <input type="file" id="acsBookCoverFile" class="acs-file-input" accept="image/jpeg,image/png,image/webp,image/jpg">
+                    <input type="hidden" id="acsBookCoverUrl" value="">
+                    <div class="acs-cover-actions">
+                        <label for="acsBookCoverFile" class="acs-btn acs-btn--sm acs-btn--file">Upload cover</label>
+                    </div>
+                    <p id="acsBookCoverStatus" class="acs-cover-status"></p>
+                </div>
+            </div>
+            <div class="acs-field">
+                <label class="acs-check acs-check--prominent">
+                    <input type="checkbox" id="acsBookCreateCourseToggle">
+                    <span>
+                        <strong>Also create a formation course for this book</strong>
+                        <em class="acs-check-help">Adds a linked course under Courses with Week 1 and the full 7 formation parts (empty shells). Book stays under Books as chapters. You expand the course later — content is not auto-copied from the book.</em>
+                    </span>
+                </label>
+            </div>
+            <details class="acs-book-advanced">
+                <summary>Advanced — unlock a different existing course on purchase</summary>
+                <p class="acs-panel-help">Separate from creating courseware. If checked, buying the book can also unlock one <em>existing</em> formation course (bundle-style perk).</p>
+                <label class="acs-check">
+                    <input type="checkbox" id="acsBookBonusToggle">
+                    Also unlock an existing course when purchased
+                </label>
+                <div id="acsBookBonusWrap" class="acs-field" hidden>
+                    <label for="acsBookBonusCourse">Bonus course</label>
+                    <select id="acsBookBonusCourse" class="acs-select"></select>
+                </div>
+            </details>
+            <p id="acsBookFormStatus" class="acs-panel-status"></p>
+            <div class="acs-modal-actions">
+                <button type="button" class="acs-btn" data-close-book>Cancel</button>
+                <button type="button" id="acsBookCreateBtn" class="acs-btn acs-btn--gold">Create &amp; open in Studio</button>
+            </div>
+        </div>
+    </div>
+
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script defer src="/js/firebase.js"></script>
-    <script defer src="/js/course-access.js"></script>
-    <script defer src="/js/scripture-passages.js"></script>
-    <script defer src="/js/lesson-renderer.js"></script>
-    <script defer src="/js/studio-doctrine-linter.js"></script>
-    <script defer src="/js/studio-toolbar.js"></script>
-    <script defer src="/js/studio-repo-sync.js"></script>
-    <script defer src="/js/studio-version-history.js"></script>
-    <script defer src="/js/admin-courses.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+    <script defer src="/js/firebase.js?v=1"></script>
+    <script defer src="/js/upload.js?v=1"></script>
+    <script defer src="/js/course-access.js?v=1"></script>
+    <script defer src="/js/scripture-passages.js?v=1"></script>
+    <script defer src="/js/canon-f1-spine.js?v=1"></script>
+    <script defer src="/js/lesson-renderer.js?v=1"></script>
+    <script defer src="/js/studio-doctrine-linter.js?v=1"></script>
+    <script defer src="/js/studio-toolbar.js?v=1"></script>
+    <script defer src="/js/studio-repo-sync.js?v=1"></script>
+    <script defer src="/js/studio-version-history.js?v=1"></script>
+    <script defer src="/js/studio-canon-ai.js?v=1"></script>
+    <script defer src="/js/studio-review.js?v=1"></script>
+    <script defer src="/js/studio-analytics.js?v=1"></script>
+    <script defer src="/js/studio-books.js?v=1"></script>
+    <script defer src="/js/admin-courses.js?v=1"></script>
 </body>
 </html>

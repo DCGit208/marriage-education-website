@@ -253,6 +253,21 @@
   }
 }
 
+/* Intro slides: legibility overlay while MP4 loads (replaces removed JPG posters) */
+.dashboard-page .slide-card.intro-slide > .intro-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.28) 0%,
+    rgba(0, 0, 0, 0.52) 55%,
+    rgba(0, 0, 0, 0.68) 100%
+  );
+}
+
 /* Intro slide 1 — video background (scoped; not .video-bg / MV House) */
 .dashboard-page .slide-card[data-card="intro-1"] > .intro-bg {
   position: absolute !important;
@@ -717,6 +732,18 @@
 /* ═══════════════════════════════════════════════════════════════════
    DISCUSSION BOARDS — one-screen mini-feed
    ═══════════════════════════════════════════════════════════════════ */
+
+/* boards-bg.jpg is not in the repo / hosting — paint a finished dark stage */
+.dashboard-page .slide-card[data-card="boards"] > .card-bg.bg-dark-boards {
+  background-color: #0a0908 !important;
+  background-image:
+    radial-gradient(ellipse at 28% 18%, rgba(232, 210, 176, 0.12) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 72%, rgba(120, 90, 60, 0.18) 0%, transparent 48%),
+    linear-gradient(165deg, #16120f 0%, #0a0908 48%, #12100e 100%) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
 
 [data-card="boards"] .card-content {
   flex: 1 1 auto;
@@ -1955,6 +1982,7 @@
     border-radius: 50% !important;
     border: 2px solid #0a0908 !important;
     display: block !important;
+    background: #1a1612 !important;
   }
   .dashboard-page [data-bb-board] .bb-story-add {
     background: transparent !important;
@@ -2064,8 +2092,10 @@
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
-    object-position: center 36% !important;
+    object-position: center 28% !important;
     display: block !important;
+    opacity: 1 !important;
+    background: #1a1612 !important;
   }
   .dashboard-page [data-bb-board] .bb-post-badge {
     position: absolute !important;

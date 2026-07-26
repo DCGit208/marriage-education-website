@@ -8,6 +8,8 @@
 const {
   computeUplineShareAmounts,
   normalizeReferralCode,
+  resolveRecruitmentUplines,
+  buildRecruitmentBonusPlan,
   POLICY_VERSION
 } = require('../functions/recruitment-bonus-policy');
 const { isExcludedUplineCode } = require('../functions/upline-exclusions');
@@ -53,5 +55,39 @@ const direct = 1500;
 const nyuy = direct + n3.totalUpline;
 ok('Nyuyshu example total 3000', nyuy === 3000);
 
-console.log(`\n--- ${passed}/${passed + failed} passed ---`);
-process.exit(failed ? 1 : 0);
+function mockDb(docs) {
+  return {
+    collection(name) {
+      return {
+        doc(id) {
+          return {
+            async get() {
+              const key = `${name}/${id}`;
+              const data = docs[key];
+              return data ? { exists: true, data: () => data } : { exists: false };
+            }
+          };
+        }
+      };
+    }
+  };
+}
+
+(async () => {
+  const db = mockDb({
+    'ambassadors/AMB-VENE-5251': { recruitedBy: 'RD-AYIN-5087', fullName: 'Venessa Epie' },
+    'regional_directors/RD-AYIN-5087': { name: 'Ayinwi Promise Imbih' }
+  });
+  const uplines = await resolveRecruitmentUplines(db, 'AMB-VENE-5251');
+  ok('AMB direct → RD upline resolves', uplines.length === 1 && uplines[0].code === 'RD-AYIN-5087');
+  const plan = await buildRecruitmentBonusPlan(db, 'AMB-VENE-5251');
+  const uplinePayout = plan.payouts.find((p) => p.bonus_tier === 'upline');
+  ok('AMB direct → RD gets 750', uplinePayout && uplinePayout.amount === 750);
+  ok('AMB direct → org retains 750', plan.org_retained_fcfa === 750);
+
+  console.log(`\n--- ${passed}/${passed + failed} passed ---`);
+  process.exit(failed ? 1 : 0);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

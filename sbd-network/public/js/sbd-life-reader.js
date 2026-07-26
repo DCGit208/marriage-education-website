@@ -85,14 +85,19 @@
         : window.SbdLifeRoutes
           ? window.SbdLifeRoutes.issue('labs-demo-q1-presence')
           : '/labs/sbd-life/issue.html?slug=labs-demo-q1-presence';
-    var heroStyle = data.coverImage
-      ? ' style="background-image:url(' + esc(data.coverImage) + ')"'
+    var coverFrame = data.coverImage
+      ? '<div class="life-cover-frame"><img class="life-cover-img" src="' +
+        esc(data.coverImage) +
+        '" alt="' +
+        esc(data.title) +
+        ' cover" /></div>'
       : '';
     root.innerHTML =
       '<article class="life-article">' +
-      '<header class="life-hero"' +
-      heroStyle +
-      '>' +
+      coverFrame +
+      '<header class="life-hero' +
+      (data.coverImage ? ' life-hero--text-only' : '') +
+      '">' +
       '<div class="life-hero-overlay"></div>' +
       '<div class="life-hero-inner">' +
       '<p class="kicker">' +
@@ -109,6 +114,9 @@
       '<div class="life-article-body">' +
       (data.excerpt ? '<p class="life-dek">' + esc(data.excerpt) + '</p>' : '') +
       renderBlocks(data.contentBlocks, data.content) +
+      (window.SbdLifeEntitlements
+        ? window.SbdLifeEntitlements.renderBookCta(data, esc)
+        : '') +
       '<div class="life-actions-row">' +
       (data.issueId
         ? '<a class="btn-secondary" href="' + issueHref + '">View issue</a>'

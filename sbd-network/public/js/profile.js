@@ -10,6 +10,9 @@ const avatarInput = document.getElementById('avatarInput');
 const avatarImg   = document.getElementById('avatarImg');
 const avatarInitials = document.getElementById('avatarInitials');
 const profileEmail   = document.getElementById('profileEmail');
+const billingSection = document.getElementById('billingSection');
+const billingSummary = document.getElementById('billingSummary');
+const manageBillingBtn = document.getElementById('manageBillingBtn');
 
 function showToast(msg) {
   const t = document.getElementById('appToast');
@@ -41,6 +44,47 @@ function renderAvatar(name, photoUrl) {
   }
 }
 
+function renderBilling(data) {
+  if (!billingSection || !data.stripeCustomerId) return;
+  const subscription = data.subscription || {};
+  const tier = subscription.tier || data.tier || 'SBD';
+  const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+  let summary = `${tierLabel} subscription`;
+
+  if (subscription.cancelAtPeriodEnd) {
+    const endDate = subscription.endDate && subscription.endDate.toDate
+      ? subscription.endDate.toDate()
+      : null;
+    summary += endDate
+      ? ` · Renewal cancelled — access continues through ${endDate.toLocaleDateString()}`
+      : ' · Renewal cancelled — access continues through the paid period';
+  } else if (subscription.status === 'active') {
+    summary += ' · Active';
+  }
+
+  billingSummary.textContent = summary;
+  billingSection.style.display = '';
+}
+
+async function openBillingPortal() {
+  if (!manageBillingBtn) return;
+  manageBillingBtn.disabled = true;
+  manageBillingBtn.textContent = 'Opening secure billing…';
+  try {
+    const createPortal = firebase.functions().httpsCallable('createSbdBillingPortalSession');
+    const result = await createPortal({});
+    if (!result.data || !result.data.url) throw new Error('No billing portal URL returned.');
+    window.location.href = result.data.url;
+  } catch (err) {
+    console.error('Billing portal error:', err);
+    showToast(err.message || 'Could not open billing management.');
+    manageBillingBtn.disabled = false;
+    manageBillingBtn.textContent = 'Manage subscription';
+  }
+}
+
+if (manageBillingBtn) manageBillingBtn.addEventListener('click', openBillingPortal);
+
 auth.onAuthStateChanged(async (user) => {
   if (!user) { window.location.href = '/auth'; return; }
 
@@ -56,6 +100,7 @@ auth.onAuthStateChanged(async (user) => {
     nameInput.value = data.name || user.displayName || '';
     profileEmail.textContent = user.email || '';
     renderAvatar(data.name || user.displayName, data.photoUrl || null);
+    renderBilling(data);
 
     // Load groups
     await loadProfileGroups(data.groups || []);

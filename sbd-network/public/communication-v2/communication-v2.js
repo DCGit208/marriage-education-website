@@ -677,7 +677,8 @@
       escapeHtml: escapeHtml,
       fmtTime: fmtTime,
       setReply: setReply,
-      canUnsendMessage: canUnsendMessage,
+      canUnsendMessage: canDeleteMessage,
+      canDeleteMessage: canDeleteMessage,
       unsendMessage: unsendMessage,
       handleCe2Error: handleCe2Error,
       render: render,
@@ -705,10 +706,10 @@
         return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
       },
       isInteractiveMsgTarget: function (node) {
-        return !!(
-          node &&
-          node.closest &&
-          node.closest('a, button, audio, video, input, textarea, select, label')
+        if (!node || !node.closest) return false;
+        if (node.closest('.ce2-media-tap')) return false;
+        return !!node.closest(
+          'a, button:not(.ce2-media-tap), audio, video, input, textarea, select, label'
         );
       },
     });
@@ -3599,16 +3600,19 @@
     return gRef.id;
   }
 
-  function canUnsendMessage(m) {
-    if (!m || !CommunicationState.me || m.senderId !== CommunicationState.me.uid) return false;
+  function canDeleteMessage(m) {
+    if (!m || !CommunicationState.me) return false;
     if (m.deleted || m._pending) return false;
     if (!m.id || String(m.id).indexOf('pending-') === 0) return false;
     var me = CommunicationState.me;
     if (me.isAdmin) return true;
+    if (m.senderId !== me.uid) return false;
     var ms = messageTimeMs(m);
     if (!ms) return false;
     return Date.now() - ms <= UNSEND_WINDOW_MS;
   }
+
+  var canUnsendMessage = canDeleteMessage;
 
   function messageMediaUrls(m) {
     if (!m) return [];
@@ -3720,9 +3724,9 @@
 
   async function unsendMessage(m, ac) {
     if (!m || !ac) return;
-    if (!canUnsendMessage(m)) {
+    if (!canDeleteMessage(m)) {
       CommunicationState.error =
-        'You can delete your own messages within 1 hour of sending (admins anytime).';
+        'You can delete your own messages within 1 hour of sending. Admins can delete any message.';
       render();
       return;
     }
@@ -3735,7 +3739,11 @@
       ac.type === 'direct'
         ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
         : db.collection('communicationGroups').doc(ac.id).collection('ce2_messages');
-    await purgeMessageMediaFromR2(m);
+    try {
+      await purgeMessageMediaFromR2(m);
+    } catch (purgeErr) {
+      console.warn('[CE2] R2 purge before delete', purgeErr);
+    }
     var patch = buildUnsendPatch(m);
     await col.doc(m.id).update(patch);
     applyLocalUnsend(m.id);

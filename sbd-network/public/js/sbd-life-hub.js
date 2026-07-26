@@ -4,6 +4,8 @@
   var seedStatus = document.getElementById('seedStatus');
   var publishCrisisBtn = document.getElementById('publishCrisisBtn');
   var publishCrisisStatus = document.getElementById('publishCrisisStatus');
+  var publishWwmBtn = document.getElementById('publishWwmBtn');
+  var publishWwmStatus = document.getElementById('publishWwmStatus');
   var syncDiscoveryBtn = document.getElementById('syncDiscoveryBtn');
   var syncDiscoveryStatus = document.getElementById('syncDiscoveryStatus');
   if (!catalog) return;
@@ -31,10 +33,17 @@
     if (issues.length) {
       html += '<h3 class="life-catalog-heading">Issues</h3><div class="life-catalog-grid">';
       issues.forEach(function (item) {
+        var cover = item.data.coverImage || '';
         html +=
-          '<a class="life-catalog-card" href="' +
+          '<a class="life-catalog-card' +
+          (cover ? ' life-catalog-card--cover' : '') +
+          '" href="' +
           issueUrl(item.id) +
-          '"><span class="life-catalog-kicker">Issue ' +
+          '">' +
+          (cover
+            ? '<img class="life-catalog-cover" src="' + esc(cover) + '" alt="" />'
+            : '') +
+          '<span class="life-catalog-kicker">Issue ' +
           esc(String(item.data.issueNumber)) +
           '</span><span class="life-catalog-title">' +
           esc(item.data.title) +
@@ -45,10 +54,17 @@
     if (articles.length) {
       html += '<h3 class="life-catalog-heading">Articles</h3><div class="life-catalog-grid">';
       articles.forEach(function (item) {
+        var cover = item.data.coverImage || '';
         html +=
-          '<a class="life-catalog-card" href="' +
+          '<a class="life-catalog-card' +
+          (cover ? ' life-catalog-card--cover' : '') +
+          '" href="' +
           articleUrl(item.id) +
-          '"><span class="life-catalog-kicker">' +
+          '">' +
+          (cover
+            ? '<img class="life-catalog-cover" src="' + esc(cover) + '" alt="" />'
+            : '') +
+          '<span class="life-catalog-kicker">' +
           esc(item.data.status) +
           ' · ' +
           esc(item.data.contentType) +
@@ -103,6 +119,37 @@
         }
       }
       syncDiscoveryBtn.disabled = false;
+    });
+  }
+
+  if (publishWwmBtn) {
+    publishWwmBtn.addEventListener('click', async function () {
+      publishWwmBtn.disabled = true;
+      if (publishWwmStatus) publishWwmStatus.textContent = 'Publishing Woman / Wife / Mother…';
+      try {
+        var ctx = await window.SbdLifeData.getViewerContext();
+        if (!ctx.user || !ctx.isAdmin) {
+          if (publishWwmStatus) publishWwmStatus.textContent = 'Admin required.';
+          publishWwmBtn.disabled = false;
+          return;
+        }
+        var ids = await window.SbdLifeData.publishWomanWifeMotherEditorial(ctx.user.uid);
+        if (publishWwmStatus) {
+          publishWwmStatus.textContent =
+            'Published. Article: ' +
+            ids.articleId +
+            ' · Issue: ' +
+            ids.issueId +
+            ' — featured on discovery rails.';
+        }
+        await refreshCatalog();
+      } catch (err) {
+        console.error(err);
+        if (publishWwmStatus) {
+          publishWwmStatus.textContent = 'Publish failed: ' + (err.message || err.code);
+        }
+      }
+      publishWwmBtn.disabled = false;
     });
   }
 
@@ -172,4 +219,6 @@
     if (!user) return;
     refreshCatalog();
   });
+
+  global.SbdLifeHub = { refreshCatalog: refreshCatalog };
 })();

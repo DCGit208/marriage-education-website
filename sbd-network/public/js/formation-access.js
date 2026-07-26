@@ -641,7 +641,7 @@ function createPaywallModal() {
         <!-- Foundation Tier -->
         <div class="tier-card" data-tier="foundation">
           <h3 class="tier-name">Foundation</h3>
-          <p class="tier-price">$9<span>/month</span></p>
+          <p class="tier-price">$9.77<span>/month</span></p>
           <ul class="tier-features">
             <li>Partial Teleios Identity (Weeks 1-4)</li>
             <li>Partial Sexual Literacy (Intro)</li>
@@ -651,6 +651,9 @@ function createPaywallModal() {
           </ul>
           <button class="btn btn-secondary" onclick="selectTier('foundation-monthly')">
             Start Foundation
+          </button>
+          <button class="btn btn-secondary" onclick="selectTier('foundation-yearly')">
+            Pay yearly — $118/yr
           </button>
         </div>
         

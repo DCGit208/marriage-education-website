@@ -200,6 +200,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.__sbdRescheduleAutoSlide = scheduleNextSlide;
 
+    window.__sbdSliderGetVisibleSlides = getVisibleSlides;
+    window.__sbdSliderGetCurrent = function () {
+      return current;
+    };
+
+    window.refreshSliderLayout = function (forcedIndex) {
+      slides = getVisibleSlides();
+      total = slides.length;
+      if (!total) return;
+
+      if (typeof forcedIndex === 'number') {
+        current = Math.max(0, Math.min(forcedIndex, total - 1));
+      } else if (current >= total) {
+        current = total - 1;
+      }
+
+      renderPagination();
+      if (!track) return;
+
+      track.classList.add('transition-disabled');
+      track.style.transform = 'translate3d(-' + current * 100 + '%,0,0)';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          track.classList.remove('transition-disabled');
+        });
+      });
+
+      updatePagination(current);
+
+      if (typeof window.onSlideChange === 'function') {
+        window.onSlideChange(current);
+      }
+
+      scheduleNextSlide();
+    };
+
     function stopAutoSlide() {
 
       if (sliderTimer) {

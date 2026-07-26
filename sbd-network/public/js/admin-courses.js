@@ -24,6 +24,15 @@
     'part-7': '## Couple Discussion\n\n## Week Assessment\n\n## Prayer / Liturgy\n\n',
   };
 
+  const BOOK_CHAPTER_PARTS = [
+    { id: 'body', order: 1, track: 'formation', title: 'Chapter body', estimatedMinutes: 45 },
+  ];
+
+  const BOOK_CHAPTER_TEMPLATE =
+    '# Chapter title\n\n' +
+    'Write this chapter in the Studio editor. Use the Markdown toolbar and **Canon AI** in the right rail to draft, expand, rewrite, or align to the SBD canon.\n\n';
+
+
   let allCourses = [];
   let modulesByCourse = {};
   let query = '';
@@ -244,7 +253,19 @@
 
   function showEditorShell(show) {
     document.getElementById('acsStudioEmpty').style.display = show ? 'none' : 'flex';
-    document.getElementById('acsStudioEditor').style.display = show ? 'flex' : 'none';
+    const editor = document.getElementById('acsStudioEditor');
+    if (editor) {
+      if (show) editor.removeAttribute('hidden');
+      else editor.setAttribute('hidden', '');
+    }
+    if (show) {
+      const vision = document.getElementById('acsVision');
+      const chev = document.getElementById('acsVisionChevron');
+      if (vision && vision.classList.contains('open')) {
+        vision.classList.remove('open');
+        if (chev) chev.textContent = '▶';
+      }
+    }
     const rail = document.getElementById('acsMetaRail');
     const fab = document.getElementById('acsMobileToolsBtn');
     if (rail) {
@@ -304,6 +325,10 @@
       if (window.StudioVersionHistory) {
         StudioVersionHistory.renderPanel(moduleId, partId);
       }
+      if (window.StudioCanonAi) StudioCanonAi.refreshIndexStatus();
+      if (window.StudioReview) StudioReview.refreshPanel(moduleId, partId);
+      updatePartNav(moduleId, partId);
+      resetEditorScroll();
     } catch (err) {
       status.textContent = 'Load failed: ' + (err.message || err);
     }
@@ -476,6 +501,54 @@
     return null;
   }
 
+  function sortedModuleParts(moduleId) {
+    const mod = findModule(moduleId);
+    if (!mod || !Array.isArray(mod.parts)) return [];
+    return mod.parts.slice().sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+  }
+
+  function resetEditorScroll() {
+    const ta = document.getElementById('acsEditorTextarea');
+    const preview = document.getElementById('acsPreviewPane');
+    if (ta) ta.scrollTop = 0;
+    if (preview) preview.scrollTop = 0;
+  }
+
+  function updatePartNav(moduleId, partId) {
+    const parts = sortedModuleParts(moduleId);
+    const idx = parts.findIndex(function (p) { return p.id === partId; });
+    const prevBtn = document.getElementById('acsPartPrevBtn');
+    const nextBtn = document.getElementById('acsPartNextBtn');
+    const label = document.getElementById('acsPartNavLabel');
+    if (!prevBtn || !nextBtn || !label) return;
+
+    if (idx < 0 || !parts.length) {
+      label.textContent = 'Part — / —';
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      prevBtn._navPart = null;
+      nextBtn._navPart = null;
+      return;
+    }
+
+    label.textContent = 'Part ' + (idx + 1) + ' / ' + parts.length;
+    prevBtn.disabled = idx <= 0;
+    nextBtn.disabled = idx >= parts.length - 1;
+    prevBtn._navPart = idx > 0 ? parts[idx - 1] : null;
+    nextBtn._navPart = idx < parts.length - 1 ? parts[idx + 1] : null;
+  }
+
+  async function navigateToAdjacentPart(part) {
+    if (!part || !editorCtx) return;
+    if (editorDirty) {
+      try {
+        await saveEditor(true);
+      } catch (e) { /* saveEditor handles status */ }
+      if (editorDirty && !confirm('Unsaved changes remain. Switch part anyway?')) return;
+    }
+    await openEditor(editorCtx.moduleId, part.id, part.title, editorCtx.courseId);
+  }
+
   function partDraftBadge(moduleId, partId) {
     return '<span class="acs-draft-dot" data-draft-for="' + attrEsc(moduleId + ':' + partId) + '" title="Checking draft…">·</span>';
   }
@@ -505,23 +578,21 @@
     await Promise.all(checks);
   }
 
-  function renderTree() {
-    const tree = document.getElementById('acsTree');
-    let courseCount = 0;
-    let weekCount = 0;
+  function isBookCourse(course) {
+    return !!(course && (course.contentKind === 'book' || course.type === 'book'));
+  }
 
-    const html = allCourses.map(function (course) {
-      const weeks = modulesByCourse[course.id] || [];
-      if (!matchesQuery(course, weeks)) return '';
-      courseCount++;
-      weekCount += weeks.length;
+  function renderCourseBlock(course, unitLabel, addUnitLabel) {
+    const weeks = modulesByCourse[course.id] || [];
+    if (!matchesQuery(course, weeks)) return '';
+    const isBook = isBookCourse(course);
 
-      const weeksHtml = weeks.map(function (mod) {
-        const parts = Array.isArray(mod.parts) ? mod.parts.slice().sort(function (a, b) {
-          return (a.order || 0) - (b.order || 0);
-        }) : [];
-        const partsHtml = parts.map(function (p) {
-          return `<div class="acs-part-row" draggable="true" data-drag-module="${attrEsc(mod.id)}" data-drag-part="${attrEsc(p.id)}">
+    const weeksHtml = weeks.map(function (mod) {
+      const parts = Array.isArray(mod.parts) ? mod.parts.slice().sort(function (a, b) {
+        return (a.order || 0) - (b.order || 0);
+      }) : [];
+      const partsHtml = parts.map(function (p) {
+        return `<div class="acs-part-row" draggable="true" data-drag-module="${attrEsc(mod.id)}" data-drag-part="${attrEsc(p.id)}">
             <span class="acs-chip acs-chip--drag" title="Drag to reorder">⠿</span>
             <button type="button" class="acs-chip acs-chip--edit" data-edit-module="${attrEsc(mod.id)}"
               data-edit-part="${attrEsc(p.id)}" data-edit-title="${attrEsc(p.title)}"
@@ -529,36 +600,79 @@
             ${partDraftBadge(mod.id, p.id)}
             <a class="acs-chip acs-chip--sm" href="/lesson.html?moduleId=${encodeURIComponent(mod.id)}&part=${encodeURIComponent(p.id)}" target="_blank" rel="noopener">↗</a>
           </div>`;
-        }).join('');
+      }).join('');
 
-        return `
+      return `
           <div class="acs-week" data-module-id="${esc(mod.id)}">
             <p class="acs-week-title">${esc(mod.title || mod.id)} <span class="acs-course-id">${esc(mod.id)}</span></p>
             <div class="acs-week-actions">
               <a class="acs-chip" href="/lesson.html?moduleId=${encodeURIComponent(mod.id)}" target="_blank" rel="noopener">Parts index</a>
               <button type="button" class="acs-chip" data-add-part="${attrEsc(mod.id)}">+ Part</button>
-              <button type="button" class="acs-chip" data-dup-week="${attrEsc(mod.id)}" data-course-id="${attrEsc(course.id)}">Duplicate week</button>
+              <button type="button" class="acs-chip" data-dup-week="${attrEsc(mod.id)}" data-course-id="${attrEsc(course.id)}">Duplicate ${esc(unitLabel)}</button>
             </div>
             <div class="acs-part-links" data-parts-module="${attrEsc(mod.id)}">${partsHtml || '<span class="acs-course-id">No parts — add one</span>'}</div>
           </div>`;
-      }).join('');
-
-      return `
-        <div class="acs-course" data-course-id="${esc(course.id)}">
-          <div class="acs-course-head" data-toggle-course>
-            <span class="acs-chevron">▶</span>
-            <span class="acs-course-title">${esc(course.title || course.id)}</span>
-            <span class="acs-course-id">${weeks.length} wks</span>
-          </div>
-          <div class="acs-weeks">
-            <button type="button" class="acs-chip acs-chip--gold" data-add-week="${attrEsc(course.id)}" style="margin-bottom:10px">+ Add week</button>
-            ${weeksHtml || '<p class="acs-course-id">No weeks yet</p>'}
-          </div>
-        </div>`;
     }).join('');
 
-    tree.innerHTML = html || '<p class="acs-course-id">No courses match.</p>';
-    document.getElementById('acsMeta').textContent = courseCount + ' courses · ' + weekCount + ' weeks';
+    return `
+        <div class="acs-course${isBook ? ' acs-course--book' : ''}" data-course-id="${esc(course.id)}">
+          <div class="acs-course-head" data-toggle-course>
+            <span class="acs-chevron">▶</span>
+            ${course.coverImage
+              ? '<img class="acs-course-cover-thumb" src="' + attrEsc(course.coverImage) + '" alt="">'
+              : '<span class="acs-course-cover-placeholder" aria-hidden="true">▣</span>'}
+            <span class="acs-course-title">${esc(course.title || course.id)}</span>
+            ${isBook ? '<span class="acs-kind-badge">Book</span>' : ''}
+            ${course.linkedCourseId ? '<span class="acs-kind-badge acs-kind-badge--link">+ Course</span>' : ''}
+            ${course.linkedBookId ? '<span class="acs-kind-badge acs-kind-badge--link">← Book</span>' : ''}
+            <span class="acs-course-id">${weeks.length} ${esc(unitLabel)}${weeks.length === 1 ? '' : 's'}</span>
+            <button type="button" class="acs-chip acs-chip--sm" data-course-cover="${attrEsc(course.id)}" title="Edit cover">Cover</button>
+          </div>
+          <div class="acs-weeks">
+            <button type="button" class="acs-chip acs-chip--gold" data-add-week="${attrEsc(course.id)}" style="margin-bottom:10px">${esc(addUnitLabel)}</button>
+            ${weeksHtml || '<p class="acs-course-id">No ' + esc(unitLabel) + 's yet</p>'}
+          </div>
+        </div>`;
+  }
+
+  function renderTree() {
+    const tree = document.getElementById('acsTree');
+    const books = allCourses.filter(isBookCourse);
+    const courses = allCourses.filter(function (c) { return !isBookCourse(c); });
+
+    let courseCount = 0;
+    let weekCount = 0;
+    let bookCount = 0;
+    let chapterCount = 0;
+
+    const booksHtml = books.map(function (course) {
+      const weeks = modulesByCourse[course.id] || [];
+      if (!matchesQuery(course, weeks)) return '';
+      bookCount++;
+      chapterCount += weeks.length;
+      return renderCourseBlock(course, 'chapter', '+ Add chapter');
+    }).join('');
+
+    const coursesHtml = courses.map(function (course) {
+      const weeks = modulesByCourse[course.id] || [];
+      if (!matchesQuery(course, weeks)) return '';
+      courseCount++;
+      weekCount += weeks.length;
+      return renderCourseBlock(course, 'week', '+ Add week');
+    }).join('');
+
+    let html = '';
+    if (booksHtml) {
+      html += '<div class="acs-tree-section"><p class="acs-tree-section-title">Books</p>' + booksHtml + '</div>';
+    }
+    if (coursesHtml) {
+      html += '<div class="acs-tree-section"><p class="acs-tree-section-title">Courses</p>' + coursesHtml + '</div>';
+    }
+
+    tree.innerHTML = html || '<p class="acs-course-id">No courses or books match.</p>';
+    document.getElementById('acsMeta').textContent =
+      bookCount + ' books · ' + chapterCount + ' chapters · ' +
+      courseCount + ' courses · ' + weekCount + ' weeks';
 
     bindTreeEvents();
     hydrateDraftBadges();
@@ -585,11 +699,19 @@
 
   function bindTreeEvents() {
     document.querySelectorAll('[data-toggle-course]').forEach(function (head) {
-      head.onclick = function () {
+      head.onclick = function (e) {
+        if (e.target.closest('[data-course-cover]')) return;
         const course = head.closest('.acs-course');
         course.classList.toggle('open');
         const chev = head.querySelector('.acs-chevron');
         if (chev) chev.textContent = course.classList.contains('open') ? '▼' : '▶';
+      };
+    });
+
+    document.querySelectorAll('[data-course-cover]').forEach(function (btn) {
+      btn.onclick = function (e) {
+        e.stopPropagation();
+        openCourseCoverSettings(btn.getAttribute('data-course-cover'));
       };
     });
 
@@ -609,9 +731,17 @@
         modalWeekCourseId = btn.getAttribute('data-add-week');
         const weeks = modulesByCourse[modalWeekCourseId] || [];
         const n = nextWeekNumber(weeks);
-        const prefix = moduleIdPrefix(modalWeekCourseId, weeks);
-        document.getElementById('acsWeekTitle').value = 'Week ' + n + ': ';
+        const course = allCourses.find(function (c) { return c.id === modalWeekCourseId; });
+        const book = isBookCourse(course);
+        const prefix = book
+          ? (modalWeekCourseId + '-ch-')
+          : moduleIdPrefix(modalWeekCourseId, weeks);
+        document.getElementById('acsWeekTitle').value = book
+          ? ('Chapter ' + n + ': ')
+          : ('Week ' + n + ': ');
         document.getElementById('acsWeekModuleId').value = prefix + n;
+        const weekModalTitle = document.querySelector('#acsWeekModal h3');
+        if (weekModalTitle) weekModalTitle.textContent = book ? 'Add chapter' : 'Add week';
         openModal('acsWeekModal');
       };
     });
@@ -687,6 +817,198 @@
     }, { merge: true });
   }
 
+
+  async function createBook(opts) {
+    const id = String(opts.id || '').trim();
+    const title = String(opts.title || '').trim();
+    if (!id || !title) throw new Error('Book id and title are required');
+
+    const existing = await db.collection('courses').doc(id).get();
+    if (existing.exists) throw new Error('A course or book with this ID already exists');
+
+    const createFormation = !!opts.createFormationCourse;
+    const linkedCourseId = createFormation ? (id + '-course') : null;
+    if (linkedCourseId) {
+      const linkedExists = await db.collection('courses').doc(linkedCourseId).get();
+      if (linkedExists.exists) {
+        throw new Error('Linked course id already exists: ' + linkedCourseId);
+      }
+    }
+
+    const priceUsd = Number(opts.priceUsd || 0);
+    const priceDisplay = '$' + (priceUsd % 1 === 0 ? priceUsd.toFixed(0) : priceUsd.toFixed(2));
+    const coverImage = opts.coverImage || '';
+    const bonusCourseId = opts.bonusCourseId || null;
+    const moduleId = id + '-ch-1';
+    const chapterTitle = 'Chapter 1: Opening';
+
+    const courseDoc = {
+      id: id,
+      title: title,
+      subtitle: opts.subtitle || '',
+      description: opts.description || '',
+      contentKind: 'book',
+      type: 'book',
+      schoolId: 'standalone',
+      accessLevel: 'elite',
+      requiredTier: 'elite',
+      purchaseOnly: true,
+      isActive: true,
+      coverImage: coverImage,
+      moduleCount: 1,
+      totalModules: 1,
+      shopPriceUsd: priceUsd,
+      bonusCourseId: bonusCourseId,
+      linkedCourseId: linkedCourseId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const bookMeta = {
+      id: id,
+      title: title,
+      subtitle: opts.subtitle || '',
+      description: opts.description || '',
+      coverImage: coverImage,
+      priceUsd: priceUsd,
+      priceDisplay: priceDisplay,
+      courseId: id,
+      linkedCourseId: linkedCourseId,
+      bonusCourseId: bonusCourseId,
+      status: 'draft',
+      studioManaged: true,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser && currentUser.uid,
+    };
+
+    const unlockCourseIds = [id];
+    if (linkedCourseId) unlockCourseIds.push(linkedCourseId);
+    if (bonusCourseId) unlockCourseIds.push(bonusCourseId);
+
+    const unlocks = {
+      type: 'products',
+      productIds: [id],
+      courseIds: unlockCourseIds,
+    };
+
+    const shopDoc = {
+      id: id,
+      name: title,
+      category: 'books_standalone',
+      section: 'books_magazine',
+      phase: 1,
+      stripeReady: true,
+      type: 'book',
+      priceUsd: priceUsd,
+      priceDisplay: priceDisplay,
+      description: opts.description || opts.subtitle || '',
+      icon: '📘',
+      format: 'digital',
+      coverImage: coverImage,
+      status: 'inactive',
+      source: 'course-studio',
+      unlocks: unlocks,
+      studioPublished: false,
+      checkoutEnabled: false,
+      studioManaged: true,
+      bookId: id,
+      linkedCourseId: linkedCourseId,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const modData = {
+      id: moduleId,
+      courseId: id,
+      schoolId: 'standalone',
+      week: 1,
+      weekNumber: 1,
+      chapter: 1,
+      totalWeeks: 1,
+      title: chapterTitle,
+      duration: 'chapter',
+      accessLevel: 'elite',
+      requiredTier: 'elite',
+      purchaseOnly: true,
+      order: 1,
+      parts: BOOK_CHAPTER_PARTS,
+      courseFormat: 'book',
+      hasPartSubcollection: true,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const batch = db.batch();
+    batch.set(db.collection('courses').doc(id), courseDoc, { merge: true });
+    batch.set(db.collection('books').doc(id), bookMeta, { merge: true });
+    batch.set(db.collection('shopProducts').doc(id), shopDoc, { merge: true });
+    const modRef = db.collection('modules').doc(moduleId);
+    batch.set(modRef, modData, { merge: true });
+    writePartDoc(modRef, BOOK_CHAPTER_PARTS[0], BOOK_CHAPTER_TEMPLATE.replace('Chapter title', chapterTitle), batch);
+
+    // Linked formation course: Week 1 + full 7-part shells (empty templates)
+    if (linkedCourseId) {
+      const weekModuleId = linkedCourseId + '-week-1';
+      const formationCourse = {
+        id: linkedCourseId,
+        title: title + ' — Formation',
+        subtitle: opts.subtitle || '',
+        description: (opts.description || '') + (opts.description ? ' ' : '') +
+          'Formation courseware linked to the book “' + title + '”.',
+        contentKind: 'course',
+        type: 'course',
+        schoolId: 'standalone',
+        accessLevel: 'elite',
+        requiredTier: 'elite',
+        purchaseOnly: true,
+        isActive: true,
+        coverImage: coverImage,
+        moduleCount: 1,
+        totalModules: 1,
+        linkedBookId: id,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      const weekData = {
+        id: weekModuleId,
+        courseId: linkedCourseId,
+        schoolId: 'standalone',
+        week: 1,
+        weekNumber: 1,
+        totalWeeks: 1,
+        title: 'Week 1: Foundations',
+        duration: '1 week',
+        accessLevel: 'elite',
+        requiredTier: 'elite',
+        purchaseOnly: true,
+        order: 1,
+        parts: DEFAULT_PARTS,
+        courseFormat: 'formation',
+        hasPartSubcollection: true,
+        linkedBookId: id,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      batch.set(db.collection('courses').doc(linkedCourseId), formationCourse, { merge: true });
+      const weekRef = db.collection('modules').doc(weekModuleId);
+      batch.set(weekRef, weekData, { merge: true });
+      DEFAULT_PARTS.forEach(function (p) {
+        const tpl = PART_TEMPLATES[p.id] || ('## ' + p.title + '\n\n');
+        writePartDoc(weekRef, p, tpl, batch);
+      });
+    }
+
+    await batch.commit();
+
+    await loadCatalog();
+    renderTree();
+    const el = document.querySelector('.acs-course[data-course-id="' + id + '"]');
+    if (el) el.classList.add('open');
+    if (linkedCourseId) {
+      const courseEl = document.querySelector('.acs-course[data-course-id="' + linkedCourseId + '"]');
+      if (courseEl) courseEl.classList.add('open');
+    }
+    openEditor(moduleId, 'body', BOOK_CHAPTER_PARTS[0].title, id);
+  }
+
   async function createWeek() {
     const courseId = modalWeekCourseId;
     const title = document.getElementById('acsWeekTitle').value.trim();
@@ -709,8 +1031,8 @@
       requiredTier: course ? (course.requiredTier || course.accessLevel || 'elite') : 'elite',
       purchaseOnly: !!(course && course.purchaseOnly),
       order: weekNum,
-      parts: DEFAULT_PARTS,
-      courseFormat: 'formation',
+      parts: isBookCourse(course) ? BOOK_CHAPTER_PARTS : DEFAULT_PARTS,
+      courseFormat: isBookCourse(course) ? 'book' : 'formation',
       hasPartSubcollection: true,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
@@ -719,10 +1041,18 @@
     const modRef = db.collection('modules').doc(moduleId);
     batch.set(modRef, data, { merge: true });
 
-    DEFAULT_PARTS.forEach(function (p) {
-      const tpl = PART_TEMPLATES[p.id] || ('## ' + p.title + '\n\n');
+    const partsDef = isBookCourse(course) ? BOOK_CHAPTER_PARTS : DEFAULT_PARTS;
+    partsDef.forEach(function (p) {
+      const tpl = isBookCourse(course)
+        ? BOOK_CHAPTER_TEMPLATE.replace('Chapter title', title || ('Chapter ' + weekNum))
+        : (PART_TEMPLATES[p.id] || ('## ' + p.title + '\n\n'));
       writePartDoc(modRef, p, tpl, batch);
     });
+
+    // Fix parts array on module for books
+    if (isBookCourse(course)) {
+      batch.set(modRef, { parts: BOOK_CHAPTER_PARTS, courseFormat: 'book' }, { merge: true });
+    }
 
     await batch.commit();
     await db.collection('courses').doc(courseId).set({
@@ -734,7 +1064,8 @@
     closeModals();
     await loadCatalog();
     renderTree();
-    openEditor(moduleId, 'part-1', DEFAULT_PARTS[0].title, courseId);
+    const openPart = partsDef[0];
+    openEditor(moduleId, openPart.id, openPart.title, courseId);
   }
 
   async function createPart() {
@@ -808,6 +1139,117 @@
     alert('Week duplicated as ' + newId);
   }
 
+  function setCoverPreview(previewId, url, clearBtnId) {
+    const preview = document.getElementById(previewId);
+    const clearBtn = clearBtnId ? document.getElementById(clearBtnId) : null;
+    if (!preview) return;
+    if (url) {
+      preview.innerHTML = '<img src="' + attrEsc(url) + '" alt="Cover preview">';
+      preview.setAttribute('aria-hidden', 'false');
+      if (clearBtn) clearBtn.style.display = '';
+    } else {
+      preview.innerHTML = '';
+      preview.setAttribute('aria-hidden', 'true');
+      if (clearBtn) clearBtn.style.display = 'none';
+    }
+  }
+
+  async function uploadCoverFromInput(fileInput, urlInputId, previewId, statusId, clearBtnId) {
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const status = document.getElementById(statusId);
+    if (status) status.textContent = 'Uploading cover…';
+    try {
+      if (typeof uploadCourseCover !== 'function') {
+        throw new Error('Upload helper not loaded');
+      }
+      const url = await uploadCourseCover(file);
+      const urlInput = document.getElementById(urlInputId);
+      if (urlInput) urlInput.value = url || '';
+      setCoverPreview(previewId, url, clearBtnId);
+      if (status) status.textContent = 'Cover ready';
+    } catch (err) {
+      if (status) status.textContent = err.message || String(err);
+    } finally {
+      fileInput.value = '';
+    }
+  }
+
+  function bindCoverPickers() {
+    const pairs = [
+      {
+        fileId: 'acsCourseCoverFile',
+        urlId: 'acsCourseCoverUrl',
+        previewId: 'acsCourseCoverPreview',
+        statusId: 'acsCourseCoverStatus',
+        clearId: 'acsCourseCoverClearBtn',
+      },
+      {
+        fileId: 'acsSettingsCoverFile',
+        urlId: 'acsSettingsCoverUrl',
+        previewId: 'acsSettingsCoverPreview',
+        statusId: 'acsSettingsCoverStatus',
+        clearId: 'acsSettingsCoverClearBtn',
+      },
+    ];
+
+    pairs.forEach(function (p) {
+      const fileInput = document.getElementById(p.fileId);
+      const clearBtn = document.getElementById(p.clearId);
+      if (fileInput && !fileInput._acsCoverBound) {
+        fileInput._acsCoverBound = true;
+        fileInput.addEventListener('change', function () {
+          uploadCoverFromInput(fileInput, p.urlId, p.previewId, p.statusId, p.clearId);
+        });
+      }
+      if (clearBtn && !clearBtn._acsCoverBound) {
+        clearBtn._acsCoverBound = true;
+        clearBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const urlInput = document.getElementById(p.urlId);
+          if (urlInput) urlInput.value = '';
+          if (fileInput) fileInput.value = '';
+          setCoverPreview(p.previewId, '', p.clearId);
+          const status = document.getElementById(p.statusId);
+          if (status) status.textContent = '';
+        });
+      }
+    });
+  }
+
+  function openCourseCoverSettings(courseId) {
+    const course = allCourses.find(function (c) { return c.id === courseId; });
+    if (!course) return;
+    document.getElementById('acsSettingsCourseId').value = courseId;
+    document.getElementById('acsCourseSettingsTitle').textContent = (course.title || courseId) + ' · cover art';
+    const url = course.coverImage || '';
+    document.getElementById('acsSettingsCoverUrl').value = url;
+    setCoverPreview('acsSettingsCoverPreview', url, 'acsSettingsCoverClearBtn');
+    const status = document.getElementById('acsSettingsCoverStatus');
+    if (status) status.textContent = '';
+    openModal('acsCourseSettingsModal');
+  }
+
+  async function saveCourseCoverSettings() {
+    const courseId = document.getElementById('acsSettingsCourseId').value;
+    const coverImage = (document.getElementById('acsSettingsCoverUrl').value || '').trim();
+    if (!courseId) return;
+    const status = document.getElementById('acsSettingsCoverStatus');
+    if (status) status.textContent = 'Saving…';
+    try {
+      await db.collection('courses').doc(courseId).set({
+        coverImage: coverImage || firebase.firestore.FieldValue.delete(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      closeModals();
+      await loadCatalog();
+      renderTree();
+    } catch (err) {
+      if (status) status.textContent = err.message || String(err);
+    }
+  }
+
   async function createCourse() {
     const courseId = document.getElementById('acsCourseId').value.trim().toLowerCase().replace(/\s+/g, '-');
     const title = document.getElementById('acsCourseTitle').value.trim();
@@ -815,13 +1257,14 @@
     const accessLevel = document.getElementById('acsCourseAccess').value;
     const purchaseOnly = document.getElementById('acsCoursePurchaseOnly').checked;
     const weekCount = parseInt(document.getElementById('acsCourseWeeks').value, 10) || 1;
+    const coverImage = (document.getElementById('acsCourseCoverUrl').value || '').trim();
 
     if (!courseId || !title) {
       alert('Course ID and title required.');
       return;
     }
 
-    await db.collection('courses').doc(courseId).set({
+    const coursePayload = {
       id: courseId,
       courseId: courseId,
       title: title,
@@ -835,7 +1278,10 @@
       totalModules: weekCount,
       duration: weekCount + ' weeks',
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
+    };
+    if (coverImage) coursePayload.coverImage = coverImage;
+
+    await db.collection('courses').doc(courseId).set(coursePayload, { merge: true });
 
     const prefix = courseId.split('-')[0] + '-week-';
     for (let w = 1; w <= weekCount; w++) {
@@ -869,6 +1315,11 @@
         }, { merge: true });
       }
     }
+
+    // Reset cover picker for next create
+    const urlInput = document.getElementById('acsCourseCoverUrl');
+    if (urlInput) urlInput.value = '';
+    setCoverPreview('acsCourseCoverPreview', '', 'acsCourseCoverClearBtn');
 
     closeModals();
     await loadCatalog();
@@ -911,7 +1362,7 @@
       return;
     }
 
-    document.getElementById('acsApp').style.display = 'block';
+    document.getElementById('acsApp').removeAttribute('hidden');
 
     const draftBanner = document.getElementById('acsDraftBanner');
     const dismissBtn = document.getElementById('acsDraftBannerDismiss');
@@ -922,6 +1373,56 @@
       dismissBtn.onclick = function () {
         draftBanner.classList.add('hidden');
         localStorage.setItem('acsDraftBannerDismissed', '1');
+      };
+    }
+
+    window.CourseStudio = {
+      openEditor: openEditor,
+      createBook: createBook,
+      getEditorCtx: function () { return editorCtx; },
+      getCurrentUser: function () { return currentUser; },
+      getAllCourses: function () { return allCourses; },
+      getModulesByCourse: function () { return modulesByCourse; },
+      findModule: findModule,
+      isBookCourse: isBookCourse,
+    };
+
+    if (window.StudioReview) StudioReview.bind();
+    if (window.StudioAnalytics) StudioAnalytics.bind();
+    if (window.StudioBooks) StudioBooks.bind();
+
+    // Hard-wire header CTAs (survives module load order / stale caches)
+    const bookBtn = document.getElementById('acsBookBtn');
+    if (bookBtn) {
+      bookBtn.onclick = function (e) {
+        e.preventDefault();
+        if (window.StudioBooks && typeof StudioBooks.open === 'function') {
+          StudioBooks.open();
+        } else {
+          openModal('acsBookModal');
+        }
+      };
+    }
+    const reviewQueueBtn = document.getElementById('acsReviewQueueBtn');
+    if (reviewQueueBtn) {
+      reviewQueueBtn.onclick = function (e) {
+        e.preventDefault();
+        if (window.StudioReview && typeof StudioReview.openQueue === 'function') {
+          StudioReview.openQueue();
+        } else {
+          openModal('acsReviewQueueModal');
+        }
+      };
+    }
+    const analyticsBtn = document.getElementById('acsAnalyticsBtn');
+    if (analyticsBtn) {
+      analyticsBtn.onclick = function (e) {
+        e.preventDefault();
+        if (window.StudioAnalytics && typeof StudioAnalytics.open === 'function') {
+          StudioAnalytics.open();
+        } else {
+          openModal('acsAnalyticsModal');
+        }
       };
     }
 
@@ -940,6 +1441,15 @@
     document.getElementById('acsPublishWeekBtn').onclick = publishWeek;
     document.getElementById('acsDupPartBtn').onclick = duplicatePart;
 
+    const partPrevBtn = document.getElementById('acsPartPrevBtn');
+    const partNextBtn = document.getElementById('acsPartNextBtn');
+    if (partPrevBtn) {
+      partPrevBtn.onclick = function () { navigateToAdjacentPart(partPrevBtn._navPart); };
+    }
+    if (partNextBtn) {
+      partNextBtn.onclick = function () { navigateToAdjacentPart(partNextBtn._navPart); };
+    }
+
     if (window.StudioToolbar) StudioToolbar.bindToolbar(document.getElementById('acsMdToolbar'));
 
     document.querySelectorAll('.acs-tab').forEach(function (t) {
@@ -956,10 +1466,20 @@
     const visionToggle = document.getElementById('acsVisionToggle');
     if (visionToggle) visionToggle.onclick = toggleVision;
 
-    document.getElementById('acsNewCourseBtn').onclick = function () { openModal('acsCourseModal'); };
+    document.getElementById('acsNewCourseBtn').onclick = function () {
+      const urlInput = document.getElementById('acsCourseCoverUrl');
+      if (urlInput) urlInput.value = '';
+      setCoverPreview('acsCourseCoverPreview', '', 'acsCourseCoverClearBtn');
+      const status = document.getElementById('acsCourseCoverStatus');
+      if (status) status.textContent = '';
+      openModal('acsCourseModal');
+    };
     document.getElementById('acsWeekSaveBtn').onclick = createWeek;
     document.getElementById('acsPartSaveBtn').onclick = createPart;
     document.getElementById('acsCourseSaveBtn').onclick = createCourse;
+    const saveSettings = document.getElementById('acsCourseSettingsSaveBtn');
+    if (saveSettings) saveSettings.onclick = saveCourseCoverSettings;
+    bindCoverPickers();
 
     document.querySelectorAll('[data-close-modal]').forEach(function (b) {
       b.onclick = closeModals;
@@ -1016,6 +1536,11 @@
         e.returnValue = '';
       }
     });
+
+    if (window.StudioCanonAi) {
+      StudioCanonAi.init({ getEditorCtx: function () { return editorCtx; } });
+      StudioCanonAi.bind();
+    }
 
     const openId = new URLSearchParams(window.location.search).get('course');
     if (openId) {

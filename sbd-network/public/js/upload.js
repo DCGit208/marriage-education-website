@@ -268,6 +268,37 @@ async function uploadImage(file, _userId, allowEdit = false, options = null) {
   return uploadToR2(file, 'ugc-photos', options || undefined);
 }
 
+/**
+ * Upload a course / issue cover image to R2 (course-covers folder).
+ * @param {File} file
+ * @param {{ onProgress?: function(number), signal?: AbortSignal }} [options]
+ * @returns {Promise<string>} public URL
+ */
+async function uploadCourseCover(file, options) {
+  if (!file) return null;
+  const mime = normalizeImageMimeType(file);
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  if (!validTypes.includes(mime)) {
+    throw new Error('Invalid cover type. Use JPG, PNG, or WebP.');
+  }
+  if (!file.type && mime) {
+    file = new File([file], file.name || 'cover.jpg', { type: mime });
+  }
+  const maxSize = 8 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error('Cover too large. Maximum size is 8 MB.');
+  }
+  try {
+    return await uploadToR2(file, 'course-covers', options || undefined);
+  } catch (err) {
+    // Older workers may not allow course-covers yet — fall back to ugc-photos.
+    if (/folder|Forbidden|Invalid folder/i.test(String(err && err.message || err))) {
+      return uploadToR2(file, 'ugc-photos', options || undefined);
+    }
+    throw err;
+  }
+}
+
 // Upload video → R2
 async function uploadVideo(file, _userId, options = null) {
   if (!file) return null;

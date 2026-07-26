@@ -27,9 +27,22 @@ admin.initializeApp();
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
 
-// Initialize Resend
-const RESEND_KEY = functions.config().resend?.key || 're_PDX9ycaB_HDkbmWkZqdtrASUp1X5oazKM';
-const resend = new Resend(RESEND_KEY);
+// Initialize Resend. The SDK throws when constructed without a key, so the
+// client is created on first use to keep an unconfigured key from taking down
+// every function in this module at load time.
+const RESEND_KEY = functions.config().resend?.key || process.env.RESEND_API_KEY || '';
+let resendClient = null;
+const resend = {
+  get emails() {
+    if (!resendClient) {
+      if (!RESEND_KEY) {
+        throw new Error('Resend API key is not configured. Set functions config resend.key or the RESEND_API_KEY env var.');
+      }
+      resendClient = new Resend(RESEND_KEY);
+    }
+    return resendClient.emails;
+  }
+};
 
 // Telegram Configuration
 const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
@@ -139,6 +152,8 @@ async function generateDownloadURL(productId) {
   const productMap = {
     'sbd-book': 'sbd-for-dummies.pdf',
     'sbd-for-dummies': 'sbd-for-dummies.pdf',
+    'sbd-dummies': 'sbd-for-dummies.pdf',
+    'sbd-dummies-digital-print': 'sbd-for-dummies.pdf',
     'sbd-founding': 'sbd-for-dummies.pdf',
     'sbd-1': 'sbd-for-dummies.pdf',
     'sbd-3': 'sbd-for-dummies.pdf',
@@ -150,6 +165,7 @@ async function generateDownloadURL(productId) {
     'complete-sbd-library': 'complete-sbd-library.pdf',
     'the-arts-of-marriage': 'the-arts-of-marriage.pdf',
     'naked-not-ashamed': 'naked-not-ashamed.pdf',
+    'naked-and-not-ashamed': 'naked-not-ashamed.pdf',
     // Add more mappings as needed
   };
   
@@ -348,6 +364,54 @@ exports.downloadBook = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error('[DOWNLOAD] Error:', error);
     return res.status(500).send(`Download error: ${error.message}. Please contact support.`);
+  }
+});
+
+/**
+ * Owned-book PDF URL for Library readers (auth required).
+ * Product IDs like sbd-dummies map to ebooks/*.pdf in Storage.
+ */
+exports.getOwnedBookPdfUrl = functions.https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in to download.');
+  }
+  const productId = String((data && data.productId) || '').trim();
+  if (!productId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing productId.');
+  }
+
+  const uid = context.auth.uid;
+  const userSnap = await db.collection('users').doc(uid).get();
+  const user = userSnap.exists ? (userSnap.data() || {}) : {};
+  const owned = Array.isArray(user.ownedProducts) ? user.ownedProducts : [];
+  const role = String(user.role || '').toLowerCase();
+  const isPrivileged = role === 'admin' || role === 'superadmin' || user.isContentDesigner === true
+    || (Array.isArray(user.roles) && user.roles.indexOf('content_designer') !== -1);
+
+  const courseHints = {
+    'sbd-dummies': ['sbd-dummies-course', 'sex-by-design-for-dummies', 'course-14-sex-by-design-for-dummies'],
+    'sbd-dummies-digital-print': ['sbd-dummies-course', 'sex-by-design-for-dummies'],
+  };
+  const ownedCourses = Array.isArray(user.ownedCourses) ? user.ownedCourses
+    : (user.progress && Array.isArray(user.progress.unlockedCourses) ? user.progress.unlockedCourses : []);
+  const hints = courseHints[productId] || [];
+  const ownsViaCourse = hints.some((id) => ownedCourses.indexOf(id) !== -1);
+  const owns = isPrivileged
+    || owned.indexOf(productId) !== -1
+    || ownsViaCourse
+    || (owned.indexOf('sbd-for-dummies') !== -1
+      && (productId === 'sbd-dummies' || productId === 'sbd-dummies-digital-print'));
+
+  if (!owns) {
+    throw new functions.https.HttpsError('permission-denied', 'This title is not on your shelf.');
+  }
+
+  try {
+    const url = await generateDownloadURL(productId);
+    return { url: url, productId: productId };
+  } catch (err) {
+    console.error('[getOwnedBookPdfUrl]', err);
+    throw new functions.https.HttpsError('not-found', err.message || 'PDF not available.');
   }
 });
 
@@ -563,6 +627,37 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     return res.json({ received: true, action: 'sbd-invoice' });
   }
 
+  // ── SBD subscription scheduled to cancel (access continues to period end) ──
+  if (event.type === 'customer.subscription.updated') {
+    const sub = event.data.object;
+    try {
+      const snap = await db.collection('users').where('stripeSubscriptionId', '==', sub.id).limit(1).get();
+      if (!snap.empty) {
+        const currentPeriodEnd = Number(sub.current_period_end || 0);
+        const subscriptionUpdate = {
+          'subscription.cancelAtPeriodEnd': sub.cancel_at_period_end === true,
+          'subscription.stripeStatus': sub.status || null,
+        };
+
+        if (sub.cancel_at_period_end === true && currentPeriodEnd > 0) {
+          subscriptionUpdate['subscription.endDate'] =
+            admin.firestore.Timestamp.fromMillis(currentPeriodEnd * 1000);
+        } else if (sub.status === 'active' || sub.status === 'trialing') {
+          subscriptionUpdate['subscription.endDate'] =
+            admin.firestore.Timestamp.fromDate(new Date('2099-12-31'));
+        }
+
+        await snap.docs[0].ref.update(subscriptionUpdate);
+        console.log(
+          `[SBD] Sub ${sub.id} updated — cancelAtPeriodEnd=${sub.cancel_at_period_end === true}`
+        );
+      }
+    } catch (e) {
+      console.error('[SBD] subscription.updated error:', e);
+    }
+    return res.json({ received: true, action: 'sbd-sub-updated' });
+  }
+
   // ── SBD subscription cancelled (recurring billing stopped by user) ──
   if (event.type === 'customer.subscription.deleted') {
     const sub = event.data.object;
@@ -586,6 +681,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           'subscription.tier': 'free',
           'subscription.status': 'cancelled',
           'subscription.endDate': admin.firestore.Timestamp.fromDate(new Date()),
+          'subscription.cancelAtPeriodEnd': false,
           'subscription.dripWeeksUnlocked': dripWeeksUnlocked,
         });
         console.log(`[SBD] Sub ${sub.id} cancelled → ${userEmail} downgraded to free. Drip position saved: week ${dripWeeksUnlocked}`);
@@ -2979,11 +3075,9 @@ exports.autoRepairSbdAccessOnAmbassador = functions.firestore
   });
 
 async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralCode, resetLink) {
-  const { Resend } = require('resend');
-  const resendClient = new Resend(process.env.RESEND_API_KEY || functions.config().resend?.api_key);
   const referralLink = `https://sbd-network.web.app/auth?ref=${sbdReferralCode}`;
 
-  await resendClient.emails.send({
+  await resend.emails.send({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
     subject: `Your SBD Network access is ready — ${ambassadorCode}`,
@@ -3766,6 +3860,7 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
 
 const SBD_STRIPE_PRICE_IDS = {
   'foundation-monthly': process.env.SBD_PRICE_FOUNDATION_MONTHLY || '',
+  'foundation-yearly': process.env.SBD_PRICE_FOUNDATION_YEARLY || '',
   'premium-monthly': process.env.SBD_PRICE_PREMIUM_MONTHLY || '',
   'elite-monthly': process.env.SBD_PRICE_ELITE_MONTHLY || '',
   'teleios-blueprint': process.env.SBD_PRICE_TELEIOS_BLUEPRINT || '',
@@ -3866,7 +3961,8 @@ const SBD_STRIPE_PRICE_IDS = {
 };
 
 const SBD_CATALOG_SERVER = {
-  'foundation-monthly': { name: 'Foundation Tier', amount: 900, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
+  'foundation-monthly': { name: 'Foundation Tier', amount: 977, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
+  'foundation-yearly': { name: 'Foundation Tier — Yearly', amount: 11800, mode: 'subscription', interval: 'year', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
   'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
@@ -3968,6 +4064,7 @@ const SBD_CATALOG_SERVER = {
 
 const SBD_UNLOCK_RULES = {
   'foundation-monthly': { tier: 'foundation', months: 1 },
+  'foundation-yearly': { tier: 'foundation', months: 12 },
   'premium-monthly': { tier: 'premium', months: 1 },
   'elite-monthly': { tier: 'elite', months: 1 },
   'teleios-blueprint': { courses: ['teleios-blueprint'] },
@@ -4089,6 +4186,75 @@ function resolveSbdProductId(rawProductId) {
   return SBD_PRODUCT_ALIASES[normalized] || normalized;
 }
 
+/**
+ * Resolve checkout product from static catalog, else Course Studio shopProducts.
+ */
+async function resolveSbdCatalogProduct(productId) {
+  const canonicalProductId = resolveSbdProductId(productId);
+  const staticProduct = SBD_CATALOG_SERVER[canonicalProductId];
+  if (staticProduct) {
+    return { id: canonicalProductId, product: staticProduct, source: 'static' };
+  }
+
+  try {
+    const snap = await db.collection('shopProducts').doc(canonicalProductId).get();
+    if (!snap.exists) return null;
+    const p = snap.data() || {};
+    if (p.status === 'inactive') return null;
+    if (!(p.studioPublished || p.checkoutEnabled || p.studioManaged)) return null;
+    const amount = Math.round(Number(p.priceUsd || 0) * 100);
+    if (!(amount >= 0)) return null;
+    return {
+      id: canonicalProductId,
+      source: 'firestore',
+      product: {
+        name: p.name || canonicalProductId,
+        amount: amount,
+        mode: p.recurring ? 'subscription' : 'payment',
+        tier: (p.unlocks && p.unlocks.tier) || p.tier || null,
+        stripePriceId: (typeof p.stripePriceId === 'string' ? p.stripePriceId.trim() : '') || '',
+      },
+    };
+  } catch (err) {
+    console.warn('[SBD] resolveSbdCatalogProduct failed:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Unlock rules: static map first, else derive from shopProducts.unlocks.
+ */
+async function resolveSbdUnlockRule(productId) {
+  const canonicalProductId = resolveSbdProductId(productId);
+  if (SBD_UNLOCK_RULES[canonicalProductId]) {
+    return SBD_UNLOCK_RULES[canonicalProductId];
+  }
+
+  try {
+    const snap = await db.collection('shopProducts').doc(canonicalProductId).get();
+    if (!snap.exists) return null;
+    const p = snap.data() || {};
+    if (!(p.studioPublished || p.checkoutEnabled || p.studioManaged)) return null;
+    const unlocks = p.unlocks || {};
+    const rule = {};
+    if (unlocks.tier) {
+      rule.tier = unlocks.tier;
+      rule.months = unlocks.months || 1;
+    }
+    const courses = unlocks.courseIds || unlocks.courses || [];
+    if (Array.isArray(courses) && courses.length) rule.courses = courses;
+    const products = unlocks.productIds || unlocks.products || [];
+    rule.products = Array.from(new Set([canonicalProductId].concat(products)));
+    if (Array.isArray(unlocks.issueIds) && unlocks.issueIds.length) {
+      rule.issueIds = unlocks.issueIds;
+    }
+    return rule;
+  } catch (err) {
+    console.warn('[SBD] resolveSbdUnlockRule failed:', err.message);
+    return null;
+  }
+}
+
 const advExprLib = require('./lib/advanced-expression-access');
 const SBD_ADVANCED_EXPRESSION_GROUPS = advExprLib.ADVANCED_EXPRESSION_GROUP_IDS;
 const SBD_TIER_GROUPS = {
@@ -4206,7 +4372,7 @@ async function grantSbdLifeEntitlements(uid, productId, session) {
 
 async function unlockSbdContent(uid, productId, session) {
   const canonicalProductId = resolveSbdProductId(productId);
-  const rule = SBD_UNLOCK_RULES[canonicalProductId];
+  const rule = await resolveSbdUnlockRule(canonicalProductId);
   if (!rule) {
     console.warn(`[SBD] No unlock rule for: ${canonicalProductId}`);
     return null;
@@ -4215,6 +4381,11 @@ async function unlockSbdContent(uid, productId, session) {
   const userRef = db.collection('users').doc(uid);
   const userSnap = await userRef.get();
   const userData = userSnap.exists ? userSnap.data() : {};
+
+  const catalogResolved = await resolveSbdCatalogProduct(canonicalProductId);
+  const productName = catalogResolved?.product?.name ||
+    SBD_CATALOG_SERVER[canonicalProductId]?.name ||
+    canonicalProductId;
 
   const tgMeta = {
     referredBy: userData.referredBy || null,
@@ -4230,13 +4401,13 @@ async function unlockSbdContent(uid, productId, session) {
     rdCommissionFCFA: null,
     tierKeyed: rule.tier || null,
     productId: canonicalProductId,
-    productName: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
+    productName: productName,
   };
 
   if (rule.tier) {
     // Recurring subscriptions: endDate = 2099 (Stripe manages billing cancellation).
     // One-time bundles: endDate = now + N months.
-    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
+    const isRecurring = ['foundation-monthly', 'foundation-yearly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     const endDate = isRecurring
       ? new Date('2099-12-31')
       : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
@@ -4287,6 +4458,7 @@ async function unlockSbdContent(uid, productId, session) {
       'subscription.endDate': admin.firestore.Timestamp.fromDate(endDate),
       'subscription.lastPayment': admin.firestore.FieldValue.serverTimestamp(),
       'subscription.dripStartDate': dripStartDate,
+      'subscription.cancelAtPeriodEnd': false,
       'subscription.dripWeeksUnlocked': admin.firestore.FieldValue.delete(),
     };
     if (session?.id)           tierUpdate['subscription.stripeSessionId'] = session.id;
@@ -4337,7 +4509,7 @@ async function unlockSbdContent(uid, productId, session) {
     app: 'sbd-network',
     userId: uid,
     productId: canonicalProductId,
-    productName: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
+    productName: productName,
     amount: session?.amount_total ? session.amount_total / 100 : 0,
     currency: session?.currency?.toUpperCase() || 'USD',
     status: 'completed',
@@ -4354,7 +4526,7 @@ async function unlockSbdContent(uid, productId, session) {
     payment_method: 'card',
     payment_category: canonicalProductId,
     product_id: canonicalProductId,
-    product_name: SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId,
+    product_name: productName,
     amount: session?.amount_total ? session.amount_total / 100 : 0,
     currency: session?.currency?.toUpperCase() || 'USD',
     customer_email: session?.customer_details?.email || '',
@@ -4504,10 +4676,11 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
   const uid   = context.auth.uid;
   const email = context.auth.token.email || '';
 
-  const product = SBD_CATALOG_SERVER[canonicalProductId];
-  if (!product) {
+  const resolved = await resolveSbdCatalogProduct(canonicalProductId);
+  if (!resolved || !resolved.product) {
     throw new functions.https.HttpsError('invalid-argument', `Unknown product: ${canonicalProductId}`);
   }
+  const product = resolved.product;
 
   const baseUrl    = 'https://sbd-network.web.app';
   const cancelTier = product.tier || canonicalProductId.replace('-monthly', '');
@@ -4515,7 +4688,7 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
     currency: 'usd',
     product_data: { name: product.name },
     unit_amount: product.amount,
-    ...(product.mode === 'subscription' ? { recurring: { interval: 'month' } } : {}),
+    ...(product.mode === 'subscription' ? { recurring: { interval: product.interval || 'month' } } : {}),
   };
   const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
   const lineItem = trimmedPriceId
@@ -4534,8 +4707,76 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
     cancel_url:  `${baseUrl}/payment?tier=${cancelTier}&cancelled=true`,
   });
 
-  console.log(`[SBD Checkout] uid=${uid} product=${canonicalProductId} session=${session.id}`);
+  console.log(`[SBD Checkout] uid=${uid} product=${canonicalProductId} source=${resolved.source} session=${session.id}`);
   return { url: session.url };
+});
+
+/**
+ * Open Stripe's hosted customer portal for SBD subscribers.
+ * The portal configuration enforces cancellation at the end of the paid period.
+ */
+exports.createSbdBillingPortalSession = functions.https.onCall(async (_data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be signed in to manage billing.');
+  }
+
+  const uid = context.auth.uid;
+  const userSnap = await db.collection('users').doc(uid).get();
+  const userData = userSnap.exists ? userSnap.data() : {};
+  const customerId = typeof userData.stripeCustomerId === 'string'
+    ? userData.stripeCustomerId.trim()
+    : '';
+
+  if (!customerId) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'No Stripe billing account is connected to this profile.'
+    );
+  }
+
+  try {
+    const configRef = db.collection('admin').doc('stripeBillingPortal');
+    const configSnap = await configRef.get();
+    let configurationId = configSnap.exists
+      ? String(configSnap.data()?.configurationId || '').trim()
+      : '';
+
+    if (!configurationId) {
+      const configuration = await stripe.billingPortal.configurations.create({
+        business_profile: {
+          headline: 'Manage your SBD Network subscription',
+        },
+        features: {
+          invoice_history: { enabled: true },
+          payment_method_update: { enabled: true },
+          subscription_cancel: {
+            enabled: true,
+            mode: 'at_period_end',
+          },
+        },
+      });
+      configurationId = configuration.id;
+      await configRef.set({
+        configurationId,
+        cancellationMode: 'at_period_end',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      configuration: configurationId,
+      return_url: 'https://sbd-network.web.app/profile.html',
+    });
+
+    return { url: session.url };
+  } catch (err) {
+    console.error('[SBD Billing Portal]', err);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Unable to open billing management right now. Please try again.'
+    );
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════

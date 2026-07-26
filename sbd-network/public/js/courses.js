@@ -473,7 +473,7 @@ function renderEliteRoadmap(activeCourses) {
         : `<div class="start-btn">${purchaseOnly && !owned ? 'Shop →' : 'Start →'}</div>`;
       const tag = purchaseOnly ? (owned ? 'Owned' : 'Shop') : 'Flagship';
       const thumb = window.CourseAccess
-        ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖')
+        ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖', course.coverImage)
         : '<div class="course-icon">' + (isWwm ? '👗' : '📖') + '</div>';
       html += `
         <div class="course-card" onclick="openCourse('${course.id}')" id="course-${course.id}">
@@ -506,7 +506,9 @@ function renderEliteRoadmap(activeCourses) {
       const nameSuffix = isFirst ? ' <span class="start-here-badge">Recommended Start</span>' : '';
       return `
         <div class="course-card${isFirst ? ' course-card--featured' : ''}" onclick="openCourse('${course.id}')">
-          <div class="course-icon">${getSchoolIcon(course.schoolId)}</div>
+          ${window.CourseAccess
+            ? CourseAccess.courseThumbHtml(course.id, getSchoolIcon(course.schoolId), course.coverImage)
+            : '<div class="course-icon">' + getSchoolIcon(course.schoolId) + '</div>'}
           <div class="course-info">
             <h3 class="course-name">${escHtml(course.title)}${nameSuffix}</h3>
             ${courseMeta ? `<p class="course-meta">${courseMeta}</p>` : ''}
@@ -548,7 +550,7 @@ function renderShopPurchaseSection(courses) {
       ${courses.map(function (course) {
         const isWwm = course.id === WWM_COURSE_ID;
         const thumb = window.CourseAccess
-          ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖')
+          ? CourseAccess.courseThumbHtml(course.id, isWwm ? '👗' : '📖', course.coverImage)
           : '<div class="course-icon">' + (isWwm ? '👗' : '📖') + '</div>';
         return `
         <div class="course-card" onclick="openCourse('${course.id}')" id="shop-course-${course.id}">

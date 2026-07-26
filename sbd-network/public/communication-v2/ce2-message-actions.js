@@ -285,11 +285,19 @@
       items.push(item('edit', 'Edit message', function () { showEditSheet(m, ac); }, { section: SEC }));
     }
 
-    if (self && deps.canUnsendMessage && deps.canUnsendMessage(m)) {
+    var canDelete =
+      deps.canDeleteMessage && deps.canDeleteMessage(m);
+    if (!canDelete && deps.canUnsendMessage) {
+      canDelete = deps.canUnsendMessage(m);
+    }
+    if (canDelete) {
+      var stMe = st && st.me;
+      var deleteLabel =
+        stMe && stMe.isAdmin && !self ? 'Delete for everyone' : 'Delete';
       items.push(
         item(
           'delete',
-          'Delete',
+          deleteLabel,
           function () { deps.unsendMessage(m, ac).catch(deps.handleCe2Error); },
           { section: SEC, danger: true }
         )

@@ -14,9 +14,17 @@ This week completes **A³** before Week 11 integration summit. Formation flow:
 Identity → Consciousness → Discipline → Practice → Covenant Flourishing
 ```
 
+### §F1 marriage ontology (recall)
+
+Read the spine top to bottom — design, marriage, integration:
+
+[[f1-spine:recall]]
+
 ### Integration law (operational)
 
-**Womanhood** is foundation; psychomotor training sustains muliebrity across decades. **Without woman, there is no wife. Without wife, there is no mother. Period.** Body stewardship is womanhood duty — credibility for wifehood in nakedness and allure.
+[[integration-law]]
+
+**Womanhood** is foundation; psychomotor training sustains muliebrity across decades. Body stewardship is womanhood duty — credibility for wifehood in nakedness and allure.
 
 ### Guard the foundation (Psalm 11:3)
 
