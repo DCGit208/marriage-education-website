@@ -355,7 +355,7 @@
   }
 
   async function loadFromPublishedPack(id) {
-    var res = await fetch('/data/books/' + encodeURIComponent(id) + '.json?v=5');
+    var res = await fetch('/data/books/' + encodeURIComponent(id) + '.json?v=6');
     if (!res.ok) return false;
     var pack = await res.json();
     if (!pack || !Array.isArray(pack.chapters) || !pack.chapters.length) return false;
