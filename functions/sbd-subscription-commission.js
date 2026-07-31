@@ -337,6 +337,34 @@ async function creditSbdSubscriptionCommissions(opts) {
     }
   }
 
+  const directPayeeCode = seller.type === 'ambassador'
+    ? (ambData.ambassadorCode || ambData.code || seller.id)
+    : seller.id;
+  const commissionShares = {
+    direct: {
+      payeeCode: String(directPayeeCode).toUpperCase(),
+      amount: plan.direct.amount,
+      status: 'pending',
+      role: 'direct'
+    }
+  };
+  if (plan.senior && seniorCode) {
+    commissionShares.senior = {
+      payeeCode: String(seniorCode).toUpperCase(),
+      amount: plan.senior.amount,
+      status: 'pending',
+      role: 'senior'
+    };
+  }
+  if (plan.rd && rdCode) {
+    commissionShares.rd = {
+      payeeCode: String(rdCode).toUpperCase(),
+      amount: plan.rd.amount,
+      status: 'pending',
+      role: 'rd'
+    };
+  }
+
   await db.collection('sbd_sales').add({
     policy_version: POLICY_VERSION,
     idempotencyKey,
@@ -358,6 +386,7 @@ async function creditSbdSubscriptionCommissions(opts) {
     seniorAmbassadorCommission: plan.senior ? plan.senior.amount : 0,
     rdOverrideCode: rdCode,
     rdCommission: plan.rd ? plan.rd.amount : 0,
+    commissionShares,
     challengeDayKey: isFoundationYearly(productId) ? dayKey : null,
     status: 'pending',
     createdAt: require('firebase-admin').firestore.FieldValue.serverTimestamp()

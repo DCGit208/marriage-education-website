@@ -7901,6 +7901,11 @@ exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
 const walletPayoutTier1 = require('./wallet-payout-tier1');
 const walletTier1Api = walletPayoutTier1.registerWalletPayoutTier1(db, exports);
 
+const { registerSbdCommissionPayout } = require('./sbd-commission-payout');
+registerSbdCommissionPayout(db, exports, {
+  assertAdmin: walletTier1Api.assertAdmin
+});
+
 const { registerPaymentInquiries } = require('./payment-inquiries');
 registerPaymentInquiries(db, exports, {
   assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),

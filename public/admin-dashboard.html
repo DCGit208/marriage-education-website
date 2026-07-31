@@ -819,6 +819,21 @@
             overflow: hidden;
         }
 
+        .sbd-commission-panel {
+            background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 120px);
+            border-color: #10b981;
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
+        }
+
+        .sbd-commission-panel .rb-panel-title-wrap h2 {
+            color: #065f46;
+        }
+
+        .sbd-commission-panel:focus-within {
+            outline: 3px solid rgba(16, 185, 129, 0.35);
+            outline-offset: 2px;
+        }
+
         .recruitment-bonus-panel:focus-within {
             outline: 3px solid rgba(245, 158, 11, 0.35);
             outline-offset: 2px;
@@ -1937,8 +1952,9 @@
             <div class="section" id="payments">
                 <h1 style="margin-bottom: 2rem;">Payment Approval Center</h1>
                 <p style="margin:-1rem 0 1.5rem;padding:12px 16px;background:#f0f4ff;border-radius:8px;font-size:14px;color:#4338ca">
-                    Customer payments are approved here. To pay ambassador <strong>commissions</strong>, use
-                    <a href="#" onclick="document.querySelector('[data-section=finance]').click();return false;">Finance → Payout queue</a>.
+                    Customer payments are approved here. To pay SBD subscription commissions, use
+                    <a href="#" onclick="document.querySelector('[data-section=finance]').click();return false;">Finance → SBD Commission Payouts</a>.
+                    Recruitment bonuses are paid in the panel below.
                 </p>
                 
                 <!-- Bulk Actions -->
@@ -2218,45 +2234,113 @@
                 </div>
             </div>
 
-            <!-- Finance / Commerce OS Tier 1 -->
+            <!-- Finance — SBD subscription commission manual payouts -->
             <div class="section" id="finance">
-                <h1 style="margin-bottom: 1rem;">Finance — Commission Payouts</h1>
-                <p class="section-subtitle" style="margin-bottom: 1.5rem">Pay earned commissions (recruitment + SBD). Export Wise CSV, then mark paid after funds are sent.</p>
-                <div class="bulk-actions" style="margin-bottom: 1rem;">
-                    <label>Min pending (FCFA)
-                        <input type="number" id="financeMinPending" value="25000" style="width:120px;margin-left:8px">
-                    </label>
-                    <button class="btn btn-primary btn-sm" id="financeRefreshBtn"><i class="fas fa-sync"></i> Refresh queue</button>
-                    <button class="btn btn-success btn-sm" id="financeExportWiseBtn"><i class="fas fa-file-csv"></i> Export Wise CSV</button>
-                    <button class="btn btn-success btn-sm" id="financeMarkSelectedBtn"><i class="fas fa-check"></i> Mark selected paid</button>
-                    <button class="btn btn-success btn-sm" id="financeMarkAllBtn"><i class="fas fa-check-double"></i> Mark all in queue paid</button>
-                    <button class="btn btn-secondary btn-sm" id="financeLoadHistoryBtn"><i class="fas fa-history"></i> Refresh history</button>
-                    <button class="btn btn-warning btn-sm" id="financeCampayDryBtn" title="Tier 2 CamPay"><i class="fas fa-mobile-alt"></i> CamPay dry run</button>
-                    <button class="btn btn-danger btn-sm" id="financeCampayLiveBtn" title="Sends real MoMo"><i class="fas fa-mobile-alt"></i> CamPay disburse</button>
-                    <span id="financeQueueStatus" style="margin-left:12px;font-size:14px;color:#636e72"></span>
-                </div>
-                <div class="table-card">
-                    <div class="table-header"><h2>Payout queue</h2></div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th><input type="checkbox" id="financeSelectAll" title="Select all payees"></th><th>Code</th><th>Name</th><th>Country</th><th>Method</th>
-                                    <th>Recruitment</th><th>SBD</th><th>Total</th><th>Profile</th><th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="financeQueueBody">
-                                <tr><td colspan="10">Open this section to load queue.</td></tr>
-                            </tbody>
-                        </table>
+                <h1 style="margin-bottom: 1rem;">Finance — SBD Commission Payouts</h1>
+                <p class="section-subtitle" style="margin-bottom: 1.5rem">
+                    Manual MoMo reimbursements for SBD Network subscription commissions (including Foundation Yearly <strong>$118</strong>).
+                    Send payment, then <strong>Mark paid</strong>. Automated operators (CamPay / Wise / PayUnit) are offline for now.
+                </p>
+
+                <section class="recruitment-bonus-panel sbd-commission-panel" id="sbdCommissionPanel" aria-labelledby="sbdPanelTitle" aria-busy="false">
+                    <div class="rb-panel-header">
+                        <div class="rb-panel-title-wrap">
+                            <h2 id="sbdPanelTitle">
+                                <span aria-hidden="true">💳</span>
+                                SBD Subscription Commissions
+                                <span class="rb-urgent-tag" style="background:#065f46">Manual payout</span>
+                            </h2>
+                            <p class="rb-panel-subtitle">
+                                Each row is one commission share on a subscription sale — who subscribed, under which operator, and who you owe.
+                                Yearly $118 sales credit the full 10/5/5 stack at once (up to 3 rows per sale).
+                            </p>
+                            <p id="sbdPanelStatus" role="status" aria-live="polite">Open Finance to load…</p>
+                        </div>
                     </div>
-                </div>
-                <div class="table-card" style="margin-top:2rem">
-                    <div class="table-header">
-                        <h2>Payout history</h2>
-                        <div class="table-actions" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+
+                    <div class="rb-summary-grid" aria-label="SBD commission summary">
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Pending lines</div>
+                            <div class="rb-summary-value" id="sbdPendingCount">—</div>
+                        </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Total to send</div>
+                            <div class="rb-summary-value rb-total" id="sbdPendingTotal">—</div>
+                        </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Unique payees</div>
+                            <div class="rb-summary-value" id="sbdPayeeCount">—</div>
+                        </div>
+                        <div class="rb-summary-card">
+                            <div class="rb-summary-label">Paid today</div>
+                            <div class="rb-summary-value" id="sbdPaidTodayTotal" style="color:#059669">—</div>
+                        </div>
+                    </div>
+
+                    <div class="rb-view-tabs" role="tablist" aria-label="SBD commission views" style="display:flex;gap:8px;margin:0 0 12px;padding:0 1.5rem">
+                        <button type="button" role="tab" id="sbdTabPending" class="btn btn-primary btn-sm" aria-selected="true">Pending queue</button>
+                        <button type="button" role="tab" id="sbdTabPaid" class="btn btn-secondary btn-sm" aria-selected="false">Paid history</button>
+                    </div>
+
+                    <div id="sbdPendingView" style="padding:0 1.5rem 1.5rem">
+                        <div class="rb-toolbar" id="sbdPendingToolbar">
+                            <label class="sr-only" for="sbdSearchInput">Search SBD commissions</label>
+                            <input type="search" id="sbdSearchInput" class="rb-search" placeholder="Search payee, seller, product, uid…" autocomplete="off">
+                            <label class="sr-only" for="sbdPayeeLookup">Look up payee total owed</label>
+                            <input type="search" id="sbdPayeeLookup" class="rb-search rb-payee-lookup" placeholder="Payee name → total owed…" autocomplete="off" list="sbdPayeeLookupList">
+                            <datalist id="sbdPayeeLookupList"></datalist>
+                            <button type="button" class="btn btn-primary btn-sm" id="sbdPayeeTotalsBtn" title="View all payee totals">
+                                <i class="fas fa-users" aria-hidden="true"></i> Payee totals
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="sbdCopyAllPhones" title="Copy all payee numbers">
+                                <i class="fas fa-copy" aria-hidden="true"></i> Copy all numbers
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm" id="sbdMarkSelectedBtn" title="Mark checked rows as paid">
+                                <i class="fas fa-check" aria-hidden="true"></i> Mark selected paid
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm" id="sbdMarkAllPendingBtn" title="Mark every pending line as paid">
+                                <i class="fas fa-check-double" aria-hidden="true"></i> Mark entire queue paid
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm" id="sbdRefreshBtn">
+                                <i class="fas fa-sync" aria-hidden="true"></i> Refresh
+                            </button>
+                        </div>
+
+                        <div id="sbdPayeeTotalsStrip" class="rb-payee-totals-strip" hidden aria-label="Totals owed by payee"></div>
+
+                        <div class="table-container">
+                            <table aria-describedby="sbdPanelTitle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col"><input type="checkbox" id="sbdSelectAll" title="Select all rows" aria-label="Select all"></th>
+                                        <th scope="col">Sale date</th>
+                                        <th scope="col">Product</th>
+                                        <th scope="col">Subscriber</th>
+                                        <th scope="col">Under (seller)</th>
+                                        <th scope="col">Payee</th>
+                                        <th scope="col">Role</th>
+                                        <th scope="col">MoMo / phone</th>
+                                        <th scope="col">Amount</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sbdCommissionTableBody">
+                                    <tr>
+                                        <td colspan="10" class="loading">
+                                            <div class="spinner"></div>
+                                            <p>Loading SBD commission lines…</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="sbdPaidView" hidden style="padding:0 1.5rem 1.5rem">
+                        <p style="font-size:14px;color:#64748b;margin:0 0 12px">Shares you marked as paid from this panel — grouped by day below.</p>
+                        <div class="rb-toolbar" style="margin-bottom:12px">
                             <label style="font-size:14px">Period
-                                <select id="financeHistoryDays" style="margin-left:6px">
+                                <select id="sbdPaidDays" style="margin-left:6px">
                                     <option value="1">Today</option>
                                     <option value="7">Last 7 days</option>
                                     <option value="30" selected>Last 30 days</option>
@@ -2264,23 +2348,35 @@
                                     <option value="365">All loaded</option>
                                 </select>
                             </label>
-                            <label style="font-size:14px">Payee
-                                <select id="financeHistoryPayee" style="margin-left:6px"><option value="">All payees</option></select>
+                            <label style="font-size:14px;margin-left:12px">Payee
+                                <select id="sbdPaidPayeeFilter" style="margin-left:6px"><option value="">All payees</option></select>
                             </label>
+                            <button type="button" class="btn btn-secondary btn-sm" id="sbdPaidRefreshBtn" style="margin-left:12px">
+                                <i class="fas fa-sync"></i> Refresh paid history
+                            </button>
+                        </div>
+                        <div id="sbdPaidDailySummary" style="margin-bottom:1rem"></div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Paid when</th>
+                                        <th>Payee</th>
+                                        <th>Product</th>
+                                        <th>Subscriber</th>
+                                        <th>Under</th>
+                                        <th>Role</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sbdPaidHistoryBody">
+                                    <tr><td colspan="7">Switch to Paid history to load.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div id="financeDailySummary" style="margin:0 1rem 1rem"></div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>When</th><th>Payee</th><th>Amount</th><th>Breakdown</th><th>Method</th><th>Reference</th><th>Admin</th></tr>
-                            </thead>
-                            <tbody id="financeHistoryBody">
-                                <tr><td colspan="7">Opens automatically when you visit Finance.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                </section>
+
                 <div class="table-card" style="margin-top:2rem">
                     <div class="table-header">
                         <h2>Payment inquiries</h2>
