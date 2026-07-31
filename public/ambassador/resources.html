@@ -187,12 +187,21 @@
             margin-bottom: 0.75rem;
         }
 
-        .flyer-preview {
-            width: 100%;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f8f9fa;
+        .flyer-status {
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 0.9rem;
+            line-height: 1.45;
             margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .flyer-status strong {
+            color: #07162f;
+            display: block;
+            margin-bottom: 0.35rem;
         }
 
         .btn-row {
@@ -226,6 +235,13 @@
 
         .resource-card .btn.subtle:hover {
             background: #f8fafc;
+        }
+
+        .resource-card .btn.disabled,
+        .resource-card .btn.disabled:hover {
+            background: #e2e8f0;
+            color: #64748b;
+            cursor: not-allowed;
         }
 
         .copy-section.compact {
@@ -316,8 +332,49 @@
         }
 
         @media (max-width: 768px) {
+            .header {
+                padding: 1.5rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.85rem;
+            }
+
+            .nav-breadcrumb,
+            .container {
+                padding: 0 1rem;
+            }
+
+            .resource-category {
+                padding: 1rem;
+                border-radius: 10px;
+            }
+
+            .outreach-hero {
+                padding: 1.25rem;
+            }
+
+            .outreach-hero h2 {
+                font-size: 1.45rem;
+                line-height: 1.25;
+            }
+
             .resource-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .resource-card {
+                padding: 1rem;
+            }
+
+            .copy-text {
+                font-size: 0.9rem;
+                max-height: 420px;
+                overflow: auto;
+            }
+
+            .resource-card .btn {
+                min-height: 46px;
             }
         }
     </style>
@@ -366,11 +423,14 @@
             <div class="resource-grid">
                 <div class="resource-card outreach-card">
                     <span class="audience-tag"><i class="fas fa-user-graduate"></i> Ages 15-35</span>
-                    <img class="flyer-preview" src="../documents/marketing-flyers/youth-foundation-access.svg" alt="Youth Foundation Access flyer preview">
                     <h3>Youth Foundation Access</h3>
                     <p>For young men, young women, students, NYSC/youth programs, early career professionals, and singles.</p>
+                    <div class="flyer-status">
+                        <strong><i class="fas fa-triangle-exclamation"></i> Final flyer artwork needed</strong>
+                        Upload the original Youth Foundation Access PNG/PDF export before enabling downloads. No reconstructed artwork is shown here.
+                    </div>
                     <div class="btn-row">
-                        <a class="btn" href="../documents/marketing-flyers/youth-foundation-access.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn disabled" type="button" aria-disabled="true"><i class="fas fa-download"></i> Flyer Pending</button>
                         <button class="btn secondary" type="button" onclick="copyToClipboard('foundationYouthMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
                         <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationYouthMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
                     </div>
@@ -405,11 +465,14 @@ or contact us on WhatsApp:
 
                 <div class="resource-card outreach-card">
                     <span class="audience-tag"><i class="fas fa-heart"></i> Couples</span>
-                    <img class="flyer-preview" src="../documents/marketing-flyers/relationship-marriage-foundation.svg" alt="Relationship and Marriage Foundation flyer preview">
                     <h3>Relationship &amp; Marriage Foundation</h3>
                     <p>For dating couples, engaged couples, newly married couples, and married couples.</p>
+                    <div class="flyer-status">
+                        <strong><i class="fas fa-triangle-exclamation"></i> Final flyer artwork needed</strong>
+                        Upload the original Relationship &amp; Marriage PNG/PDF export before enabling downloads. No reconstructed artwork is shown here.
+                    </div>
                     <div class="btn-row">
-                        <a class="btn" href="../documents/marketing-flyers/relationship-marriage-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn disabled" type="button" aria-disabled="true"><i class="fas fa-download"></i> Flyer Pending</button>
                         <button class="btn secondary" type="button" onclick="copyToClipboard('foundationMarriageMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
                         <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationMarriageMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
                     </div>
@@ -446,11 +509,14 @@ Build a stronger relationship today. Build a stronger future together.</div>
 
                 <div class="resource-card outreach-card">
                     <span class="audience-tag"><i class="fas fa-people-roof"></i> Families</span>
-                    <img class="flyer-preview" src="../documents/marketing-flyers/family-parenting-foundation.svg" alt="Family and Parenting Foundation flyer preview">
                     <h3>Family &amp; Parenting Foundation</h3>
                     <p>For parents, single parents, guardians, and grandparents.</p>
+                    <div class="flyer-status">
+                        <strong><i class="fas fa-triangle-exclamation"></i> Final flyer artwork needed</strong>
+                        Upload the original Family &amp; Parenting PNG/PDF export before enabling downloads. No reconstructed artwork is shown here.
+                    </div>
                     <div class="btn-row">
-                        <a class="btn" href="../documents/marketing-flyers/family-parenting-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn disabled" type="button" aria-disabled="true"><i class="fas fa-download"></i> Flyer Pending</button>
                         <button class="btn secondary" type="button" onclick="copyToClipboard('foundationFamilyMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
                         <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationFamilyMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
                     </div>
@@ -493,11 +559,14 @@ Because stronger parents build stronger children, stronger families, and stronge
 
                 <div class="resource-card outreach-card">
                     <span class="audience-tag"><i class="fas fa-building"></i> Institutions</span>
-                    <img class="flyer-preview" src="../documents/marketing-flyers/leaders-organizations-foundation.svg" alt="Leaders and Organizations Foundation flyer preview">
                     <h3>Leaders &amp; Organizations</h3>
                     <p>For churches, NGOs, schools, universities, employers, and community organizations.</p>
+                    <div class="flyer-status">
+                        <strong><i class="fas fa-triangle-exclamation"></i> Final flyer artwork needed</strong>
+                        Upload the original Leaders &amp; Organizations PNG/PDF export before enabling downloads. No reconstructed artwork is shown here.
+                    </div>
                     <div class="btn-row">
-                        <a class="btn" href="../documents/marketing-flyers/leaders-organizations-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn disabled" type="button" aria-disabled="true"><i class="fas fa-download"></i> Flyer Pending</button>
                         <button class="btn secondary" type="button" onclick="copyToClipboard('foundationOrganizationsMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
                         <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationOrganizationsMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
                     </div>
@@ -536,11 +605,14 @@ When people grow, organizations grow. When families grow stronger, communities a
 
                 <div class="resource-card outreach-card">
                     <span class="audience-tag"><i class="fas fa-globe"></i> Universal</span>
-                    <img class="flyer-preview" src="../documents/marketing-flyers/general-foundation-access.svg" alt="General Foundation Access flyer preview">
                     <h3>General Foundation Access</h3>
                     <p>The flagship flyer to send when you do not yet know the prospect category.</p>
+                    <div class="flyer-status">
+                        <strong><i class="fas fa-triangle-exclamation"></i> Final flyer artwork needed</strong>
+                        Upload the original General Foundation Access PNG/PDF export before enabling downloads. No reconstructed artwork is shown here.
+                    </div>
                     <div class="btn-row">
-                        <a class="btn" href="../documents/marketing-flyers/general-foundation-access.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn disabled" type="button" aria-disabled="true"><i class="fas fa-download"></i> Flyer Pending</button>
                         <button class="btn secondary" type="button" onclick="copyToClipboard('foundationGeneralMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
                         <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationGeneralMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
                     </div>
