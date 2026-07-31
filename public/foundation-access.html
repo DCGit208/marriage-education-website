@@ -381,17 +381,17 @@
     .course-grid {
       list-style: none;
       display: grid;
-      gap: 0.55rem 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0;
+      grid-template-columns: 1fr;
     }
 
     .course-grid li {
       display: grid;
-      grid-template-columns: 1.7rem 1fr;
-      gap: 0.55rem;
-      align-items: start;
-      font-size: 0.92rem;
-      padding: 0.55rem 0;
+      grid-template-columns: 1.7rem minmax(0, 1fr) auto;
+      gap: 0.65rem;
+      align-items: baseline;
+      font-size: 0.95rem;
+      padding: 0.7rem 0;
       border-top: 1px solid rgba(243, 239, 230, 0.12);
     }
 
@@ -399,7 +399,66 @@
       color: #e8d5a3;
       font-size: 0.78rem;
       letter-spacing: 0.04em;
-      padding-top: 0.15rem;
+    }
+
+    .course-name { color: #f3efe6; }
+
+    .course-price {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e8d5a3;
+      white-space: nowrap;
+    }
+
+    .stack-total {
+      margin-top: 1.25rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(243, 239, 230, 0.22);
+    }
+
+    .stack-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: baseline;
+      padding: 0.55rem 0;
+      font-size: 0.95rem;
+      color: rgba(243, 239, 230, 0.82);
+    }
+
+    .stack-row strong {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.2rem;
+      color: #f7f3ea;
+    }
+
+    .stack-row-sum {
+      border-top: 1px solid rgba(243, 239, 230, 0.18);
+      margin-top: 0.25rem;
+      padding-top: 0.75rem;
+      color: #f7f3ea;
+      font-weight: 600;
+    }
+
+    .stack-row-sum strong {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
+    .stack-row-pay {
+      background: rgba(232, 213, 163, 0.12);
+      margin-top: 0.55rem;
+      padding: 0.85rem 0.95rem;
+      color: #e8d5a3;
+      font-weight: 700;
+    }
+
+    .stack-row-pay strong {
+      color: #e8d5a3;
+      font-size: 1.55rem;
+      text-decoration: none;
+      opacity: 1;
     }
 
     .school-foot {
@@ -723,7 +782,7 @@
       </p>
       <div class="hero-price">
         <strong>$118</strong>
-        <span>USD · billed yearly · Teleios Blueprint alone is $247</span>
+        <span>USD · scholarship access · retail stack over $3,000</span>
       </div>
       <div class="hero-actions">
         <a class="btn-primary" href="#enroll">Start your year of access</a>
@@ -734,28 +793,28 @@
 
   <section class="peek" id="inside">
     <div class="wrap">
-      <p class="section-label">Sneak peek</p>
+      <p class="section-label">Sneak peek · real prices</p>
       <h2>This is what $118 unlocks.</h2>
       <p class="section-copy">
-        Not a vague “membership.” Two complete formation pathways you can name — plus the School 1 roadmap you grow into across the year.
+        See the individual course prices first. Then see the scholarship: one yearly payment instead of buying the stack à la carte.
       </p>
 
-      <div class="value-hit" aria-label="Value comparison">
+      <div class="value-hit" aria-label="Scholarship comparison">
         <div>
-          <strong>Teleios Blueprint course alone</strong>
-          <span>$247</span>
+          <strong>Retail if bought course-by-course</strong>
+          <span>$3,143</span>
         </div>
         <div>
-          <strong>Full year of Foundation Access</strong>
+          <strong>Foundation Yearly scholarship</strong>
           <span class="value-hit-accent">$118</span>
         </div>
       </div>
 
       <div class="track-grid">
         <article class="track">
-          <p class="track-kicker">Pathway 1 · 6 weeks</p>
+          <p class="track-kicker">Included · retail $247</p>
           <h3>The Teleios Blueprint</h3>
-          <p class="track-sub">Full Human Maturity — dripped weekly on SBD Network</p>
+          <p class="track-sub">6 weeks · Full Human Maturity — dripped weekly on SBD Network</p>
           <ol class="track-list">
             <li><span>Week 1</span> You Were Created Teleios</li>
             <li><span>Week 2</span> The Four Integrated Faculties</li>
@@ -767,44 +826,64 @@
         </article>
 
         <article class="track">
-          <p class="track-kicker">Pathway 2 · 13 weeks</p>
+          <p class="track-kicker">Included · retail $300</p>
           <h3>Sex By Design for Dummies</h3>
-          <p class="track-sub">The complete marriage handbook pathway — dripped weekly</p>
+          <p class="track-sub">13-week course · the complete marriage handbook pathway — dripped weekly</p>
           <ol class="track-list">
             <li><span>W1–3</span> Design, anatomy &amp; the marriage equation</li>
             <li><span>W4–6</span> Desire, covenant sexuality &amp; fidelity</li>
             <li><span>W7–9</span> Communication, conflict &amp; one-flesh life</li>
             <li><span>W10–13</span> Household strength, parenting &amp; lasting practice</li>
           </ol>
-          <p class="track-note">Full 13-week courseware + Foundation library / resources — not a teaser chapter.</p>
+          <p class="track-note">Standalone course value: <strong>$300</strong> — included in Foundation Tier, not sold separately here.</p>
         </article>
       </div>
 
       <div class="school-block">
         <div class="school-head">
           <div>
-            <p class="track-kicker">School 1 · Teleios Foundation</p>
-            <h3>The 13-course formation roadmap</h3>
-            <p>Your year opens the Foundation pathway. School 1 is the structured course sequence you progress through — not a mystery folder.</p>
+            <p class="track-kicker">School 1 · Teleios Foundation · retail $2,843</p>
+            <h3>13 courses with real prices</h3>
+            <p>Read the price next to each course. This is the formation stack your scholarship year opens — plus the $300 SBD for Dummies course above.</p>
           </div>
-          <a class="btn-primary" href="#enroll">Unlock this year — $118</a>
+          <a class="btn-primary" href="#enroll">Claim scholarship — $118</a>
         </div>
         <ol class="course-grid">
-          <li><b>01</b> The Teleios Blueprint: Full Human Maturity</li>
-          <li><b>02</b> The Anthropology of Wholeness</li>
-          <li><b>03</b> Identity Mastery</li>
-          <li><b>04</b> The Four Faculties Training</li>
-          <li><b>05</b> Anthropocentric Development</li>
-          <li><b>06</b> The Personal Development MasterClass</li>
-          <li><b>07</b> The Science of Self-Command</li>
-          <li><b>08</b> The Heart of Relationship</li>
-          <li><b>09</b> Relationship Relatednesses</li>
-          <li><b>10</b> Relationship Mastery Intensive</li>
-          <li><b>11</b> The Perfect Self Program</li>
-          <li><b>12</b> Emotional Literacy for Couples &amp; Singles</li>
-          <li><b>13</b> Temperament Intelligence for Marriage</li>
+          <li><b>01</b><span class="course-name">The Teleios Blueprint: Full Human Maturity</span><span class="course-price">$247</span></li>
+          <li><b>02</b><span class="course-name">The Anthropology of Wholeness</span><span class="course-price">$149</span></li>
+          <li><b>03</b><span class="course-name">Identity Mastery</span><span class="course-price">$149</span></li>
+          <li><b>04</b><span class="course-name">The Four Faculties Training</span><span class="course-price">$199</span></li>
+          <li><b>05</b><span class="course-name">Anthropocentric Development</span><span class="course-price">$129</span></li>
+          <li><b>06</b><span class="course-name">The Personal Development MasterClass</span><span class="course-price">$697</span></li>
+          <li><b>07</b><span class="course-name">The Science of Self-Command</span><span class="course-price">$199</span></li>
+          <li><b>08</b><span class="course-name">The Heart of Relationship</span><span class="course-price">$149</span></li>
+          <li><b>09</b><span class="course-name">Relationship Relatednesses</span><span class="course-price">$199</span></li>
+          <li><b>10</b><span class="course-name">Relationship Mastery Intensive</span><span class="course-price">$349</span></li>
+          <li><b>11</b><span class="course-name">The Perfect Self Program</span><span class="course-price">$149</span></li>
+          <li><b>12</b><span class="course-name">Emotional Literacy for Couples &amp; Singles</span><span class="course-price">$129</span></li>
+          <li><b>13</b><span class="course-name">Temperament Intelligence for Marriage</span><span class="course-price">$99</span></li>
         </ol>
-        <p class="school-foot">Also included: Foundation community boards, downloadable resources, and your login to <strong>sbd-network.web.app/learn?tier=foundation</strong>.</p>
+
+        <div class="stack-total" aria-label="Retail stack total">
+          <div class="stack-row">
+            <span>School 1 · 13 courses</span>
+            <strong>$2,843</strong>
+          </div>
+          <div class="stack-row">
+            <span>Sex By Design for Dummies · 13-week course</span>
+            <strong>$300</strong>
+          </div>
+          <div class="stack-row stack-row-sum">
+            <span>Retail total</span>
+            <strong>$3,143</strong>
+          </div>
+          <div class="stack-row stack-row-pay">
+            <span>Your Foundation Yearly scholarship</span>
+            <strong>$118</strong>
+          </div>
+        </div>
+
+        <p class="school-foot">Also included: Foundation community boards, downloadable resources, and login to <strong>sbd-network.web.app/learn?tier=foundation</strong>.</p>
       </div>
     </div>
   </section>
@@ -870,7 +949,7 @@
         <h2>Foundation Access — Yearly</h2>
         <div class="price-block">
           <strong>$118</strong>
-          <span>one payment · 12 months</span>
+          <span>scholarship · $3,143 retail stack</span>
         </div>
 
         <form id="enrollForm" novalidate>
@@ -895,10 +974,10 @@
         <p class="section-label">After you enroll</p>
         <h2>Everything points to Foundation.</h2>
         <ul class="aside-list">
-          <li>Teleios Blueprint (6 weeks) + SBD for Dummies (13 weeks) open first</li>
-          <li>School 1’s 13-course roadmap is named above — scroll the sneak peek</li>
-          <li>Payment unlocks Foundation immediately; login email follows</li>
-          <li>If you used an ambassador link, their deployment challenge updates</li>
+          <li>School 1 courses total <strong>$2,843</strong> at retail</li>
+          <li>SBD for Dummies 13-week course adds <strong>$300</strong></li>
+          <li>Retail stack <strong>$3,143</strong> → scholarship price <strong>$118</strong></li>
+          <li>Pay once · login emailed · open Foundation on SBD Network</li>
         </ul>
       </aside>
     </div>
@@ -918,7 +997,7 @@
   <div class="sticky-bar" id="stickyBar">
     <div>
       <strong>$118</strong>
-      <span style="opacity:0.8;font-size:0.9rem"> · Foundation Yearly</span>
+      <span style="opacity:0.8;font-size:0.9rem"> · $3,143 value scholarship</span>
     </div>
     <a class="btn-primary" href="#enroll">Enroll</a>
   </div>
