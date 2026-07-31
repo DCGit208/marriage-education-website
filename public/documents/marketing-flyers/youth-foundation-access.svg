@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Youth Foundation Access flyer</title>
+  <desc id="desc">Foundation Access outreach flyer for young adults, students, singles, and early career professionals.</desc>
+  <rect width="1080" height="1350" fill="#07162f"/>
+  <rect x="0" y="0" width="1080" height="165" fill="#0b1d3b"/>
+  <rect x="0" y="165" width="1080" height="1185" fill="#f8fafc"/>
+  <text x="70" y="92" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" fill="#ffffff">SBD NETWORK</text>
+  <text x="70" y="132" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#f5b52e">by MarriageEducation.com</text>
+  <rect x="610" y="42" width="400" height="62" rx="31" fill="#f5b52e"/>
+  <text x="640" y="82" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#07162f">INVEST IN YOURSELF</text>
+
+  <text x="70" y="285" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="800" fill="#07162f">THE EDUCATION</text>
+  <text x="70" y="390" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="900" fill="#d49513">LIFE NEVER</text>
+  <text x="70" y="495" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="900" fill="#d49513">TAUGHT YOU.</text>
+  <text x="70" y="570" font-family="Arial, Helvetica, sans-serif" font-size="33" font-weight="700" fill="#233047">Better decisions. Stronger relationships.</text>
+  <text x="70" y="615" font-family="Arial, Helvetica, sans-serif" font-size="33" font-weight="700" fill="#233047">Healthier families. A greater future.</text>
+
+  <rect x="70" y="680" width="940" height="135" rx="22" fill="#f5b52e"/>
+  <text x="110" y="735" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">PERFECT FOR:</text>
+  <text x="110" y="780" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#07162f">Young men and women | Students | Singles | Early career</text>
+
+  <rect x="70" y="875" width="270" height="250" rx="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="4"/>
+  <text x="125" y="960" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="900" fill="#07162f">13</text>
+  <text x="116" y="1010" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="800" fill="#07162f">COURSES</text>
+  <text x="110" y="1060" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#233047">1 FULL YEAR</text>
+  <text x="132" y="1094" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#233047">OF ACCESS</text>
+
+  <rect x="405" y="875" width="270" height="250" rx="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="4"/>
+  <text x="452" y="955" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">VALUE OVER</text>
+  <text x="432" y="1036" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" fill="#d49513">$2,500+</text>
+  <text x="510" y="1086" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">USD</text>
+
+  <rect x="740" y="875" width="270" height="250" rx="22" fill="#07162f"/>
+  <text x="785" y="935" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#f5b52e">SCHOLARSHIP</text>
+  <text x="815" y="1008" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="900" fill="#ffffff">$118</text>
+  <text x="795" y="1060" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">USD / YEAR</text>
+
+  <text x="70" y="1198" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#07162f">PRACTICAL TOPICS:</text>
+  <text x="70" y="1242" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#233047">Relationships | Communication | Conflict | Emotional intelligence | Money | Purpose</text>
+  <rect x="0" y="1280" width="1080" height="70" fill="#f5b52e"/>
+  <text x="70" y="1325" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#07162f">START TODAY: marriageducation.com/foundation-access</text>
+</svg>

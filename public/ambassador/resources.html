@@ -136,6 +136,115 @@
             background: #00a085;
         }
 
+        .outreach-hero {
+            background: linear-gradient(135deg, #07162f 0%, #102a54 58%, #d49513 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .outreach-hero h2 {
+            color: white;
+            margin-bottom: 0.75rem;
+        }
+
+        .outreach-hero p {
+            color: rgba(255,255,255,0.88);
+            margin-bottom: 1rem;
+        }
+
+        .outreach-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .outreach-chip {
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 999px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.45rem 0.75rem;
+        }
+
+        .outreach-card {
+            cursor: default;
+        }
+
+        .audience-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #fff7e6;
+            color: #8a5a00;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0.35rem 0.65rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .flyer-preview {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .resource-card .btn.secondary {
+            background: #07162f;
+        }
+
+        .resource-card .btn.secondary:hover {
+            background: #102a54;
+        }
+
+        .resource-card .btn.whatsapp {
+            background: #25D366;
+            color: #07162f;
+        }
+
+        .resource-card .btn.whatsapp:hover {
+            background: #1ebe5d;
+        }
+
+        .resource-card .btn.subtle {
+            background: white;
+            color: #07162f;
+            border: 1px solid #cbd5e1;
+        }
+
+        .resource-card .btn.subtle:hover {
+            background: #f8fafc;
+        }
+
+        .copy-section.compact {
+            margin-top: 1rem;
+            margin-bottom: 0;
+        }
+
+        .resource-link-box {
+            background: #eef8f5;
+            border: 1px solid #c8efe6;
+            border-radius: 8px;
+            color: #075e54;
+            font-family: monospace;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+            padding: 0.75rem;
+            word-break: break-word;
+        }
+
         .copy-section {
             background: #f8f9fa;
             padding: 1.5rem;
@@ -216,15 +325,262 @@
 <body>
     <div class="header">
         <h1><i class="fas fa-folder-open"></i> Marketing Resources</h1>
-        <p>Everything you need to sell 60+ books successfully</p>
+        <p>Foundation Access outreach resources for every prospect category</p>
     </div>
 
     <div class="nav-breadcrumb">
-        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a> / 
+        <a href="dashboard.html" id="resourcesBreadcrumbDashboard"><i class="fas fa-home"></i> Dashboard</a> / 
         <span>Resources</span>
     </div>
 
     <div class="container">
+        <!-- Foundation Outreach Flyers -->
+        <div class="resource-category" id="foundation-outreach">
+            <div class="outreach-hero">
+                <h2><i class="fas fa-bullhorn"></i> Foundation Outreach Flyers & Messages</h2>
+                <p>Choose the prospect category, download the matching flyer, then copy or share the ready message. If you are logged into your operator dashboard, copied messages include your Foundation Access referral link automatically.</p>
+                <div class="outreach-chip-row" aria-label="Outreach categories">
+                    <span class="outreach-chip">Youth</span>
+                    <span class="outreach-chip">Relationships</span>
+                    <span class="outreach-chip">Families</span>
+                    <span class="outreach-chip">Organizations</span>
+                    <span class="outreach-chip">General</span>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <h4><i class="fas fa-lightbulb"></i> Which flyer should I use?</h4>
+                <ul>
+                    <li><strong>Unknown prospect:</strong> use General Foundation Access.</li>
+                    <li><strong>Young adult, student, single, NYSC/youth program:</strong> use Youth Foundation Access.</li>
+                    <li><strong>Dating, engaged, newly married, or married couple:</strong> use Relationship &amp; Marriage Foundation.</li>
+                    <li><strong>Parent, guardian, grandparent, or family leader:</strong> use Family &amp; Parenting Foundation.</li>
+                    <li><strong>Church, school, NGO, employer, or community leader:</strong> use Leaders &amp; Organizations.</li>
+                </ul>
+            </div>
+
+            <p class="resource-link-box">
+                Your Foundation Access link: <span data-foundation-link>https://marriageducation.com/foundation-access</span>
+            </p>
+
+            <div class="resource-grid">
+                <div class="resource-card outreach-card">
+                    <span class="audience-tag"><i class="fas fa-user-graduate"></i> Ages 15-35</span>
+                    <img class="flyer-preview" src="../documents/marketing-flyers/youth-foundation-access.svg" alt="Youth Foundation Access flyer preview">
+                    <h3>Youth Foundation Access</h3>
+                    <p>For young men, young women, students, NYSC/youth programs, early career professionals, and singles.</p>
+                    <div class="btn-row">
+                        <a class="btn" href="../documents/marketing-flyers/youth-foundation-access.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn secondary" type="button" onclick="copyToClipboard('foundationYouthMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
+                        <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationYouthMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
+                    </div>
+                    <div class="copy-section compact">
+                        <h4><i class="fas fa-message"></i> Message to send with flyer</h4>
+                        <div class="copy-text" id="foundationYouthMessage">🚨 Before you make some of the biggest decisions of your life… make one of the smartest investments in yourself.
+
+Most of us were taught how to pass exams.
+
+Very few of us were taught how to build healthy relationships, make wise life decisions, choose the right life partner, develop emotional intelligence, or prepare for marriage and family life.
+
+That’s why I’m sharing this with you.
+
+Through the Foundation Access Scholarship, you can unlock 13 practical life-changing courses (worth over $2,500 USD) for just $118 USD for one full year.
+
+This is education designed for real life, not just the classroom.
+
+Take a look at the flyer below.
+
+If you’d like to claim your Foundation Access Scholarship, simply reply:
+
+FOUNDATION
+
+or contact us on WhatsApp:
+
+📱 680 28 99 56
+📱 681 49 83 69
+
+🌐 <span data-foundation-link>https://marriageducation.com/foundation-access</span></div>
+                    </div>
+                </div>
+
+                <div class="resource-card outreach-card">
+                    <span class="audience-tag"><i class="fas fa-heart"></i> Couples</span>
+                    <img class="flyer-preview" src="../documents/marketing-flyers/relationship-marriage-foundation.svg" alt="Relationship and Marriage Foundation flyer preview">
+                    <h3>Relationship &amp; Marriage Foundation</h3>
+                    <p>For dating couples, engaged couples, newly married couples, and married couples.</p>
+                    <div class="btn-row">
+                        <a class="btn" href="../documents/marketing-flyers/relationship-marriage-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn secondary" type="button" onclick="copyToClipboard('foundationMarriageMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
+                        <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationMarriageMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
+                    </div>
+                    <div class="copy-section compact">
+                        <h4><i class="fas fa-message"></i> Message to send with flyer</h4>
+                        <div class="copy-text" id="foundationMarriageMessage">❤️ A successful wedding lasts one day. A successful marriage lasts a lifetime.
+
+Most couples spend months preparing for a wedding, yet very little time preparing for the marriage that follows.
+
+Strong marriages don’t happen by chance. They are built through knowledge, communication, trust, emotional maturity and shared purpose.
+
+That’s why MarriageEducation.com created the Foundation Access Scholarship.
+
+For just $118 USD per year, you’ll receive 13 practical courses with an educational value of over $2,500 USD—designed to help dating couples, engaged couples, newly married couples and established marriages build stronger, healthier, and lasting relationships.
+
+Your relationship is one of the most important investments you’ll ever make.
+
+Take a look at the flyer below.
+
+If you’re ready to invest in your future together, reply:
+
+FOUNDATION
+
+or contact us on WhatsApp:
+
+📱 680 28 99 56
+📱 681 49 83 69
+
+🌐 <span data-foundation-link>https://marriageducation.com/foundation-access</span>
+
+Build a stronger relationship today. Build a stronger future together.</div>
+                    </div>
+                </div>
+
+                <div class="resource-card outreach-card">
+                    <span class="audience-tag"><i class="fas fa-people-roof"></i> Families</span>
+                    <img class="flyer-preview" src="../documents/marketing-flyers/family-parenting-foundation.svg" alt="Family and Parenting Foundation flyer preview">
+                    <h3>Family &amp; Parenting Foundation</h3>
+                    <p>For parents, single parents, guardians, and grandparents.</p>
+                    <div class="btn-row">
+                        <a class="btn" href="../documents/marketing-flyers/family-parenting-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn secondary" type="button" onclick="copyToClipboard('foundationFamilyMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
+                        <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationFamilyMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
+                    </div>
+                    <div class="copy-section compact">
+                        <h4><i class="fas fa-message"></i> Message to send with flyer</h4>
+                        <div class="copy-text" id="foundationFamilyMessage">👨‍👩‍👧‍👦 Your children need more than career success. They need life education.
+
+Every parent wants to give their children the best future.
+
+But the greatest gift isn’t just a good school or a successful career—it’s the wisdom, values, character and life skills that help them make good decisions, build healthy relationships and live with purpose.
+
+Through the Foundation Access Scholarship, your family can access 13 practical, life-changing courses (worth over $2,500 USD) for just $118 USD for one full year.
+
+Learn practical principles that help you:
+
+✅ Build stronger family relationships
+✅ Raise confident, purpose-driven children
+✅ Improve communication at home
+✅ Develop emotional intelligence and character
+✅ Prepare your children for life—not just a career
+
+The investment you make in your family today can shape generations tomorrow.
+
+Please take a moment to look at the flyer below.
+
+To claim your Foundation Access Scholarship, reply:
+
+FOUNDATION
+
+or contact us on WhatsApp:
+
+📱 680 28 99 56
+📱 681 49 83 69
+
+🌐 <span data-foundation-link>https://marriageducation.com/foundation-access</span>
+
+Because stronger parents build stronger children, stronger families, and stronger generations.</div>
+                    </div>
+                </div>
+
+                <div class="resource-card outreach-card">
+                    <span class="audience-tag"><i class="fas fa-building"></i> Institutions</span>
+                    <img class="flyer-preview" src="../documents/marketing-flyers/leaders-organizations-foundation.svg" alt="Leaders and Organizations Foundation flyer preview">
+                    <h3>Leaders &amp; Organizations</h3>
+                    <p>For churches, NGOs, schools, universities, employers, and community organizations.</p>
+                    <div class="btn-row">
+                        <a class="btn" href="../documents/marketing-flyers/leaders-organizations-foundation.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn secondary" type="button" onclick="copyToClipboard('foundationOrganizationsMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
+                        <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationOrganizationsMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
+                    </div>
+                    <div class="copy-section compact">
+                        <h4><i class="fas fa-message"></i> Message to send with flyer</h4>
+                        <div class="copy-text" id="foundationOrganizationsMessage">Strong organizations are built by strong people. Strong people are built through education.
+
+Whether you’re leading a church, school, university, NGO, business or community organization, one challenge remains the same:
+
+People make organizations stronger—or weaker.
+
+Imagine giving your members, staff, students or community access to practical education that strengthens relationships, families, leadership, communication, emotional intelligence and personal responsibility.
+
+Through the Foundation Access Scholarship, your organization can provide access to 13 transformational courses with an educational value of over $2,500 USD, available through a $118 USD annual scholarship.
+
+This is more than a learning platform.
+
+It’s an investment in stronger people, stronger families, stronger teams and stronger communities.
+
+Please take a moment to review the flyer below.
+
+If you’d like to explore how your organization can participate or sponsor access for your members, reply:
+
+FOUNDATION
+
+or contact us on WhatsApp:
+
+📱 680 28 99 56
+📱 681 49 83 69
+
+🌐 <span data-foundation-link>https://marriageducation.com/foundation-access</span>
+
+When people grow, organizations grow. When families grow stronger, communities and nations become stronger too.</div>
+                    </div>
+                </div>
+
+                <div class="resource-card outreach-card">
+                    <span class="audience-tag"><i class="fas fa-globe"></i> Universal</span>
+                    <img class="flyer-preview" src="../documents/marketing-flyers/general-foundation-access.svg" alt="General Foundation Access flyer preview">
+                    <h3>General Foundation Access</h3>
+                    <p>The flagship flyer to send when you do not yet know the prospect category.</p>
+                    <div class="btn-row">
+                        <a class="btn" href="../documents/marketing-flyers/general-foundation-access.svg" download><i class="fas fa-download"></i> Download Flyer</a>
+                        <button class="btn secondary" type="button" onclick="copyToClipboard('foundationGeneralMessage', this)"><i class="fas fa-copy"></i> Copy Message</button>
+                        <button class="btn whatsapp" type="button" onclick="shareResourceMessage('foundationGeneralMessage')"><i class="fab fa-whatsapp"></i> Share Text</button>
+                    </div>
+                    <div class="copy-section compact">
+                        <h4><i class="fas fa-message"></i> Message to send with flyer</h4>
+                        <div class="copy-text" id="foundationGeneralMessage">🚨 What if one decision this year could transform the way you think, build relationships, lead your family and shape your future?
+
+Most people invest in their careers.
+
+Very few invest in the knowledge that determines the quality of their relationships, marriage, family life and personal leadership.
+
+That’s why MarriageEducation.com created the Foundation Access Scholarship.
+
+For just $118 USD for one full year, you receive access to 13 practical, transformational courses with an educational value of over $2,500 USD.
+
+Whether you’re a young man or woman, single, engaged, married, a parent, a professional or a leader, these courses provide practical knowledge that helps you make better life decisions and build stronger relationships and families.
+
+This is more than a subscription.
+
+It’s an investment in yourself, your family and your future.
+
+Please take a moment to review the flyer below.
+
+If you’re ready to claim your Foundation Access Scholarship, reply:
+
+FOUNDATION
+
+or contact us on WhatsApp:
+
+📱 680 28 99 56
+📱 681 49 83 69
+
+🌐 <span data-foundation-link>https://marriageducation.com/foundation-access</span>
+
+The best investment you’ll ever make isn’t just in your career—it’s in becoming the person who builds a successful life, healthy relationships and a lasting legacy.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Social Media Templates -->
         <div class="resource-category">
             <h2><i class="fab fa-instagram"></i> Social Media Templates</h2>
@@ -530,7 +886,7 @@ No pressure at all - just thought it might resonate with you!
 
             <div class="copy-section">
                 <h4>💰 "It's too expensive"</h4>
-                <div class="copy-text">I totally understand budget concerns! But think about it this way:
+                <div class="copy-text" id="objection1">I totally understand budget concerns! But think about it this way:
 
 • A dinner date costs 10,000-15,000 FCFA (gone in 2 hours)
 • A movie ticket costs 5,000 FCFA (gone in 90 minutes)
@@ -546,7 +902,7 @@ Investment in your marriage > Entertainment expenses, right? 😊</div>
 
             <div class="copy-section">
                 <h4>⏰ "I'll buy it later"</h4>
-                <div class="copy-text">I hear you! But here's the thing:
+                <div class="copy-text" id="objection2">I hear you! But here's the thing:
 
 1. Launch price (15,000 FCFA) ends in [X days] - then it's 20,000 FCFA
 2. Founder's edition bonuses are only for this 14-day window
@@ -560,7 +916,7 @@ I'm not trying to pressure you, but I'd hate for you to miss out and regret it l
 
             <div class="copy-section">
                 <h4>📚 "I don't read books"</h4>
-                <div class="copy-text">Totally get it - not everyone is a bookworm! But here's what makes this different:
+                <div class="copy-text" id="objection3">Totally get it - not everyone is a bookworm! But here's what makes this different:
 
 • It's called "For Dummies" for a reason - super practical, easy to digest
 • You don't have to read cover-to-cover; jump to chapters that interest you
@@ -576,29 +932,158 @@ Plus, if it can save your marriage from even ONE major conflict, isn't it worth 
 
         <!-- Back to Dashboard -->
         <div style="text-align: center; margin: 3rem 0;">
-            <a href="dashboard.html" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background: #00b894; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            <a href="dashboard.html" id="resourcesBackToDashboard" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background: #00b894; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
         </div>
     </div>
 
     <script>
-        function copyToClipboard(elementId) {
-            const text = document.getElementById(elementId).textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = event.target.closest('button');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                btn.style.background = '#27ae60';
-                
+        (function () {
+            const DEFAULT_FOUNDATION_LINK = 'https://marriageducation.com/foundation-access';
+
+            function parseStoredData() {
+                try {
+                    const raw = localStorage.getItem('ambassadorData') || localStorage.getItem('rdData') || '{}';
+                    return JSON.parse(raw);
+                } catch (err) {
+                    return {};
+                }
+            }
+
+            function resolveReferralCode() {
+                const data = parseStoredData();
+                const direct = (data.sbdReferralCode || data.sbd_referral_code || '').toString().trim();
+                if (direct) return direct;
+
+                const storedCode = (
+                    localStorage.getItem('ambassadorCode') ||
+                    localStorage.getItem('rdCode') ||
+                    data.code ||
+                    data.rd_code ||
+                    data.rdCode ||
+                    data.ambassador_code ||
+                    data.existingAmbCode ||
+                    ''
+                ).toString().trim();
+
+                if (!storedCode) return '';
+                const normalized = storedCode.toUpperCase();
+                if (normalized.indexOf('SBD-') === 0) return normalized;
+                if (normalized.indexOf('AMB-') === 0) return normalized.replace(/^AMB-/, 'SBD-');
+                if (normalized.indexOf('RD-') === 0) return normalized.replace(/^RD-/, 'SBD-');
+                return storedCode;
+            }
+
+            function foundationLink() {
+                const code = resolveReferralCode();
+                return code ? DEFAULT_FOUNDATION_LINK + '?ref=' + encodeURIComponent(code) : DEFAULT_FOUNDATION_LINK;
+            }
+
+            function normalizeCopyText(text) {
+                return (text || '').replace(/\n{3,}/g, '\n\n').trim();
+            }
+
+            function setButtonFeedback(btn, label, color) {
+                if (!btn) return;
+                const originalText = btn.getAttribute('data-original-text') || btn.innerHTML;
+                btn.setAttribute('data-original-text', originalText);
+                btn.innerHTML = label;
+                btn.style.background = color || '#27ae60';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
-                    btn.style.background = '#00b894';
+                    btn.style.background = '';
                 }, 2000);
-            }).catch(err => {
-                alert('Failed to copy. Please try again.');
-            });
-        }
+            }
+
+            function copyRawText(text, btn) {
+                const value = normalizeCopyText(text);
+                if (!value) {
+                    alert('Nothing to copy yet.');
+                    return;
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(value).then(() => {
+                        setButtonFeedback(btn, '<i class="fas fa-check"></i> Copied!');
+                    }).catch(() => fallbackCopy(value, btn));
+                    return;
+                }
+
+                fallbackCopy(value, btn);
+            }
+
+            function fallbackCopy(text, btn) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    setButtonFeedback(btn, '<i class="fas fa-check"></i> Copied!');
+                } catch (err) {
+                    alert('Failed to copy. Please select and copy the message manually.');
+                }
+                document.body.removeChild(ta);
+            }
+
+            function getDashboardHref() {
+                const params = new URLSearchParams(window.location.search);
+                const from = (params.get('from') || '').toLowerCase();
+                if (from === 'regional_director' || from === 'regional' || from === 'rd') {
+                    return '../regional-director/rd-dashboard.html';
+                }
+                if (from === 'senior') return 'senior-dashboard.html';
+                if (from === 'ambassador') return 'dashboard.html';
+
+                const referrer = document.referrer || '';
+                if (referrer.indexOf('/regional-director/') !== -1) return '../regional-director/rd-dashboard.html';
+                if (referrer.indexOf('/senior-dashboard') !== -1) return 'senior-dashboard.html';
+
+                const data = parseStoredData();
+                const type = (data.ambassador_type || data.type || '').toString().toLowerCase();
+                if (type === 'regional_director') return '../regional-director/rd-dashboard.html';
+                if (type === 'senior') return 'senior-dashboard.html';
+                return 'dashboard.html';
+            }
+
+            function hydrateResourcePage() {
+                const link = foundationLink();
+                document.querySelectorAll('[data-foundation-link]').forEach((el) => {
+                    el.textContent = link;
+                });
+
+                const dashboardHref = getDashboardHref();
+                const breadcrumb = document.getElementById('resourcesBreadcrumbDashboard');
+                const back = document.getElementById('resourcesBackToDashboard');
+                if (breadcrumb) breadcrumb.href = dashboardHref;
+                if (back) back.href = dashboardHref;
+            }
+
+            window.copyToClipboard = function (elementId, btn) {
+                const el = document.getElementById(elementId);
+                if (!el) {
+                    alert('Resource text not found.');
+                    return;
+                }
+                copyRawText(el.textContent, btn || (window.event && window.event.target.closest('button')));
+            };
+
+            window.shareResourceMessage = function (elementId) {
+                const el = document.getElementById(elementId);
+                if (!el) {
+                    alert('Resource text not found.');
+                    return;
+                }
+                const text = normalizeCopyText(el.textContent);
+                window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+            };
+
+            document.addEventListener('DOMContentLoaded', hydrateResourcePage);
+        })();
     </script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Family and Parenting Foundation flyer</title>
+  <desc id="desc">Foundation Access outreach flyer for parents, single parents, guardians, and grandparents.</desc>
+  <rect width="1080" height="1350" fill="#063a1f"/>
+  <rect x="0" y="0" width="1080" height="165" fill="#ffffff"/>
+  <rect x="0" y="165" width="1080" height="1185" fill="#f7fbf4"/>
+  <text x="70" y="92" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" fill="#063a1f">SBD NETWORK</text>
+  <text x="70" y="132" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#d49513">by MarriageEducation.com</text>
+  <rect x="570" y="42" width="440" height="62" rx="31" fill="#063a1f"/>
+  <text x="600" y="82" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#f5b52e">STRONGER GENERATIONS</text>
+
+  <text x="70" y="280" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="900" fill="#07162f">YOUR CHILDREN</text>
+  <text x="70" y="370" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="900" fill="#07162f">DESERVE MORE THAN</text>
+  <text x="70" y="460" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="900" fill="#063a1f">CAREER SUCCESS.</text>
+  <text x="70" y="560" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="900" fill="#07162f">THEY DESERVE</text>
+  <text x="70" y="650" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="900" fill="#d49513">LIFE EDUCATION.</text>
+
+  <rect x="70" y="705" width="940" height="120" rx="22" fill="#063a1f"/>
+  <text x="110" y="760" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">PERFECT FOR:</text>
+  <text x="110" y="802" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#f8d27a">Parents | Single parents | Guardians | Grandparents</text>
+
+  <rect x="70" y="885" width="270" height="245" rx="22" fill="#063a1f"/>
+  <text x="125" y="968" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="900" fill="#ffffff">13</text>
+  <text x="112" y="1018" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">COURSES</text>
+  <text x="106" y="1068" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#f5b52e">1 FULL YEAR</text>
+  <text x="132" y="1102" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#f5b52e">OF ACCESS</text>
+
+  <rect x="405" y="885" width="270" height="245" rx="22" fill="#ffffff" stroke="#cfe7d5" stroke-width="4"/>
+  <text x="448" y="965" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#063a1f">VALUE OVER</text>
+  <text x="432" y="1046" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" fill="#063a1f">$2,500+</text>
+  <text x="510" y="1096" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#063a1f">USD</text>
+
+  <rect x="740" y="885" width="270" height="245" rx="22" fill="#063a1f"/>
+  <text x="786" y="947" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#f5b52e">SCHOLARSHIP</text>
+  <text x="813" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="80" font-weight="900" fill="#ffffff">$118</text>
+  <text x="793" y="1074" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">USD / YEAR</text>
+
+  <text x="70" y="1210" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#063a1f">WHAT FAMILIES GAIN:</text>
+  <text x="70" y="1252" font-family="Arial, Helvetica, sans-serif" font-size="27" fill="#243b2b">Relationships | Values | Emotional intelligence | Communication | Purpose | Prepared future</text>
+  <rect x="0" y="1280" width="1080" height="70" fill="#063a1f"/>
+  <text x="70" y="1325" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#f5b52e">BETTER PARENTS. BETTER CHILDREN. BETTER FUTURES.</text>
+</svg>

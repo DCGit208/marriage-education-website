@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350" role="img" aria-labelledby="title desc">
+  <title id="title">Leaders and Organizations Foundation flyer</title>
+  <desc id="desc">Foundation Access outreach flyer for churches, NGOs, schools, universities, employers, and community organizations.</desc>
+  <rect width="1080" height="1350" fill="#07162f"/>
+  <rect x="0" y="0" width="1080" height="165" fill="#ffffff"/>
+  <rect x="0" y="165" width="1080" height="1185" fill="#f8fafc"/>
+  <text x="70" y="92" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700" fill="#07162f">SBD NETWORK</text>
+  <text x="70" y="132" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#d49513">by MarriageEducation.com</text>
+  <rect x="590" y="42" width="420" height="62" rx="31" fill="#07162f"/>
+  <text x="620" y="82" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#f5b52e">COMMUNITIES CHANGE</text>
+
+  <text x="70" y="285" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="900" fill="#07162f">STRONG FAMILIES</text>
+  <text x="70" y="380" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="900" fill="#07162f">BUILD STRONG</text>
+  <text x="70" y="475" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="900" fill="#07162f">ORGANIZATIONS.</text>
+  <text x="70" y="585" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="900" fill="#d49513">STRONGER NATIONS.</text>
+  <text x="70" y="655" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700" fill="#233047">Equip your church, school, organization, or community</text>
+  <text x="70" y="698" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="700" fill="#233047">with life-transforming education.</text>
+
+  <rect x="70" y="755" width="940" height="115" rx="22" fill="#07162f"/>
+  <text x="110" y="810" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#f5b52e">PERFECT FOR:</text>
+  <text x="110" y="850" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" fill="#ffffff">Churches | NGOs | Schools | Universities | Employers | Communities</text>
+
+  <rect x="70" y="930" width="270" height="235" rx="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="4"/>
+  <text x="125" y="1010" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="900" fill="#07162f">13</text>
+  <text x="112" y="1060" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">COURSES</text>
+  <text x="118" y="1110" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#233047">1 YEAR ACCESS</text>
+
+  <rect x="405" y="930" width="270" height="235" rx="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="4"/>
+  <text x="448" y="1005" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">VALUE OVER</text>
+  <text x="432" y="1086" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="900" fill="#d49513">$2,500+</text>
+  <text x="510" y="1136" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#07162f">USD</text>
+
+  <rect x="740" y="930" width="270" height="235" rx="22" fill="#07162f"/>
+  <text x="786" y="990" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#f5b52e">FOUNDATION</text>
+  <text x="813" y="1065" font-family="Arial, Helvetica, sans-serif" font-size="80" font-weight="900" fill="#ffffff">$118</text>
+  <text x="793" y="1117" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">USD / YEAR</text>
+
+  <text x="70" y="1235" font-family="Arial, Helvetica, sans-serif" font-size="27" fill="#233047">People | Relationships | Families | Performance | Impact | Mission</text>
+  <rect x="0" y="1280" width="1080" height="70" fill="#07162f"/>
+  <text x="70" y="1325" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" fill="#f5b52e">BETTER PEOPLE. STRONGER FAMILIES. GREATER COMMUNITIES.</text>
+</svg>
