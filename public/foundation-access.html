@@ -2,26 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Foundation Access — Yearly ($118) | Marriage Education</title>
-  <meta name="description" content="One payment covers a full year of Foundation — School 1 access for 12 months. Ideal for parents sponsoring a student, young couples, older couples, and groups.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Foundation Access — Yearly Scholarship ($118) | Marriage Education</title>
+  <meta name="description" content="Scholarship year of Foundation on SBD Network: Teleios Blueprint + Sex By Design for Dummies + progressive School 1. Retail stack $3,143 — you pay $118 (≈67,984 FCFA).">
   <link rel="canonical" href="https://marriageducation.com/foundation-access.html">
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://marriageducation.com/foundation-access.html">
-  <meta property="og:title" content="Foundation Access — One Year of School 1 · $118">
-  <meta property="og:description" content="One payment. Twelve months of Foundation access on SBD Network. For parents, couples, and families ready to begin.">
+  <meta property="og:title" content="Foundation Access — $3,143 stack for $118">
+  <meta property="og:description" content="One scholarship year: Teleios Blueprint, SBD for Dummies course, and progressive School 1 on SBD Network.">
+  <meta property="og:image" content="https://marriageducation.com/images/foundation-access-og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="Marriage Education">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Foundation Access — One Year of School 1 · $118">
-  <meta name="twitter:description" content="One payment covers a full year of Foundation access on SBD Network.">
+  <meta name="twitter:title" content="Foundation Access — $3,143 → $118">
+  <meta name="twitter:description" content="Scholarship year of Foundation formation on SBD Network.">
+  <meta name="twitter:image" content="https://marriageducation.com/images/foundation-access-og.jpg">
 
   <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0a3d32">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -32,50 +37,52 @@
       --leaf: #0f6b56;
       --leaf-deep: #0a3d32;
       --gold: #b8954a;
+      --gold-soft: #e8d5a3;
       --line: rgba(20, 32, 28, 0.12);
-      --max: 1120px;
+      --max: 1080px;
+      --pad: clamp(1rem, 4vw, 1.5rem);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --sticky-h: 4.25rem;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
+      margin: 0;
       font-family: 'Source Sans 3', Georgia, sans-serif;
       color: var(--ink);
       background: var(--paper);
       line-height: 1.55;
+      overflow-x: hidden;
     }
-
+    img { max-width: 100%; display: block; }
     a { color: inherit; }
+    button, input { font: inherit; }
+    h1, h2, h3 { text-wrap: balance; }
 
     .wrap {
-      width: min(100% - 2rem, var(--max));
+      width: min(100% - (var(--pad) * 2), var(--max));
       margin-inline: auto;
     }
 
     /* ——— Hero ——— */
     .hero {
-      min-height: 100vh;
-      min-height: 100dvh;
+      min-height: min(100svh, 52rem);
       display: flex;
       flex-direction: column;
       position: relative;
       color: #f7f3ea;
       background:
-        linear-gradient(115deg, rgba(8, 28, 24, 0.88) 0%, rgba(10, 61, 50, 0.72) 48%, rgba(12, 40, 34, 0.55) 100%),
-        radial-gradient(ellipse at 70% 20%, rgba(184, 149, 74, 0.28), transparent 55%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
-        linear-gradient(160deg, #0a3d32 0%, #16352d 45%, #1b2a24 100%);
-      background-size: cover;
+        linear-gradient(118deg, rgba(8, 28, 24, 0.92) 0%, rgba(10, 61, 50, 0.78) 48%, rgba(12, 40, 34, 0.62) 100%),
+        radial-gradient(ellipse at 78% 12%, rgba(184, 149, 74, 0.26), transparent 52%),
+        linear-gradient(165deg, #0a3d32 0%, #16352d 48%, #1b2a24 100%);
       overflow: hidden;
     }
-
     .hero::after {
       content: '';
       position: absolute;
       inset: auto 0 0 0;
-      height: 120px;
+      height: clamp(4rem, 12vw, 7rem);
       background: linear-gradient(to top, var(--paper), transparent);
       pointer-events: none;
     }
@@ -84,471 +91,386 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.25rem 0;
-      width: min(100% - 2rem, var(--max));
+      gap: 1rem;
+      padding: calc(0.9rem + env(safe-area-inset-top, 0px)) 0 0.9rem;
+      width: min(100% - (var(--pad) * 2), var(--max));
       margin-inline: auto;
       position: relative;
       z-index: 2;
     }
-
     .brand {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+      font-size: clamp(1.25rem, 3.5vw, 1.65rem);
       font-weight: 600;
-      letter-spacing: 0.02em;
       text-decoration: none;
+      letter-spacing: 0.01em;
     }
-
     .nav-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
+      min-height: 2.75rem;
       padding: 0.55rem 1rem;
       border: 1px solid rgba(247, 243, 234, 0.35);
       border-radius: 999px;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
-      transition: background 0.25s ease, border-color 0.25s ease;
-    }
-
-    .nav-cta:hover {
-      background: rgba(247, 243, 234, 0.1);
-      border-color: rgba(247, 243, 234, 0.7);
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
     }
 
     .hero-main {
       flex: 1;
       display: grid;
       align-content: center;
-      width: min(100% - 2rem, var(--max));
+      width: min(100% - (var(--pad) * 2), var(--max));
       margin-inline: auto;
-      padding: 2rem 0 5rem;
+      padding: 1.5rem 0 4.5rem;
       position: relative;
       z-index: 1;
-      max-width: 40rem;
-      animation: rise 0.9s ease both;
+      max-width: 38rem;
+      animation: rise 0.85s ease both;
     }
-
     @keyframes rise {
-      from { opacity: 0; transform: translateY(18px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
     }
 
     .hero-kicker {
-      font-size: 0.78rem;
-      letter-spacing: 0.18em;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: rgba(247, 243, 234, 0.72);
-      margin-bottom: 1rem;
+      margin: 0 0 0.85rem;
+      font-weight: 600;
     }
-
     .hero h1 {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(2.6rem, 7vw, 4.4rem);
+      font-size: clamp(2.35rem, 8vw, 4.1rem);
       font-weight: 600;
-      line-height: 1.05;
+      line-height: 1.04;
       letter-spacing: -0.02em;
-      margin-bottom: 1rem;
+      margin: 0 0 0.9rem;
     }
-
-    .hero h1 em {
-      font-style: italic;
-      color: #e8d5a3;
-    }
-
+    .hero h1 em { font-style: italic; color: var(--gold-soft); }
     .hero-lead {
-      font-size: clamp(1.05rem, 2vw, 1.2rem);
+      margin: 0 0 1.35rem;
+      font-size: clamp(1rem, 2.6vw, 1.15rem);
       color: rgba(247, 243, 234, 0.88);
-      max-width: 32rem;
-      margin-bottom: 1.75rem;
+      max-width: 34rem;
     }
+    .hero-lead strong { color: #f2e4bc; font-weight: 600; }
 
     .hero-price {
       display: flex;
-      align-items: baseline;
-      gap: 0.65rem;
       flex-wrap: wrap;
-      margin-bottom: 1.5rem;
+      align-items: baseline;
+      gap: 0.45rem 0.75rem;
+      margin-bottom: 1.35rem;
     }
-
     .hero-price strong {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(2rem, 4vw, 2.6rem);
+      font-size: clamp(2rem, 6vw, 2.55rem);
       font-weight: 600;
     }
-
     .hero-price span {
-      font-size: 0.95rem;
-      color: rgba(247, 243, 234, 0.7);
+      font-size: 0.92rem;
+      color: rgba(247, 243, 234, 0.72);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
     }
 
     .btn-primary {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      background: #e8d5a3;
+      min-height: 3rem;
+      padding: 0.85rem 1.35rem;
+      background: var(--gold-soft);
       color: var(--leaf-deep);
       font-weight: 700;
-      font-size: 1rem;
-      padding: 0.95rem 1.5rem;
+      font-size: 0.98rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       text-decoration: none;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+      transition: transform 0.2s ease, background 0.2s ease;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
     }
-
-    .btn-primary:hover {
-      background: #f2e4bc;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.7;
-      cursor: wait;
-      transform: none;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.85rem;
-      align-items: center;
-    }
+    .btn-primary:hover { background: #f2e4bc; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.7; cursor: wait; transform: none; }
+    .btn-primary.block { width: 100%; }
 
     .btn-ghost {
       display: inline-flex;
       align-items: center;
-      color: rgba(247, 243, 234, 0.88);
+      min-height: 3rem;
+      color: rgba(247, 243, 234, 0.9);
       font-weight: 600;
       font-size: 0.95rem;
       text-decoration: none;
-      border-bottom: 1px solid rgba(232, 213, 163, 0.45);
-      padding-bottom: 0.15rem;
-      transition: color 0.2s ease, border-color 0.2s ease;
+      border-bottom: 1px solid rgba(232, 213, 163, 0.4);
+      padding: 0 0 0.1rem;
     }
 
-    .btn-ghost:hover {
-      color: #e8d5a3;
-      border-color: #e8d5a3;
+    /* ——— Sections ——— */
+    section { padding: clamp(3rem, 8vw, 5rem) 0; }
+    .section-label {
+      margin: 0 0 0.55rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      font-weight: 700;
     }
-
-    .hero-lead strong {
-      color: #f2e4bc;
+    h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(1.85rem, 5vw, 2.6rem);
       font-weight: 600;
+      line-height: 1.12;
+      margin: 0 0 0.75rem;
+      max-width: 18ch;
+    }
+    .section-copy {
+      margin: 0 0 1.75rem;
+      color: var(--muted);
+      font-size: 1.02rem;
+      max-width: 38rem;
     }
 
-    /* ——— Sneak peek ——— */
-    .peek {
-      background: var(--paper);
-      padding-top: clamp(2.5rem, 6vw, 4rem);
+    .note-pill {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      max-width: 40rem;
+      margin: 0 0 1.5rem;
+      padding: 0.85rem 1rem;
+      background: rgba(15, 107, 86, 0.08);
+      border-left: 3px solid var(--leaf);
+      color: var(--ink);
+      font-size: 0.95rem;
     }
+
+    /* Peek */
+    .peek { background: var(--paper); padding-top: clamp(2rem, 5vw, 3.25rem); }
 
     .value-hit {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
       max-width: 34rem;
-      margin: 0 0 2rem;
+      margin: 0 0 1.75rem;
     }
-
     .value-hit > div {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      padding: 0.95rem 1rem;
+      gap: 0.2rem;
+      padding: 0.9rem 1rem;
       border: 1px solid var(--line);
       background: #fff;
+      border-radius: 8px;
     }
-
-    .value-hit strong {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--muted);
-    }
-
+    .value-hit strong { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
     .value-hit span {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.65rem;
+      font-size: clamp(1.45rem, 4vw, 1.7rem);
       font-weight: 600;
-      color: var(--ink);
       text-decoration: line-through;
-      opacity: 0.55;
+      opacity: 0.5;
     }
-
-    .value-hit .value-hit-accent {
+    .value-hit .accent {
       color: var(--leaf-deep);
       text-decoration: none;
       opacity: 1;
     }
 
-    .track-grid {
-      display: grid;
-      gap: 1.25rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-bottom: 1.75rem;
+    .mid-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 0 0 1.75rem;
+    }
+    .mid-cta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
     }
 
+    .track-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 1.5rem;
+    }
     .track {
       background: #fff;
       border: 1px solid var(--line);
-      padding: 1.35rem 1.4rem 1.5rem;
+      border-radius: 10px;
+      padding: 1.2rem 1.25rem 1.35rem;
     }
-
     .track-kicker {
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
+      margin: 0 0 0.4rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--leaf);
       font-weight: 700;
-      margin-bottom: 0.45rem;
     }
-
     .track h3 {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.55rem;
+      font-size: clamp(1.35rem, 3vw, 1.55rem);
       font-weight: 600;
-      margin-bottom: 0.3rem;
+      margin: 0 0 0.3rem;
     }
-
-    .track-sub {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-bottom: 1rem;
-    }
-
-    .track-list {
-      list-style: none;
-      display: grid;
-      gap: 0.55rem;
-    }
-
+    .track-sub { margin: 0 0 0.95rem; color: var(--muted); font-size: 0.92rem; }
+    .track-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
     .track-list li {
       display: grid;
-      grid-template-columns: 3.2rem 1fr;
-      gap: 0.65rem;
-      font-size: 0.95rem;
-      align-items: baseline;
+      grid-template-columns: 3.1rem 1fr;
+      gap: 0.55rem;
+      font-size: 0.92rem;
     }
-
     .track-list li span {
-      font-size: 0.72rem;
-      letter-spacing: 0.06em;
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--gold);
       font-weight: 700;
+      padding-top: 0.2rem;
     }
-
     .track-note {
-      margin-top: 1rem;
-      font-size: 0.88rem;
-      color: var(--muted);
+      margin: 0.95rem 0 0;
+      padding-top: 0.8rem;
       border-top: 1px solid var(--line);
-      padding-top: 0.85rem;
+      font-size: 0.86rem;
+      color: var(--muted);
     }
 
     .school-block {
       background: var(--leaf-deep);
       color: #f3efe6;
-      padding: clamp(1.4rem, 3vw, 1.85rem);
+      border-radius: 12px;
+      padding: clamp(1.15rem, 3vw, 1.75rem);
     }
-
-    .school-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1.25rem;
-      flex-wrap: wrap;
-      align-items: end;
-      margin-bottom: 1.25rem;
-    }
-
-    .school-head .track-kicker { color: #e8d5a3; }
+    .school-head { margin-bottom: 1rem; }
+    .school-head .track-kicker { color: var(--gold-soft); }
     .school-head h3 {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(1.5rem, 3vw, 1.9rem);
+      font-size: clamp(1.4rem, 3.5vw, 1.85rem);
       font-weight: 600;
       margin: 0.2rem 0 0.45rem;
+      max-width: none;
     }
     .school-head p {
+      margin: 0;
       color: rgba(243, 239, 230, 0.78);
-      max-width: 36rem;
-      font-size: 0.98rem;
+      font-size: 0.95rem;
+      max-width: 40rem;
     }
 
     .course-grid {
       list-style: none;
+      margin: 0;
+      padding: 0;
       display: grid;
-      gap: 0;
-      grid-template-columns: 1fr;
     }
-
     .course-grid li {
       display: grid;
-      grid-template-columns: 1.7rem minmax(0, 1fr) auto;
-      gap: 0.65rem;
+      grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+      gap: 0.55rem;
       align-items: baseline;
-      font-size: 0.95rem;
-      padding: 0.7rem 0;
+      padding: 0.68rem 0;
       border-top: 1px solid rgba(243, 239, 230, 0.12);
+      font-size: 0.92rem;
     }
-
     .course-grid b {
-      color: #e8d5a3;
-      font-size: 0.78rem;
+      color: var(--gold-soft);
+      font-size: 0.74rem;
       letter-spacing: 0.04em;
     }
-
-    .course-name { color: #f3efe6; }
-
     .course-price {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
-      color: #e8d5a3;
+      color: var(--gold-soft);
       white-space: nowrap;
     }
 
     .stack-total {
-      margin-top: 1.25rem;
-      padding-top: 0.35rem;
-      border-top: 1px solid rgba(243, 239, 230, 0.22);
+      margin-top: 1rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(243, 239, 230, 0.2);
     }
-
     .stack-row {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
       align-items: baseline;
-      padding: 0.55rem 0;
-      font-size: 0.95rem;
+      padding: 0.5rem 0;
+      font-size: 0.92rem;
       color: rgba(243, 239, 230, 0.82);
     }
-
     .stack-row strong {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       color: #f7f3ea;
     }
-
     .stack-row-sum {
-      border-top: 1px solid rgba(243, 239, 230, 0.18);
-      margin-top: 0.25rem;
-      padding-top: 0.75rem;
-      color: #f7f3ea;
+      border-top: 1px solid rgba(243, 239, 230, 0.16);
+      margin-top: 0.2rem;
+      padding-top: 0.7rem;
       font-weight: 600;
+      color: #f7f3ea;
     }
-
-    .stack-row-sum strong {
-      text-decoration: line-through;
-      opacity: 0.7;
-    }
-
+    .stack-row-sum strong { text-decoration: line-through; opacity: 0.7; }
     .stack-row-pay {
       background: rgba(232, 213, 163, 0.12);
-      margin-top: 0.55rem;
+      margin-top: 0.5rem;
       padding: 0.85rem 0.95rem;
-      color: #e8d5a3;
+      border-radius: 8px;
+      color: var(--gold-soft);
       font-weight: 700;
     }
-
     .stack-row-pay strong {
-      color: #e8d5a3;
-      font-size: 1.55rem;
+      color: var(--gold-soft);
+      font-size: clamp(1.35rem, 4vw, 1.55rem);
       text-decoration: none;
       opacity: 1;
     }
-
     .school-foot {
-      margin-top: 1.15rem;
-      font-size: 0.9rem;
-      color: rgba(243, 239, 230, 0.75);
+      margin: 1rem 0 0;
+      font-size: 0.88rem;
+      color: rgba(243, 239, 230, 0.72);
     }
 
-    @media (max-width: 760px) {
-      .track-grid,
-      .value-hit { grid-template-columns: 1fr; }
-      .school-head .btn-primary { width: 100%; }
-    }
-
-    /* ——— Sections ——— */
-    section {
-      padding: clamp(3.5rem, 8vw, 5.5rem) 0;
-    }
-
-    .section-label {
-      font-size: 0.75rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--leaf);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-
-    h2 {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 600;
-      line-height: 1.15;
-      margin-bottom: 0.85rem;
-      max-width: 18ch;
-    }
-
-    .section-copy {
-      color: var(--muted);
-      font-size: 1.05rem;
-      max-width: 38rem;
-      margin-bottom: 2rem;
-    }
-
-    .who {
-      background:
-        linear-gradient(180deg, var(--paper), var(--cream));
-    }
-
+    /* Who */
+    .who { background: linear-gradient(180deg, var(--paper), var(--cream)); }
     .who-grid {
       display: grid;
-      gap: 1.25rem 2rem;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      margin-top: 0.5rem;
+      gap: 1.15rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-
     .who-item h3 {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       font-weight: 600;
-      margin-bottom: 0.35rem;
+      margin: 0 0 0.3rem;
     }
+    .who-item p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 
-    .who-item p {
-      color: var(--muted);
-      font-size: 0.98rem;
-    }
-
-    .how {
-      background: var(--paper);
-    }
-
-    .steps {
-      display: grid;
-      gap: 1.5rem;
-      counter-reset: step;
-      max-width: 40rem;
-    }
-
+    /* How */
+    .steps { display: grid; gap: 1.15rem; max-width: 40rem; margin-top: 1.25rem; }
     .step {
       display: grid;
       grid-template-columns: auto 1fr;
-      gap: 1rem;
+      gap: 0.9rem;
       align-items: start;
-      animation: rise 0.7s ease both;
     }
-
-    .step:nth-child(2) { animation-delay: 0.08s; }
-    .step:nth-child(3) { animation-delay: 0.16s; }
-
     .step-num {
       width: 2.4rem;
       height: 2.4rem;
@@ -557,148 +479,177 @@
       display: grid;
       place-items: center;
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--leaf);
-    }
-
-    .step h3 {
       font-size: 1.15rem;
-      margin-bottom: 0.25rem;
+      color: var(--leaf);
+      font-weight: 600;
+    }
+    .step h3 { margin: 0 0 0.2rem; font-size: 1.08rem; }
+    .step p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* FAQ */
+    .faq { background: var(--cream); border-top: 1px solid var(--line); }
+    .faq-list { display: grid; gap: 0.65rem; max-width: 44rem; }
+    details.faq-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.15rem 1rem;
+    }
+    details.faq-item summary {
+      cursor: pointer;
+      list-style: none;
+      min-height: 3.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    details.faq-item summary::-webkit-details-marker { display: none; }
+    details.faq-item summary::after {
+      content: '+';
+      color: var(--leaf);
+      font-size: 1.25rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    details.faq-item[open] summary::after { content: '–'; }
+    details.faq-item p {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 40rem;
     }
 
-    .step p { color: var(--muted); font-size: 0.98rem; }
-
-    /* ——— Checkout ——— */
+    /* Enroll */
     .enroll {
       background:
-        radial-gradient(ellipse at 20% 0%, rgba(15, 107, 86, 0.12), transparent 50%),
+        radial-gradient(ellipse at 15% 0%, rgba(15, 107, 86, 0.1), transparent 48%),
         var(--cream);
       border-top: 1px solid var(--line);
+      padding-bottom: calc(clamp(3rem, 8vw, 5rem) + var(--sticky-h) + var(--safe-b));
     }
-
     .enroll-layout {
       display: grid;
-      gap: 2.5rem;
-      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.75rem;
+      grid-template-columns: 1.05fr 0.95fr;
       align-items: start;
     }
-
-    @media (max-width: 860px) {
-      .enroll-layout { grid-template-columns: 1fr; }
-    }
-
     .enroll-panel {
       background: #fff;
       border: 1px solid var(--line);
-      padding: clamp(1.5rem, 4vw, 2rem);
-      box-shadow: 0 18px 50px rgba(20, 32, 28, 0.06);
+      border-radius: 12px;
+      padding: clamp(1.25rem, 3.5vw, 1.85rem);
+      box-shadow: 0 16px 40px rgba(20, 32, 28, 0.05);
     }
-
-    .enroll-panel h2 {
-      max-width: none;
-      font-size: clamp(1.8rem, 3vw, 2.2rem);
-    }
-
+    .enroll-panel h2 { max-width: none; font-size: clamp(1.7rem, 3vw, 2.1rem); }
     .price-block {
       display: flex;
+      flex-wrap: wrap;
       align-items: baseline;
-      gap: 0.6rem;
-      margin: 1rem 0 1.25rem;
-      padding-bottom: 1.25rem;
+      gap: 0.4rem 0.65rem;
+      margin: 0.85rem 0 1.15rem;
+      padding-bottom: 1.1rem;
       border-bottom: 1px solid var(--line);
     }
-
     .price-block strong {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 2.4rem;
+      font-size: 2.25rem;
       font-weight: 600;
       color: var(--leaf-deep);
     }
+    .price-block span { color: var(--muted); font-size: 0.92rem; }
 
-    .price-block span { color: var(--muted); }
-
-    .field {
-      display: grid;
-      gap: 0.35rem;
-      margin-bottom: 1rem;
-    }
-
-    .field label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--ink);
-    }
-
+    .field { display: grid; gap: 0.3rem; margin-bottom: 0.9rem; }
+    .field label { font-size: 0.85rem; font-weight: 600; }
     .field input {
       width: 100%;
-      padding: 0.85rem 0.95rem;
+      min-height: 3rem;
+      padding: 0.75rem 0.9rem;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      font: inherit;
+      border-radius: 8px;
       background: #fff;
       color: var(--ink);
     }
-
     .field input:focus {
-      outline: 2px solid rgba(15, 107, 86, 0.35);
+      outline: 2px solid rgba(15, 107, 86, 0.3);
       border-color: var(--leaf);
     }
 
-    .form-note {
-      font-size: 0.85rem;
+    .sponsor-toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      margin: 0 0 1rem;
+      padding: 0.85rem 0.95rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      cursor: pointer;
+    }
+    .sponsor-toggle input {
+      width: 1.15rem;
+      height: 1.15rem;
+      margin-top: 0.15rem;
+      accent-color: var(--leaf);
+      flex-shrink: 0;
+    }
+    .sponsor-toggle span { font-size: 0.92rem; color: var(--ink); }
+    .sponsor-toggle small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.82rem; }
+
+    .sponsor-fields {
+      display: none;
+      margin-bottom: 0.35rem;
+      padding: 0.85rem 0 0.15rem;
+      border-top: 1px dashed var(--line);
+    }
+    .sponsor-fields.show { display: block; }
+
+    .form-note { margin: 0.75rem 0 0; font-size: 0.84rem; color: var(--muted); }
+    .form-error, .form-status {
+      display: none;
+      margin-top: 0.8rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .form-error { background: #fef2f2; color: #991b1b; }
+    .form-status { background: #ecfdf5; color: #065f46; }
+    .form-error.show, .form-status.show { display: block; }
+
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin: 0.75rem 0 0;
     }
-
-    .form-error {
-      display: none;
-      margin-top: 0.85rem;
-      padding: 0.75rem 0.9rem;
-      background: #fef2f2;
-      color: #991b1b;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    .form-error.show { display: block; }
-
-    .form-status {
-      display: none;
-      margin-top: 0.85rem;
-      padding: 0.75rem 0.9rem;
-      background: #ecfdf5;
-      color: #065f46;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    .form-status.show { display: block; }
 
     .enroll-aside h2 { max-width: 14ch; }
-
     .aside-list {
       list-style: none;
+      margin: 1.1rem 0 0;
+      padding: 0;
       display: grid;
-      gap: 0.85rem;
-      margin-top: 1.25rem;
+      gap: 0.8rem;
     }
-
     .aside-list li {
-      padding-left: 1.1rem;
       position: relative;
+      padding-left: 1rem;
       color: var(--muted);
+      font-size: 0.95rem;
     }
-
     .aside-list li::before {
       content: '';
       position: absolute;
       left: 0;
       top: 0.55rem;
-      width: 0.4rem;
-      height: 0.4rem;
-      background: var(--gold);
+      width: 0.35rem;
+      height: 0.35rem;
       border-radius: 50%;
+      background: var(--gold);
     }
 
     .cancelled-banner {
@@ -706,27 +657,24 @@
       background: #fff7ed;
       color: #9a3412;
       text-align: center;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
+      padding: 0.75rem var(--pad);
+      font-size: 0.92rem;
       border-bottom: 1px solid #fed7aa;
     }
-
     .cancelled-banner.show { display: block; }
 
     footer {
-      padding: 2rem 0 2.5rem;
+      padding: 1.75rem 0 calc(1.75rem + var(--sticky-h) + var(--safe-b));
       border-top: 1px solid var(--line);
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
     }
-
     footer .wrap {
       display: flex;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 0.85rem;
       flex-wrap: wrap;
     }
-
     footer a { color: var(--leaf); }
 
     .sticky-bar {
@@ -734,34 +682,52 @@
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 20;
-      background: rgba(10, 61, 50, 0.96);
-      color: #f7f3ea;
-      padding: 0.85rem 1rem;
+      z-index: 40;
       display: none;
-      justify-content: space-between;
       align-items: center;
-      gap: 1rem;
-      backdrop-filter: blur(8px);
+      justify-content: space-between;
+      gap: 0.85rem;
+      min-height: var(--sticky-h);
+      padding: 0.7rem var(--pad) calc(0.7rem + var(--safe-b));
+      background: rgba(10, 61, 50, 0.97);
+      color: #f7f3ea;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-
     .sticky-bar.show { display: flex; }
-
     .sticky-bar strong {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
     }
-
+    .sticky-meta { font-size: 0.78rem; opacity: 0.8; display: block; }
     .sticky-bar .btn-primary {
-      padding: 0.7rem 1.1rem;
+      min-height: 2.7rem;
+      padding: 0.65rem 1.1rem;
       font-size: 0.92rem;
       box-shadow: none;
+      flex-shrink: 0;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 860px) {
+      .track-grid,
+      .who-grid,
+      .enroll-layout,
+      .value-hit { grid-template-columns: 1fr; }
       .nav-cta { display: none; }
-      .sticky-bar { display: flex; }
-      .sticky-bar:not(.show) { display: none; }
+      .hero { min-height: auto; }
+      .hero-main { padding: 1.75rem 0 3.5rem; }
+      h2 { max-width: none; }
+    }
+
+    @media (max-width: 480px) {
+      .course-grid li { font-size: 0.88rem; gap: 0.4rem; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn-primary { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-main { animation: none; }
+      html { scroll-behavior: auto; }
     }
   </style>
 </head>
@@ -771,22 +737,22 @@
   <header class="hero" id="top">
     <div class="nav">
       <a class="brand" href="https://marriageducation.com">Marriage Education</a>
-      <a class="nav-cta" href="#enroll">Get Foundation Access</a>
+      <a class="nav-cta" href="#enroll">Claim scholarship</a>
     </div>
 
     <div class="hero-main">
-      <p class="hero-kicker">Foundation Tier · Yearly</p>
+      <p class="hero-kicker">Foundation Tier · Yearly scholarship</p>
       <h1>One year of <em>Foundation</em> access.</h1>
       <p class="hero-lead">
-        You open <strong>The Teleios Blueprint</strong> (6 weeks) and <strong>Sex By Design for Dummies</strong> (13 weeks) — then grow through School 1 formation for a full year.
+        You begin with <strong>The Teleios Blueprint</strong> and the <strong>Sex By Design for Dummies</strong> course. School 1 then unlocks progressively across your year — a true scholarship path, not a teaser.
       </p>
       <div class="hero-price">
         <strong>$118</strong>
-        <span>USD · scholarship access · retail stack over $3,000</span>
+        <span>≈ 67,984 FCFA · retail stack $3,143</span>
       </div>
       <div class="hero-actions">
-        <a class="btn-primary" href="#enroll">Start your year of access</a>
-        <a class="btn-ghost" href="#inside">See what’s inside ↓</a>
+        <a class="btn-primary" href="#enroll">Claim the $118 scholarship</a>
+        <a class="btn-ghost" href="#inside">See prices inside ↓</a>
       </div>
     </div>
   </header>
@@ -796,7 +762,11 @@
       <p class="section-label">Sneak peek · real prices</p>
       <h2>This is what $118 unlocks.</h2>
       <p class="section-copy">
-        See the individual course prices first. Then see the scholarship: one yearly payment instead of buying the stack à la carte.
+        Read the retail prices first. Then see the scholarship: one yearly payment instead of buying the stack course by course.
+      </p>
+
+      <p class="note-pill">
+        Progressive by design: Blueprint and Dummies open your year. School 1 courses unlock as you advance through formation — so the scholarship stays earned and paced.
       </p>
 
       <div class="value-hit" aria-label="Scholarship comparison">
@@ -806,13 +776,18 @@
         </div>
         <div>
           <strong>Foundation Yearly scholarship</strong>
-          <span class="value-hit-accent">$118</span>
+          <span class="accent">$118</span>
         </div>
+      </div>
+
+      <div class="mid-cta">
+        <a class="btn-primary" href="#enroll">Enroll now — $118</a>
+        <p>Or keep scrolling for every course price.</p>
       </div>
 
       <div class="track-grid">
         <article class="track">
-          <p class="track-kicker">Included · retail $247</p>
+          <p class="track-kicker">Opens first · retail $247</p>
           <h3>The Teleios Blueprint</h3>
           <p class="track-sub">6 weeks · Full Human Maturity — dripped weekly on SBD Network</p>
           <ol class="track-list">
@@ -826,47 +801,44 @@
         </article>
 
         <article class="track">
-          <p class="track-kicker">Included · retail $300</p>
+          <p class="track-kicker">Opens with Foundation · retail $300</p>
           <h3>Sex By Design for Dummies</h3>
-          <p class="track-sub">13-week course · the complete marriage handbook pathway — dripped weekly</p>
+          <p class="track-sub">13-week course — not the $27 ebook alone</p>
           <ol class="track-list">
             <li><span>W1–3</span> Design, anatomy &amp; the marriage equation</li>
             <li><span>W4–6</span> Desire, covenant sexuality &amp; fidelity</li>
             <li><span>W7–9</span> Communication, conflict &amp; one-flesh life</li>
             <li><span>W10–13</span> Household strength, parenting &amp; lasting practice</li>
           </ol>
-          <p class="track-note">Standalone course value: <strong>$300</strong> — included in Foundation Tier, not sold separately here.</p>
+          <p class="track-note">Course value <strong>$300</strong> — included in Foundation Tier.</p>
         </article>
       </div>
 
       <div class="school-block">
         <div class="school-head">
-          <div>
-            <p class="track-kicker">School 1 · Teleios Foundation · retail $2,843</p>
-            <h3>13 courses with real prices</h3>
-            <p>Read the price next to each course. This is the formation stack your scholarship year opens — plus the $300 SBD for Dummies course above.</p>
-          </div>
-          <a class="btn-primary" href="#enroll">Claim scholarship — $118</a>
+          <p class="track-kicker">School 1 · Teleios Foundation · retail $2,843</p>
+          <h3>13 courses with real prices</h3>
+          <p>These are the School 1 retail prices (Teleios Blueprint $247 is course 01 inside this total). They unlock progressively through your scholarship year — plus the $300 Dummies course above.</p>
         </div>
         <ol class="course-grid">
-          <li><b>01</b><span class="course-name">The Teleios Blueprint: Full Human Maturity</span><span class="course-price">$247</span></li>
-          <li><b>02</b><span class="course-name">The Anthropology of Wholeness</span><span class="course-price">$149</span></li>
-          <li><b>03</b><span class="course-name">Identity Mastery</span><span class="course-price">$149</span></li>
-          <li><b>04</b><span class="course-name">The Four Faculties Training</span><span class="course-price">$199</span></li>
-          <li><b>05</b><span class="course-name">Anthropocentric Development</span><span class="course-price">$129</span></li>
-          <li><b>06</b><span class="course-name">The Personal Development MasterClass</span><span class="course-price">$697</span></li>
-          <li><b>07</b><span class="course-name">The Science of Self-Command</span><span class="course-price">$199</span></li>
-          <li><b>08</b><span class="course-name">The Heart of Relationship</span><span class="course-price">$149</span></li>
-          <li><b>09</b><span class="course-name">Relationship Relatednesses</span><span class="course-price">$199</span></li>
-          <li><b>10</b><span class="course-name">Relationship Mastery Intensive</span><span class="course-price">$349</span></li>
-          <li><b>11</b><span class="course-name">The Perfect Self Program</span><span class="course-price">$149</span></li>
-          <li><b>12</b><span class="course-name">Emotional Literacy for Couples &amp; Singles</span><span class="course-price">$129</span></li>
-          <li><b>13</b><span class="course-name">Temperament Intelligence for Marriage</span><span class="course-price">$99</span></li>
+          <li><b>01</b><span>The Teleios Blueprint: Full Human Maturity</span><span class="course-price">$247</span></li>
+          <li><b>02</b><span>The Anthropology of Wholeness</span><span class="course-price">$149</span></li>
+          <li><b>03</b><span>Identity Mastery</span><span class="course-price">$149</span></li>
+          <li><b>04</b><span>The Four Faculties Training</span><span class="course-price">$199</span></li>
+          <li><b>05</b><span>Anthropocentric Development</span><span class="course-price">$129</span></li>
+          <li><b>06</b><span>The Personal Development MasterClass</span><span class="course-price">$697</span></li>
+          <li><b>07</b><span>The Science of Self-Command</span><span class="course-price">$199</span></li>
+          <li><b>08</b><span>The Heart of Relationship</span><span class="course-price">$149</span></li>
+          <li><b>09</b><span>Relationship Relatednesses</span><span class="course-price">$199</span></li>
+          <li><b>10</b><span>Relationship Mastery Intensive</span><span class="course-price">$349</span></li>
+          <li><b>11</b><span>The Perfect Self Program</span><span class="course-price">$149</span></li>
+          <li><b>12</b><span>Emotional Literacy for Couples &amp; Singles</span><span class="course-price">$129</span></li>
+          <li><b>13</b><span>Temperament Intelligence for Marriage</span><span class="course-price">$99</span></li>
         </ol>
 
         <div class="stack-total" aria-label="Retail stack total">
           <div class="stack-row">
-            <span>School 1 · 13 courses</span>
+            <span>School 1 · 13 courses (includes Teleios $247)</span>
             <strong>$2,843</strong>
           </div>
           <div class="stack-row">
@@ -882,8 +854,7 @@
             <strong>$118</strong>
           </div>
         </div>
-
-        <p class="school-foot">Also included: Foundation community boards, downloadable resources, and login to <strong>sbd-network.web.app/learn?tier=foundation</strong>.</p>
+        <p class="school-foot">Also included: Foundation boards, resources, and login to sbd-network.web.app/learn?tier=foundation</p>
       </div>
     </div>
   </section>
@@ -891,22 +862,22 @@
   <section class="who" id="who">
     <div class="wrap">
       <p class="section-label">Who it’s for</p>
-      <h2>Built for the people who actually begin.</h2>
+      <h2>Built for people who actually begin.</h2>
       <p class="section-copy">
-        Whether you are sponsoring someone you love or enrolling yourselves, Foundation Access is a clear, complete year of formation — not a trial drip of disconnected content.
+        Enroll yourself — or sponsor someone you love. The learner gets the login; the sponsor can receive the receipt.
       </p>
       <div class="who-grid">
         <div class="who-item">
           <h3>Parents sponsoring a student</h3>
-          <p>Give a son, daughter, or young adult a full year of structured marriage and relationship literacy.</p>
+          <p>Pay once. Their login arrives by email. A full scholarship year of Foundation formation.</p>
         </div>
         <div class="who-item">
           <h3>Young couples</h3>
-          <p>Begin formation together before patterns harden — one shared year on the Foundation pathway.</p>
+          <p>Begin together before patterns harden — paced weekly pathways, not a content dump.</p>
         </div>
         <div class="who-item">
           <h3>Older couples &amp; groups</h3>
-          <p>Renew the foundation, or sponsor a household, fellowship, or small group through one clear enrollment.</p>
+          <p>Renew the foundation, or place a household on one clear enrollment.</p>
         </div>
       </div>
     </div>
@@ -915,29 +886,58 @@
   <section class="how" id="how">
     <div class="wrap">
       <p class="section-label">How it works</p>
-      <h2>Pay once. Set your password. Begin.</h2>
-      <div class="steps" style="margin-top:1.5rem">
+      <h2>Pay once. Set a password. Begin.</h2>
+      <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
           <div>
-            <h3>Enroll with your name and email</h3>
-            <p>Secure Stripe checkout for Foundation Tier — Yearly ($118).</p>
+            <h3>Enroll with learner details</h3>
+            <p>Secure Stripe checkout for Foundation Tier — Yearly ($118 / ≈67,984 FCFA).</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <div>
-            <h3>Receive your SBD Network login</h3>
-            <p>We email a secure link to set your password and open your account.</p>
+            <h3>Receive SBD Network login</h3>
+            <p>We email a secure link to set the password for the learner account.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <div>
-            <h3>Enter Foundation — School 1</h3>
-            <p>Go straight to <strong>sbd-network.web.app/learn?tier=foundation</strong> and start your year.</p>
+            <h3>Enter Foundation</h3>
+            <p>Open <strong>sbd-network.web.app/learn?tier=foundation</strong> and start the year.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" id="faq">
+    <div class="wrap">
+      <p class="section-label">FAQ</p>
+      <h2>Before you enroll</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Do I get all 13 School 1 courses on day one?</summary>
+          <p>You begin with Teleios Blueprint and the Sex By Design for Dummies course. School 1 courses unlock progressively across your scholarship year as you advance — by design, so formation stays paced and complete.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What happens after I pay?</summary>
+          <p>Stripe confirms payment, Foundation access activates, and we email a password-setup link for the learner. Then open Foundation on SBD Network and begin.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I buy this for someone else?</summary>
+          <p>Yes. Check “I’m sponsoring someone.” Use their name and email for the login account. Your email receives the Stripe receipt; theirs receives the access email.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What happens after 12 months?</summary>
+          <p>This is a yearly subscription. Before renewal you’ll manage billing in Stripe / SBD Network. Your formation progress stays on the account.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is the $300 Dummies item the book or the course?</summary>
+          <p>The $300 line is the 13-week Sex By Design for Dummies course included in Foundation — not the standalone ~$27 ebook.</p>
+        </details>
       </div>
     </div>
   </section>
@@ -949,35 +949,61 @@
         <h2>Foundation Access — Yearly</h2>
         <div class="price-block">
           <strong>$118</strong>
-          <span>scholarship · $3,143 retail stack</span>
+          <span>≈ 67,984 FCFA · $3,143 retail stack</span>
         </div>
 
         <form id="enrollForm" novalidate>
+          <label class="sponsor-toggle">
+            <input type="checkbox" id="isSponsor" name="isSponsor">
+            <span>
+              I’m sponsoring someone else
+              <small>You’ll pay; they receive the login.</small>
+            </span>
+          </label>
+
+          <div class="sponsor-fields" id="sponsorFields">
+            <div class="field">
+              <label for="sponsorName">Your name (sponsor)</label>
+              <input id="sponsorName" name="sponsorName" type="text" autocomplete="name" placeholder="Sponsor full name">
+            </div>
+            <div class="field">
+              <label for="sponsorEmail">Your email (receipt)</label>
+              <input id="sponsorEmail" name="sponsorEmail" type="email" autocomplete="email" placeholder="sponsor@example.com">
+            </div>
+          </div>
+
           <div class="field">
-            <label for="fullName">Full name</label>
-            <input id="fullName" name="fullName" type="text" autocomplete="name" required placeholder="Your name">
+            <label for="fullName" id="nameLabel">Learner full name</label>
+            <input id="fullName" name="fullName" type="text" autocomplete="name" required placeholder="Name on the learning account">
           </div>
           <div class="field">
-            <label for="email">Email for login</label>
-            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+            <label for="email" id="emailLabel">Learner email (login)</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="learner@example.com">
           </div>
-          <button class="btn-primary" type="submit" id="submitBtn" style="width:100%">
+
+          <button class="btn-primary block" type="submit" id="submitBtn">
             Continue to secure payment
           </button>
-          <p class="form-note">You’ll complete payment on Stripe. After success, check your email for login instructions.</p>
+          <p class="form-note">You’ll finish on Stripe. After success, the learner email gets login instructions.</p>
+          <div class="trust-row">
+            <span>Secure checkout · Stripe</span>
+            <span>Login emailed after payment</span>
+            <span>Foundation on SBD Network</span>
+          </div>
           <div class="form-error" id="formError" role="alert"></div>
           <div class="form-status" id="formStatus">Redirecting to secure checkout…</div>
         </form>
       </div>
 
       <aside class="enroll-aside">
-        <p class="section-label">After you enroll</p>
+        <p class="section-label">Scholarship math</p>
         <h2>Everything points to Foundation.</h2>
         <ul class="aside-list">
-          <li>School 1 courses total <strong>$2,843</strong> at retail</li>
-          <li>SBD for Dummies 13-week course adds <strong>$300</strong></li>
-          <li>Retail stack <strong>$3,143</strong> → scholarship price <strong>$118</strong></li>
-          <li>Pay once · login emailed · open Foundation on SBD Network</li>
+          <li>School 1 retail <strong>$2,843</strong> (includes Teleios $247)</li>
+          <li>SBD for Dummies course <strong>+$300</strong></li>
+          <li>Retail stack <strong>$3,143</strong> → scholarship <strong>$118</strong></li>
+          <li>Progressive School 1 unlock across the year</li>
+          <li>Boards, resources, and Foundation login included</li>
         </ul>
       </aside>
     </div>
@@ -994,10 +1020,10 @@
     </div>
   </footer>
 
-  <div class="sticky-bar" id="stickyBar">
+  <div class="sticky-bar" id="stickyBar" aria-hidden="true">
     <div>
       <strong>$118</strong>
-      <span style="opacity:0.8;font-size:0.9rem"> · $3,143 value scholarship</span>
+      <span class="sticky-meta">≈ 67,984 FCFA · $3,143 value</span>
     </div>
     <a class="btn-primary" href="#enroll">Enroll</a>
   </div>
@@ -1034,10 +1060,27 @@
       if (enroll && sticky && 'IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries) {
           entries.forEach(function (entry) {
-            sticky.classList.toggle('show', !entry.isIntersecting && entry.boundingClientRect.top > 0);
+            var show = !entry.isIntersecting && entry.boundingClientRect.top > 0;
+            sticky.classList.toggle('show', show);
+            sticky.setAttribute('aria-hidden', show ? 'false' : 'true');
           });
-        }, { threshold: 0.15 });
+        }, { threshold: 0.12 });
         io.observe(enroll);
+      }
+
+      var isSponsor = document.getElementById('isSponsor');
+      var sponsorFields = document.getElementById('sponsorFields');
+      var nameLabel = document.getElementById('nameLabel');
+      var emailLabel = document.getElementById('emailLabel');
+      function syncSponsor() {
+        var on = !!(isSponsor && isSponsor.checked);
+        if (sponsorFields) sponsorFields.classList.toggle('show', on);
+        if (nameLabel) nameLabel.textContent = on ? 'Learner full name' : 'Your full name';
+        if (emailLabel) emailLabel.textContent = on ? 'Learner email (login)' : 'Your email (login)';
+      }
+      if (isSponsor) {
+        isSponsor.addEventListener('change', syncSponsor);
+        syncSponsor();
       }
 
       var form = document.getElementById('enrollForm');
@@ -1057,22 +1100,41 @@
         err.classList.remove('show');
         var name = document.getElementById('fullName').value.trim();
         var email = document.getElementById('email').value.trim();
-        if (!name || name.length < 2) return showError('Please enter your full name.');
+        var sponsoring = !!(isSponsor && isSponsor.checked);
+        var sponsorName = document.getElementById('sponsorName').value.trim();
+        var sponsorEmail = document.getElementById('sponsorEmail').value.trim();
+
+        if (!name || name.length < 2) {
+          return showError(sponsoring ? 'Enter the learner’s full name.' : 'Please enter your full name.');
+        }
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          return showError('Please enter a valid email — this becomes your SBD Network login.');
+          return showError('Enter a valid learner email — this becomes the SBD Network login.');
+        }
+        if (sponsoring) {
+          if (!sponsorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail)) {
+            return showError('Enter a valid sponsor email for the Stripe receipt.');
+          }
+          if (sponsorEmail.toLowerCase() === email.toLowerCase()) {
+            return showError('Sponsor email must be different from the learner login email.');
+          }
         }
 
         btn.disabled = true;
         status.classList.add('show');
 
         try {
-          var create = firebase.functions().httpsCallable('createSbdGuestCheckoutSession');
-          var result = await create({
+          var payload = {
             name: name,
             email: email,
             productId: 'foundation-yearly',
             ref: ref || undefined
-          });
+          };
+          if (sponsoring) {
+            payload.sponsorEmail = sponsorEmail;
+            payload.sponsorName = sponsorName || undefined;
+          }
+          var create = firebase.functions().httpsCallable('createSbdGuestCheckoutSession');
+          var result = await create(payload);
           if (result.data && result.data.url) {
             window.location.href = result.data.url;
             return;

@@ -550,8 +550,9 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
 
         if (session.metadata?.guest === '1') {
           try {
+            const loginEmail = session.metadata?.loginEmail || payer;
             await sendSbdBuyerAccessEmail({
-              email: payer,
+              email: loginEmail,
               name: session.customer_details?.name || '',
               productId: canonicalProductId,
               productName: prodName
@@ -4801,12 +4802,26 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   const email = String(data?.email || '').trim().toLowerCase();
   const name = String(data?.name || '').trim() || 'Student';
+  const sponsorEmail = String(data?.sponsorEmail || '').trim().toLowerCase();
+  const sponsorName = String(data?.sponsorName || '').trim();
+  const isSponsored = !!sponsorEmail;
   const rawRef = String(data?.ref || data?.referredBy || '').trim();
   const referredBy = normalizeSbdReferralCode(rawRef);
   const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new functions.https.HttpsError('invalid-argument', 'A valid email is required.');
+    throw new functions.https.HttpsError('invalid-argument', 'A valid learner email is required.');
+  }
+
+  if (isSponsored && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid sponsor email is required.');
+  }
+
+  if (isSponsored && sponsorEmail === email) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Sponsor email must be different from the learner login email.'
+    );
   }
 
   if (productId !== 'foundation-yearly') {
@@ -4853,6 +4868,10 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     signupApp: existingData.signupApp || 'foundation-yearly-landing',
     lastActive: admin.firestore.FieldValue.serverTimestamp(),
   };
+  if (isSponsored) {
+    patch.sponsoredByEmail = sponsorEmail;
+    if (sponsorName) patch.sponsoredByName = sponsorName;
+  }
   if (isNew || !userSnap.exists) {
     patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
     patch.groups = existingData.groups || [];
@@ -4890,16 +4909,21 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     ? { price: trimmedPriceId, quantity: 1 }
     : { price_data: priceData, quantity: 1 };
 
+  const receiptEmail = isSponsored ? sponsorEmail : email;
   const meta = {
     app: 'sbd',
     uid,
     productId,
     guest: '1',
     referredBy: referredBy || '',
+    loginEmail: email,
+    sponsored: isSponsored ? '1' : '0',
+    sponsorEmail: isSponsored ? sponsorEmail : '',
+    sponsorName: isSponsored ? (sponsorName || '') : '',
   };
 
   const session = await stripe.checkout.sessions.create({
-    customer_email: email,
+    customer_email: receiptEmail,
     client_reference_id: uid,
     metadata: meta,
     subscription_data: { metadata: meta },
@@ -4913,7 +4937,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
 
   console.log(
     `[SBD Guest Checkout] uid=${uid} new=${isNew} product=${productId} ` +
-    `ref=${referredBy || 'none'} session=${session.id}`
+    `ref=${referredBy || 'none'} sponsored=${isSponsored} session=${session.id}`
   );
 
   return {
@@ -4921,6 +4945,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     uid,
     isNew,
     productId,
+    sponsored: isSponsored,
   };
 });
 
