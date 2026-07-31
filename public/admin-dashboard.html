@@ -2581,16 +2581,19 @@
                                     <th>Date</th>
                                     <th>Ambassador</th>
                                     <th>SBD Code</th>
+                                    <th>Product</th>
                                     <th>Tier</th>
+                                    <th>Amount</th>
                                     <th>Direct Commission</th>
                                     <th>Senior</th>
                                     <th>Senior Override</th>
+                                    <th>RD Override</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="sbdSalesTableBody">
                                 <tr>
-                                    <td colspan="8" class="loading">
+                                    <td colspan="11" class="loading">
                                         <div class="spinner"></div>
                                         <p>Loading SBD sales audit trail...</p>
                                     </td>
@@ -3728,7 +3731,7 @@
                     .get();
 
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#636e72;">No SBD subscription sales recorded yet</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#636e72;">No SBD subscription sales recorded yet</td></tr>';
                     return;
                 }
 
@@ -3736,15 +3739,25 @@
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleString() : 'N/A';
+                    const isYearly = data.productId === 'foundation-yearly' || data.program === 'foundation_yearly_deployment';
+                    const productLabel = isYearly
+                        ? '<span style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Yearly $118</span>'
+                        : (data.productId || data.program || '—');
+                    const amountLabel = data.revenueUsd
+                        ? `$${Number(data.revenueUsd).toLocaleString()}`
+                        : (data.revenueBaseFCFA ? `${Number(data.revenueBaseFCFA).toLocaleString()} FCFA` : '—');
                     html += `
                         <tr>
                             <td>${date}</td>
                             <td><strong>${data.ambassadorCode || 'N/A'}</strong><br><small>${data.ambassadorName || ''}</small></td>
                             <td><code>${data.sbdReferralCode || 'N/A'}</code></td>
+                            <td>${productLabel}<br><small style="color:#636e72">${data.productId || ''}</small></td>
                             <td>${String(data.tier || 'N/A').replace(/^./, (match) => match.toUpperCase())}</td>
+                            <td>${amountLabel}</td>
                             <td>${((data.ambassadorCommission || 0)).toLocaleString()} FCFA</td>
                             <td>${data.seniorAmbassadorCode || '—'}</td>
                             <td>${((data.seniorAmbassadorCommission || 0)).toLocaleString()} FCFA</td>
+                            <td>${data.rdOverrideCode ? `${data.rdOverrideCode}<br><small>+${((data.rdCommission || 0)).toLocaleString()} FCFA</small>` : '—'}</td>
                             <td>${data.status || 'pending'}</td>
                         </tr>
                     `;
@@ -3753,7 +3766,7 @@
                 tbody.innerHTML = html;
             } catch (error) {
                 console.error('Error loading SBD sales table:', error);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#d63031;">Error loading SBD sales audit trail</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#d63031;">Error loading SBD sales audit trail</td></tr>';
             }
         }
 

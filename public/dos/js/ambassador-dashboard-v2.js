@@ -124,7 +124,7 @@
     }
     var yearlyRef = encodeURIComponent(sbdCode || code || '');
     return [
-      { key: 'foundation-yearly', label: 'Foundation Yearly ($118)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef },
+      { key: 'foundation-yearly', label: 'Foundation Yearly ($118)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef + '#enroll' },
       { key: 'books', label: 'Books', icon: 'fa-solid fa-book', url: 'https://marriageducation.com/sbd-campaign.html?ref=' + safe + '&category=books' },
       { key: 'schools', label: 'Schools', icon: 'fa-solid fa-school', url: 'https://marriageducation.com/schools.html?ref=' + safe + '&category=schools' },
       { key: 'courses', label: 'Courses', icon: 'fa-solid fa-book-open', url: 'https://marriageducation.com/courses.html?ref=' + safe + '&category=courses' },
@@ -559,10 +559,10 @@
     }
 
     var sbdUrl = 'https://sbd-network.web.app/auth?ref=' + sbdCode;
-    var yearlyUrl = 'https://marriageducation.com/foundation-access.html?ref=' + encodeURIComponent(sbdCode);
+    var yearlyUrl = 'https://marriageducation.com/foundation-access.html?ref=' + encodeURIComponent(sbdCode) + '#enroll';
     var refs = stats.sbdReferrals || {};
     body.innerHTML =
-      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($118)</strong> landing for the official deployment program, or the app signup link for monthly:</p>' +
+      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($118)</strong> link below for the official deployment program. <strong>Only coded links credit you</strong> — always include <code>?ref=' + sbdCode + '</code>.</p>' +
       '<div class="dos-sbd-panel">' +
       '<div class="dos-link-row">' +
       '<div class="dos-link-box" id="dosYearlyLink">' + yearlyUrl + '</div>' +

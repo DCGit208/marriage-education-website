@@ -2840,8 +2840,19 @@ async function handleSbdStripeInvoice(invoice) {
 }
 
 async function findSellerBySbdReferralCode(refCode) {
-  const code = String(refCode || '').trim().toUpperCase();
+  let code = String(refCode || '').trim().toUpperCase();
   if (!code) return null;
+  if (/^(AMB|RD|SNR|SBD)[_-]/.test(code)) code = code.replace(/_/g, '-');
+  code = code.replace(/-+/g, '-');
+
+  // Accept AMB-… / SNR-… and map to SBD-… for lookup
+  if (code.startsWith('AMB-') || code.startsWith('SNR-')) {
+    const ambDoc = await db.collection('ambassadors').doc(code.replace(/^SNR-/, 'AMB-')).get();
+    if (ambDoc.exists) {
+      return { type: 'ambassador', ref: ambDoc.ref, data: ambDoc.data(), id: ambDoc.id };
+    }
+    code = code.replace(/^(AMB|SNR)-/, 'SBD-');
+  }
 
   const ambSnap = await db.collection('ambassadors')
     .where('sbdReferralCode', '==', code).limit(1).get();
@@ -2863,9 +2874,27 @@ async function findSellerBySbdReferralCode(refCode) {
     if (rdDoc.exists) {
       return { type: 'rd', ref: rdDoc.ref, data: rdDoc.data(), id: rdDoc.id };
     }
+    const ambFromSbd = code.replace(/^SBD-/, 'AMB-');
+    const ambDoc = await db.collection('ambassadors').doc(ambFromSbd).get();
+    if (ambDoc.exists) {
+      return { type: 'ambassador', ref: ambDoc.ref, data: ambDoc.data(), id: ambDoc.id };
+    }
   }
 
   return null;
+}
+
+/** Normalize operator codes to SBD-… form for users.referredBy */
+function normalizeToSbdReferralCode(raw) {
+  let code = normalizeSbdReferralCode(raw);
+  if (!code) return '';
+  if (code.startsWith('AMB-') || code.startsWith('SNR-')) {
+    return code.replace(/^(AMB|SNR)-/, 'SBD-');
+  }
+  if (code.startsWith('RD-')) {
+    return code.replace(/^RD-/, 'SBD-');
+  }
+  return code;
 }
 
 function firestoreSafeObject(obj) {
@@ -4806,7 +4835,8 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   const sponsorName = String(data?.sponsorName || '').trim();
   const isSponsored = !!sponsorEmail;
   const rawRef = String(data?.ref || data?.referredBy || '').trim();
-  const referredBy = normalizeSbdReferralCode(rawRef);
+  const referredBy = normalizeToSbdReferralCode(rawRef);
+  const requireReferral = data?.requireReferral === true;
   const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -4822,6 +4852,23 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
       'invalid-argument',
       'Sponsor email must be different from the learner login email.'
     );
+  }
+
+  if (requireReferral && !referredBy) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'A valid operator referral code is required (SBD-XXXX).'
+    );
+  }
+
+  if (referredBy) {
+    const sellerCheck = await findSellerBySbdReferralCode(referredBy);
+    if (!sellerCheck) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Referral code not recognized. Check the operator code (SBD-XXXX) and try again.'
+      );
+    }
   }
 
   if (productId !== 'foundation-yearly') {
