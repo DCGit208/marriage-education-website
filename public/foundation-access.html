@@ -663,6 +663,23 @@
     }
     .cancelled-banner.show { display: block; }
 
+    .referral-banner {
+      display: none;
+      background: linear-gradient(90deg, #ecfdf5, #f0fdf4);
+      color: #14532d;
+      text-align: center;
+      padding: 0.7rem var(--pad);
+      font-size: 0.9rem;
+      border-bottom: 1px solid #bbf7d0;
+    }
+    .referral-banner.show { display: block; }
+    .referral-banner strong { font-weight: 700; letter-spacing: 0.02em; }
+    .field .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
     footer {
       padding: 1.75rem 0 calc(1.75rem + var(--sticky-h) + var(--safe-b));
       border-top: 1px solid var(--line);
@@ -733,6 +750,7 @@
 </head>
 <body>
   <div class="cancelled-banner" id="cancelledBanner">Checkout was cancelled. You can resume enrollment below whenever you’re ready.</div>
+  <div class="referral-banner" id="referralBanner" role="status" aria-live="polite"></div>
 
   <header class="hero" id="top">
     <div class="nav">
@@ -981,6 +999,11 @@
             <input id="email" name="email" type="email" autocomplete="email" required placeholder="learner@example.com">
           </div>
 
+          <div class="field">
+            <label for="referralCode">Operator referral code <span class="hint">(optional — required for ambassador credit)</span></label>
+            <input id="referralCode" name="referralCode" type="text" inputmode="text" autocomplete="off" placeholder="SBD-XXXX" spellcheck="false">
+          </div>
+
           <button class="btn-primary block" type="submit" id="submitBtn">
             Continue to secure payment
           </button>
@@ -1042,12 +1065,84 @@
       };
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
+      var REF_KEY = 'foundation_yearly_ref';
+
+      function normalizeRef(raw) {
+        var code = String(raw || '').trim().toUpperCase().replace(/_/g, '-').replace(/-+/g, '-');
+        if (!code) return '';
+        if (code.indexOf('AMB-') === 0 || code.indexOf('SNR-') === 0) {
+          return code.replace(/^(AMB|SNR)-/, 'SBD-');
+        }
+        if (code.indexOf('RD-') === 0) {
+          return code.replace(/^RD-/, 'SBD-');
+        }
+        return code;
+      }
+
+      function persistRef(code) {
+        if (!code) return;
+        try { sessionStorage.setItem(REF_KEY, code); } catch (e) {}
+        try { localStorage.setItem(REF_KEY, code); } catch (e) {}
+      }
+
+      function readStoredRef() {
+        var s = '';
+        try { s = sessionStorage.getItem(REF_KEY) || ''; } catch (e) {}
+        if (s) return s;
+        try { s = localStorage.getItem(REF_KEY) || ''; } catch (e) {}
+        return s || '';
+      }
+
+      function enrollHref(hash) {
+        hash = hash || '#enroll';
+        if (!ref) return hash;
+        return '?ref=' + encodeURIComponent(ref) + hash;
+      }
+
+      function applyRefToCtas() {
+        document.querySelectorAll('a[href="#enroll"], a[href="#inside"]').forEach(function (a) {
+          var hash = a.getAttribute('href');
+          if (hash === '#enroll' || hash === '#inside') {
+            a.setAttribute('href', enrollHref(hash));
+          }
+        });
+        var sticky = document.querySelector('#stickyBar a.btn-primary');
+        if (sticky) sticky.setAttribute('href', enrollHref('#enroll'));
+      }
+
+      function showReferralBanner(code) {
+        var el = document.getElementById('referralBanner');
+        if (!el || !code) return;
+        el.innerHTML = 'Referred by operator <strong>' + code.replace(/</g, '') + '</strong> — your enrollment credits their deployment.';
+        el.classList.add('show');
+      }
+
       var params = new URLSearchParams(window.location.search);
-      var ref = (params.get('ref') || params.get('referral') || '').trim().toUpperCase();
+      var ref = normalizeRef(params.get('ref') || params.get('referral') || '');
       if (ref) {
-        try { sessionStorage.setItem('foundation_yearly_ref', ref); } catch (e) {}
+        persistRef(ref);
       } else {
-        try { ref = sessionStorage.getItem('foundation_yearly_ref') || ''; } catch (e) { ref = ''; }
+        ref = normalizeRef(readStoredRef());
+      }
+
+      var referralInput = document.getElementById('referralCode');
+      if (referralInput && ref) {
+        referralInput.value = ref;
+        showReferralBanner(ref);
+      }
+      applyRefToCtas();
+
+      if (referralInput) {
+        referralInput.addEventListener('change', function () {
+          var typed = normalizeRef(referralInput.value);
+          if (typed) {
+            ref = typed;
+            referralInput.value = typed;
+            persistRef(typed);
+            showReferralBanner(typed);
+            applyRefToCtas();
+          }
+        });
       }
 
       if (params.get('cancelled') === '1') {
@@ -1103,6 +1198,11 @@
         var sponsoring = !!(isSponsor && isSponsor.checked);
         var sponsorName = document.getElementById('sponsorName').value.trim();
         var sponsorEmail = document.getElementById('sponsorEmail').value.trim();
+        var typedRef = normalizeRef(referralInput ? referralInput.value : '');
+        if (typedRef) {
+          ref = typedRef;
+          persistRef(typedRef);
+        }
 
         if (!name || name.length < 2) {
           return showError(sponsoring ? 'Enter the learner’s full name.' : 'Please enter your full name.');
