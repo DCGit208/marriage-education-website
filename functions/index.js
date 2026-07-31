@@ -12,7 +12,9 @@ const {
   creditSbdSubscriptionCommissions,
   normalizeCode: normalizeSbdReferralCode,
   isFoundationYearly,
-  FOUNDATION_YEARLY_USD
+  FOUNDATION_YEARLY_USD,
+  YEARLY_REVENUE_BASE_FCFA,
+  XAF_PER_USD
 } = require('./sbd-subscription-commission');
 const { registerAdminUserTools } = require('./admin-user-tools');
 const { registerStudioCanonAi } = require('./studio-canon-ai');
@@ -2497,7 +2499,9 @@ function getPaymentFulfillment() {
       generateDownloadURL,
       sendDownloadEmail,
       sendTelegram,
-      TELEGRAM_BOT_TOKEN
+      TELEGRAM_BOT_TOKEN,
+      unlockSbdContent,
+      sendSbdBuyerAccessEmail
     });
   }
   return _paymentFulfillment;
@@ -4525,7 +4529,7 @@ async function unlockSbdContent(uid, productId, session) {
       ? new Date('2099-12-31')
       : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
 
-    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice ──
+    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice or manual pending ref ──
     try {
       let invoiceId = session?.invoice || null;
       if (!invoiceId && session?.id && session?.mode === 'subscription') {
@@ -4537,6 +4541,28 @@ async function unlockSbdContent(uid, productId, session) {
           typeof invoiceId === 'string' ? invoiceId : invoiceId.id
         );
         const commissionResult = await handleSbdStripeInvoice(invoice);
+        Object.assign(tgMeta, {
+          referralCredited: !!commissionResult.credited,
+          referralSkipReason: commissionResult.referralSkipReason || null,
+          referrerAmbassadorCode: commissionResult.referrerAmbassadorCode || null,
+          referrerFullName: commissionResult.referrerFullName || null,
+          seniorAmbassadorCode: commissionResult.seniorAmbassadorCode || null,
+          ambassadorCommissionFCFA: commissionResult.ambassadorCommissionFCFA,
+          seniorCommissionFCFA: commissionResult.seniorCommissionFCFA,
+          rdCode: commissionResult.rdCode || null,
+          rdCommissionFCFA: commissionResult.rdCommissionFCFA
+        });
+      } else if (session?.manualCommissionKey) {
+        const commissionResult = await creditSbdSubscriptionCommissions({
+          db,
+          findSellerByReferralCode: findSellerBySbdReferralCode,
+          uid,
+          referralCode: userData.referredBy,
+          productId: canonicalProductId,
+          tierKey: rule.tier,
+          idempotencyKey: session.manualCommissionKey,
+          chargeKind: session.manualChargeKind || 'initial'
+        });
         Object.assign(tgMeta, {
           referralCredited: !!commissionResult.credited,
           referralSkipReason: commissionResult.referralSkipReason || null,
@@ -4618,32 +4644,42 @@ async function unlockSbdContent(uid, productId, session) {
   }
 
   // Audit trail
+  const orderAmount = session?.manualAmount != null
+    ? Number(session.manualAmount) || 0
+    : (session?.amount_total ? session.amount_total / 100 : 0);
+  const orderCurrency = session?.manualCurrency
+    || session?.currency?.toUpperCase()
+    || 'USD';
+  const paymentChannel = session?.manualChannel || 'stripe';
+
   await db.collection('orders').add({
     app: 'sbd-network',
     userId: uid,
     productId: canonicalProductId,
     productName: productName,
-    amount: session?.amount_total ? session.amount_total / 100 : 0,
-    currency: session?.currency?.toUpperCase() || 'USD',
+    amount: orderAmount,
+    currency: orderCurrency,
     status: 'completed',
-    stripeSessionId: session?.id || null,
+    stripeSessionId: session?.id && !String(session.id).startsWith('pending_') ? session.id : null,
+    pendingPaymentRef: session?.manualCommissionKey || null,
+    channel: paymentChannel,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   await writeUnifiedPaymentRecord({
-    source: 'stripe_sbd',
+    source: paymentChannel === 'stripe' ? 'stripe_sbd' : 'manual_payment',
     reference: session?.id || `${uid}-${canonicalProductId}`,
     external_reference: session?.payment_intent || session?.id || '',
     record_type: 'customer_payment',
-    channel: 'stripe',
-    payment_method: 'card',
+    channel: paymentChannel,
+    payment_method: paymentChannel === 'stripe' ? 'card' : (session?.manualPaymentMethod || 'momo'),
     payment_category: canonicalProductId,
     product_id: canonicalProductId,
     product_name: productName,
-    amount: session?.amount_total ? session.amount_total / 100 : 0,
-    currency: session?.currency?.toUpperCase() || 'USD',
+    amount: orderAmount,
+    currency: orderCurrency,
     customer_email: session?.customer_details?.email || '',
-    customer_phone: '',
+    customer_phone: session?.customer_details?.phone || '',
     ambassador_code: '',
     recruiter_code: '',
     status: 'completed',
@@ -4993,6 +5029,204 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     isNew,
     productId,
     sponsored: isSponsored,
+  };
+});
+
+/**
+ * Guest Foundation Yearly — Manual MoMo / Orange Money path.
+ * Creates Auth user + pending_payments; admin approve unlocks Foundation + commissions.
+ */
+exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
+  const email = String(data?.email || '').trim().toLowerCase();
+  const name = String(data?.name || '').trim() || 'Student';
+  const phone = String(data?.phone || '').trim();
+  const sponsorEmail = String(data?.sponsorEmail || '').trim().toLowerCase();
+  const sponsorName = String(data?.sponsorName || '').trim();
+  const isSponsored = !!sponsorEmail;
+  const rawRef = String(data?.ref || data?.referredBy || '').trim();
+  const referredBy = normalizeToSbdReferralCode(rawRef);
+  const momoNetwork = String(data?.momo_network || 'mtn').toLowerCase() === 'orange' ? 'orange' : 'mtn';
+  const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid learner email is required.');
+  }
+  if (!phone || phone.replace(/\D/g, '').length < 9) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid MoMo phone number is required.');
+  }
+  if (isSponsored && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid sponsor email is required.');
+  }
+  if (isSponsored && sponsorEmail === email) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Sponsor email must be different from the learner login email.'
+    );
+  }
+  if (productId !== 'foundation-yearly') {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Manual MoMo guest checkout is for Foundation Tier — Yearly only.'
+    );
+  }
+  if (referredBy) {
+    const sellerCheck = await findSellerBySbdReferralCode(referredBy);
+    if (!sellerCheck) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Referral code not recognized. Check the operator code (SBD-XXXX) and try again.'
+      );
+    }
+  }
+
+  let uid = null;
+  let isNew = false;
+  try {
+    const existing = await admin.auth().getUserByEmail(email);
+    uid = existing.uid;
+  } catch (notFoundErr) {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    const tempPassword = Array.from({ length: 14 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+    const userRecord = await admin.auth().createUser({
+      email,
+      password: tempPassword,
+      displayName: name,
+      emailVerified: false,
+    });
+    uid = userRecord.uid;
+    isNew = true;
+  }
+
+  const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const existingData = userSnap.exists ? userSnap.data() : {};
+  const patch = {
+    uid,
+    email,
+    name: existingData.name || name,
+    role: existingData.role === 'admin' ? 'admin' : (existingData.role || 'member'),
+    signupApp: existingData.signupApp || 'foundation-yearly-landing',
+    lastActive: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (phone) patch.phone = phone;
+  if (isSponsored) {
+    patch.sponsoredByEmail = sponsorEmail;
+    if (sponsorName) patch.sponsoredByName = sponsorName;
+  }
+  if (isNew || !userSnap.exists) {
+    patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    patch.groups = existingData.groups || [];
+  }
+  if (!existingData.referredBy && referredBy) {
+    patch.referredBy = referredBy;
+  }
+  await userRef.set(firestoreSafeObject(patch), { merge: true });
+
+  if (referredBy && !existingData.referredBy) {
+    try {
+      const seller = await findSellerBySbdReferralCode(referredBy);
+      if (seller) {
+        await seller.ref.update({
+          'sbdReferrals.signups': admin.firestore.FieldValue.increment(1)
+        });
+      }
+    } catch (signupErr) {
+      console.warn('[SBD MoMo] signup increment skipped:', signupErr.message);
+    }
+  }
+
+  const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
+  const amount = YEARLY_REVENUE_BASE_FCFA; // 70,800 FCFA ($118 @ 600)
+  const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
+  const payeeName = 'Achu Gustave Mokom';
+  const contactEmail = isSponsored ? sponsorEmail : email;
+
+  const paymentData = {
+    reference,
+    product_id: productId,
+    product_name: 'Foundation Tier — Yearly',
+    amount,
+    currency: 'XAF',
+    email: contactEmail,
+    loginEmail: email,
+    name,
+    phone,
+    uid,
+    guest: true,
+    app: 'sbd',
+    type: 'sbd_subscription',
+    referral_code: referredBy || '',
+    referredBy: referredBy || '',
+    sponsored: isSponsored,
+    sponsorEmail: isSponsored ? sponsorEmail : '',
+    sponsorName: isSponsored ? sponsorName : '',
+    status: 'pending',
+    payment_channel: 'manual',
+    momo_network: momoNetwork,
+    payment_method: momoNetwork === 'orange' ? 'orange_money' : 'momo',
+    payee_number: payeeNumber,
+    payee_name: payeeName,
+    created_at: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  await db.collection('pending_payments').doc(reference).set(paymentData);
+
+  await writeUnifiedPaymentRecord({
+    source: 'manual_payment',
+    reference,
+    external_reference: reference,
+    record_type: 'customer_payment',
+    channel: 'manual',
+    payment_method: paymentData.payment_method,
+    payment_category: 'sbd_subscription',
+    product_id: productId,
+    product_name: paymentData.product_name,
+    amount,
+    currency: 'XAF',
+    customer_email: contactEmail,
+    customer_phone: phone,
+    ambassador_code: '',
+    recruiter_code: referredBy || '',
+    status: 'pending',
+    action_required: true,
+    created_at: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  try {
+    const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
+    await sendTelegram(
+      `🔔 FOUNDATION YEARLY — MOMO PENDING\n\n` +
+      `📋 Reference: ${reference}\n` +
+      `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
+      `🏦 Network: ${networkLabel}\n` +
+      `📥 Payee: ${payeeNumber} (${payeeName})\n` +
+      `👤 Learner: ${email}\n` +
+      `📱 Phone: ${phone}\n` +
+      (referredBy ? `🔗 Referral: ${referredBy}\n` : '🔗 Referral: (none)\n') +
+      (isSponsored ? `🎁 Sponsor: ${sponsorEmail}\n` : '') +
+      `\n👉 Approve: https://marriageducation.com/admin-dashboard.html`,
+      false
+    );
+  } catch (tgErr) {
+    console.warn('[SBD MoMo] Telegram failed:', tgErr.message);
+  }
+
+  console.log(`[SBD Guest MoMo] uid=${uid} new=${isNew} ref=${reference} referral=${referredBy || 'none'}`);
+
+  return {
+    success: true,
+    reference,
+    uid,
+    isNew,
+    productId,
+    amount,
+    currency: 'XAF',
+    payee_number: payeeNumber,
+    payee_name: payeeName,
+    momo_network: momoNetwork,
+    message: 'Payment submitted for approval'
   };
 });
 

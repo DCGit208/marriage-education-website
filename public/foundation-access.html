@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Foundation Access — Yearly Scholarship ($118) | Marriage Education</title>
-  <meta name="description" content="Scholarship year of Foundation on SBD Network: Teleios Blueprint + Sex By Design for Dummies + progressive School 1. Retail stack $3,143 — you pay $118 (≈67,984 FCFA).">
+  <meta name="description" content="Scholarship year of Foundation on SBD Network: Teleios Blueprint + Sex By Design for Dummies + progressive School 1. Retail stack $3,143 — you pay $118 (≈70,800 FCFA).">
   <link rel="canonical" href="https://marriageducation.com/foundation-access.html">
 
   <meta property="og:type" content="website">
@@ -606,6 +606,155 @@
     }
     .sponsor-fields.show { display: block; }
 
+    .pay-methods {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin: 0 0 1rem;
+    }
+    .pay-method {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 0.85rem 0.75rem;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: center;
+      min-height: 3.1rem;
+    }
+    .pay-method.active {
+      border-color: var(--leaf);
+      background: #ecfdf5;
+      box-shadow: inset 0 0 0 1px var(--leaf);
+    }
+    .pay-method small {
+      display: block;
+      margin-top: 0.2rem;
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .momo-panel {
+      display: none;
+      margin: 0 0 1rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+    }
+    .momo-panel.show { display: block; }
+    .momo-panel h3 {
+      margin: 0 0 0.65rem;
+      font-size: 0.95rem;
+    }
+    .momo-network {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .momo-network button {
+      flex: 1;
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 0.65rem;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .momo-network button.active {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .momo-network button.orange.active {
+      border-color: #ea580c;
+      background: #fff7ed;
+    }
+    .momo-steps {
+      margin: 0 0 0.9rem;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.55rem;
+      font-size: 0.88rem;
+      color: var(--ink);
+    }
+    .momo-steps li {
+      display: grid;
+      grid-template-columns: 1.5rem 1fr;
+      gap: 0.45rem;
+    }
+    .momo-steps .n {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      background: var(--leaf);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .momo-payee {
+      margin: 0.35rem 0;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px dashed var(--line);
+    }
+    .momo-payee strong {
+      display: block;
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+    }
+    .momo-payee small { color: var(--muted); }
+    .momo-ref-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 700;
+      color: var(--leaf-deep);
+    }
+    .momo-done {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    .momo-done.show { display: block; }
+    .momo-done code {
+      display: inline-block;
+      margin-top: 0.35rem;
+      padding: 0.2rem 0.45rem;
+      background: #fff;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .virtual-card-hint {
+      margin: 0.75rem 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .virtual-card-hint summary {
+      cursor: pointer;
+      color: var(--leaf-deep);
+      font-weight: 600;
+    }
+    .virtual-card-hint ol {
+      margin: 0.5rem 0 0;
+      padding-left: 1.15rem;
+    }
+
     .form-note { margin: 0.75rem 0 0; font-size: 0.84rem; color: var(--muted); }
     .form-error, .form-status {
       display: none;
@@ -766,7 +915,7 @@
       </p>
       <div class="hero-price">
         <strong>$118</strong>
-        <span>≈ 67,984 FCFA · retail stack $3,143</span>
+        <span>≈ 70,800 FCFA · retail stack $3,143</span>
       </div>
       <div class="hero-actions">
         <a class="btn-primary" href="#enroll">Claim the $118 scholarship</a>
@@ -910,7 +1059,7 @@
           <div class="step-num">1</div>
           <div>
             <h3>Enroll with learner details</h3>
-            <p>Secure Stripe checkout for Foundation Tier — Yearly ($118 / ≈67,984 FCFA).</p>
+            <p>Secure Stripe or Manual MoMo checkout for Foundation Tier — Yearly ($118 / ≈70,800 FCFA).</p>
           </div>
         </div>
         <div class="step">
@@ -942,7 +1091,8 @@
         </details>
         <details class="faq-item">
           <summary>What happens after I pay?</summary>
-          <p>Stripe confirms payment, Foundation access activates, and we email a password-setup link for the learner. Then open Foundation on SBD Network and begin.</p>
+          <p><strong>Card / Stripe:</strong> payment confirms instantly, Foundation unlocks, and we email a password-setup link.<br>
+          <strong>Manual MoMo:</strong> transfer 70,800 FCFA, confirm on this page, then we approve in admin and email login — same Foundation access and operator commissions.</p>
         </details>
         <details class="faq-item">
           <summary>Can I buy this for someone else?</summary>
@@ -967,7 +1117,7 @@
         <h2>Foundation Access — Yearly</h2>
         <div class="price-block">
           <strong>$118</strong>
-          <span>≈ 67,984 FCFA · $3,143 retail stack</span>
+          <span>≈ 70,800 FCFA · $3,143 retail stack</span>
         </div>
 
         <form id="enrollForm" novalidate>
@@ -1004,17 +1154,70 @@
             <input id="referralCode" name="referralCode" type="text" inputmode="text" autocomplete="off" placeholder="SBD-XXXX" spellcheck="false">
           </div>
 
+          <p class="field" style="margin-bottom:0.45rem"><label>How will you pay?</label></p>
+          <div class="pay-methods" role="group" aria-label="Payment method">
+            <button type="button" class="pay-method active" id="payStripe" data-method="stripe">
+              Card / Stripe
+              <small>Visa · Mastercard · Virtual Card</small>
+            </button>
+            <button type="button" class="pay-method" id="payMomo" data-method="momo">
+              Manual MoMo
+              <small>MTN or Orange · 70,800 FCFA</small>
+            </button>
+          </div>
+
+          <div class="momo-panel" id="momoPanel">
+            <h3>Transfer 70,800 FCFA</h3>
+            <div class="momo-network" role="group" aria-label="Mobile money network">
+              <button type="button" class="active" id="netMtn" data-network="mtn">MTN MoMo</button>
+              <button type="button" class="orange" id="netOrange" data-network="orange">Orange Money</button>
+            </div>
+            <ol class="momo-steps">
+              <li><span class="n">1</span><span id="momoStep1">Open your MTN MoMo app or dial <strong>*126#</strong></span></li>
+              <li>
+                <span class="n">2</span>
+                <span>
+                  Send <strong>70,800 FCFA</strong> to:
+                  <div class="momo-payee">
+                    <strong id="momoPayeeNumber">237 677 604 100</strong>
+                    <small>Account name: <span id="momoPayeeName">Achu Gustave Mokom</span> — must match what the app shows</small>
+                  </div>
+                </span>
+              </li>
+              <li><span class="n">3</span><span>In the note/reference field, include the code shown after you confirm below (or your learner email).</span></li>
+              <li><span class="n">4</span><span>Enter the phone you paid from, then confirm. We activate after admin verifies the transfer.</span></li>
+            </ol>
+            <div class="field">
+              <label for="momoPhone" id="momoPhoneLabel">Your MTN MoMo phone number</label>
+              <input id="momoPhone" name="momoPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="670000000" pattern="[0-9+]{9,15}">
+            </div>
+          </div>
+
           <button class="btn-primary block" type="submit" id="submitBtn">
             Continue to secure payment
           </button>
-          <p class="form-note">You’ll finish on Stripe. After success, the learner email gets login instructions.</p>
+          <p class="form-note" id="formNote">You’ll finish on Stripe. After success, the learner email gets login instructions.</p>
+          <details class="virtual-card-hint" id="virtualCardHint">
+            <summary>Paying from MoMo? Use an MTN MoMo Virtual Card on Stripe</summary>
+            <ol>
+              <li><strong>USSD:</strong> Dial <strong>*126*43#</strong> and create your MoMo Virtual Card.</li>
+              <li><strong>App:</strong> In the MTN MoMo app, create a Virtual Card, then pay $118 on Stripe.</li>
+            </ol>
+            <p>That is the Card path — not a transfer to our number. For a direct transfer, choose Manual MoMo above.</p>
+          </details>
           <div class="trust-row">
-            <span>Secure checkout · Stripe</span>
+            <span id="trustPay">Secure checkout · Stripe</span>
             <span>Login emailed after payment</span>
             <span>Foundation on SBD Network</span>
           </div>
           <div class="form-error" id="formError" role="alert"></div>
           <div class="form-status" id="formStatus">Redirecting to secure checkout…</div>
+          <div class="momo-done" id="momoDone" role="status">
+            <strong>Transfer submitted for approval.</strong>
+            <p style="margin:0.45rem 0 0">Send <strong>70,800 FCFA</strong> now if you haven’t yet. Include this reference:</p>
+            <code id="momoDoneRef">—</code>
+            <p style="margin:0.65rem 0 0;font-size:0.88rem">We’ll email login instructions to the learner after we confirm the MoMo. Usually within a few hours during business time.</p>
+          </div>
         </form>
       </div>
 
@@ -1046,7 +1249,7 @@
   <div class="sticky-bar" id="stickyBar" aria-hidden="true">
     <div>
       <strong>$118</strong>
-      <span class="sticky-meta">≈ 67,984 FCFA · $3,143 value</span>
+      <span class="sticky-meta">≈ 70,800 FCFA · $3,143 value</span>
     </div>
     <a class="btn-primary" href="#enroll">Enroll</a>
   </div>
@@ -1183,6 +1386,84 @@
       var err = document.getElementById('formError');
       var status = document.getElementById('formStatus');
 
+      var payMethod = 'stripe';
+      var momoNetwork = 'mtn';
+      var payStripe = document.getElementById('payStripe');
+      var payMomo = document.getElementById('payMomo');
+      var momoPanel = document.getElementById('momoPanel');
+      var formNote = document.getElementById('formNote');
+      var trustPay = document.getElementById('trustPay');
+      var virtualCardHint = document.getElementById('virtualCardHint');
+      var momoDone = document.getElementById('momoDone');
+      var PAYEES = {
+        mtn: { number: '237 677 604 100', name: 'Achu Gustave Mokom', step1: 'Open your MTN MoMo app or dial <strong>*126#</strong>', phoneLabel: 'Your MTN MoMo phone number' },
+        orange: { number: '237 699 651 555', name: 'Achu Gustave Mokom', step1: 'Open your Orange Money app or dial <strong>#150#</strong>', phoneLabel: 'Your Orange Money phone number' }
+      };
+
+      function syncPayMethod() {
+        var isMomo = payMethod === 'momo';
+        if (payStripe) payStripe.classList.toggle('active', !isMomo);
+        if (payMomo) payMomo.classList.toggle('active', isMomo);
+        if (momoPanel) momoPanel.classList.toggle('show', isMomo);
+        if (btn) btn.textContent = isMomo ? 'Confirm MoMo transfer' : 'Continue to secure payment';
+        if (formNote) {
+          formNote.textContent = isMomo
+            ? 'After you transfer 70,800 FCFA and confirm, we approve in admin and email the learner login.'
+            : 'You’ll finish on Stripe. After success, the learner email gets login instructions.';
+        }
+        if (trustPay) trustPay.textContent = isMomo ? 'Manual MoMo · admin verifies' : 'Secure checkout · Stripe';
+        if (virtualCardHint) virtualCardHint.style.display = isMomo ? 'none' : '';
+        if (status) {
+          status.textContent = isMomo ? 'Submitting MoMo confirmation…' : 'Redirecting to secure checkout…';
+        }
+        if (momoDone) momoDone.classList.remove('show');
+      }
+
+      function syncMomoNetwork() {
+        var p = PAYEES[momoNetwork] || PAYEES.mtn;
+        var num = document.getElementById('momoPayeeNumber');
+        var nameEl = document.getElementById('momoPayeeName');
+        var step1 = document.getElementById('momoStep1');
+        var phoneLabel = document.getElementById('momoPhoneLabel');
+        var netMtnEl = document.getElementById('netMtn');
+        var netOrangeEl = document.getElementById('netOrange');
+        if (num) num.textContent = p.number;
+        if (nameEl) nameEl.textContent = p.name;
+        if (step1) step1.innerHTML = p.step1;
+        if (phoneLabel) phoneLabel.textContent = p.phoneLabel;
+        if (netMtnEl) netMtnEl.classList.toggle('active', momoNetwork === 'mtn');
+        if (netOrangeEl) netOrangeEl.classList.toggle('active', momoNetwork === 'orange');
+      }
+
+      if (payStripe) {
+        payStripe.addEventListener('click', function () {
+          payMethod = 'stripe';
+          syncPayMethod();
+        });
+      }
+      if (payMomo) {
+        payMomo.addEventListener('click', function () {
+          payMethod = 'momo';
+          syncPayMethod();
+        });
+      }
+      var netMtn = document.getElementById('netMtn');
+      var netOrange = document.getElementById('netOrange');
+      if (netMtn) {
+        netMtn.addEventListener('click', function () {
+          momoNetwork = 'mtn';
+          syncMomoNetwork();
+        });
+      }
+      if (netOrange) {
+        netOrange.addEventListener('click', function () {
+          momoNetwork = 'orange';
+          syncMomoNetwork();
+        });
+      }
+      syncPayMethod();
+      syncMomoNetwork();
+
       function showError(msg) {
         err.textContent = msg;
         err.classList.add('show');
@@ -1193,11 +1474,14 @@
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         err.classList.remove('show');
+        if (momoDone) momoDone.classList.remove('show');
         var name = document.getElementById('fullName').value.trim();
         var email = document.getElementById('email').value.trim();
         var sponsoring = !!(isSponsor && isSponsor.checked);
         var sponsorName = document.getElementById('sponsorName').value.trim();
         var sponsorEmail = document.getElementById('sponsorEmail').value.trim();
+        var momoPhone = (document.getElementById('momoPhone') || {}).value || '';
+        momoPhone = String(momoPhone).trim();
         var typedRef = normalizeRef(referralInput ? referralInput.value : '');
         if (typedRef) {
           ref = typedRef;
@@ -1212,10 +1496,15 @@
         }
         if (sponsoring) {
           if (!sponsorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail)) {
-            return showError('Enter a valid sponsor email for the Stripe receipt.');
+            return showError('Enter a valid sponsor email for the receipt / contact.');
           }
           if (sponsorEmail.toLowerCase() === email.toLowerCase()) {
             return showError('Sponsor email must be different from the learner login email.');
+          }
+        }
+        if (payMethod === 'momo') {
+          if (!momoPhone || momoPhone.replace(/\D/g, '').length < 9) {
+            return showError('Enter the phone number you are paying from (9+ digits).');
           }
         }
 
@@ -1233,6 +1522,27 @@
             payload.sponsorEmail = sponsorEmail;
             payload.sponsorName = sponsorName || undefined;
           }
+
+          if (payMethod === 'momo') {
+            payload.phone = momoPhone;
+            payload.momo_network = momoNetwork;
+            var createMomo = firebase.functions().httpsCallable('createSbdGuestManualPayment');
+            var momoResult = await createMomo(payload);
+            var data = momoResult.data || {};
+            if (!data.success || !data.reference) {
+              return showError('Could not submit MoMo confirmation. Please try again.');
+            }
+            status.classList.remove('show');
+            btn.disabled = false;
+            if (momoDone) {
+              var refEl = document.getElementById('momoDoneRef');
+              if (refEl) refEl.textContent = data.reference;
+              momoDone.classList.add('show');
+              momoDone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            return;
+          }
+
           var create = firebase.functions().httpsCallable('createSbdGuestCheckoutSession');
           var result = await create(payload);
           if (result.data && result.data.url) {

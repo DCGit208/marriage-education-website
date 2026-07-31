@@ -15,7 +15,9 @@ function createPendingPaymentFulfillment(deps) {
     generateDownloadURL,
     sendDownloadEmail,
     sendTelegram,
-    TELEGRAM_BOT_TOKEN
+    TELEGRAM_BOT_TOKEN,
+    unlockSbdContent,
+    sendSbdBuyerAccessEmail
   } = deps;
 
   async function fulfillPendingPayment(reference, options = {}) {
@@ -131,6 +133,87 @@ function createPendingPaymentFulfillment(deps) {
         success: true,
         message: 'Ambassador registration approved',
         ambassador_code: normalized.ambassador_code,
+        channel
+      };
+    }
+
+    // Foundation Yearly (and other SBD subscription products) via Manual MoMo
+    const isSbdSubscription =
+      payment.product_id === 'foundation-yearly' ||
+      payment.type === 'sbd_subscription' ||
+      payment.app === 'sbd';
+
+    if (isSbdSubscription && typeof unlockSbdContent === 'function') {
+      const uid = payment.uid;
+      if (!uid) {
+        throw new Error('Foundation MoMo payment missing uid — cannot unlock');
+      }
+      const productId = payment.product_id || 'foundation-yearly';
+      const sessionLike = {
+        id: `pending_${ref}`,
+        customer_details: {
+          email: payment.loginEmail || payment.email || '',
+          name: payment.name || '',
+          phone: payment.phone || ''
+        },
+        manualCommissionKey: `pending_${ref}`,
+        manualChargeKind: 'initial',
+        manualAmount: Number(payment.amount) || 0,
+        manualCurrency: (payment.currency || 'XAF').toUpperCase(),
+        manualChannel: channel === 'campay' ? 'campay' : 'momo',
+        manualPaymentMethod: payment.payment_method || paymentMethod || 'momo'
+      };
+
+      const tgMeta = await unlockSbdContent(uid, productId, sessionLike);
+
+      if (typeof sendSbdBuyerAccessEmail === 'function' && (payment.guest === true || payment.guest === '1')) {
+        try {
+          await sendSbdBuyerAccessEmail({
+            email: payment.loginEmail || payment.email,
+            name: payment.name || '',
+            productId,
+            productName: payment.product_name || 'Foundation Tier — Yearly'
+          });
+        } catch (mailErr) {
+          console.error('[fulfill] SBD buyer email failed:', mailErr.message);
+          if (TELEGRAM_BOT_TOKEN) {
+            await sendTelegram(
+              `⚠️ SBD MoMo approve: welcome email failed\n📋 ${ref}\n❌ ${mailErr.message}`,
+              false
+            );
+          }
+        }
+      }
+
+      if (TELEGRAM_BOT_TOKEN) {
+        let msg =
+          `✅ FOUNDATION YEARLY APPROVED (${channel})\n\n` +
+          `📋 Reference: ${ref}\n` +
+          `📦 ${payment.product_name || productId}\n` +
+          `💰 ${payment.amount} ${payment.currency || 'XAF'}\n` +
+          `👤 ${payment.email}\n` +
+          `🆔 ${uid}\n`;
+        if (tgMeta?.referredBy) msg += `🔗 Referral: ${tgMeta.referredBy}\n`;
+        if (tgMeta?.referralCredited) {
+          msg += `✅ Commission: ${tgMeta.ambassadorCommissionFCFA || 0} FCFA`;
+          if (tgMeta.seniorAmbassadorCode) {
+            msg += ` · senior ${tgMeta.seniorAmbassadorCode} +${tgMeta.seniorCommissionFCFA || 0}`;
+          }
+          if (tgMeta.rdCode) {
+            msg += ` · RD ${tgMeta.rdCode} +${tgMeta.rdCommissionFCFA || 0}`;
+          }
+          msg += '\n';
+        } else if (tgMeta?.referralSkipReason) {
+          msg += `ℹ️ Commission: ${tgMeta.referralSkipReason}\n`;
+        }
+        await sendTelegram(msg, false);
+      }
+
+      return {
+        success: true,
+        message: 'Foundation / SBD subscription approved',
+        uid,
+        product_id: productId,
         channel
       };
     }

@@ -3275,6 +3275,8 @@
                         typeBadge = '<span class="badge" style="background: #00b894;">🎯 Ambassador</span>';
                     } else if (data.product_id === 'rd-registration' || data.type === 'rd') {
                         typeBadge = '<span class="badge" style="background: #9333ea;">👑 RD</span>';
+                    } else if (data.product_id === 'foundation-yearly' || data.type === 'sbd_subscription') {
+                        typeBadge = '<span class="badge" style="background: #065f46;">💳 Foundation Yearly</span>';
                     }
                     
                     // Show RD code or ambassador code if available
@@ -3284,6 +3286,12 @@
                     }
                     if (data.ambassador_code) {
                         additionalInfo += `<br><small style="color: #00b894;">🎯 Code: ${data.ambassador_code}</small>`;
+                    }
+                    if (data.referredBy || data.referral_code) {
+                        additionalInfo += `<br><small style="color: #065f46;">🔗 Ref: ${data.referredBy || data.referral_code}</small>`;
+                    }
+                    if (data.loginEmail && data.loginEmail !== data.email) {
+                        additionalInfo += `<br><small>Learner: ${data.loginEmail}</small>`;
                     }
                     
                     html += `
@@ -3320,7 +3328,7 @@
 
         // Approve Payment
         async function approvePayment(paymentId, reference) {
-            if (!confirm('Approve this payment and deliver the book?')) return;
+            if (!confirm('Approve this payment? This will unlock access / activate the product.')) return;
             
             try {
                 const approveFunc = firebase.functions().httpsCallable('approvePayment');
