@@ -9,18 +9,28 @@
 
   var DOCTRINE = {
     subscriptionMonthlyUsd: 9,
+    foundationYearlyUsd: 118,
     ambassadorRecurringPercent: 0.1,
     seniorOverridePercent: 0.05,
     rdOverridePercent: 0.05,
-    ambassadorMonthlyTargetUsd: 3000,
-    seniorMonthlyTargetUsd: 18000,
+    ambassadorMonthlyTargetUsd: 2360,
+    seniorMonthlyTargetUsd: 11800,
     rdMonthlyTargetUsd: 750000,
     dailyTargets: {
       newSubscribers: 10,
+      foundationYearly: 10,
       conversations: 20,
       followUps: 10,
       recruitConversations: 1,
       socialPosts: 1
+    },
+    yearlyDeployment: {
+      dailyTarget: 10,
+      activeDaysPerMonth: 20,
+      monthlyTarget: 200,
+      ambassadorDailyCommissionUsd: 118,
+      ambassadorMonthlyCommissionUsd: 2360,
+      seniorMonthlyCommissionUsd: 11800
     },
     promotion: {
       seniorRecruits: 10,
@@ -33,6 +43,11 @@
   function monthlyCommissionUsd(activeSubscribers) {
     var n = Number(activeSubscribers) || 0;
     return n * DOCTRINE.subscriptionMonthlyUsd * DOCTRINE.ambassadorRecurringPercent;
+  }
+
+  function yearlyDeploymentCommissionUsd(deployments) {
+    var n = Number(deployments) || 0;
+    return n * DOCTRINE.foundationYearlyUsd * DOCTRINE.ambassadorRecurringPercent;
   }
 
   function xafToUsd(xaf) {
@@ -56,6 +71,7 @@
   global.DOSEconomics = {
     DOCTRINE: DOCTRINE,
     monthlyCommissionUsd: monthlyCommissionUsd,
+    yearlyDeploymentCommissionUsd: yearlyDeploymentCommissionUsd,
     xafToUsd: xafToUsd,
     formatUsd: formatUsd,
     formatStoredXafAsUsd: formatStoredXafAsUsd

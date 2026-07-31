@@ -425,12 +425,88 @@ body.dos-app {
 .dos-overview-hint strong { color: #0f766e; }
 
 .dos-monthly-target {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0f6b56 0%, #0a3d32 100%);
   color: #fff;
   border-radius: 12px;
   padding: 22px 24px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.28);
+  box-shadow: 0 4px 12px rgba(15, 107, 86, 0.28);
+}
+
+.dos-yearly-challenge {
+  background: linear-gradient(145deg, #14201c 0%, #1b3a32 55%, #0f6b56 140%);
+  color: #f7f3ea;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(20, 32, 28, 0.18);
+}
+
+.dos-yearly-challenge-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.dos-yearly-challenge h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.dos-yearly-challenge-head p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+  max-width: 40rem;
+}
+
+.dos-yearly-challenge-earned {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.dos-yearly-challenge-earned span {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.dos-yearly-bars {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dos-yearly-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.dos-progress-light {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.dos-progress-light .dos-progress-fill {
+  background: linear-gradient(90deg, #e8d5a3, #f2e4bc);
+}
+
+.dos-yearly-challenge-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  opacity: 0.95;
 }
 
 .dos-monthly-target h3 {

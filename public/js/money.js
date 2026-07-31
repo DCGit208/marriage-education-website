@@ -8,8 +8,8 @@
   var XAF_PER_USD = 600;
 
   var TARGETS = {
-    ambassadorMonthlyUsd: 3000,
-    seniorMonthlyUsd: 18000,
+    ambassadorMonthlyUsd: 2360,
+    seniorMonthlyUsd: 11800,
     rdMonthlyUsd: 750000,
     contestBonusUsd: 17
   };

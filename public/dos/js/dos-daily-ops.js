@@ -30,13 +30,18 @@
     },
     {
       id: 'close',
-      title: 'Close — Foundation subscription',
-      body: 'Foundation access is about $9/month on the SBD Network — structured modules, not a one-time book. I will send you my personal link now; when you subscribe, I can support your first week. Here is the link: [YOUR LINK]'
+      title: 'Close — Foundation Yearly ($118)',
+      body: 'Foundation Access is one payment of $118 for a full year of School 1 on the SBD Network — ideal if you want to start without monthly friction. I will send you my Foundation Yearly link now; after you enroll you receive login details by email. Here is the link: [YOUR YEARLY LINK]'
+    },
+    {
+      id: 'close_monthly',
+      title: 'Close — Foundation monthly (alternate)',
+      body: 'If you prefer month-to-month, Foundation is also available monthly on the SBD Network. I can send my app link for that path — but our official scholarship deployment is the annual Foundation Access.'
     },
     {
       id: 'followup',
       title: 'Follow-up (24–48h)',
-      body: 'Hello — checking in on the Marriage Foundation access we discussed. Do you have any questions about starting this week? I am here to help you activate your subscription.'
+      body: 'Hello — checking in on the Foundation Yearly access we discussed ($118 for 12 months). Do you have any questions before enrolling? I am here to help you activate your login.'
     },
     {
       id: 'recruit',
@@ -84,7 +89,7 @@
   function getTargets() {
     var t = global.DOSEconomics && global.DOSEconomics.DOCTRINE
       ? global.DOSEconomics.DOCTRINE.dailyTargets
-      : { newSubscribers: 10, conversations: 20, followUps: 10, recruitConversations: 1, socialPosts: 1 };
+      : { newSubscribers: 10, foundationYearly: 10, conversations: 20, followUps: 10, recruitConversations: 1, socialPosts: 1 };
     return t;
   }
 
@@ -140,8 +145,8 @@
 
     container.innerHTML =
       '<div class="dos-card"><h3><i class="fa-solid fa-sun"></i> Daily targets · ' + todayKey() + '</h3>' +
-      '<p style="font-size:13px;color:#71717a;margin:0 0 16px">DOS field standards. Log your counts at the end of each day.</p>' +
-      targetRow('New subscribers', c.subscribers || 0, targets.newSubscribers) +
+      '<p style="font-size:13px;color:#71717a;margin:0 0 16px">Official challenge: <strong>10 Foundation Yearly ($118)</strong> deployments / day. Self-log below; paid truth also updates Overview from Stripe.</p>' +
+      targetRow('Foundation Yearly deployments', c.subscribers || 0, targets.foundationYearly || targets.newSubscribers || 10) +
       targetRow('Conversations', c.conversations || 0, targets.conversations) +
       targetRow('Follow-ups', c.followUps || 0, targets.followUps) +
       targetRow('Recruit conversations', c.recruitConversations || 0, targets.recruitConversations) +
@@ -150,7 +155,7 @@
       '<div class="dos-card"><h3><i class="fa-solid fa-list-check"></i> Daily checklist</h3>' + checklistHtml + '</div>' +
       '<div class="dos-card"><h3><i class="fa-solid fa-pen"></i> Log today\'s activity</h3>' +
       '<div class="dos-daily-form-grid">' +
-      '<label>Subscribers today<input type="number" min="0" id="dosCountSubs" value="' + (c.subscribers || 0) + '"></label>' +
+      '<label>Yearly deployments today<input type="number" min="0" id="dosCountSubs" value="' + (c.subscribers || 0) + '"></label>' +
       '<label>Conversations<input type="number" min="0" id="dosCountConv" value="' + (c.conversations || 0) + '"></label>' +
       '<label>Follow-ups<input type="number" min="0" id="dosCountFollow" value="' + (c.followUps || 0) + '"></label>' +
       '<label>Recruit convos<input type="number" min="0" id="dosCountRecruit" value="' + (c.recruitConversations || 0) + '"></label>' +

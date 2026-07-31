@@ -9,7 +9,10 @@ const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
 const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
 const { isExcludedUplineCode } = require('./upline-exclusions');
 const {
-  creditSbdSubscriptionCommissions
+  creditSbdSubscriptionCommissions,
+  normalizeCode: normalizeSbdReferralCode,
+  isFoundationYearly,
+  FOUNDATION_YEARLY_USD
 } = require('./sbd-subscription-commission');
 const { registerAdminUserTools } = require('./admin-user-tools');
 const { registerStudioCanonAi } = require('./studio-canon-ai');
@@ -497,12 +500,21 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
         const payer    = session.customer_details?.email || uid;
 
+        const yearlyTag = isFoundationYearly(canonicalProductId)
+          ? `\n🎯 YEARLY DEPLOYMENT ($${FOUNDATION_YEARLY_USD} · 10/5/5 stack)\n`
+          : '\n';
+
         let payMsg =
-          '✅ SBD NETWORK PAYMENT\n\n' +
-          `📦 ${prodName}\n` +
+          '✅ SBD NETWORK PAYMENT\n' +
+          yearlyTag +
+          `\n📦 ${prodName}\n` +
           `💵 ${amt}\n` +
           `👤 ${payer}\n` +
           `🆔 ${uid}\n`;
+
+        if (session.metadata?.guest === '1') {
+          payMsg += '🆕 Guest checkout (DTC landing)\n';
+        }
 
         if (tgMeta) {
           if (tgMeta.referredBy) {
@@ -517,6 +529,9 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           }
           if (tgMeta.referralCredited) {
             payMsg += `✅ Referral commission recorded: ${tgMeta.ambassadorCommissionFCFA || 0} FCFA (tier ${tgMeta.tierKeyed || '—'})`;
+            if (isFoundationYearly(canonicalProductId)) {
+              payMsg += ` · ~$${((tgMeta.ambassadorCommissionFCFA || 0) / 600).toFixed(2)}`;
+            }
             if (tgMeta.seniorAmbassadorCode) {
               payMsg += `\n👑 Senior override: ${tgMeta.seniorAmbassadorCode} (+${tgMeta.seniorCommissionFCFA || 0} FCFA)`;
             }
@@ -532,6 +547,24 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         payMsg += '\n👉 Admin: https://marriageducation.com/admin-dashboard.html';
 
         await sendTelegram(payMsg, false);
+
+        if (session.metadata?.guest === '1') {
+          try {
+            await sendSbdBuyerAccessEmail({
+              email: payer,
+              name: session.customer_details?.name || '',
+              productId: canonicalProductId,
+              productName: prodName
+            });
+          } catch (buyerMailErr) {
+            console.error('[SBD] Buyer welcome email failed:', buyerMailErr.message);
+            await sendTelegram(
+              `⚠️ SBD buyer welcome email failed\n👤 ${payer}\n🆔 ${uid}\n❌ ${buyerMailErr.message}`,
+              false
+            );
+          }
+        }
+
         return res.json({ received: true, action: 'sbd' });
       }
       // ────────────────────────────────────────────────────────────────
@@ -3116,6 +3149,56 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
   });
 }
 
+/**
+ * Welcome email for DTC Foundation Yearly (and other guest) buyers.
+ */
+async function sendSbdBuyerAccessEmail(opts) {
+  const email = String(opts.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    throw new Error('Missing buyer email for welcome message');
+  }
+  const name = String(opts.name || '').trim() || 'Student';
+  const productName = opts.productName || 'Foundation Tier — Yearly';
+  const learnUrl = 'https://sbd-network.web.app/learn?tier=foundation';
+  const loginUrl = 'https://sbd-network.web.app/auth';
+  const resetLink = await admin.auth().generatePasswordResetLink(email, {
+    url: learnUrl
+  });
+
+  await resend.emails.send({
+    to: email,
+    from: 'Marriage Education <orders@marriageducation.com>',
+    subject: `Your Foundation Access is ready — School 1 for 12 months`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#0a3d32 0%,#00b894 100%);color:#fff;padding:32px;text-align:center;">
+          <p style="margin:0;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;opacity:0.85;">Marriage Education</p>
+          <h1 style="margin:10px 0 0;font-size:26px;">Foundation Access — Yearly</h1>
+          <p style="margin:10px 0 0;opacity:0.9;">One payment. Twelve months. School 1 on SBD Network.</p>
+        </div>
+        <div style="padding:30px;background:#f7faf9;">
+          <p style="font-size:16px;color:#333;">Dear ${name},</p>
+          <p style="color:#555;">Thank you for purchasing <strong>${productName}</strong>. Your Foundation-tier access is active on the SBD Network.</p>
+
+          <div style="background:#fff;border-left:4px solid #00b894;padding:16px;margin:22px 0;">
+            <h3 style="margin:0 0 10px;color:#0a3d32;">Your login</h3>
+            <p style="margin:6px 0;"><strong>App:</strong> <a href="${learnUrl}">sbd-network.web.app/learn?tier=foundation</a></p>
+            <p style="margin:6px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin:6px 0;"><strong>Password:</strong> Set it with the button below (required once)</p>
+          </div>
+
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${resetLink}" style="display:inline-block;background:#00b894;color:#fff;font-weight:700;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;">Set password &amp; open Foundation →</a>
+          </div>
+
+          <p style="color:#555;font-size:14px;">Already have a password? <a href="${loginUrl}">Sign in here</a>, then go to Foundation.</p>
+          <p style="color:#777;font-size:13px;margin-top:24px;">Questions? Contact <a href="mailto:orders@marriageducation.com">orders@marriageducation.com</a></p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
   const mailOptions = {
     from: `"Marriage Education" <${SMTP_CONFIG.from}>`,
@@ -4709,6 +4792,136 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 
   console.log(`[SBD Checkout] uid=${uid} product=${canonicalProductId} source=${resolved.source} session=${session.id}`);
   return { url: session.url };
+});
+
+/**
+ * Guest (DTC) checkout for Foundation Yearly landing — no prior auth required.
+ * Creates/finds Auth user, attributes referral, returns Stripe Checkout URL.
+ */
+exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
+  const email = String(data?.email || '').trim().toLowerCase();
+  const name = String(data?.name || '').trim() || 'Student';
+  const rawRef = String(data?.ref || data?.referredBy || '').trim();
+  const referredBy = normalizeSbdReferralCode(rawRef);
+  const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid email is required.');
+  }
+
+  if (productId !== 'foundation-yearly') {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'This guest checkout is for Foundation Tier — Yearly only.'
+    );
+  }
+
+  const resolved = await resolveSbdCatalogProduct(productId);
+  if (!resolved || !resolved.product) {
+    throw new functions.https.HttpsError('invalid-argument', `Unknown product: ${productId}`);
+  }
+  const product = resolved.product;
+
+  let uid = null;
+  let isNew = false;
+  try {
+    const existing = await admin.auth().getUserByEmail(email);
+    uid = existing.uid;
+  } catch (notFoundErr) {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    const tempPassword = Array.from({ length: 14 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+    const userRecord = await admin.auth().createUser({
+      email,
+      password: tempPassword,
+      displayName: name,
+      emailVerified: false,
+    });
+    uid = userRecord.uid;
+    isNew = true;
+  }
+
+  const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const existingData = userSnap.exists ? userSnap.data() : {};
+  const patch = {
+    uid,
+    email,
+    name: existingData.name || name,
+    role: existingData.role === 'admin' ? 'admin' : (existingData.role || 'member'),
+    signupApp: existingData.signupApp || 'foundation-yearly-landing',
+    lastActive: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (isNew || !userSnap.exists) {
+    patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    patch.groups = existingData.groups || [];
+  }
+  if (!existingData.referredBy && referredBy) {
+    patch.referredBy = referredBy;
+  }
+  await userRef.set(firestoreSafeObject(patch), { merge: true });
+
+  if (referredBy && !existingData.referredBy) {
+    try {
+      const seller = await findSellerBySbdReferralCode(referredBy);
+      if (seller) {
+        await seller.ref.update({
+          'sbdReferrals.signups': admin.firestore.FieldValue.increment(1)
+        });
+      }
+    } catch (signupErr) {
+      console.warn('[SBD Guest] signup increment skipped:', signupErr.message);
+    }
+  }
+
+  const landingCancel = referredBy
+    ? `https://marriageducation.com/foundation-access.html?ref=${encodeURIComponent(referredBy)}&cancelled=1`
+    : 'https://marriageducation.com/foundation-access.html?cancelled=1';
+
+  const priceData = {
+    currency: 'usd',
+    product_data: { name: product.name },
+    unit_amount: product.amount,
+    recurring: { interval: product.interval || 'year' },
+  };
+  const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
+  const lineItem = trimmedPriceId
+    ? { price: trimmedPriceId, quantity: 1 }
+    : { price_data: priceData, quantity: 1 };
+
+  const meta = {
+    app: 'sbd',
+    uid,
+    productId,
+    guest: '1',
+    referredBy: referredBy || '',
+  };
+
+  const session = await stripe.checkout.sessions.create({
+    customer_email: email,
+    client_reference_id: uid,
+    metadata: meta,
+    subscription_data: { metadata: meta },
+    mode: 'subscription',
+    line_items: [lineItem],
+    success_url:
+      `https://sbd-network.web.app/checkout-success.html?product=${productId}` +
+      `&session_id={CHECKOUT_SESSION_ID}&guest=1`,
+    cancel_url: landingCancel,
+  });
+
+  console.log(
+    `[SBD Guest Checkout] uid=${uid} new=${isNew} product=${productId} ` +
+    `ref=${referredBy || 'none'} session=${session.id}`
+  );
+
+  return {
+    url: session.url,
+    uid,
+    isNew,
+    productId,
+  };
 });
 
 /**

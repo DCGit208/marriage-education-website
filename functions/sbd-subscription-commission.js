@@ -1,18 +1,64 @@
 /**
- * SBD subscription commission policy 2026-04-v1
- * Recurring 500 + 250 + 250 FCFA on 5,000 base per qualifying charge.
+ * SBD subscription commission policy
+ * - Monthly tiers: 500 + 250 + 250 FCFA on 5,000 base (2026-04-v1)
+ * - Foundation Yearly ($118): 10% / 5% / 5% of $118 @ 600 XAF/USD (2026-07-v2)
  * See docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md
  */
 
 const { isExcludedUplineCode } = require('./upline-exclusions');
 
-const POLICY_VERSION = '2026-04-v1';
+const POLICY_VERSION = '2026-07-v2';
 const REVENUE_BASE_FCFA = 5000;
 const DIRECT_COMMISSION_FCFA = 500;
 const SENIOR_OVERRIDE_FCFA = 250;
 const RD_OVERRIDE_FCFA = 250;
 
-const RECURRING_TIER_PRODUCTS = ['foundation-monthly', 'premium-monthly', 'elite-monthly'];
+const XAF_PER_USD = 600;
+const FOUNDATION_YEARLY_PRODUCT = 'foundation-yearly';
+const FOUNDATION_YEARLY_USD = 118;
+const YEARLY_REVENUE_BASE_FCFA = FOUNDATION_YEARLY_USD * XAF_PER_USD; // 70,800
+const YEARLY_DIRECT_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.1 * XAF_PER_USD); // 7,080
+const YEARLY_SENIOR_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 3,540
+const YEARLY_RD_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 3,540
+
+const RECURRING_TIER_PRODUCTS = [
+  'foundation-monthly',
+  'foundation-yearly',
+  'premium-monthly',
+  'elite-monthly'
+];
+
+const MONTHLY_TIER_PRODUCTS = ['foundation-monthly', 'premium-monthly', 'elite-monthly'];
+
+function isFoundationYearly(productId) {
+  return String(productId || '').trim() === FOUNDATION_YEARLY_PRODUCT;
+}
+
+/** Africa/Douala is UTC+1 year-round (no DST). */
+function challengeDayKey(date) {
+  const d = date instanceof Date ? date : new Date();
+  const shifted = new Date(d.getTime() + 60 * 60 * 1000);
+  return shifted.toISOString().slice(0, 10);
+}
+
+function commissionAmountsForProduct(productId) {
+  if (isFoundationYearly(productId)) {
+    return {
+      revenueBaseFCFA: YEARLY_REVENUE_BASE_FCFA,
+      direct: YEARLY_DIRECT_FCFA,
+      senior: YEARLY_SENIOR_FCFA,
+      rd: YEARLY_RD_FCFA,
+      program: 'foundation_yearly_deployment'
+    };
+  }
+  return {
+    revenueBaseFCFA: REVENUE_BASE_FCFA,
+    direct: DIRECT_COMMISSION_FCFA,
+    senior: SENIOR_OVERRIDE_FCFA,
+    rd: RD_OVERRIDE_FCFA,
+    program: 'foundation_monthly'
+  };
+}
 
 function normalizeCode(raw) {
   let c = String(raw || '').trim().toUpperCase();
@@ -92,14 +138,19 @@ async function resolveRdOverrideCode(db, seller) {
 }
 
 /**
- * @returns {Promise<{ direct: object, senior: object|null, rd: object|null }>}
+ * @param {object} db
+ * @param {object} seller
+ * @param {string} [productId]
+ * @returns {Promise<{ direct: object, senior: object|null, rd: object|null, amounts: object }>}
  */
-async function buildSubscriptionCommissionPlan(db, seller) {
+async function buildSubscriptionCommissionPlan(db, seller, productId) {
+  const amounts = commissionAmountsForProduct(productId);
   const directCollection = seller.type === 'rd' ? 'regional_directors' : 'ambassadors';
   const plan = {
+    amounts,
     direct: {
       code: seller.id,
-      amount: DIRECT_COMMISSION_FCFA,
+      amount: amounts.direct,
       collection: directCollection,
       role: seller.type === 'rd' ? 'regional_director' : 'direct_referrer'
     },
@@ -111,7 +162,7 @@ async function buildSubscriptionCommissionPlan(db, seller) {
   if (seniorCode) {
     plan.senior = {
       code: seniorCode,
-      amount: SENIOR_OVERRIDE_FCFA,
+      amount: amounts.senior,
       collection: 'ambassadors',
       role: 'senior_override'
     };
@@ -121,7 +172,7 @@ async function buildSubscriptionCommissionPlan(db, seller) {
   if (rdCode && rdCode !== seller.id) {
     plan.rd = {
       code: rdCode,
-      amount: RD_OVERRIDE_FCFA,
+      amount: amounts.rd,
       collection: 'regional_directors',
       role: 'rd_override'
     };
@@ -130,8 +181,9 @@ async function buildSubscriptionCommissionPlan(db, seller) {
   return plan;
 }
 
-async function applySellerCommissionUpdates(ref, amount, tierKey, isInitial, role) {
+async function applySellerCommissionUpdates(ref, amount, tierKey, isInitial, role, opts) {
   const admin = require('firebase-admin');
+  opts = opts || {};
   let updates = {};
 
   if (role === 'direct_referrer' || role === 'regional_director') {
@@ -142,6 +194,13 @@ async function applySellerCommissionUpdates(ref, amount, tierKey, isInitial, rol
     if (isInitial) {
       updates['sbdReferrals.subscribers'] = admin.firestore.FieldValue.increment(1);
       updates[`sbdReferrals.${tierKey}`] = admin.firestore.FieldValue.increment(1);
+      if (isFoundationYearly(opts.productId)) {
+        const dayKey = opts.dayKey || challengeDayKey();
+        const monthKey = dayKey.slice(0, 7);
+        updates['sbdReferrals.foundationYearly'] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.yearlyByDay.${dayKey}`] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.yearlyByMonth.${monthKey}`] = admin.firestore.FieldValue.increment(1);
+      }
     }
   } else if (role === 'senior_override') {
     updates = {
@@ -150,6 +209,13 @@ async function applySellerCommissionUpdates(ref, amount, tierKey, isInitial, rol
     };
     if (isInitial) {
       updates['sbdReferrals.overrideSubscribers'] = admin.firestore.FieldValue.increment(1);
+      if (isFoundationYearly(opts.productId)) {
+        const dayKey = opts.dayKey || challengeDayKey();
+        const monthKey = dayKey.slice(0, 7);
+        updates['sbdReferrals.overrideFoundationYearly'] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.overrideYearlyByDay.${dayKey}`] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.overrideYearlyByMonth.${monthKey}`] = admin.firestore.FieldValue.increment(1);
+      }
     }
   } else if (role === 'rd_override') {
     updates = {
@@ -158,6 +224,13 @@ async function applySellerCommissionUpdates(ref, amount, tierKey, isInitial, rol
     };
     if (isInitial) {
       updates['sbdReferrals.rdOverrideSubscribers'] = admin.firestore.FieldValue.increment(1);
+      if (isFoundationYearly(opts.productId)) {
+        const dayKey = opts.dayKey || challengeDayKey();
+        const monthKey = dayKey.slice(0, 7);
+        updates['sbdReferrals.rdOverrideFoundationYearly'] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.rdOverrideYearlyByDay.${dayKey}`] = admin.firestore.FieldValue.increment(1);
+        updates[`sbdReferrals.rdOverrideYearlyByMonth.${monthKey}`] = admin.firestore.FieldValue.increment(1);
+      }
     }
   }
 
@@ -187,6 +260,8 @@ async function creditSbdSubscriptionCommissions(opts) {
   const idempotencyKey = String(opts.idempotencyKey || '').trim();
   const chargeKind = opts.chargeKind === 'renewal' ? 'renewal' : 'initial';
   const isInitial = chargeKind === 'initial';
+  const dayKey = challengeDayKey();
+  const amounts = commissionAmountsForProduct(productId);
 
   const emptyMeta = {
     credited: false,
@@ -196,7 +271,9 @@ async function creditSbdSubscriptionCommissions(opts) {
     rdCommissionFCFA: null,
     referrerAmbassadorCode: null,
     seniorAmbassadorCode: null,
-    rdCode: null
+    rdCode: null,
+    program: amounts.program,
+    productId: productId || null
   };
 
   if (!idempotencyKey) {
@@ -220,18 +297,23 @@ async function creditSbdSubscriptionCommissions(opts) {
     return Object.assign({}, emptyMeta, { referralSkipReason: 'no_matching_seller' });
   }
 
-  const plan = await buildSubscriptionCommissionPlan(db, seller);
+  const plan = await buildSubscriptionCommissionPlan(db, seller, productId);
   const ambData = seller.data || {};
   const sellerDisplayName = ambData.fullName || ambData.name || seller.id;
+  const trackOpts = { productId, dayKey };
 
   await applySellerCommissionUpdates(
     seller.ref,
     plan.direct.amount,
     tierKey,
     isInitial,
-    plan.direct.role
+    plan.direct.role,
+    trackOpts
   );
-  console.log(`[SBD] ${seller.type} ${seller.id} +${plan.direct.amount} FCFA direct (${chargeKind}, tier=${tierKey})`);
+  console.log(
+    `[SBD] ${seller.type} ${seller.id} +${plan.direct.amount} FCFA direct ` +
+    `(${chargeKind}, tier=${tierKey}, product=${productId}, program=${amounts.program})`
+  );
 
   let seniorCode = null;
   if (plan.senior) {
@@ -239,7 +321,7 @@ async function creditSbdSubscriptionCommissions(opts) {
     const seniorRef = db.collection('ambassadors').doc(seniorCode);
     const seniorSnap = await seniorRef.get();
     if (seniorSnap.exists) {
-      await applySellerCommissionUpdates(seniorRef, plan.senior.amount, tierKey, isInitial, 'senior_override');
+      await applySellerCommissionUpdates(seniorRef, plan.senior.amount, tierKey, isInitial, 'senior_override', trackOpts);
       console.log(`[SBD] Senior ${seniorCode} +${plan.senior.amount} FCFA override (${chargeKind})`);
     }
   }
@@ -250,7 +332,7 @@ async function creditSbdSubscriptionCommissions(opts) {
     const rdRef = db.collection('regional_directors').doc(rdCode);
     const rdSnap = await rdRef.get();
     if (rdSnap.exists) {
-      await applySellerCommissionUpdates(rdRef, plan.rd.amount, tierKey, isInitial, 'rd_override');
+      await applySellerCommissionUpdates(rdRef, plan.rd.amount, tierKey, isInitial, 'rd_override', trackOpts);
       console.log(`[SBD] RD ${rdCode} +${plan.rd.amount} FCFA override (${chargeKind})`);
     }
   }
@@ -259,6 +341,7 @@ async function creditSbdSubscriptionCommissions(opts) {
     policy_version: POLICY_VERSION,
     idempotencyKey,
     chargeKind,
+    program: amounts.program,
     ambassadorCode: seller.type === 'ambassador'
       ? (ambData.ambassadorCode || ambData.code || seller.id)
       : (ambData.ambassador_code || null),
@@ -268,12 +351,14 @@ async function creditSbdSubscriptionCommissions(opts) {
     subscriberUid: uid,
     productId,
     tier: tierKey,
-    revenueBaseFCFA: REVENUE_BASE_FCFA,
+    revenueBaseFCFA: amounts.revenueBaseFCFA,
+    revenueUsd: isFoundationYearly(productId) ? FOUNDATION_YEARLY_USD : null,
     ambassadorCommission: plan.direct.amount,
     seniorAmbassadorCode: seniorCode,
     seniorAmbassadorCommission: plan.senior ? plan.senior.amount : 0,
     rdOverrideCode: rdCode,
     rdCommission: plan.rd ? plan.rd.amount : 0,
+    challengeDayKey: isFoundationYearly(productId) ? dayKey : null,
     status: 'pending',
     createdAt: require('firebase-admin').firestore.FieldValue.serverTimestamp()
   });
@@ -291,7 +376,10 @@ async function creditSbdSubscriptionCommissions(opts) {
     rdCommissionFCFA: plan.rd ? plan.rd.amount : null,
     tierKeyed: tierKey,
     chargeKind,
-    policyVersion: POLICY_VERSION
+    policyVersion: POLICY_VERSION,
+    program: amounts.program,
+    productId,
+    revenueUsd: isFoundationYearly(productId) ? FOUNDATION_YEARLY_USD : null
   };
 }
 
@@ -301,9 +389,20 @@ module.exports = {
   DIRECT_COMMISSION_FCFA,
   SENIOR_OVERRIDE_FCFA,
   RD_OVERRIDE_FCFA,
+  XAF_PER_USD,
+  FOUNDATION_YEARLY_PRODUCT,
+  FOUNDATION_YEARLY_USD,
+  YEARLY_REVENUE_BASE_FCFA,
+  YEARLY_DIRECT_FCFA,
+  YEARLY_SENIOR_FCFA,
+  YEARLY_RD_FCFA,
   RECURRING_TIER_PRODUCTS,
+  MONTHLY_TIER_PRODUCTS,
   normalizeCode,
   resolveSeniorOverrideCode,
   buildSubscriptionCommissionPlan,
-  creditSbdSubscriptionCommissions
+  creditSbdSubscriptionCommissions,
+  commissionAmountsForProduct,
+  isFoundationYearly,
+  challengeDayKey
 };
