@@ -213,7 +213,30 @@
             const product = productId ? magazineProducts[productId] : null;
             if (product) {
               document.getElementById('product-name').textContent = product.name;
-              document.getElementById('amount').textContent = '$' + product.price + '.00';
+              const priceLabel = Number(product.price) % 1 === 0
+                ? '$' + product.price + '.00'
+                : '$' + Number(product.price).toFixed(2);
+              document.getElementById('amount').textContent = priceLabel;
+            }
+            const isGuest = urlParams.get('guest') === '1';
+            if (productId === 'foundation-yearly' || isGuest) {
+              const msg = document.querySelector('.success-message');
+              const notice = document.querySelector('.email-notice-text');
+              const primary = document.getElementById('success-primary-link');
+              if (msg) {
+                msg.textContent = isGuest
+                  ? 'Your Foundation Access is active. Check your email to set your password, then open School 1 on SBD Network.'
+                  : 'Your Foundation Access is active for 12 months. Open School 1 on SBD Network to begin.';
+              }
+              if (notice) {
+                notice.textContent = isGuest
+                  ? '📧 We emailed you a secure link to set your password and open Foundation.'
+                  : '📧 A confirmation email has been sent with your order details.';
+              }
+              if (primary) {
+                primary.href = '/learn?tier=foundation';
+                primary.textContent = 'Open Foundation — School 1';
+              }
             }
             const sbdLifeShopIds = ['sbd-magazine-annual-subscription', 'sbd-magazine-single-issue', 'sbd-digital-archive-access'];
             if (productId && sbdLifeShopIds.indexOf(productId) !== -1) {

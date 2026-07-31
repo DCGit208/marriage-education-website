@@ -41,11 +41,24 @@
     { level: 'Platinum', threshold: 500, icon: 'fa-gem', color: '#71717a' }
   ];
 
+  /** Official Foundation Yearly deployment program (10 × $118 / day × 20 days). */
+  var YEARLY_DEPLOYMENT_CHALLENGE = {
+    productId: 'foundation-yearly',
+    productUsd: 118,
+    dailyTarget: 10,
+    activeDaysPerMonth: 20,
+    monthlyTarget: 200,
+    ambassadorDailyCommissionUsd: 118,
+    ambassadorMonthlyCommissionUsd: 2360,
+    landingPath: 'https://marriageducation.com/foundation-access.html'
+  };
+
   global.DOSConfig = {
     PHASE: { current: 8, total: 8, label: 'Phase 8 — Production DOS (all ranks)' },
     SENIOR_RECRUIT_TARGET: 10,
     RD_SENIOR_TARGET: 50,
     UNIT_MILESTONES: UNIT_MILESTONES,
+    YEARLY_DEPLOYMENT_CHALLENGE: YEARLY_DEPLOYMENT_CHALLENGE,
     AMBASSADOR_NAV: AMBASSADOR_NAV,
     getNavForRank: function (rank) {
       var nav = AMBASSADOR_NAV.slice();

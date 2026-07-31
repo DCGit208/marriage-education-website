@@ -10,7 +10,7 @@ Before editing ambassador recruitment bonuses, SBD subscription commissions, pay
 
 1. Read **`docs/COMMISSION-MASTER-PRINCIPLES.md`** first.
 2. Recruitment (15,000 FCFA signup): **`docs/RECRUITMENT-BONUS-POLICY.md`** (`2026-03-v3`) — no Executive upline payouts.
-3. SBD subscriptions: **`docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md`** — recurring 500+250+250 on 5,000 base.
+3. SBD subscriptions: **`docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md`** — yearly $118 at 10/5/5; monthly 500+250+250 on 5,000 base.
 4. Executive: **`docs/EXECUTIVE-NETWORK-DIRECTOR.md`** — replication only, no commission tier.
 5. Implement recruitment via `functions/recruitment-bonus-policy.js` + `recruitment-bonus-service.js`.
 6. After changes, run:

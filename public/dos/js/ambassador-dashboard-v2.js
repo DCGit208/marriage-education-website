@@ -115,7 +115,16 @@
 
   function getPortfolioLinks(code) {
     var safe = encodeURIComponent(code || '');
+    var sbdCode = resolveSbdReferralCode(state.stats || {}) || '';
+    if (!sbdCode && code) {
+      var c = String(code).toUpperCase();
+      if (c.indexOf('AMB-') === 0) sbdCode = c.replace(/^AMB-/, 'SBD-');
+      else if (c.indexOf('RD-') === 0) sbdCode = c.replace(/^RD-/, 'SBD-');
+      else if (c.indexOf('SBD-') === 0) sbdCode = c;
+    }
+    var yearlyRef = encodeURIComponent(sbdCode || code || '');
     return [
+      { key: 'foundation-yearly', label: 'Foundation Yearly ($118)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef },
       { key: 'books', label: 'Books', icon: 'fa-solid fa-book', url: 'https://marriageducation.com/sbd-campaign.html?ref=' + safe + '&category=books' },
       { key: 'schools', label: 'Schools', icon: 'fa-solid fa-school', url: 'https://marriageducation.com/schools.html?ref=' + safe + '&category=schools' },
       { key: 'courses', label: 'Courses', icon: 'fa-solid fa-book-open', url: 'https://marriageducation.com/courses.html?ref=' + safe + '&category=courses' },
@@ -173,11 +182,12 @@
     var monthlyXaf = (stats.monthly_earnings && stats.monthly_earnings[monthKey])
       ? stats.monthly_earnings[monthKey].total : 0;
     var monthlyUsd = money() ? money().toUsd(monthlyXaf) : monthlyXaf / 600;
-    var targetUsd = money()
-      ? (isRdPreview()
-        ? money().TARGETS.rdMonthlyUsd
-        : (isSeniorPreview() ? money().TARGETS.seniorMonthlyUsd : money().TARGETS.ambassadorMonthlyUsd))
-      : (isRdPreview() ? 750000 : (isSeniorPreview() ? 18000 : 3000));
+    var challenge = global.DOSConfig && global.DOSConfig.YEARLY_DEPLOYMENT_CHALLENGE;
+    var targetUsd = isRdPreview()
+      ? (money() ? money().TARGETS.rdMonthlyUsd : 750000)
+      : (isSeniorPreview()
+        ? (challenge ? challenge.ambassadorMonthlyCommissionUsd * 5 : (money() ? money().TARGETS.seniorMonthlyUsd : 11800))
+        : (challenge ? challenge.ambassadorMonthlyCommissionUsd : (money() ? money().TARGETS.ambassadorMonthlyUsd : 2360)));
     var remainingUsd = Math.max(0, targetUsd - monthlyUsd);
     var progress = Math.min(100, targetUsd ? (monthlyUsd / targetUsd) * 100 : 0);
     var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -195,6 +205,109 @@
       '<div><div class="label">Remaining</div><div class="val" id="dosMonthlyRemaining">' + formatUsdValue(remainingUsd) + '</div></div>' +
       '<div><div class="label">Progress</div><div class="val" id="dosMonthlyProgress">' + progress.toFixed(1) + '%</div></div>' +
       '<div><div class="label">Days left</div><div class="val" id="dosDaysLeft">' + daysLeft + '</div></div>' +
+      '</div></div>';
+  }
+
+  function challengeDayKeyLocal(date) {
+    var d = date || new Date();
+    // Africa/Douala UTC+1
+    var shifted = new Date(d.getTime() + 60 * 60 * 1000);
+    return shifted.toISOString().slice(0, 10);
+  }
+
+  function ensureYearlyChallengeMount() {
+    var mount = document.getElementById('dosYearlyChallengeMount');
+    if (mount) return mount;
+    var monthly = document.getElementById('dosMonthlyTargetMount');
+    if (!monthly || !monthly.parentNode) return null;
+    mount = document.createElement('div');
+    mount.id = 'dosYearlyChallengeMount';
+    monthly.parentNode.insertBefore(mount, monthly.nextSibling);
+    return mount;
+  }
+
+  function renderYearlyDeploymentChallenge(stats) {
+    var mount = ensureYearlyChallengeMount();
+    if (!mount) return;
+
+    var challenge = (global.DOSConfig && global.DOSConfig.YEARLY_DEPLOYMENT_CHALLENGE) || {
+      dailyTarget: 10,
+      activeDaysPerMonth: 20,
+      monthlyTarget: 200,
+      productUsd: 118,
+      ambassadorDailyCommissionUsd: 118,
+      ambassadorMonthlyCommissionUsd: 2360,
+      landingPath: 'https://marriageducation.com/foundation-access.html'
+    };
+
+    var refs = stats.sbdReferrals || {};
+    var isSenior = isSeniorPreview();
+    var isRd = isRdPreview();
+    var dayMap = isRd
+      ? (refs.rdOverrideYearlyByDay || refs.overrideYearlyByDay || refs.yearlyByDay || {})
+      : (isSenior ? (refs.overrideYearlyByDay || refs.yearlyByDay || {}) : (refs.yearlyByDay || {}));
+    var monthMap = isRd
+      ? (refs.rdOverrideYearlyByMonth || refs.overrideYearlyByMonth || refs.yearlyByMonth || {})
+      : (isSenior ? (refs.overrideYearlyByMonth || refs.yearlyByMonth || {}) : (refs.yearlyByMonth || {}));
+
+    var todayKey = challengeDayKeyLocal();
+    var monthKey = todayKey.slice(0, 7);
+    var todayCount = Number(dayMap[todayKey]) || 0;
+    var monthCount = Number(monthMap[monthKey]) || 0;
+    if (!monthCount && dayMap) {
+      monthCount = Object.keys(dayMap).reduce(function (sum, key) {
+        return key.indexOf(monthKey) === 0 ? sum + (Number(dayMap[key]) || 0) : sum;
+      }, 0);
+    }
+
+    var daysHit = 0;
+    Object.keys(dayMap || {}).forEach(function (key) {
+      if (key.indexOf(monthKey) === 0 && (Number(dayMap[key]) || 0) >= challenge.dailyTarget) {
+        daysHit += 1;
+      }
+    });
+
+    var dailyPct = Math.min(100, Math.round((todayCount / challenge.dailyTarget) * 100));
+    var monthPct = Math.min(100, Math.round((monthCount / challenge.monthlyTarget) * 100));
+    var daysPct = Math.min(100, Math.round((daysHit / challenge.activeDaysPerMonth) * 100));
+    var earnedUsd = global.DOSEconomics && global.DOSEconomics.yearlyDeploymentCommissionUsd
+      ? global.DOSEconomics.yearlyDeploymentCommissionUsd(monthCount)
+      : monthCount * challenge.productUsd * 0.1;
+    if (isSenior) earnedUsd = monthCount * challenge.productUsd * 0.05;
+    if (isRd) earnedUsd = monthCount * challenge.productUsd * 0.05;
+
+    var sbdCode = resolveSbdReferralCode(stats);
+    var landing = challenge.landingPath + (sbdCode ? ('?ref=' + encodeURIComponent(sbdCode)) : '');
+    var roleLabel = isRd ? 'Regional Director (5% network)' : (isSenior ? 'Senior (5% network)' : 'Ambassador (10% direct)');
+    var totalYearly = Number(refs.foundationYearly || refs.overrideFoundationYearly || refs.rdOverrideFoundationYearly || 0);
+
+    mount.innerHTML =
+      '<div class="dos-yearly-challenge">' +
+      '<div class="dos-yearly-challenge-head">' +
+      '<div><h3><i class="fa-solid fa-flag-checkered"></i> Foundation Yearly Deployment Challenge</h3>' +
+      '<p>Official program: <strong>' + challenge.dailyTarget + ' × $' + challenge.productUsd +
+      '</strong> / day · <strong>' + challenge.activeDaysPerMonth + ' days</strong> / month · ' + roleLabel + '</p></div>' +
+      '<div class="dos-yearly-challenge-earned">' +
+      (global.DOSEconomics ? global.DOSEconomics.formatUsd(earnedUsd) : formatUsdValue(earnedUsd)) +
+      '<span>this month</span></div></div>' +
+      '<div class="dos-yearly-bars">' +
+      '<div class="dos-yearly-bar-row">' +
+      '<div class="dos-yearly-bar-label"><span>Today</span><strong>' + todayCount + ' / ' + challenge.dailyTarget + '</strong></div>' +
+      '<div class="dos-progress dos-progress-light"><div class="dos-progress-fill" style="width:' + dailyPct + '%"></div></div>' +
+      '</div>' +
+      '<div class="dos-yearly-bar-row">' +
+      '<div class="dos-yearly-bar-label"><span>Month deployments</span><strong>' + monthCount + ' / ' + challenge.monthlyTarget + '</strong></div>' +
+      '<div class="dos-progress dos-progress-light"><div class="dos-progress-fill" style="width:' + monthPct + '%"></div></div>' +
+      '</div>' +
+      '<div class="dos-yearly-bar-row">' +
+      '<div class="dos-yearly-bar-label"><span>Days hit (10+)</span><strong>' + daysHit + ' / ' + challenge.activeDaysPerMonth + '</strong></div>' +
+      '<div class="dos-progress dos-progress-light"><div class="dos-progress-fill" style="width:' + daysPct + '%"></div></div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="dos-yearly-challenge-foot">' +
+      '<span>All-time yearly: <strong>' + totalYearly + '</strong></span>' +
+      '<a class="dos-btn dos-btn-primary" href="' + landing + '" target="_blank" rel="noopener">' +
+      '<i class="fa-solid fa-share-nodes"></i> Share $118 landing</a>' +
       '</div></div>';
   }
 
@@ -446,19 +559,25 @@
     }
 
     var sbdUrl = 'https://sbd-network.web.app/auth?ref=' + sbdCode;
+    var yearlyUrl = 'https://marriageducation.com/foundation-access.html?ref=' + encodeURIComponent(sbdCode);
     var refs = stats.sbdReferrals || {};
     body.innerHTML =
-      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share this link for SBD Network app signups and subscriptions:</p>' +
+      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($118)</strong> landing for the official deployment program, or the app signup link for monthly:</p>' +
       '<div class="dos-sbd-panel">' +
       '<div class="dos-link-row">' +
+      '<div class="dos-link-box" id="dosYearlyLink">' + yearlyUrl + '</div>' +
+      '<button type="button" class="dos-btn dos-btn-primary" id="dosCopyYearly"><i class="fa-solid fa-copy"></i> Copy yearly</button>' +
+      '</div>' +
+      '<div class="dos-link-row" style="margin-top:10px">' +
       '<div class="dos-link-box" id="dosSbdLink">' + sbdUrl + '</div>' +
-      '<button type="button" class="dos-btn dos-btn-primary" id="dosCopySbd"><i class="fa-solid fa-copy"></i> Copy</button>' +
+      '<button type="button" class="dos-btn" id="dosCopySbd"><i class="fa-solid fa-copy"></i> Copy app</button>' +
       '<a class="dos-btn" href="https://sbd-network.web.app" target="_blank" rel="noopener"><i class="fa-solid fa-external-link-alt"></i> Open app</a>' +
       '</div></div>' +
       '<div class="dos-kpi-grid" style="margin-top:16px">' +
       kpi('Signups', String(refs.signups || 0), '') +
       kpi('Subscribers', String(refs.subscribers || 0), '') +
       kpi('Foundation', String(refs.foundation || 0), '') +
+      kpi('Yearly ($118)', String(refs.foundationYearly || 0), 'Deployment challenge units') +
       kpi('Premium', String(refs.premium || 0), '') +
       kpi('Elite', String(refs.elite || 0), '') +
       '</div>';
@@ -467,6 +586,12 @@
     if (copySbd) {
       copySbd.addEventListener('click', function () {
         copyText(sbdUrl);
+      });
+    }
+    var copyYearly = document.getElementById('dosCopyYearly');
+    if (copyYearly) {
+      copyYearly.addEventListener('click', function () {
+        copyText(yearlyUrl);
       });
     }
   }
@@ -1406,6 +1531,7 @@
       global.DOSTour.onDashboardReady(code);
     }
     renderMonthlyTarget(stats);
+    renderYearlyDeploymentChallenge(stats);
     if (isExecutivePreview()) {
       await loadPhase6Executive(code, stats);
       await loadPhase4Team(code, stats);

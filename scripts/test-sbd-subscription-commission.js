@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Unit tests for SBD subscription commission policy 2026-04-v1.
+ * Unit tests for SBD subscription commission policy (monthly + Foundation Yearly).
  * Run: node scripts/test-sbd-subscription-commission.js
  */
 
@@ -10,7 +10,15 @@ const {
   SENIOR_OVERRIDE_FCFA,
   RD_OVERRIDE_FCFA,
   REVENUE_BASE_FCFA,
-  resolveSeniorOverrideCode
+  YEARLY_DIRECT_FCFA,
+  YEARLY_SENIOR_FCFA,
+  YEARLY_RD_FCFA,
+  YEARLY_REVENUE_BASE_FCFA,
+  FOUNDATION_YEARLY_USD,
+  XAF_PER_USD,
+  resolveSeniorOverrideCode,
+  commissionAmountsForProduct,
+  isFoundationYearly
 } = require('../functions/sbd-subscription-commission');
 
 let passed = 0;
@@ -26,12 +34,33 @@ function ok(name, cond, detail) {
   }
 }
 
-ok('policy version', POLICY_VERSION === '2026-04-v1');
-ok('direct 500', DIRECT_COMMISSION_FCFA === 500);
-ok('senior 250', SENIOR_OVERRIDE_FCFA === 250);
-ok('rd 250', RD_OVERRIDE_FCFA === 250);
-ok('base 5000', REVENUE_BASE_FCFA === 5000);
-ok('full stack 1000', DIRECT_COMMISSION_FCFA + SENIOR_OVERRIDE_FCFA + RD_OVERRIDE_FCFA === 1000);
+ok('policy version', POLICY_VERSION === '2026-07-v2');
+ok('monthly direct 500', DIRECT_COMMISSION_FCFA === 500);
+ok('monthly senior 250', SENIOR_OVERRIDE_FCFA === 250);
+ok('monthly rd 250', RD_OVERRIDE_FCFA === 250);
+ok('monthly base 5000', REVENUE_BASE_FCFA === 5000);
+ok('monthly full stack 1000', DIRECT_COMMISSION_FCFA + SENIOR_OVERRIDE_FCFA + RD_OVERRIDE_FCFA === 1000);
+
+ok('yearly product $118', FOUNDATION_YEARLY_USD === 118);
+ok('xaf rate 600', XAF_PER_USD === 600);
+ok('yearly direct 7080', YEARLY_DIRECT_FCFA === 7080);
+ok('yearly senior 3540', YEARLY_SENIOR_FCFA === 3540);
+ok('yearly rd 3540', YEARLY_RD_FCFA === 3540);
+ok('yearly base 70800', YEARLY_REVENUE_BASE_FCFA === 70800);
+ok('yearly full stack 14160', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 14160);
+ok('daily amb target $118', YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 === 118);
+ok('monthly amb target $2360', YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 === 2360);
+
+ok('isFoundationYearly true', isFoundationYearly('foundation-yearly') === true);
+ok('isFoundationYearly false monthly', isFoundationYearly('foundation-monthly') === false);
+
+const monthlyAmounts = commissionAmountsForProduct('foundation-monthly');
+ok('monthly amounts program', monthlyAmounts.program === 'foundation_monthly');
+ok('monthly amounts direct', monthlyAmounts.direct === 500);
+
+const yearlyAmounts = commissionAmountsForProduct('foundation-yearly');
+ok('yearly amounts program', yearlyAmounts.program === 'foundation_yearly_deployment');
+ok('yearly amounts direct', yearlyAmounts.direct === 7080);
 
 const ambSeller = {
   type: 'ambassador',

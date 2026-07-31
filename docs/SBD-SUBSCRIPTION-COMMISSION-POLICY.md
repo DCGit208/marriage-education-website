@@ -1,8 +1,8 @@
 # SBD Subscription Commission Policy
 
-**Policy version:** `2026-04-v1`  
-**Status:** Active — implemented in Cloud Functions (`handleSbdStripeInvoice`, `unlockSbdContent`)  
-**Last updated:** March 2026  
+**Policy version:** `2026-07-v2`  
+**Status:** Active — implemented in Cloud Functions (`handleSbdStripeInvoice`, `unlockSbdContent`, `creditSbdSubscriptionCommissions`)  
+**Last updated:** July 2026  
 
 > **Read [COMMISSION-MASTER-PRINCIPLES.md](./COMMISSION-MASTER-PRINCIPLES.md) first.**
 
@@ -10,52 +10,74 @@
 
 ## 1. Purpose
 
-When a user subscribes to **Foundation Access** on **sbd-network.web.app** (and related checkout paths), ambassadors and uplines earn **recurring commission** on each successful monthly charge — separate from the **15,000 FCFA ambassador onboarding** recruitment bonus.
+When a user subscribes to **Foundation Access** on **sbd-network.web.app** (and related checkout paths), ambassadors and uplines earn commission on each qualifying charge — separate from the **15,000 FCFA ambassador onboarding** recruitment bonus.
+
+Two Foundation billing paths exist:
+
+| Path | Product ID | Role |
+|------|------------|------|
+| **Official yearly deployment program** | `foundation-yearly` ($118/year) | Primary operator challenge (10/day × 20 days) |
+| **Monthly enrollment provision** | `foundation-monthly` (~$9.77/mo) | Alternate path — does not replace yearly |
 
 ---
 
-## 2. Product & pricing
+## 2. Foundation Yearly — official deployment program
 
 | Field | Value |
 |-------|-------|
-| Product ID | `foundation-monthly` (also premium/elite tiers use same % rules on their base) |
-| Customer charge | **5,200 FCFA/month** |
+| Product ID | `foundation-yearly` |
+| Customer charge | **$118 USD / year** |
+| FX ledger rate | **600 XAF / USD** |
+| Commissionable base | **70,800 FCFA** ($118 × 600) |
+
+### Commission stack (each paid yearly charge)
+
+| Role | % of $118 | USD | FCFA |
+|------|-----------|-----|------|
+| **Direct** (SBD referral code owner) | 10% | **$11.80** | **7,080** |
+| **Senior override** | 5% | **$5.90** | **3,540** |
+| **RD override** | 5% | **$5.90** | **3,540** |
+
+**Full stack:** 20% of $118 = **$23.60** (14,160 FCFA).
+
+### Operator challenge math (planning + DOS)
+
+| Cadence | Deployments | Direct commission |
+|---------|-------------|-------------------|
+| Day | 10 × $118 | **$118 / day** |
+| Month (20 days) | 200 | **$2,360 / month** |
+| Senior (10 ambassadors at full target) | 5% of network revenue | **$11,800 / month** |
+
+Dashboard tracks paid yearly sales via `sbdReferrals.yearlyByDay` / `yearlyByMonth` / `foundationYearly`.
+
+---
+
+## 3. Foundation Monthly — alternate provision
+
+| Field | Value |
+|-------|-------|
+| Product ID | `foundation-monthly` (premium/elite monthly use same % rules on their base) |
+| Customer charge | **5,200 FCFA/month** (catalog USD may show ~$9.77) |
 | Commissionable base | **5,000 FCFA** |
 | OPEX (platform) | **200 FCFA** (not commissionable) |
 
-Educational access value is scholarship-tier (~2,500 USD equivalent infrastructure on sbd-network.web.app).
+### Commission stack (every qualifying monthly charge)
 
----
+| Role | % of 5,000 base | FCFA/month |
+|------|-----------------|------------|
+| **Direct** | 10% | **500** |
+| **Senior override** | 5% | **250** |
+| **RD override** | 5% | **250** |
 
-## 3. Commission stack (every qualifying monthly charge)
-
-| Role | % of 5,000 base | FCFA/month | When paid |
-|------|-----------------|------------|-----------|
-| **Direct** (SBD referral code owner) | 10% | **500** | Subscriber used their `SBD-…` code |
-| **Senior override** | 5% | **250** | Direct seller is a **downline ambassador**; senior = immediate upline |
-| **RD override** | 5% | **250** | Sale occurs in that RD’s region |
-| **Executive** | — | **0** | No tier — see [EXECUTIVE-NETWORK-DIRECTOR.md](./EXECUTIVE-NETWORK-DIRECTOR.md) |
-
-**Total commission per charge (full stack):** **1,000 FCFA** (20% of 5,000 base).
-
-**Platform per charge:** 4,000 from base + 200 OPEX = **4,200 FCFA** (~80.8% of 5,200).
-
----
-
-## 4. Recurring rule (confirmed)
+**Total commission per monthly charge (full stack):** **1,000 FCFA**.
 
 Commissions apply on **each successful monthly subscription charge**, not first month only.
 
-- Month 1: 500 + 250 + 250 (if full chain exists)
-- Month 2, 3, … while subscription stays active and attributed: same amounts repeat
-
-**Do not** re-credit on failed payments, refunds, or duplicate webhook events (idempotency required in Phase 3).
-
 ---
 
-## 5. Attribution
+## 4. Attribution
 
-1. Subscriber `users/{uid}.referredBy` = SBD referral code at signup/checkout.
+1. Subscriber `users/{uid}.referredBy` = SBD referral code at signup/checkout (including guest Foundation Yearly landing `?ref=`).
 2. Resolve seller via `sbdReferralCode` on `ambassadors/{AMB-…}` or `regional_directors/{RD-…}`.
 3. **Senior override:** walk `recruitedBy` / `senior_code` from selling ambassador — **not** `regional_director` alone.
 4. **RD override:** `rdCode` or `regional_director_code` on the selling branch.
@@ -64,93 +86,76 @@ Commissions apply on **each successful monthly subscription charge**, not first 
 
 | Case | Direct | Senior | RD |
 |------|--------|--------|-----|
-| Ambassador sells (full chain) | 500 | 250 | 250 |
-| Senior sells own code | 500 | 0 | 250 if in region |
-| RD sells own code | 500 | 0 | 0 |
+| Ambassador sells (full chain) | Yes | Yes | Yes |
+| Senior sells own code | Yes | 0 | Yes if in region |
+| RD sells own code | Yes | 0 | 0 |
 | No referral code | 0 | 0 | 0 |
 
 One payee per role per charge. No walking Executive via `sponsor_code`.
 
 ---
 
-## 6. Mature RD economics (planning model)
+## 5. Mature RD economics (planning model)
 
 **Structure per RD network:**
 
 - 50 Senior Ambassadors × 10 Ambassadors = **500 ambassadors**
-- Planning deployment: 10 subs/day × 20 days = **200 new subs/month per ambassador**
-- With retention modeling, mature retained subs drive recurring override
+- Planning deployment: **10 yearly subs/day × 20 days** = **200 new yearly deployments/month per ambassador**
 
-**RD override only:**
-
-```
-1,000,000 retained subs × 250 FCFA = 250,000,000 FCFA/month per mature RD network
-```
-
-This is **RD’s 5% slice**, not total network commission. Full stack at 1M subs = **1B FCFA/month** total commission pool.
-
-Label all figures **planning targets** — actuals depend on deployment, retention, and activation rates.
+Label all mature-scale figures **planning targets** — actuals depend on deployment, retention, and activation rates.
 
 ---
 
-## 7. Firestore (Phase 3 target)
+## 6. Firestore
 
-| Collection | Purpose |
-|------------|---------|
-| `sbd_sales` | One row per commission event; fields: `ambassadorCommission`, `seniorAmbassadorCommission`, `rdCommission`, `policy_version`, `chargePeriod` |
-| Seller docs | `sbdReferrals.commissionPending`, `overrideCommissionPending`, etc. |
+| Collection / field | Purpose |
+|--------------------|---------|
+| `sbd_sales` | One row per commission event; includes `program`, `productId`, `challengeDayKey` |
+| Seller `sbdReferrals.foundationYearly` | Count of yearly deployments |
+| Seller `sbdReferrals.yearlyByDay.{YYYY-MM-DD}` | Daily challenge progress |
+| Seller `sbdReferrals.yearlyByMonth.{YYYY-MM}` | Monthly challenge progress |
 
-**Policy version tag:** `2026-04-v1`
+**Policy version tag:** `2026-07-v2`
 
 ---
 
-## 8. Related systems
+## 7. Related systems
 
 | System | Relationship |
 |--------|----------------|
 | [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) | One-time 15,000 FCFA signup — separate |
+| DTC landing | `public/foundation-access.html` → `createSbdGuestCheckoutSession` |
 | `functions/commerce/` | Sandbox CamPay engine — mirror these rules; not production checkout yet |
-| Product / book sales | **Done** — 10/5/5 only; no executive override (Phase 4) |
+| Product / book sales | **Done** — 10/5/5 only; no executive override |
 
 ---
 
-## 9. Code map (Phase 3)
+## 8. Code map
 
 | Concern | File |
 |---------|------|
 | Policy & crediting | `functions/sbd-subscription-commission.js` |
 | Stripe invoice + checkout hook | `functions/index.js` → `handleSbdStripeInvoice()`, `unlockSbdContent()`, `stripeWebhook` |
-| Checkout metadata | `functions/index.js` → `createSbdCheckoutSession()` |
-| Sandbox mirror | `functions/commerce/config.js` |
+| Auth checkout | `functions/index.js` → `createSbdCheckoutSession()` |
+| Guest yearly checkout | `functions/index.js` → `createSbdGuestCheckoutSession()` |
 | Tests | `scripts/test-sbd-subscription-commission.js` |
 
-**Production:** recurring commissions on `invoice.payment_succeeded` + checkout invoice idempotency.
+**Production:** commissions on `invoice.payment_succeeded` + checkout invoice idempotency.
 
 ---
 
-## 10. Deployment checklist (Phase 3)
-
-1. Implement recurring idempotent commission crediting
-2. Add RD 250 + fix senior/RD attribution fields
-3. Add `scripts/test-sbd-subscription-commission.js`
-4. `firebase deploy --only functions`
-5. Stripe webhook endpoint must subscribe to **`invoice.payment_succeeded`** (renewals) — configured on `we_1TL50G…` → `stripeWebhook` (May 2026)
-6. Verify test sub month 1 and simulated renewal
-
----
-
-## 11. Quick reference
+## 9. Quick reference
 
 ```
-CHARGE     = 5200 FCFA/month
-BASE       = 5000 FCFA (commissionable)
-OPEX       = 200 FCFA
+YEARLY ($118):
+  Direct  = 7,080 FCFA ($11.80)
+  Senior  = 3,540 FCFA ($5.90)
+  RD      = 3,540 FCFA ($5.90)
 
-EACH successful monthly charge:
-  Direct ambassador  = 500
-  Senior override    = 250  (downline ambassador sales only)
-  RD override        = 250  (regional sales)
-  Executive          = 0
+MONTHLY (5,200 charge / 5,000 base):
+  Direct  = 500
+  Senior  = 250
+  RD      = 250
 
-Executive earns via replicated RD infrastructure — not this stack.
+Executive = 0 on both stacks
 ```
