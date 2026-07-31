@@ -212,6 +212,208 @@
       transform: none;
     }
 
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      align-items: center;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      color: rgba(247, 243, 234, 0.88);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(232, 213, 163, 0.45);
+      padding-bottom: 0.15rem;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn-ghost:hover {
+      color: #e8d5a3;
+      border-color: #e8d5a3;
+    }
+
+    .hero-lead strong {
+      color: #f2e4bc;
+      font-weight: 600;
+    }
+
+    /* ——— Sneak peek ——— */
+    .peek {
+      background: var(--paper);
+      padding-top: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    .value-hit {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      max-width: 34rem;
+      margin: 0 0 2rem;
+    }
+
+    .value-hit > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.95rem 1rem;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .value-hit strong {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .value-hit span {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.65rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+
+    .value-hit .value-hit-accent {
+      color: var(--leaf-deep);
+      text-decoration: none;
+      opacity: 1;
+    }
+
+    .track-grid {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 1.75rem;
+    }
+
+    .track {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 1.35rem 1.4rem 1.5rem;
+    }
+
+    .track-kicker {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+    }
+
+    .track h3 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .track-sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .track-list {
+      list-style: none;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .track-list li {
+      display: grid;
+      grid-template-columns: 3.2rem 1fr;
+      gap: 0.65rem;
+      font-size: 0.95rem;
+      align-items: baseline;
+    }
+
+    .track-list li span {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .track-note {
+      margin-top: 1rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 0.85rem;
+    }
+
+    .school-block {
+      background: var(--leaf-deep);
+      color: #f3efe6;
+      padding: clamp(1.4rem, 3vw, 1.85rem);
+    }
+
+    .school-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      align-items: end;
+      margin-bottom: 1.25rem;
+    }
+
+    .school-head .track-kicker { color: #e8d5a3; }
+    .school-head h3 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(1.5rem, 3vw, 1.9rem);
+      font-weight: 600;
+      margin: 0.2rem 0 0.45rem;
+    }
+    .school-head p {
+      color: rgba(243, 239, 230, 0.78);
+      max-width: 36rem;
+      font-size: 0.98rem;
+    }
+
+    .course-grid {
+      list-style: none;
+      display: grid;
+      gap: 0.55rem 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .course-grid li {
+      display: grid;
+      grid-template-columns: 1.7rem 1fr;
+      gap: 0.55rem;
+      align-items: start;
+      font-size: 0.92rem;
+      padding: 0.55rem 0;
+      border-top: 1px solid rgba(243, 239, 230, 0.12);
+    }
+
+    .course-grid b {
+      color: #e8d5a3;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      padding-top: 0.15rem;
+    }
+
+    .school-foot {
+      margin-top: 1.15rem;
+      font-size: 0.9rem;
+      color: rgba(243, 239, 230, 0.75);
+    }
+
+    @media (max-width: 760px) {
+      .track-grid,
+      .value-hit { grid-template-columns: 1fr; }
+      .school-head .btn-primary { width: 100%; }
+    }
+
     /* ——— Sections ——— */
     section {
       padding: clamp(3.5rem, 8vw, 5.5rem) 0;
@@ -264,39 +466,6 @@
     .who-item p {
       color: var(--muted);
       font-size: 0.98rem;
-    }
-
-    .includes {
-      background: var(--leaf-deep);
-      color: #f3efe6;
-    }
-
-    .includes h2 { color: #f7f3ea; max-width: 22ch; }
-    .includes .section-label { color: #e8d5a3; }
-    .includes .section-copy { color: rgba(243, 239, 230, 0.78); }
-
-    .include-list {
-      list-style: none;
-      display: grid;
-      gap: 0.9rem;
-      max-width: 36rem;
-    }
-
-    .include-list li {
-      display: grid;
-      grid-template-columns: 1.25rem 1fr;
-      gap: 0.75rem;
-      align-items: start;
-      font-size: 1.05rem;
-    }
-
-    .include-list li::before {
-      content: '';
-      width: 0.55rem;
-      height: 0.55rem;
-      margin-top: 0.45rem;
-      border-radius: 50%;
-      background: #e8d5a3;
     }
 
     .how {
@@ -550,15 +719,95 @@
       <p class="hero-kicker">Foundation Tier · Yearly</p>
       <h1>One year of <em>Foundation</em> access.</h1>
       <p class="hero-lead">
-        One payment covers a full year of Foundation — School 1 access for 12 months on SBD Network.
+        You open <strong>The Teleios Blueprint</strong> (6 weeks) and <strong>Sex By Design for Dummies</strong> (13 weeks) — then grow through School 1 formation for a full year.
       </p>
       <div class="hero-price">
         <strong>$118</strong>
-        <span>USD · billed yearly · ≈ 67,984 FCFA</span>
+        <span>USD · billed yearly · Teleios Blueprint alone is $247</span>
       </div>
-      <a class="btn-primary" href="#enroll">Start your year of access</a>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#enroll">Start your year of access</a>
+        <a class="btn-ghost" href="#inside">See what’s inside ↓</a>
+      </div>
     </div>
   </header>
+
+  <section class="peek" id="inside">
+    <div class="wrap">
+      <p class="section-label">Sneak peek</p>
+      <h2>This is what $118 unlocks.</h2>
+      <p class="section-copy">
+        Not a vague “membership.” Two complete formation pathways you can name — plus the School 1 roadmap you grow into across the year.
+      </p>
+
+      <div class="value-hit" aria-label="Value comparison">
+        <div>
+          <strong>Teleios Blueprint course alone</strong>
+          <span>$247</span>
+        </div>
+        <div>
+          <strong>Full year of Foundation Access</strong>
+          <span class="value-hit-accent">$118</span>
+        </div>
+      </div>
+
+      <div class="track-grid">
+        <article class="track">
+          <p class="track-kicker">Pathway 1 · 6 weeks</p>
+          <h3>The Teleios Blueprint</h3>
+          <p class="track-sub">Full Human Maturity — dripped weekly on SBD Network</p>
+          <ol class="track-list">
+            <li><span>Week 1</span> You Were Created Teleios</li>
+            <li><span>Week 2</span> The Four Integrated Faculties</li>
+            <li><span>Week 3</span> Attributes of Personal Development</li>
+            <li><span>Week 4</span> Identity, Image &amp; Likeness</li>
+            <li><span>Week 5</span> Practicing From Perfection</li>
+            <li><span>Week 6</span> Maturity That Holds in Covenant</li>
+          </ol>
+        </article>
+
+        <article class="track">
+          <p class="track-kicker">Pathway 2 · 13 weeks</p>
+          <h3>Sex By Design for Dummies</h3>
+          <p class="track-sub">The complete marriage handbook pathway — dripped weekly</p>
+          <ol class="track-list">
+            <li><span>W1–3</span> Design, anatomy &amp; the marriage equation</li>
+            <li><span>W4–6</span> Desire, covenant sexuality &amp; fidelity</li>
+            <li><span>W7–9</span> Communication, conflict &amp; one-flesh life</li>
+            <li><span>W10–13</span> Household strength, parenting &amp; lasting practice</li>
+          </ol>
+          <p class="track-note">Full 13-week courseware + Foundation library / resources — not a teaser chapter.</p>
+        </article>
+      </div>
+
+      <div class="school-block">
+        <div class="school-head">
+          <div>
+            <p class="track-kicker">School 1 · Teleios Foundation</p>
+            <h3>The 13-course formation roadmap</h3>
+            <p>Your year opens the Foundation pathway. School 1 is the structured course sequence you progress through — not a mystery folder.</p>
+          </div>
+          <a class="btn-primary" href="#enroll">Unlock this year — $118</a>
+        </div>
+        <ol class="course-grid">
+          <li><b>01</b> The Teleios Blueprint: Full Human Maturity</li>
+          <li><b>02</b> The Anthropology of Wholeness</li>
+          <li><b>03</b> Identity Mastery</li>
+          <li><b>04</b> The Four Faculties Training</li>
+          <li><b>05</b> Anthropocentric Development</li>
+          <li><b>06</b> The Personal Development MasterClass</li>
+          <li><b>07</b> The Science of Self-Command</li>
+          <li><b>08</b> The Heart of Relationship</li>
+          <li><b>09</b> Relationship Relatednesses</li>
+          <li><b>10</b> Relationship Mastery Intensive</li>
+          <li><b>11</b> The Perfect Self Program</li>
+          <li><b>12</b> Emotional Literacy for Couples &amp; Singles</li>
+          <li><b>13</b> Temperament Intelligence for Marriage</li>
+        </ol>
+        <p class="school-foot">Also included: Foundation community boards, downloadable resources, and your login to <strong>sbd-network.web.app/learn?tier=foundation</strong>.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="who" id="who">
     <div class="wrap">
@@ -574,30 +823,13 @@
         </div>
         <div class="who-item">
           <h3>Young couples</h3>
-          <p>Begin formation together before patterns harden — one shared year of School 1 access.</p>
+          <p>Begin formation together before patterns harden — one shared year on the Foundation pathway.</p>
         </div>
         <div class="who-item">
           <h3>Older couples &amp; groups</h3>
           <p>Renew the foundation, or sponsor a household, fellowship, or small group through one clear enrollment.</p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="includes" id="includes">
-    <div class="wrap">
-      <p class="section-label">What you receive</p>
-      <h2>Foundation on SBD Network — for twelve months.</h2>
-      <p class="section-copy">
-        After payment, you receive login access to sbd-network.web.app and enter the Foundation section to begin.
-      </p>
-      <ul class="include-list">
-        <li>Foundation Tier access for a full year (School 1 pathway)</li>
-        <li>Teleios Blueprint formation (weekly drip)</li>
-        <li>Sex By Design for Dummies pathway (weekly drip)</li>
-        <li>Foundation boards, resources, and guided learning on SBD Network</li>
-        <li>Login details emailed after checkout — open directly to Foundation</li>
-      </ul>
     </div>
   </section>
 
@@ -663,10 +895,10 @@
         <p class="section-label">After you enroll</p>
         <h2>Everything points to Foundation.</h2>
         <ul class="aside-list">
-          <li>Payment unlocks Foundation Tier immediately</li>
-          <li>Telegram notifies the operations team of the purchase</li>
+          <li>Teleios Blueprint (6 weeks) + SBD for Dummies (13 weeks) open first</li>
+          <li>School 1’s 13-course roadmap is named above — scroll the sneak peek</li>
+          <li>Payment unlocks Foundation immediately; login email follows</li>
           <li>If you used an ambassador link, their deployment challenge updates</li>
-          <li>Monthly enrollment remains available separately inside the app if you ever need it</li>
         </ul>
       </aside>
     </div>
