@@ -328,12 +328,37 @@
         <!-- Payment Action -->
         <div class="payment-form">
             <h2>Payment</h2>
-            <p style="color:var(--text-secondary,#aaa);font-size:0.9rem;margin:0 0 20px 0;line-height:1.6">
+            <p id="stripe-copy" style="color:var(--text-secondary,#aaa);font-size:0.9rem;margin:0 0 20px 0;line-height:1.6">
                 You'll be taken to Stripe's secure checkout page to enter your card details.
                 Your payment is processed by Stripe — we never see your card number.
             </p>
 
-            <details style="margin:0 0 20px 0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.03)">
+            <div id="yearly-pay-methods" style="display:none;margin:0 0 16px 0">
+              <p style="color:var(--text-secondary,#aaa);font-size:0.85rem;margin:0 0 10px">Foundation Yearly can be paid by card or Manual MoMo (70,800 FCFA · one year).</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                <button type="button" class="pay-method-btn active" id="method-stripe" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(125,211,192,0.15);color:#fff;font-weight:600;cursor:pointer">Card / Stripe</button>
+                <button type="button" class="pay-method-btn" id="method-momo" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-weight:600;cursor:pointer">Manual MoMo</button>
+              </div>
+            </div>
+
+            <div id="momo-panel" style="display:none;margin:0 0 20px;padding:14px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.04)">
+              <div style="display:flex;gap:8px;margin-bottom:12px">
+                <button type="button" class="momo-net active" id="net-mtn" data-network="mtn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#fff;cursor:pointer">MTN MoMo</button>
+                <button type="button" class="momo-net" id="net-orange" data-network="orange" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;cursor:pointer">Orange Money</button>
+              </div>
+              <ol style="margin:0 0 12px;padding-left:18px;color:var(--text-secondary,#aaa);font-size:0.85rem;line-height:1.55">
+                <li id="momo-step1">Open MTN MoMo or dial <strong>*126#</strong></li>
+                <li>Send <strong>70,800 FCFA</strong> to <strong id="momo-payee-number">237 677 604 100</strong><br><span style="font-size:0.8rem">Name: <span id="momo-payee-name">Achu Gustave Mokom</span></span></li>
+                <li>Enter the phone you paid from, then confirm below. Access activates for <strong>12 months</strong> after admin approval.</li>
+              </ol>
+              <label for="momo-phone" style="display:block;font-size:0.85rem;margin-bottom:6px;color:#ccc">Your MoMo phone number</label>
+              <input id="momo-phone" type="tel" inputmode="tel" placeholder="670000000" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);color:#fff;margin-bottom:8px;box-sizing:border-box">
+              <div id="momo-done" style="display:none;margin-top:12px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#a7f3d0;font-size:0.9rem">
+                Submitted. Include reference <code id="momo-done-ref" style="color:#fff">—</code> in your transfer note if you haven’t sent yet.
+              </div>
+            </div>
+
+            <details id="virtual-card-hint" style="margin:0 0 20px 0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.03)">
               <summary style="cursor:pointer;font-weight:600;color:#7dd3c0;font-size:0.9rem">
                 Don't have a Visa/Mastercard? Use an MTN MoMo Virtual Card
               </summary>
@@ -349,7 +374,7 @@
 
             <div id="checkout-error" style="color:#ff4444;font-size:0.85rem;margin-bottom:16px;min-height:20px"></div>
 
-            <button id="pay-button" class="pay-button" onclick="startStripeCheckout(currentProductId)">
+            <button id="pay-button" class="pay-button" onclick="startCheckout()">
                 💳 Pay with Card
             </button>
             <p class="payment-wa-support payment-wa-support--dark">
@@ -362,7 +387,7 @@
 
             <div class="secure-badge">
                 <span class="secure-badge-icon">🔒</span>
-                <span class="secure-badge-text">Secure checkout powered by Stripe</span>
+                <span class="secure-badge-text" id="secure-badge-text">Secure checkout powered by Stripe</span>
             </div>
         </div>
         
@@ -377,7 +402,7 @@
     
     <!-- Checkout Script -->
     <script src="/js/shop-product-ids.js?v=1785064899585" defer></script>
-    <script src="/js/checkout.js?v=1785064899585" defer></script>
+    <script src="/js/checkout.js?v=1785064899586" defer></script>
     <script src="/js/payment-whatsapp-support.js?v=1785064899585" defer></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {

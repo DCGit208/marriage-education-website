@@ -109,7 +109,11 @@
     if (sub.status === 'active' && subEnd > now && sub.tier) {
       return String(sub.tier).toLowerCase();
     }
-    return String(userData.tier || 'free').toLowerCase();
+    // Do not fall back to stale users.tier after cancel/expiry — that grants free access.
+    if (sub.status === 'cancelled' || sub.status === 'canceled') return 'free';
+    if (subEnd > 0 && subEnd <= now) return 'free';
+    if (!sub.status) return String(userData.tier || 'free').toLowerCase();
+    return 'free';
   }
 
   function isPurchaseOnlyCourse(course) {
