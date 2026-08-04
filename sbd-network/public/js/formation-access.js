@@ -70,13 +70,29 @@ function isAdminGrantedElite(userData) {
 }
 
 /**
- * Resolve tier from user doc (sync). Prefer active subscription.tier, else users.tier.
+ * Resolve tier from user doc (sync).
+ * Active subscription wins. Expired/cancelled subscriptions do NOT fall back to
+ * a stale users.tier (that would grant continuous access without renewal).
  */
 function resolveEffectiveTier(userData) {
   if (!userData) return 'free';
   const subTier = resolveActiveSubscriptionTier(userData);
   if (subTier) return subTier;
-  return normalizeTierSlug(userData.tier || 'free');
+  if (isAdminGrantedElite(userData)) return 'elite';
+
+  const sub = userData.subscription;
+  if (sub && (sub.status === 'cancelled' || sub.status === 'canceled')) {
+    return 'free';
+  }
+  // Active flag but endDate passed (e.g. MoMo yearly term ended, or Stripe period ended)
+  if (sub && subscriptionEndMs(sub) > 0 && subscriptionEndMs(sub) <= Date.now()) {
+    return 'free';
+  }
+  // No subscription record — legacy / one-off grants via users.tier
+  if (!sub || !sub.status) {
+    return normalizeTierSlug(userData.tier || 'free');
+  }
+  return 'free';
 }
 
 /**
@@ -188,15 +204,7 @@ async function getUserTier(userId) {
   try {
     const userDoc = await db.collection('users').doc(userId).get();
     if (!userDoc.exists) return 'free';
-    
-    const userData = userDoc.data();
-    const subscription = userData.subscription;
-    
-    const docTier = normalizeTierSlug(userData.tier || 'free');
-    const subTier = resolveActiveSubscriptionTier(userData);
-    if (docTier === 'elite' || subTier === 'elite') return 'elite';
-    if (subTier) return subTier;
-    return docTier;
+    return resolveEffectiveTier(userDoc.data());
   } catch (error) {
     console.error('[Access Control] Error fetching user tier:', error);
     return 'free';

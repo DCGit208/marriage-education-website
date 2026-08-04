@@ -41,11 +41,15 @@
     if (!userData) return 'free';
     if (userData.role === 'admin') return 'elite';
     var sub = userData.subscription || {};
-    var activeSub =
-      sub.status === 'active' && subscriptionEndMs(sub) > Date.now()
-        ? String(sub.tier || '').toLowerCase()
-        : '';
-    return activeSub || String(userData.tier || 'free').toLowerCase();
+    var endMs = subscriptionEndMs(sub);
+    if (sub.status === 'active' && endMs > Date.now()) {
+      return String(sub.tier || '').toLowerCase() || 'free';
+    }
+    // Expired/cancelled: do not fall back to stale users.tier
+    if (sub.status === 'cancelled' || sub.status === 'canceled') return 'free';
+    if (endMs > 0 && endMs <= Date.now()) return 'free';
+    if (!sub.status) return String(userData.tier || 'free').toLowerCase();
+    return 'free';
   }
 
   function userGroups(userData) {

@@ -161,7 +161,9 @@ function createPendingPaymentFulfillment(deps) {
         manualAmount: Number(payment.amount) || 0,
         manualCurrency: (payment.currency || 'XAF').toUpperCase(),
         manualChannel: channel === 'campay' ? 'campay' : 'momo',
-        manualPaymentMethod: payment.payment_method || paymentMethod || 'momo'
+        manualPaymentMethod: payment.payment_method || paymentMethod || 'momo',
+        // Fixed 12-month term for Manual MoMo yearly (no Stripe auto-renew)
+        manualAccessMonths: productId === 'foundation-yearly' ? 12 : (payment.manualAccessMonths || null)
       };
 
       const tgMeta = await unlockSbdContent(uid, productId, sessionLike);

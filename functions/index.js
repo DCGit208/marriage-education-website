@@ -663,29 +663,45 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     return res.json({ received: true, action: 'sbd-invoice' });
   }
 
-  // ── SBD subscription scheduled to cancel (access continues to period end) ──
+  // ── SBD subscription scheduled to cancel / past_due (access through period end only) ──
   if (event.type === 'customer.subscription.updated') {
     const sub = event.data.object;
     try {
       const snap = await db.collection('users').where('stripeSubscriptionId', '==', sub.id).limit(1).get();
       if (!snap.empty) {
         const currentPeriodEnd = Number(sub.current_period_end || 0);
+        const stripeStatus = String(sub.status || '');
         const subscriptionUpdate = {
           'subscription.cancelAtPeriodEnd': sub.cancel_at_period_end === true,
-          'subscription.stripeStatus': sub.status || null,
+          'subscription.stripeStatus': stripeStatus || null,
         };
 
         if (sub.cancel_at_period_end === true && currentPeriodEnd > 0) {
+          // Explicit cancel: access continues through paid period (Stripe's "grace")
           subscriptionUpdate['subscription.endDate'] =
             admin.firestore.Timestamp.fromMillis(currentPeriodEnd * 1000);
-        } else if (sub.status === 'active' || sub.status === 'trialing') {
+          subscriptionUpdate['subscription.status'] = 'active';
+        } else if (stripeStatus === 'past_due' || stripeStatus === 'unpaid') {
+          // Failed renewal: keep access only through current_period_end while Stripe retries.
+          // No extra grace days beyond the paid period.
+          if (currentPeriodEnd > 0) {
+            subscriptionUpdate['subscription.endDate'] =
+              admin.firestore.Timestamp.fromMillis(currentPeriodEnd * 1000);
+          }
+          subscriptionUpdate['subscription.status'] = 'active';
+        } else if (stripeStatus === 'active' || stripeStatus === 'trialing') {
           subscriptionUpdate['subscription.endDate'] =
             admin.firestore.Timestamp.fromDate(new Date('2099-12-31'));
+          subscriptionUpdate['subscription.status'] = 'active';
+        } else if (stripeStatus === 'canceled' || stripeStatus === 'incomplete_expired') {
+          subscriptionUpdate['subscription.status'] = 'cancelled';
+          subscriptionUpdate['subscription.endDate'] =
+            admin.firestore.Timestamp.fromDate(new Date());
         }
 
         await snap.docs[0].ref.update(subscriptionUpdate);
         console.log(
-          `[SBD] Sub ${sub.id} updated — cancelAtPeriodEnd=${sub.cancel_at_period_end === true}`
+          `[SBD] Sub ${sub.id} updated — status=${stripeStatus} cancelAtPeriodEnd=${sub.cancel_at_period_end === true}`
         );
       }
     } catch (e) {
@@ -4522,12 +4538,20 @@ async function unlockSbdContent(uid, productId, session) {
   };
 
   if (rule.tier) {
-    // Recurring subscriptions: endDate = 2099 (Stripe manages billing cancellation).
-    // One-time bundles: endDate = now + N months.
+    // Stripe recurring: endDate = 2099 (Stripe webhooks manage cancel / period end).
+    // Manual MoMo yearly: fixed term (months) — no auto-renewal.
+    // One-time bundles: endDate = now + N months from unlock rule.
     const isRecurring = ['foundation-monthly', 'foundation-yearly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
-    const endDate = isRecurring
-      ? new Date('2099-12-31')
-      : (() => { const d = new Date(); d.setMonth(d.getMonth() + rule.months); return d; })();
+    let endDate;
+    if (session?.manualAccessMonths) {
+      endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + Number(session.manualAccessMonths));
+    } else if (isRecurring) {
+      endDate = new Date('2099-12-31');
+    } else {
+      endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + rule.months);
+    }
 
     // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice or manual pending ref ──
     try {
@@ -5226,6 +5250,133 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
     payee_number: payeeNumber,
     payee_name: payeeName,
     momo_network: momoNetwork,
+    message: 'Payment submitted for approval'
+  };
+});
+
+/**
+ * Authenticated SBD Network checkout — Manual MoMo for Foundation Yearly only.
+ * Monthly tiers stay Stripe-only (recurring billing).
+ */
+exports.createSbdManualPayment = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be signed in to purchase.');
+  }
+
+  const uid = context.auth.uid;
+  const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
+  const phone = String(data?.phone || '').trim();
+  const momoNetwork = String(data?.momo_network || 'mtn').toLowerCase() === 'orange' ? 'orange' : 'mtn';
+
+  if (productId !== 'foundation-yearly') {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Manual MoMo is only available for Foundation Tier — Yearly ($118). Monthly plans use Stripe.'
+    );
+  }
+  if (!phone || phone.replace(/\D/g, '').length < 9) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid MoMo phone number is required.');
+  }
+
+  const userSnap = await db.collection('users').doc(uid).get();
+  const userData = userSnap.exists ? userSnap.data() : {};
+  const email = String(context.auth.token.email || userData.email || '').trim().toLowerCase();
+  const name = String(userData.name || context.auth.token.name || 'Student').trim();
+  const referredBy = normalizeToSbdReferralCode(userData.referredBy || '');
+
+  if (!email) {
+    throw new functions.https.HttpsError('failed-precondition', 'Your account needs an email address.');
+  }
+
+  const amount = YEARLY_REVENUE_BASE_FCFA;
+  const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
+  const payeeName = 'Achu Gustave Mokom';
+  const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
+
+  await db.collection('users').doc(uid).set({
+    phone: phone,
+    lastActive: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  const paymentData = {
+    reference,
+    product_id: productId,
+    product_name: 'Foundation Tier — Yearly',
+    amount,
+    currency: 'XAF',
+    email,
+    loginEmail: email,
+    name,
+    phone,
+    uid,
+    guest: false,
+    app: 'sbd',
+    type: 'sbd_subscription',
+    referral_code: referredBy || '',
+    referredBy: referredBy || '',
+    status: 'pending',
+    payment_channel: 'manual',
+    momo_network: momoNetwork,
+    payment_method: momoNetwork === 'orange' ? 'orange_money' : 'momo',
+    payee_number: payeeNumber,
+    payee_name: payeeName,
+    created_at: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  await db.collection('pending_payments').doc(reference).set(paymentData);
+
+  await writeUnifiedPaymentRecord({
+    source: 'manual_payment',
+    reference,
+    external_reference: reference,
+    record_type: 'customer_payment',
+    channel: 'manual',
+    payment_method: paymentData.payment_method,
+    payment_category: 'sbd_subscription',
+    product_id: productId,
+    product_name: paymentData.product_name,
+    amount,
+    currency: 'XAF',
+    customer_email: email,
+    customer_phone: phone,
+    ambassador_code: '',
+    recruiter_code: referredBy || '',
+    status: 'pending',
+    action_required: true,
+    created_at: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  try {
+    const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
+    await sendTelegram(
+      `🔔 FOUNDATION YEARLY — MOMO PENDING (SBD app)\n\n` +
+      `📋 Reference: ${reference}\n` +
+      `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
+      `🏦 Network: ${networkLabel}\n` +
+      `📥 Payee: ${payeeNumber} (${payeeName})\n` +
+      `👤 ${email}\n` +
+      `📱 ${phone}\n` +
+      (referredBy ? `🔗 Referral: ${referredBy}\n` : '🔗 Referral: (none)\n') +
+      `\n👉 Approve: https://marriageducation.com/admin-dashboard.html`,
+      false
+    );
+  } catch (tgErr) {
+    console.warn('[SBD MoMo auth] Telegram failed:', tgErr.message);
+  }
+
+  console.log(`[SBD MoMo] uid=${uid} ref=${reference} referral=${referredBy || 'none'}`);
+
+  return {
+    success: true,
+    reference,
+    uid,
+    productId,
+    amount,
+    currency: 'XAF',
+    payee_number: payeeNumber,
+    payee_name: payeeName,
+    momo_network: momoNetwork,
+    accessMonths: 12,
     message: 'Payment submitted for approval'
   };
 });
