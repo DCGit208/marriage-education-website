@@ -715,7 +715,36 @@
         </div>`;
   }
 
-  function renderTree() {
+  function getOpenCourseIds() {
+    return Array.prototype.map.call(
+      document.querySelectorAll('.acs-course.open'),
+      function (el) { return el.getAttribute('data-course-id'); }
+    ).filter(Boolean);
+  }
+
+  function setCourseOpen(courseId, scrollIntoView) {
+    if (!courseId) return null;
+    const el = Array.prototype.find.call(document.querySelectorAll('.acs-course'), function (node) {
+      return node.getAttribute('data-course-id') === courseId;
+    });
+    if (!el) return null;
+    el.classList.add('open');
+    const chev = el.querySelector('.acs-chevron');
+    if (chev) chev.textContent = '▼';
+    if (scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    return el;
+  }
+
+  function restoreOpenCourses(openIds, focusCourseId) {
+    (openIds || []).forEach(function (id) { setCourseOpen(id, false); });
+    if (focusCourseId) setCourseOpen(focusCourseId, true);
+  }
+
+  function renderTree(opts) {
+    const openIds = getOpenCourseIds();
+    const focusCourseId = opts && opts.focusCourseId;
     const tree = document.getElementById('acsTree');
     const books = allCourses.filter(isBookCourse);
     const courses = allCourses.filter(function (c) { return !isBookCourse(c); });
@@ -756,6 +785,7 @@
 
     bindTreeEvents();
     hydrateDraftBadges();
+    restoreOpenCourses(openIds, focusCourseId);
   }
 
   async function reorderParts(moduleId, fromPartId, toPartId) {
@@ -1242,7 +1272,7 @@
     }
 
     await loadCatalog();
-    renderTree();
+    renderTree({ focusCourseId: courseId });
     alert('Week duplicated as ' + newId);
   }
 
@@ -1302,7 +1332,7 @@
       }
 
       await loadCatalog();
-      renderTree();
+      renderTree({ focusCourseId: courseId });
     } catch (err) {
       alert('Delete failed: ' + (err.message || err));
     }
