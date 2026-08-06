@@ -32,6 +32,7 @@
     if (code === 'unauthenticated') return 'Sign in required.';
     if (code === 'failed-precondition') return raw || 'Setup incomplete (check Gemini API key).';
     if (code === 'deadline-exceeded') return 'Timed out — click Reindex again to resume batches.';
+    if (code === 'resource-exhausted') return 'Canon AI is rate-limited right now. Wait 30-60 seconds, then try again.';
     if (code === 'internal') return raw && raw !== 'internal'
       ? raw
       : 'Server error during reindex — try again in a moment.';
@@ -80,6 +81,24 @@
 
   let getEditorCtx = function () { return null; };
 
+
+  function isRateLimitedError(err) {
+    const code = String(err && err.code || '').replace(/^functions\//, '');
+    const msg = String((err && err.message) || '') + ' ' + String((err && err.details && err.details.message) || err && err.details || '');
+    return code === 'resource-exhausted' || /429|rate.?limit|quota|resource exhausted|too many requests/i.test(msg);
+  }
+
+  async function invokeAssist(fn, payload) {
+    try {
+      return await fn(payload);
+    } catch (err) {
+      if (!isRateLimitedError(err)) throw err;
+      setStatus('Rate-limited. Retrying once in 8 seconds…', true);
+      await new Promise(function (resolve) { setTimeout(resolve, 8000); });
+      return await fn(payload);
+    }
+  }
+
   async function callAssist(action) {
     if (busy) return;
     const editorCtx = getEditorCtx();
@@ -103,7 +122,7 @@
 
     try {
       const fn = callable('studioCanonAssist');
-      const res = await fn({
+      const res = await invokeAssist(fn, {
         action: action,
         courseId: editorCtx.courseId,
         moduleId: editorCtx.moduleId,
