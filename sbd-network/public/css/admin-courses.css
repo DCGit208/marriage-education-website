@@ -344,6 +344,8 @@
 .acs-chip--edit { border-color: rgba(198,169,107,0.3); color: var(--acs-gold); }
 .acs-chip--active { background: rgba(0,188,212,0.12); border-color: var(--acs-teal); color: var(--acs-teal); }
 .acs-chip--gold { border-color: rgba(198,169,107,0.5); color: var(--acs-gold); }
+.acs-chip--danger { border-color: rgba(229,115,115,0.45); color: #e57373; }
+.acs-chip--danger:hover { border-color: #e57373; color: #ff8a80; }
 .acs-chip--drag { cursor: grab; color: #666; padding: 2px 6px; user-select: none; }
 .acs-part-row--dragging { opacity: 0.45; }
 .acs-part-row--drag-over { outline: 1px dashed var(--acs-teal); border-radius: 8px; }
