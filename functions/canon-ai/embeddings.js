@@ -17,6 +17,46 @@ function getApiKey() {
   );
 }
 
+
+function shouldRetryStatus(status) {
+  return status === 429 || status === 503 || status === 500;
+}
+
+function retryDelayMs(attempt, retryAfterHeader) {
+  const retryAfter = Number(retryAfterHeader || 0);
+  if (retryAfter > 0 && Number.isFinite(retryAfter)) {
+    return Math.min(retryAfter * 1000, 20000);
+  }
+  const base = 1200;
+  return Math.min(base * Math.pow(2, attempt), 12000);
+}
+
+function formatApiError(prefix, err, status) {
+  const detail = err?.response?.data?.error?.message || err?.message || String(err);
+  if (status === 429) return prefix + ': RATE_LIMITED (429) ' + detail;
+  return prefix + ': ' + detail;
+}
+
+async function postWithRetry(url, body, timeoutMs, label) {
+  const maxAttempts = 3;
+  let lastErr = null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await axios.post(url, body, { timeout: timeoutMs });
+    } catch (err) {
+      lastErr = err;
+      const status = err?.response?.status;
+      if (!shouldRetryStatus(status) || attempt === maxAttempts - 1) {
+        throw new Error(formatApiError(label, err, status));
+      }
+      const retryAfter = err?.response?.headers?.['retry-after'];
+      await sleep(retryDelayMs(attempt, retryAfter));
+    }
+  }
+  throw lastErr || new Error(label + ': request failed');
+}
+
+
 async function embedText(text, apiKey) {
   const key = apiKey || getApiKey();
   if (!key) throw new Error('Gemini API key not configured. Set: firebase functions:config:set gemini.api_key="YOUR_KEY"');
@@ -28,10 +68,10 @@ async function embedText(text, apiKey) {
     const model = EMBED_MODELS[m];
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${key}`;
     try {
-      const res = await axios.post(url, {
+      const res = await postWithRetry(url, {
         model: `models/${model}`,
         content: { parts: [{ text: input }] },
-      }, { timeout: 60000 });
+      }, 60000, 'Embedding failed (' + model + ')');
 
       const values = res.data?.embedding?.values;
       if (!Array.isArray(values) || !values.length) {
@@ -42,8 +82,7 @@ async function embedText(text, apiKey) {
       lastErr = err;
       const status = err.response?.status;
       if (status === 404 || status === 400) continue;
-      const detail = err.response?.data?.error?.message || err.message || String(err);
-      throw new Error('Embedding failed (' + model + '): ' + detail);
+      throw err;
     }
   }
 
@@ -77,14 +116,14 @@ async function generateMarkdown(systemPrompt, userPrompt, apiKey) {
   if (!key) throw new Error('Gemini API key not configured');
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEN_MODEL}:generateContent?key=${key}`;
-  const res = await axios.post(url, {
+  const res = await postWithRetry(url, {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: 0.55,
       maxOutputTokens: 8192,
     },
-  }, { timeout: 120000 });
+  }, 120000, 'Generation failed');
 
   const parts = res.data?.candidates?.[0]?.content?.parts || [];
   const text = parts.map(function (p) { return p.text || ''; }).join('').trim();

@@ -81,15 +81,26 @@ async function runStudioAssist(db, data, context) {
     wordTarget: data?.wordTarget || 700,
   });
 
-  const markdown = await generateMarkdown(buildSystemPrompt(), userPrompt);
+  try {
+    const markdown = await generateMarkdown(buildSystemPrompt(), userPrompt);
 
-  return {
-    markdown: markdown,
-    action: action,
-    citations: formatCitations(chunks),
-    chunkCount: chunks.length,
-    retrievedTitles: chunks.map(function (c) { return c.title || c.sourcePath; }),
-  };
+    return {
+      markdown: markdown,
+      action: action,
+      citations: formatCitations(chunks),
+      chunkCount: chunks.length,
+      retrievedTitles: chunks.map(function (c) { return c.title || c.sourcePath; }),
+    };
+  } catch (err) {
+    const msg = String(err && err.message || 'Canon assist failed');
+    if (/RATE_LIMITED|429|quota|resource exhausted|too many requests/i.test(msg)) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        'Canon AI is temporarily rate-limited. Wait ~30-60 seconds and retry.'
+      );
+    }
+    throw err;
+  }
 }
 
 module.exports = { runStudioAssist, assertContentDesigner, assertAdmin };
