@@ -32,6 +32,15 @@
     '# Chapter title\n\n' +
     'Write this chapter in the Studio editor. Use the Markdown toolbar and **Canon AI** in the right rail to draft, expand, rewrite, or align to the SBD canon.\n\n';
 
+  /** Synthetic part used when a week only has legacy module.content (no parts[]). */
+  const LEGACY_BODY_PART = {
+    id: 'body',
+    order: 1,
+    track: 'formation',
+    title: 'Week body',
+    estimatedMinutes: 45,
+  };
+
 
   let allCourses = [];
   let modulesByCourse = {};
@@ -213,9 +222,61 @@
     return doc.draft;
   }
 
+  function isLegacyModule(mod) {
+    return !!(mod && (!Array.isArray(mod.parts) || mod.parts.length === 0));
+  }
+
+  /**
+   * Older seeds (e.g. Anthropology of Wholeness) store markdown on the module
+   * doc as `content` with no parts[]. Course Studio only edits parts — migrate
+   * that body into parts/body once so the week becomes editable.
+   */
+  async function ensurePartsFromLegacy(moduleId) {
+    const mod = findModule(moduleId);
+    if (!mod) throw new Error('Module not found: ' + moduleId);
+    if (!isLegacyModule(mod)) return mod;
+
+    const body = typeof mod.content === 'string' ? mod.content : '';
+    const part = Object.assign({}, LEGACY_BODY_PART, {
+      title: body.trim() ? 'Week body' : 'Week body',
+    });
+
+    await db.collection('modules').doc(moduleId).set({
+      parts: [part],
+      hasPartSubcollection: true,
+      courseFormat: mod.courseFormat || 'formation',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    await db.collection('modules').doc(moduleId).collection('parts').doc(part.id).set({
+      id: part.id,
+      content: body,
+      draftContent: body,
+      hasDraft: false,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    await loadCatalog();
+    return findModule(moduleId);
+  }
+
+  async function openLegacyWeek(moduleId, courseId) {
+    try {
+      const status = document.getElementById('acsEditorStatus');
+      if (status) status.textContent = 'Preparing legacy week…';
+      const mod = await ensurePartsFromLegacy(moduleId);
+      renderTree();
+      const part = (mod && Array.isArray(mod.parts) && mod.parts[0]) || LEGACY_BODY_PART;
+      await openEditor(moduleId, part.id, part.title || 'Week body', courseId || (mod && mod.courseId));
+    } catch (err) {
+      alert('Could not open week: ' + (err.message || err));
+    }
+  }
+
   async function weekWordCount(moduleId) {
     const mod = findModule(moduleId);
-    if (!mod || !Array.isArray(mod.parts)) return 0;
+    if (!mod) return 0;
+    if (isLegacyModule(mod)) return wordCount(mod.content || '');
     let total = 0;
     for (const p of mod.parts) {
       const md = await loadPartMarkdown(moduleId, p.id);
@@ -408,6 +469,13 @@
       await db.collection('modules').doc(editorCtx.moduleId)
         .collection('parts').doc(editorCtx.partId)
         .set(partWritePayload(md, true), { merge: true });
+      // Keep module.content mirrored for sole-body / legacy-compatible weeks.
+      if (editorCtx.partId === 'body') {
+        await db.collection('modules').doc(editorCtx.moduleId).set({
+          content: md,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
       await saveVersionSnapshot(editorCtx.moduleId, editorCtx.partId, md);
       lastSavedDraft = md;
       editorDirty = false;
@@ -588,7 +656,8 @@
     const isBook = isBookCourse(course);
 
     const weeksHtml = weeks.map(function (mod) {
-      const parts = Array.isArray(mod.parts) ? mod.parts.slice().sort(function (a, b) {
+      const legacy = isLegacyModule(mod);
+      const parts = !legacy && Array.isArray(mod.parts) ? mod.parts.slice().sort(function (a, b) {
         return (a.order || 0) - (b.order || 0);
       }) : [];
       const partsHtml = parts.map(function (p) {
@@ -602,6 +671,16 @@
           </div>`;
       }).join('');
 
+      const legacyBodyHtml = legacy
+        ? `<div class="acs-part-row">
+            <button type="button" class="acs-chip acs-chip--edit" data-edit-legacy="${attrEsc(mod.id)}"
+              data-course-id="${attrEsc(course.id)}" title="This week uses legacy content — open to edit">
+              ${(mod.content && String(mod.content).trim()) ? 'Edit week body' : 'Edit week body (empty)'}
+            </button>
+            <span class="acs-course-id">legacy</span>
+          </div>`
+        : '';
+
       return `
           <div class="acs-week" data-module-id="${esc(mod.id)}">
             <p class="acs-week-title">${esc(mod.title || mod.id)} <span class="acs-course-id">${esc(mod.id)}</span></p>
@@ -609,8 +688,9 @@
               <a class="acs-chip" href="/lesson.html?moduleId=${encodeURIComponent(mod.id)}" target="_blank" rel="noopener">Parts index</a>
               <button type="button" class="acs-chip" data-add-part="${attrEsc(mod.id)}">+ Part</button>
               <button type="button" class="acs-chip" data-dup-week="${attrEsc(mod.id)}" data-course-id="${attrEsc(course.id)}">Duplicate ${esc(unitLabel)}</button>
+              <button type="button" class="acs-chip acs-chip--danger" data-del-week="${attrEsc(mod.id)}" data-course-id="${attrEsc(course.id)}">Delete ${esc(unitLabel)}</button>
             </div>
-            <div class="acs-part-links" data-parts-module="${attrEsc(mod.id)}">${partsHtml || '<span class="acs-course-id">No parts — add one</span>'}</div>
+            <div class="acs-part-links" data-parts-module="${attrEsc(mod.id)}">${partsHtml || legacyBodyHtml || '<span class="acs-course-id">No parts — add one</span>'}</div>
           </div>`;
     }).join('');
 
@@ -726,6 +806,12 @@
       };
     });
 
+    document.querySelectorAll('[data-edit-legacy]').forEach(function (btn) {
+      btn.onclick = function () {
+        openLegacyWeek(btn.getAttribute('data-edit-legacy'), btn.getAttribute('data-course-id'));
+      };
+    });
+
     document.querySelectorAll('[data-add-week]').forEach(function (btn) {
       btn.onclick = function () {
         modalWeekCourseId = btn.getAttribute('data-add-week');
@@ -747,8 +833,15 @@
     });
 
     document.querySelectorAll('[data-add-part]').forEach(function (btn) {
-      btn.onclick = function () {
+      btn.onclick = async function () {
         modalPartModuleId = btn.getAttribute('data-add-part');
+        try {
+          await ensurePartsFromLegacy(modalPartModuleId);
+          renderTree();
+        } catch (err) {
+          alert('Could not prepare week: ' + (err.message || err));
+          return;
+        }
         const mod = findModule(modalPartModuleId);
         const n = (mod && mod.parts ? mod.parts.length : 0) + 1;
         document.getElementById('acsPartTitle').value = 'New section';
@@ -760,6 +853,12 @@
     document.querySelectorAll('[data-dup-week]').forEach(function (btn) {
       btn.onclick = function () {
         duplicateWeek(btn.getAttribute('data-dup-week'), btn.getAttribute('data-course-id'));
+      };
+    });
+
+    document.querySelectorAll('[data-del-week]').forEach(function (btn) {
+      btn.onclick = function () {
+        deleteWeek(btn.getAttribute('data-del-week'), btn.getAttribute('data-course-id'));
       };
     });
 
@@ -1105,6 +1204,13 @@
   }
 
   async function duplicateWeek(sourceModuleId, courseId) {
+    try {
+      await ensurePartsFromLegacy(sourceModuleId);
+    } catch (err) {
+      alert('Could not prepare source week: ' + (err.message || err));
+      return;
+    }
+
     const src = findModule(sourceModuleId);
     if (!src) return;
     const weeks = modulesByCourse[courseId] || [];
@@ -1118,6 +1224,7 @@
       order: weekNum,
       title: (src.title || 'Week') + ' (copy)',
     });
+    // Prefer parts subcollection as source of truth after migrate.
     delete data.content;
 
     await db.collection('modules').doc(newId).set(data, { merge: true });
@@ -1137,6 +1244,68 @@
     await loadCatalog();
     renderTree();
     alert('Week duplicated as ' + newId);
+  }
+
+  async function deleteCollectionDocs(querySnap, batchSize) {
+    const docs = querySnap.docs.slice();
+    const size = batchSize || 400;
+    for (let i = 0; i < docs.length; i += size) {
+      const batch = db.batch();
+      docs.slice(i, i + size).forEach(function (d) { batch.delete(d.ref); });
+      await batch.commit();
+    }
+  }
+
+  async function deleteWeek(moduleId, courseId) {
+    const mod = findModule(moduleId);
+    if (!mod) return;
+
+    const label = mod.title || moduleId;
+    if (!confirm('Delete "' + label + '"?\n\nThis permanently removes the week/chapter and all of its parts. This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const moduleRef = db.collection('modules').doc(moduleId);
+      const partsSnap = await moduleRef.collection('parts').get();
+
+      for (const partDoc of partsSnap.docs) {
+        const versionsSnap = await partDoc.ref.collection('versions').get();
+        await deleteCollectionDocs(versionsSnap);
+      }
+      await deleteCollectionDocs(partsSnap);
+      await moduleRef.delete();
+
+      const course = allCourses.find(function (c) { return c.id === courseId; });
+      if (course) {
+        const patch = {
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        if (Array.isArray(course.moduleIds)) {
+          patch.moduleIds = course.moduleIds.filter(function (id) { return id !== moduleId; });
+        }
+        const remaining = (modulesByCourse[courseId] || []).filter(function (w) {
+          return w.id !== moduleId;
+        }).length;
+        if (course.moduleCount != null || course.totalModules != null) {
+          patch.moduleCount = remaining;
+          patch.totalModules = remaining;
+        }
+        await db.collection('courses').doc(courseId).set(patch, { merge: true });
+      }
+
+      if (editorCtx && editorCtx.moduleId === moduleId) {
+        editorCtx = null;
+        editorDirty = false;
+        lastSavedDraft = '';
+        if (typeof showEditorShell === 'function') showEditorShell(false);
+      }
+
+      await loadCatalog();
+      renderTree();
+    } catch (err) {
+      alert('Delete failed: ' + (err.message || err));
+    }
   }
 
   function setCoverPreview(previewId, url, clearBtnId) {
