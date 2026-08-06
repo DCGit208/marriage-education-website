@@ -89,14 +89,20 @@
   }
 
   async function invokeAssist(fn, payload) {
-    try {
-      return await fn(payload);
-    } catch (err) {
-      if (!isRateLimitedError(err)) throw err;
-      setStatus('Rate-limited. Retrying once in 8 seconds…', true);
-      await new Promise(function (resolve) { setTimeout(resolve, 8000); });
-      return await fn(payload);
+    const waits = [8000, 16000, 28000];
+    let lastErr = null;
+    for (let attempt = 0; attempt <= waits.length; attempt++) {
+      try {
+        return await fn(payload);
+      } catch (err) {
+        lastErr = err;
+        if (!isRateLimitedError(err) || attempt === waits.length) throw err;
+        const waitMs = waits[attempt];
+        setStatus('Rate-limited (429). Auto-retry ' + (attempt + 1) + '/' + waits.length + ' in ' + Math.round(waitMs / 1000) + 's…', true);
+        await new Promise(function (resolve) { setTimeout(resolve, waitMs); });
+      }
     }
+    throw lastErr || new Error('Canon assist failed');
   }
 
   async function callAssist(action) {
@@ -145,9 +151,13 @@
         cites.innerHTML = data.citations.map(function (c) {
           return '<li>' + esc(c) + '</li>';
         }).join('');
+      } else if (cites) {
+        cites.innerHTML = '';
       }
 
-      setStatus('Done — review draft, then Save. Citations: ' + (data.chunkCount || 0) + ' canon excerpts.');
+      let statusMsg = 'Done — review draft, then Save. Citations: ' + (data.chunkCount || 0) + ' canon excerpts.';
+      if (data.note) statusMsg += ' ' + data.note;
+      setStatus(statusMsg);
     } catch (err) {
       setStatus(formatCallableError(err), true);
     } finally {

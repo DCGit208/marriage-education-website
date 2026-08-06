@@ -175,7 +175,26 @@
                 <div class="acs-meta-rail-section acs-panel-card acs-canon-section">
                     <p class="acs-meta-rail-title">✦ Canon AI</p>
                     <p id="acsCanonIndexMeta" class="acs-canon-index-meta">Loading index…</p>
-                    <textarea id="acsCanonInstruction" class="acs-canon-instruction" rows="2" placeholder="Optional: tone, emphasis, week theme…"></textarea>
+                    <textarea id="acsCanonInstruction" class="acs-canon-instruction" rows="3" placeholder="Optional instruction, e.g. Rewrite for Foundation clarity. Keep SBD doctrine. End with 3 reflection questions." list="acsCanonPromptIdeas"></textarea>
+                    <datalist id="acsCanonPromptIdeas">
+                        <option value="Rewrite for Foundation clarity. Keep SBD doctrine. Max 350 words."></option>
+                        <option value="Expand with deeper doctrine, one example, and KJV scripture anchors."></option>
+                        <option value="Align this to SBD integration law (Woman → Wife → Mother). Fix functionalism."></option>
+                        <option value="Generate 5 reflection questions + 2 formation exercises for couples."></option>
+                        <option value="Tighten tone: pastoral, precise, covenant-grade. Remove therapy-speak."></option>
+                        <option value="Produce a clean outline: headings, key definitions, 3 scripture anchors."></option>
+                    </datalist>
+                    <details class="acs-canon-help">
+                        <summary>How to use Canon AI</summary>
+                        <ol>
+                            <li>Open a week part in the editor.</li>
+                            <li>Optionally select the paragraph to improve.</li>
+                            <li>Add an instruction (or pick a prompt idea).</li>
+                            <li>Use <strong>Draft</strong>, <strong>Expand</strong>, <strong>Rewrite</strong>, <strong>Align canon</strong>, or <strong>Outline</strong>.</li>
+                            <li>Review, Save draft, then Publish.</li>
+                        </ol>
+                        <p>If you see a 429/rate-limit message, wait — Studio auto-retries. Avoid clicking multiple actions at once.</p>
+                    </details>
                     <div class="acs-canon-actions">
                         <button type="button" class="acs-btn acs-btn--sm acs-btn--gold" data-canon-action="draft">Draft part</button>
                         <button type="button" class="acs-btn acs-btn--sm" data-canon-action="expand">Expand</button>
