@@ -12,13 +12,17 @@ async function assertContentDesigner(db, context) {
   const uid = context.auth.uid;
   const snap = await db.collection('users').doc(uid).get();
   const ud = snap.exists ? snap.data() : {};
-  const role = String(ud.role || '').toLowerCase();
+  const roles = new Set();
+  const primary = String(ud.role || '').toLowerCase();
+  if (primary) roles.add(primary);
+  (ud.roles || []).forEach(function (r) { roles.add(String(r || '').toLowerCase()); });
+
   const isDesigner =
-    role === 'admin' ||
-    role === 'designer' ||
+    roles.has('admin') ||
+    roles.has('designer') ||
     ud.isAdmin === true ||
-    (ud.roles && ud.roles.includes('designer')) ||
-    (ud.staffAccess && ud.staffAccess.contentDesigner === true);
+    ud.isContentDesigner === true ||
+    !!(ud.staffAccess && ud.staffAccess.contentDesigner === true);
   if (!isDesigner) {
     throw new functions.https.HttpsError('permission-denied', 'Content Designer access required');
   }
@@ -60,12 +64,26 @@ async function runStudioAssist(db, data, context) {
     currentDraft.slice(0, 800),
   ].filter(Boolean);
 
-  const chunks = await retrieveChunks(db, queryParts.join(' — '), {
-    courseId,
-    moduleId,
-    partId,
-    limit: 14,
-  });
+  let chunks = [];
+  let retrievalNote = '';
+  try {
+    chunks = await retrieveChunks(db, queryParts.join(' — '), {
+      courseId,
+      moduleId,
+      partId,
+      limit: 10,
+    });
+  } catch (retrieveErr) {
+    const rmsg = String(retrieveErr && retrieveErr.message || '');
+    // Embeddings are the usual 429 hotspot — still draft without RAG rather than failing the edit.
+    if (/RATE_LIMITED|429|quota|resource exhausted|too many requests/i.test(rmsg)) {
+      console.warn('[studioCanonAssist] retrieval rate-limited; generating without RAG');
+      retrievalNote = 'Generated without live canon retrieval (rate-limited). Review carefully.';
+      chunks = [];
+    } else {
+      throw retrieveErr;
+    }
+  }
 
   const canonContext = buildContextBlock(chunks);
   const userPrompt = buildUserPrompt({
@@ -90,6 +108,7 @@ async function runStudioAssist(db, data, context) {
       citations: formatCitations(chunks),
       chunkCount: chunks.length,
       retrievedTitles: chunks.map(function (c) { return c.title || c.sourcePath; }),
+      note: retrievalNote || undefined,
     };
   } catch (err) {
     const msg = String(err && err.message || 'Canon assist failed');

@@ -22,13 +22,38 @@ function shouldRetryStatus(status) {
   return status === 429 || status === 503 || status === 500;
 }
 
-function retryDelayMs(attempt, retryAfterHeader) {
-  const retryAfter = Number(retryAfterHeader || 0);
-  if (retryAfter > 0 && Number.isFinite(retryAfter)) {
-    return Math.min(retryAfter * 1000, 20000);
+function parseRetryAfterMs(err) {
+  const header = err?.response?.headers?.['retry-after'];
+  const headerNum = Number(header || 0);
+  if (headerNum > 0 && Number.isFinite(headerNum)) {
+    return Math.min(headerNum * 1000, 45000);
   }
-  const base = 1200;
-  return Math.min(base * Math.pow(2, attempt), 12000);
+
+  // Gemini often returns: details[].retryDelay = "12s" / "1.5s"
+  const details = err?.response?.data?.error?.details;
+  if (Array.isArray(details)) {
+    for (let i = 0; i < details.length; i++) {
+      const d = details[i] || {};
+      const raw = d.retryDelay || d.retry_delay;
+      if (!raw) continue;
+      const m = String(raw).match(/([\d.]+)\s*s/i);
+      if (m) {
+        const sec = Number(m[1]);
+        if (sec > 0 && Number.isFinite(sec)) return Math.min(sec * 1000, 45000);
+      }
+    }
+  }
+  return 0;
+}
+
+function retryDelayMs(attempt, err) {
+  const fromApi = parseRetryAfterMs(err);
+  if (fromApi > 0) return fromApi;
+  // 429 needs longer backoff than transient 5xx
+  const status = err?.response?.status;
+  const base = status === 429 ? 2500 : 1200;
+  const jitter = Math.floor(Math.random() * 600);
+  return Math.min(base * Math.pow(2, attempt) + jitter, 30000);
 }
 
 function formatApiError(prefix, err, status) {
@@ -38,7 +63,7 @@ function formatApiError(prefix, err, status) {
 }
 
 async function postWithRetry(url, body, timeoutMs, label) {
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   let lastErr = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
@@ -49,8 +74,9 @@ async function postWithRetry(url, body, timeoutMs, label) {
       if (!shouldRetryStatus(status) || attempt === maxAttempts - 1) {
         throw new Error(formatApiError(label, err, status));
       }
-      const retryAfter = err?.response?.headers?.['retry-after'];
-      await sleep(retryDelayMs(attempt, retryAfter));
+      const waitMs = retryDelayMs(attempt, err);
+      console.warn('[canon-ai] ' + label + ' HTTP ' + status + ' — retry ' + (attempt + 1) + '/' + (maxAttempts - 1) + ' in ' + waitMs + 'ms');
+      await sleep(waitMs);
     }
   }
   throw lastErr || new Error(label + ': request failed');

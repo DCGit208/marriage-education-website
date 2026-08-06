@@ -886,8 +886,23 @@ label.acs-btn--file {
   font-size: 0.75rem;
   font-family: inherit;
   resize: vertical;
-  min-height: 48px;
+  min-height: 64px;
 }
+.acs-canon-help {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: #999;
+}
+.acs-canon-help summary {
+  cursor: pointer;
+  color: var(--acs-gold);
+  margin-bottom: 6px;
+}
+.acs-canon-help ol {
+  margin: 0 0 6px 1.1rem;
+  padding: 0;
+}
+.acs-canon-help li { margin: 0 0 4px; }
 .acs-canon-actions {
   display: flex;
   flex-wrap: wrap;
