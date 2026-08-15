@@ -3303,9 +3303,6 @@ async function ensureCe2DirectConv(otherUid) {
 
 /** Share board post via Messages V2 (ce2_conversations / board_share). */
 async function sendPostAsDm(otherUser, boardId, postId, preview) {
-  if (!window.Ce2Share || !Ce2Share.mintBoardShareToken) {
-    throw new Error('Messages V2 share module failed to load. Refresh and try again.');
-  }
   if (!boardId || !postId) {
     throw new Error('Missing board post reference.');
   }
@@ -3334,7 +3331,10 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
   const convId = await ensureCe2DirectConv(otherUser.id);
   const now = firebase.firestore.Timestamp.now();
   const title = preview ? String(preview).slice(0, 120) : 'Board post';
-  const token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+  let token = '';
+  if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
+    token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+  }
   const boardShare = {
     boardId,
     postId,
@@ -3356,14 +3356,64 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
     createdAt: now,
   };
 
-  await db.collection('ce2_conversations').doc(convId).collection('ce2_messages').add(patch);
+  const msgRef = await db.collection('ce2_conversations').doc(convId).collection('ce2_messages').add(patch);
   await db.collection('ce2_conversations').doc(convId).set(
     {
       lastMessageAt: now,
       lastPreview: content.slice(0, 140),
+      lastSenderId: currentUserId,
+      lastMessageId: msgRef.id,
+      lastMessageType: 'board_share',
+      [`lastRead.${currentUserId}`]: now,
+      [`unreadCount.${otherUser.id}`]: firebase.firestore.FieldValue.increment(1),
     },
     { merge: true }
   );
+  notifyBoardShareRecipient(otherUser, otherData, convId, msgRef.id, content).catch(() => {});
+}
+
+async function notifyBoardShareRecipient(otherUser, otherData, convId, messageId, content) {
+  if (!otherUser?.id || !convId || !messageId || otherUser.id === currentUserId) return;
+  const senderName = currentUserData.name || currentUserData.email || 'Someone';
+  const body = content || 'Shared a board post';
+
+  db.collection('notifications').add({
+    userId: otherUser.id,
+    type: 'direct_message',
+    title: senderName,
+    body: body.slice(0, 80),
+    senderId: currentUserId,
+    convId,
+    messageId,
+    read: false,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(() => {});
+
+  const token = otherData?.fcmToken || otherData?.pushToken || otherData?.notificationToken || '';
+  if (!token) return;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken();
+  await fetch('https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      senderId: currentUserId,
+      recipientId: otherUser.id,
+      recipientToken: token,
+      senderName,
+      title: senderName,
+      body: body.slice(0, 100),
+      message: body,
+      convId,
+      messageId,
+      url: `/communication-v2/?conv=${encodeURIComponent(convId)}&msg=${encodeURIComponent(messageId)}`,
+    }),
+  });
 }
 
 document.getElementById('ctxDelete').addEventListener('click', async () => {
