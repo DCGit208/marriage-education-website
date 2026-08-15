@@ -2164,9 +2164,12 @@ body.ce2-msg-menu-open {
 }
 
 .ce2-board-share-thumb {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 132px;
+  min-height: 132px;
+  max-height: 220px;
   margin-bottom: 6px;
   border-radius: 8px;
   overflow: hidden;
@@ -2176,8 +2179,10 @@ body.ce2-msg-menu-open {
 .ce2-board-share-thumb img {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
+  max-height: 220px;
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .ce2-board-share-body {
