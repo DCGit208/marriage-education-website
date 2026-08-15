@@ -3357,7 +3357,15 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
   };
 
   const msgRef = await db.collection('ce2_conversations').doc(convId).collection('ce2_messages').add(patch);
-  await db.collection('ce2_conversations').doc(convId).set(
+  const convRef = db.collection('ce2_conversations').doc(convId);
+  const convSnap = await convRef.get();
+  const convMeta = convSnap.exists ? (convSnap.data() || {}) : {};
+  const unreadMap = convMeta.unreadCount || {};
+  const currentUnread = typeof unreadMap[otherUser.id] === 'number' && unreadMap[otherUser.id] > 0
+    ? unreadMap[otherUser.id]
+    : 0;
+
+  await convRef.set(
     {
       lastMessageAt: now,
       lastPreview: content.slice(0, 140),
@@ -3365,7 +3373,7 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
       lastMessageId: msgRef.id,
       lastMessageType: 'board_share',
       [`lastRead.${currentUserId}`]: now,
-      [`unreadCount.${otherUser.id}`]: firebase.firestore.FieldValue.increment(1),
+      [`unreadCount.${otherUser.id}`]: currentUnread + 1,
     },
     { merge: true }
   );
