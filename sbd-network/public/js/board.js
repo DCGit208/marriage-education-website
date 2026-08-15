@@ -3200,7 +3200,7 @@ async function openShareDmModal(post) {
         row.style.opacity = '0.5';
         row.style.pointerEvents = 'none';
         try {
-          await sendPostAsDm(u, boardId, post.id, preview);
+          await sendPostAsDm(u, boardId, post, preview);
           close();
           showToast('Post shared via Messages V2 to ' + u.name);
         } catch (err) {
@@ -3302,7 +3302,23 @@ async function ensureCe2DirectConv(otherUid) {
 }
 
 /** Share board post via Messages V2 (ce2_conversations / board_share). */
-async function sendPostAsDm(otherUser, boardId, postId, preview) {
+function getBoardShareThumbnail(post) {
+  if (!post || typeof post === 'string') return { thumbnailUrl: '', mediaType: '' };
+  if (Array.isArray(post.allMedia) && post.allMedia.length > 0) {
+    const firstImage = post.allMedia.find((item) => item && item.type === 'image' && item.url);
+    if (firstImage) return { thumbnailUrl: firstImage.url, mediaType: 'image' };
+    const firstVideo = post.allMedia.find((item) => item && item.type === 'video' && item.url);
+    if (firstVideo) return { thumbnailUrl: firstVideo.thumbUrl || post.thumbUrl || post.imageUrl || '', mediaType: 'video' };
+  }
+  if (post.imageUrl) return { thumbnailUrl: post.imageUrl, mediaType: 'image' };
+  if (Array.isArray(post.allPhotos) && post.allPhotos[0]) return { thumbnailUrl: post.allPhotos[0], mediaType: 'image' };
+  if (post.thumbUrl) return { thumbnailUrl: post.thumbUrl, mediaType: 'video' };
+  if (Array.isArray(post.allThumbs) && post.allThumbs[0]) return { thumbnailUrl: post.allThumbs[0], mediaType: 'video' };
+  return { thumbnailUrl: '', mediaType: post.videoUrl ? 'video' : '' };
+}
+
+async function sendPostAsDm(otherUser, boardId, postOrPostId, preview) {
+  const postId = typeof postOrPostId === 'string' ? postOrPostId : postOrPostId?.id;
   if (!boardId || !postId) {
     throw new Error('Missing board post reference.');
   }
@@ -3334,6 +3350,7 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
   const postUrl = window.Ce2Share && Ce2Share.shareHref
     ? Ce2Share.shareHref(boardId, postId, '')
     : `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
+  const shareThumb = getBoardShareThumbnail(postOrPostId);
   let token = '';
   if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
     try {
@@ -3349,6 +3366,8 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
     url: token
       ? `${postUrl}&ce2token=${encodeURIComponent(token)}`
       : postUrl,
+    thumbnailUrl: shareThumb.thumbnailUrl || '',
+    mediaType: shareThumb.mediaType || '',
     title,
     excerpt: preview ? String(preview).slice(0, 200) : '',
   };

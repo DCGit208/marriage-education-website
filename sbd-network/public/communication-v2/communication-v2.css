@@ -2163,6 +2163,29 @@ body.ce2-msg-menu-open {
   text-decoration: none;
 }
 
+.ce2-board-share-thumb {
+  display: block;
+  width: 100%;
+  height: 132px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.ce2-board-share-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ce2-board-share-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .ce2-board-share-kicker {
   font-size: 0.62rem;
   text-transform: uppercase;

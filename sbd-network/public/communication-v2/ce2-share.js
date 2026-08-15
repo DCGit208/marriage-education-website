@@ -59,10 +59,18 @@
     var href = bs.url || shareHref(bs.boardId, bs.postId, bs.token);
     var title = escapeHtml(bs.title || 'Board post');
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
+    var thumb = bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '';
+    var thumbHtml = thumb
+      ? '<span class="ce2-board-share-thumb"><img src="' +
+        escapeHtml(thumb).replace(/"/g, '&quot;') +
+        '" alt="" loading="lazy"></span>'
+      : '';
     return (
       '<a class="ce2-board-share" href="' +
       href.replace(/"/g, '&quot;') +
       '">' +
+      thumbHtml +
+      '<span class="ce2-board-share-body">' +
       '<span class="ce2-board-share-kicker">Board share</span>' +
       '<span class="ce2-board-share-title">' +
       title +
@@ -70,7 +78,7 @@
       (excerpt
         ? '<span class="ce2-board-share-excerpt">' + excerpt + '</span>'
         : '') +
-      '<span class="ce2-board-share-cta">Open post →</span></a>'
+      '<span class="ce2-board-share-cta">Open post →</span></span></a>'
     );
   }
 
