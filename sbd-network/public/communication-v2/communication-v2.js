@@ -211,6 +211,7 @@
         localFile: null,
         uploading: false,
         uploadProgress: 0,
+        uploadFinalizing: false,
         uploadAbort: null,
         queuedSend: null,
         pendingSendAfterUpload: false,
@@ -248,6 +249,7 @@
     }
     slot.uploading = false;
     slot.uploadProgress = 0;
+    slot.uploadFinalizing = false;
   }
 
   function clearComposerSlot(slot) {
@@ -262,6 +264,7 @@
     slot.localFile = null;
     slot.queuedSend = null;
     slot.pendingSendAfterUpload = false;
+    slot.uploadFinalizing = false;
     syncGlobalsFromComposerSlot();
   }
 
@@ -2448,6 +2451,7 @@
     });
     if (slot.uploading && slot.localPreviewUrl) {
       var pct = Math.round((slot.uploadProgress || 0) * 100);
+      var uploadLabel = slot.uploadFinalizing ? 'Finalizing…' : pct + '%';
       var attMod = attachments();
       var uploadingVideo =
         slot.localFile && attMod && attMod.isVideoFile && attMod.isVideoFile(slot.localFile);
@@ -2461,8 +2465,8 @@
         '<div class="ce2-attach-cell ce2-attach-cell-uploading">' +
         uploadingCell +
         '<span class="ce2-attach-pct">' +
-        pct +
-        '%</span></div>';
+        uploadLabel +
+        '</span></div>';
     }
     html += '</div>';
     if (slot.attachQueue.length) {
@@ -4263,6 +4267,7 @@
     slot.localPreviewUrl = URL.createObjectURL(file);
     slot.uploading = true;
     slot.uploadProgress = 0;
+    slot.uploadFinalizing = false;
     slot.uploadAbort = typeof AbortController !== 'undefined' ? new AbortController() : null;
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
@@ -4273,6 +4278,11 @@
         var s = CommunicationState.threadComposer[threadKey];
         if (!s) return;
         s.uploadProgress = p;
+        s.uploadFinalizing = p >= 0.995;
+        if (s.uploadFinalizing) {
+          CommunicationState.statusMessage = 'Finalizing upload…';
+          setAttachStatus('Finalizing upload…', 'ok');
+        }
         var now = Date.now();
         if (now - lastProgressUi < 200) return;
         lastProgressUi = now;
@@ -4295,6 +4305,7 @@
         syncPendingMediaFromAttachments(s);
         s.uploading = false;
         s.uploadProgress = 1;
+        s.uploadFinalizing = false;
         s.uploadAbort = null;
         s.localFile = null;
         revokeLocalPreview(s.localPreviewUrl);
@@ -4322,6 +4333,7 @@
         var s = CommunicationState.threadComposer[threadKey];
         if (!s) return;
         s.uploading = false;
+        s.uploadFinalizing = false;
         s.uploadAbort = null;
         s.localFile = null;
         revokeLocalPreview(s.localPreviewUrl);
