@@ -73,34 +73,87 @@ You were created in the image of God. Not as a broken thing needing completion, 
 
 The word "justified" (δικαιόω - dikaioō) means to render righteous, to show as innocent, to declare just. You have already been justified. It is finished. Your standing before God is settled.
 
-Therefore: You don't practice holiness TO become righteous. You practice holiness FROM the righteousness Christ has already secured.
+**Therefore:** You do not practice holiness **TO** become holy; nor righteousness **to** become righteous.  
+You practice holiness because you are holy by design.
+
+Righteousness is not a performance ladder. **Righteousness is state** — *"the state of him who is as he ought to be"* (G1343, **δικαιοσύνη / dikaiosynē**): *"the condition acceptable to God."*
+
+> *"For he hath made him to be sin for us, who knew no sin; that we might be made the righteousness of God in him."* — **2 Corinthians 5:21 (KJV)**
+
+God reconciled us back to Himself — back to design — through Jesus Christ:
+
+> *"Therefore if any man be in Christ, he is a new creature: old things are passed away; behold, all things are become new. And all things are of God, who hath reconciled us to himself by Jesus Christ…"* — **2 Corinthians 5:17–18 (KJV)**
+
+This fact trumps religionism. It is not denominational slogan; it is human-design fact: Genesis 1:26–28 restored in Christ.
+
+"Be holy, for I am holy" is a foundational command found in Leviticus 11:44, 19:2, 20:7, and repeated in the New Testament (1 Peter 1:16). It speaks to your design — not to be interpreted as a moonshot, uphill battle, tall order, or heavy lift.
 
 ---
 
-## The Etymology of "Be Perfect"
+### The Etymology of "Be Holy"
 
-> "Be ye therefore perfect, even as your Father which is in heaven is perfect." — Matthew 5:48 (KJV)
+> *"For I am the LORD your God: ye shall therefore sanctify yourselves, and ye shall be holy; for I am holy..."* — **Leviticus 11:44 (KJV)**  
+> *"Speak unto all the congregation of the children of Israel, and say unto them, Ye shall be holy: for I the LORD your God am holy."* — **Leviticus 19:2 (KJV)**  
+> *"Sanctify yourselves therefore, and be ye holy: for I am the LORD your God."* — **Leviticus 20:7 (KJV)**  
+> *"Because it is written, Be ye holy; for I am holy."* — **1 Peter 1:16 (KJV)**
 
-Because holiness is not a target—it is your template.
+**Because holiness is not a target — it is your template.**
 
-The word "be" does not mean "become." Perfection is not a destination. Perfection is your origin.
+The word **"be"** does not mean **"become."**  
+Holiness is not a destination. Holiness is your **design-state**.
 
-### Etymology of "Be"
+### Lexical Grounding of "Be" (WordWeb)
 
-- **Old English:** beon — to exist, to remain, to abide
-- **Proto-Germanic:** beunan — to be in a state
-- **Definition:** to stand in what already is; to manifest what is extant
+Verb: **be** (am, are, is, were, was, been, being)
 
-### What "Be Perfect" Means
+Core lexical senses:
+1. **Have the quality of being** (copula): "John is rich."
+2. **Be identical to; be someone or something**: "This is my house."
+3. **Have an existence, be extant**: "Is there a God?"
+
+Therefore, **"be holy"** is not a command to manufacture a new ontology.  
+It is a command to **have the quality of being holy**, to **be identical to** that design-state, and to **exist/abide** as what is already true under God.
+
+**What "Be Holy" Means:**
+1. Have the quality of being holy (state, not slogans)
+2. Be identical to your holy design-identity under God
+3. Exist and abide in that state
+4. Live according to what is already true of your design
+
+It does **NOT** mean "attempt holiness until you maybe become holy."  
+It means **"act according to what you already are."**
+
+---
+
+### The Etymology of "Be Perfect"
+
+> *"Be ye therefore perfect, even as your Father which is in heaven is perfect."* — **Matthew 5:48 (KJV)**
+
+**Because holiness is not a target — it is your template.**
+
+The word **"be"** does not mean **"become."**  
+Perfection is not a destination. Perfection is your **origin**.
+
+**Etymology of "Be":**
+- **Old English:** *beon* — to exist, to remain, to abide  
+- **Proto-Germanic:** *beunan* — to be in a state  
+- **Definition:** to stand in what already is; to manifest what is extant  
+
+**WordWeb confirmation of the same force:**
+- Have the quality of being  
+- Be identical to; be someone or something  
+- Have an existence; be extant  
+
+**What "Be Perfect" Means:**
 
 To "be perfect" means to:
+1. Exist **from** perfection  
+2. Operate **from** completeness  
+3. Express your **original state**  
+4. Live **from** the truth of your nature
 
-- Exist from perfection
-- Operate from completeness
-- Express your original state
-- Live from the truth of your nature
-
-It does NOT mean "attempt perfection." It means "act according to what you already are."
+It does **NOT** mean "attempt perfection."  
+It means **"act according to what you already are."**
 
 ### Wrong vs. Right Mindset
 
