@@ -2314,12 +2314,6 @@
     }
     if (m.messageType === 'board_share' && m.boardShare && sh) {
       bubble.insertAdjacentHTML('beforeend', sh.renderBoardShareHtml(m, escapeHtml));
-      if (m.content) {
-        var cap = document.createElement('p');
-        cap.className = 'ce2-msg-caption';
-        cap.textContent = m.content;
-        bubble.appendChild(cap);
-      }
       return;
     }
     if (m.imageUrl) {
