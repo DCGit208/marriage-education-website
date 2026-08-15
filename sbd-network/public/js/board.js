@@ -3331,14 +3331,24 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
   const convId = await ensureCe2DirectConv(otherUser.id);
   const now = firebase.firestore.Timestamp.now();
   const title = preview ? String(preview).slice(0, 120) : 'Board post';
+  const postUrl = window.Ce2Share && Ce2Share.shareHref
+    ? Ce2Share.shareHref(boardId, postId, '')
+    : `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
   let token = '';
   if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
-    token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+    try {
+      token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+    } catch (err) {
+      console.warn('[Board Share] token mint skipped:', err);
+    }
   }
   const boardShare = {
     boardId,
     postId,
     token,
+    url: token
+      ? `${postUrl}&ce2token=${encodeURIComponent(token)}`
+      : postUrl,
     title,
     excerpt: preview ? String(preview).slice(0, 200) : '',
   };
@@ -3365,7 +3375,7 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
     ? unreadMap[otherUser.id]
     : 0;
 
-  await convRef.set(
+  convRef.set(
     {
       lastMessageAt: now,
       lastPreview: content.slice(0, 140),
@@ -3376,7 +3386,7 @@ async function sendPostAsDm(otherUser, boardId, postId, preview) {
       [`unreadCount.${otherUser.id}`]: currentUnread + 1,
     },
     { merge: true }
-  );
+  ).catch((err) => console.warn('[Board Share] metadata update skipped:', err));
   notifyBoardShareRecipient(otherUser, otherData, convId, msgRef.id, content).catch(() => {});
 }
 

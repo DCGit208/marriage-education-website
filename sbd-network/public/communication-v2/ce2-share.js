@@ -56,13 +56,13 @@
   function renderBoardShareHtml(m, escapeHtml) {
     var bs = m.boardShare;
     if (!bs || !bs.boardId || !bs.postId) return '';
-    var href = shareHref(bs.boardId, bs.postId, bs.token);
+    var href = bs.url || shareHref(bs.boardId, bs.postId, bs.token);
     var title = escapeHtml(bs.title || 'Board post');
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
     return (
       '<a class="ce2-board-share" href="' +
       href.replace(/"/g, '&quot;') +
-      '" target="_blank" rel="noopener noreferrer">' +
+      '">' +
       '<span class="ce2-board-share-kicker">Board share</span>' +
       '<span class="ce2-board-share-title">' +
       title +
