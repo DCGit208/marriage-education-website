@@ -45,6 +45,7 @@ jobs:
           filters: |
             functions:
               - 'sbd-network/functions/**'
+              - '.github/workflows/sbd-network-deploy.yml'
             rules:
               - 'sbd-network/firestore.rules'
               - 'sbd-network/firestore.indexes.json'
@@ -71,7 +72,7 @@ jobs:
 
       - name: Install functions dependencies
         if: steps.filter.outputs.functions == 'true' || github.event_name == 'workflow_dispatch'
-        run: npm ci
+        run: npm install
         working-directory: sbd-network/functions
 
       - name: Deploy to Firebase
