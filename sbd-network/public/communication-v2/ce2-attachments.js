@@ -408,6 +408,27 @@
       uploadFile = await compressImageFile(file);
       uploadFile = normalizeUploadFile(uploadFile);
     }
+
+    var previewPromise = null;
+    if (isImageFile(file)) {
+      previewPromise = createImageThumbBlob(uploadFile)
+        .then(function (imageThumb) {
+          if (!imageThumb) return null;
+          var imgBase = (file.name || 'photo').replace(/\.[^.]+$/, '');
+          return uploadChatThumb(imageThumb, imgBase, {});
+        })
+        .catch(function () { return null; });
+    } else if (isVideoFile(file)) {
+      previewPromise = captureVideoPosterBlob(file)
+        .then(function (posterBlob) {
+          if (!posterBlob) return null;
+          var base = (file.name || 'video').replace(/\.[^.]+$/, '');
+          var posterFile = new File([posterBlob], base + '_thumb.jpg', { type: 'image/jpeg' });
+          return withUploadTimeout(uploadMediaFile(posterFile, 'dm_attachments', {}), 30000);
+        })
+        .catch(function () { return null; });
+    }
+
     var folder = folderForFile(uploadFile);
     var url = await withUploadTimeout(
       uploadMediaFile(uploadFile, folder, options || {}),
@@ -417,29 +438,16 @@
     var result = { url: url, kind: kindForFile(file) };
     if (isImageFile(file)) {
       try {
-        var imageThumb = await withSoftTimeout(createImageThumbBlob(uploadFile), 3500, null);
-        if (imageThumb) {
-          var imgBase = (file.name || 'photo').replace(/\.[^.]+$/, '');
-          var thumbUrl = await withSoftTimeout(uploadChatThumb(imageThumb, imgBase, options || {}), 6000, null);
-          if (thumbUrl) result.thumbUrl = thumbUrl;
-        }
+        var thumbUrl = await withSoftTimeout(previewPromise || Promise.resolve(null), 3500, null);
+        if (thumbUrl) result.thumbUrl = thumbUrl;
       } catch (_) {}
     }
     if (isVideoFile(file)) {
       try {
-        var posterBlob = await withSoftTimeout(captureVideoPosterBlob(file), 4500, null);
-        if (posterBlob) {
-          var base = (file.name || 'video').replace(/\.[^.]+$/, '');
-          var posterFile = new File([posterBlob], base + '_thumb.jpg', { type: 'image/jpeg' });
-          var posterUrl = await withSoftTimeout(
-            withUploadTimeout(uploadMediaFile(posterFile, 'dm_attachments', options || {}), 15000),
-            8000,
-            null
-          );
-          if (posterUrl) {
-            result.posterUrl = posterUrl;
-            result.thumbUrl = posterUrl;
-          }
+        var posterUrl = await withSoftTimeout(previewPromise || Promise.resolve(null), 5000, null);
+        if (posterUrl) {
+          result.posterUrl = posterUrl;
+          result.thumbUrl = posterUrl;
         }
       } catch (_) {}
     }
@@ -456,6 +464,6 @@
     r2Ready: r2Ready,
     primeVideoThumbnail: primeVideoThumbnail,
     MAX_BYTES: MAX_BYTES,
-    VERSION: 11,
+    VERSION: 12,
   };
 })(typeof window !== 'undefined' ? window : global);
