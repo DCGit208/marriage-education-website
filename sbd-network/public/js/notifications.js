@@ -36,6 +36,7 @@ async function initNotifications(userId) {
     _notifUserData = null;
   }
   _startUnreadListener(userId);
+  _ensurePanelShell();
   _setupBellListeners(userId);
   _ensurePanelChrome();
   // Defer heavy purge — running during dashboard boot caused iOS listener churn
@@ -237,10 +238,15 @@ function _showNotifToast(n) {
   toast.className = 'notif-toast';
   toast.innerHTML = `<span class="notif-toast-icon">${icon}</span><div class="notif-toast-body"><div class="notif-toast-title">${_esc(n.title)}</div>${n.body ? `<div class="notif-toast-text">${_esc(n.body.substring(0, 80))}${n.body.length > 80 ? '…' : ''}</div>` : ''}</div>`;
 
-  // Clicking the toast opens the notification panel
+  // Clicking the toast should land on the same target as the panel item.
   toast.addEventListener('click', () => {
     toast.remove();
-    openNotifPanel();
+    const targetUrl = _notificationTargetUrl(n);
+    if (targetUrl) {
+      window.location.href = targetUrl;
+    } else {
+      openNotifPanel();
+    }
   });
 
   document.body.appendChild(toast);
@@ -251,6 +257,31 @@ function _showNotifToast(n) {
     toast.classList.remove('notif-toast--in');
     setTimeout(() => toast.remove(), 400);
   }, 5000);
+}
+
+function _notificationTargetUrl(n) {
+  if (!n) return '';
+  if (n.boardId) {
+    let url = `/board.html?boardId=${encodeURIComponent(n.boardId)}`;
+    if (n.postId) {
+      url += `&post=${encodeURIComponent(n.postId)}`;
+    }
+    if (n.commentId) {
+      url += `&comment=${encodeURIComponent(n.commentId)}`;
+    }
+    return url;
+  }
+  if (n.type === 'group_message' && (n.groupId || n.convId)) {
+    let url = `/communication-v2/?group=${encodeURIComponent(n.groupId || n.convId)}`;
+    if (n.messageId) url += `&msg=${encodeURIComponent(n.messageId)}`;
+    return url;
+  }
+  if (n.type === 'direct_message' && n.convId) {
+    let url = `/communication-v2/?conv=${encodeURIComponent(n.convId)}`;
+    if (n.messageId) url += `&msg=${encodeURIComponent(n.messageId)}`;
+    return url;
+  }
+  return '';
 }
 
 function _setBadge(count) {
@@ -269,7 +300,35 @@ function _setBadge(count) {
 let _pushInitialised = false;
 let _clearAllBusy = false;
 
+function _ensurePanelShell() {
+  if (!document.getElementById('notifOverlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'notifOverlay';
+    overlay.className = 'notif-overlay';
+    overlay.style.display = 'none';
+    document.body.appendChild(overlay);
+  }
+
+  if (!document.getElementById('notifPanel')) {
+    const panel = document.createElement('aside');
+    panel.id = 'notifPanel';
+    panel.className = 'notif-panel';
+    panel.setAttribute('aria-label', 'Notifications');
+    panel.innerHTML = `
+      <div class="notif-panel-header">
+        <h3>Notifications</h3>
+        <button id="notifPanelClose" class="notif-close-btn" type="button" aria-label="Close notifications">&times;</button>
+      </div>
+      <ul id="notifList" class="notif-list">
+        <li class="notif-empty">No notifications yet</li>
+      </ul>
+    `;
+    document.body.appendChild(panel);
+  }
+}
+
 function _ensurePanelChrome() {
+  _ensurePanelShell();
   const header = document.querySelector('#notifPanel .notif-panel-header');
   if (!header || header.dataset.notifChrome === '1') return;
   const closeBtn = document.getElementById('notifPanelClose');
@@ -326,6 +385,7 @@ async function _clearAllNotifications() {
 }
 
 function _setupBellListeners(userId) {
+  _ensurePanelShell();
   // Use event delegation on body — works even if bell is rendered late
   document.body.addEventListener('click', e => {
     if (!e.target.closest('.notif-bell-btn')) return;
@@ -347,6 +407,7 @@ function _setupBellListeners(userId) {
 
 // ── Notification panel ────────────────────────────────────────────
 function openNotifPanel() {
+  _ensurePanelShell();
   const panel   = document.getElementById('notifPanel');
   const overlay = document.getElementById('notifOverlay');
   if (!panel) return;
@@ -439,18 +500,12 @@ function _appendNotifItem(n, list) {
         <div class="ni-time">${ago}</div>
       </div>
     `;
-    if (n.boardId) {
+    const targetUrl = _notificationTargetUrl(n);
+    if (targetUrl) {
       li.style.cursor = 'pointer';
       li.addEventListener('click', () => {
         closeNotifPanel();
-        let url = `board.html?boardId=${encodeURIComponent(n.boardId)}`;
-        if (n.postId) {
-          url += `&post=${encodeURIComponent(n.postId)}`;
-        }
-        if (n.commentId) {
-          url += `&comment=${encodeURIComponent(n.commentId)}`;
-        }
-        window.location.href = url;
+        window.location.href = targetUrl;
       });
     } else if (n.type === 'announcement') {
       li.style.cursor = 'pointer';
@@ -458,19 +513,6 @@ function _appendNotifItem(n, list) {
         closeNotifPanel();
         const vMatch = (n.title || '').match(/v(\d+)/);
         _openAnnouncementSheet(vMatch ? vMatch[1] : null, n);
-      });
-    } else if (n.type === 'group_message' && (n.groupId || n.convId)) {
-      li.style.cursor = 'pointer';
-      li.addEventListener('click', () => {
-        closeNotifPanel();
-        const gid = encodeURIComponent(n.groupId || n.convId);
-        window.location.href = `/communication-v2/?group=${gid}`;
-      });
-    } else if (n.type === 'direct_message' && n.convId) {
-      li.style.cursor = 'pointer';
-      li.addEventListener('click', () => {
-        closeNotifPanel();
-        window.location.href = `/communication-v2/?conv=${encodeURIComponent(n.convId)}`;
       });
     }
     list.appendChild(li);
@@ -654,6 +696,7 @@ async function _triggerPushForComment(boardId, boardName, postId, commentId, com
         body:    `${commenterName}: ${(text || '').substring(0, 80)}`,
         boardId: boardId,
         postId:  postId,
+        commentId: commentId,
         groupId: groupId || null,
         url:     `/board.html?boardId=${boardId}&post=${postId}&comment=${commentId}`,
       }),

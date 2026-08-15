@@ -17,7 +17,7 @@ const PAGE_SIZE = (function() {
 })();
 
 const urlParams   = new URLSearchParams(window.location.search);
-const boardId     = urlParams.get('boardId');
+let boardId       = urlParams.get('boardId') || urlParams.get('id');
 
 let currentBoardData  = null;
 let currentUserId     = null;
@@ -43,6 +43,41 @@ let currentUserBookmarks  = new Set();
 let bulkSelectMode    = false;         // true while select mode is active
 let bulkSelected      = new Set();     // Set of selected post IDs
 let bulkSelectedPosts = {};            // { postId: postData }
+
+async function resolveBoardIdFromDeepLink() {
+  if (boardId) return boardId;
+
+  let targetPostId = urlParams.get('post');
+  const targetCommentId = urlParams.get('comment');
+  const shareToken = urlParams.get('ce2token');
+
+  try {
+    if (shareToken) {
+      const tokenDoc = await db.collection('ce2_share_tokens').doc(shareToken).get();
+      if (tokenDoc.exists) {
+        const tokenData = tokenDoc.data() || {};
+        if (!targetPostId && tokenData.postId) {
+          targetPostId = tokenData.postId;
+          urlParams.set('post', targetPostId);
+        }
+        if (tokenData.boardId && (!targetPostId || !tokenData.postId || tokenData.postId === targetPostId)) {
+          return tokenData.boardId;
+        }
+      }
+    }
+    if (!targetPostId && targetCommentId) {
+      const commentDoc = await db.collection('comments').doc(targetCommentId).get();
+      if (commentDoc.exists) targetPostId = commentDoc.data().postId || '';
+    }
+    if (!targetPostId) return '';
+    const postDoc = await db.collection('posts').doc(targetPostId).get();
+    if (!postDoc.exists) return '';
+    return postDoc.data().boardId || '';
+  } catch (err) {
+    console.warn('[Board] Could not resolve boardId from deep link:', err);
+    return '';
+  }
+}
 
 // Apply Expression + Save to Wardrobe: enabled on all boards except these titles
 const WARDROBE_EXPRESSION_BOARD_EXCLUSIONS = [
@@ -231,7 +266,13 @@ auth.onAuthStateChanged(async (user) => {
   
   console.log('[Board] Firebase ready, proceeding with auth check');
   
-  if (!user) { window.location.href = '/auth'; return; }
+  if (!user) {
+    window.location.href = '/auth?next=' + encodeURIComponent(window.location.pathname + window.location.search);
+    return;
+  }
+  if (!boardId) {
+    boardId = await resolveBoardIdFromDeepLink();
+  }
   if (!boardId) {
     window.location.href = 'dashboard.html';
     return;
@@ -2158,7 +2199,8 @@ function renderComment(comment, onReply) {
 
   // Wire copy-link button
   li.querySelector('.comment-copy-link-btn').addEventListener('click', () => {
-    const url = `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&comment=${encodeURIComponent(comment.id)}`;
+    const postParam = comment.postId ? `&post=${encodeURIComponent(comment.postId)}` : '';
+    const url = `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}${postParam}&comment=${encodeURIComponent(comment.id)}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => showToast('Comment link copied!')).catch(() => prompt('Copy this link:', url));
     } else {

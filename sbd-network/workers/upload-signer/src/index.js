@@ -23,6 +23,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
 const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', 'dm_videos', 'dm_audio', 'course-covers']);
 
 const FIREBASE_PROJECT_ID = 'marriage-education';
+const PUBLIC_APP_ORIGIN = 'https://sbd-network.web.app';
 
 // ── Service-account JWT → Google OAuth2 access token ─────────────
 async function getAccessToken(env) {
@@ -136,7 +137,7 @@ export default {
       const accessToken = await getAccessToken(env);
       if (!accessToken) return respond({ error: 'Push not configured' }, 503);
 
-      const { title, body, boardId, postId, url, groupId: bodyGroupId } = await request.json().catch(() => ({}));
+      const { title, body, boardId, postId, commentId, type, url, groupId: bodyGroupId } = await request.json().catch(() => ({}));
       if (!title || !body) return respond({ error: 'Missing title or body' }, 400);
 
       let groupId = bodyGroupId || null;
@@ -208,17 +209,19 @@ export default {
             body,
             boardId: boardId || '',
             postId:  postId  || '',
+            commentId: commentId || '',
+            type: type || '',
             url:     url     || '/dashboard.html',
           },
           webpush: {
             notification: {
-              icon:     'https://marriage-education.web.app/assets/icons/icon-192.png',
-              badge:    'https://marriage-education.web.app/assets/icons/icon-72.png',
+              icon:     `${PUBLIC_APP_ORIGIN}/assets/icons/icon-192.png`,
+              badge:    `${PUBLIC_APP_ORIGIN}/assets/icons/icon-72.png`,
               tag:      'sbd-notification',
               renotify: true,
             },
             fcm_options: {
-              link: `https://marriage-education.web.app${url || '/dashboard.html'}`,
+              link: `${PUBLIC_APP_ORIGIN}${url || '/dashboard.html'}`,
             },
           },
           android: { priority: 'high' },
@@ -296,21 +299,22 @@ export default {
             data: {
               title: pushTitle,
               body: pushBody,
-              url: url || '/dm.html',
+              url: url || '/communication-v2/',
               convId: convId || '',
+              messageId: dmBody.messageId || '',
               senderId: String(senderId),
               recipientId: String(recipientId),
               message: String(message).slice(0, 300),
             },
             webpush: {
               notification: {
-                icon: 'https://marriage-education.web.app/assets/icons/icon-192.png',
-                badge: 'https://marriage-education.web.app/assets/icons/icon-72.png',
+                icon: `${PUBLIC_APP_ORIGIN}/assets/icons/icon-192.png`,
+                badge: `${PUBLIC_APP_ORIGIN}/assets/icons/icon-72.png`,
                 tag: `dm-${convId || 'msg'}`,
                 renotify: true,
               },
               fcm_options: {
-                link: `https://marriage-education.web.app${url || '/dm.html'}`,
+                link: `${PUBLIC_APP_ORIGIN}${url || '/communication-v2/'}`,
               },
             },
             android: { priority: 'high' },

@@ -161,10 +161,13 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
 
     const pushTitle = body.title || senderName || "New message";
     const pushBody = (body.body || message).slice(0, 100);
+    const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
     const url =
       typeof body.url === "string" && body.url.trim()
         ? body.url.trim()
-        : `/communication-v2/?conv=${encodeURIComponent(body.convId || "")}`;
+        : `/communication-v2/?conv=${encodeURIComponent(body.convId || "")}${
+            messageId ? `&msg=${encodeURIComponent(messageId)}` : ""
+          }`;
     await admin.messaging().send(
       buildPushMessage({
         token: recipientToken,
@@ -178,6 +181,7 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
           recipientId,
           message: message.slice(0, 300),
           convId,
+          messageId,
         },
       })
     );
@@ -239,10 +243,13 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
     const membersSnap = await groupRef.collection("members").limit(80).get();
     const pushTitle = groupName;
     const pushBody = `${senderName || "Someone"}: ${message.slice(0, 100)}`;
+    const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
     const url =
       typeof body.url === "string" && body.url.trim()
         ? body.url.trim()
-        : `/communication-v2/?group=${encodeURIComponent(groupId)}`;
+        : `/communication-v2/?group=${encodeURIComponent(groupId)}${
+            messageId ? `&msg=${encodeURIComponent(messageId)}` : ""
+          }`;
 
     let pushed = 0;
     let skipped = 0;
@@ -276,6 +283,7 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
                 groupId,
                 message: message.slice(0, 300),
                 convId: groupId,
+                messageId,
               },
             })
           );

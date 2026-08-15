@@ -411,7 +411,7 @@ async function loadThisWeeksWork(uid) {
       const boardDoc = await db.collection('boards').doc(linkedBoardId).get();
       if (boardDoc.exists) {
         boardTitle = boardDoc.data().title || 'Discussion Board';
-        boardLink = `/board.html?id=${linkedBoardId}`;
+        boardLink = `/board.html?boardId=${encodeURIComponent(linkedBoardId)}`;
       }
     }
     

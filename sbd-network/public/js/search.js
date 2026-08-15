@@ -204,18 +204,24 @@ async function searchComments() {
       postIds.add(comment.postId);
     });
 
-    // Fetch post info for board filtering
-    if (boardFilter && postIds.size > 0) {
+    // Fetch post info so comment links can include the required boardId.
+    if (postIds.size > 0) {
       const posts = await Promise.all(
         Array.from(postIds).map(id => db.collection('posts').doc(id).get())
       );
+      const postBoards = new Map();
       const validPostIds = new Set();
       posts.forEach(doc => {
-        if (doc.exists && doc.data().boardId === boardFilter) {
+        if (!doc.exists) return;
+        const postBoardId = doc.data().boardId || '';
+        postBoards.set(doc.id, postBoardId);
+        if (!boardFilter || postBoardId === boardFilter) {
           validPostIds.add(doc.id);
         }
       });
-      return results.filter(c => validPostIds.has(c.postId));
+      return results
+        .filter(c => validPostIds.has(c.postId))
+        .map(c => ({ ...c, boardId: postBoards.get(c.postId) || '' }));
     }
 
     return results;
@@ -328,7 +334,7 @@ function renderResults(posts, comments, hashtags, users) {
         <div class="result-content">${linkifyContent(post.content || 'No content')}</div>
         ${post.imageUrl ? `<div class="result-media"><img src="${esc(post.imageUrl)}" alt="Post image"></div>` : ''}
         <div class="result-actions">
-          <a href="/board.html?id=${esc(post.boardId)}&post=${esc(post.id)}" class="result-link">View post →</a>
+          <a href="/board.html?boardId=${esc(post.boardId)}&post=${esc(post.id)}" class="result-link">View post →</a>
         </div>
       `;
       postsSection.appendChild(resultCard);
@@ -354,7 +360,7 @@ function renderResults(posts, comments, hashtags, users) {
         </div>
         <div class="result-content">${linkifyContent(comment.text || 'No content')}</div>
         <div class="result-actions">
-          <a href="/board.html?post=${esc(comment.postId)}&comment=${esc(comment.id)}" class="result-link">View comment →</a>
+          <a href="/board.html?boardId=${esc(comment.boardId || '')}&post=${esc(comment.postId)}&comment=${esc(comment.id)}" class="result-link">View comment →</a>
         </div>
       `;
       commentsSection.appendChild(resultCard);

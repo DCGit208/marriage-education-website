@@ -63,6 +63,7 @@
 
   Promise.all([waitForFirebase(8000), waitForUser(8000)])
     .catch(function () {
-      window.location.href = '/auth';
+      var next = window.location.pathname + window.location.search;
+      window.location.href = '/auth?next=' + encodeURIComponent(next);
     });
 })();

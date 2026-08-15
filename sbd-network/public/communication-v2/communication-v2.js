@@ -3385,7 +3385,7 @@
     }
   }
 
-  async function writeGroupMessageNotifications(ac, preview, me) {
+  async function writeGroupMessageNotifications(ac, preview, me, messageId) {
     if (!ac || ac.type !== 'group' || !ac.id || !me) return;
     try {
       var memberIds = CommunicationState.memberIds;
@@ -3412,6 +3412,7 @@
           body: body,
           groupId: ac.id,
           convId: ac.id,
+          messageId: messageId || '',
           read: false,
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         });
@@ -3447,6 +3448,8 @@
         var token = recipDoc.data().fcmToken;
         var convId = ac.id || directConvId(me.uid, ac.otherUid);
         if (token) {
+          var dmUrl = '/communication-v2/?conv=' + encodeURIComponent(convId);
+          if (messageId) dmUrl += '&msg=' + encodeURIComponent(messageId);
           await fetch(
             'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
             {
@@ -3463,7 +3466,7 @@
                 senderName: senderName,
                 title: senderName,
                 body: messageText,
-                url: '/communication-v2/?conv=' + encodeURIComponent(convId),
+                url: dmUrl,
                 convId: convId,
                 messageId: messageId || '',
               }),
@@ -3475,6 +3478,8 @@
       }
 
       if (ac.type === 'group' && ac.id) {
+        var groupUrl = '/communication-v2/?group=' + encodeURIComponent(ac.id);
+        if (messageId) groupUrl += '&msg=' + encodeURIComponent(messageId);
         await fetch(
           'https://us-central1-marriage-education.cloudfunctions.net/notifyGroupV2',
           {
@@ -3489,12 +3494,13 @@
               message: messageText,
               senderName: senderName,
               groupName: ac.title || 'Group',
-              url: '/communication-v2/?group=' + encodeURIComponent(ac.id),
+              url: groupUrl,
               convId: ac.id,
+              messageId: messageId || '',
             }),
           }
         );
-        writeGroupMessageNotifications(ac, preview, me);
+        writeGroupMessageNotifications(ac, preview, me, messageId);
       }
     } catch (e) {
       console.warn('[CE2 Push]', e);
@@ -5415,6 +5421,8 @@
     auth.onAuthStateChanged(function (user) {
       if (!user) {
         ce2BootedUid = null;
+        window.location.href =
+          '/auth?next=' + encodeURIComponent(window.location.pathname + window.location.search);
         return;
       }
       if (ce2BootedUid === user.uid) return;
