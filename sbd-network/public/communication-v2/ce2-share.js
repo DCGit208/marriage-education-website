@@ -65,9 +65,7 @@
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
     var thumb = bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '';
     var thumbHtml = thumb
-      ? '<span class="ce2-board-share-thumb"><img class="ce2-board-share-thumb-bg" src="' +
-        escapeHtml(thumb).replace(/"/g, '&quot;') +
-        '" alt="" loading="lazy" aria-hidden="true"><img class="ce2-board-share-thumb-img" src="' +
+      ? '<span class="ce2-board-share-thumb"><img class="ce2-board-share-thumb-img" src="' +
         escapeHtml(thumb).replace(/"/g, '&quot;') +
         '" alt="" loading="lazy"></span>'
       : '';
