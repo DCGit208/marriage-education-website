@@ -211,6 +211,30 @@
     });
   }
 
+  function withSoftTimeout(promise, ms, fallback) {
+    return new Promise(function (resolve) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        resolve(fallback);
+      }, ms || 5000);
+      promise
+        .then(function (result) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(result);
+        })
+        .catch(function () {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(fallback);
+        });
+    });
+  }
+
   function createImageThumbBlob(file) {
     if (!file || !isImageFile(file) || isVideoFile(file) || isAudioFile(file)) {
       return Promise.resolve(null);
@@ -393,23 +417,24 @@
     var result = { url: url, kind: kindForFile(file) };
     if (isImageFile(file)) {
       try {
-        var imageThumb = await createImageThumbBlob(uploadFile);
+        var imageThumb = await withSoftTimeout(createImageThumbBlob(uploadFile), 3500, null);
         if (imageThumb) {
           var imgBase = (file.name || 'photo').replace(/\.[^.]+$/, '');
-          var thumbUrl = await uploadChatThumb(imageThumb, imgBase, options || {});
+          var thumbUrl = await withSoftTimeout(uploadChatThumb(imageThumb, imgBase, options || {}), 6000, null);
           if (thumbUrl) result.thumbUrl = thumbUrl;
         }
       } catch (_) {}
     }
     if (isVideoFile(file)) {
       try {
-        var posterBlob = await captureVideoPosterBlob(file);
+        var posterBlob = await withSoftTimeout(captureVideoPosterBlob(file), 4500, null);
         if (posterBlob) {
           var base = (file.name || 'video').replace(/\.[^.]+$/, '');
           var posterFile = new File([posterBlob], base + '_thumb.jpg', { type: 'image/jpeg' });
-          var posterUrl = await withUploadTimeout(
-            uploadMediaFile(posterFile, 'dm_attachments', options || {}),
-            60000
+          var posterUrl = await withSoftTimeout(
+            withUploadTimeout(uploadMediaFile(posterFile, 'dm_attachments', options || {}), 15000),
+            8000,
+            null
           );
           if (posterUrl) {
             result.posterUrl = posterUrl;
