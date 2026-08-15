@@ -15,6 +15,12 @@ const AUTH_REDIRECT_ALLOWLIST = new Set([
   '/learn', '/learn.html',
   '/profile', '/profile.html',
   '/boards', '/boards.html',
+  '/board', '/board.html',
+  '/group', '/group.html',
+  '/member', '/member.html',
+  '/search', '/search.html',
+  '/mv-house', '/mv-house.html',
+  '/communication-v2',
   '/payment', '/payment.html'
 ]);
 

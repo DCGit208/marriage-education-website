@@ -1083,7 +1083,7 @@ async function _doSend(text, imageUrl, replyTo, videoUrl, audioUrl) {
   if (audioUrl) msgData.audioUrl = audioUrl;
   if (replyTo)  msgData.replyTo  = replyTo;
 
-  await db.collection('conversations').doc(activeConvId)
+  const msgRef = await db.collection('conversations').doc(activeConvId)
     .collection('messages').add(msgData);
 
   const preview = audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : (imageUrl ? '📎 Photo' : text.slice(0, 100)));
@@ -1113,11 +1113,11 @@ async function _doSend(text, imageUrl, replyTo, videoUrl, audioUrl) {
     // Notify all group members except the sender
     activeParticipants.forEach(p => {
       if (p.uid === currentUserId) return;
-      _triggerDmPush(activeConvId, p.uid, text || (audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : '📎 Photo'))).catch(() => {});
+      _triggerDmPush(activeConvId, p.uid, text || (audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : '📎 Photo')), msgRef.id).catch(() => {});
     });
   } else {
     // Single recipient
-    _triggerDmPush(activeConvId, activeOtherId, text || (audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : '📎 Photo'))).catch(() => {});
+    _triggerDmPush(activeConvId, activeOtherId, text || (audioUrl ? '🎤 Voice message' : (videoUrl ? '🎥 Video' : '📎 Photo')), msgRef.id).catch(() => {});
   }
 }
 
@@ -1218,7 +1218,7 @@ chatMessages.addEventListener('click', e => {
 });
 
 // ── DM Push notification ──────────────────────────────────────────
-async function _triggerDmPush(convId, recipientId, body) {
+async function _triggerDmPush(convId, recipientId, body, messageId = '') {
   try {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -1244,8 +1244,9 @@ async function _triggerDmPush(convId, recipientId, body) {
         senderName,
         title:    `💬 ${senderName}`,
         body:     body.slice(0, 100),
-        url:      `/communication-v2/`,
+        url:      `/communication-v2/?conv=${encodeURIComponent(convId)}${messageId ? `&msg=${encodeURIComponent(messageId)}` : ''}`,
         convId,
+        messageId,
       }),
     });
   } catch (e) {

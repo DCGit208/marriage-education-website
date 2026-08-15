@@ -164,7 +164,7 @@ function renderTopPosts(posts) {
     const truncated = text.length > 100 ? text.slice(0, 100) + '...' : text;
     
     return `
-      <a href="/board.html?id=${post.boardId}#post-${post.id}" class="top-post-item">
+      <a href="/board.html?boardId=${post.boardId}&post=${post.id}" class="top-post-item">
         <div class="top-post-rank ${rankClass}">${rank}</div>
         <div class="top-post-content">
           <div class="top-post-text">${escHtml(truncated)}</div>

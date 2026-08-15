@@ -527,14 +527,21 @@ async function openLook(itemId) {
       const snap = await firebase.firestore().collection('posts').doc(postId).get();
       if (snap.exists && snap.data().boardId) {
         boardId = snap.data().boardId;
+        if (!isSharedWardrobeView()) {
+          firebase.firestore().collection('wardrobes').doc(currentUid)
+            .collection('items').doc(itemId)
+            .set({ boardId }, { merge: true })
+            .catch(() => {});
+        }
       }
     } catch (err) {
       console.warn('[MV House] openLook: could not fetch post boardId:', err.message);
     }
   }
 
-  // Last resort: derive boardId from the saved category
-  if (!boardId && item.category) {
+  // Last resort only for category entries that do not point at a specific post.
+  // Guessing a board for a known post can send users to a board where it does not exist.
+  if (!boardId && !postId && item.category) {
     boardId = CATEGORY_BOARD_MAP[item.category] || null;
   }
 
