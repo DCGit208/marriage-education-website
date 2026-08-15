@@ -4421,8 +4421,9 @@
       url: sh.shareHref(boardParsed.boardId, boardParsed.postId, token),
       thumbnailUrl: thumb.thumbnailUrl || '',
       mediaType: thumb.mediaType || '',
-      title: titleText || excerpt || 'Board post',
-      excerpt: excerpt || titleText || '',
+      note: titleText || '',
+      title: excerpt || titleText || 'Board post',
+      excerpt: excerpt || '',
     };
   }
 

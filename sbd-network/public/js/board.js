@@ -3157,10 +3157,12 @@ async function openShareDmModal(post) {
   const modal    = document.getElementById('shareDmModal');
   const list     = document.getElementById('shareDmUserList');
   const searchEl = document.getElementById('shareDmSearch');
+  const commentEl = document.getElementById('shareDmComment');
   const closeBtn = document.getElementById('shareDmClose');
 
   list.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);">Loading members\u2026</div>';
   searchEl.value = '';
+  if (commentEl) commentEl.value = '';
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
@@ -3200,7 +3202,8 @@ async function openShareDmModal(post) {
         row.style.opacity = '0.5';
         row.style.pointerEvents = 'none';
         try {
-          await sendPostAsDm(u, boardId, post, preview);
+          const comment = commentEl ? commentEl.value.trim() : '';
+          await sendPostAsDm(u, boardId, post, preview, comment);
           close();
           showToast('Post shared via Messages V2 to ' + u.name);
         } catch (err) {
@@ -3317,7 +3320,7 @@ function getBoardShareThumbnail(post) {
   return { thumbnailUrl: '', mediaType: post.videoUrl ? 'video' : '' };
 }
 
-async function sendPostAsDm(otherUser, boardId, postOrPostId, preview) {
+async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment = '') {
   const postId = typeof postOrPostId === 'string' ? postOrPostId : postOrPostId?.id;
   if (!boardId || !postId) {
     throw new Error('Missing board post reference.');
@@ -3351,6 +3354,7 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview) {
     ? Ce2Share.shareHref(boardId, postId, '')
     : `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
   const shareThumb = getBoardShareThumbnail(postOrPostId);
+  const note = (comment || '').trim().slice(0, 240);
   let token = '';
   if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
     try {
@@ -3368,10 +3372,11 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview) {
       : postUrl,
     thumbnailUrl: shareThumb.thumbnailUrl || '',
     mediaType: shareThumb.mediaType || '',
+    note,
     title,
     excerpt: preview ? String(preview).slice(0, 200) : '',
   };
-  const content = preview ? '📎 ' + String(preview).slice(0, 80) : 'Shared a board post';
+  const content = note || 'Shared a board post';
   const patch = {
     conversationId: convId,
     senderId: currentUserId,

@@ -63,6 +63,7 @@
     var href = bs.url || shareHref(bs.boardId, bs.postId, bs.token);
     var title = escapeHtml(bs.title || 'Board post');
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
+    var note = bs.note ? escapeHtml(String(bs.note).slice(0, 240)) : '';
     var thumb = bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '';
     var thumbHtml = thumb
       ? '<span class="ce2-board-share-thumb"><img class="ce2-board-share-thumb-img" src="' +
@@ -75,6 +76,7 @@
       '">' +
       thumbHtml +
       '<span class="ce2-board-share-body">' +
+      (note ? '<span class="ce2-board-share-note">' + note + '</span>' : '') +
       '<span class="ce2-board-share-kicker">Board share</span>' +
       '<span class="ce2-board-share-title">' +
       title +

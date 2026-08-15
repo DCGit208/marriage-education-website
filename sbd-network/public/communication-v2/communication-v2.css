@@ -2184,6 +2184,14 @@ body.ce2-msg-menu-open {
   gap: 4px;
 }
 
+.ce2-board-share-note {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 4px;
+}
+
 .ce2-board-share-kicker {
   font-size: 0.62rem;
   text-transform: uppercase;
