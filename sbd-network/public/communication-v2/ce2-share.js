@@ -6,12 +6,16 @@
 
   function parseBoardPostUrl(raw) {
     if (!raw) return null;
-    try {
-      var u = new URL(raw.trim(), global.location ? global.location.origin : 'https://sbd-network.web.app');
-      var boardId = u.searchParams.get('boardId');
-      var postId = u.searchParams.get('post');
-      if (boardId && postId) return { boardId: boardId, postId: postId };
-    } catch (_) {}
+    var text = String(raw);
+    var matches = text.match(/https?:\/\/[^\s<>"']+|\/board(?:\.html)?\?[^\s<>"']+/gi) || [text];
+    for (var i = 0; i < matches.length; i += 1) {
+      try {
+        var u = new URL(matches[i].trim(), global.location ? global.location.origin : 'https://sbd-network.web.app');
+        var boardId = u.searchParams.get('boardId') || u.searchParams.get('id');
+        var postId = u.searchParams.get('post');
+        if (boardId && postId) return { boardId: boardId, postId: postId, url: u.href };
+      } catch (_) {}
+    }
     return null;
   }
 

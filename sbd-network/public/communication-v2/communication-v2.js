@@ -4364,6 +4364,74 @@
     render();
   }
 
+  function ce2BoardShareThumbnail(post) {
+    if (!post) return { thumbnailUrl: '', mediaType: '' };
+    if (Array.isArray(post.allMedia) && post.allMedia.length > 0) {
+      var firstImage = post.allMedia.find(function (item) {
+        return item && item.type === 'image' && item.url;
+      });
+      if (firstImage) return { thumbnailUrl: firstImage.url, mediaType: 'image' };
+      var firstVideo = post.allMedia.find(function (item) {
+        return item && item.type === 'video' && item.url;
+      });
+      if (firstVideo) {
+        return {
+          thumbnailUrl: firstVideo.thumbUrl || post.thumbUrl || post.imageUrl || '',
+          mediaType: 'video',
+        };
+      }
+    }
+    if (post.imageUrl) return { thumbnailUrl: post.imageUrl, mediaType: 'image' };
+    if (Array.isArray(post.allPhotos) && post.allPhotos[0]) {
+      return { thumbnailUrl: post.allPhotos[0], mediaType: 'image' };
+    }
+    if (post.thumbUrl) return { thumbnailUrl: post.thumbUrl, mediaType: 'video' };
+    if (Array.isArray(post.allThumbs) && post.allThumbs[0]) {
+      return { thumbnailUrl: post.allThumbs[0], mediaType: 'video' };
+    }
+    return { thumbnailUrl: '', mediaType: post.videoUrl ? 'video' : '' };
+  }
+
+  async function buildBoardShareFromParsed(boardParsed, text, sh) {
+    var titleText = (text || '').trim();
+    if (boardParsed.url) {
+      titleText = titleText.replace(boardParsed.url, '').trim();
+    }
+    var token = '';
+    try {
+      token = await sh.mintBoardShareToken(
+        db,
+        CommunicationState.me.uid,
+        boardParsed.boardId,
+        boardParsed.postId,
+        titleText || 'Board post'
+      );
+    } catch (err) {
+      console.warn('[CE2 Board Share] token mint skipped:', err);
+    }
+
+    var postData = null;
+    try {
+      var postDoc = await db.collection('posts').doc(boardParsed.postId).get();
+      if (postDoc.exists) postData = postDoc.data() || null;
+    } catch (err) {
+      console.warn('[CE2 Board Share] post preview skipped:', err);
+    }
+
+    var thumb = ce2BoardShareThumbnail(postData);
+    var excerpt = postData && postData.content ? String(postData.content).slice(0, 200) : '';
+    return {
+      boardId: boardParsed.boardId,
+      postId: boardParsed.postId,
+      token: token,
+      url: sh.shareHref(boardParsed.boardId, boardParsed.postId, token),
+      thumbnailUrl: thumb.thumbnailUrl || '',
+      mediaType: thumb.mediaType || '',
+      title: titleText || excerpt || 'Board post',
+      excerpt: excerpt || titleText || '',
+    };
+  }
+
   async function sendMessage() {
     var me = CommunicationState.me;
     var ac = CommunicationState.activeConversation;
@@ -4412,7 +4480,7 @@
     var slot = getComposerSlot();
     var mediaList = slot ? composerMediaList(slot) : [];
     var sh = share();
-    var boardParsed = sh && boardUrl ? sh.parseBoardPostUrl(boardUrl) : null;
+    var boardParsed = sh && (boardUrl || text) ? sh.parseBoardPostUrl(boardUrl || text) : null;
 
     if (slot && (slot.uploading || slot.attachQueue.length)) {
       if (!text && !boardParsed && !mediaList.length) {
@@ -4549,13 +4617,7 @@
     var now = firebase.firestore.Timestamp.now();
     var boardShare = null;
     if (boardParsed && sh) {
-      var token = await sh.mintBoardShareToken(db, me.uid, boardParsed.boardId, boardParsed.postId, text);
-      boardShare = {
-        boardId: boardParsed.boardId,
-        postId: boardParsed.postId,
-        token: token,
-        title: text || 'Board post',
-      };
+      boardShare = await buildBoardShareFromParsed(boardParsed, text, sh);
       if (!text) text = 'Shared a board post';
     }
 
