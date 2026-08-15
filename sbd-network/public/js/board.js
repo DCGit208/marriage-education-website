@@ -3149,11 +3149,12 @@ function refreshBoardRankScoreNonBlocking(boardId) {
 // ── Share via DM ──────────────────────────────────────────────────
 document.getElementById('ctxShareDm').addEventListener('click', async () => {
   const post = ctxPost;
+  const selectedMedia = ctxMediaSelection;
   closeContextMenu();
-  if (post) await openShareDmModal(post);
+  if (post) await openShareDmModal(post, selectedMedia);
 });
 
-async function openShareDmModal(post) {
+async function openShareDmModal(post, selectedMedia = null) {
   const modal    = document.getElementById('shareDmModal');
   const list     = document.getElementById('shareDmUserList');
   const searchEl = document.getElementById('shareDmSearch');
@@ -3203,7 +3204,7 @@ async function openShareDmModal(post) {
         row.style.pointerEvents = 'none';
         try {
           const comment = commentEl ? commentEl.value.trim() : '';
-          await sendPostAsDm(u, boardId, post, preview, comment);
+          await sendPostAsDm(u, boardId, post, preview, comment, selectedMedia);
           close();
           showToast('Post shared via Messages V2 to ' + u.name);
         } catch (err) {
@@ -3305,7 +3306,13 @@ async function ensureCe2DirectConv(otherUid) {
 }
 
 /** Share board post via Messages V2 (ce2_conversations / board_share). */
-function getBoardShareThumbnail(post) {
+function getBoardShareThumbnail(post, selectedMedia = null) {
+  if (selectedMedia && selectedMedia.url) {
+    return {
+      thumbnailUrl: selectedMedia.type === 'image' ? selectedMedia.url : (selectedMedia.thumbUrl || ''),
+      mediaType: selectedMedia.type || '',
+    };
+  }
   if (!post || typeof post === 'string') return { thumbnailUrl: '', mediaType: '' };
   if (Array.isArray(post.allMedia) && post.allMedia.length > 0) {
     const firstImage = post.allMedia.find((item) => item && item.type === 'image' && item.url);
@@ -3320,7 +3327,7 @@ function getBoardShareThumbnail(post) {
   return { thumbnailUrl: '', mediaType: post.videoUrl ? 'video' : '' };
 }
 
-async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment = '') {
+async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment = '', selectedMedia = null) {
   const postId = typeof postOrPostId === 'string' ? postOrPostId : postOrPostId?.id;
   if (!boardId || !postId) {
     throw new Error('Missing board post reference.');
@@ -3353,7 +3360,7 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
   const postUrl = window.Ce2Share && Ce2Share.shareHref
     ? Ce2Share.shareHref(boardId, postId, '')
     : `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
-  const shareThumb = getBoardShareThumbnail(postOrPostId);
+  const shareThumb = getBoardShareThumbnail(postOrPostId, selectedMedia);
   const note = (comment || '').trim().slice(0, 240);
   let token = '';
   if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
@@ -3372,6 +3379,8 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
       : postUrl,
     thumbnailUrl: shareThumb.thumbnailUrl || '',
     mediaType: shareThumb.mediaType || '',
+    mediaUrl: selectedMedia?.url || '',
+    selectedMedia: !!(selectedMedia && selectedMedia.url),
     note,
     title,
     excerpt: preview ? String(preview).slice(0, 200) : '',
