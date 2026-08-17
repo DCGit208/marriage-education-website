@@ -78,6 +78,22 @@ Design is not a metaphor. Design implies:
 | Boundaries | Moral and sexual limits that protect flourishing |
 | Responsibility | Stewardship — you answer for whether you live as who you are |
 
+---
+
+#### On “Boundaries — moral and sexual limits that protect flourishing”
+
+**It means:** because humans are designed, morality and sexuality are not open-ended preference zones. Design installs **given limits**. Those limits are part of **what a human is** — not optional lifestyle tips.
+
+**Boundaries** sits next to Intent, Structure, and Responsibility. So the claim is **anthropological**:
+
+- **Moral limits** — right and wrong are not self-invented. You answer to design (truth, fidelity, responsibility, non-harm as covenant order), not to “my truth.”  
+- **Sexual limits** — sexuality belongs to design (sexed nature, covenant order, one-flesh fidelity). Desire is real; **desire does not rewrite ontology**. You govern sexuality as design stewardship, not as unlimited self-expression.  
+- **“that protect flourishing”** — living inside those limits is what produces human flourishing (eudaemonia / impregnable marriage & family). Crossing them damages persons, covenant, and household.
+
+**What it does *not* mean:** “Be good so life feels nicer,” or “boundaries are whatever your community currently likes.” The limits come from **design**; flourishing is the **fruit**, not the manufacturer of the rule.
+
+---
+
 You are not an accident assembling a self from trends. You are a **creature** with a **nature**. Nature is not oppression; it is the map.
 
 Three modern refusals of design:
