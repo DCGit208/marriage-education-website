@@ -406,7 +406,7 @@ const PRODUCTS = [
   // ── Phase 5 — School 1 — Teleios ────────────────────────────────
   p('teleios-blueprint-full', 'The Teleios Blueprint: Full Human Maturity', 'courses_school1', 247, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 70, description: 'Foundational certificate — identity, maturity, human design.' }),
   p('teleios-level-2', 'Teleios Level 2: Advanced Development', 'courses_school1', 397, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 71, description: 'Epistemology, axiology, ontology for marriage readiness.' }),
-  p('anthropology-of-wholeness', 'The Anthropology of Wholeness', 'courses_school1', 149, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 72, description: 'Becoming fully human — image, likeness, UDHR 26:2.' }),
+  p('anthropology-of-wholeness', 'The Anthropology of Wholeness', 'courses_school1', 149, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 72, description: 'Becoming fully human — image, likeness, UDHR 26:2.', coverImage: '/images/course-covers/anthropology-of-wholeness-cover.png' }),
   p('identity-mastery', 'Identity Mastery', 'courses_school1', 149, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 73, description: 'Who you are by design from Genesis 1:26-27.' }),
   p('four-faculties-training', 'The Four Faculties Training', 'courses_school1', 199, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 74, description: 'Conative, Cognitive, Psychomotor, and Affective capacity stewardship.' }),
   p('anthropocentric-development', 'Anthropocentric Development', 'courses_school1', 129, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 75, description: 'How humans are designed to grow whole over time.' }),
