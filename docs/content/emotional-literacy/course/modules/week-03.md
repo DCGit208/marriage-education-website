@@ -99,6 +99,22 @@ Even good navigation leaves tears in the fabric. Week 4 — emotional repair —
 
 ---
 
+### 11) Fear under anger (common captain swap)
+
+Many “anger problems” are fear or shame wearing volume. Literacy asks: after pause, what second emotion appears? Name both. Repair both moves if both drove harm.
+
+### 12) Singles: workplace and family as training ground
+
+Do not postpone conflict literacy until marriage. A spat with a sibling or manager that you pause–name–repair is covenant rehearsal. Journal it with the same honesty.
+
+### 13) Contempt detox micro-drill (3 days)
+
+Each evening list any contempt word, joke, eye-roll, or “always/never” character attack you used. Rewrite each as: emotion named + act named + ask. Contempt is often unprocessed emotion + pride. Literacy refuses the costume.
+
+### 14) When both captains fire
+
+Two people, two emotion captains — e.g., their fear and your contempt. Protocol: sequential naming (one at a time), no dual monologues. First speaker gets mirror; then switch. Without sequence, you get parallel storms.
+
 ## Diagnostic — Emotion in Conflict Audit
 
 Score 1–5.

@@ -112,6 +112,30 @@ After this week: keep appreciation list visible; one honor act daily; monthly re
 
 ---
 
+### 13) School 1 greatness test (read aloud)
+
+If a graduate of School 1 still:
+
+- chases worth through practice,
+- is ruled by unnamed emotion,
+- or treats their spouse’s temperament as a defect to erase,
+
+…then the school’s fruit is incomplete — regardless of certificates.
+
+Your closing charter must answer how you will refuse those three failures for the next 90 days with visible rails.
+
+### 14) Blessing without flattery
+
+You may finish Course 13 with unfinished honor habits. Unfinished is not un-imaged. Keep the 7-day challenge logic for 30 more days. Espouse design. Live accordingly. Make School 1 great in the household, not only in the LMS.
+
+### 15) Rulebook insert (copy into Course 10 rules)
+
+> We will not call temperament differences character defects. We will honor pace/intensity differences with return-times and clean asks. Contempt words on our forbid list: ______. Weekly we name one strength in the other’s flavor.
+
+### 16) Final School 1 charge
+
+Make School 1 great where it counts: breakfast tone, conflict mid-week, desire loyalty, repair speed, honor of difference. Certificates are secondary. Teleios practice, emotional literacy, and temperament intelligence — lived — are the school’s reputation in a household.
+
 ## Diagnostic — Temperament Harmony Audit
 
 Score 1–5.

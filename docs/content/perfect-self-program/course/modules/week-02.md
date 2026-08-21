@@ -118,6 +118,29 @@ Identity practice without holiness/joy becomes grim duty or proud grit. Week 3 i
 
 ---
 
+### 11) Identity practice and the four faculties (worked example)
+
+Cue: loneliness on a Friday night.
+
+1. **Cognitive** — test: “Loneliness means I am incomplete” (illegal premise).
+2. **Mental attribute** — replace: “Loneliness is a signal; I am teleios; I may seek fitting companionship without fusion.”
+3. **Emotional attribute** — name: lonely / tender / restless (precision).
+4. **Affective** — care: text a real friend; do not open a fantasy app as ontology medicine.
+5. **Conative** — decide the act and keep it.
+6. **Psychomotor** — leave the couch; walk; phone charger elsewhere.
+7. **Behavioral** — keep the act; log; repair if you slip.
+
+This is identity practice as whole-person stewardship — not a slogan loop.
+
+### 12) Anti-patterns that look spiritual
+
+- “Dying to self” that means hating your design
+- Endless journaling with no Behavioral close
+- Using identity language to avoid apology (“I’m secure so I won’t repair”)
+- Public identity testimony while private leaks rule the house
+
+If a practice increases pride or secrecy, it is not Week 2 practice.
+
 ## Diagnostic — Identity Practice Audit
 
 Score 1–5.

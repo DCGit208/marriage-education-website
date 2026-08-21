@@ -98,6 +98,33 @@ Named emotion still needs a brake. Week 2 installs regulation — active control
 
 ---
 
+### 11) A starter lexicon (use and add)
+
+Anger family: irritated, frustrated, furious, resentful, bitter, contemptuous.  
+Fear family: uneasy, anxious, panicked, dread, insecure.  
+Sadness family: down, grieved, lonely, disappointed, hopeless (feeling — not ontology).  
+Shame family: embarrassed, humiliated, guilty (act-focused) vs worthless (illegal ontology).  
+Gladness family: glad, grateful, delighted, peaceful, hopeful, tender.
+
+For three hidden emotions, write: word · body · cue · what I usually do · design alternative.
+
+### 12) Children / household modeling
+
+If you parent or influence younger people: fine-culture trains them to hide. Naming without dumping models literacy. “I feel frustrated about the mess; I will ask for help” beats silent rage or fog.
+
+### 13) Ratiocination for couples’ nightly share
+
+- Premise 1: Unshared emotion becomes leak or explosion.
+- Premise 2: Fixing mid-share trains the speaker to stop naming.
+- Premise 3: Mirror listening (Course 10) + time-box protects both.
+- Conclusion: Three minutes of named emotion without fixing is literacy practice, not therapy theater.
+
+Script for the listener: paraphrase once; ask “do you want comfort, help, or just witness?”; obey the answer.
+
+### 14) What “good enough for School 1” requires this week
+
+Not poetic feelings essays. A log with precise words, hidden emotions confessed, and at least three shared namings. If you cannot produce the log, you are not ready to claim literacy — return to Week 1 until the jars are labeled.
+
 ## Diagnostic — Naming Emotions Audit
 
 Score 1–5.

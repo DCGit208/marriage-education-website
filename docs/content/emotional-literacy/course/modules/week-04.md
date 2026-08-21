@@ -107,6 +107,24 @@ Temperament differences will tempt contempt (“they’re too much / too cold”
 
 ---
 
+### 11) Repair scripts (adapt; do not recite robotically)
+
+> “I felt ______ and I discharged it by ______. That impacted you by ______. I own that. What would help? My next act is ______ by ______.”
+
+If they are not ready to talk: deliver ownership + next act in writing, invite a time, do not demand absolution.
+
+### 12) When repair is refused
+
+You still own and change. Forgiveness is theirs to give; your Behavioral next act is yours. Do not use their refusal as excuse to return to contempt. Wisdom may add boundaries (Course 09).
+
+### 13) 48-hour trust read (how to score)
+
+After repair: Did they initiate warmth? Did you keep the next act? Did conflict residual stay or clear? Score trust up/flat/down without demanding they perform forgiveness feelings on your timeline.
+
+### 14) Capstone standard for School 1
+
+A School 1 graduate can: name emotion, brake, navigate conflict emotion, and mend. If any leg is missing, the “great school” claim fails in the kitchen. Your charter must name which leg is still weakest and the 30-day rail for it.
+
 ## Diagnostic — Emotional Repair Audit
 
 Score 1–5.

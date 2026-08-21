@@ -107,6 +107,27 @@ Curiosity prepares daily honor. Week 3: harmony challenge — appreciation list,
 
 ---
 
+### 11) Pursue–withdraw with temperament glasses
+
+Often pursue = higher intensity / faster pace; withdraw = reserved / slow processor. Protocol: withdrawer sets return time; pursuer journals one ask; both refuse defect labels (“needy” / “cold”) during the pause.
+
+### 12) Sexual timing conflicts (marriage)
+
+Pace and intensity differences often surface sexually. Honor means: no coercion, no contempt for desire level differences, clean asks, Course 06 W11 loyalty. Difference is not defect; pressure is not intimacy (Course 10 W7).
+
+### 13) Decision time-box template
+
+Curiosity window: 15 minutes.  
+Then: one decision, or one scheduled decision time within 24 hours.  
+Write the decision.  
+If slow processor needs more time: agree the deadline now — not infinite delay.
+
+This keeps Week 2 from becoming endless soft conflict.
+
+### 14) In-law / extended family flavor clashes
+
+Temperament contempt often enters through family of origin stories (“in our family we just say it”). Translate: different intensity norms. Honor your spouse’s flavor in front of your family. Public contempt of your spouse’s temperament is covenant betrayal with manners.
+
 ## Diagnostic — Temperament in Conflict Audit
 
 Score 1–5.

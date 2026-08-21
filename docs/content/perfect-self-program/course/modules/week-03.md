@@ -123,6 +123,25 @@ Joyful holiness that still uses self-punishment as growth strategy will collapse
 
 ---
 
+### 11) Joy and the household climate
+
+Private joy rituals that never reach presence are incomplete. After the ritual, ask: Did anyone in my household experience more honor, patience, or truth from me today?
+
+Holiness that improves only your self-image while your spouse/children still meet contempt is performance. Joyful alignment has witnesses — not for applause, for fruit.
+
+### 12) Sexual and bodily shame zones (handle carefully)
+
+Many chase-holiness stories live in body and desire. Course 02 / 06 W11 already forbade desire-as-ontology and silence-as-holiness. This week: if sexuality is a shame zone, write conviction language (“this act/compromise missed design”) not trash language (“I am disgusting as a being”). Then joy: gratitude for sexed design + loyalty next act. Do not graphicize; do not euphemize into fog.
+
+### 13) Joy ritual failure modes
+
+- Ritual becomes another chase (“I must feel joy or I’ve failed”)
+- Ritual skips gap-naming (fake light)
+- Ritual never touches Behavioral next act
+- Ritual is secret while household still meets your shame weather
+
+Fix: keep the five steps; measure by next act and household fruit, not by emotional fireworks.
+
 ## Diagnostic — Holiness & Joy Audit
 
 Score 1–5.

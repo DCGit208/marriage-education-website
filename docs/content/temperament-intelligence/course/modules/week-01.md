@@ -124,6 +124,30 @@ Basics without conflict application remain theory. Week 2: temperament in confli
 
 ---
 
+### 11) Working sketch — two columns (fill honestly)
+
+**Me under fatigue:** pace __ · intensity __ · sociability __ · structure __ · conflict __ · recovery __  
+**Them under fatigue:** (same)
+
+Then circle the axis most likely to generate contempt words in your mouth this month. That axis is your Week 1 priority honor field.
+
+### 12) Church / culture misreads
+
+Temperament contempt is not only marital. “Real leaders are loud.” “Spiritual people are always gentle-paced.” Test those slogans against design: gifts differ; holiness does not require one flavor.
+
+### 13) Extended case — “lazy” rewrite
+
+Old: “You never help; you’re lazy.”  
+Temperament: slow pace + reserved recovery after work.  
+Truth mix: sometimes also Behavioral neglect — hold both.  
+Stewardship ask: “I need thirty minutes of shared chores starting at 7:30; do you want a buffer after work first?”  
+Honor: thank the depth they bring when they are not rushed.  
+Refuse: using “temperament” to dodge the chore — and using “lazy” to erase their flavor.
+
+### 14) Self-profile honesty check
+
+Have a witness guess your fatigue profile. Where their guess differs from yours, investigate. Self-flattery (“I’m intense in a good way only”) is as dangerous as contempt for the other.
+
 ## Diagnostic — Temperament Basics Audit
 
 Score 1–5.

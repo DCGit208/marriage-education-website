@@ -121,6 +121,31 @@ Do not make a spouse the scorekeeper of your 30-day goal in a parental way. Witn
 
 ---
 
+### 11) Linking the 30-day goal to School 1 rails you already own
+
+Do not invent a exotic goal. Prefer a goal that reactivates an existing rail:
+
+- Course 07 MDS item that drifted
+- Course 10 rulebook rule that became a wish again
+- Course 11 identity practice cue
+- Course 08 repair speed
+
+Sustainable growth often means **returning** to design you already named — under Law of Time — not collecting new certificates.
+
+### 12) Pride risk after “I practice from perfection”
+
+Teleios grammar can be twisted into superiority over “less mature” people. Illegal. Ontology is gift. Likeness is responsibility. If your 30-day plan includes contempt for others’ pace, rewrite the plan.
+
+### 13) Sample 30-day goal (template only)
+
+Domain: evening presence.  
+Metric: device-free 20 minutes with spouse/friend/family ≥5 nights/week.  
+Miss protocol: same-night ownership + make-up block within 24h.  
+Weekly review: Sunday 15 minutes with witness.  
+Ontology line: “I am teleios; this is likeness, not worth purchase.”
+
+Rewrite to your domain; keep the structure.
+
 ## Diagnostic — Sustainable Growth Audit
 
 Score 1–5.

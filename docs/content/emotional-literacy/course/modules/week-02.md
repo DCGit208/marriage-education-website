@@ -90,6 +90,35 @@ Regulation does not manufacture teleios. It expresses Behavioral and Emotional s
 
 ---
 
+### 11) Environment is part of the brake
+
+Willpower-only regulation fails. Change cues:
+
+- Phone out of bedroom
+- Leave the room at volume spike
+- Pre-written text you will not send for 20 minutes
+- Walk loop before reply
+
+Psychomotor and environment are not “cheating.” They are design-wise.
+
+### 12) When the other refuses your pause
+
+You still brake. You may say: “I’m pausing so I don’t harm; I’ll return at ____.” If they escalate, do not use their refusal as permission to explode. Your regulation is yours (better whole).
+
+### 13) Load tiers — design the brake for each
+
+| Load | What regulation looks like |
+|------|----------------------------|
+| Green | Short pause + name + continue conversation |
+| Yellow | 10–20 min pause + return time |
+| Red | Exit environment; no decisions; witness text; return next day for repair talk |
+
+Pre-agree couple colors if bonded. Singles: pre-agree with yourself in writing so red days are not improvisation.
+
+### 14) Linking regulation to Course 07 impulse log
+
+Impulse peaks and emotion peaks often co-occur. One card can serve both: pause → name emotion → test desire/act against design → redirect. Do not run two competing systems that you will abandon.
+
 ## Diagnostic — Regulation Audit
 
 Score 1–5.
