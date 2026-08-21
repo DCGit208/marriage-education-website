@@ -115,6 +115,17 @@ Each evening list any contempt word, joke, eye-roll, or “always/never” chara
 
 Two people, two emotion captains — e.g., their fear and your contempt. Protocol: sequential naming (one at a time), no dual monologues. First speaker gets mirror; then switch. Without sequence, you get parallel storms.
 
+### 15) Worked example — money fight
+
+Topic: overspend. Captains: your anxiety, their shame, mutual contempt risk.
+
+Sequence: pause → you name anxiety without attacking character → they name shame without collapsing into trash ontology → each owns one Behavioral move → one budget next act → 24h trust read.
+
+If contempt appears (“you’re so irresponsible”), stop topic; repair contempt first. Topic will wait; acid will not.
+
+### 16) Week 3 evidence bar
+
+Produce: two emotion maps, three journal rows, one blame→stewardship rewrite with before/after sentences, and one live conflict where pause–name–repair actually ran. Anything less is incomplete for a school that claims covenant formation.
 ## Diagnostic — Emotion in Conflict Audit
 
 Score 1–5.

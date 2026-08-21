@@ -119,6 +119,21 @@ Pre-agree couple colors if bonded. Singles: pre-agree with yourself in writing s
 
 Impulse peaks and emotion peaks often co-occur. One card can serve both: pause → name emotion → test desire/act against design → redirect. Do not run two competing systems that you will abandon.
 
+### 15) Worked example — yellow load at home
+
+Cue: spouse criticizes lateness; chest tight; premise “I’m never enough” (chase) tries to fire.
+
+1. Call pause code; set return in 15 minutes.
+2. Walk outside; breathe; name: shame + anger.
+3. Rewrite premise: “I was late — act to own; I remain teleios.”
+4. Return; own lateness; ask what would help; refuse contempt return fire.
+5. Log; if you snapped anyway, repair same evening.
+
+This is regulation as School 1 fruit — not a breathing aesthetic.
+
+### 16) Measurement for the week
+
+Success is not zero intensity. Success is: pause used ≥5 times, at least one return-time kept under yellow/red, one repaired slip, and a witness who heard you tell the truth about a failure. Without that evidence, retake the challenge before Week 3.
 ## Diagnostic — Regulation Audit
 
 Score 1–5.
