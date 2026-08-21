@@ -43,18 +43,18 @@ It trains the learner to become mindful, educated, and accountable in vision, id
 
 | Week | Title | Core question | Status |
 |------|-------|---------------|--------|
-| 1 | Teleios Vision | What must I see before I can live accordingly? | **This pass** |
-| 2 | Identity & Calling | How does given identity become covenant calling? | **This pass** |
-| 3 | Mental Discipline | How is the Mental attribute stewarded without manufacturing the self? | **This pass** |
-| 4 | Emotional Formation | How are emotions governed as design, not as identity? | **This pass** |
-| 5 | Temperament Training | How is temperament stewarded, not excused? | Later |
-| 6 | Habit Systems | How do habits express (not create) maturity? | Later |
-| 7 | Time & Order | How does ordered time protect formation? | Later |
-| 8 | Money & Stewardship | How does money test order without defining worth? | Later |
-| 9 | Speech & Presence | How do words and presence govern atmosphere? | Later |
-| 10 | Relationships & Repair | How is repair practiced without better-half ontology? | Later |
-| 11 | Sexual Stewardship | How is desire governed as design, not as preference? | Later |
-| 12 | Covenant Readiness | What proves readiness to bear covenant weight? | Later |
+| 1 | Teleios Vision | What must I see before I can live accordingly? | Done |
+| 2 | Identity & Calling | How does given identity become covenant calling? | Done |
+| 3 | Mental Discipline | How is the Mental attribute stewarded without manufacturing the self? | Done |
+| 4 | Emotional Formation | How are emotions governed as design, not as identity? | Done |
+| 5 | Temperament Training | How is temperament stewarded, not excused? | Done |
+| 6 | Habit Systems | How do habits express (not create) maturity? | Done |
+| 7 | Time & Order | How does ordered time protect formation? | Done |
+| 8 | Money & Stewardship | How does money test order without defining worth? | Done |
+| 9 | Speech & Presence | How do words and presence govern atmosphere? | Pending |
+| 10 | Relationships & Repair | How is repair practiced without better-half ontology? | Pending |
+| 11 | Sexual Stewardship | How is desire governed as design, not as preference? | Pending |
+| 12 | Covenant Readiness | What proves readiness to bear covenant weight? | Pending |
 
 ---
 
@@ -73,15 +73,16 @@ It trains the learner to become mindful, educated, and accountable in vision, id
 
 ---
 
-## Learning outcomes (Weeks 1–4)
+## Learning outcomes (Weeks 1–8)
 
-By the end of Weeks 1–4, the learner will:
+By the end of Weeks 1–8, the learner will:
 
 1. Write a Teleios Vision statement from design, not from self-invention.
 2. Distinguish identity (given) from calling (stewardship of what is given).
-3. Run a Mental Attribute audit and a 7-day thought-evidence log.
-4. Run an Emotional Attribute audit with pause-name-govern-repair practice.
-5. Hold the attribute vs faculty distinction without collapse.
+3. Steward Mental, Emotional, and Temperamental attributes without identity collapse.
+4. Install habit infrastructure and first-hour / weekly time order.
+5. Treat money as alignment test and stewardship — not as worth.
+6. Hold attribute vs faculty distinction without collapse.
 
 ---
 
@@ -89,10 +90,8 @@ By the end of Weeks 1–4, the learner will:
 
 | Week | File |
 |------|------|
-| 1 | `course/modules/week-01.md` |
-| 2 | `course/modules/week-02.md` |
-| 3 | `course/modules/week-03.md` |
-| 4 | `course/modules/week-04.md` |
+| 1–8 | `course/modules/week-01.md` … `week-08.md` |
+| 9–12 | Pending |
 
 **Catalogue:** `courseId: personal-development-masterclass`  
 **Firestore seed:** `sbd-network/scripts/seed-personal-development-masterclass.js`
@@ -104,6 +103,6 @@ By the end of Weeks 1–4, the learner will:
 | Item | State |
 |------|-------|
 | Week spine (12) | Locked from catalogue |
-| Weeks 1–4 prose | Drafted this pass |
-| Weeks 5–12 | Pending |
-| Catalogue / Firestore | Pending after approval of 1–4 |
+| Weeks 1–8 prose | Done |
+| Weeks 9–12 | Pending |
+| Catalogue / Firestore | Sync + seed Weeks 1–8 |

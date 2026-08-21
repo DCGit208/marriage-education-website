@@ -1,8 +1,8 @@
 /**
  * Seed Personal Development MasterClass (School 1 Course 06)
- * Weeks 1–4 from courses-catalogue.json (weeks 5–12 remain stubs until written).
+ * Weeks 1–8 from courses-catalogue.json (weeks 9–12 remain stubs until written).
  *
- * Target: modules/pd-masterclass-week-{1..4}
+ * Target: modules/pd-masterclass-week-{1..8}
  * Course: course-6-the-personal-development-masterclass
  */
 
@@ -35,14 +35,14 @@ if (!course) {
 }
 
 const modules = course.modules || [];
-if (modules.length < 4) {
-  console.error('❌ Expected at least 4 modules, found', modules.length);
+if (modules.length < 8) {
+  console.error('❌ Expected at least 8 modules, found', modules.length);
   process.exit(1);
 }
 
 const COURSE_DOC_ID = 'course-6-the-personal-development-masterclass';
 const SCHOOL_ID = 'school-1-teleios';
-const SEED_COUNT = 4;
+const SEED_COUNT = 8;
 const MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(w => `pd-masterclass-week-${w}`);
 
 async function seed() {
@@ -103,7 +103,7 @@ async function seed() {
     console.log('\n✅  courses/' + COURSE_DOC_ID + ' created');
   }
 
-  console.log('\n🎉 PD MasterClass weeks 1–4 seeded (Foundation-tier). Weeks 5–12 still stubs.');
+  console.log('\n🎉 PD MasterClass weeks 1–8 seeded (Foundation-tier). Weeks 9–12 still stubs.');
   process.exit(0);
 }
 

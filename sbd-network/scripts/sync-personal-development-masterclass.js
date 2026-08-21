@@ -1,6 +1,6 @@
 /**
- * Sync Course 06 Weeks 1–4 markdown into root and public catalogues.
- * Weeks 5–12 remain catalogue stubs until written.
+ * Sync Course 06 Weeks 1–8 markdown into root and public catalogues.
+ * Weeks 9–12 remain catalogue stubs until written.
  */
 
 const fs = require('fs');
@@ -19,6 +19,10 @@ const MODULE_FILES = [
   path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-02.md'),
   path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-03.md'),
   path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-04.md'),
+  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-05.md'),
+  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-06.md'),
+  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-07.md'),
+  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-08.md'),
 ];
 
 const TITLES = [
@@ -26,6 +30,10 @@ const TITLES = [
   'Identity & Calling',
   'Mental Discipline',
   'Emotional Formation',
+  'Temperament Training',
+  'Habit Systems',
+  'Time & Order',
+  'Money & Stewardship',
 ];
 
 const REFLECTIONS = [
@@ -57,6 +65,34 @@ const REFLECTIONS = [
     'How is Emotional attribute different from Affective care?',
     'What would your household experience if you became 20% more predictable this month?',
   ],
+  [
+    'Which “that’s just me” sentence has cost your household the most?',
+    'How is temperament different from identity — and where have you fused them?',
+    'What counter-habit would protect trust this month?',
+    'Where are you using a spouse’s opposite style as a substitute for your own governance?',
+    'What would predictable virtue look like on a tired Tuesday?',
+  ],
+  [
+    'Which habit have you used as proof you are “becoming someone”?',
+    'What destructive habit’s payoff are you still addicted to?',
+    'How does Law of Repetition correct both streak vanity and anti-structure pride?',
+    'Where is conative refusal hiding inside “I’m still designing my system”?',
+    'What one rhythm would your household feel within 21 days?',
+  ],
+  [
+    'What do you fund with hours that design would defund?',
+    'How does first-hour capture explain your Mental/Emotional failures?',
+    'Where is “busy” covering refusal of a hard conversation?',
+    'What margin are you missing that guarantees threshold failure?',
+    'How would ordered time change your spouse’s or household’s experience of you?',
+  ],
+  [
+    'What illegal premise about money still runs your choices?',
+    'Which leak is actually an Emotional or Mental failure in costume?',
+    'How does Week 1 vision constrain what you are allowed to buy?',
+    'Where have you outsourced or monopolized money truth in the household?',
+    'What would contentment require you to stop chasing — and what would diligence require you to start?',
+  ],
 ];
 
 function readText(filePath) {
@@ -74,7 +110,7 @@ function main() {
     list[idx].description =
       '12-week intensive: personal development as responsible expression of design — vision, identity, attributes, habits, order, and covenant readiness. Teleios is not manufactured; it is espoused and lived.';
     const mods = list[idx].modules || [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < bodies.length; i++) {
       mods[i] = {
         title: TITLES[i],
         content: bodies[i],
@@ -85,7 +121,7 @@ function main() {
     list[idx].modules = mods;
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
   });
-  console.log('✅ Synced personal-development-masterclass weeks 1–4 into both catalogues.');
+  console.log('✅ Synced personal-development-masterclass weeks 1–8 into both catalogues.');
 }
 
 main();
