@@ -21,19 +21,21 @@ Level 2 installs **relatedness systems**: framework, boundaries and honor, power
 
 Relatedness is a **system of design**, not a set of feelings. Governance sustains health; hope alone does not.
 
-This course does **not** manufacture teleios by networking. Whole persons govern relatedness under design.
+This course does **not** manufacture teleios by networking. Whole persons govern relatedness under design. Practice aligns typed connection under load; it does not invent being. Better wholes steward maps, fences, seesaws, weather, bricks, and meetings — without fusion and without worth-from-relatedness.
 
 ---
 
 ## Doctrine guardrails
 
 - Teleios/maturity = design-state; practice does not create being.
+- **Teleios required in every week** — explicit grammar: design-state starting point; practice does not manufacture ontology; better whole under load.
 - Better whole — no fusion, no better-half power games.
 - Boundaries protect honor; they are not hostility (Course 02 continuity).
 - Power without responsibility = abuse; responsibility without power = resentment.
 - Conflict is pattern to govern, not identity storm.
 - Trust rebuilds by structural acts (Course 08 W2), not speeches.
 - Covenant governance = ordered rules + review — not control theater or chaos romanticism.
+- Continuity: Course 08 heart → Course 09 systems → Course 10 intensive mastery.
 
 ---
 
@@ -52,20 +54,20 @@ This course does **not** manufacture teleios by networking. Whole persons govern
 
 ## Pedagogy (per week)
 
-Central Truth · Overview · Core Teaching · Diagnostic · Cases · Drills · Reflection · Assignment  
+Central Truth · Overview · Core Teaching (incl. teleios grammar + ratiocination) · Diagnostic · Cases · Drills · Reflection · Assignment · Closing Declaration · Outcome
 
-**Target depth:** ~900–1,200 words per week.
+**Target depth:** ~1,500–1,800 words per week (formation thicken parity with Course 10 / Perfect Self).
 
 ---
 
 ## Learning outcomes
 
-1. Network map + relatedness rule for closest bonds  
+1. Network map + Relatedness Rule (teleios + better whole) for closest bonds  
 2. Honor code + two live boundary practices  
 3. Power-with-responsibility plan + 3-day power audit  
 4. Conflict pattern journal + one design replacement  
 5. Trust repair plan + 7-day structural trust log  
-6. Governance meeting held; rules defined for key bond  
+6. Governance meeting held; rules defined; Level 2 closing charter  
 
 ---
 
@@ -82,5 +84,6 @@ Central Truth · Overview · Core Teaching · Diagnostic · Cases · Drills · R
 | Item | State |
 |------|-------|
 | Spine | Locked |
-| Full prose | Done (Weeks 1–6) |
+| Full prose | **Formation thicken done** (Weeks 1–6) · teleios required every week |
+| Target depth | ~1,500–1,800 words/week |
 | Catalogue / Firestore | Synced + seeded Foundation-tier |

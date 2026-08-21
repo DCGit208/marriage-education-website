@@ -54,7 +54,7 @@ Mastery is **likeness under load**, not a new ontology. You remain teleios by de
 
 Central Truth · Overview · Core Teaching · Diagnostic · Cases · Drills · Reflection · Assignment  
 
-**Target:** ~750–1,000 words/week.
+**Target:** ~1,500–1,800 words/week · Course 05 parity
 
 ---
 
@@ -63,5 +63,5 @@ Central Truth · Overview · Core Teaching · Diagnostic · Cases · Drills · R
 | Item | State |
 |------|-------|
 | Spine | Locked |
-| Full prose | Done (Weeks 1–8) |
-| Catalogue / Firestore | Synced + seeded Foundation-tier |
+| Full prose | Formation thicken done (Weeks 1–8) |
+| Catalogue / Firestore | Pending reseed after sync |

@@ -59,7 +59,7 @@ You are teleios by design. Self-command is likeness: living as who you are under
 7. Reflection  
 8. Assignment  
 
-**Target depth:** ~1,400–1,800 words per week.
+**Target depth:** ~1,500–1,800 words per week (formation thicken parity with Course 10 / Perfect Self).
 
 ---
 
@@ -91,5 +91,6 @@ By the end of 5 weeks, the learner will:
 | Item | State |
 |------|-------|
 | Spine | Locked from catalogue |
-| Full prose | Done (Weeks 1–5) |
+| Full prose | **Formation thicken done** (Weeks 1–5) · teleios required every week |
+| Target depth | ~1,500–1,800 words/week |
 | Catalogue / Firestore | Synced + seeded Foundation-tier |
