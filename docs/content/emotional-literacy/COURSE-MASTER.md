@@ -9,9 +9,16 @@
 
 ## Thesis
 
-Understand, name, and steward emotions without being controlled by them. Essential for covenant life — for couples and for singles practicing readiness.
+Understand, name, and steward emotions without being controlled by them — and without worshiping them as ontology. Essential for covenant life for couples and for singles practicing readiness. Loop: name → regulate → conflict tools → repair.
 
-Emotional literacy = vocabulary + regulation + conflict use + repair. Builds on Course 10 W3 without collapsing Emotional attribute into Affective faculty.
+## Doctrine guardrails
+
+- Emotional attribute ≠ Affective faculty (do not collapse).
+- Feelings report; they do not rule or mint worth (Course 11).
+- Naming enables governance; dumping and fusion are illegal.
+- Regulation is active brake — not freeze, not numbness-as-holiness.
+- Repair proves maturity; fog apologies and self-erasure fail.
+- Better whole — partner is not permanent regulator.
 
 ## Week map
 
@@ -22,13 +29,13 @@ Emotional literacy = vocabulary + regulation + conflict use + repair. Builds on 
 | 3 | Emotion in Conflict |
 | 4 | Emotional Repair |
 
-## Doctrine
+## Pedagogy target
 
-- Feelings report; they do not rule or rewrite ontology.
-- Naming enables governance (you cannot govern what you cannot name).
-- Better whole — partner is not permanent regulator.
-- Repair proves maturity of emotional stewardship.
+~1,400–1,800 words/week · couples + singles tracks · formation depth
 
 ## Status
 
-Full prose this pass · sync/seed pending
+| Item | State |
+|------|-------|
+| Full prose | Formation-depth pass |
+| Catalogue / Firestore | Pending resync + reseed |

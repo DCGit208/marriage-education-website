@@ -1,113 +1,185 @@
 # Week 1: Temperament Basics
 ## Palette Colors — Understand, Don’t Judge
 
-> **Week 1 of 3** | 8–10 hours | Foundations  
-> **Sources:** Course 02 Temperamental attribute · Course 06 W5
+> **Week 1 of 3** | 8–10 hours | Temperamental Attribute  
+> **Sources:** Course 02 Week 3 Attributes · Course 06 W5 · Course 11–12 · better whole
 
 ---
 
 ## The Central Truth
 
 Temperament is the energy and flavor of a person; it must be **understood, not judged**.  
-Colors on a palette differ; the painting needs more than one. Misreading temperament as character defect breeds contempt.
+Colors on a palette differ; the painting needs more than one. Misreading temperament as character defect breeds contempt. Using temperament as an excuse for harm breeds chaos. School 1 ends here only if both errors die.
+
+Temperament is the **Temperamental attribute** — not ontology, not destiny, not a free pass.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-How do we describe temperament without ontology or excuse?
+How do we describe temperament without ontology baptism or excuse theology?
 
 ### Key Insight
-Identify your temperament leanings (pace, intensity, sociability, structure preference); list strengths/limits; name one misread of spouse/close other.
+Sketch descriptive axes (pace, intensity, sociability, structure preference, conflict approach); list strengths and limits; rewrite one misread of spouse or close other; log five days under load.
 
 ### Learning Outcomes
-- Identify your temperament profile (descriptive)  
-- List strengths and limits  
-- Name one misinterpretation of spouse/friend  
-- Keep 5-day temperament reflection log  
-- Pass a Temperament Basics Audit  
+By the end of this week you will:
+
+- Locate temperament inside the Attributes map (not Faculties collapse)
+- Sketch your profile and one other person’s profile descriptively
+- List strengths and limits for both without contempt words
+- Rewrite one misinterpretation (“lazy/cold/dramatic/controlling”) into temperament + stewardship ask
+- Complete a 5-day temperament reflection log
+- Pass a Temperament Basics Audit
 
 ---
 
 ## Core Teaching
 
-### 1) Descriptive axes (not rigid boxes)
+### 1) Where temperament sits (doctrine lock)
 
-Pace (fast/slow), intensity, introvert/extrovert lean, structure vs flexibility, conflict approach. Sketch yourself; sketch the other.
+**Attributes (Course 02):** Behavioral · Temperamental · Emotional · Mental  
 
-### 2) Strengths and limits
+**Faculties (Course 04):** Conative · Cognitive · Psychomotor · Affective  
 
-Every color has both. Fast pace: initiative + impatience risk. Slow pace: depth + delay risk. Neither is teleios vs un-teleios.
+Temperament is **not** Cognitive faculty and not Emotional attribute — though it interacts with both. Do not say “my temperament made me think X” when you mean a Mental premise you still own. Do not say “temperament” when you mean ungoverned emotion (Course 12).
 
-### 3) Misinterpretation inventory
+### 2) Descriptive axes (not rigid boxes)
 
-“They’re lazy / cold / dramatic / controlling” — often temperament + story. Rewrite one as temperament + stewardship ask.
+Sketch yourself and the other on:
 
-### 4) Not an excuse
+- Pace (fast ↔ slow)  
+- Intensity (high ↔ low)  
+- Sociability (outward ↔ reserved)  
+- Structure preference (planned ↔ flexible)  
+- Conflict approach (engage fast ↔ process then speak)  
+- Recovery need (quick bounce ↔ longer quiet)  
 
-Temperament explains *tendency*. It does not authorize harm, broken vows, or contempt. Stewardship still binds (Course 06 W5).
+Blends are normal. Primary under fatigue matters most.
 
-### 5) 5-day log
+### 3) Strengths and limits (both required)
 
-| Day | My flavor under load | Their flavor | Misread risk | Honor act |
-|-----|----------------------|--------------|--------------|-----------|
+| Flavor lean | Strength gift | Limit risk if unstewarded |
+|-------------|---------------|---------------------------|
+| Fast pace | Initiative | Impatience, steamroll |
+| Slow pace | Depth, caution | Delay, withdrawal read as rejection |
+| High intensity | Passion, clarity | Overwhelm, volume |
+| Low intensity | Calm | Under-response read as indifference |
+| Reserved | Depth, loyalty | Stonewall risk |
+| Outward | Warmth, connection | Oversharing, intrusion |
 
-### 6) Analogy: palette
+Neither column is teleios vs un-teleios. Stewardship is.
 
-Judge the painting’s harmony, not a single pigment as “wrong color for existing.”
+### 4) Misinterpretation inventory
 
-### 7) Continuity
+Common contempt translations:
 
-Basics feed conflict literacy (Week 2).
+- Slow → “lazy”  
+- Fast → “controlling”  
+- Reserved → “cold”  
+- Intense → “crazy/dramatic”  
+- Flexible → “irresponsible”  
+- Structured → “rigid/joyless”  
+
+Rewrite one:
+
+> Old story: ______  
+> Temperament read: ______  
+> Stewardship ask (clean): ______  
+> What I will stop calling it: ______
+
+### 5) Not an excuse (Course 06 W5 continuity)
+
+Temperament explains *tendency*. It does not authorize:
+
+- broken vows  
+- contempt  
+- abandonment without return  
+- cruelty  
+- refusal to repair  
+
+“That’s just my temperament” after harm is excuse theology. Teleios persons steward attributes.
+
+### 6) 5-day reflection log
+
+| Day | My flavor under load | Their flavor | Misread risk | Honor act | Excuse temptation? |
+|-----|----------------------|--------------|--------------|-----------|--------------------|
+
+### 7) Analogy: palette
+
+Judge the painting’s harmony, not a single pigment as “wrong for existing.” You may still ask a color to be applied with skill — that is stewardship, not erasure.
+
+### 8) Better whole
+
+Do not demand your spouse become your temperament. Harmony is coordinated wholes (Week 3), not cloning.
+
+### 9) Married focus; singles transferable
+
+Course title centers marriage; the literacy transfers to family and close bonds. Unmarried learners: practice on a real close relationship now — do not wait to disrespect a future spouse’s flavor.
+
+### 10) Continuity into Week 2
+
+Basics without conflict application remain theory. Week 2: temperament in conflict — curiosity over defect theology.
 
 ---
 
 ## Diagnostic — Temperament Basics Audit
 
-| Statement | 1–5 |
-|-----------|-----|
-| Profile sketched | |
-| Strengths/limits listed | |
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| Temperament located in Attributes map correctly | |
+| Two profiles sketched | |
+| Strengths and limits listed without contempt | |
 | One misread rewritten | |
-| 5-day log done | |
+| 5-day log completed | |
 | I refuse temperament-as-excuse | |
 | I refuse temperament-as-contempt target | |
+| Better whole explicit (no clone demand) | |
 
 ---
 
 ## Case Contrasts
 
-**A — Contempt reader:** Dana calls slow “lazy.”  
-**B — Excuse artist:** Riley harms, blames “my temperament.”  
-**C — Palette literacy:** Sam sketches both, rewrites misread, logs 5 days.
+### Case A — Contempt reader
+Dana calls slow “lazy,” reserved “cold,” and builds a museum of injuries. Difference becomes moral defect. Marriage climate: contempt.
+
+### Case B — Excuse artist
+Riley harms, delays repair, blames “my temperament.” Attribute used as free pass. Climate: chaos with psychology vocabulary.
+
+### Case C — Palette literacy
+Sam sketches both profiles, rewrites one misread, logs five days, honors a strength daily, still owns Behavioral misses without excuse.
 
 ---
 
 ## Seven-Day Drill
 
-Days 1–2: profiles  
-Days 3–7: reflection log  
+**Days 1–2:** Profiles + strengths/limits + misread rewrite.  
+**Days 3–7:** Reflection log (5 days minimum inside the week).
 
 ---
 
 ## Reflection Questions
 
-1. What contempt word do you use for their flavor?  
-2. Where do you excuse yourself with temperament?  
-3. What strength of theirs have you refused to honor?  
-4. How does better whole change “make them like me”?  
-5. What did the log show under fatigue?  
+1. What contempt word do you use for their flavor?
+2. Where do you excuse yourself with temperament?
+3. What strength of theirs have you refused to honor?
+4. How does better whole change “make them like me”?
+5. What did the log show under fatigue that calm days hid?
+6. Where have you collapsed temperament into Emotional or Mental wrongly?
 
 ---
 
 ## Weekly Assignment
 
-1. Basics Audit  
-2. Two profiles  
-3. Misread rewrite  
-4. 5-day log  
-5. One honor act  
+1. Temperament Basics Audit  
+2. Two profile sketches (axes)  
+3. Strengths/limits tables  
+4. Misread rewrite sheet  
+5. 5-day reflection log  
+6. 400–600 words: “What I was calling a character defect”
 
 ---
 
@@ -116,10 +188,11 @@ Days 3–7: reflection log
 > Temperament is flavor, not fate.  
 > I understand before I judge.  
 > No excuse; no contempt.  
-> Palette — many colors, one design honor.
+> Palette — many colors, one design honor.  
+> I steward my attribute; I honor theirs.
 
 ---
 
 ## Outcome
 
-You hold descriptive profiles and a rewritten misread — temperament literacy without judgment theater.
+You hold descriptive profiles and a rewritten misread — temperament literacy without judgment theater or excuse theology.

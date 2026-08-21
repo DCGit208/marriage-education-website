@@ -2,103 +2,157 @@
 ## Mend the Fabric — Restore Capacity
 
 > **Week 4 of 4** | 9–11 hours | Capstone  
-> **Sources:** Course 08 W4 · Course 10 W6 · Weeks 1–3
+> **Sources:** Course 08 W4 · Course 10 W6 · Weeks 1–3 · Course 11 · Matthew 5:23–24
 
 ---
 
 ## The Central Truth
 
 Repair is the final proof of emotional maturity.  
-Mending fabric restores usefulness; ignoring tears guarantees failure under load. Emotional literacy ends in practiced repair, not vocabulary certificates.
+Mending fabric restores usefulness; ignoring tears guarantees failure under load. Emotional literacy that ends in vocabulary certificates without mended relationships is unfinished. Maturity is evidenced in the mend — as a teleios person who owns acts without identity deletion.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-What makes emotional repair land?
+What makes emotional repair land — for couples and singles?
 
 ### Key Insight
-Autopsy last two repair attempts; build a repair ritual; practice with a trusted person; close Course 12 with a literacy charter.
+Autopsy last two repair attempts; build an emotional repair ritual that includes naming; practice live with a trusted person; write a Course 12 closing charter that carries into Temperament Intelligence without contempt.
 
 ### Learning Outcomes
-- Review last two emotional repair attempts  
-- Create an emotional repair ritual  
-- Practice with a trusted person  
-- Pass an Emotional Repair Audit  
-- Write closing charter  
+By the end of this week you will:
+
+- Autopsy two emotional repair attempts with 48-hour trust read
+- Write an emotional repair ritual (name → own → ask → next act)
+- Practice the ritual live once this week
+- Distinguish repair from self-erasure and from gift-bribery
+- Complete Emotional Literacy closing charter
 
 ---
 
 ## Core Teaching
 
-### 1) Autopsy
+### 1) Why repair is the proof
 
-For each attempt: emotion involved, what you said, what was missing (name? own? next act?), trust at 48h.
+Naming and regulation can be private. Repair is public to the bond. Hebrews-shaped maturity (responsibility under load) shows when torn relatedness is restored by truth.
 
-### 2) Emotional repair ritual
+Matthew 5:23–24: reconciliation priority over religious performance — repair is not optional polish.
 
-1. Name the emotion you discharged poorly  
-2. Name the act/impact  
-3. Own without fog  
-4. Ask what would help  
-5. Next regulated act  
-6. Invite their emotion naming (no fixing)
+### 2) Autopsy template (two attempts)
 
-### 3) Practice live
+For each:
 
-One trusted person this week — partner, friend, or family. Notes required.
+- Emotion involved (Week 1 word)  
+- What I said/did  
+- What I avoided naming  
+- What the other needed  
+- Self-erasure or fog?  
+- Next act kept?  
+- Trust at 48 hours (up / flat / down)  
 
-### 4) Analogy: mending
+Patterns teach more than intentions.
 
-Stitched cloth carries weight again. Unmended tears spread.
+### 3) Emotional repair ritual
 
-### 5) Integration
+1. Request a repair talk (or scheduled window)  
+2. Name the emotion you discharged poorly  
+3. Name the act and impact (specific)  
+4. Own without fog (“I did…”)  
+5. Paraphrase their impact if they share  
+6. Ask what would help  
+7. One next regulated act + time  
+8. Log follow-through 7 days  
+9. Do not demand instant “it’s fine” feelings  
 
-Name → regulate → conflict tools → repair. Literacy loop.
+### 4) Repair ≠ self-erasure ≠ bribery
 
-### 6) Continuity
+| Real repair | Self-erasure | Bribery |
+|-------------|--------------|---------|
+| Own act | “I’m trash; parent me” | Gift without ownership |
+| Next rail | Endless apology fog | Distraction |
+| Honor both | Fusion | Avoidance |
 
-Temperament Intelligence (Course 13) adds how wire/flavor differs — without contempt.
+Course 11: conviction, not shame ontology, inside the apology.
+
+### 5) Forgiveness vs trust (recall)
+
+Forgiveness may release revenge debt; trust rebuilds by bricks (Course 09–10). Emotional repair can start both — it does not force premature “I trust you.”
+
+### 6) Analogy: mending fabric
+
+Stitched cloth carries weight again. Unmended tears spread under the next load. Pretty patches that skip the stitch (fog apologies) fail at the seam.
+
+### 7) Couples and singles
+
+**Couples:** Practice with spouse; use governance meeting if stuck (Course 09 W6).  
+**Singles:** Practice with family/friend you actually ruptured with — literacy is not theoretical.
+
+### 8) Integration — Course 12 loop
+
+Name → Regulate → Conflict tools → Repair.  
+Remove repair and the loop is unfinished School 1 work.
+
+### 9) Continuity into Course 13
+
+Temperament differences will tempt contempt (“they’re too much / too cold”). Emotional repair skills + Course 11 ontology prepare you to honor difference without resentment museums.
+
+### 10) Final ratiocination
+
+- Premise 1: Finite persons rupture emotionally.
+- Premise 2: Unrepaired emotional rupture compounds into contempt or distance.
+- Premise 3: Named, owned, followed-through repair restores capacity without erasing persons.
+- Conclusion: Emotional repair is literacy’s capstone — or literacy was theater.
 
 ---
 
 ## Diagnostic — Emotional Repair Audit
 
-| Statement | 1–5 |
-|-----------|-----|
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
 | Two attempts autopsied | |
 | Ritual written | |
-| Practiced live | |
+| Practiced live this week | |
 | Repair includes emotion naming | |
 | I refuse gift-bribe without ownership | |
-| Maturity proven in mend, not mood | |
+| I refuse self-erasure apologies | |
+| Follow-through logged | |
+| Closing charter holds Course 11 grammar | |
 
 ---
 
 ## Case Contrasts
 
-**A — Skip mend:** Drew waits for “time.”  
-**B — Over-apologize fog:** Avery collapses; other parents them.  
-**C — Mend:** Sam ritual, clear own, next act, 48h trust up.
+### Case A — Skip mend
+Drew waits for “time.” Time without stitch widens the tear. Fine culture returns.
+
+### Case B — Over-apologize fog
+Avery collapses into “I’m the worst”; other person parents; no next act. Temporary calm; no structure.
+
+### Case C — Mend
+Sam names the discharged contempt, owns the words, asks what would help, offers a Week 2 pause code in future fights, logs seven days; trust rises.
 
 ---
 
-## Seven-Day Drill
+## Seven-Day Drill — Capstone
 
-Days 1–2: autopsy + ritual  
-Days 3–5: live practice + follow-through  
-Days 6–7: closing charter  
+**Days 1–2:** Autopsy + ritual draft.  
+**Days 3–5:** Live practice + follow-through start.  
+**Days 6–7:** Closing charter; witness review.
 
 ---
 
 ## Reflection Questions
 
-1. Which repair failure repeats?  
-2. What emotion do you still refuse to name in apology?  
-3. How does mending differ from self-erasure?  
-4. What will you carry into temperament work?  
-5. What proves literacy in your household this month?  
+1. Which repair failure repeats across years?
+2. What emotion do you still refuse to name inside apology?
+3. How does mending differ from self-erasure?
+4. What will you carry into temperament work?
+5. What proves literacy in your household this month — observable?
+6. Where have you demanded forgiveness feelings on your timeline?
 
 ---
 
@@ -106,9 +160,10 @@ Days 6–7: closing charter
 
 1. Emotional Repair Audit  
 2. Two-attempt autopsy  
-3. Repair ritual  
-4. Live practice write-up  
-5. Closing charter (500–800 words)  
+3. Written emotional repair ritual  
+4. Live practice write-up + 7-day follow-through plan  
+5. Course 12 closing charter (700–1000 words) integrating name/regulate/conflict/repair and Course 11 teleios grammar  
+6. One gratitude note to the person who received your repair
 
 ---
 
@@ -117,10 +172,11 @@ Days 6–7: closing charter
 > Repair proves literacy.  
 > I mend what I tear.  
 > Emotions named, governed, repaired.  
-> Covenant life requires this fabric whole.
+> Covenant life requires this fabric whole.  
+> I am teleios — I steward feeling without worshiping it.
 
 ---
 
 ## Outcome
 
-You complete Course 12 with a live emotional repair ritual — maturity evidenced in the mend.
+You complete Course 12 with a live emotional repair ritual — maturity evidenced in the mend, ready for temperament honor without contempt.

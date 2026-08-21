@@ -10,28 +10,33 @@
 
 ## Thesis
 
-You do not practice to *become* teleios. You practice **from** teleios — design-state as starting point. Striving that chases worth manufactures anxiety; stewardship that starts from design produces likeness.
+You do not practice to *become* teleios. You practice **from** teleios — design-state as starting point. Striving that chases worth manufactures anxiety; stewardship that starts from design produces likeness. This course is the ontology hinge that keeps Courses 02–10 from becoming a worth-factory.
 
 ## Doctrine guardrails
 
 - Teleios/maturity = design-state / full development; activity does not create being.
-- Holiness is state (`be holy`); joy is fruit of alignment, not hype.
-- Image given; identity not self-invented.
-- Better whole; growth without self-hatred.
+- Holiness is state (`be holy`); joy is fruit of alignment, not hype or denial.
+- Image given; identity not self-invented; likeness is practiced.
+- Better whole; growth without self-hatred agriculture.
 - Matthew 5:48 — *be* perfect — state language, not moonshot.
+- Passivity is not the alternative to chase; stewardship is.
 
 ## Week map
 
-| Week | Title |
-|------|-------|
-| 1 | Teleios Starting Point |
-| 2 | Identity Practice |
-| 3 | Holiness & Joy |
-| 4 | Sustainable Growth |
+| Week | Title | Core install |
+|------|-------|----------------|
+| 1 | Teleios Starting Point | Practice-from grammar + declaration |
+| 2 | Identity Practice | Mirror rails / leak interrupt |
+| 3 | Holiness & Joy | State + sunlight ritual |
+| 4 | Sustainable Growth | 30-day plant logic + charter |
+
+## Pedagogy target
+
+~1,400–1,800 words/week · full diagnostic · cases · drills · charter-ready assignments
 
 ## Status
 
 | Item | State |
 |------|-------|
-| Full prose | This pass |
-| Sync / seed | Pending |
+| Full prose | Formation-depth pass |
+| Catalogue / Firestore | Pending resync + reseed |

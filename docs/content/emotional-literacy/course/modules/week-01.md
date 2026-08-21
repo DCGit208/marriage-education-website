@@ -1,114 +1,159 @@
 # Week 1: Naming Emotions
 ## Label the Jars — Clarity Brings Order
 
-> **Week 1 of 4** | 8–10 hours | Vocabulary  
-> **Sources:** Course 06 W4 · Course 10 W3 · Course 11
+> **Week 1 of 4** | 8–10 hours | Emotional Vocabulary  
+> **Sources:** Course 06 W4 · Course 10 W3 · Course 11 · Course 04 (Affective ≠ Emotional) · better whole
 
 ---
 
 ## The Central Truth
 
 You cannot govern what you cannot name.  
-Labeling jars brings order to a pantry; unnamed feelings become anonymous tyrants. Literacy begins with honest vocabulary — for couples and singles alike.
+Labeling jars brings order to a pantry; unnamed feelings become anonymous tyrants. Emotional literacy begins with honest vocabulary — for couples and for singles practicing covenant readiness — without baptizing feelings as ontology (“I am my anger”) and without chasing worth through emotional performance (Course 11).
 
 ---
 
 ## Week Overview
 
 ### Core Question
-How does naming restore capacity to steward emotion?
+How does naming restore capacity to steward emotion as a teleios person?
 
 ### Key Insight
-People hide “unacceptable” emotions (anger, envy, fear, desire) and then leak them. Name ten from this week; note which you hide; practice daily naming.
+People hide “unacceptable” emotions (anger, envy, fear, desire, contempt, tenderness) and then leak them sideways. Name ten from this week; note which you hide; practice daily naming as Mental clarity + Emotional attribute stewardship — not as dumping, and not as identity.
 
 ### Learning Outcomes
-- List 10 emotions felt this week  
-- Identify which you hide  
-- Practice naming daily  
-- Keep a 7-day emotion log  
-- Pass a Naming Emotions Audit  
+By the end of this week you will:
+
+- Distinguish Emotional attribute from Affective faculty in plain speech
+- List 10 emotions with precision (beyond mad/sad/fine)
+- Identify hidden emotions and their leak routes
+- Keep a 7-day emotion log with intensity and cues
+- Pass a Naming Emotions Audit without fine-culture fog
 
 ---
 
 ## Core Teaching
 
-### 1) Why naming matters
+### 1) Attribute vs faculty (doctrine lock)
 
-Unnamed → fused with identity (“I am anger”). Named → stewardable state (“I feel anger about X”).
+| | Meaning in this canon |
+|--|------------------------|
+| **Emotional attribute** | How feeling states move, intensify, and get governed in the person |
+| **Affective faculty** | Capacity to care, value, attach with forethought |
 
-### 2) Expand vocabulary
+Literacy trains the **attribute** (name and govern feeling). It does not replace Affective care. Collapsing them produces either cold technique or unmanaged care floods.
 
-Beyond mad/sad/fine: frustrated, grieved, envious, ashamed, delighted, tender, lonely, hopeful, contemptuous, peaceful. Precision reduces explosion.
+### 2) Why naming matters (ratiocination)
 
-### 3) Hide inventory
+- Premise 1: Ungoverned emotion still acts (Behavioral leak).
+- Premise 2: What is unnamed tends to fuse with identity or hide until ambush.
+- Premise 3: Teleios persons remain responsible for speech and acts under feeling (Course 07 / 11).
+- Conclusion: Naming is the first stewardship move — epistemic clarity for Conative choice.
 
-Which emotions feel “not allowed” in your history or household? Hiding trains ambush.
+### 3) Expand vocabulary (precision reduces explosion)
 
-### 4) Emotion log (7 days)
+Beyond mad/sad/fine: frustrated, grieved, envious, ashamed, delighted, tender, lonely, hopeful, contemptuous, peaceful, anxious, jealous, grateful, resentful, eager, overwhelmed, secure, discarded (feeling — not ontology).
 
-| Time | Emotion word | Intensity 1–5 | Cue | Hidden? |
-|------|--------------|---------------|-----|---------|
+Precision is honor. Vague “upset” often hides contempt or fear.
 
-### 5) Couples & singles
+### 4) Hide inventory
 
-Couples: share one named emotion daily without fixing.  
-Singles: name without recruiting a fantasy partner as witness — use journal + wise friend.
+Which emotions felt “illegal” in your family, church, gender scripts, or marriage?  
+Hiding trains ambush: sarcasm, stonewall, illness theater, pornographic escape, spending, spiritualizing.
 
-### 6) Analogy: labeled jars
+Write three hidden emotions + their usual leak route.
 
-Unlabeled spices ruin the meal. Unlabeled feelings ruin the conversation.
+### 5) Naming ≠ dumping; naming ≠ fusion
 
-### 7) Continuity
+| Healthy naming | Dumping | Fusion |
+|----------------|---------|--------|
+| “I feel X about Y” | Flood to control | “I am X; fix me” |
+| Time-bound | No return | Partner as regulator |
+| Invites understanding | Demands absorption | Better-half medicine |
 
-Named emotion still needs regulation (Week 2).
+### 6) Emotion log (7 days)
+
+| Time | Emotion word | Intensity 1–5 | Cue | Body | Hidden? | Leak risk |
+|------|--------------|---------------|-----|------|---------|-----------|
+
+Morning scan + evening scan minimum.
+
+### 7) Couples and singles tracks
+
+**Couples:** Share one named emotion daily **without fixing** for 3 minutes. Mirror once (Course 10 W4). No advice unless asked.
+
+**Singles:** Name without recruiting a fantasy partner as witness. Journal + one wise friend. Literacy is readiness practice, not a waiting-room identity.
+
+### 8) Analogy: labeled jars
+
+Unlabeled spices ruin the meal. Unlabeled feelings ruin the conversation and the conscience. Labels do not invent the spice; they make cooking possible.
+
+### 9) Course 11 guard
+
+If naming becomes chase (“I must feel the right feelings to be okay”), stop and return to teleios declaration. Feelings report; they do not mint worth.
+
+### 10) Continuity into Week 2
+
+Named emotion still needs a brake. Week 2 installs regulation — active control between feeling and act.
 
 ---
 
 ## Diagnostic — Naming Emotions Audit
 
-| Statement | 1–5 |
-|-----------|-----|
-| 10 emotions listed | |
-| Hidden ones named | |
-| Daily naming practiced | |
-| 7-day log done | |
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| I can separate Emotional attribute from Affective faculty | |
+| I listed 10 precise emotion words from this week | |
+| Hidden emotions and leak routes named | |
+| 7-day log completed | |
 | I refuse fine-only vocabulary | |
-| Naming ≠ dumping | |
+| Naming is not dumping | |
+| I refuse “I am my feeling” ontology | |
+| Couples/singles practice done without fusion | |
 
 ---
 
 ## Case Contrasts
 
-**A — Fine culture:** Avery only says fine; home walks on eggshells.  
-**B — Flood naming:** Riley names to overwhelm.  
-**C — Literacy:** Sam logs precisely, shares one clean sentence.
+### Case A — Fine culture
+Avery only says fine; home walks on eggshells; contempt leaks as “jokes.” No jars labeled; pantry on fire.
+
+### Case B — Flood naming
+Riley names constantly to overwhelm and avoid responsibility. Vocabulary as weapon. Partner becomes container.
+
+### Case C — Literacy
+Sam logs precisely, shares one clean sentence with spouse/friend, refuses fix-it mode, notices envy without becoming “I am envy,” and prepares Week 2 pause.
 
 ---
 
 ## Seven-Day Drill
 
-Day 1: list 10 + hides  
-Days 2–7: emotion log  
+**Day 1:** Vocabulary expansion sheet + hide inventory.  
+**Days 2–7:** Full emotion log; one shared naming (couple or witness) on at least three days.
 
 ---
 
 ## Reflection Questions
 
-1. Which emotion is most illegal in your story?  
-2. What do you lose by staying at “fine”?  
-3. How does naming protect better whole?  
-4. Couples: what happens when you name without fixing?  
-5. What word was hardest to admit?  
+1. Which emotion is most “illegal” in your story — and who taught that?
+2. What do you lose by staying at “fine”?
+3. How does naming protect better whole?
+4. Couples: what happens when you name without fixing?
+5. Singles: where does fantasy replace honest naming?
+6. Where have you used emotion words to dodge a Behavioral next act?
 
 ---
 
 ## Weekly Assignment
 
-1. Naming Audit  
-2. Ten-emotion list  
-3. Hide inventory  
-4. 7-day log  
-5. One shared naming (person or witness)  
+1. Naming Emotions Audit  
+2. Ten-emotion list with definitions in your own words  
+3. Hide inventory + leak routes  
+4. 7-day emotion log  
+5. Shared naming practice notes (3+ days)  
+6. 400–600 words: “What I refuse to feel — and what it costs”
 
 ---
 
@@ -116,11 +161,12 @@ Days 2–7: emotion log
 
 > I name what I feel.  
 > Naming is the start of governance.  
-> I refuse anonymous tyranny.  
-> Clarity brings order.
+> I refuse anonymous tyranny and feeling-as-ontology.  
+> Clarity brings order.  
+> I am teleios — feelings report; they do not rule.
 
 ---
 
 ## Outcome
 
-You build emotional vocabulary with a week of labeled evidence — literacy’s first jar labels.
+You build emotional vocabulary with a week of labeled evidence — literacy’s first jar labels, doctrine-locked to teleios stewardship.

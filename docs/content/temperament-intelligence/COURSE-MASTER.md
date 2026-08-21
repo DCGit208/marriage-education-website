@@ -9,7 +9,17 @@
 
 ## Thesis
 
-Master working with different temperaments in marriage (and close bonds) without contempt or resentment. Temperament is energy/flavor of the **Temperamental attribute** — understood and honored, not judged as character defect, not used as excuse for sin.
+Master working with different temperaments in marriage (and close bonds) without contempt or resentment. Temperament is energy/flavor of the **Temperamental attribute** — understood and honored, not judged as character defect, not used as excuse for sin. Seals School 1 Foundation spine.
+
+## Doctrine guardrails
+
+- Temperament ≠ ontology; teleios persons have varied temperamental expression.
+- Attributes map: do not collapse into Faculties / Emotional / Mental wrongly.
+- Course 06 W5: stewarded, not excused.
+- Difference ≠ defect; contempt is the enemy; erasure is not love.
+- Curiosity must still reach decisions; analysis is not a hiding place.
+- Better whole — do not demand spouse become your temperament.
+- Course 11–12 grammar remains: no chase, no feeling-as-being, then honor flavor.
 
 ## Week map
 
@@ -19,14 +29,13 @@ Master working with different temperaments in marriage (and close bonds) without
 | 2 | Temperament in Conflict |
 | 3 | Temperament Harmony |
 
-## Doctrine
+## Pedagogy target
 
-- Temperament ≠ ontology; teleios persons have varied temperamental expression.
-- Course 06 W5 continuity: stewarded, not excused.
-- Difference ≠ defect; contempt is the enemy.
-- Harmony honors difference; it does not erase it.
-- Better whole — do not demand spouse become your temperament.
+~1,400–1,800 words/week · marriage-primary, singles-transferable · School 1 finale charter
 
 ## Status
 
-Full prose this pass · sync/seed pending
+| Item | State |
+|------|-------|
+| Full prose | Formation-depth pass |
+| Catalogue / Firestore | Pending resync + reseed |

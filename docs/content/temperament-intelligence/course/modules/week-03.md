@@ -1,121 +1,174 @@
 # Week 3: Temperament Harmony
 ## Orchestra — Honor, Don’t Erase
 
-> **Week 3 of 3** | 9–11 hours | Capstone  
-> **Sources:** Weeks 1–2 · better whole · orchestra analogy
+> **Week 3 of 3** | 9–11 hours | Capstone · School 1 Finale Hinge  
+> **Sources:** Weeks 1–2 · Courses 08–12 · better whole · Proverbs 24:3 · orchestra analogy
 
 ---
 
 ## The Central Truth
 
 Harmony is achieved by **honoring, not erasing**, differences.  
-An orchestra needs every instrument. Marriage (and close bonds) need temperament honor without demanding sameness — and without resentment when difference costs.
+An orchestra needs every instrument. Marriage needs temperament honor without demanding sameness — and without resentment when difference costs. Erasure projects (“make them like me”) are not love. Resentment museums are not discernment. Daily honor is the practice.
+
+This week closes Course 13 and seals School 1’s personal/relational Foundation spine (Courses 02–13) with a living charter.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-How do we practice daily honor across temperament lines?
+How do we practice daily honor across temperament lines without denial of real costs?
 
 ### Key Insight
-Build a temperament appreciation list; practice one honor act daily; replace complaint with gratitude; run a 7-day harmony challenge; close School 1 Course 13 with a charter.
+Build a temperament appreciation list; practice one honor act daily for 7 days; replace complaint with gratitude **then** clean ask; write a School 1 closing charter that keeps teleios grammar, emotional literacy, and temperament honor together.
 
 ### Learning Outcomes
-- Create temperament appreciation list (spouse or close other)  
-- Practice one honor act daily  
-- Replace complaint with gratitude  
-- Complete 7-day harmony challenge  
-- Write School 1 temperament closing charter  
+By the end of this week you will:
+
+- Create a 10-item temperament appreciation list (spouse or close other)
+- Complete a 7-day harmony challenge (honor acts + complaint interrupts)
+- Practice complaint→gratitude→clean ask
+- Refuse erasure-as-love and resentment-as-identity
+- Write Temperament + School 1 Foundation closing charter
 
 ---
 
 ## Core Teaching
 
-### 1) Appreciation list
+### 1) Appreciation list (10 specifics)
 
-10 items: strengths their flavor brings to the household. Be specific. No backhanded compliments.
+Rules:
+
+- Name the **flavor strength**, not generic “they’re great”  
+- No backhanded compliments  
+- Include at least three items that used to irritate you  
+
+Example shapes: “Your slow processing protects us from rash debt.” “Your fast initiative gets the household moving when I stall.”
 
 ### 2) Daily honor act
 
-Tied to their flavor: give processing time; invite their pace; celebrate initiative; protect quiet; join their social gear briefly without contempt.
+Tied to their flavor:
 
-### 3) Complaint → gratitude
+- Give processing time without punishing silence  
+- Invite their pace into a decision  
+- Celebrate initiative without competing  
+- Protect quiet / protect social gear briefly without contempt  
+- Match intensity down or up wisely without mockery  
 
-When complaint rises, force one gratitude sentence about the same trait’s upside — then steward the downside with a clean ask (not erasure).
+Honor is Behavioral, not only Mental admiration.
 
-### 4) 7-day harmony challenge
+### 3) Complaint → gratitude → clean ask
 
-| Day | Honor act | Complaint caught? | Gratitude | Note |
-|-----|-----------|-------------------|-----------|------|
+When complaint rises:
+
+1. Catch it  
+2. Force one gratitude sentence about the same trait’s upside  
+3. Then one clean ask about the downside (specific, time-bound)  
+4. No erasure demand (“stop being who you are”)  
+
+This is not toxic positivity. It is ordered speech.
+
+### 4) 7-day harmony challenge log
+
+| Day | Honor act | Complaint caught? | Gratitude sentence | Clean ask? | Contempt risk |
+|-----|-----------|-------------------|--------------------|------------|---------------|
 
 ### 5) Analogy: orchestra
 
-Mute the violins because you prefer brass — and you lose the piece. Conduct difference; don’t fire instruments for being themselves.
+Mute the violins because you prefer brass — and you lose the piece. Conduct difference; don’t fire instruments for being themselves. The conductor still cues entries — governance (Course 09–10) remains. Honor ≠ chaos.
 
-### 6) Better whole
+### 6) Wisdom built the house (Prov 24:3)
 
-You do not become them; they do not become you. Harmony is coordinated wholes.
+Harmony is architectural. Wishful “acceptance” without honor acts and clean asks is not wisdom. Rulebooks (Course 10 W8) should include at least one temperament-honor rule after this week.
 
-### 7) School 1 hinge
+### 7) Better whole
 
-Courses 02–13 complete Foundation personal/relational spine. Carry rulebooks, literacy, and temperament honor into ongoing formation.
+You do not become them; they do not become you. Children (if any) need to see difference honored — or they will inherit contempt as family liturgy.
 
-### 8) Final ratiocination
+### 8) School 1 integration (finale)
 
-- Premise 1: Temperament differences are real and recurring.  
-- Premise 2: Contempt and erasure destroy covenant climate.  
-- Premise 3: Honor + stewardship produce harmony under load.  
-- Conclusion: Temperament intelligence is marriage skill — practiced daily.
+| Course band | Carry forward |
+|-------------|---------------|
+| 02–04 | Anthropology, identity, faculties |
+| 05–07 | Development, PD MasterClass, self-command |
+| 08–10 | Heart, relatedness, mastery intensive |
+| 11 | Practice from teleios |
+| 12 | Emotional literacy |
+| 13 | Temperament honor |
+
+Remove contempt here and you poison the rest. Remove teleios grammar and temperament work becomes personality fashion.
+
+### 9) Final ratiocination
+
+- Premise 1: Temperament differences are real and recurring under load.
+- Premise 2: Contempt and erasure destroy covenant climate.
+- Premise 3: Daily honor + clean asks + governance produce harmony.
+- Conclusion: Temperament intelligence is marriage skill — practiced, not performed — and a fitting seal for School 1 Foundation.
+
+### 10) 30-day continuation
+
+After this week: keep appreciation list visible; one honor act daily; monthly review of contempt words you forbid in your mouth.
 
 ---
 
 ## Diagnostic — Temperament Harmony Audit
 
-| Statement | 1–5 |
-|-----------|-----|
-| Appreciation list done | |
-| Daily honor for 7 days | |
-| Complaint→gratitude practiced | |
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| Appreciation list (10) done | |
+| Daily honor for 7 days logged | |
+| Complaint→gratitude→ask practiced | |
 | I refuse erasure-as-love | |
 | I refuse resentment-as-identity | |
-| Charter written | |
+| One temperament rule added to rulebook | |
+| Course 11 teleios grammar intact | |
+| Closing charter written and witnessed | |
 
 ---
 
 ## Case Contrasts
 
-**A — Erasure project:** Dana tries to remake spouse’s pace.  
-**B — Resentment museum:** Morgan catalogs differences as injuries only.  
-**C — Orchestra:** Sam honors daily 7 days, asks cleanly, gratitude list live.
+### Case A — Erasure project
+Dana tries to remake spouse’s pace and intensity; calls it “helping them grow.” Love as cloning. Resistance → contempt.
+
+### Case B — Resentment museum
+Morgan catalogs differences as injuries only; no appreciation list; no honor acts. Discernment cosplay.
+
+### Case C — Orchestra
+Sam honors daily for 7 days, gratitude list live, clean asks on bedtime and social calendar, adds one rule to the Couples rulebook, charter seals School 1 without pride.
 
 ---
 
 ## Seven-Day Drill — Capstone
 
-Day 1: appreciation list  
-Days 1–7: harmony challenge  
-Day 7: closing charter (School 1 Course 13)
+**Day 1:** Appreciation list + pick honor acts.  
+**Days 1–7:** Harmony challenge log.  
+**Day 7:** Rulebook addition + School 1 / Course 13 closing charter + witness.
 
 ---
 
 ## Reflection Questions
 
-1. Which difference have you treated as a defect to erase?  
-2. What honor act costs you pride?  
-3. How does gratitude change the downside ask?  
-4. What does Day 30 of honor look like?  
-5. How will temperament intelligence serve your rulebook?  
+1. Which difference have you treated as a defect to erase?
+2. What honor act costs you pride?
+3. How does gratitude change the downside ask?
+4. What does Day 30 of honor look like in your home?
+5. How will temperament intelligence serve your Course 10 rulebook?
+6. Looking across School 1 — where is contempt still a leak?
 
 ---
 
 ## Weekly Assignment
 
-1. Harmony Audit  
+1. Temperament Harmony Audit  
 2. Appreciation list (10)  
 3. 7-day harmony log  
-4. One clean downside ask  
-5. Closing charter (600–900 words)  
+4. One clean downside ask (delivered)  
+5. One temperament-honor rule added to relationship rulebook  
+6. Closing charter (900–1200 words): Temperament Harmony + how Courses 11–13 complete Foundation without chase, emotional illiteracy, or contempt
 
 ---
 
@@ -125,10 +178,11 @@ Day 7: closing charter (School 1 Course 13)
 > I will not erase the one I love.  
 > Complaint yields to gratitude and clean asks.  
 > Orchestra — many instruments, one household song.  
-> School 1 temperament — practiced, not performed.
+> School 1 Foundation — practiced from teleios, literate in emotion, intelligent in temperament.  
+> Contempt ends here.
 
 ---
 
 ## Outcome
 
-You complete Course 13 — and the School 1 temperament hinge — with seven days of honor and a living appreciation list.
+You complete Course 13 — and seal School 1’s Foundation relational spine — with seven days of honor, a living appreciation list, and a charter worthy of the school’s name.

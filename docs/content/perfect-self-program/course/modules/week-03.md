@@ -1,117 +1,187 @@
 # Week 3: Holiness & Joy
 ## State Alignment — Not Shame Mood
 
-> **Week 3 of 4** | 8–10 hours | Holiness  
-> **Sources:** 1 Peter 1:15–16 · Week 1–2 · joy as fruit
+> **Week 3 of 4** | 8–10 hours | Holiness as State  
+> **Sources:** 1 Peter 1:15–16 · Leviticus holiness refrain · Week 1–2 · Psalm 16:11 · better whole
 
 ---
 
 ## The Central Truth
 
 Holiness is not a mood; it is joyful **alignment with design**.  
-Shame-as-holiness is a counterfeit. Sunlight — joy is fruit of alignment, not a hype product you manufacture to feel spiritual.
+Shame-as-holiness is a counterfeit. Sunlight — joy is fruit of alignment, not a hype product you manufacture to feel spiritual. `Be holy` is state language. Misery is not the meter.
+
+Conviction tells truth about acts. Shame ontology says “I am trash.” Course 11 refuses to baptize the second as the first.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-How do we separate holiness-as-state from shame-as-fuel?
+How do we separate holiness-as-state from shame-as-fuel — without fake joy or denial?
 
 ### Key Insight
-Where you equate holiness with self-contempt, you will either burn out or rebel. Replace shame loops with joy rituals that celebrate alignment and still tell truth about sin/drift.
+Where you equate holiness with self-contempt, you will either burn out, rebel, or perform. Replace shame loops with joy rituals that celebrate alignment **and** still tell truth about drift. Joy without truth is numbness. Truth without joy is chase.
 
 ### Learning Outcomes
-- List two areas where you equate holiness with shame  
-- Replace shame with joy in one practice  
-- Create a joy ritual for routines  
-- Practice the ritual daily  
-- Pass a Holiness & Joy Audit  
+By the end of this week you will:
+
+- Define holiness in design language (state + likeness), not misery language
+- List two zones where you equate holiness with shame
+- Install a daily joy ritual attached to an existing cue
+- Practice conviction-without-collapse after one real miss
+- Pass a Holiness & Joy Audit under load
 
 ---
 
 ## Core Teaching
 
-### 1) Holiness = state
+### 1) Holiness = state (ontology/communion frame)
 
-`Be holy` — ontology/status language in design communion — not “feel miserable enough.”  
-Likeness: living aligned. Conviction ≠ shame ontology.
+In this canon, holiness names set-apart alignment with God’s design and character — **be** holy — not “feel crushed enough to count as serious.”
 
-### 2) Shame vs conviction
+Likeness: living that state in time (speech, desire, justice, worship, household honor).
+
+If holiness requires you to hate your given design, it is not holiness; it is accusation wearing vestments.
+
+### 2) Shame vs conviction (table you must memorize)
 
 | Shame ontology | Conviction |
 |----------------|------------|
-| I am trash | This act missed design |
-| Hide | Repair |
-| Fuel: self-hatred | Fuel: love of truth |
+| I am trash / irredeemable as being | This act missed design |
+| Hide; isolate; perform | Repair; confess wisely; resume rails |
+| Fuel: self-hatred | Fuel: love of truth and persons |
+| Identity deletion | Act ownership |
+| Endless penance theater | Time-bound next act |
 
-### 3) Joy ritual
+Ratiocination:
 
-Attach to existing cue (morning coffee / evening walk):  
-1. Name one alignment kept  
-2. Thank for design given  
-3. Name one gap without collapse  
-4. One next act  
+- Premise 1: Image and teleios are given.
+- Premise 2: Acts can violate design without erasing image.
+- Conclusion: Repair addresses acts; shame ontology attacks being — illegal.
 
-### 4) Two shame zones
+### 3) Joy as fruit, not product
 
-Write them; write the joy-replacement premise for each.
+Joy here is not forced cheerfulness and not entertainment. It is the settled gladness of alignment — often quiet — that can coexist with grief.
 
-### 5) Analogy: sunlight
+Psalm-shaped joy: presence and design produce gladness; chasing worth produces brittle highs.
 
-Plants turn toward light. Joy is not denial of winter; it is orientation to the given sun of design.
+Illegal joy: skipping confession, calling numbness “peace,” using hype to avoid repentance.
 
-### 6) Continuity
+### 4) Two shame zones — write them
 
-Joyful holiness sustains growth without self-hatred (Week 4).
+Examples: body/sexuality; money failure; parenting miss; anger; comparison at church; unfinished education.
+
+For each:
+
+1. Shame sentence you hear  
+2. Conviction sentence that tells truth without ontology collapse  
+3. Joy/alignment sentence (gratitude for design + next act)  
+
+### 5) Joy ritual (attach to existing cue)
+
+Morning coffee / commute / evening walk / after prayer:
+
+1. Name one alignment kept (specific)  
+2. Thank for design given (ontology)  
+3. Name one gap without collapse (conviction)  
+4. One next act (Conative)  
+5. One Affective care note (for household or future self)
+
+Duration: 3–5 minutes. If it requires a perfect morning, it will die.
+
+### 6) Analogy: sunlight
+
+Plants turn toward light. Joy is orientation to the given sun of design — not denial of winter seasons. You do not rip the plant up daily to prove seriousness (Week 4 will deepen this).
+
+### 7) Holiness and better whole
+
+Shame holiness often demands a partner regulate your worth (“reassure me I’m not disgusting”). Better whole: receive comfort; do not outsource ontology. Joy rituals are first-person stewardship.
+
+### 8) Faculties under holiness
+
+- Cognitive: test premises (“misery proves piety” — false)  
+- Affective: care without fusion  
+- Conative: keep ritual  
+- Psychomotor: embodied thanks (walk, breath, posture)  
+- Emotional attribute: name sorrow without becoming shame  
+- Behavioral: the next aligned act  
+
+Holiness that never reaches Behavior is theater.
+
+### 9) Continuity into Week 4
+
+Joyful holiness that still uses self-punishment as growth strategy will collapse. Week 4 installs sustainable growth — plant logic, not scorched-earth “improvement.”
+
+### 10) What this week refuses
+
+- Misery as virtue  
+- Fake joy as denial  
+- Holiness as social performance  
+- Using “grace” to skip rails  
+- Using “standards” to authorize self-hatred  
 
 ---
 
 ## Diagnostic — Holiness & Joy Audit
 
-| Statement | 1–5 |
-|-----------|-----|
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| I define holiness without misery-as-meter | |
 | Two shame=holiness zones named | |
-| Joy ritual written | |
-| Ritual practiced daily | |
-| I distinguish conviction from shame | |
-| I refuse misery-as-virtue | |
-| Alignment includes truth about gaps | |
+| Joy ritual written and cued | |
+| Ritual practiced most days | |
+| I distinguish conviction from shame ontology | |
+| After miss, I repair without “I am trash” | |
+| Joy includes truth about gaps | |
+| I refuse partner-as-worth-regulator | |
 
 ---
 
 ## Case Contrasts
 
-**A — Shame saint:** Dana feels holy only when crushed.  
-**B — Fake joy:** Riley skips confession; calls numbness peace.  
-**C — Sunlight:** Sam keeps joy ritual, repairs gaps cleanly, rests in state.
+### Case A — Shame saint
+Dana feels “holy” only when crushed. Household experiences her piety as weather. Misses become multi-day identity funerals. No joy ritual; only penance.
+
+### Case B — Fake joy
+Riley skips confession, says “good vibes,” calls numbness peace. Drift grows. Holiness vocabulary unused; chase hidden under positivity.
+
+### Case C — Sunlight
+Sam keeps the joy ritual, names a sexual or speech miss with conviction language, repairs same day, thanks for design without claiming sinlessness, and rests without self-hatred fuel.
 
 ---
 
-## Seven-Day Drill
+## Seven-Day Drill — Joy Ritual Log
 
-Day 1: shame zones + ritual  
-Days 2–7: daily joy ritual log  
+| Day | Cue kept? | Alignment named | Gap named cleanly? | Next act | Shame spike? | Interrupt used? |
+|-----|-----------|-----------------|--------------------|----------|--------------|-----------------|
+
+**Day 1:** Shame zones + ritual card.  
+**Days 2–7:** Ritual daily; at least one real miss handled with conviction script.
 
 ---
 
 ## Reflection Questions
 
-1. Where did you learn shame=holy?  
-2. What joy feels “illegal” to you — and why?  
-3. How does state language change repentance?  
-4. What ritual cue will survive busy weeks?  
-5. How does joy serve covenant presence?  
+1. Where did you learn shame = holy?
+2. What joy feels “illegal” to you — and what premise makes it illegal?
+3. How does state language (`be holy`) change your repentance script?
+4. What ritual cue will survive your busiest week?
+5. How does joy serve covenant presence (Course 10 W7) rather than private spirituality only?
+6. Where have you used a spouse/friend as anti-shame medicine instead of rails?
 
 ---
 
 ## Weekly Assignment
 
 1. Holiness & Joy Audit  
-2. Two shame zones  
-3. Joy ritual card  
+2. Two shame-zone rewrites (shame → conviction → joy/alignment)  
+3. Joy ritual card attached to a real cue  
 4. 7-day ritual log  
-5. One repaired gap with non-shame ownership  
+5. One repaired gap with non-shame ownership (write the exact sentences used)  
+6. 400–600 words: “Holiness without self-hatred”
 
 ---
 
@@ -120,10 +190,11 @@ Days 2–7: daily joy ritual log
 > Holiness is state.  
 > Joy is fruit of alignment.  
 > I refuse shame-as-fuel.  
-> I tell truth and turn toward light.
+> I tell truth and turn toward light.  
+> Conviction repairs acts; it does not delete persons.
 
 ---
 
 ## Outcome
 
-You practice holiness with joy — conviction without ontology collapse.
+You practice holiness with joy — conviction without ontology collapse — and a daily ritual that keeps sunlight on design.

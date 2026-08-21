@@ -2,112 +2,160 @@
 ## Navigate the Storm — Tools, Not Denial
 
 > **Week 3 of 4** | 8–10 hours | Conflict Emotions  
-> **Sources:** Course 10 W5 · Week 1–2 · storm-at-sea
+> **Sources:** Course 10 W5 · Course 09 W4 · Weeks 1–2 · Course 11 · better whole
 
 ---
 
 ## The Central Truth
 
 Conflict exposes your emotional formation gaps.  
-A storm at sea is navigable with tools — pause, name, repair — not with pretending the ocean is a pond.
+A storm at sea is navigable with tools — pause, name, repair — not with pretending the ocean is a pond, and not with baptizing blame weather as “honesty.” Literacy that fails in conflict was never literacy; it was classroom vocabulary.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-Which emotions run your conflict — and how do you steward them?
+Which emotions run your conflict — and how do you steward them as a whole person?
 
 ### Key Insight
-Top conflict emotions (anger, fear, shame, contempt) drive pattern. Practice pause–name–repair; replace blame with self-stewardship; journal three days.
+Top conflict emotions (anger, fear, shame, contempt, panic, humiliation) drive pattern more than the topic does. Practice pause–name–repair; replace blame with self-stewardship; journal three real conflict windows.
 
 ### Learning Outcomes
-- Identify top two conflict emotions  
-- Practice pause, name, repair  
-- Replace blame with self-stewardship  
-- Keep a 3-day conflict journal  
-- Pass an Emotion in Conflict Audit  
+By the end of this week you will:
+
+- Identify top two conflict emotions with stories and moves
+- Install pause–name–repair as a spoken household/personal card
+- Replace blame speech with stewardship speech in at least one live conflict
+- Keep a 3-day (minimum) conflict emotion journal
+- Pass an Emotion in Conflict Audit
 
 ---
 
 ## Core Teaching
 
-### 1) Top two conflict emotions
+### 1) Topic vs emotion captain
 
-Name them; name the story each tells; name the usual harmful move.
+Most fights have a surface topic (dishes, money, tone, lateness) and an emotion captain (contempt, fear of abandonment, shame, envy). Master the captain or the topic forever returns.
 
-### 2) Pause — name — repair
+### 2) Top two conflict emotions — map
 
-1. Pause (Week 2)  
-2. Name aloud or on paper (Week 1 word)  
-3. Own your move; repair ask  
+For each:
 
-### 3) Blame → stewardship
+| Field | Write |
+|-------|-------|
+| Emotion | |
+| Typical cue | |
+| Premise (Mental) | |
+| Body | |
+| Usual harmful move | |
+| Design move | pause / name / ask / return-time / repair |
 
-Blame: “You made me…”  
-Stewardship: “I felt X; I chose Y; I will Z.”
+### 3) Pause — name — repair
 
-### 4) Conflict journal (3 days)
+1. **Pause** — Week 2 brake; set return time if exiting  
+2. **Name** — emotion word aloud or on paper (Week 1)  
+3. **Own** — your Behavioral move without fog  
+4. **Repair** — ask + next act (Course 08 / 10)  
 
-| Conflict | Emotion | Named? | Pause? | Repair? |
-|----------|---------|--------|--------|---------|
+Sequence matters. Naming mid-explosion without pause is still discharge.
 
-### 5) Couples & singles
+### 4) Blame → stewardship
 
-Couples: use in live conflict. Singles: use in family/work conflict — same literacy.
+| Blame | Stewardship |
+|-------|-------------|
+| You made me… | I felt X; I chose Y; I will Z |
+| Always / never | This instance |
+| Character attack | Act + impact |
+| Scorekeeping | One rupture |
 
-### 6) Continuity
+Blame protects ego. Stewardship protects design and bond.
 
-Conflict skill still needs emotional repair ritual (Week 4).
+### 5) Contempt special warning
+
+Contempt is acid. If contempt is a top emotion, literacy requires naming it early and refusing contempt speech as “just how I talk.” Honor code (Course 09 W2) applies.
+
+### 6) Conflict journal (3+ days)
+
+| Conflict | Topic | Emotion captain | Named? | Pause? | Blame slipped? | Repair? | 24h trust |
+|----------|-------|-----------------|--------|--------|----------------|---------|-----------|
+
+### 7) Couples and singles
+
+**Couples:** Use in live conflict with protocol from Course 10.  
+**Singles:** Use in family/work/friend conflict — same literacy. Do not wait for marriage to learn navigation.
+
+### 8) Analogy: storm at sea
+
+Denial sinks ships. Panic without instruments sinks ships. Charts, compass, and practiced crew navigate. You are installing instruments.
+
+### 9) Course 11 guard
+
+Conflict shame (“I am a monster for feeling anger”) reinstalls chase. Anger can be named and governed; it is not proof you are non-teleios.
+
+### 10) Continuity into Week 4
+
+Even good navigation leaves tears in the fabric. Week 4 — emotional repair — is the proof of maturity.
 
 ---
 
 ## Diagnostic — Emotion in Conflict Audit
 
-| Statement | 1–5 |
-|-----------|-----|
-| Top two emotions named | |
-| Pause–name–repair practiced | |
-| Blame replaced in speech | |
-| 3-day journal done | |
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| Top two conflict emotions mapped | |
+| Pause–name–repair card exists | |
+| Practiced in live conflict | |
+| Blame speech caught and rewritten | |
+| Conflict journal done (≥3 entries) | |
+| Contempt refused as style | |
 | I refuse storm-denial | |
-| Self-stewardship visible | |
+| Self-stewardship visible to a witness | |
 
 ---
 
 ## Case Contrasts
 
-**A — Blame weather:** Dana’s anger is always someone else’s fault.  
-**B — Silent storm:** Morgan disappears; no name.  
-**C — Navigation:** Sam pauses, names fear, repairs twice.
+### Case A — Blame weather
+Dana’s anger is always someone else’s fault. Naming never reaches her own move. Partner parents or flees.
+
+### Case B — Silent storm
+Morgan disappears; no name; returns as if nothing happened. Trust freezes.
+
+### Case C — Navigation
+Sam pauses, names fear under the anger, owns the raised voice, repairs with a next act, journals three conflicts, trust rises within 24 hours.
 
 ---
 
 ## Seven-Day Drill
 
-Day 1: top two emotions  
-Days 2–4: conflict journal  
-Days 5–7: refine script  
+**Day 1:** Top-two maps + card.  
+**Days 2–4:** Conflict journal (seek real windows; do not pick fake fights).  
+**Days 5–7:** Refine scripts; one blame→stewardship rewrite shared with witness.
 
 ---
 
 ## Reflection Questions
 
-1. Which conflict emotion is your captain?  
-2. Where does blame protect you from ownership?  
-3. What happens when you name mid-storm?  
-4. How does this serve covenant readiness?  
-5. What journal line surprised you?  
+1. Which conflict emotion is your captain?
+2. Where does blame protect you from ownership?
+3. What happens when you name mid-storm after a pause?
+4. How does this serve covenant readiness if you are unmarried?
+5. What journal line surprised you?
+6. Where does contempt still disguise as humor or “standards”?
 
 ---
 
 ## Weekly Assignment
 
 1. Emotion in Conflict Audit  
-2. Top-two sheet  
-3. Pause–name–repair card  
-4. 3-day journal  
-5. One blame→stewardship rewrite  
+2. Top-two emotion maps  
+3. Pause–name–repair card (shared if coupled)  
+4. Conflict journal (≥3 entries)  
+5. One blame→stewardship rewrite (before/after sentences)  
+6. 400–600 words: “My emotion captain in conflict”
 
 ---
 
@@ -116,10 +164,11 @@ Days 5–7: refine script
 > Conflict exposes gaps.  
 > I pause, name, and repair.  
 > Blame ends; stewardship begins.  
-> Storms are navigable.
+> Storms are navigable.  
+> I refuse contempt and denial.
 
 ---
 
 ## Outcome
 
-You steward conflict emotions with tools — not denial, not blame weather.
+You steward conflict emotions with tools — not denial, not blame weather — as literacy under fire.

@@ -1,111 +1,169 @@
 # Week 2: Temperament in Conflict
 ## Different Notes — Not Character Defects
 
-> **Week 2 of 3** | 8–10 hours | Conflict  
-> **Sources:** Week 1 · Course 10 W5 · Course 12 W3
+> **Week 2 of 3** | 8–10 hours | Conflict Under Flavor Clash  
+> **Sources:** Week 1 · Course 10 W5 · Course 12 W3 · Course 09 W4 · better whole
 
 ---
 
 ## The Central Truth
 
 Conflict often reveals **temperament differences**, not character defects.  
-Musical notes clash until arranged; curiosity arranges better than judgment.
+Musical notes clash until arranged; curiosity arranges better than judgment. Defect theology (“they’re broken for being slow/fast/intense/quiet”) is contempt with a moral costume. Endless analysis without decision is also failure — curiosity is a tool, not a hiding place.
 
 ---
 
 ## Week Overview
 
 ### Core Question
-How do we govern temperament clash without contempt?
+How do we govern temperament clash without contempt and without excuse?
 
 ### Key Insight
-List two recurring conflicts tied to temperament; pause and ask before reacting; replace judgment with curiosity; journal three days.
+List two recurring conflicts tied to temperament; pause and ask before reacting; replace judgment with curiosity; still use conflict protocol (own, repair); journal three days.
 
 ### Learning Outcomes
-- List two temperament-tied conflicts  
-- Practice pause and ask  
-- Replace judgment with curiosity  
-- Keep 3-day temperament conflict journal  
-- Pass a Temperament in Conflict Audit  
+By the end of this week you will:
+
+- Name two recurring conflicts as flavor-clash + topic
+- Install pause-and-ask before defect-labeling
+- Practice curiosity scripts that still lead to decisions
+- Keep a 3-day temperament conflict journal
+- Pass a Temperament in Conflict Audit
 
 ---
 
 ## Core Teaching
 
-### 1) Two recurring conflicts
+### 1) Two layers of a fight
 
-Name the issue; name the flavor clash (e.g., fast closer vs slow processor); name the contempt story you tell.
+1. **Topic** — money, chores, sex timing, in-laws, punctuality  
+2. **Flavor clash** — fast closer vs slow processor; engagers vs withdrawers; high intensity vs low  
 
-### 2) Pause and ask
+If you only fight the topic, the clash returns dressed as a new topic.
 
-Before reacting: “Is this defect — or different pace/intensity?” Ask one curious question. Then use conflict protocol (Course 10).
+### 2) Two recurring conflicts — map
 
-### 3) Curiosity scripts
+For each:
 
-“Help me understand what you need when you’re quiet.”  
-“I move fast; do you need ten minutes before we decide?”
+| Field | Write |
+|-------|-------|
+| Topic | |
+| My flavor move | |
+| Their flavor move | |
+| Contempt story I tell | |
+| Defect label I reach for | |
+| Curious question | |
+| Clean stewardship ask | |
+| Protocol step (Course 10) | |
 
-### 4) Journal (3 days)
+### 3) Pause and ask (temperament edition)
 
-| Conflict | Flavors | Judgment thought | Curious ask | Outcome |
-|----------|---------|------------------|-------------|---------|
+Before reacting:
 
-### 5) Analogy: musical notes
+1. Brake (Course 12 / 07)  
+2. Ask internally: “Defect — or different pace/intensity?”  
+3. Ask aloud one curious question  
+4. Then own your move and use conflict card  
 
-Dissonance can resolve to harmony. Contempt is refusing to read the score.
+Curiosity that never reaches a decision is avoidance. Time-box: curiosity → decision window.
 
-### 6) Continuity
+### 4) Curiosity scripts (examples — write yours)
 
-Curiosity prepares harmony practices (Week 3).
+- “Help me understand what you need when you’re quiet.”  
+- “I move fast; do you need twenty minutes before we decide?”  
+- “My intensity is up; is volume the problem or the content?”  
+- “I’m not withdrawing to punish — I need a return time. I’ll be back at ____.”  
+
+### 5) Judgment → curiosity → still responsibility
+
+| Judgment | Curiosity | Responsibility |
+|----------|-----------|----------------|
+| You’re cold | What’s your processing need? | I will not stonewall without return |
+| You’re controlling | What’s your pace fear? | I will not steamroll deadlines of care |
+| You’re dramatic | What’s the intensity signal? | I will not use volume as dominance |
+
+### 6) Journal (3 days)
+
+| Conflict | Flavors | Judgment thought | Curious ask | Decision made? | Outcome |
+|----------|---------|------------------|-------------|----------------|---------|
+
+### 7) Analogy: musical notes
+
+Dissonance can resolve to harmony. Contempt is refusing to read the score. Walking off stage mid-piece without return time is not “temperament” — it is ungoverned Behavioral exit.
+
+### 8) Power and temperament (Course 09 W3)
+
+The faster / louder / more socially skilled person can “win” conflicts while losing the bond. Submit power to protocol. The slower processor needs voice without being labeled defective.
+
+### 9) Course 11–12 guards
+
+- Do not shame yourself for having a flavor (“I am broken for being intense”).  
+- Do not dump unregulated emotion and call it “my fiery temperament.”  
+- Name emotion (Course 12) *and* read temperament (this course).
+
+### 10) Continuity into Week 3
+
+Curiosity prepares daily honor. Week 3: harmony challenge — appreciation list, honor acts, complaint→gratitude, School 1 closing.
 
 ---
 
 ## Diagnostic — Temperament in Conflict Audit
 
-| Statement | 1–5 |
-|-----------|-----|
-| Two conflicts listed | |
+Score 1–5.
+
+| Statement | Score |
+|-----------|-------|
+| Two conflicts mapped as flavor + topic | |
 | Pause-and-ask practiced | |
-| Judgment→curiosity once+ | |
+| Judgment→curiosity at least twice | |
+| Decisions still reached (no endless analysis) | |
 | 3-day journal done | |
-| I refuse defect-labeling | |
+| Defect-labeling refused | |
 | Protocol still used | |
+| Power submitted to the card | |
 
 ---
 
 ## Case Contrasts
 
-**A — Defect theology:** Avery moralizes pace differences.  
-**B — Endless analysis:** Morgan never decides; hides in “temperament talk.”  
-**C — Curious skill:** Sam pauses, asks, decides with honor.
+### Case A — Defect theology
+Avery moralizes pace differences; every fight becomes character court. Curiosity absent. Contempt climate.
+
+### Case B — Endless analysis
+Morgan “understands temperament” forever and never decides bedtime, budget, or repair. Hiding in psychology talk.
+
+### Case C — Curious skill
+Sam pauses, asks, time-boxes a decision, owns steamroll or withdrawal, repairs, journals three clashes; harmony begins.
 
 ---
 
 ## Seven-Day Drill
 
-Day 1: two conflicts  
-Days 2–4: journal  
-Days 5–7: one curiosity habit install  
+**Day 1:** Two conflict maps + curiosity scripts.  
+**Days 2–4:** Journal live conflicts.  
+**Days 5–7:** One repaired contempt moment; refine scripts.
 
 ---
 
 ## Reflection Questions
 
-1. Which contempt label do you reach for first?  
-2. What question would have saved last month’s fight?  
-3. Where is “curiosity” avoiding decision?  
-4. How do your flavors collide at 10pm?  
-5. What changed when you asked instead of accused?  
+1. Which contempt label do you reach for first?
+2. What question would have saved last month’s worst fight?
+3. Where is “curiosity” avoiding decision?
+4. How do your flavors collide at 10pm (fatigue truth)?
+5. What changed when you asked instead of accused?
+6. Where does power let you skip the ask?
 
 ---
 
 ## Weekly Assignment
 
-1. Conflict Audit  
-2. Two conflict sheets  
+1. Temperament in Conflict Audit  
+2. Two conflict maps  
 3. Curiosity script card  
 4. 3-day journal  
-5. One repaired contempt moment  
+5. One repaired contempt moment write-up  
+6. 400–600 words: “Difference is not defect — and not destiny”
 
 ---
 
@@ -113,11 +171,12 @@ Days 5–7: one curiosity habit install
 
 > Difference is not defect.  
 > I pause and ask.  
-> Judgment yields to curiosity.  
-> Notes can become music.
+> Judgment yields to curiosity — then decision.  
+> Notes can become music.  
+> I refuse contempt court and analysis hiding.
 
 ---
 
 ## Outcome
 
-You interrupt temperament contempt in conflict with curiosity and a live journal.
+You interrupt temperament contempt in conflict with curiosity, protocol, and a live journal — School 1 conflict skill with flavor literacy.
