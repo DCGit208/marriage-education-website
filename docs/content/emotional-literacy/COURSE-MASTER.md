@@ -38,4 +38,4 @@ Understand, name, and steward emotions without being controlled by them — and 
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Pending resync + reseed |
+| Catalogue / Firestore | Formation-depth synced + seeded |

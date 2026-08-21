@@ -38,4 +38,4 @@ Master working with different temperaments in marriage (and close bonds) without
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Pending resync + reseed |
+| Catalogue / Firestore | Formation-depth synced + seeded |

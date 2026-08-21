@@ -39,4 +39,4 @@ You do not practice to *become* teleios. You practice **from** teleios — desig
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Pending resync + reseed |
+| Catalogue / Firestore | Formation-depth synced + seeded |
