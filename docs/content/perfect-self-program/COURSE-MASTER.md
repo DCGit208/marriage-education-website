@@ -32,11 +32,11 @@ You do not practice to *become* teleios. You practice **from** teleios — desig
 
 ## Pedagogy target
 
-~1,400–1,800 words/week · full diagnostic · cases · drills · charter-ready assignments
+~1,500–1,800 words/week · Course 05 parity target · full diagnostic · cases · drills · charter-ready assignments
 
 ## Status
 
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Formation-depth synced + seeded |
+| Catalogue / Firestore | Course 05 parity pass · synced + seeded |

@@ -19,7 +19,7 @@ A plant grows steady, healthy, rooted. Scorched-earth “improvement” kills th
 How do we grow without punishing ourselves into change?
 
 ### Key Insight
-Audit growth patterns: which are stewardship, which are self-punishment cosplay? Replace punishment with rails + a 30-day goal that assumes Week 1 ontology. Launch the log. Write the Perfect Self closing charter that locks Courses 11’s grammar for the rest of School 1’s finale (12–13).
+Audit growth patterns: which are stewardship, which are self-punishment costume? Replace punishment with rails + a 30-day goal that assumes Week 1 ontology. Launch the log. Write the Perfect Self closing charter that locks Courses 11’s grammar for the rest of School 1’s finale (12–13).
 
 ### Learning Outcomes
 By the end of this week you will:
@@ -145,6 +145,43 @@ Weekly review: Sunday 15 minutes with witness.
 Ontology line: “I am teleios; this is likeness, not worth purchase.”
 
 Rewrite to your domain; keep the structure.
+
+### 14) Anti-scorch inventory (replace these)
+
+| Scorched pattern | Stewardship replacement |
+|------------------|-------------------------|
+| 30-day extreme after shame spike | MDS-sized goal, fatigue-ready |
+| Public announcement, private abandon | Witnessed quiet log |
+| Multi-day identity funeral after miss | Same-window repair + resume |
+| “New me Monday” forever | Continue count with honesty |
+| Using spouse as warden | Adult witness, not parent |
+
+### 15) Charter must-include lines (Course 11)
+
+Your closing charter is incomplete unless it contains:
+
+1. Teleios starting-point sentence
+2. Two retired chase finish lines
+3. Identity practice cue
+4. Joy ritual cue
+5. 30-day goal + miss protocol
+6. How you will refuse chase in Courses 12–13 by name
+
+### 16) Depth standard
+
+School 1 greatness is not more content modules. It is graduates who grow like plants — rooted, timed, joyful — not like arsonists of their own souls. Write the charter accordingly.
+
+### 17) Thirty-day review agenda (copy into calendar)
+
+Week 1 check: ontology language still clean?  
+Week 2 check: identity practice cue firing?  
+Week 3 check: joy ritual not chase?  
+Week 4 check: miss protocol used without funerals?  
+Adjust metric once if needed — do not restart identity.
+
+### 18) Final charge
+
+Do not leave Course 11 entertained. Leave planted. Water the 30-day goal. Keep the joy ritual. Interrupt chase speech. School 1's reputation in your home begins with whether perfection remains a starting point when you fail on Day 11.
 
 ## Diagnostic — Sustainable Growth Audit
 

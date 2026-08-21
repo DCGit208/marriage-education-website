@@ -136,6 +136,46 @@ You may finish Course 13 with unfinished honor habits. Unfinished is not un-imag
 
 Make School 1 great where it counts: breakfast tone, conflict mid-week, desire loyalty, repair speed, honor of difference. Certificates are secondary. Teleios practice, emotional literacy, and temperament intelligence — lived — are the school’s reputation in a household.
 
+### 17) Appreciation list quality control
+
+Cross out any item that:
+
+- is backhanded (“you’re slow but at least…”)
+- is generic (“you’re nice”)
+- secretly demands change
+
+Replace with flavor-specific honor. Aim for sentences your spouse would recognize as true.
+
+### 18) Clean ask bank (write five)
+
+Examples to adapt:
+
+1. “I need twenty minutes quiet after work before decisions.”
+2. “Please don’t interpret my processing silence as rejection; I’ll return at ____.”
+3. “I need us to decide by tonight; can we set a 15-minute consult?”
+4. “When my intensity rises, tell me ‘volume’ as a cue — I’ll brake.”
+5. “Join me for thirty minutes of my social gear this weekend; then we protect quiet.”
+
+Honor without asks becomes resentment. Asks without honor become control.
+
+### 19) Children / community witness
+
+If children are present: they learn whether difference is mocked or conducted. One week of honor acts is a liturgy. If no children: your friends still learn from how you speak about your spouse’s flavor in public. Public honor is part of Week 3.
+
+### 20) School 1 final greatness triad
+
+For 90 days, keep visible:
+
+1. **Teleios** — practice from perfection (Course 11)
+2. **Literacy** — name, brake, mend (Course 12)
+3. **Temperament honor** — no contempt, daily honor, clean asks (Course 13)
+
+A school is great when kitchens change. Let the charter be a kitchen document.
+
+### 21) Public speech audit (7 days)
+
+Each evening: Did I mock their flavor to a third party? Did I honor them in front of someone? One public honor act weekly is required for the harmony challenge to count as School 1 grade.
+
 ## Diagnostic — Temperament Harmony Audit
 
 Score 1–5.

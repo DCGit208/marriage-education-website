@@ -31,11 +31,11 @@ Master working with different temperaments in marriage (and close bonds) without
 
 ## Pedagogy target
 
-~1,400–1,800 words/week · marriage-primary, singles-transferable · School 1 finale charter
+~1,500–1,800 words/week · Course 05 parity target · marriage-primary, singles-transferable · School 1 finale charter
 
 ## Status
 
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Formation-depth synced + seeded |
+| Catalogue / Firestore | Course 05 parity pass · synced + seeded |

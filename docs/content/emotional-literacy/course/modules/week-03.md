@@ -119,13 +119,50 @@ Two people, two emotion captains — e.g., their fear and your contempt. Protoco
 
 Topic: overspend. Captains: your anxiety, their shame, mutual contempt risk.
 
-Sequence: pause → you name anxiety without attacking character → they name shame without collapsing into trash ontology → each owns one Behavioral move → one budget next act → 24h trust read.
+Sequence: pause → you name anxiety without attacking character → they name shame without collapsing into shame ontology → each owns one Behavioral move → one budget next act → 24h trust read.
 
 If contempt appears (“you’re so irresponsible”), stop topic; repair contempt first. Topic will wait; acid will not.
 
 ### 16) Week 3 evidence bar
 
 Produce: two emotion maps, three journal rows, one blame→stewardship rewrite with before/after sentences, and one live conflict where pause–name–repair actually ran. Anything less is incomplete for a school that claims covenant formation.
+### 17) The archive problem
+
+Kitchen-sinking (bringing every past wound) is often unprocessed emotion captains wearing history as a weapon. Literacy rule: **one conflict window, one primary emotion captain, one topic.** Archives go to a scheduled repair talk — not to the peak.
+
+### 18) Humor and “standards” as contempt costumes
+
+Write three recent “jokes” or “I’m just saying” lines. For each: Was it play, or contempt with a smile? If contempt, rewrite as named emotion + clean ask. School 1 homes die by a thousand cute cuts.
+
+### 19) Full worked sequence (anger over interrupted evening)
+
+1. Cue: plans changed without consult.
+2. Body: heat, jaw.
+3. Illegal premise: “They never respect me” (always/never).
+4. Pause code; 15-minute return.
+5. Name: anger + beneath it, feeling dismissed.
+6. Return: own any volume; ask for consult norm going forward.
+7. Repair if contempt leaked.
+8. Journal row same night.
+
+Practice this sequence once from a real event this week — not a hypothetical.
+
+### 20) Doctrine lock for conflict emotion
+
+Feeling intensely in conflict does not make you immature. **Ungoverned** intensity that harms and won’t repair does. Teleios persons can feel fire and still keep the card.
+
+### 21) After the fight — same-night micro-repair
+
+Even if full repair talk waits until morning, same-night micro-repair is literacy:
+
+> “I was flooding with ______; I owned ______ poorly; I will talk at ______ tomorrow; I am not abandoning.”
+
+This prevents freeze-as-punishment and keeps return-time theology honest.
+
+### 22) Final conflict-emotion charge
+
+Your emotion captain will return. Literacy is not exile of feeling; it is governance under covenant weight. Keep the card on the fridge or phone lock screen. When contempt costumes appear, stop the topic and mend the acid first.
+
 ## Diagnostic — Emotion in Conflict Audit
 
 Score 1–5.

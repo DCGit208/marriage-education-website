@@ -125,6 +125,48 @@ After repair: Did they initiate warmth? Did you keep the next act? Did conflict 
 
 A School 1 graduate can: name emotion, brake, navigate conflict emotion, and mend. If any leg is missing, the “great school” claim fails in the kitchen. Your charter must name which leg is still weakest and the 30-day rail for it.
 
+### 15) Repair and the four faculties (integration)
+
+A complete emotional repair often needs:
+
+- **Cognitive** — accurate account of what happened
+- **Mental** — reject “I am trash” / “they are trash”
+- **Emotional** — name what was discharged
+- **Affective** — care about impact without fusion
+- **Conative** — commit to next act
+- **Psychomotor** — show up for the talk; posture; eye contact
+- **Behavioral** — keep the next act
+
+Missing faculties produce fog apologies or technical non-human repairs.
+
+### 16) When you are the injured party
+
+Literacy is not only apologizing. If you were harmed:
+
+1. Name your emotion without character assassination
+2. State the impact
+3. State what would help (boundary, act, time)
+4. Refuse moving goalposts as revenge (Course 09)
+5. Distinguish forgiveness process from trust bricks
+
+Better whole: you may require structure without becoming a permanent prosecutor.
+
+### 17) Closing charter checklist (Course 12)
+
+Must include: lexicon growth proof, pause card, conflict captain maps, repair ritual, weakest leg + 30-day rail, Course 11 teleios sentences preserved. If chase or feeling-as-ontology returned, confess it in the charter.
+
+### 18) School 1 greatness test
+
+Can your household feel safer because you can mend? If not, literacy is still academic. Mend once more before you collect the certificate in your heart.
+
+### 19) Gift, touch, and timing
+
+Restitution may include a gift or act of service — **after** ownership, never instead of it. Touch may comfort — never coerce forgiveness. Timing: do not force a repair talk at peak red load; schedule it; keep the schedule. Structure is love’s body language.
+
+### 20) Final repair charge
+
+Mend once more than you prefer. Prefer structure over relief. Prefer ownership over fog. Prefer next acts over speeches. Then walk into Course 13 able to honor difference without using emotional illiteracy as an excuse for contempt.
+
 ## Diagnostic — Emotional Repair Audit
 
 Score 1–5.

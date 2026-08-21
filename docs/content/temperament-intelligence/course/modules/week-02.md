@@ -128,6 +128,57 @@ This keeps Week 2 from becoming endless soft conflict.
 
 Temperament contempt often enters through family of origin stories (“in our family we just say it”). Translate: different intensity norms. Honor your spouse’s flavor in front of your family. Public contempt of your spouse’s temperament is covenant betrayal with manners.
 
+### 15) Full map — conflict #1 and #2 (force specificity)
+
+Reproduce this twice in your notes:
+
+**Conflict title:** ______  
+**Last date it happened:** ______  
+**Topic surface:** ______  
+**My fatigue flavor:** ______  
+**Their fatigue flavor:** ______  
+**My contempt word:** ______  
+**Their likely wound story:** ______  
+**Curious question I will actually ask:** ______  
+**Decision time-box:** ______  
+**Repair if I used contempt:** ______
+
+Vague maps produce vague marriages.
+
+### 16) The “spiritualized preference” problem
+
+Sometimes we baptize our temperament as the godly one (“gentle always waits”; “leaders always push”). Test preferences against design fruit: truth, fidelity, honor, repair. Preferring your own flavor is normal; sacralizing it is pride.
+
+### 17) Practice drill — 72-hour curiosity
+
+In the next 72 hours, during one real friction:
+
+1. Pause
+2. Ask one curious question from your card
+3. Time-box a decision
+4. Own your flavor move
+5. Journal the row
+
+If you avoid all friction to protect the assignment, you fail the assignment.
+
+### 18) Doctrine lock
+
+Difference is not defect. Difference is also not destiny. Teleios persons with different temperaments still keep covenants, tell truth, and repair. Curiosity serves responsibility — it does not replace it.
+
+### 19) Extended case — bedtime clash
+
+Fast closer wants lights out decision now; slow processor needs twenty minutes. Contempt scripts: “You’re a child” / “You’re a dictator.”  
+Design play: curious ask + time-box (“twenty minutes, then we decide”) + no volume dominance + morning review if it failed.  
+Journal it once this week even if bedtime is not your issue — use your real analogue (leaving parties, ending visits, closing purchases).
+
+### 20) What “mastery” means here
+
+Not never clashing. Mastery is: shorter contempt half-life, faster curiosity, kept time-boxes, repaired defect-labels same day. Measure that — not vibes.
+
+### 21) Final conflict charge
+
+Curiosity without decision breeds fog. Decision without curiosity breeds tyranny. Hold both. Time-box. Repair defect labels same day. That is temperament intelligence under fire — worthy of a great school.
+
 ## Diagnostic — Temperament in Conflict Audit
 
 Score 1–5.

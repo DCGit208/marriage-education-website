@@ -143,6 +143,29 @@ Not anti-growth. It is anti-**wrong-rooted** growth.
 
 ---
 
+### 12) Four illegal finish lines (name yours)
+
+1. **Approval finish line** — “I’ll be okay when they finally respect me.”
+2. **Romance finish line** — “I’ll be whole when I’m chosen.”
+3. **Performance finish line** — “I’ll be perfect when my streak is clean.”
+4. **Comparison finish line** — “I’ll rest when I catch up to them.”
+
+Each finish line secretly denies teleios starting point. Write the design counter-sentence for your top two.
+
+### 13) Language discipline for the week
+
+Forbidden private sentences (catch and rewrite):
+
+- “I need to find myself.” → “I need to steward who I already am.”
+- “I’m broken.” → “This act/pattern missed design; I remain image-bearing.”
+- “When I become enough…” → “I am teleios; today I align ______.”
+
+Language is Mental architecture. Sloppy ontology talk rebuilds chase overnight.
+
+### 14) School 1 greatness criterion (Week 1)
+
+A great School 1 does not graduate people who use formation rails to hate themselves. If your journal shows chase grammar winning most evenings, do not rush Week 2. Stay until the declaration is believable under fatigue — not only on Sunday.
+
 ## Diagnostic — Teleios Starting Point Audit
 
 Score 1–5 under load (recall a hard week).

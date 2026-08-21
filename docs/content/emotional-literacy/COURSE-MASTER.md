@@ -31,11 +31,11 @@ Understand, name, and steward emotions without being controlled by them — and 
 
 ## Pedagogy target
 
-~1,400–1,800 words/week · couples + singles tracks · formation depth
+~1,500–1,800 words/week · Course 05 parity target · couples + singles tracks · formation depth
 
 ## Status
 
 | Item | State |
 |------|-------|
 | Full prose | Formation-depth pass |
-| Catalogue / Firestore | Formation-depth synced + seeded |
+| Catalogue / Firestore | Course 05 parity pass · synced + seeded |

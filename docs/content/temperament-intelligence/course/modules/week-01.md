@@ -148,6 +148,38 @@ Refuse: using “temperament” to dodge the chore — and using “lazy” to e
 
 Have a witness guess your fatigue profile. Where their guess differs from yours, investigate. Self-flattery (“I’m intense in a good way only”) is as dangerous as contempt for the other.
 
+### 15) Interaction with other attributes (precision)
+
+- Temperament × **Mental**: fast minds may leap to premises; slow minds may over-qualify. Both still own premises.
+- Temperament × **Emotional**: intensity flavor is not the same as Emotional surge — but they amplify each other.
+- Temperament × **Behavioral**: pace shows in habits; still no excuse for broken rails.
+- Temperament × **faculties**: a reserved person still has Affective capacity; quiet ≠ uncaring.
+
+Wrong collapses create false compassion or false condemnation.
+
+### 16) Spouse interview (30 minutes) — if married / partnered
+
+Ask (without defending):
+
+1. What word do you fear I use for your flavor?
+2. When do you feel steamrolled or abandoned by my pace?
+3. What strength of yours do I under-thank?
+4. What clean ask would help this month?
+
+Singles: ask a close family member or friend the same about your flavor in conflict.
+
+### 17) Vocabulary forbid list (start now)
+
+Write five contempt words you will not use about their temperament (lazy, crazy, cold, dramatic, controlling, clingy, etc.). Post them. Week 2–3 will test the list.
+
+### 18) Strengths you must stop resenting
+
+List three strengths in the other that cost you comfort (their social energy, their caution, their drive). Resentment of a gift is a heart issue, not a temperament insight. Convert each into one honor sentence and one clean ask if a downside exists.
+
+### 19) Final basics charge
+
+If you finish Week 1 still using one contempt word on your forbid list, you have incomplete basics. Retire the word in speech for seven days and log every catch. Understanding without mouth discipline is not intelligence.
+
 ## Diagnostic — Temperament Basics Audit
 
 Score 1–5.

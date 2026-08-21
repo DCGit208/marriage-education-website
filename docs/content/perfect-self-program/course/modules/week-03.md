@@ -142,6 +142,32 @@ Many chase-holiness stories live in body and desire. Course 02 / 06 W11 already 
 
 Fix: keep the five steps; measure by next act and household fruit, not by emotional fireworks.
 
+### 14) Holiness and speech — a concrete bridge
+
+Holiness as state shows up in the mouth. This week add one speech rail to the joy ritual’s “next act” slot at least three days:
+
+- Refuse one contempt label
+- Tell one hard truth without volume
+- Apologize same day without shame ontology
+
+Joy that never reaches speech is still incomplete likeness.
+
+### 15) Grief is allowed
+
+Joyful alignment is not forced cheer. You may name grief inside the ritual (step 3) without collapsing into shame. “I am grieved about ______; I remain teleios; next act is ______.” Soft hearts are not unholy. Self-hatred is.
+
+### 16) Doctrine checkpoint
+
+Say aloud and mean it:
+
+> Holiness is not how bad I feel about myself. Holiness is joyful alignment with design, including truthful repair when I drift.
+
+If you cannot say it without flinching, that flinch is the curriculum.
+
+### 17) Case D — Quiet joy, real rails
+
+Noah keeps the joy ritual without hype music or public testimony. He names a speech miss cleanly, repairs before bed, thanks for design, and his spouse notices less shame weather — not more religious talk. That is Week 3 fruit.
+
 ## Diagnostic — Holiness & Joy Audit
 
 Score 1–5.

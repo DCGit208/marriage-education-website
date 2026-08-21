@@ -134,6 +134,40 @@ This is regulation as School 1 fruit — not a breathing aesthetic.
 ### 16) Measurement for the week
 
 Success is not zero intensity. Success is: pause used ≥5 times, at least one return-time kept under yellow/red, one repaired slip, and a witness who heard you tell the truth about a failure. Without that evidence, retake the challenge before Week 3.
+### 17) Premises that disable the brake
+
+Catch these Mental premises before they cancel regulation:
+
+- “If I pause, I lose.”
+- “Real people don’t need brakes.”
+- “This feeling must be discharged now or I’ll explode.”
+- “They don’t deserve a regulated me.”
+
+Rewrite each into a design premise. Unreformed premises make pause cards into wallpaper.
+
+### 18) Body-first regulation (Psychomotor menu)
+
+Pick two and practice cold (not only in fights):
+
+- 90-second box breathing
+- Walk to the end of the block and back
+- Hands under cold water
+- Sit on the floor; feet flat; name three objects you see
+
+Body change often unlocks Mental rewrite. Ignoring the body is not “more spiritual.”
+
+### 19) Evidence bar (raise it)
+
+By Day 7 you should be able to show a witness: five pause logs, one red/yellow return-time kept, one repaired failure, and your pause card photo. No evidence → no Week 3 claim.
+
+### 20) Linking to money, screens, and speech
+
+Regulation is not only for marital tone. Pause before: send, spend, scroll, swear, storm out. Pick one non-relational domain this week and run the same card. Cross-training makes the brake reliable when the bond heats.
+
+### 21) Final regulation charge
+
+The brake is love's technique. Use it for the bond's good and your own Behavioral integrity. If you only regulate at work and explode at home, you have a compartment — not literacy. Close the compartment this week.
+
 ## Diagnostic — Regulation Audit
 
 Score 1–5.

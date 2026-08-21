@@ -125,6 +125,40 @@ Script for the listener: paraphrase once; ask “do you want comfort, help, or j
 
 Not poetic feelings essays. A log with precise words, hidden emotions confessed, and at least three shared namings. If you cannot produce the log, you are not ready to claim literacy — return to Week 1 until the jars are labeled.
 
+### 15) Mapping body to word (literacy laboratory)
+
+For five days, when intensity ≥3, complete:
+
+1. Body location (chest, gut, jaw, hands, heat)
+2. First imprecise word (“bad / weird / upset”)
+3. Precise word from lexicon
+4. Need underneath (comfort, justice, rest, boundary, repentance, help)
+5. One sentence you could say without dumping
+
+This trains Cognitive precision under Emotional load — the heart of literacy.
+
+### 16) Illegal namings (still name the feeling; fix the ontology)
+
+- “I am anxiety” → “I feel anxious about ______.”
+- “I am worthless” → “I feel ashamed about ______ act.”
+- “I am my rage” → “I feel furious about ______; I will govern the act.”
+
+Course 11 grammar inside Course 12 vocabulary.
+
+### 17) Couples: the no-fix covenant (write and sign)
+
+> For three minutes after an emotion is named, I will not advise, defend, or problem-solve unless asked. I will mirror once. I will ask comfort / help / witness.
+
+Break the covenant → repair using Course 12 Week 4 early.
+
+### 18) Singles track — loneliness without fusion fantasy
+
+Loneliness is a real emotion word. Illegal move: using fantasy romance as the only witness. Legal move: name lonely; journal; call a real friend; refuse “I am incomplete” ontology. Literacy prepares covenant; it does not postpone honesty until a wedding.
+
+### 19) Depth bar for Week 1 completion
+
+You are not done when you "understand" naming. You are done when the 7-day log exists, three shares happened, hide inventory is written, and you can explain Emotional attribute vs Affective faculty to a witness in under two minutes without notes.
+
 ## Diagnostic — Naming Emotions Audit
 
 Score 1–5.

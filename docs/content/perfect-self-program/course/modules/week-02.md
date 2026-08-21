@@ -141,6 +141,31 @@ This is identity practice as whole-person stewardship — not a slogan loop.
 
 If a practice increases pride or secrecy, it is not Week 2 practice.
 
+### 13) Seven-day leak taxonomy (fill, then pick one practice)
+
+| Leak | Cue | Story | Act | Cost | Practice interrupt |
+|------|-----|-------|-----|------|--------------------|
+| Role collapse | | | | | |
+| Shame-after-miss | | | | | |
+| Applause addiction | | | | | |
+| Secret life | | | | | |
+| Mood ontology | | | | | |
+| Desire ontology | | | | | |
+| Relational fusion | | | | | |
+
+You may not need all seven active. You need ruthless honesty about which two run your house.
+
+### 14) Witness protocol (15 minutes)
+
+1. Read your declaration aloud.
+2. Name your top leak without comedy fog.
+3. Show the practice card.
+4. Ask: “Where do you still hear chase in my language?”
+5. Receive one correction without defense.
+6. Schedule a Day-7 check text.
+
+Without this, Week 2 becomes private spirituality that never touches the kitchen.
+
 ## Diagnostic — Identity Practice Audit
 
 Score 1–5.
