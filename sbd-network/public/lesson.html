@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1785064899585">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1786511000000">
     <link rel="stylesheet" href="/css/lesson-reader.css?v=1785064899585">
 
     <style>
@@ -708,6 +708,24 @@
         let _uData         = null; // full user doc, set on auth
 
         let _partContentCache = Object.create(null);
+        let _courseTitle = '';
+
+        function isWwmCourse() {
+            const id = (currentMod && currentMod.courseId) || '';
+            return id === 'the-woman-the-wife-the-mother' || String(moduleId).indexOf('wwm-week') === 0;
+        }
+
+        function formationKicker(weekNum) {
+            if (isWwmCourse()) return 'Muliebrity Formation · Week ' + weekNum;
+            if (_courseTitle) return _courseTitle + ' · Week ' + weekNum;
+            return 'Formation · Week ' + weekNum;
+        }
+
+        function formationDek(allDone) {
+            if (allDone) return 'Every part complete. Your formation continues.';
+            if (isWwmCourse()) return 'Seven focused readings. One integrated woman.';
+            return '';
+        }
 
         function updateWwmChallengeBar() {
             const bar = document.getElementById('wwmChallengeBar');
@@ -735,7 +753,7 @@
         function paintEarlyShell() {
             const weekNum = parseWeekFromModuleId(moduleId);
             if (weekNum) {
-                document.getElementById('lessonMeta').textContent = 'Muliebrity Formation · Week ' + weekNum;
+                document.getElementById('lessonMeta').textContent = formationKicker(weekNum);
                 document.getElementById('lessonTitle').textContent = 'Week ' + weekNum;
             }
             showContentSkeleton();
@@ -776,6 +794,14 @@
 
             if (!mDoc.exists) { showError('Module not found.'); return; }
             currentMod = mDoc.data();
+            if (currentMod.courseId) {
+                try {
+                    const cSnap = await firebase.firestore().collection('courses').doc(currentMod.courseId).get();
+                    if (cSnap.exists) _courseTitle = cSnap.data().title || '';
+                } catch (e) {
+                    _courseTitle = '';
+                }
+            }
 
             const ownsCourse = window.CourseAccess
                 ? CourseAccess.userOwnsCourse(uData, currentMod.courseId)
@@ -969,11 +995,9 @@
             const weekTotal = weekTotalFor(currentMod);
             document.getElementById('lessonMeta').textContent  = allDone
                 ? 'Week ' + weekNum + ' of ' + weekTotal + ' · Complete'
-                : 'Muliebrity Formation · Week ' + weekNum;
+                : formationKicker(weekNum);
             document.getElementById('lessonTitle').textContent    = currentMod.title || 'Week ' + weekNum;
-            document.getElementById('lessonSubtitle').textContent = allDone
-                ? 'Every part complete. Your formation continues.'
-                : 'Seven focused readings. One integrated woman.';
+            document.getElementById('lessonSubtitle').textContent = formationDek(allDone);
 
             const isFormation = currentMod.courseFormat === 'formation' ||
                 (parts.length > 0 && parts.every(p => p.track === 'formation'));
@@ -1659,5 +1683,6 @@
     <script defer src="/js/ham-nav.js?v=1785064899585"></script>
 
 
+    <script defer src="/js/bottom-nav-pin.js?v=1786511000000"></script>
 </body>
 </html>
