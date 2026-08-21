@@ -1,6 +1,5 @@
 /**
- * Sync Course 06 Weeks 1–8 markdown into root and public catalogues.
- * Weeks 9–12 remain catalogue stubs until written.
+ * Sync Course 06 Weeks 1–12 markdown into root and public catalogues.
  */
 
 const fs = require('fs');
@@ -14,17 +13,6 @@ const FILES = [
   path.join(ROOT, 'public/courses-catalogue.json'),
 ];
 
-const MODULE_FILES = [
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-01.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-02.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-03.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-04.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-05.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-06.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-07.md'),
-  path.join(ROOT, 'docs/content/personal-development-masterclass/course/modules/week-08.md'),
-];
-
 const TITLES = [
   'Teleios Vision',
   'Identity & Calling',
@@ -34,6 +22,10 @@ const TITLES = [
   'Habit Systems',
   'Time & Order',
   'Money & Stewardship',
+  'Speech & Presence',
+  'Relationships & Repair',
+  'Sexual Stewardship',
+  'Covenant Readiness',
 ];
 
 const REFLECTIONS = [
@@ -93,35 +85,60 @@ const REFLECTIONS = [
     'Where have you outsourced or monopolized money truth in the household?',
     'What would contentment require you to stop chasing — and what would diligence require you to start?',
   ],
+  [
+    'Which phrase has most damaged trust in your closest relationship?',
+    'Where is absence disguised as busyness?',
+    'How does Week 3 premise work show up in your sarcasm?',
+    'What would your household’s atmosphere be if you removed complaint for 30 days?',
+    'Where do you still recruit someone else to regulate your tone?',
+  ],
+  [
+    'What unrepaired harm still taxes your closest relationship?',
+    'Do you delay repair from shame or from pride?',
+    'Where have you used “we” language to avoid “I”?',
+    'How is repair different from people-pleasing?',
+    'What act would make this week’s apology believable?',
+  ],
+  [
+    'Where have you treated desire as ontology?',
+    'What compromise’s payoff are you still protecting?',
+    'How does better whole change sexual expectation of a spouse?',
+    'What device or context is your highest-risk cue?',
+    'What would 14 days of loyalty evidence change in your household’s trust?',
+  ],
+  [
+    'What have you been calling “readiness” that was only desire?',
+    'Which capacity is evidenced — and which is still branding?',
+    'How does better whole change your marriage timeline or marriage practice?',
+    'What frontier, if ignored, would most damage a household?',
+    'What will Day 30 look like if you keep today’s plan?',
+  ],
 ];
 
-function readText(filePath) {
-  if (!fs.existsSync(filePath)) throw new Error('Missing file: ' + filePath);
-  return fs.readFileSync(filePath, 'utf8').trim();
-}
-
 function main() {
-  const bodies = MODULE_FILES.map(readText);
+  const bodies = TITLES.map((_, i) => {
+    const n = String(i + 1).padStart(2, '0');
+    const fp = path.join(ROOT, `docs/content/personal-development-masterclass/course/modules/week-${n}.md`);
+    if (!fs.existsSync(fp)) throw new Error('Missing ' + fp);
+    return fs.readFileSync(fp, 'utf8').trim();
+  });
+
   FILES.forEach(function (filePath) {
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     const list = Array.isArray(data) ? data : data.courses;
     const idx = list.findIndex(c => c && c.courseId === COURSE_ID);
     if (idx === -1) throw new Error('Course not found in ' + filePath);
     list[idx].description =
-      '12-week intensive: personal development as responsible expression of design — vision, identity, attributes, habits, order, and covenant readiness. Teleios is not manufactured; it is espoused and lived.';
-    const mods = list[idx].modules || [];
-    for (let i = 0; i < bodies.length; i++) {
-      mods[i] = {
-        title: TITLES[i],
-        content: bodies[i],
-        reflection_questions: REFLECTIONS[i],
-        downloads: mods[i] && mods[i].downloads ? mods[i].downloads : [],
-      };
-    }
-    list[idx].modules = mods;
+      '12-week intensive: personal development as responsible expression of design — vision, identity, attributes, habits, order, speech, repair, sexuality, and covenant readiness. Teleios is not manufactured; it is espoused and lived.';
+    list[idx].modules = bodies.map((content, i) => ({
+      title: TITLES[i],
+      content,
+      reflection_questions: REFLECTIONS[i],
+      downloads: [],
+    }));
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
   });
-  console.log('✅ Synced personal-development-masterclass weeks 1–8 into both catalogues.');
+  console.log('✅ Synced personal-development-masterclass weeks 1–12 into both catalogues.');
 }
 
 main();

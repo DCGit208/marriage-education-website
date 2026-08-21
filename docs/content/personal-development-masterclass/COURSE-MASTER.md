@@ -51,10 +51,10 @@ It trains the learner to become mindful, educated, and accountable in vision, id
 | 6 | Habit Systems | How do habits express (not create) maturity? | Done |
 | 7 | Time & Order | How does ordered time protect formation? | Done |
 | 8 | Money & Stewardship | How does money test order without defining worth? | Done |
-| 9 | Speech & Presence | How do words and presence govern atmosphere? | Pending |
-| 10 | Relationships & Repair | How is repair practiced without better-half ontology? | Pending |
-| 11 | Sexual Stewardship | How is desire governed as design, not as preference? | Pending |
-| 12 | Covenant Readiness | What proves readiness to bear covenant weight? | Pending |
+| 9 | Speech & Presence | How do words and presence govern atmosphere? | Done |
+| 10 | Relationships & Repair | How is repair practiced without better-half ontology? | Done |
+| 11 | Sexual Stewardship | How is desire governed as design, not as preference? | Done |
+| 12 | Covenant Readiness | What proves readiness to bear covenant weight? | Done |
 
 ---
 
@@ -73,16 +73,15 @@ It trains the learner to become mindful, educated, and accountable in vision, id
 
 ---
 
-## Learning outcomes (Weeks 1–8)
+## Learning outcomes (course)
 
-By the end of Weeks 1–8, the learner will:
+By the end of 12 weeks, the learner will:
 
-1. Write a Teleios Vision statement from design, not from self-invention.
-2. Distinguish identity (given) from calling (stewardship of what is given).
-3. Steward Mental, Emotional, and Temperamental attributes without identity collapse.
-4. Install habit infrastructure and first-hour / weekly time order.
-5. Treat money as alignment test and stewardship — not as worth.
-6. Hold attribute vs faculty distinction without collapse.
+1. Live from Teleios Vision and given identity without self-invention.
+2. Steward Mental, Emotional, and Temperamental attributes under load.
+3. Maintain habit, time, and money rails as design infrastructure.
+4. Govern speech, repair, and sexual loyalty without better-half ontology.
+5. Produce an evidenced Covenant Readiness statement and 30-day plan.
 
 ---
 
@@ -90,8 +89,7 @@ By the end of Weeks 1–8, the learner will:
 
 | Week | File |
 |------|------|
-| 1–8 | `course/modules/week-01.md` … `week-08.md` |
-| 9–12 | Pending |
+| 1–12 | `course/modules/week-01.md` … `week-12.md` |
 
 **Catalogue:** `courseId: personal-development-masterclass`  
 **Firestore seed:** `sbd-network/scripts/seed-personal-development-masterclass.js`
@@ -102,7 +100,7 @@ By the end of Weeks 1–8, the learner will:
 
 | Item | State |
 |------|-------|
-| Week spine (12) | Locked from catalogue |
-| Weeks 1–8 prose | Done |
-| Weeks 9–12 | Pending |
-| Catalogue / Firestore | Sync + seed Weeks 1–8 |
+| Week spine (12) | Locked |
+| Weeks 1–12 prose | **Done** |
+| Catalogue / Firestore | Sync + seed all 12 |
+| Doctrine-current lock | Ready after final skim |

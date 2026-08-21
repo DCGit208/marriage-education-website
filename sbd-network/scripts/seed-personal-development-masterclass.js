@@ -1,8 +1,8 @@
 /**
  * Seed Personal Development MasterClass (School 1 Course 06)
- * Weeks 1–8 from courses-catalogue.json (weeks 9–12 remain stubs until written).
+ * Weeks 1–12 from courses-catalogue.json
  *
- * Target: modules/pd-masterclass-week-{1..8}
+ * Target: modules/pd-masterclass-week-{1..12}
  * Course: course-6-the-personal-development-masterclass
  */
 
@@ -35,14 +35,14 @@ if (!course) {
 }
 
 const modules = course.modules || [];
-if (modules.length < 8) {
-  console.error('❌ Expected at least 8 modules, found', modules.length);
+if (modules.length < 12) {
+  console.error('❌ Expected 12 modules, found', modules.length);
   process.exit(1);
 }
 
 const COURSE_DOC_ID = 'course-6-the-personal-development-masterclass';
 const SCHOOL_ID = 'school-1-teleios';
-const SEED_COUNT = 8;
+const SEED_COUNT = 12;
 const MODULE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(w => `pd-masterclass-week-${w}`);
 
 async function seed() {
@@ -59,7 +59,7 @@ async function seed() {
       week: weekNo,
       title: 'Week ' + weekNo + ': ' + mod.title,
       content: mod.content || '',
-      duration: '8-10 hours',
+      duration: weekNo === 12 ? '9-11 hours' : '8-10 hours',
       linkedBoardId: 'board-pd-masterclass-week-' + weekNo,
       unlockTier: 'foundation',
       accessLevel: 'foundation',
@@ -103,7 +103,7 @@ async function seed() {
     console.log('\n✅  courses/' + COURSE_DOC_ID + ' created');
   }
 
-  console.log('\n🎉 PD MasterClass weeks 1–8 seeded (Foundation-tier). Weeks 9–12 still stubs.');
+  console.log('\n🎉 PD MasterClass weeks 1–12 seeded (Foundation-tier). Course 06 complete.');
   process.exit(0);
 }
 
