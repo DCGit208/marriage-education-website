@@ -167,6 +167,10 @@ Restitution may include a gift or act of service — **after** ownership, never 
 
 Mend once more than you prefer. Prefer structure over relief. Prefer ownership over fog. Prefer next acts over speeches. Then walk into Course 13 able to honor difference without using emotional illiteracy as an excuse for contempt.
 
+### 21) One-sentence doctrine
+
+Emotional maturity is not a calm personality; it is the practiced power to mend what ungoverned feeling tore.
+
 ## Diagnostic — Emotional Repair Audit
 
 Score 1–5.

@@ -163,6 +163,10 @@ This prevents freeze-as-punishment and keeps return-time theology honest.
 
 Your emotion captain will return. Literacy is not exile of feeling; it is governance under covenant weight. Keep the card on the fridge or phone lock screen. When contempt costumes appear, stop the topic and mend the acid first.
 
+### 23) One-sentence doctrine
+
+Conflict emotion is data under fire — name it, govern it, repair what it harmed, and refuse to crown it as captain of the bond.
+
 ## Diagnostic — Emotion in Conflict Audit
 
 Score 1–5.

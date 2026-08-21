@@ -179,6 +179,10 @@ Not never clashing. Mastery is: shorter contempt half-life, faster curiosity, ke
 
 Curiosity without decision breeds fog. Decision without curiosity breeds tyranny. Hold both. Time-box. Repair defect labels same day. That is temperament intelligence under fire — worthy of a great school.
 
+### 22) One-sentence doctrine
+
+In conflict, curiosity opens the door and responsibility walks through it — on time.
+
 ## Diagnostic — Temperament in Conflict Audit
 
 Score 1–5.

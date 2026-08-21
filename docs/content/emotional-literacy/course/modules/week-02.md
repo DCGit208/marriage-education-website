@@ -168,6 +168,10 @@ Regulation is not only for marital tone. Pause before: send, spend, scroll, swea
 
 The brake is love's technique. Use it for the bond's good and your own Behavioral integrity. If you only regulate at work and explode at home, you have a compartment — not literacy. Close the compartment this week.
 
+### 22) One-sentence doctrine
+
+Regulation does not erase feeling; it refuses to let feeling write law for the mouth, the hands, or the household.
+
 ## Diagnostic — Regulation Audit
 
 Score 1–5.

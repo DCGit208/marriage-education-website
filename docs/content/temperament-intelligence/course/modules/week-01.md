@@ -180,6 +180,10 @@ List three strengths in the other that cost you comfort (their social energy, th
 
 If you finish Week 1 still using one contempt word on your forbid list, you have incomplete basics. Retire the word in speech for seven days and log every catch. Understanding without mouth discipline is not intelligence.
 
+### 20) One-sentence doctrine
+
+Temperament is flavor to understand and steward — never a verdict on worth, never a license to harm, never a reason for contempt.
+
 ## Diagnostic — Temperament Basics Audit
 
 Score 1–5.
