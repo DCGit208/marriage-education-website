@@ -49,3 +49,5 @@ functions/.runtimeconfig.json
 stripe/node_modules/
 stripe/vendor/bundle/
 vendor/bundle/
+
+.netrc_ftp
