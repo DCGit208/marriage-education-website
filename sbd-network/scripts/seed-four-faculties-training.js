@@ -10,6 +10,7 @@
  */
 
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const path = require('path');
 const fs = require('fs');
 
@@ -19,8 +20,13 @@ if (!fs.existsSync(SA)) {
   process.exit(1);
 }
 
-admin.initializeApp({ credential: admin.credential.cert(require(SA)) });
-const db = admin.firestore();
+const certFn = (admin.credential && admin.credential.cert) || admin.cert;
+admin.initializeApp({ credential: certFn(require(SA)) });
+const db = typeof admin.firestore === 'function' ? admin.firestore() : getFirestore();
+const serverTimestamp = () =>
+  (admin.firestore && admin.firestore.FieldValue)
+    ? admin.firestore.FieldValue.serverTimestamp()
+    : FieldValue.serverTimestamp();
 
 const CATALOGUE = path.resolve(__dirname, '../../courses-catalogue.json');
 const catalogue = JSON.parse(fs.readFileSync(CATALOGUE, 'utf8'));
@@ -67,8 +73,8 @@ async function seed() {
       lockMessage: null,
       reflectionQuestions: mod.reflection_questions || [],
       downloads: mod.downloads || [],
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdAt: serverTimestamp(),
     }, { merge: true });
 
     const words = (mod.content || '').trim().split(/\s+/).filter(Boolean).length;
@@ -82,7 +88,7 @@ async function seed() {
     accessLevel: 'foundation',
     requiredTier: 'foundation',
     durationWeeks: 5,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
 
   if (courseSnap.exists) {
@@ -96,7 +102,7 @@ async function seed() {
       courseNo: 4,
       price: 199,
       catalogueId: 'four-faculties-training',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
       ...payload,
     });
     console.log(`\n✅  courses/${COURSE_DOC_ID} created`);
