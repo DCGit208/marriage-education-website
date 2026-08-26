@@ -124,6 +124,47 @@ Talking *about* the person to third parties while refusing Matthew 18 directness
 
 Week 10 is where Weeks 4, 5, and 9 become public. If repair still fails, return to Course 05 gap protocol before adding covenant weight (Week 12).
 
+### 13) Teleios starting point (repair edition)
+
+Repair proves responsibility; it does not prove you were created incomplete. You are teleios by design. Wound is real. Trust can be damaged. Ontology is not rewritten by the need to apologize.
+
+Illegal: “If I must apologize, my identity was fake.”  
+Illegal: “Repair means we were never whole.”  
+Legal: “I am teleios; this act missed design; I own, apologize, and act.”
+
+Chase grammar turns every rupture into an identity crisis. Practice grammar turns rupture into covenant work among whole persons.
+
+### 14) Worked example — own–apologize–act under fatigue
+
+Harm: dismissed spouse’s concern Tuesday; raised voice; left the room.  
+Own: “I interrupted, raised my voice, and exited without a return time.”  
+Apologize: “I was wrong. No ‘but you started it’ in this sentence.”  
+Act: “Tonight I will listen 15 minutes without defending. Check me Friday whether the contempt tone is gone.”  
+Better whole line: “I own my part; I invite yours; I will not ask you to complete my will or regulate me permanently.”
+
+If the same harm repeats thrice, stop collecting dramatic apologies — open a Course 05 gap protocol on that pattern.
+
+### 15) Fusion language to retire this week
+
+| Fusion / exile talk | Better-whole replacement |
+|---------------------|--------------------------|
+| “We’re a mess.” | “I did X; you named Y; here is my next act.” |
+| “You complete me; fix this feeling.” | “I feel X; I will govern; I ask for presence, not ontology.” |
+| “You’re the entire problem.” | “Here is your part as I see it; here is mine; both require truth.” |
+| “If you loved me you wouldn’t need repair.” | “Love includes repair; need for repair is human, not proof of fake love.” |
+
+### 16) Evidence bar for Week 10
+
+Produce: repair speed table (3 harms), one live own–apologize–act with dated act step, one paragraph refusing fusion language, Repair Covenant Rule, and honesty about whether the act was kept. Words without act are still Case B theater.
+
+### 17) What this week is not
+
+Not people-pleasing.  
+Not forced premature full access after betrayal.  
+Not scorekeeping ammunition labeled “sorry.”  
+Not waiting until you “feel ready” while contempt hardens.  
+Not using repair to manufacture worth — you remain teleios; you mend practice.
+
 ---
 
 ## Diagnostic — Repair Responsibility Audit

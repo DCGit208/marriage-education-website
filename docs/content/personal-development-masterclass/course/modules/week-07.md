@@ -155,6 +155,44 @@ If they disagree, the calendar is the true working vision. Repent the calendar.
 
 Each softens Law of Order until crisis feels normal. Name which soft constraint you use, then install a hard counter-rule for 14 days.
 
+### 12) Teleios starting point (time edition)
+
+Ordered time does not manufacture teleios. You are already teleios by design. Chaos does not mean you are unfinished ontology; it means likeness is unpaid in the field of hours.
+
+Illegal: “When my calendar is perfect, I will be whole.”  
+Legal: “I am teleios; today I sequence hours so design can be lived.”
+
+Hustle-as-ontology and rest-as-avoidance both fail. Stewardship budgets both labor and margin because a whole person requires both under design.
+
+### 13) First hour as attribute protection
+
+First-hour capture is usually Mental + Emotional sabotage:
+
+- Feed enters → premises of comparison and scarcity install → Emotional surge or numbness → Temperament drift → Habit stack collapses → Repair delayed.
+
+Protecting first hour is not aesthetic minimalism. It is infrastructure so Weeks 3–6 have a chance before other people’s urgency owns you.
+
+### 14) Worked example — Sunday planning that sticks
+
+40 minutes, same chair, phone in another room:
+
+1. Last week: one fruit, one failure (evidence, not drama).
+2. Top three design priorities (not vanity list).
+3. One repair conversation scheduled if owed.
+4. Two household presence blocks on the calendar (devices down).
+5. Sleep window written as non-negotiable.
+6. One cut (what you will defund this week).
+
+If the plan dies by Wednesday, the failure is usually margin denial or first-hour collapse — not “lack of inspiration.”
+
+### 15) Better whole and calendar fusion
+
+“My spouse runs the calendar so I can be free” often means abdication. Roles may divide labor; neither person may treat the other as the missing Law of Order. Better whole owns your hours even when someone else helps administer them.
+
+### 16) Evidence bar for Week 7
+
+Produce: one day logged and marked, first-hour rule practiced ≥5 days, weekly planning notes, time budget with margin, and one named soft constraint with a 14-day hard counter-rule. If vision (Week 1) and calendar still disagree, repent the calendar before you decorate the vision statement.
+
 ---
 
 ## Diagnostic — Time & Order Audit

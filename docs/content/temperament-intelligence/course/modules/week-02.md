@@ -183,6 +183,10 @@ Curiosity without decision breeds fog. Decision without curiosity breeds tyranny
 
 In conflict, curiosity opens the door and responsibility walks through it — on time.
 
+### 23) School 1 greatness evidence bar
+
+By week’s end you must show: two conflict maps with teleios lines intact, one curiosity question asked live, one time-boxed decision kept, and one same-day repair of a defect-label. Without that evidence, temperament talk remains theory — not School 1 fruit.
+
 ## Diagnostic — Temperament in Conflict Audit
 
 Score 1–5.

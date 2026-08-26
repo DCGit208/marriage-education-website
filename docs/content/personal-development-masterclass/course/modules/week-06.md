@@ -147,6 +147,47 @@ Examples: shared first-hour phone rule; evening device basket; weekly planning a
 
 All four dodge Law of Repetition under Order and Time.
 
+### 12) Teleios starting point (habits edition)
+
+Habits express maturity; they do not create it. You are teleios by design. A 21-day streak does not mint personhood. A missed day does not delete image.
+
+Chase grammar: “When my stack is perfect, I will finally be someone.”  
+Practice grammar: “I am teleios; the stack stabilizes likeness under ordinary days.”
+
+If you treat habits as a maturity factory, you will either worship streaks or despair after one miss. Both are ontology errors wearing productivity clothes.
+
+### 13) Attributes and faculties in the stack
+
+Keep Course 02 / Course 04 distinctions clean:
+
+- **Mental attribute** — premises that make the cue feel “necessary” (escape, applause, numbness).
+- **Emotional attribute** — surge that hijacks the stack at peak.
+- **Temperamental attribute** — pace/withdrawal that skips the cue.
+- **Behavioral attribute** — whether the act actually happens.
+- **Conative faculty** — commitment that keeps the stack when mood declines.
+- **Cognitive faculty** — honest review of what the log shows.
+- **Psychomotor faculty** — body showing up at the cue time.
+- **Affective faculty** — care for household fruit, not only private badges.
+
+Habits sit at the intersection. Collapsing them into “just willpower” or “just feelings” fails the map.
+
+### 14) Worked example — late-night scroll replace
+
+Cue: couch + phone after conflict.  
+Payoff: numbness; delay of repair.  
+Cost: sleep, trust, first-hour collapse next day.  
+Replacement stack: after conflict → one true sentence written → 10-minute walk or shower → phone charger outside bedroom → sleep time.  
+Accountability: partner ping if phone is in bed past limit.  
+Ontology line: “I am not becoming a new species by charging my phone elsewhere; I am stewarding a teleios person who was drifting.”
+
+### 15) Evidence bar for Week 6
+
+Produce: routine map with three-column marks, one destructive habit with cue/payoff/replacement, morning stack log (≥5 days), miss protocol written, and one household-visible rhythm. Without household fruit, private streaks remain theater.
+
+### 16) Better whole and habit fusion
+
+“My spouse’s discipline will carry our household while I freestyle” is outsourced conation. Support is covenant good. Permanent borrowed rails are not your habit system. Better whole owns infrastructure.
+
 ---
 
 ## Diagnostic — Habit Infrastructure Audit

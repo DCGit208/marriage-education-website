@@ -49,14 +49,16 @@ Course 02 installed anthropology: you are teleios by design; image is given; hol
 
 1. Central Truth  
 2. Week Overview  
-3. Core Teaching  
+3. Core Teaching (10–14 sections; teleios + better whole explicit)  
 4. Diagnostic  
-5. Case / contrast  
-6. Daily drills (7 days)  
+5. Case contrasts (A/B/C)  
+6. Seven-Day Drill  
 7. Reflection questions  
 8. Weekly assignment  
+9. Closing Declaration  
+10. Outcome  
 
-**Target depth:** ~1,600–2,000+ words per week (match Course 02).
+**Target depth:** ~1,500–1,800 words per week (formation thicken parity with Course 10 / Perfect Self).
 
 ---
 
@@ -91,7 +93,8 @@ By the end of 4 weeks, the learner will:
 | Item | State |
 |------|--------|
 | Week spine locked | Done |
-| Full week prose | Done (seeded) |
+| Full prose | **Formation thicken done** (Weeks 1–4) · teleios required every week |
+| Target depth | ~1,500–1,800 words/week |
 | Catalogue modules updated | Done |
 | Firestore seed | Done (Foundation-tier) |
 | Doctrine-current pass | **Locked — Aug 15, 2026** |

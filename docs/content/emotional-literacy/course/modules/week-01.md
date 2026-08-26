@@ -159,6 +159,21 @@ Loneliness is a real emotion word. Illegal move: using fantasy romance as the on
 
 You are not done when you "understand" naming. You are done when the 7-day log exists, three shares happened, hide inventory is written, and you can explain Emotional attribute vs Affective faculty to a witness in under two minutes without notes.
 
+### 20) Teleios + better whole (naming edition)
+
+You are teleios by design. Naming feelings does not invent a self and does not mint worth (Course 11). Feelings report; they do not rule; they do not rewrite ontology.
+
+Better whole: a partner is not a permanent jar-labeler or emotional regulator. Couples share naming; each person still owns their Emotional attribute. Singles refuse fantasy partners as the only witness to interior life.
+
+Illegal: “I am my anger / envy / anxiety.”  
+Legal: “I feel ______ about ______; I remain teleios; I will govern the next act.”
+
+### 21) Loop preview
+
+Course 12 loop: **name → regulate → conflict tools → repair.** Week 1 is only the first hinge. Vocabulary without Weeks 2–4 becomes either fine-culture relapse or dumping theater.
+
+---
+
 ## Diagnostic — Naming Emotions Audit
 
 Score 1–5.

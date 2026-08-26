@@ -171,6 +171,20 @@ Mend once more than you prefer. Prefer structure over relief. Prefer ownership o
 
 Emotional maturity is not a calm personality; it is the practiced power to mend what ungoverned feeling tore.
 
+### 22) Teleios + better whole (repair edition)
+
+You mend as a teleios person who wounded in practice — not as someone inventing worth through apology theater, and not as someone deleting identity (“I’m trash; parent me”).
+
+Better whole: a partner may forgive and help; a partner is not your permanent conscience chip or emotional completeness. Repair restores relatedness between whole persons; it does not assemble half-selves.
+
+Course 11 grammar inside the apology: conviction about the act, not shame-as-ontology.
+
+### 23) Loop complete
+
+**Name → regulate → conflict tools → repair.** This week closes the loop. Remove mend and Course 12 was vocabulary certificates. Carry the ritual into Course 13 without using temperament difference as an excuse for unrepaired contempt.
+
+---
+
 ## Diagnostic — Emotional Repair Audit
 
 Score 1–5.

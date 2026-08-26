@@ -140,6 +140,53 @@ Speech failures are rarely “word problems” only:
 
 Fix the phrase **and** the chain.
 
+### 12) Teleios starting point (speech edition)
+
+Words steward atmosphere; they do not invent your being. You are teleios by design. Cruel speech does not mean you are non-teleios ontology — it means likeness was violated and must be repaired. Silence-as-punishment does not make you holy; it often makes you absent.
+
+Illegal: “If I speak perfectly, I will finally be enough.”  
+Legal: “I am teleios; today I govern tongue and attention as stewardship.”
+
+Matthew 5:48 remains state language. Speech practice is likeness under load — not a worth factory.
+
+### 13) Worked example — contempt phrase replace
+
+Old phrase under fatigue: “You never help; you’re useless.”  
+Chain: Temperament escalate → premise “I’m alone in this house” → Emotional surge → identity attack.  
+Pause (Week 4): 10 seconds; delay the text.  
+Name: frustration + loneliness (feeling report, not ontology).  
+Clean sentence: “I felt alone with the dishes tonight; I need 20 minutes of shared cleanup; I was wrong to call you useless.”  
+Presence: phones away for the cleanup block.  
+Repair if the contempt already landed — same day (bridge to Week 10).
+
+### 14) Attributes ≠ faculties (speech map)
+
+Keep the map clean when diagnosing “communication problems”:
+
+- **Mental attribute** — premises in the sentence (“always/never,” worth attacks)
+- **Emotional attribute** — surge that removes the pause
+- **Behavioral attribute** — whether the mouth/fingers obey
+- **Affective faculty** — whether you care about impact with forethought
+- **Cognitive faculty** — whether the claim is accurate
+- **Conative faculty** — whether you keep the Speech Covenant Rule tomorrow
+
+Technique without this map becomes politeness theater.
+
+### 15) Better whole and speech fusion
+
+“You manage my tone / finish my sentences / speak for me in hard rooms” is outsourced Behavioral and Emotional governance. Invitation and coaching can be love. Permanent filter-chip fusion is not better whole. Own your tongue.
+
+### 16) Evidence bar for Week 9
+
+Produce: top three harmful phrases with replacements, 3-day no-complaint log with conversions, one conflict where pause fired, one presence-only meal dated, Speech Covenant Rule written. If public charm and private speech still split, the audit score is lying.
+
+### 17) What this week is not
+
+Not “be nicer.”  
+Not repression of truthful requests.  
+Not endless processing as substitute for presence.  
+Not using spiritual language to avoid a clean apology.
+
 ---
 
 ## Diagnostic — Speech & Presence Audit

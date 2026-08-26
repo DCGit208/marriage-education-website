@@ -148,6 +148,41 @@ Temperament drift often *recruits* Mental premises and Emotional surges:
 
 Interrupt the chain at the earliest owned point. Temperament training without Weeks 3–4 becomes behavior tips with no epistemology.
 
+### 11) Teleios starting point (temperament edition)
+
+You are teleios by design before any counter-habit fires. Temperament training does not manufacture a “better personality self.” It aligns expression with design under load.
+
+Illegal grammar:
+
+- “When I become less intense / more outgoing, then I’ll be whole.”
+- “My type is my destiny; formation is for other people.”
+
+Legal grammar:
+
+- “I am teleios; this drift is real; stewardship is owed today.”
+- “Style may remain; harm will not be baptized as authenticity.”
+
+Matthew 5:48 remains state language here: *be* perfect — not “become a different temperament brand.”
+
+### 12) Evidence bar for Week 5
+
+You are not done when you can quote a type label. You are done when:
+
+1. Default drift is named with three behavioral evidences.
+2. One counter-habit fired on at least one high-load day.
+3. Partner/witness scored predictability at least five times.
+4. Temperament Covenant Rule is written and readable under fatigue.
+5. Better whole is explicit: you do not treat a spouse’s opposite style as your missing will.
+
+If the audit is high but the partner scores are low, trust the fruit — not your self-brand.
+
+### 13) What this week is not
+
+Not a personality transplant.  
+Not permission to keep wounding under “that’s just me.”  
+Not contempt for quieter or louder styles.  
+Not better-half outsourcing (“you balance me so I don’t have to govern”).
+
 ---
 
 ## Diagnostic — Temperament Stewardship Audit

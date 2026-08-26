@@ -69,7 +69,7 @@ It trains the learner to become mindful, educated, and accountable in vision, id
 7. Reflection questions  
 8. Weekly assignment
 
-**Target depth:** ~1,700–2,200 words per week.
+**Target depth:** 1,500–1,700 words per week (formation depth; Perfect Self Week 1 quality bar).
 
 ---
 
@@ -101,6 +101,6 @@ By the end of 12 weeks, the learner will:
 | Item | State |
 |------|-------|
 | Week spine (12) | Locked |
-| Weeks 1–12 prose | **Done** |
+| Weeks 1–12 prose | **Done** — every week ≥1,500 words (target 1,500–1,700) |
 | Catalogue / Firestore | Sync + seed all 12 |
-| Doctrine-current lock | Ready after final skim |
+| Doctrine-current lock | Teleios starting point · Attributes ≠ Faculties · better whole · habits ≠ maturity factory |

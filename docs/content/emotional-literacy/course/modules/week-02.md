@@ -172,6 +172,20 @@ The brake is love's technique. Use it for the bond's good and your own Behaviora
 
 Regulation does not erase feeling; it refuses to let feeling write law for the mouth, the hands, or the household.
 
+### 23) Teleios + better whole (regulation edition)
+
+Regulation does not manufacture teleios. You brake because you are a teleios person responsible under load — not because a perfect streak will finally make you whole.
+
+Better whole: co-regulation can be care; permanent outsourcing (“you calm me or I explode”) is fusion. First follower of your own pause card is you (Courses 07 / 11).
+
+If chase returns (“I must feel calm to be acceptable”), rewrite: “I may feel intensely; I remain teleios; I choose the next governed act.”
+
+### 24) Loop lock
+
+Name (Week 1) without regulate (Week 2) is vocabulary for postmortems. Regulate without later conflict tools and repair leaves the Course 12 loop unfinished.
+
+---
+
 ## Diagnostic — Regulation Audit
 
 Score 1–5.

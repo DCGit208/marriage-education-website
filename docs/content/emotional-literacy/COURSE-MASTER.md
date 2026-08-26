@@ -31,11 +31,12 @@ Understand, name, and steward emotions without being controlled by them — and 
 
 ## Pedagogy target
 
-~1,500–1,800 words/week · Course 05 parity target · couples + singles tracks · formation depth
+1,500–1,700 words/week · Perfect Self Week 1 quality bar · couples + singles tracks · formation depth · explicit teleios + better whole every week
 
 ## Status
 
 | Item | State |
 |------|-------|
-| Full prose | Formation-depth pass |
+| Full prose (Weeks 1–4) | **Done** — every week ≥1,500 words (target 1,500–1,700) |
+| Doctrine lock | Emotional attribute ≠ Affective faculty · teleios · better whole · name→regulate→conflict→repair |
 | Catalogue / Firestore | Course 05 parity pass · synced + seeded |

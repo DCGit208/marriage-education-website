@@ -65,6 +65,23 @@ Source notes: `docs/content/_canon-assets/PERSONAL-DEVELOPMENT-MATURATION-MAP.md
 
 ---
 
+## Pedagogy (per week)
+
+1. Central Truth  
+2. Week Overview  
+3. Core Teaching (10–14 sections; teleios + better whole explicit)  
+4. Diagnostic  
+5. Case contrasts (A/B/C)  
+6. Seven-Day Drill  
+7. Reflection questions  
+8. Weekly assignment  
+9. Closing Declaration  
+10. Outcome  
+
+**Target depth:** ~1,500–1,800 words per week (formation thicken parity with Course 10 / Perfect Self).
+
+---
+
 ## Learning outcomes
 
 By the end of five weeks, the learner will:
@@ -97,7 +114,8 @@ By the end of five weeks, the learner will:
 | Item | State |
 |------|-------|
 | Correct capacity spine | Locked |
-| Full module prose | Done |
+| Full prose | **Formation thicken done** (Weeks 1–5) · teleios required every week |
+| Target depth | ~1,500–1,800 words/week |
 | Catalogue sync | Done |
 | Firestore seed | Done — Foundation-tier |
 | Doctrine-current pass | **Locked — Aug 15, 2026** |

@@ -167,6 +167,20 @@ Your emotion captain will return. Literacy is not exile of feeling; it is govern
 
 Conflict emotion is data under fire — name it, govern it, repair what it harmed, and refuse to crown it as captain of the bond.
 
+### 24) Teleios + better whole (conflict edition)
+
+Feeling fire in conflict does not mean you are non-teleios. Ungoverned harm that will not repair is the maturity failure — not the existence of anger, fear, or shame as feeling reports.
+
+Better whole in the storm: you steward your emotion captain; you do not demand the other person permanently regulate you; you do not erase their agency with fusion (“we’re crazy”) or exile (“you’re the only storm”).
+
+Course 11 guard: conflict shame that says “I am a monster for feeling” reinstalls chase. Name the feeling; own the act; keep the card.
+
+### 25) Loop lock
+
+Pause–name–repair in conflict is the third hinge of **name → regulate → conflict → repair**. Without Week 4 mend, navigation still leaves torn fabric.
+
+---
+
 ## Diagnostic — Emotion in Conflict Audit
 
 Score 1–5.

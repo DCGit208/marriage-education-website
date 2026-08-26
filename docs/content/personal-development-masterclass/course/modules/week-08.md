@@ -161,6 +161,32 @@ Write one page:
 
 This page is the bridge into Weeks 9–12 (speech, repair, sexuality, covenant readiness).
 
+### 13) Teleios starting point (money edition)
+
+Money tests order; it does not define worth. You are teleios by design whether the account is thin or thick. Prosperity does not invent holiness. Poverty does not erase image.
+
+Chase grammar: “When I have more, I will become generous / honest / ordered.”  
+Practice grammar: “I am teleios; stewardship of substance is owed in this season’s numbers.”
+
+If money speech still sounds like identity (“I am my raise / I am my lack”), Week 1 vision and Week 2 identity are not yet in your mouth under load.
+
+### 14) Worked example — envy scroll leak
+
+Cue: late phone + comparison feed.  
+Premise: “I’m behind; a purchase will close the gap.”  
+Payoff: brief status relief.  
+Cost: margin, secrecy risk, household trust.  
+Replacement: phone out after 9 → write one teleios sentence → 24-hour pause on non-budget buys → name the desire in the money meeting without shame fog.  
+Ontology line: “A purchase cannot manufacture the self I already am.”
+
+### 15) Better whole and money
+
+Abdication (“you handle it so I stay innocent”) and domination (“I earn so I unilaterally rule”) both violate better whole. Shared truth + owned responsibility appropriate to roles — without erasing either person’s agency, and without treating a spouse as the missing conscience for numbers.
+
+### 16) Evidence bar for Week 8
+
+Produce: 7-day expense log, two leaks with cue/payoff/replacement, written give/save/spend rule, money meeting notes (one cut, one build, one truth repaired), and the Weeks 5–8 checkpoint page. Numbers without truth remain fantasy; truth without numbers remains fog.
+
 ---
 
 ## Diagnostic — Money Stewardship Audit

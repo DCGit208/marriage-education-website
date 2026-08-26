@@ -137,6 +137,43 @@ Genesis 2:24–25 and 1 Cor 6:16 bind sexual union to profound joining. Casual s
 
 Sexual loyalty logs are readiness evidence. Romantic intensity is not.
 
+### 13) Teleios starting point (sexuality edition)
+
+Desire does not mint personhood. You are teleios by design — sexed, covenantal, responsible — before any loyalty log is perfect. Sexual compromise is likeness failure to be repaired; it is not proof you are unfinished ontology. Sexual performance or repression-as-identity both fail the starting point.
+
+Illegal: “My desire is my truth.”  
+Illegal: “I am my frustration / my purity streak.”  
+Legal: “I am teleios; desire is real; design limits govern practice today.”
+
+Better whole sexually: a spouse is not the missing half of your sexual self, not a permanent regulator of appetite, and not an enemy of desire. Two whole persons enter covenant; sex expresses union; it does not assemble being.
+
+### 14) Attributes and faculties under desire load
+
+- **Mental attribute** — premises that entertain possession (Matthew 5:27–28)
+- **Emotional attribute** — surge, loneliness, contempt, numbness
+- **Behavioral attribute** — whether eyes, hands, devices obey
+- **Temperamental attribute** — secrecy windows, withdrawal, charm splits
+- **Affective faculty** — care for the other’s good with forethought (not use-as-appliance)
+- **Conative faculty** — loyalty commitment when desire peaks
+- **Cognitive faculty** — honest naming of compromise without euphemism fog
+- **Psychomotor faculty** — body present in covenant or removed from cue environments
+
+Collapsing “sexuality problems” into preference talk erases this map.
+
+### 15) Worked example — device cue
+
+Compromise: late phone in bed → pornographic formation.  
+Cue: fatigue + conflict residue + secrecy window.  
+Payoff: numbness; fantasy control.  
+Cost: one-flesh honor, clarity, trust.  
+Replacement: charger outside bedroom; 10-minute walk or written true sentence; sleep; same-day ownership if the line is crossed.  
+Accountability: wise check that asks for evidence, not slogans.  
+Ontology: “I am not becoming human by winning a streak; I am stewarding design.”
+
+### 16) Evidence bar for Week 11
+
+Produce: written loyalty code, one compromise with cue/payoff/replacement, Days 1–7 of the 14-day log, one device/context rule kept, one accountability touchpoint. Romantic intensity, tears, or private vows without logs do not count as readiness evidence for Week 12.
+
 ---
 
 ## Diagnostic — Sexual Stewardship Audit

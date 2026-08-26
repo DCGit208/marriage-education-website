@@ -137,6 +137,41 @@ Completing this MasterClass is not the end of School 1. Course 07 (Self-Command)
 
 You may leave this course with unfinished frontiers. That is honesty. Unfinished is not un-imaged. Keep the 30-day plan. Espouse design. Live accordingly.
 
+### 13) Teleios starting point (capstone restatement)
+
+Course 06 ends where it began: you practice because you are teleios by design — not in order to become teleios. Readiness is evidenced stewardship under load. Marriage deploys wholeness; it does not manufacture it. A better half cannot complete ontology you already have.
+
+If Week 12 speech still sounds like “when I marry / when I’m chosen / when my streak is clean, then I’ll be whole,” return to Week 1 before you collect readiness theater.
+
+### 14) Attributes ≠ faculties — readiness checklist
+
+Do not confuse layers when you inventory capacities:
+
+| If this fails… | You are usually looking at… |
+|----------------|------------------------------|
+| Illegal premises under stress | Mental attribute |
+| Surge without pause/repair | Emotional attribute |
+| “That’s just me” harm | Temperamental attribute |
+| Acts that won’t stick | Behavioral attribute + Conative |
+| Care without forethought / cold technique | Affective faculty gaps |
+| Body absence / device capture | Psychomotor + Time order |
+
+Readiness is integrated expression — not one shiny faculty with the others unpaid.
+
+### 15) Better whole — final refusal list
+
+Write and keep:
+
+1. I will not recruit a spouse to supply my will.
+2. I will not treat romance as ontology medicine.
+3. I will not call fusion “oneness.”
+4. I will not call exile “boundaries” when it is contempt.
+5. I will bear covenant weight as a whole person among whole persons.
+
+### 16) Evidence bar for Week 12
+
+Produce: load-scored audit, capacities inventory with dated evidence (not aspirations), witnessed readiness statement, 30-day plan with five elements, MasterClass closing charter (700–1000 words). If a wise witness cannot affirm growth with the caveats you already admit, you are still branding.
+
 ---
 
 ## Diagnostic — Covenant Readiness Audit
