@@ -225,6 +225,32 @@ Sam pauses, asks, time-boxes a decision, owns steamroll or withdrawal, repairs, 
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Evidence: two conflict maps with teleios lines intact, curiosity question asked live, time-boxed decision kept, same-day repair if you defect-labeled. Temperament in conflict without protocol is analysis paralysis or contempt — both fail School 1.
+
+### Integration — Courses 10 + 12
+
+Conflict mastery (Course 10) and emotional literacy (Course 12) meet **flavor clash** here. Curiosity is tool, not hiding place — decision window required. Better whole: different notes, not character defects.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Pause-and-ask in a real clash this week. Journal-only curiosity fails the evidence bar.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog. Keep the evidence visible for ninety days. Honor daily.
+
 ## Reflection Questions
 
 1. Which contempt label do you reach for first?

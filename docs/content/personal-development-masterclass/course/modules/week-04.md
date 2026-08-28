@@ -211,6 +211,28 @@ If any line is empty, that week is incomplete — not because you lack worth, bu
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Evidence required: seven-day Emotional log with surge → name → brake → act, one same-day repair after a discharge, and explicit refusal of mood-as-ontology in writing. Emotional formation without repair speed is regulation aesthetics — not likeness.
+
+### Integration — Course 12 preview
+
+Course 12 will deepen naming and mend; Week 4 here installs **attribute stewardship** so emotion is governed, not worshiped. Keep Attributes ≠ Faculties: Emotional attribute is personal-development expression; Affective faculty is care/empathy as power of the person.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Pick your highest-risk cue (sarcasm, stonewall, flood, contempt tone). Run brake + name + act there this week — not only on minor irritations. School 1 greatness is measured at threshold, not at calm.
+
 ## Reflection Questions
 
 1. Do you sin more by explosion or by freeze — and how have you baptized that pattern?

@@ -210,6 +210,20 @@ If nothing durable remains, you wrote a brand brief, not a calling.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+By week’s end you must show: a calling sentence that survives a bad Tuesday (not only a good Sunday), one role-collapse interrupt with a witness text, and one refusal of better-half recruitment in speech. Without that evidence, Identity & Calling remains branding — not School 1 fruit.
+
+### Integration — Courses 01–03
+
+Course 01 installed teleios starting point. Course 03 installed identity Code grammar. Week 2 of the MasterClass is where vision (Week 1) meets **who you are responsible to be** under schedule. If your calling sentence still requires applause, a title, or a future spouse to feel real, you are chasing — not espousing design.
+
+### Formation under load — Tuesday test
+
+Run your calling sentence after criticism, a flat bank notification, or a lonely evening. If it collapses, shrink the sentence until it holds on your worst 20% of days — then grow it again from evidence, not fantasy.
+
 ## Reflection Questions
 
 1. What do you say after “I am…” when no one impressive is listening?

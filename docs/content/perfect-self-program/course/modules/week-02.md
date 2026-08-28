@@ -207,6 +207,32 @@ Chris installs one cue (phone in bed → desire/scroll leak), runs script + char
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Evidence: leak taxonomy with costs, practice card with cue/script/act/log, seven-day check-in with ≥2 fatigue days, witness share with one correction accepted. Identity practice that stays private is mirror talk without cleaning — James 1:23–25 applies.
+
+### Integration — Course 03 + 07
+
+Identity Mastery (Course 03) and Self-Command (Course 07) assume likeness practice. Week 2 refuses self-creation religion: practice reflects design; it does not manufacture being. Better whole: spouse/friend may witness — they are not your ontology supplier.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+If your script says “become someone,” rewrite before Day 3. Likeness language only — or stop and return to Week 1.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog.
+
 ## Reflection Questions
 
 1. Which leak costs your household (or future household) the most?

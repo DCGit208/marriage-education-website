@@ -219,6 +219,28 @@ Sam writes a code, names one cue (late phone in bed), installs replacement (phon
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Show: desire ≠ ontology paragraph witnessed, 14-day loyalty evidence log, highest-risk cue changed environmentally, and one better-whole sentence about sexual expectation of a spouse/future spouse. Sexual stewardship that treats urge as identity is counterfeit anthropology — regardless of vocabulary.
+
+### Integration — Courses 02–03 + 11
+
+Image and likeness (Course 03) include sexed design stewardship. Course 11 will reinforce teleios starting point so sexuality is not a worth-factory. Week 11 here is **covenant-weight preparation** — loyalty before access, structure before mood.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Your loyalty evidence must include a moment you wanted compromise and kept rail anyway. Virtue only on easy days is not yet virtue.
+
 ## Reflection Questions
 
 1. Where have you treated desire as ontology?

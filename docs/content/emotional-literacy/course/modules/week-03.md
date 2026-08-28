@@ -219,6 +219,28 @@ Sam pauses, names fear under the anger, owns the raised voice, repairs with a ne
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Deliver: conflict captain map for two storms, blame → ownership rewrite, mid-storm naming once without fixing everything, and contempt-smile audit (three lines rewritten). Emotion in conflict without ownership is emotional intelligence cosplay — contempt with better vocabulary.
+
+### Integration — Courses 09–10
+
+Relatedness L2 and Mastery L3 supply protocol; Course 12 Week 3 supplies **emotion captaincy**. Better whole: name your part without fusion or exile language.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+One conflict where you named your emotion before assigning character verdicts. If you only name after victory, literacy is lagging — not leading.
+
 ## Reflection Questions
 
 1. Which conflict emotion is your captain?

@@ -209,6 +209,28 @@ Sam writes the declaration, journals chase vs practice for 7 days, repairs a mis
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Produce: Teleios Starting Point Audit with chase patterns costed in household terms, seven-day gratitude interrupt log including two fatigue days, and declaration sentence a witness can repeat back without fluff. Practice-from-perfection without chase inventory is optimism — not Course 11.
+
+### Integration — Course 01 foundations
+
+Course 01 Week 1: “You don’t become perfect; you practice FROM perfection.” Course 11 re-anchors that ontology before Courses 12–13. If Matthew 5:48 becomes moonshot motivation here, the whole capstone band collapses into self-help.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Run the declaration after a miss — not only after a win. Teleios starting point that collapses in shame is still chase grammar wearing Bible words.
+
 ## Reflection Questions
 
 1. Where is chase still your default religion — even after Courses 02–10?

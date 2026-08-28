@@ -221,6 +221,32 @@ Sam sketches both profiles, rewrites one misread, logs five days, honors a stren
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Produce: two axis profiles, misread rewrite delivered aloud, five-day log, forbid list posted with seven-day zero-use or catch-and-repair log. Temperament basics without mouth discipline is psychology tourism — not School 1 finale prep.
+
+### Integration — Course 06 W5 + Course 02
+
+Temperamental attribute was named in Course 02 and trained in MasterClass Week 5. Course 13 completes **honor without clone demand**. Attributes ≠ Faculties — do not collapse temperament into Cognitive or Emotional excuses.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Honor act on a day their flavor irritates you most. Understanding without honor is contempt with notes.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog. Keep the evidence visible for ninety days. Honor daily.
+
 ## Reflection Questions
 
 1. What contempt word do you use for their flavor?

@@ -241,6 +241,28 @@ Jonah installs first hour + Sunday 40-minute plan + two protected family blocks.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Produce: first-hour capture log for seven days, one hard conversation you stopped postponing, margin block protected twice, and honest accounting of what “busy” funded instead of design. Time & order without margin is performance scheduling — not stewardship.
+
+### Integration — Courses 04–07
+
+Conative faculty (commitment) and Psychomotor agility (show-up) meet **Behavioral attribute** rhythm here. Time is not neutral; it reveals what you treat as god. Course 01 greatness: capacities under calendar, not intentions under fantasy.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Protect margin on your worst day this week. If margin only exists when you feel motivated, it is not margin — it is mood.
+
 ## Reflection Questions
 
 1. What do you fund with hours that design would defund?

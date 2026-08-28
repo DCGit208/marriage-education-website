@@ -211,6 +211,28 @@ Sam logs precisely, shares one clean sentence with spouse/friend, refuses fix-it
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Show: lexicon growth (≥12 precise words used live), illegal emotion audit, one naming conversation that did not immediately fix, and Course 11 teleios sentence preserved (“feeling is signal, not ontology”). Naming without precision is venting with vocabulary — not literacy.
+
+### Integration — Course 02 attributes + Course 11
+
+Emotional attribute sits inside personal development; it is not identity. Course 11 forbids feeling-as-ontology. Week 1 builds the **word bank** Course 12 Weeks 2–4 will govern and mend.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Name the emotion aloud in your highest-risk cue this week. Private naming only is halfway literacy.
+
 ## Reflection Questions
 
 1. Which emotion is most “illegal” in your story — and who taught that?

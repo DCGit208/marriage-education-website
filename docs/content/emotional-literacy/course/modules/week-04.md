@@ -223,6 +223,28 @@ Sam names the discharged contempt, owns the words, asks what would help, offers 
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Capstone evidence: two repair autopsies, live ritual practiced, 48-hour trust read honest, closing charter 700–1000 words with weakest leg + 30-day rail. Emotional repair skipped means Course 12 failed the kitchen test — certificates notwithstanding.
+
+### Integration — Course 13 + full School 1
+
+Course 13 temperament honor requires mend capacity — contempt grows in unmended tears. Week 4 closes **name → regulate → conflict → repair**. Course 01 parity: maturity is capacity evidenced under load.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Mend once more than comfort prefers this week. Structure over relief; ownership over fog.
+
 ## Reflection Questions
 
 1. Which repair failure repeats across years?

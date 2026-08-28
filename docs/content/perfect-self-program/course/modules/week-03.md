@@ -208,6 +208,32 @@ Sam keeps the joy ritual, names a sexual or speech miss with conviction language
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Deliver: holiness-as-state paragraph (not moonshot), joy interrupt log seven days, shame-fuel refusal in one live conversation, and integration sentence linking holiness to stewardship not performance streaks. Holiness & joy without state grammar re-baptizes chase.
+
+### Integration — Courses 01–03
+
+Holiness is **state** in this canon; likeness is formed alignment. Course 11 Week 3 prevents grim duty and proud grit from eating the Perfect Self Program. Emotional Literacy (Course 12) will need this joy/holiness distinction for repair without self-erasure.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Joy interrupt after criticism or failure — not only after success. If joy is reward-only, it is applause addiction with worship vocabulary.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog.
+
 ## Reflection Questions
 
 1. Where did you learn shame = holy?

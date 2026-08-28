@@ -214,6 +214,32 @@ Sam honors daily for 7 days, gratitude list live, clean asks on bedtime and soci
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Finale evidence: ten-item appreciation list (no backhanded entries), seven-day honor log, five clean asks bank with one delivered, School 1 closing charter 900–1200 words witnessed. Course 13 completes Foundation — contempt here poisons Courses 02–12 retroactively.
+
+### Integration — School 1 Foundation spine
+
+Teleios (11) · literacy (12) · temperament honor (13) — the capstone triad. Course 01 parity: make the school great in breakfast tone, repair speed, and honor of difference. Certificates are secondary to household fruit for 90 days.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Public honor act once this week. Private-only honor is insufficient for School 1 finale grade.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog.
+
 ## Reflection Questions
 
 1. Which difference have you treated as a defect to erase?

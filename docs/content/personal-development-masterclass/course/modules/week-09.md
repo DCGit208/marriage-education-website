@@ -234,6 +234,28 @@ Log slips; convert each to lament or repair request; repair if contempt landed.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Deliver: speech audit with one phrase retired, presence block kept five of seven days, complaint fast interrupted twice with gratitude + ask, and one repair initiated by your words (not only your silence). Speech & presence without repair is eloquence without covenant weight.
+
+### Integration — Courses 08–10
+
+Relationship tracks begin with truth in speech. Week 9 is **public atmosphere** stewardship — how your mouth and body teach the household what is safe. Course 01 parity: formation is structural; cosmetic politeness is information.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Your presence block must include eye contact or undivided attention when you least want to give it. That is Affective faculty in Psychomotor form — not a productivity hack.
+
 ## Reflection Questions
 
 1. Which phrase has most damaged trust in your closest relationship?

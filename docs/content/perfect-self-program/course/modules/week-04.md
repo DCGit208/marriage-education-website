@@ -222,6 +222,32 @@ Sam sets one 30-day presence/sleep goal, miss-repairs Day 6 in hours, keeps joy 
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Capstone evidence: 30-day sustainable growth plan with one rail per faculty/attribute band, witness review, chase relapse plan, and explicit bridge to Course 12 without pride. Sustainable growth that increases contempt or secrecy failed Course 11 — regardless of page count.
+
+### Integration — School 1 capstone band (11–13)
+
+Course 12 names and mends emotion; Course 13 honors temperament. Week 4 here seals **teleios practice** so the band does not become three self-help electives. Course 01 parity: greatness is kitchen fruit for 90 days — not LMS completion pride.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Your 30-day plan must include repair speed and emotional naming — or Course 12 will be theory on arrival.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog.
+
 ## Reflection Questions
 
 1. Which “growth” habit is actually punishment?

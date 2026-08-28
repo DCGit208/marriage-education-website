@@ -215,6 +215,32 @@ Joel: “I interrupted and dismissed you Tuesday. I was wrong. Tonight I will li
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Non-negotiable evidence: repair speed table completed, one live own–apologize–act with **dated act step kept**, fusion language retired in writing, and Course 05 gap sketch if the same harm repeated three times. Apology without act is Case B theater — School 1 rejects it.
+
+### Integration — Courses 08–10 + 12
+
+Heart L1, Relatedness L2, and Mastery L3 assume repair literacy. Week 10 is the MasterClass **public exam** for Weeks 4, 5, and 9. Emotional Literacy (Course 12) will deepen mend; you must already own acts without identity deletion.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Repair within 24 hours of harm on a fatigue day. Slow repair baptized as “processing” is often pride or freeze — not maturity.
+
+### Parity seal
+
+This week meets Course 01 depth when your witness can describe one visible change in your speech, schedule, or repair — without you prompting them. If they cannot, extend the week. School 1 does not graduate fog.
+
 ## Reflection Questions
 
 1. What unrepaired harm still taxes your closest relationship?

@@ -224,6 +224,28 @@ Include at least one couple/family conflict if available.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Evidence: pause card used at least three times with log, brake → name → choose sequence on a red-load day, and refusal of freeze-as-virtue or flood-as-honesty in writing. Regulation that never reaches a chosen act is breathing aesthetic — not School 1 fruit.
+
+### Integration — Courses 06–07 + 10
+
+PD MasterClass and Self-Command installed Behavioral brakes. Course 10 conflict mastery assumes regulation before words. Week 2 is **governed emotion** — not suppressed emotion, not performed calm.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Pause card in live conflict or sharp text temptation — not only in journaling. Literacy is public when covenant requires it.
+
 ## Reflection Questions
 
 1. Where does reaction still win — and what payoff keeps it?

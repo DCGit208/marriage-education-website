@@ -236,6 +236,28 @@ Write days 8–21 commitments; name accountability person; define miss protocol.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Show: one keystone habit with Law of Repetition evidence (21-day trajectory, not day-3 heroics), one destructive habit’s payoff named honestly, and household testimony that a rhythm changed — not only your journal pride. Habit systems that manufacture worth are chase religion with a tracker app.
+
+### Integration — Course 07 self-command
+
+Course 07 installs Behavioral governance under load. Week 6 gives **rails** so self-command is not willpower theater. Practice from teleios: habits align expression; they do not invent the person.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Your keystone habit must survive travel, illness, or conflict week. If it only runs in ideal conditions, redesign smaller — School 1 rails are for real life.
+
 ## Reflection Questions
 
 1. Which habit have you used as proof you are “becoming someone”?

@@ -226,6 +226,28 @@ Leah lists capacities with dates/logs, names money speech as frontier, writes 30
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Capstone evidence: readiness audit with **evidence not branding**, frontier map with one 30-day rail, better-whole marriage timeline or marriage practice sentence, and honest “not yet” where design would defraud a household. Covenant readiness that is only desire is the oldest leak in School 1 — refuse it in writing.
+
+### Integration — full MasterClass arc
+
+Weeks 1–11 installed vision through sexuality. Week 12 is **gate check** before Courses 07–10 relationship intensives and Courses 11–13 capstones. Course 01 parity: maturity is capacity under load — feelings and certificates are not sufficient.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Ask one witness: “Would you trust your child’s formation to my rails?” If the answer hesitates, your readiness sentence is marketing — adjust rails before adding covenant weight.
+
 ## Reflection Questions
 
 1. What have you been calling “readiness” that was only desire?

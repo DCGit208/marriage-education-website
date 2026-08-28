@@ -226,6 +226,28 @@ If you cannot name the doctrine contradicted, you are still managing mood, not p
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Produce: seven log rows with **next acts attached** (not mood notes), two premises autopsied with Course 02–05 doctrine cited, and one Mental Covenant Rule tested on a fatigue day. Mental discipline that never reaches Behavioral close is Cognitive theater — not attribute stewardship.
+
+### Integration — Attributes vs Faculties (lock)
+
+Course 01 Week 3 named the Four Attributes; Course 04 named the Four Faculties. This week governs **Mental attribute** expression — inner speech and interpretation — without confusing it with Cognitive faculty (learning/reasoning power). Collapse the map and you will either intellectualize formation or treat thinking as ontology manufacture.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Your interrupt protocol is fake if it only runs before coffee. Schedule one rep after conflict, scroll temptation, or harsh feedback. Log whether the **act** happened within 24 hours — not whether you “felt clearer.”
+
 ## Reflection Questions
 
 1. Which hidden premise most often impersonates “insight”?

@@ -233,6 +233,20 @@ List top three triggers that summon your worst drift.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Deliver: temperament profile under fatigue, one counter-habit kept seven days, one contempt word retired from speech, and one clean ask that honors difference without cloning. “That’s just me” after harm fails this bar — teleios persons steward temperament; they do not baptize harm as flavor.
+
+### Integration — Course 13 finale
+
+Course 13 will seal temperament honor for the household. Week 5 here is **Behavioral training** on your flavor — predictable virtue on tired Tuesdays. Better whole: do not demand your spouse become your temperament to feel safe.
+
+### Formation under load — Tuesday test
+
+Log one conflict where you paused before defect-labeling. If you cannot name their flavor strength you honored that day, Week 5 is incomplete.
+
 ## Reflection Questions
 
 1. Which “that’s just me” sentence has cost your household the most?

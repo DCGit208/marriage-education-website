@@ -231,6 +231,28 @@ Bring log; leave with one cut, one build, one repair if secrecy occurred.
 
 ---
 
+---
+
+## Course 01 parity — School 1 greatness evidence bar
+
+Evidence: money truth shared where applicable (no secret ledgers), one leak closed with Behavioral follow-through, contentment sentence that refuses both poverty gospel and greed gospel, and Week 1 vision constraining one purchase you would have made last month. Money stewardship that hides from the household is Mental premise cosplay.
+
+### Integration — Course 05 development
+
+Anthropocentric development named gaps with structure. Week 8 applies **stewardship economics** — diligence and contentment as teleios expression, not worth proof. Better whole: no spouse as sole money conscience or sole spender without accountability.
+
+### Formation under load — Tuesday test
+### Additional formation depth — Course 01 standard
+
+School 1 greatness is not measured by reading completion. It is measured when a household can feel the rails: faster repair, cleaner speech, governed emotion, honored difference, and practice that starts from teleios rather than chasing worth. This week’s assignment must produce **observable fruit** — a log, a witness, a kept act, a retired phrase — not only insight.
+
+Write one paragraph answering: *What would my closest relationship experience if I kept this week’s rule for 30 days?* If the answer is “nothing different,” the rule is too vague. Sharpen until the household would feel it.
+
+Carry Course 01 integration forward: formation is structural; information is cosmetic. A great week leaves evidence in time, speech, and body — not only in notes.
+
+
+Run your contentment sentence at checkout, inbox promo, or comparison scroll. If it fails only there, it is not yet a rule — it is a sermon.
+
 ## Reflection Questions
 
 1. What illegal premise about money still runs your choices?
