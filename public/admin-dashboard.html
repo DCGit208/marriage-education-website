@@ -2726,9 +2726,37 @@
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Message:</label>
                             <textarea class="search-box" style="width: 100%; min-height: 200px;" placeholder="Your message..." id="messageBody"></textarea>
                         </div>
-                        <button class="btn btn-primary">
+                        <div id="messageSendStatus" style="display:none; margin-bottom: 1rem; padding: 12px 16px; border-radius: 8px; font-size: 14px;"></div>
+                        <button type="button" class="btn btn-primary" id="sendMessageBtn" onclick="window.sendAdminCommunication && window.sendAdminCommunication(event)">
                             <i class="fas fa-paper-plane"></i> Send Message
                         </button>
+                        <p style="margin-top: 12px; color: #636e72; font-size: 13px;">
+                            Operator audiences (Ambassadors, Regional Directors, Referral users) are delivered to their Deployment Ops dashboard <strong>Messages</strong> section and bell notifications — not email by default.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h2>Recent Messages</h2>
+                        <button type="button" class="btn btn-secondary btn-sm" id="refreshMessagesBtn">↺ Refresh</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Audience</th>
+                                    <th>Subject</th>
+                                    <th>Recipients</th>
+                                    <th>Dashboard</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="communicationHistoryBody">
+                                <tr><td colspan="6" style="text-align:center;color:#636e72;">Open this section to load message history</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -2775,9 +2803,32 @@
         // Initialize services (use var for global scope)
         var db = null;
         var auth = null;
+        var functionsUsCentral = null;
+
+        function getAdminFunctions() {
+            if (functionsUsCentral) return functionsUsCentral;
+            try {
+                if (typeof firebase.app === 'function' && firebase.app().functions) {
+                    functionsUsCentral = firebase.app().functions('us-central1');
+                } else if (typeof firebase.functions === 'function') {
+                    functionsUsCentral = firebase.functions();
+                }
+            } catch (e) {
+                console.warn('Functions region init failed, using default:', e);
+                if (typeof firebase.functions === 'function') {
+                    functionsUsCentral = firebase.functions();
+                }
+            }
+            return functionsUsCentral;
+        }
 
         if (typeof firebase.firestore === 'function') {
             db = firebase.firestore();
+            try {
+                db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+            } catch (e) {
+                console.warn('Firestore settings skipped:', e);
+            }
             console.log('✅ Firestore initialized');
         }
 
@@ -3439,8 +3490,154 @@
                     loadSBDReferralAnalyticsTable();
                     loadSBDSalesTable();
                     break;
+                case 'messages':
+                    bindSendMessageButton();
+                    loadCommunicationHistory();
+                    break;
             }
         }
+
+        function bindSendMessageButton() {
+            const btn = document.getElementById('sendMessageBtn');
+            if (!btn || btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                sendAdminCommunication();
+            });
+        }
+
+        function setMessageSendStatus(type, text) {
+            const el = document.getElementById('messageSendStatus');
+            if (!el) return;
+            el.style.display = text ? 'block' : 'none';
+            el.textContent = text || '';
+            if (type === 'success') {
+                el.style.background = '#d4edda';
+                el.style.color = '#155724';
+                el.style.border = '1px solid #c3e6cb';
+            } else if (type === 'error') {
+                el.style.background = '#f8d7da';
+                el.style.color = '#721c24';
+                el.style.border = '1px solid #f5c6cb';
+            } else {
+                el.style.background = '#e7f3ff';
+                el.style.color = '#0c5460';
+                el.style.border = '1px solid #bee5eb';
+            }
+        }
+
+        async function loadCommunicationHistory() {
+            const tbody = document.getElementById('communicationHistoryBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#636e72;">Loading message history...</td></tr>';
+
+            try {
+                const snapshot = await db.collection('admin_communications')
+                    .orderBy('createdAt', 'desc')
+                    .limit(25)
+                    .get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#636e72;">No messages sent yet</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.createdAt
+                        ? new Date(data.createdAt.seconds * 1000).toLocaleString()
+                        : 'N/A';
+                    html += `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${data.recipientLabel || data.recipientType || 'N/A'}</td>
+                            <td><strong>${data.subject || '—'}</strong></td>
+                            <td>${data.totalRecipients || 0}</td>
+                            <td>${data.dashboardDelivered ? 'Yes' : '—'}</td>
+                            <td>${data.emailsSent || 0}${data.emailsFailed ? ` <span style="color:#d63031;">(${data.emailsFailed} failed)</span>` : ''}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading communication history:', error);
+                const hint = String(error.message || error.code || 'Unknown error');
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#d63031;">Could not load history: ' + hint + '</td></tr>';
+            }
+        }
+
+        function formatCallableError(error) {
+            if (!error) return 'Failed to send message';
+            const code = String(error.code || '').replace('functions/', '');
+            const detail = error.details || error.message || 'Unknown error';
+            if (code === 'permission-denied') {
+                return 'Admin access required. Sign in with an admin account (admin@marriageducation.com or admin role).';
+            }
+            if (code === 'unauthenticated') {
+                return 'Session expired. Please log out and sign in again, then retry.';
+            }
+            if (code === 'failed-precondition') {
+                return detail;
+            }
+            return code ? `${code}: ${detail}` : detail;
+        }
+
+        async function sendAdminCommunication(event) {
+            if (event && event.preventDefault) event.preventDefault();
+            const recipientType = document.getElementById('messageRecipients')?.value;
+            const subject = document.getElementById('messageSubject')?.value.trim();
+            const message = document.getElementById('messageBody')?.value.trim();
+            const btn = document.getElementById('sendMessageBtn');
+
+            if (!recipientType || !subject || !message) {
+                setMessageSendStatus('error', 'Please choose an audience, subject, and message.');
+                return;
+            }
+
+            if (!auth || !auth.currentUser) {
+                setMessageSendStatus('error', 'You are not signed in. Please log in again.');
+                return;
+            }
+
+            const audienceLabel = document.querySelector(`#messageRecipients option[value="${recipientType}"]`)?.textContent || recipientType;
+            if (!confirm(`Send this message to ${audienceLabel}?`)) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                setMessageSendStatus('info', 'Sending message...');
+
+                await auth.currentUser.getIdToken(true);
+                const fn = getAdminFunctions();
+                if (!fn) {
+                    throw new Error('Firebase Functions is not available. Hard refresh and try again.');
+                }
+                const sendFunc = fn.httpsCallable('sendAdminCommunication');
+                const result = await sendFunc({ recipientType, subject, message });
+                const data = result.data || {};
+
+                setMessageSendStatus(
+                    'success',
+                    data.dashboardDelivered
+                        ? `Published to operator dashboards (${audienceLabel}). RDs/Ambassadors will see it under Messages and the bell icon. Matched records: ${data.totalRecipients || 0}.`
+                        : `Sent ${data.emailsSent || 0} email(s) to ${data.totalRecipients || 0} recipient(s).`
+                );
+
+                document.getElementById('messageSubject').value = '';
+                document.getElementById('messageBody').value = '';
+                loadCommunicationHistory();
+            } catch (error) {
+                console.error('Error sending communication:', error);
+                setMessageSendStatus('error', formatCallableError(error));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            }
+        }
+        window.sendAdminCommunication = sendAdminCommunication;
 
         // Load CRM Table
         async function loadCRMTable() {
@@ -3969,6 +4166,9 @@
             }
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            bindSendMessageButton();
+            document.getElementById('refreshMessagesBtn')?.addEventListener('click', loadCommunicationHistory);
 
             // Auto-refresh notifications every 30 seconds (only if logged in)
             setInterval(() => {

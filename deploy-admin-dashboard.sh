@@ -1,22 +1,28 @@
 #!/bin/bash
-# Quick FTP deployment for admin-dashboard.html rename
+# Deploy admin-dashboard.html to iPage (marriageducation.com)
 
-echo "🚀 Deploying admin-dashboard.html to iPage..."
+set -euo pipefail
 
-# Read FTP credentials from .netrc_ftp
+if [[ ! -f ".netrc_ftp" ]]; then
+  echo "❌ Missing .netrc_ftp credentials file."
+  echo "   Deploy to Firebase instead: firebase deploy --only hosting:marriageducation,hosting:main"
+  echo "   Then use: https://marriageducation.web.app/admin-dashboard.html"
+  exit 1
+fi
+
 FTP_HOST=$(grep "machine" .netrc_ftp | awk '{print $2}')
 FTP_USER=$(grep "login" .netrc_ftp | awk '{print $2}')
 FTP_PASS=$(grep "password" .netrc_ftp | awk '{print $2}')
 
-# Upload using curl
-echo "📤 Uploading admin-dashboard.html..."
-curl -T public/admin-dashboard.html ftp://$FTP_HOST/public_html/public/ --user $FTP_USER:$FTP_PASS
+echo "🚀 Deploying admin-dashboard.html to iPage ($FTP_HOST)..."
 
-echo "🗑️  Removing old admin-payments.html..."
-curl -Q "DELE public_html/public/admin-payments.html" ftp://$FTP_HOST --user $FTP_USER:$FTP_PASS
+echo "📤 Uploading to /public_html/admin-dashboard.html ..."
+curl -T public/admin-dashboard.html "ftp://$FTP_HOST/public_html/admin-dashboard.html" --user "$FTP_USER:$FTP_PASS"
+
+echo "📤 Uploading to /public_html/public/admin-dashboard.html ..."
+curl -T public/admin-dashboard.html "ftp://$FTP_HOST/public_html/public/admin-dashboard.html" --user "$FTP_USER:$FTP_PASS"
 
 echo ""
 echo "✅ Deployment complete!"
-echo ""
-echo "🌐 Live URL: https://marriageducation.com/public/admin-dashboard.html"
-echo "🔗 Test it now!"
+echo "🌐 https://marriageducation.com/admin-dashboard.html"
+echo "🌐 https://marriageducation.com/public/admin-dashboard.html"

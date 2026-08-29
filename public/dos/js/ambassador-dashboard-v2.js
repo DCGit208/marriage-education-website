@@ -1234,6 +1234,161 @@
     }
   }
 
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatMessageBody(text) {
+    return escapeHtml(text || '').replace(/\n/g, '<br>');
+  }
+
+  function announcementMatchesRank(data, rank, operatorCode) {
+    if (!data) return false;
+    if (data.recipientCodes && data.recipientCodes.length) {
+      return !!(operatorCode && data.recipientCodes.indexOf(operatorCode) !== -1);
+    }
+    var audience = String(data.audience || data.recipientType || '').toLowerCase();
+    if (!audience || audience === 'all' || audience === 'everyone') return true;
+    if (audience === 'customers') return false;
+    if (audience === 'ambassadors') {
+      return rank === 'ambassador' || rank === 'senior' || rank === 'regional_director' || rank === 'executive';
+    }
+    if (audience === 'regional_directors' || audience === 'rds') {
+      return rank === 'regional_director' || rank === 'executive';
+    }
+    if (audience === 'referrals') {
+      return rank === 'ambassador' || rank === 'senior' || rank === 'regional_director' || rank === 'executive';
+    }
+    return true;
+  }
+
+  function ensureMessagesSection() {
+    if (document.querySelector('[data-section="messages"]')) return;
+    var main = document.querySelector('.dos-content');
+    if (!main) return;
+
+    var section = document.createElement('section');
+    section.className = 'dos-section';
+    section.setAttribute('data-section', 'messages');
+    section.innerHTML =
+      '<div class="dos-card">' +
+        '<h3><i class="fa-solid fa-envelope"></i> Messages from HQ</h3>' +
+        '<p style="font-size:13px;color:#71717a;margin:0 0 16px">Sales scripts, operational directives, and admin announcements appear here and in the bell icon.</p>' +
+        '<div id="dosMessagesList"><div class="dos-empty">Loading messages…</div></div>' +
+      '</div>';
+    main.insertBefore(section, main.firstChild.nextSibling);
+
+    var sidebar = document.getElementById('dosSidebarNav');
+    if (sidebar) sidebar.removeAttribute('data-built');
+    var mobile = document.getElementById('dosMobileNav');
+    if (mobile) mobile.innerHTML = '';
+  }
+
+  function renderAnnouncementItem(doc, readIds, compact) {
+    var d = doc.data();
+    var isUnread = readIds.indexOf(doc.id) === -1;
+    var title = d.title || d.subject || 'Message';
+    var body = d.body || d.message || '';
+    var preview = body.length > (compact ? 140 : 100000) ? body.slice(0, compact ? 137 : 100000) + '…' : body;
+    var item = document.createElement('div');
+    item.className = 'dos-notif-item' + (isUnread ? ' unread' : '');
+    item.dataset.id = doc.id;
+    item.innerHTML =
+      '<strong>' + escapeHtml(title) + '</strong>' +
+      (compact ? escapeHtml(preview) : formatMessageBody(preview)) +
+      '<div class="dos-notif-time">' + timeAgoShared(d.createdAt) + '</div>';
+    return item;
+  }
+
+  function timeAgoShared(ts) {
+    if (!ts) return '';
+    var d = ts.toDate ? ts.toDate() : new Date(ts);
+    var diff = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+
+  var operatorAnnouncementUnsub = null;
+  var operatorAnnouncementListeners = [];
+
+  function notifyOperatorAnnouncementListeners(docs) {
+    operatorAnnouncementListeners.forEach(function (fn) {
+      try { fn(docs); } catch (e) { console.warn('[DOS] announcement listener failed', e); }
+    });
+  }
+
+  function startOperatorAnnouncementFeed() {
+    if (operatorAnnouncementUnsub || !firebase.apps.length) return;
+    var seenIds = {};
+    operatorAnnouncementUnsub = db().collection('announcements')
+      .orderBy('createdAt', 'desc')
+      .limit(40)
+      .onSnapshot(function (snap) {
+        var rank = getRank();
+        var operatorCode = state.code;
+        var docs = [];
+        snap.forEach(function (doc) {
+          if (!announcementMatchesRank(doc.data(), rank, operatorCode)) return;
+          docs.push(doc);
+        });
+        docs.forEach(function (doc) {
+          if (!seenIds[doc.id]) {
+            seenIds[doc.id] = true;
+            var readIds = JSON.parse(localStorage.getItem('me_read_notifs') || '[]');
+            if (readIds.indexOf(doc.id) === -1 && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              var d = doc.data();
+              try {
+                new Notification(d.title || d.subject || 'New message', {
+                  body: String(d.body || d.message || '').slice(0, 180),
+                  tag: 'me-announcement-' + doc.id
+                });
+              } catch (_) {}
+            }
+          }
+        });
+        notifyOperatorAnnouncementListeners(docs);
+      }, function () {});
+  }
+
+  function subscribeOperatorAnnouncements(onUpdate) {
+    operatorAnnouncementListeners.push(onUpdate);
+    startOperatorAnnouncementFeed();
+    return function () {
+      operatorAnnouncementListeners = operatorAnnouncementListeners.filter(function (fn) { return fn !== onUpdate; });
+    };
+  }
+
+  function initMessagesSection() {
+    var list = document.getElementById('dosMessagesList');
+    if (!list) return;
+
+    subscribeOperatorAnnouncements(function (docs) {
+      if (!docs.length) {
+        list.innerHTML = '<div class="dos-empty">No messages yet. Admin announcements will appear here.</div>';
+        return;
+      }
+      var readIds = JSON.parse(localStorage.getItem('me_read_notifs') || '[]');
+      list.innerHTML = '';
+      docs.forEach(function (doc) {
+        var item = renderAnnouncementItem(doc, readIds, false);
+        item.addEventListener('click', function () {
+          if (readIds.indexOf(doc.id) === -1) {
+            readIds.push(doc.id);
+            localStorage.setItem('me_read_notifs', JSON.stringify(readIds));
+          }
+          item.classList.remove('unread');
+        });
+        list.appendChild(item);
+      });
+    });
+  }
+
   function initAnnouncements() {
     var bellBtn = document.getElementById('dosNotifBtn');
     var panel = document.getElementById('dosNotifPanel');
@@ -1253,16 +1408,6 @@
       } else {
         badge.style.display = 'none';
       }
-    }
-
-    function timeAgo(ts) {
-      if (!ts) return '';
-      var d = ts.toDate ? ts.toDate() : new Date(ts);
-      var diff = Math.floor((Date.now() - d.getTime()) / 1000);
-      if (diff < 60) return 'just now';
-      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-      return Math.floor(diff / 86400) + 'd ago';
     }
 
     bellBtn.addEventListener('click', function (e) {
@@ -1287,42 +1432,33 @@
       });
     }
 
-    if (!firebase.apps.length) return;
-    db().collection('announcements')
-      .orderBy('createdAt', 'desc')
-      .limit(20)
-      .onSnapshot(function (snap) {
-        if (snap.empty) {
-          list.innerHTML = '<div class="dos-empty" style="padding:20px">No announcements yet</div>';
-          unreadCount = 0;
-          updateBadge();
-          return;
-        }
+    subscribeOperatorAnnouncements(function (docs) {
+      if (!docs.length) {
+        list.innerHTML = '<div class="dos-empty" style="padding:20px">No messages yet</div>';
         unreadCount = 0;
-        list.innerHTML = '';
-        snap.forEach(function (doc) {
-          var d = doc.data();
-          var isUnread = readIds.indexOf(doc.id) === -1;
-          if (isUnread) unreadCount++;
-          var item = document.createElement('div');
-          item.className = 'dos-notif-item' + (isUnread ? ' unread' : '');
-          item.dataset.id = doc.id;
-          item.innerHTML = '<strong>' + (d.title || 'Announcement') + '</strong>' +
-            (d.body || d.message || '') +
-            '<div class="dos-notif-time">' + timeAgo(d.createdAt) + '</div>';
-          item.addEventListener('click', function () {
-            if (readIds.indexOf(doc.id) === -1) {
-              readIds.push(doc.id);
-              localStorage.setItem('me_read_notifs', JSON.stringify(readIds));
-              if (unreadCount > 0) unreadCount--;
-              updateBadge();
-            }
-            item.classList.remove('unread');
-          });
-          list.appendChild(item);
-        });
         updateBadge();
-      }, function () { /* collection may not exist */ });
+        return;
+      }
+      unreadCount = 0;
+      list.innerHTML = '';
+      docs.slice(0, 20).forEach(function (doc) {
+        var isUnread = readIds.indexOf(doc.id) === -1;
+        if (isUnread) unreadCount++;
+        var item = renderAnnouncementItem(doc, readIds, true);
+        item.addEventListener('click', function () {
+          if (readIds.indexOf(doc.id) === -1) {
+            readIds.push(doc.id);
+            localStorage.setItem('me_read_notifs', JSON.stringify(readIds));
+            if (unreadCount > 0) unreadCount--;
+            updateBadge();
+          }
+          item.classList.remove('unread');
+          if (global.DOSRouter) global.DOSRouter.setSection('messages');
+        });
+        list.appendChild(item);
+      });
+      updateBadge();
+    });
   }
 
   function bindShareButtons() {
@@ -1875,7 +2011,9 @@
 
   function init() {
     bindActions();
+    ensureMessagesSection();
     initAnnouncements();
+    initMessagesSection();
     if (global.DOSRouter) global.DOSRouter.init();
     initRoleCharter();
     loadAll();

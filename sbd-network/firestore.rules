@@ -448,6 +448,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
+
+    // Admin Communication Center — Cloud Function writes; admin dashboard reads history
+    match /admin_communications/{communicationId} {
+      allow read: if true;
+      allow write: if false;
+    }
     
     // Ambassador Registrations - Public create, admin read/write
     match /ambassador_registrations/{regId} {

@@ -8316,3 +8316,10 @@ registerStudioCanonAi(db, exports);
 
 const { registerNotificationMaintenance } = require('./notification-maintenance');
 registerNotificationMaintenance(db, exports);
+
+const { registerAdminCommunication } = require('./admin-communication');
+registerAdminCommunication(db, exports, {
+  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  transporter,
+  smtpFrom: SMTP_CONFIG.from
+});
