@@ -8293,7 +8293,7 @@ registerSbdCommissionPayout(db, exports, {
 
 const { registerPaymentInquiries } = require('./payment-inquiries');
 registerPaymentInquiries(db, exports, {
-  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  assertAdmin: walletTier1Api.assertAdmin,
   sendTelegram
 });
 
@@ -8304,7 +8304,7 @@ const { registerCommerceOsTier2 } = require('./commerce-os-tier2');
 registerCommerceOsTier2(db, admin, exports, {
   fulfillPendingPayment: (reference, options) =>
     getPaymentFulfillment().fulfillPendingPayment(reference, options),
-  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  assertAdmin: walletTier1Api.assertAdmin,
   markPayoutBatchPaidCore: (data, adminUser) =>
     walletTier1Api.markPayoutBatchPaidCore(data, adminUser),
   normalizeAmbassadorRecruiterPaymentFields,
@@ -8319,7 +8319,7 @@ registerNotificationMaintenance(db, exports);
 
 const { registerAdminCommunication } = require('./admin-communication');
 registerAdminCommunication(db, exports, {
-  assertAdmin: (context) => walletTier1Api.assertAdmin(db, context),
+  assertAdmin: walletTier1Api.assertAdmin,
   transporter,
   smtpFrom: SMTP_CONFIG.from
 });
