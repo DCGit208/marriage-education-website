@@ -2714,6 +2714,7 @@
                             <select class="search-box" style="width: 100%;" id="messageRecipients">
                                 <option value="all">All Customers</option>
                                 <option value="ambassadors">All Ambassadors</option>
+                                <option value="senior_ambassadors">All Senior Ambassadors</option>
                                 <option value="rds">All Regional Directors</option>
                                 <option value="referrals">All Referral Users</option>
                             </select>
@@ -3589,6 +3590,8 @@
             switch (recipientType) {
                 case 'rds':
                     return 'Regional Directors will see it under Messages and the bell icon.';
+                case 'senior_ambassadors':
+                    return 'Senior Ambassadors will see it under Messages and the bell icon.';
                 case 'ambassadors':
                     return 'Ambassadors will see it under Messages and the bell icon.';
                 case 'referrals':

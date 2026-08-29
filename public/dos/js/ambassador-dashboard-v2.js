@@ -1257,6 +1257,9 @@
     if (audience === 'ambassadors') {
       return rank === 'ambassador' || rank === 'senior' || rank === 'regional_director' || rank === 'executive';
     }
+    if (audience === 'senior_ambassadors' || audience === 'seniors') {
+      return rank === 'senior' || rank === 'regional_director' || rank === 'executive';
+    }
     if (audience === 'regional_directors' || audience === 'rds') {
       return rank === 'regional_director' || rank === 'executive';
     }

@@ -5,11 +5,12 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
-const RECIPIENT_TYPES = new Set(['all', 'ambassadors', 'rds', 'referrals']);
+const RECIPIENT_TYPES = new Set(['all', 'ambassadors', 'senior_ambassadors', 'rds', 'referrals']);
 
 const RECIPIENT_LABELS = {
   all: 'All Customers',
   ambassadors: 'All Ambassadors',
+  senior_ambassadors: 'All Senior Ambassadors',
   rds: 'All Regional Directors',
   referrals: 'All Referral Users'
 };
@@ -17,6 +18,7 @@ const RECIPIENT_LABELS = {
 const AUDIENCE_BY_RECIPIENT_TYPE = {
   all: 'customers',
   ambassadors: 'ambassadors',
+  senior_ambassadors: 'senior_ambassadors',
   rds: 'regional_directors',
   referrals: 'referrals'
 };
@@ -91,6 +93,36 @@ async function resolveRecipients(db, recipientType) {
         sourceId: doc.id,
         sourceType: 'ambassador',
         operatorCode: doc.id
+      });
+    });
+  }
+
+  if (recipientType === 'senior_ambassadors') {
+    const seenCodes = new Set();
+
+    const seniorSnap = await db.collection('senior_ambassadors').get();
+    seniorSnap.forEach((doc) => {
+      const data = doc.data();
+      seenCodes.add(doc.id);
+      addRecipient(recipients, data.email, {
+        name: displayName(data),
+        sourceId: doc.id,
+        sourceType: 'senior_ambassador',
+        operatorCode: data.code || doc.id
+      });
+    });
+
+    const ambassadorsSnap = await db.collection('ambassadors')
+      .where('ambassador_type', '==', 'senior')
+      .get();
+    ambassadorsSnap.forEach((doc) => {
+      if (seenCodes.has(doc.id)) return;
+      const data = doc.data();
+      addRecipient(recipients, data.email, {
+        name: displayName(data),
+        sourceId: doc.id,
+        sourceType: 'senior_ambassador',
+        operatorCode: data.code || doc.id
       });
     });
   }
