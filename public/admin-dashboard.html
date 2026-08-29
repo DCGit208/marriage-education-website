@@ -3585,6 +3585,19 @@
             return code ? `${code}: ${detail}` : detail;
         }
 
+        function dashboardDeliveryHint(recipientType) {
+            switch (recipientType) {
+                case 'rds':
+                    return 'Regional Directors will see it under Messages and the bell icon.';
+                case 'ambassadors':
+                    return 'Ambassadors will see it under Messages and the bell icon.';
+                case 'referrals':
+                    return 'Referral users will see it under Messages and the bell icon.';
+                default:
+                    return 'Operators will see it under Messages and the bell icon.';
+            }
+        }
+
         async function sendAdminCommunication(event) {
             if (event && event.preventDefault) event.preventDefault();
             const recipientType = document.getElementById('messageRecipients')?.value;
@@ -3622,7 +3635,7 @@
                 setMessageSendStatus(
                     'success',
                     data.dashboardDelivered
-                        ? `Published to operator dashboards (${audienceLabel}). RDs/Ambassadors will see it under Messages and the bell icon. Matched records: ${data.totalRecipients || 0}.`
+                        ? `Published to operator dashboards (${audienceLabel}). ${dashboardDeliveryHint(recipientType)} Matched records: ${data.totalRecipients || 0}.`
                         : `Sent ${data.emailsSent || 0} email(s) to ${data.totalRecipients || 0} recipient(s).`
                 );
 
