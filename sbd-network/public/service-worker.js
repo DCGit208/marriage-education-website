@@ -43,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1785066600000';
+const CACHE_VERSION = 'sbd-network-v1789601192657';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
@@ -56,6 +56,22 @@ const PRECACHE_URLS = [
   '/manifest.json',
   '/changelog.json',
 ];
+
+/** Paths Hosting 302/301s. If the SW follows those redirects, the document URL
+ *  stays on the original path (Safari unwrap) and auth-guard may bounce guests. */
+const HOSTING_REDIRECT_PATHS = new Set([
+  '/',
+  '/index',
+  '/index.html',
+  '/paywall-demo',
+  '/paywall-demo.html',
+  '/video-preview-demo',
+  '/video-preview-demo.html',
+  '/dashboard-old',
+  '/dashboard-old.html',
+  '/mv-house-OLD-BACKUP',
+  '/mv-house-OLD-BACKUP.html',
+]);
 
 /**
  * Safari (WebKit) throws if a SW returns a Response with redirected === true.
@@ -198,11 +214,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML — Network-first, bypass all caches.
-  // Cache successful responses so we can fall back if the network returns
-  // a 503/500 or is unreachable on the next visit.
-  // Critical for Safari: never return a redirected Response from the SW
-  // (Firebase cleanUrls: /library.html → /library).
+  // Do not intercept Hosting redirect sources. Following + unwrapping those
+  // responses keeps the original URL (e.g. `/` or `/dashboard-old`) and
+  // sends guests to `/auth?next=...`.
+  if (HOSTING_REDIRECT_PATHS.has(url.pathname)) {
+    return;
+  }
   const isHtml = request.headers.get('accept')?.includes('text/html') || url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '';
   if (isHtml) {
     event.respondWith(

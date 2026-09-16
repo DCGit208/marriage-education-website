@@ -21,7 +21,8 @@ const AUTH_REDIRECT_ALLOWLIST = new Set([
   '/search', '/search.html',
   '/mv-house', '/mv-house.html',
   '/communication-v2',
-  '/payment', '/payment.html'
+  '/payment', '/payment.html',
+  '/pricing', '/pricing.html'
 ]);
 
 function getAuthEntryIntent() {

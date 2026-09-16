@@ -16,25 +16,69 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "scripts/**"
+      "scripts/**",
+      "paywall-demo.html",
+      "video-preview-demo.html",
+      "dashboard-old.html",
+      "mv-house-OLD-BACKUP.html"
     ],
     "cleanUrls": true,
     "trailingSlash": false,
     "redirects": [
       {
         "source": "/index",
-        "destination": "/auth",
+        "destination": "/dashboard",
         "type": 302
       },
       {
         "source": "/index.html",
-        "destination": "/auth",
+        "destination": "/dashboard",
         "type": 302
       },
       {
         "source": "/",
         "destination": "/dashboard",
         "type": 302
+      },
+      {
+        "source": "/paywall-demo",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/paywall-demo.html",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/video-preview-demo",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/video-preview-demo.html",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/dashboard-old",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/dashboard-old.html",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/mv-house-OLD-BACKUP",
+        "destination": "/dashboard",
+        "type": 301
+      },
+      {
+        "source": "/mv-house-OLD-BACKUP.html",
+        "destination": "/dashboard",
+        "type": 301
       }
     ],
     "headers": [

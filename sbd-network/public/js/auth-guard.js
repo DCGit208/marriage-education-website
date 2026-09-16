@@ -6,12 +6,17 @@
 (function () {
   var normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
   var guestAllowedRoutes = new Set([
+    '/',
     '/dashboard',
     '/dashboard.html',
     '/auth',
     '/auth.html',
     '/index',
     '/index.html',
+    '/pricing',
+    '/pricing.html',
+    '/resources',
+    '/resources.html',
   ]);
 
   if (normalizedPath.indexOf('/communication-v2') === 0) {
@@ -21,6 +26,18 @@
   if (guestAllowedRoutes.has(normalizedPath)) {
     return;
   }
+
+  // Hide opted-in pages (html.sbd-auth-pending CSS) until auth is confirmed.
+  document.documentElement.classList.add('sbd-auth-pending');
+
+  // Bounce guests before Firebase loads so protected chrome never paints.
+  try {
+    if (!localStorage.getItem('sbdUserId')) {
+      var nextNow = window.location.pathname + window.location.search;
+      window.location.replace('/auth?next=' + encodeURIComponent(nextNow));
+      return;
+    }
+  } catch (e) {}
 
   function waitForFirebase(maxMs) {
     var start = Date.now();
@@ -61,9 +78,15 @@
     });
   }
 
-  Promise.all([waitForFirebase(8000), waitForUser(8000)])
+  waitForFirebase(8000)
+    .then(function () {
+      return waitForUser(8000);
+    })
+    .then(function () {
+      document.documentElement.classList.remove('sbd-auth-pending');
+    })
     .catch(function () {
       var next = window.location.pathname + window.location.search;
-      window.location.href = '/auth?next=' + encodeURIComponent(next);
+      window.location.replace('/auth?next=' + encodeURIComponent(next));
     });
 })();
