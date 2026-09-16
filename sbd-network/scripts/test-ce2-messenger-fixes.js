@@ -184,8 +184,99 @@ test('mic denial maps to a readable error', function () {
   assert.ok(/Microphone access was blocked/.test(msg));
 });
 
-if (failed) {
-  console.error('\n' + failed + ' test(s) failed\n');
-  process.exit(1);
+console.log('\nVoice upload MIME + CORS policy\n');
+
+function loadUploadJs() {
+  const sandbox = {
+    console: console,
+    getCurrentUser: function () { return { uid: 'u1', getIdToken: async function () { return 't'; } }; },
+  };
+  sandbox.window = sandbox;
+  sandbox.global = sandbox;
+  vm.runInNewContext(
+    fs.readFileSync(path.join(ROOT, 'public/js/upload.js'), 'utf8'),
+    sandbox,
+    { filename: 'upload.js' }
+  );
+  return sandbox;
 }
-console.log('\n✅ CE2 messenger fix tests passed\n');
+
+const uploadSandbox = loadUploadJs();
+
+test('strips MediaRecorder codec params so the R2 worker allow-list matches', function () {
+  const type = uploadSandbox.detectUploadContentType({
+    type: 'audio/webm;codecs=opus',
+    name: 'voice-1.webm',
+  });
+  assert.strictEqual(type, 'audio/webm');
+});
+
+test('maps m4a recordings to audio/mp4', function () {
+  const type = uploadSandbox.detectUploadContentType({
+    type: 'audio/mp4',
+    name: 'voice-1.m4a',
+  });
+  assert.strictEqual(type, 'audio/mp4');
+});
+
+test('CORS network errors fall back to Firebase Storage', function () {
+  assert.strictEqual(
+    uploadSandbox.canFallbackToFirebaseStorage(new Error('Upload failed — network error')),
+    true
+  );
+  assert.strictEqual(
+    uploadSandbox.canFallbackToFirebaseStorage(new Error('Content type not allowed')),
+    true
+  );
+  assert.strictEqual(
+    uploadSandbox.canFallbackToFirebaseStorage(new Error('Not authenticated')),
+    false
+  );
+});
+
+async function runPolicyTests() {
+  const { pathToFileURL } = require('url');
+  const policyPath = pathToFileURL(
+    path.join(ROOT, 'workers/upload-signer/src/upload-policy.js')
+  ).href;
+  const policy = await import(policyPath);
+
+  test('sbd.marriageducation.com is a trusted upload origin', function () {
+    assert.strictEqual(
+      policy.isTrustedUploadOrigin('https://sbd.marriageducation.com', ''),
+      true
+    );
+  });
+
+  test('unlisted origins are not trusted', function () {
+    assert.strictEqual(
+      policy.isTrustedUploadOrigin('https://evil.example', ''),
+      false
+    );
+  });
+
+  test('worker strips codec params from Content-Type', function () {
+    assert.strictEqual(
+      policy.stripContentTypeParams('audio/webm;codecs=opus'),
+      'audio/webm'
+    );
+    assert.strictEqual(
+      policy.stripContentTypeParams('audio/mp4;codecs=mp4a.40.2'),
+      'audio/mp4'
+    );
+  });
+}
+
+runPolicyTests()
+  .then(function () {
+    if (failed) {
+      console.error('\n' + failed + ' test(s) failed\n');
+      process.exit(1);
+    }
+    console.log('\n✅ CE2 messenger fix tests passed\n');
+  })
+  .catch(function (err) {
+    console.error(err);
+    process.exit(1);
+  });
+

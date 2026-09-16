@@ -464,6 +464,6 @@
     r2Ready: r2Ready,
     primeVideoThumbnail: primeVideoThumbnail,
     MAX_BYTES: MAX_BYTES,
-    VERSION: 12,
+    VERSION: 14,
   };
 })(typeof window !== 'undefined' ? window : global);

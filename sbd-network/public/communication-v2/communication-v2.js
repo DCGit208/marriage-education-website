@@ -4100,8 +4100,9 @@
             (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
           audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
         }).then(function () {
+          var detail = err && err.message ? String(err.message) : 'unknown error';
           CommunicationState.statusMessage =
-            'Voice note failed to upload. Tap Retry or Discard.';
+            'Voice note failed to upload (' + detail + '). Tap Retry or Discard.';
           requestRender({ threadOnly: true });
         });
       });

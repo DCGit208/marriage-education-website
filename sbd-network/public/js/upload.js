@@ -7,15 +7,18 @@
 // Update this after running: cd workers/upload-signer && npx wrangler deploy
 const UPLOAD_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
 
+function stripUploadContentTypeParams(contentType) {
+  return String(contentType || '')
+    .toLowerCase()
+    .split(';')[0]
+    .trim();
+}
+
 function detectUploadContentType(file) {
-  let contentType = file.type;
-  if (contentType) {
-    const lower = contentType.toLowerCase();
-    if (lower === 'image/x-png' || lower === 'image/apng') contentType = 'image/png';
-    else contentType = lower;
-  }
+  let contentType = stripUploadContentTypeParams(file && file.type);
+  if (contentType === 'image/x-png' || contentType === 'image/apng') contentType = 'image/png';
   if (!contentType) {
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = ((file && file.name) || '').split('.').pop().toLowerCase();
     const extMap = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
       webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
@@ -36,6 +39,12 @@ function detectUploadContentType(file) {
     if (!contentType) contentType = 'application/octet-stream';
   }
   return contentType;
+}
+
+function canFallbackToFirebaseStorage(err) {
+  const msg = String((err && err.message) || err || '');
+  if (/not authenticated/i.test(msg)) return false;
+  return /network error|failed to fetch|content type not allowed|upload failed|load failed|cors/i.test(msg);
 }
 
 function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
@@ -110,28 +119,34 @@ async function uploadToR2(file, folder, options) {
   const contentType = detectUploadContentType(file);
   options = options || {};
 
-  if (options.onProgress || options.signal) {
-    return uploadToR2XHR(file, folder, idToken, filename, contentType, options);
+  try {
+    if (options.onProgress || options.signal) {
+      return await uploadToR2XHR(file, folder, idToken, filename, contentType, options);
+    }
+
+    const res = await fetch(`${UPLOAD_WORKER_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': contentType,
+        'X-Folder': folder,
+        'X-Filename': filename,
+      },
+      body: file,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Upload failed (${res.status})`);
+    }
+
+    const { publicUrl } = await res.json();
+    return publicUrl;
+  } catch (err) {
+    if (!canFallbackToFirebaseStorage(err)) throw err;
+    console.warn('[upload] R2 failed; falling back to Firebase Storage:', err && err.message);
+    return uploadToFirebaseStorage(file, folder, options);
   }
-
-  const res = await fetch(`${UPLOAD_WORKER_URL}/upload`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${idToken}`,
-      'Content-Type': contentType,
-      'X-Folder': folder,
-      'X-Filename': filename,
-    },
-    body: file,
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Upload failed (${res.status})`);
-  }
-
-  const { publicUrl } = await res.json();
-  return publicUrl;
 }
 
 /**
