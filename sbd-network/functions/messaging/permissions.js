@@ -38,12 +38,50 @@ function tierLevel(tier) {
   return TIER_LEVEL[t] ?? 0;
 }
 
+function isBillingTier(tier) {
+  const t = normalizeTier(tier);
+  return t === 'foundation' || t === 'premium' || t === 'elite';
+}
+
+function subscriptionEndMs(sub) {
+  if (!sub || !sub.endDate) return 0;
+  const end = sub.endDate;
+  if (typeof end.toMillis === 'function') return end.toMillis();
+  if (typeof end.toDate === 'function') return end.toDate().getTime();
+  if (typeof end.seconds === 'number') return end.seconds * 1000;
+  if (typeof end._seconds === 'number') return end._seconds * 1000;
+  if (end instanceof Date) return end.getTime();
+  const n = Number(end);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function isSubscriptionCurrentlyActive(sub, nowMs) {
+  if (!sub) return false;
+  const status = String(sub.status || '').toLowerCase();
+  if (status !== 'active') return false;
+  const end = subscriptionEndMs(sub);
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  if (end > 0 && end <= now) return false;
+  return true;
+}
+
+function resolveMessagingTier(userData, nowMs) {
+  const d = userData || {};
+  const docTier = normalizeTier(d.tier);
+  const sub = d.subscription || null;
+  if (!isSubscriptionCurrentlyActive(sub, nowMs)) return docTier;
+  const subTier = normalizeTier(sub.tier);
+  if (!isBillingTier(subTier)) return docTier;
+  return tierLevel(subTier) > tierLevel(docTier) ? subTier : docTier;
+}
+
 function userFromDoc(uid, data) {
   const d = data || {};
+  const tier = resolveMessagingTier(d);
   return {
     uid,
-    tier: normalizeTier(d.tier),
-    tierLevel: typeof d.tierLevel === 'number' ? d.tierLevel : tierLevel(d.tier),
+    tier,
+    tierLevel: tierLevel(tier),
     ambassadorRole: d.ambassadorRole || null,
     messagingEnabled: d.messagingEnabled !== false,
     mentor: !!d.mentor,
@@ -56,10 +94,11 @@ function calculateConversationSecurityLevel(participants) {
   let minLevel = 99;
   let minTier = 'foundation';
   participants.forEach(function (p) {
-    const lvl = typeof p.tierLevel === 'number' ? p.tierLevel : tierLevel(p.tier);
+    const resolved = p && p.tier ? normalizeTier(p.tier) : 'foundation';
+    const lvl = tierLevel(resolved);
     if (lvl < minLevel) {
       minLevel = lvl;
-      minTier = normalizeTier(p.tier);
+      minTier = resolved;
     }
   });
   return { tier: minTier, level: minLevel };
@@ -106,6 +145,8 @@ module.exports = {
   TIER_LEVEL,
   normalizeTier,
   tierLevel,
+  resolveMessagingTier,
+  isSubscriptionCurrentlyActive,
   userFromDoc,
   calculateConversationSecurityLevel,
   canDiscoverUser,

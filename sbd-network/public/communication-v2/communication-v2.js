@@ -299,19 +299,19 @@
 
   /**
    * CE2 user view — never writes; defaults only in memory (no overwrite of Firestore).
+   * Messaging tier prefers active subscription.tier (Elite billing) over a stale users.tier.
    */
   function normalizeCe2User(uid, raw) {
     const d = raw || {};
-    const tier = normalizeTier(d.tier);
+    const g = gov();
+    const tier =
+      g && g.resolveMessagingTier ? g.resolveMessagingTier(d) : normalizeTier(d.tier);
     return {
       uid,
       email: d.email || null,
       name: d.name || d.displayName || d.email || 'Member',
       tier,
-      tierLevel:
-        typeof d.tierLevel === 'number' && !Number.isNaN(d.tierLevel)
-          ? d.tierLevel
-          : (gov() && gov().tierRank ? gov().tierRank(tier) : 0),
+      tierLevel: g && g.tierRank ? g.tierRank(tier) : 0,
       formationLevel:
         typeof d.formationLevel === 'number' && !Number.isNaN(d.formationLevel)
           ? d.formationLevel
@@ -852,6 +852,41 @@
     var t = normalizeTier(u.tier);
     if (t === 'foundation') return ['foundation', 'free'];
     return [t];
+  }
+
+  async function queryUsersMatchingTiers(tiers, limitN) {
+    var unique = [];
+    (tiers || []).forEach(function (t) {
+      if (t && unique.indexOf(t) < 0) unique.push(t);
+    });
+    if (!unique.length) return [];
+    var byId = {};
+    function ingest(snap) {
+      if (!snap) return;
+      snap.forEach(function (doc) {
+        if (!byId[doc.id]) byId[doc.id] = doc;
+      });
+    }
+    var snap = await db.collection('users').where('tier', 'in', unique).limit(limitN || 40).get();
+    ingest(snap);
+    var billing = unique.filter(function (t) {
+      return t === 'elite' || t === 'premium' || t === 'foundation' || t === 'free';
+    });
+    if (billing.length) {
+      try {
+        var snap2 = await db
+          .collection('users')
+          .where('subscription.tier', 'in', billing)
+          .limit(limitN || 40)
+          .get();
+        ingest(snap2);
+      } catch (err) {
+        console.warn('subscription.tier discovery query', err);
+      }
+    }
+    return Object.keys(byId).map(function (id) {
+      return byId[id];
+    });
   }
 
   function discoveryEmptyMessage(mode, u) {
@@ -3258,8 +3293,8 @@
     if (CommunicationState.discoveryMode === 'lower') {
       var lowerTiers = lowerTierQueriesForUser(u);
       if (!lowerTiers.length) return;
-      var qLower = await db.collection('users').where('tier', 'in', lowerTiers).limit(50).get();
-      qLower.forEach(function (doc) {
+      var qLowerDocs = await queryUsersMatchingTiers(lowerTiers, 50);
+      qLowerDocs.forEach(function (doc) {
         if (doc.id === u.uid) return;
         var nu = normalizeCe2User(doc.id, doc.data());
         if (!canCommunicate(u, nu)) return;
@@ -3274,9 +3309,9 @@
     }
 
     var tierQueries = peerTierQueriesForUser(u);
-    var q2 = await db.collection('users').where('tier', 'in', tierQueries).limit(40).get();
+    var q2docs = await queryUsersMatchingTiers(tierQueries, 40);
     var myPeerTier = normalizeTier(u.tier);
-    q2.forEach(function (doc) {
+    q2docs.forEach(function (doc) {
       if (doc.id === u.uid) return;
       var nu = normalizeCe2User(doc.id, doc.data());
       if (normalizeTier(nu.tier) !== myPeerTier) return;
