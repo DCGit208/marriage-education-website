@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="build-version" content="1789601192648">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SBD Network membership — Explore free, Foundation $9.77/mo, Premium $20/mo, Elite $50/mo.">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Membership | SBD Network</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/styles.css?v=1789601192648">
+    <link rel="stylesheet" href="/css/home-premium.css?v=1789601192648">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1789601192648">
+
+    <style>
+        .pricing-page {
+            background: #0D0D0D;
+            color: #EAE3D2;
+            min-height: 100vh;
+            padding-bottom: 110px;
+        }
+        .pricing-hero {
+            padding: 52px 20px 28px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .pricing-kicker {
+            display: inline-block;
+            border: 1px solid rgba(198,163,132,0.4);
+            background: rgba(198,163,132,0.12);
+            color: #C6A384;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+        }
+        .pricing-hero h1 {
+            font-size: clamp(28px, 5vw, 40px);
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .pricing-hero p {
+            max-width: 440px;
+            margin: 0 auto;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #A8A29E;
+        }
+        .pricing-page .membership-container {
+            height: auto;
+            padding: 28px 20px 140px;
+        }
+        .pricing-page .membership-card {
+            cursor: pointer;
+        }
+        .pricing-page .membership-features-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pricing-page .membership-feature-nowrap {
+            white-space: normal;
+        }
+        .pricing-cta-note {
+            max-width: 480px;
+            margin: 8px auto 0;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+        }
+        .pricing-signin {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 14px;
+            color: #A8A29E;
+        }
+        .pricing-signin a {
+            color: #C6A384;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body class="pricing-page home-cinematic">
+
+    <header class="pricing-hero">
+        <div class="pricing-kicker">Membership</div>
+        <h1>Choose Your Level of Access</h1>
+        <p>The same public plans shown on Home. Start free, or unlock a formation path.</p>
+    </header>
+
+    <main class="membership-container membership-layout">
+        <div class="membership-cards flex-col gap-8">
+            <div class="membership-card mt-4 opacity-88" data-tier="free" role="link" tabindex="0">
+                <div class="membership-card-header mb-2">
+                    <div class="membership-tier-name">Explore</div>
+                    <div class="membership-tier-price">Free</div>
+                </div>
+                <div class="membership-card-features membership-features-compact">
+                    <div class="membership-feature">Access to Foundation School (intro lessons)</div>
+                    <div class="membership-feature">Preview selected courses</div>
+                </div>
+            </div>
+
+            <div class="membership-card opacity-88" data-tier="foundation" role="link" tabindex="0">
+                <div class="membership-card-header mb-2">
+                    <div class="membership-tier-name">Foundation</div>
+                    <div class="membership-tier-price">$9.77<span>/mo</span></div>
+                </div>
+                <div class="membership-card-features membership-features-compact">
+                    <div class="membership-feature">Access to core courses in School 1 &amp; 2</div>
+                    <div class="membership-feature">Structured learning path</div>
+                </div>
+            </div>
+
+            <div class="membership-card membership-card-featured membership-premium-card" data-tier="premium" role="link" tabindex="0">
+                <div class="membership-card-header mb-2">
+                    <div class="membership-tier-name">
+                        Premium
+                        <span class="membership-badge">POPULAR</span>
+                    </div>
+                    <div class="membership-tier-price">$20<span>/mo</span></div>
+                </div>
+                <div class="membership-card-features membership-features-grid">
+                    <div class="membership-feature membership-feature-span">Everything in Foundation</div>
+                    <div class="membership-feature membership-feature-span">Full access to School 1 &amp; 2 courses</div>
+                    <div class="membership-feature membership-feature-nowrap">Certificates and progress boards</div>
+                    <div class="membership-feature">Priority support</div>
+                </div>
+            </div>
+
+            <div class="membership-card membership-card-featured membership-elite-card" data-tier="elite" role="link" tabindex="0">
+                <div class="membership-card-header mb-2">
+                    <div class="membership-tier-name">Elite</div>
+                    <div class="membership-tier-price">$50<span>/mo</span></div>
+                </div>
+                <div class="membership-card-features membership-features-elite flex-col">
+                    <div class="membership-feature opacity-85">Everything in Explore, Foundation &amp; Premium</div>
+                    <div class="membership-feature opacity-90">Access to 44 Courses (across 4 Schools)</div>
+                    <div class="membership-feature font-semibold text-gold">Advanced Muliebrity &amp; Virility Training School</div>
+                    <div class="membership-feature opacity-90">Powered by Advanced Muliebrity &amp; Virility Media Boards</div>
+                    <div class="membership-feature font-semibold text-gold">Teaching Sexuality Like Never Before</div>
+                    <div class="membership-feature font-semibold">Full MV Fashion House Access</div>
+                </div>
+            </div>
+        </div>
+        <p class="pricing-cta-note">Tap a plan to continue. Guests create an account first; members go to checkout.</p>
+        <p class="pricing-signin">Already have an account? <a href="/auth?next=/pricing&amp;src=pricing-signin">Sign in</a></p>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+        <a href="/dashboard.html" class="bn-tab" aria-label="Home">
+            <span class="bn-icon">🏠</span>
+            <span class="bn-label">Home</span>
+        </a>
+        <a href="/learn.html" class="bn-tab" aria-label="Learn">
+            <span class="bn-icon">📚</span>
+            <span class="bn-label">Learn</span>
+        </a>
+        <a href="/boards.html" class="bn-tab" aria-label="Boards">
+            <span class="bn-icon">💬</span>
+            <span class="bn-label">Boards</span>
+        </a>
+        <a href="/shop.html" class="bn-tab" aria-label="Shop">
+            <span class="bn-icon">🛒</span>
+            <span class="bn-label">Shop</span>
+        </a>
+        <a href="/profile.html" class="bn-tab" aria-label="Profile">
+            <span class="bn-icon">👤</span>
+            <span class="bn-label">Profile</span>
+        </a>
+    </nav>
+
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script defer src="/js/firebase.js?v=1789601192648"></script>
+    <script>
+      (function () {
+        var isAuthenticated = false;
+
+        function buildAuthUrl(tier) {
+          var url = new URL('/auth', window.location.origin);
+          url.searchParams.set('next', '/learn');
+          url.searchParams.set('src', 'pricing');
+          if (tier && tier !== 'free') url.searchParams.set('tier', tier);
+          return url.pathname + url.search;
+        }
+
+        function routeTier(tier) {
+          if (!tier) return;
+          if (tier === 'free') {
+            window.location.href = '/dashboard';
+            return;
+          }
+          try { sessionStorage.setItem('selectedTier', tier); } catch (e) {}
+          if (!isAuthenticated) {
+            window.location.href = buildAuthUrl(tier);
+            return;
+          }
+          var target = new URL('/payment', window.location.origin);
+          target.searchParams.set('tier', tier);
+          target.searchParams.set('src', 'pricing');
+          window.location.href = target.pathname + target.search;
+        }
+
+        document.querySelectorAll('.membership-card[data-tier]').forEach(function (card) {
+          function go() { routeTier((card.dataset.tier || '').toLowerCase()); }
+          card.addEventListener('click', go);
+          card.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              go();
+            }
+          });
+        });
+
+        function waitForAuth() {
+          if (typeof auth === 'undefined' || !auth.onAuthStateChanged) {
+            setTimeout(waitForAuth, 120);
+            return;
+          }
+          auth.onAuthStateChanged(function (user) {
+            isAuthenticated = !!user;
+          });
+        }
+        waitForAuth();
+      })();
+    </script>
+</body>
+</html>

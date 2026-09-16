@@ -70,7 +70,11 @@ function isPublicGuestRoute(pathname) {
          normalized === '/index' ||
          normalized === '/index.html' ||
          normalized === '/dashboard' ||
-         normalized === '/dashboard.html';
+         normalized === '/dashboard.html' ||
+         normalized === '/pricing' ||
+         normalized === '/pricing.html' ||
+         normalized === '/resources' ||
+         normalized === '/resources.html';
 }
 
 // Auth state listener
