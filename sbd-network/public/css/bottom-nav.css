@@ -7,6 +7,13 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Visual-viewport pin (set by /js/bottom-nav-viewport.js).
+   bottom: 0 is the no-JS fallback. JS sets inline top from visualViewport
+   (layout coordinates) so we do not stack dvh + bottom-gap + transform. */
+:root {
+  --bn-vv-bottom: 0px;
+}
+
 /* ── Bottom Nav ─────────────────────────────────────────────────── */
 .bottom-nav {
   position: fixed;
@@ -104,15 +111,16 @@
 
 /* DM page: dm-main and chatView are flex children of app-content — no bottom offset needed */
 
-/* FAB: sit above bottom nav */
-.bottom-nav-page .fab {
-  bottom: calc(76px + env(safe-area-inset-bottom));
+/* FAB: sit above bottom nav (tracks visual-viewport pin) */
+.bottom-nav-page .fab,
+.bottom-nav-page.board-page .fab {
+  bottom: calc(76px + env(safe-area-inset-bottom) + var(--bn-vv-bottom, 0px));
 }
 
-/* Toasts: sit above bottom nav */
+/* Toasts: sit above bottom nav (tracks visual-viewport pin) */
 .bottom-nav-page #appToast,
 .bottom-nav-page .app-toast {
-  bottom: calc(76px + env(safe-area-inset-bottom));
+  bottom: calc(76px + env(safe-area-inset-bottom) + var(--bn-vv-bottom, 0px));
 }
 
 /* ── Slim loading-progress bar (replaces full-screen spinner) ───── */
@@ -430,6 +438,9 @@
 }
 
 /* ── Page Transition Animations ─────────────────────────────────── */
+/* Animate body children, not body: a transform on <body> makes it the
+   containing block for position:fixed, so .bottom-nav un-sticks on every
+   navigation. Leave the nav on the viewport; slide the rest of the page. */
 @keyframes pageSlideIn {
   from { opacity: 0; transform: translateX(18px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -439,9 +450,13 @@
   to   { opacity: 0; transform: translateX(-18px); }
 }
 
-.page-enter     { animation: pageSlideIn  0.28s cubic-bezier(0.4, 0, 0.2, 1) both; }
-.page-exit      { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-.page-exit-back { animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.page-enter > *:not(.bottom-nav) {
+  animation: pageSlideIn  0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.page-exit > *:not(.bottom-nav),
+.page-exit-back > *:not(.bottom-nav) {
+  animation: pageSlideOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 /* ── MV House topbar: force badge between back arrow and title ───── */
 /* Uses order so it works regardless of which cached HTML version loads */
