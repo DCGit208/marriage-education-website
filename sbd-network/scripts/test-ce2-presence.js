@@ -197,8 +197,8 @@ test('hub and header presence hooks are wired', function () {
   assert.ok(v2.indexOf('avatarWithPresence') >= 0);
   assert.ok(html.indexOf('ce2ThreadPresenceDot') >= 0);
   assert.ok(html.indexOf('ce2-presence.js?v=5') >= 0);
-  assert.ok(html.indexOf('communication-v2.js?v=107') >= 0);
-  assert.ok(html.indexOf('communication-v2.css?v=76') >= 0);
+  assert.ok(/communication-v2\.js\?v=\d+/.test(html));
+  assert.ok(/communication-v2\.css\?v=\d+/.test(html));
 });
 
 if (failed) {

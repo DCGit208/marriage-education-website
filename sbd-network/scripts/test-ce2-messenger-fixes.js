@@ -123,6 +123,14 @@ test('raw formation-progress tierLevel does not collapse Elite floor', function 
   assert.strictEqual(floor.level, 2);
 });
 
+test('trialing Elite billing raises stale premium users.tier', function () {
+  const tier = gov.resolveMessagingTier({
+    tier: 'premium',
+    subscription: { status: 'trialing', tier: 'elite', endDate: futureEnd(14) },
+  });
+  assert.strictEqual(tier, 'elite');
+});
+
 test('permissions.js matches client Elite billing resolution', function () {
   const user = perms.userFromDoc('abc', {
     tier: 'premium',

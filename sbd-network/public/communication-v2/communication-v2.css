@@ -737,6 +737,71 @@ body.ce2-body-root.ce2-kb-active {
   letter-spacing: 0.02em;
 }
 
+.ce2-row.is-self[data-delivery="pending"] .ce2-msg-foot-meta,
+.ce2-row.is-self.is-pending .ce2-msg-foot-meta {
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.ce2-row.is-self[data-delivery="sent"] .ce2-msg-foot-meta {
+  letter-spacing: 0.03em;
+}
+
+.ce2-row.is-self[data-delivery="delivered"] .ce2-msg-foot-meta,
+.ce2-row.is-self[data-delivery="read"] .ce2-msg-foot-meta {
+  color: #c9b892;
+  opacity: 0.95;
+}
+
+.ce2-row.is-self[data-delivery="read"] .ce2-msg-foot-meta {
+  color: #e4d5b0;
+}
+
+.ce2-row.is-failed .ce2-bubble,
+.ce2-row.is-self.is-failed .ce2-bubble {
+  border: 1px dashed rgba(200, 90, 90, 0.4);
+}
+
+.ce2-row.is-failed .ce2-msg-foot-meta,
+.ce2-row.is-self[data-delivery="failed"] .ce2-msg-foot-meta {
+  color: #e8b4b0;
+  font-style: normal;
+  opacity: 1;
+}
+
+.ce2-send-failed-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ce2-send-retry {
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 184, 146, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8dcc4;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 719px) {
+  .ce2-msg-foot-meta {
+    font-size: 0.7rem;
+  }
+
+  .ce2-send-retry,
+  .ce2-voice-retry,
+  .ce2-voice-discard {
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+}
+
 /* Long-press / right-click message menu */
 .ce2-msg-menu {
   position: fixed;

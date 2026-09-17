@@ -247,6 +247,26 @@
     if (!st || !m) return items;
 
     if (m._pending && self) {
+      if (m._failed) {
+        items.push({
+          id: 'retry_send',
+          label: 'Retry send',
+          run: function () {
+            if (deps.retryFailedMessage) deps.retryFailedMessage(m.id);
+          },
+        });
+        items.push({
+          id: 'discard_send',
+          label: 'Discard',
+          danger: true,
+          run: function () {
+            if (deps.removeOptimisticMessage) deps.removeOptimisticMessage(m.id);
+            statusMsg('Message discarded');
+            if (deps.requestRender) deps.requestRender({ threadOnly: true });
+          },
+        });
+        return items;
+      }
       items.push({
         id: 'cancel_send',
         label: 'Cancel send',
@@ -980,7 +1000,14 @@
         ? (state().convMeta.lastRead || {})[ac.otherUid]
         : null;
     var status =
-      rc && self && !m._pending ? rc.deliveryStatus(m, state().me.uid, otherRead) : '';
+      rc && self
+        ? rc.deliveryStatus(
+            m,
+            state().me.uid,
+            otherRead,
+            m._failed ? { otherOnline: false } : undefined
+          )
+        : '';
     body.innerHTML =
       '<dl class="ce2-info-dl">' +
       '<dt>Sent</dt><dd>' +

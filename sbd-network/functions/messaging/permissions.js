@@ -57,8 +57,10 @@ function subscriptionEndMs(sub) {
 
 function isSubscriptionCurrentlyActive(sub, nowMs) {
   if (!sub) return false;
-  const status = String(sub.status || '').toLowerCase();
-  if (status !== 'active') return false;
+  let status = String(sub.status || '').toLowerCase();
+  if (status === 'canceled') status = 'cancelled';
+  if (status && status !== 'active' && status !== 'trialing') return false;
+  if (!status) return false;
   const end = subscriptionEndMs(sub);
   const now = typeof nowMs === 'number' ? nowMs : Date.now();
   if (end > 0 && end <= now) return false;
@@ -140,6 +142,12 @@ function validateMessageSend({ sender, conversationSecurity, contentTier, messag
   return { ok: true };
 }
 
+function shouldRaiseConversationSecurity(storedLevel, liveLevel) {
+  if (typeof liveLevel !== 'number' || liveLevel < 0) return false;
+  if (typeof storedLevel !== 'number' || storedLevel < 0) return true;
+  return liveLevel > storedLevel;
+}
+
 module.exports = {
   TIER_ORDER,
   TIER_LEVEL,
@@ -147,6 +155,7 @@ module.exports = {
   tierLevel,
   resolveMessagingTier,
   isSubscriptionCurrentlyActive,
+  shouldRaiseConversationSecurity,
   userFromDoc,
   calculateConversationSecurityLevel,
   canDiscoverUser,

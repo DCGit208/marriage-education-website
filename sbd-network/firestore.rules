@@ -56,7 +56,10 @@ service cloud.firestore {
     function ce2SubscriptionActive(ud) {
       return ud != null
         && ud.subscription is map
-        && ud.subscription.status == 'active'
+        && (
+          ud.subscription.status == 'active' ||
+          ud.subscription.status == 'trialing'
+        )
         && (
           !('endDate' in ud.subscription)
           || !(ud.subscription.endDate is timestamp)
