@@ -1,8 +1,21 @@
 /**
- * CE2 Phase 3 — board post share tokens
+ * CE2 Phase 3 — board post share tokens + messenger return links
  */
 (function (global) {
   'use strict';
+
+  var FROM_MESSENGER = 'ce2';
+  var MESSENGER_PATH = '/communication-v2/';
+  var ID_RE = /^[A-Za-z0-9._-]{1,200}$/;
+
+  function originBase() {
+    return global.location ? global.location.origin : 'https://sbd-network.web.app';
+  }
+
+  function safeId(value) {
+    var s = String(value || '').trim();
+    return ID_RE.test(s) ? s : '';
+  }
 
   function parseBoardPostUrl(raw) {
     if (!raw) return null;
@@ -10,7 +23,7 @@
     var matches = text.match(/https?:\/\/[^\s<>"']+|\/board(?:\.html)?\?[^\s<>"']+/gi) || [text];
     for (var i = 0; i < matches.length; i += 1) {
       try {
-        var u = new URL(matches[i].trim(), global.location ? global.location.origin : 'https://sbd-network.web.app');
+        var u = new URL(matches[i].trim(), originBase());
         var boardId = u.searchParams.get('boardId') || u.searchParams.get('id');
         var postId = u.searchParams.get('post');
         if (boardId && postId) return { boardId: boardId, postId: postId, url: u.href };
@@ -20,15 +33,84 @@
   }
 
   function shareHref(boardId, postId, token) {
-    var origin = global.location ? global.location.origin : 'https://sbd-network.web.app';
     return (
-      origin +
+      originBase() +
       '/board.html?boardId=' +
       encodeURIComponent(boardId) +
       '&post=' +
       encodeURIComponent(postId) +
       (token ? '&ce2token=' + encodeURIComponent(token) : '')
     );
+  }
+
+  /**
+   * Normalize conversation or query-param shapes into a messenger return payload.
+   * Stored share URLs stay clean; return params are added only at click/render time.
+   */
+  function normalizeMessengerReturn(info) {
+    if (!info) return null;
+    var conv = '';
+    var group = '';
+    if (info.type === 'group') {
+      group = safeId(info.id || info.group);
+    } else if (info.type === 'direct') {
+      conv = safeId(info.id || info.conv);
+    } else {
+      conv = safeId(info.conv);
+      group = safeId(info.group);
+      if (!conv && !group) conv = safeId(info.id);
+    }
+    if (info.from && info.from !== FROM_MESSENGER) return null;
+    return { from: FROM_MESSENGER, conv: conv, group: group };
+  }
+
+  function withMessengerReturn(href, info) {
+    if (!href) return href;
+    var ret = arguments.length < 2 ? { from: FROM_MESSENGER, conv: '', group: '' } : normalizeMessengerReturn(info);
+    if (!ret) return href;
+    try {
+      var u = new URL(String(href), originBase());
+      u.searchParams.set('from', FROM_MESSENGER);
+      if (ret.group) {
+        u.searchParams.set('group', ret.group);
+        u.searchParams.delete('conv');
+      } else if (ret.conv) {
+        u.searchParams.set('conv', ret.conv);
+        u.searchParams.delete('group');
+      } else {
+        u.searchParams.delete('conv');
+        u.searchParams.delete('group');
+      }
+      return u.href;
+    } catch (_) {
+      return href;
+    }
+  }
+
+  function messengerReturnHref(info) {
+    var ret = normalizeMessengerReturn(info) || { from: FROM_MESSENGER, conv: '', group: '' };
+    if (ret.group) return MESSENGER_PATH + '?group=' + encodeURIComponent(ret.group);
+    if (ret.conv) return MESSENGER_PATH + '?conv=' + encodeURIComponent(ret.conv);
+    return MESSENGER_PATH;
+  }
+
+  function parseMessengerReturnFromSearch(search) {
+    var params;
+    try {
+      if (search && typeof search.get === 'function') {
+        params = search;
+      } else {
+        params = new URLSearchParams(search || '');
+      }
+    } catch (_) {
+      return null;
+    }
+    if (params.get('from') !== FROM_MESSENGER) return null;
+    return {
+      from: FROM_MESSENGER,
+      conv: safeId(params.get('conv')),
+      group: safeId(params.get('group')),
+    };
   }
 
   function newTokenId() {
@@ -57,10 +139,10 @@
     return token;
   }
 
-  function renderBoardShareHtml(m, escapeHtml) {
+  function renderBoardShareHtml(m, escapeHtml, returnInfo) {
     var bs = m.boardShare;
     if (!bs || !bs.boardId || !bs.postId) return '';
-    var href = bs.url || shareHref(bs.boardId, bs.postId, bs.token);
+    var href = withMessengerReturn(bs.url || shareHref(bs.boardId, bs.postId, bs.token), returnInfo || { from: FROM_MESSENGER });
     var title = escapeHtml(bs.title || 'Board post');
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
     var note = bs.note ? escapeHtml(String(bs.note).slice(0, 240)) : '';
@@ -94,7 +176,12 @@
     parseBoardPostUrl: parseBoardPostUrl,
     mintBoardShareToken: mintBoardShareToken,
     shareHref: shareHref,
+    withMessengerReturn: withMessengerReturn,
+    messengerReturnHref: messengerReturnHref,
+    parseMessengerReturnFromSearch: parseMessengerReturnFromSearch,
+    normalizeMessengerReturn: normalizeMessengerReturn,
     renderBoardShareHtml: renderBoardShareHtml,
+    FROM_MESSENGER: FROM_MESSENGER,
     VERSION: 2,
   };
 })(typeof window !== 'undefined' ? window : global);

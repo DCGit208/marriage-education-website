@@ -2352,7 +2352,10 @@
       bubble.insertAdjacentHTML('beforeend', rm.renderReplyQuoteHtml(m.replyTo, escapeHtml));
     }
     if (m.messageType === 'board_share' && m.boardShare && sh) {
-      bubble.insertAdjacentHTML('beforeend', sh.renderBoardShareHtml(m, escapeHtml));
+      bubble.insertAdjacentHTML(
+        'beforeend',
+        sh.renderBoardShareHtml(m, escapeHtml, CommunicationState.activeConversation)
+      );
       return;
     }
     if (m.imageUrl) {

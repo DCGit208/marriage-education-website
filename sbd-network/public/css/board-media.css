@@ -23,6 +23,52 @@
   line-height: 1.4;
 }
 
+/* ── Return to messenger (CE2 board-share origin) ─────────────── */
+.messenger-return-bar {
+  display: none;
+  position: fixed;
+  top: calc(60px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 999;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 16px;
+  background: rgba(0, 24, 32, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 188, 212, 0.35);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0, 188, 212, 0.25);
+}
+.messenger-return-bar:hover,
+.messenger-return-bar:focus-visible {
+  background: rgba(0, 188, 212, 0.16);
+  color: #fff;
+}
+.messenger-return-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--accent-primary, #00bcd4);
+  flex-shrink: 0;
+}
+.board-page.from-messenger .messenger-return-bar:not([hidden]) {
+  display: flex;
+}
+.board-page.from-messenger.has-header {
+  padding-top: calc(108px + env(safe-area-inset-top));
+}
+.board-page.from-messenger .pinned-banner {
+  top: calc(108px + env(safe-area-inset-top));
+}
+
 /* ── Pinned banner ─────────────────────────────────────────────── */
 .pinned-banner {
   position: sticky;
