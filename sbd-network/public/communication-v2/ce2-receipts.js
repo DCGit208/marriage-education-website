@@ -15,6 +15,14 @@
 
   function unreadCount(meta, uid) {
     if (!meta || !uid) return 0;
+    if (meta.lastSenderId && meta.lastSenderId === uid) return 0;
+    var lastRead = (meta.lastRead || {})[uid];
+    var lastAt = meta.lastMessageAt;
+    if (lastRead && lastAt) {
+      var readSec = tsSeconds(lastRead);
+      var msgSec = tsSeconds(lastAt);
+      if (readSec > 0 && msgSec > 0 && readSec >= msgSec) return 0;
+    }
     var map = meta.unreadCount || {};
     var n = map[uid];
     return typeof n === 'number' && n > 0 ? n : 0;
@@ -101,6 +109,6 @@
     deliveryStatus: deliveryStatus,
     statusLabel: statusLabel,
     tsSeconds: tsSeconds,
-    VERSION: 3,
+    VERSION: 4,
   };
 })(typeof window !== 'undefined' ? window : global);

@@ -209,6 +209,19 @@ service cloud.firestore {
           after[request.auth.uid] is timestamp
         );
     }
+    function ce2InboxPrefValid() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['muted', 'pinned', 'sortAt', 'updatedAt', 'threadType', 'threadId'])
+        && d.muted is bool
+        && d.pinned is bool
+        && d.threadType in ['direct', 'group']
+        && d.threadId is string
+        && d.threadId.size() > 0
+        && d.threadId.size() < 200
+        && d.updatedAt is timestamp
+        && d.sortAt is number
+        && d.sortAt >= 0;
+    }
     function ce2TypingKeysOwnOnlyIfPresent() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['typing']) ||
         ce2TypingOwnKeyOnly();
@@ -1271,6 +1284,15 @@ service cloud.firestore {
 
     match /users/{userId}/ce2_saved/{saveId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Per-user inbox mute/pin — never written onto the shared conversation doc.
+    match /users/{userId}/ce2_inbox/{prefId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null &&
+        request.auth.uid == userId &&
+        ce2InboxPrefValid();
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     match /users/{userId}/ce2_blocks/{blockedId} {
