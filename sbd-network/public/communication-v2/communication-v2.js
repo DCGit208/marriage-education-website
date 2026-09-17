@@ -710,9 +710,10 @@
       },
       isInteractiveMsgTarget: function (node) {
         if (!node || !node.closest) return false;
-        if (node.closest('.ce2-media-tap')) return false;
+        // Photo thumbs and OG/board-share thumbs must still long-press to Reply.
+        if (node.closest('.ce2-media-tap, .ce2-board-share-thumb')) return false;
         return !!node.closest(
-          'a, button:not(.ce2-media-tap), audio, video, input, textarea, select, label'
+          'a, button:not(.ce2-media-tap):not(.ce2-board-share-thumb), audio, video, input, textarea, select, label'
         );
       },
     });
@@ -4258,6 +4259,23 @@
         e.preventDefault();
         e.stopPropagation();
         scrollToReplyMessage(quoteBtn.getAttribute('data-reply-to-id'));
+        return;
+      }
+      var shareThumb = e.target.closest('.ce2-board-share-thumb');
+      if (shareThumb) {
+        e.preventDefault();
+        e.stopPropagation();
+        var shareRow = shareThumb.closest('.ce2-row');
+        var shareId = shareRow && shareRow.dataset.messageId;
+        var shareMsg = shareId
+          ? (CommunicationState.messages || []).find(function (x) {
+              return x.id === shareId;
+            }) ||
+            (CommunicationState.lastServerMessages || []).find(function (x) {
+              return x.id === shareId;
+            })
+          : null;
+        if (shareMsg) setReply(shareMsg);
         return;
       }
       var retryBtn = e.target.closest('.ce2-voice-retry');
