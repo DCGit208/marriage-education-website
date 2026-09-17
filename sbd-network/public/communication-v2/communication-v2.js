@@ -37,6 +37,10 @@
   var convMetaUnsub = null;
   var typingInputUnsub = null;
   var messengerNotifUnsub = null;
+  var presenceWatchSet = null;
+  var presenceHeartbeatStop = null;
+  var presenceTickTimer = null;
+  var MAX_PRESENCE_WATCHES = 36;
   var messengerNotifFirst = true;
   var ce2BootedUid = null;
   var ce2UiWired = false;
@@ -95,6 +99,7 @@
     shareDraft: null,
     _renderedMsgIds: null,
     _metaLastMessageId: null,
+    presenceByUid: {},
   };
 
   function threadComposerKey(ac) {
@@ -351,6 +356,176 @@
 
   function presence() {
     return typeof window !== 'undefined' ? window.Ce2Presence : null;
+  }
+
+  function ingestPresenceFromUser(uid, data) {
+    var pr = presence();
+    if (!pr || !uid || !pr.recordFromUserData) return;
+    CommunicationState.presenceByUid[uid] = pr.recordFromUserData(data || {});
+  }
+
+  function collectPresenceUids() {
+    var ordered = [];
+    var seen = {};
+    var me = CommunicationState.me;
+    function add(uid) {
+      if (!uid || seen[uid] || (me && uid === me.uid)) return;
+      seen[uid] = true;
+      ordered.push(uid);
+    }
+    var ac = CommunicationState.activeConversation;
+    if (ac && ac.type === 'direct') add(ac.otherUid);
+    if (ac && ac.type === 'group') {
+      (CommunicationState.memberIds || []).forEach(add);
+    }
+    (CommunicationState.threads || []).forEach(function (t) {
+      add(t.otherUid);
+    });
+    if (CommunicationState.mobileHubPanel === 'discover') {
+      (CommunicationState.visibleUsers || []).forEach(function (x) {
+        add(x.uid);
+      });
+    }
+    return ordered.slice(0, MAX_PRESENCE_WATCHES);
+  }
+
+  function countOnlineUids(uids) {
+    var n = 0;
+    (uids || []).forEach(function (uid) {
+      var rec = CommunicationState.presenceByUid[uid];
+      if (rec && rec.state === 'online') n += 1;
+    });
+    return n;
+  }
+
+  function presenceHeaderText(ac) {
+    if (!ac || ac.needsJoin || showDebugUi()) return null;
+    var pr = presence();
+    if (!pr) return null;
+    if (ac.type === 'direct' && ac.otherUid) {
+      var rec = CommunicationState.presenceByUid[ac.otherUid];
+      if (!rec) return null;
+      return pr.formatLabel(rec) || null;
+    }
+    if (ac.type === 'group') {
+      var n = countOnlineUids(CommunicationState.memberIds);
+      if (n === 1) return '1 online';
+      if (n > 1) return n + ' online';
+    }
+    return null;
+  }
+
+  function applyPresenceUi() {
+    var pr = presence();
+    if (!pr || !pr.applyDot) return;
+    document.querySelectorAll('[data-presence-uid]').forEach(function (wrap) {
+      var uid = wrap.getAttribute('data-presence-uid');
+      var rec = uid ? CommunicationState.presenceByUid[uid] : null;
+      pr.applyDot(wrap.querySelector('.ce2-presence-dot'), rec);
+    });
+    applyPresenceHeader();
+  }
+
+  function applyPresenceHeader() {
+    var pr = presence();
+    var ac = CommunicationState.activeConversation;
+    var meta = el('ce2ThreadMeta');
+    var dot = el('ce2ThreadPresenceDot');
+    var threadOpen = !!(ac && !ac.needsJoin);
+    var rec =
+      threadOpen && ac.type === 'direct' && ac.otherUid
+        ? CommunicationState.presenceByUid[ac.otherUid]
+        : null;
+    var groupOnline =
+      threadOpen && ac.type === 'group' ? countOnlineUids(CommunicationState.memberIds) : 0;
+    if (dot && pr && pr.applyDot) {
+      if (rec && (rec.state === 'online' || rec.state === 'away')) {
+        pr.applyDot(dot, rec);
+      } else if (groupOnline > 0) {
+        pr.applyDot(dot, { state: 'online', label: groupOnline + ' online' });
+      } else {
+        pr.applyDot(dot, null);
+      }
+    } else if (dot) {
+      dot.hidden = true;
+    }
+    if (!meta) return;
+    var presenceText = presenceHeaderText(ac);
+    meta.classList.toggle('ce2-thread-meta--presence', !!presenceText);
+    meta.classList.toggle(
+      'is-online',
+      !!(presenceText && rec && rec.state === 'online') || groupOnline > 0
+    );
+    meta.classList.toggle('is-away', !!(presenceText && rec && rec.state === 'away'));
+    if (presenceText) meta.textContent = presenceText;
+    else if (ac) meta.textContent = formatThreadMeta(ac);
+  }
+
+  function onPresenceRecord(uid, rec) {
+    if (!uid || !rec) return;
+    CommunicationState.presenceByUid[uid] = rec;
+    applyPresenceUi();
+  }
+
+  function syncPresenceWatches() {
+    var pr = presence();
+    if (!pr || !pr.createWatchSet || typeof db === 'undefined') return;
+    if (!presenceWatchSet) {
+      presenceWatchSet = pr.createWatchSet(db, onPresenceRecord);
+    }
+    presenceWatchSet.sync(collectPresenceUids());
+  }
+
+  function startPresenceLayer(uid) {
+    var pr = presence();
+    if (!pr || !uid || typeof db === 'undefined') return;
+    if (presenceHeartbeatStop) {
+      try {
+        presenceHeartbeatStop();
+      } catch (_) {}
+      presenceHeartbeatStop = null;
+    }
+    if (pr.startHeartbeat) {
+      presenceHeartbeatStop = pr.startHeartbeat(db, uid);
+    }
+    if (presenceTickTimer) clearInterval(presenceTickTimer);
+    presenceTickTimer = setInterval(function () {
+      if (!pr.refreshRecords) return;
+      if (pr.refreshRecords(CommunicationState.presenceByUid)) applyPresenceUi();
+    }, 15000);
+    syncPresenceWatches();
+  }
+
+  function stopPresenceLayer() {
+    if (presenceHeartbeatStop) {
+      try {
+        presenceHeartbeatStop();
+      } catch (_) {}
+      presenceHeartbeatStop = null;
+    }
+    if (presenceWatchSet) {
+      presenceWatchSet.stop();
+      presenceWatchSet = null;
+    }
+    if (presenceTickTimer) {
+      clearInterval(presenceTickTimer);
+      presenceTickTimer = null;
+    }
+    CommunicationState.presenceByUid = {};
+  }
+
+  function avatarWithPresence(label, presenceUid) {
+    var initial = escapeHtml(personInitial(label));
+    if (!presenceUid) {
+      return '<span class="ce2-avatar">' + initial + '</span>';
+    }
+    return (
+      '<span class="ce2-avatar-wrap" data-presence-uid="' +
+      escapeHtml(presenceUid) +
+      '"><span class="ce2-avatar">' +
+      initial +
+      '</span><span class="ce2-presence-dot" hidden aria-hidden="true"></span></span>'
+    );
   }
 
   function receipts() {
@@ -1171,6 +1346,7 @@
     if (hub === 'discover') {
       ensureDiscoveryLoaded()
         .then(function () {
+          syncPresenceWatches();
           render();
         })
         .catch(function (err) {
@@ -1466,9 +1642,9 @@
             gSub = 'requires ' + g.requiredTier + (g.mentorLed ? ' · mentor-led' : '');
           }
           li.innerHTML =
-            '<div class="ce2-li-row"><span class="ce2-avatar">' +
-            escapeHtml(personInitial(g.name)) +
-            '</span><span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
+            '<div class="ce2-li-row">' +
+            avatarWithPresence(g.name, '') +
+            '<span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
             escapeHtml(g.name) +
             '</div>' +
             (g.unread
@@ -1505,9 +1681,9 @@
               ? ' is-selected'
               : '');
           li.innerHTML =
-            '<div class="ce2-li-row"><span class="ce2-avatar">' +
-            escapeHtml(personInitial(t.label)) +
-            '</span><span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
+            '<div class="ce2-li-row">' +
+            avatarWithPresence(t.label, t.otherUid || '') +
+            '<span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
             escapeHtml(t.label) +
             '</div>' +
             (t.unread
@@ -1548,9 +1724,9 @@
             'ce2-li' +
             (CommunicationState.selectedDiscoveryUid === x.uid ? ' is-selected' : '');
           li.innerHTML =
-            '<div class="ce2-li-row"><span class="ce2-avatar">' +
-            escapeHtml(personInitial(x.name)) +
-            '</span><span class="ce2-li-body"><div class="ce2-li-name">' +
+            '<div class="ce2-li-row">' +
+            avatarWithPresence(x.name, x.uid || '') +
+            '<span class="ce2-li-body"><div class="ce2-li-name">' +
             escapeHtml(x.name) +
             '</div><div class="ce2-li-meta">' +
             escapeHtml(x.tier) +
@@ -1669,7 +1845,11 @@
         : CommunicationState.loading
           ? 'Loading…'
           : CommunicationState.error || CommunicationState.statusMessage || '';
+      if (!ac) {
+        meta.classList.remove('ce2-thread-meta--presence', 'is-online', 'is-away');
+      }
     }
+    applyPresenceUi();
 
     var voiceBtn = el('ce2VoiceBtn');
     if (voiceBtn) {
@@ -2295,6 +2475,7 @@
     renderThreadChrome();
     renderMessagePanel();
     syncCe2FocusableInputs();
+    applyPresenceUi();
   }
 
 
@@ -2933,6 +3114,7 @@
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
     syncCe2ThreadUrl(CommunicationState.activeConversation);
+    syncPresenceWatches();
     render();
   }
 
@@ -3004,6 +3186,7 @@
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
     syncCe2ThreadUrl(CommunicationState.activeConversation);
+    syncPresenceWatches();
     render();
   }
 
@@ -3114,6 +3297,7 @@
           .get()
           .then(function (udoc) {
             if (udoc.exists) userMap[other] = normalizeCe2User(other, udoc.data());
+            ingestPresenceFromUser(other, udoc.exists ? udoc.data() : {});
           })
           .catch(function () {});
       })
@@ -3141,6 +3325,7 @@
         unread: unread,
       });
     }
+    syncPresenceWatches();
   }
 
   async function loadSavedItems(uid) {
@@ -3325,6 +3510,11 @@
     });
     } catch (err) {
       console.warn('loadDiscovery', err);
+    } finally {
+      (CommunicationState.visibleUsers || []).forEach(function (nu) {
+        if (nu && nu.uid) ingestPresenceFromUser(nu.uid, nu.raw || {});
+      });
+      syncPresenceWatches();
     }
   }
 
@@ -5429,6 +5619,19 @@
     ingestIncomingNotif: function (notif) {
       ingestIncomingNotif(notif);
     },
+    /** QA: paint presence without a second session. stateOrMs = 'online'|'away'|'recent'|epochMs */
+    simulatePresence: function (uid, stateOrMs) {
+      var pr = presence();
+      if (!pr || !uid) return null;
+      var ts = Date.now();
+      if (stateOrMs === 'away') ts -= 4 * 60 * 1000;
+      else if (stateOrMs === 'recent' || stateOrMs === 'offline') ts -= 20 * 60 * 1000;
+      else if (typeof stateOrMs === 'number') ts = stateOrMs;
+      var rec = pr.statusFromTs(ts);
+      CommunicationState.presenceByUid[uid] = rec;
+      applyPresenceUi();
+      return rec;
+    },
   };
 
   async function boot(user) {
@@ -5460,6 +5663,7 @@
     CommunicationState.me = normalizeCe2User(user.uid, data);
     CommunicationState.loading = false;
     render();
+    startPresenceLayer(user.uid);
 
     if (isMessagingSuspended()) {
       CommunicationState.statusMessage =
@@ -5547,6 +5751,7 @@
     auth.onAuthStateChanged(function (user) {
       if (!user) {
         ce2BootedUid = null;
+        stopPresenceLayer();
         window.location.href =
           '/auth?next=' + encodeURIComponent(window.location.pathname + window.location.search);
         return;
@@ -5587,4 +5792,11 @@
     console.log('[CE2] ce2-audio-waveform.js Phase 1D');
   }
   console.log('[CE2] audio rollback=ce2-audio-stable-1d');
+  if (presence()) {
+    console.log(
+      '[CE2] presence v' +
+        presence().VERSION +
+        ' (online/last-seen · users.lastActive)'
+    );
+  }
 })();

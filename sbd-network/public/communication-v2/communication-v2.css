@@ -572,11 +572,22 @@ body.ce2-body-root.ce2-kb-active {
   min-width: 0;
 }
 
+.ce2-thread-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .ce2-thread-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ce2-thread-meta {
@@ -584,6 +595,19 @@ body.ce2-body-root.ce2-kb-active {
   font-size: 0.68rem;
   line-height: 1.3;
   opacity: var(--ce2-meta-opacity);
+}
+
+.ce2-thread-meta.ce2-thread-meta--presence {
+  opacity: 0.78;
+  color: #c9b892;
+}
+
+.ce2-thread-meta.ce2-thread-meta--presence.is-online {
+  color: #b7d8b4;
+}
+
+.ce2-thread-meta.ce2-thread-meta--presence.is-away {
+  color: #d2c4a4;
 }
 
 .ce2-thread-search-toggle {
@@ -1139,6 +1163,18 @@ body.ce2-msg-menu-open {
   min-width: 0;
 }
 
+.ce2-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.ce2-avatar-wrap .ce2-avatar {
+  width: 100%;
+  height: 100%;
+}
+
 .ce2-avatar {
   flex-shrink: 0;
   width: 36px;
@@ -1152,6 +1188,60 @@ body.ce2-msg-menu-open {
   background: rgba(201, 184, 146, 0.2);
   color: #e8dcc4;
   border: 1px solid rgba(201, 184, 146, 0.35);
+}
+
+.ce2-presence-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #08080a;
+  background: #6f9d6c;
+  box-shadow: 0 0 0 1px rgba(8, 8, 10, 0.4);
+  pointer-events: none;
+}
+
+.ce2-presence-dot[hidden] {
+  display: none !important;
+}
+
+.ce2-presence-dot[data-state='online'] {
+  background: #7dba7a;
+  animation: ce2-presence-breathe 2.8s ease-in-out infinite;
+}
+
+.ce2-presence-dot[data-state='away'] {
+  background: #c9b892;
+  opacity: 0.72;
+}
+
+.ce2-presence-dot--header {
+  position: static;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-width: 0;
+  box-shadow: none;
+}
+
+@keyframes ce2-presence-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ce2-presence-dot[data-state='online'] {
+    animation: none;
+  }
 }
 
 .ce2-select {
