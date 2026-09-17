@@ -51,10 +51,31 @@ service cloud.firestore {
         : ud != null && ud.tierLevel is int ? ud.tierLevel
         : ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation');
     }
-    // DM open policy uses formation tier string only (tierLevel is progress, not messaging rank)
+    // DM / group / classification policy uses users.tier plus active billing subscription.
+    // Paid Elite is often only on subscription.tier; users.tierLevel is formation progress, not rank.
+    function ce2SubscriptionActive(ud) {
+      return ud != null
+        && ud.subscription is map
+        && ud.subscription.status == 'active'
+        && (
+          !('endDate' in ud.subscription)
+          || !(ud.subscription.endDate is timestamp)
+          || ud.subscription.endDate > request.time
+        );
+    }
+    function ce2BillingRank(ud) {
+      return ce2SubscriptionActive(ud) && ud.subscription.tier is string
+        ? ce2TierRankFromString(ud.subscription.tier)
+        : 0;
+    }
     function ce2PolicyTierRank(ud) {
       return ud != null && ce2IsAdmin(ud) ? 6
-        : ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation');
+        : (
+          ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation')
+            >= ce2BillingRank(ud)
+          ? ce2TierRankFromString(ud != null && ud.tier is string ? ud.tier : 'foundation')
+          : ce2BillingRank(ud)
+        );
     }
     function ce2RequiredTierRank(t) {
       return ce2TierRankFromString(t);

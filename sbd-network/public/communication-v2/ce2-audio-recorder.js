@@ -108,12 +108,63 @@
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
+  function containerMime(mime) {
+    var t = String(mime || '')
+      .toLowerCase()
+      .split(';')[0]
+      .trim();
+    if (t.indexOf('audio/') === 0) return t;
+    if (t.indexOf('video/webm') === 0) return 'audio/webm';
+    if (t.indexOf('mp4') >= 0 || t.indexOf('m4a') >= 0) return 'audio/mp4';
+    return t || 'audio/webm';
+  }
+
   function pickMime() {
     if (typeof MediaRecorder === 'undefined') return '';
-    if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
-    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
-    if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+    if (!MediaRecorder.isTypeSupported) return '';
+    var apple = isAppleCapture();
+    var candidates = apple
+      ? ['audio/mp4', 'audio/mp4;codecs=mp4a.40.2', 'audio/webm;codecs=opus', 'audio/webm']
+      : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+    for (var i = 0; i < candidates.length; i++) {
+      try {
+        if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
+      } catch (_) {}
+    }
     return '';
+  }
+
+  function isAppleCapture() {
+    try {
+      var nav = global.navigator || {};
+      var ua = String(nav.userAgent || '');
+      if (/iP(ad|hone|od)/i.test(ua)) return true;
+      if (/Macintosh/i.test(ua) && nav.maxTouchPoints > 1) return true;
+      if (/Safari/i.test(ua) && !/Chrome|Chromium|Android|Edg|OPR|Firefox/i.test(ua)) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  function microphoneErrorMessage(err) {
+    var name = (err && err.name) || '';
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+      return 'Microphone access was blocked. Allow the mic for this site and try again.';
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      return 'No microphone was found on this device.';
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+      return 'The microphone is in use by another app. Close it and try again.';
+    }
+    if (name === 'SecurityError') {
+      return 'Voice notes need a secure (HTTPS) connection.';
+    }
+    if (name === 'NotSupportedError') {
+      return 'Voice notes are not supported in this browser.';
+    }
+    return (err && err.message) || 'Voice recording failed.';
   }
 
   function stopTimer() {
@@ -241,9 +292,14 @@
     }
 
     s.uploadDispatched = true;
-    var mime = s.mime || 'audio/webm';
+    var mime = containerMime(s.mime || 'audio/webm');
     var blob = new Blob(s.chunks, { type: mime });
     s.chunks = [];
+    if (!blob.size) {
+      surfaceHint('Recording was empty. Try again.');
+      resetSession();
+      return;
+    }
     var ext = mime.indexOf('mp4') >= 0 ? 'm4a' : 'webm';
     var file = new File([blob], 'voice-' + Date.now() + '.' + ext, { type: mime });
 
@@ -281,7 +337,20 @@
 
   function startRecorder(stream) {
     var mime = pickMime();
-    var recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    var recorder;
+    try {
+      recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    } catch (_) {
+      try {
+        recorder = new MediaRecorder(stream);
+        mime = recorder.mimeType || '';
+      } catch (err) {
+        cleanupStream(stream);
+        resetSession();
+        if (deps.onError) deps.onError(err);
+        return;
+      }
+    }
     var recordedMime = mime || recorder.mimeType || 'audio/webm';
 
     session.stream = stream;
@@ -291,6 +360,7 @@
     session.waveform = startLiveWaveform(stream);
 
     recorder.ondataavailable = function (e) {
+      if (!session || !session.chunks) return;
       if (e.data && e.data.size) session.chunks.push(e.data);
     };
 
@@ -356,7 +426,7 @@
       startX: clientX,
       startY: clientY,
       cancelArmed: false,
-      locked: false,
+      locked: !!(opts && opts.touchLock),
       touchLock: !!(opts && opts.touchLock),
       finalized: false,
       uploadDispatched: false,
@@ -367,6 +437,7 @@
 
     var st = state();
     if (st) st.error = null;
+    setRecordingUi(true, false, !!session.locked);
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
@@ -384,7 +455,7 @@
       })
       .catch(function (err) {
         resetSession();
-        if (deps.onError) deps.onError(err);
+        if (deps.onError) deps.onError(new Error(microphoneErrorMessage(err)));
       });
   }
 
@@ -413,7 +484,7 @@
 
   function onPointerEnd(e, send) {
     if (!session || session.finalized || e.pointerId !== session.pointerId) return;
-    if (session.locked) return;
+    if (session.locked || session.touchLock) return;
     try {
       if (e.currentTarget && e.currentTarget.releasePointerCapture) {
         e.currentTarget.releasePointerCapture(e.pointerId);
@@ -432,21 +503,24 @@
     }
 
     function shouldKeepRecordingAfterRelease() {
-      return !!(session && session.touchLock);
+      return !!(session && (session.touchLock || session.locked));
     }
 
     function pressEnd(pointerId, send) {
       if (!session || session.finalized || pointerId !== session.pointerId) return;
-      if (session.locked) return;
+      if (session.locked || session.touchLock) return;
       try {
         if (voiceBtn.releasePointerCapture) voiceBtn.releasePointerCapture(pointerId);
       } catch (_) {}
       finishStop(send);
     }
 
+    var hasPointerEvents = typeof global.PointerEvent === 'function';
+
     voiceBtn.addEventListener('pointerdown', function (e) {
       if (!isPrimaryPress(e)) return;
-      var touchLock = e.pointerType === 'touch';
+      if (e.cancelable) e.preventDefault();
+      var touchLock = e.pointerType === 'touch' || e.pointerType === 'pen';
       if (!touchLock) {
         try {
           voiceBtn.setPointerCapture(e.pointerId);
@@ -466,46 +540,51 @@
     });
 
     voiceBtn.addEventListener('pointercancel', function (e) {
+      if (session && (session.locked || session.touchLock)) return;
       if (session) session.cancelArmed = true;
       onPointerEnd(e, false);
     });
 
-    voiceBtn.addEventListener(
-      'touchstart',
-      function (e) {
-        if (!e.touches || !e.touches.length) return;
+    if (!hasPointerEvents) {
+      voiceBtn.addEventListener(
+        'touchstart',
+        function (e) {
+          if (!e.touches || !e.touches.length) return;
+          if (e.cancelable) e.preventDefault();
+          var t = e.touches[0];
+          pressStart(t.identifier, t.clientX, t.clientY, { touchLock: true });
+        },
+        { passive: false }
+      );
+
+      voiceBtn.addEventListener('touchmove', function (e) {
+        if (!session || session.finalized || !e.touches || !e.touches.length) return;
         var t = e.touches[0];
-        pressStart(t.identifier, t.clientX, t.clientY, { touchLock: true });
-      },
-      { passive: true }
-    );
-
-    voiceBtn.addEventListener('touchmove', function (e) {
-      if (!session || session.finalized || !e.touches || !e.touches.length) return;
-      var t = e.touches[0];
-      if (t.identifier !== session.pointerId) return;
-      onPointerMove({
-        pointerId: t.identifier,
-        clientX: t.clientX,
-        clientY: t.clientY,
+        if (t.identifier !== session.pointerId) return;
+        onPointerMove({
+          pointerId: t.identifier,
+          clientX: t.clientX,
+          clientY: t.clientY,
+        });
       });
-    });
 
-    voiceBtn.addEventListener('touchend', function (e) {
-      if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
-      var t = e.changedTouches[0];
-      if (t.identifier !== session.pointerId) return;
-      if (shouldKeepRecordingAfterRelease()) return;
-      pressEnd(t.identifier, !session.cancelArmed);
-    });
+      voiceBtn.addEventListener('touchend', function (e) {
+        if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
+        var t = e.changedTouches[0];
+        if (t.identifier !== session.pointerId) return;
+        if (shouldKeepRecordingAfterRelease()) return;
+        pressEnd(t.identifier, !session.cancelArmed);
+      });
 
-    voiceBtn.addEventListener('touchcancel', function (e) {
-      if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
-      var t = e.changedTouches[0];
-      if (t.identifier !== session.pointerId) return;
-      session.cancelArmed = true;
-      pressEnd(t.identifier, false);
-    });
+      voiceBtn.addEventListener('touchcancel', function (e) {
+        if (!session || session.finalized || !e.changedTouches || !e.changedTouches.length) return;
+        var t = e.changedTouches[0];
+        if (t.identifier !== session.pointerId) return;
+        if (session.locked || session.touchLock) return;
+        session.cancelArmed = true;
+        pressEnd(t.identifier, false);
+      });
+    }
 
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', function (e) {
@@ -531,15 +610,20 @@
 
   function bindVisibility() {
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden' && session && !session.finalized) {
-        session.cancelArmed = true;
-        finishStop(false);
-      }
+      if (document.visibilityState !== 'hidden' || !session || session.finalized) return;
+      // Mic permission sheets / iOS PWA chrome hide the document before MediaRecorder
+      // starts. Cancelling here made the recorder look dead on first tap.
+      if (!session.recorder) return;
+      finishStop(true);
     });
   }
 
   global.Ce2AudioRecorder = {
     LOCK_TO_RECORD: LOCK_TO_RECORD,
+    pickMime: pickMime,
+    containerMime: containerMime,
+    isAppleCapture: isAppleCapture,
+    microphoneErrorMessage: microphoneErrorMessage,
     init: function (d) {
       deps = d || {};
       if (bound) return;
@@ -550,4 +634,4 @@
     reset: resetSession,
     isLockEnabled: isLockEnabled,
   };
-})(typeof window !== 'undefined' ? window : global);
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

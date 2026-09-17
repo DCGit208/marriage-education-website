@@ -51,13 +51,65 @@
     return TIER_RANK[normalizeTier(tier)] || 0;
   }
 
+  function isBillingTier(tier) {
+    var t = normalizeTier(tier);
+    return t === 'foundation' || t === 'premium' || t === 'elite';
+  }
+
+  function subscriptionEndMs(sub) {
+    if (!sub || !sub.endDate) return 0;
+    var end = sub.endDate;
+    try {
+      if (typeof end.toMillis === 'function') return end.toMillis();
+      if (typeof end.toDate === 'function') return end.toDate().getTime();
+    } catch (_) {}
+    if (typeof end.seconds === 'number') return end.seconds * 1000;
+    if (typeof end._seconds === 'number') return end._seconds * 1000;
+    if (end instanceof Date) return end.getTime();
+    var n = Number(end);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function isSubscriptionCurrentlyActive(sub, nowMs) {
+    if (!sub) return false;
+    var status = String(sub.status || '').toLowerCase();
+    if (status && status !== 'active') return false;
+    if (!status) return false;
+    var end = subscriptionEndMs(sub);
+    var now = typeof nowMs === 'number' ? nowMs : Date.now();
+    if (end > 0 && end <= now) return false;
+    return true;
+  }
+
+  /**
+   * Messaging rank for a user doc.
+   * Paid Elite lives on subscription.tier for many members; users.tier can lag.
+   * Ambassador / senior_ambassador / rd ranks on users.tier stay higher than billing.
+   * Do not treat raw users.tierLevel as messaging rank (that field is formation progress).
+   */
+  function resolveMessagingTier(userData, nowMs) {
+    var d = userData || {};
+    var docTier = normalizeTier(d.tier);
+    var sub = d.subscription || null;
+    if (!isSubscriptionCurrentlyActive(sub, nowMs)) return docTier;
+    var subTier = normalizeTier(sub.tier);
+    if (!isBillingTier(subTier)) return docTier;
+    return tierRank(subTier) > tierRank(docTier) ? subTier : docTier;
+  }
+
   /** Formation tier only — admin role does not raise conversation floor. */
   function formationRankFromParticipant(p) {
     if (!p) return 0;
-    if (typeof p.tierLevel === 'number' && !Number.isNaN(p.tierLevel)) {
+    if (p.tier) return tierRank(p.tier);
+    if (
+      typeof p.tierLevel === 'number' &&
+      !Number.isNaN(p.tierLevel) &&
+      p.tierLevel >= 0 &&
+      p.tierLevel <= 5
+    ) {
       return p.tierLevel;
     }
-    return tierRank(p.tier);
+    return 0;
   }
 
   function tierRankFromParticipant(p) {
@@ -149,7 +201,10 @@
     setEnabled: setEnabled,
     normalizeTier: normalizeTier,
     tierRank: tierRank,
+    resolveMessagingTier: resolveMessagingTier,
+    isSubscriptionCurrentlyActive: isSubscriptionCurrentlyActive,
     tierRankFromParticipant: tierRankFromParticipant,
+    formationRankFromParticipant: formationRankFromParticipant,
     tierLabelFromRank: tierLabelFromRank,
     tiersAtOrBelowRank: tiersAtOrBelowRank,
     tiersBelowRank: tiersBelowRank,
@@ -160,6 +215,6 @@
     classificationAllowedAtFloor: classificationAllowedAtFloor,
     clampClassification: clampClassification,
     classificationsAtOrBelowFloor: classificationsAtOrBelowFloor,
-    VERSION: 4,
+    VERSION: 5,
   };
-})(typeof window !== 'undefined' ? window : global);
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

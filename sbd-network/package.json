@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "validate": "node scripts/validate-public-js.js && node scripts/verify-guest-ux.js",
+    "test:ce2-messenger": "node scripts/test-ce2-messenger-fixes.js",
     "test:guest-ux": "node scripts/verify-guest-ux.js",
     "test:guest-ux:browser": "playwright test --config=playwright.guest.config.js",
     "test:smoke": "playwright test browser-tests/00-auth-smoke.spec.js",

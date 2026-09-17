@@ -56,6 +56,7 @@
 
   function validateFile(file) {
     if (!file) throw new Error('No file selected.');
+    if (!file.size) throw new Error('Recording is empty — nothing to upload.');
     if (!canUpload()) {
       throw new Error('Upload not ready — sign in again and refresh the page.');
     }
@@ -89,8 +90,32 @@
     return 'image/jpeg';
   }
 
+  function stripMimeParams(type) {
+    return String(type || '').toLowerCase().split(';')[0].trim();
+  }
+
+  function normalizedAudioMime(file) {
+    var type = stripMimeParams(file && file.type);
+    if (type.indexOf('audio/') === 0) return type;
+    var ext = fileExt(file);
+    if (ext === 'm4a' || ext === 'mp4' || ext === 'aac') return 'audio/mp4';
+    if (ext === 'mp3') return 'audio/mpeg';
+    if (ext === 'wav') return 'audio/wav';
+    if (ext === 'ogg') return 'audio/ogg';
+    if (ext === 'caf') return 'audio/x-caf';
+    return 'audio/webm';
+  }
+
   function normalizeUploadFile(file) {
-    if (!file || !isImageFile(file)) return file;
+    if (!file) return file;
+    if (isAudioFile(file)) {
+      var audioMime = normalizedAudioMime(file);
+      if (String(file.type || '') !== audioMime) {
+        return new File([file], file.name || 'voice.webm', { type: audioMime });
+      }
+      return file;
+    }
+    if (!isImageFile(file)) return file;
     var mime = normalizedImageMime(file);
     if (!file.type || file.type.toLowerCase() !== mime) {
       return new File([file], file.name || 'photo', { type: mime });
@@ -407,6 +432,8 @@
     if (isImageFile(file)) {
       uploadFile = await compressImageFile(file);
       uploadFile = normalizeUploadFile(uploadFile);
+    } else if (isAudioFile(file)) {
+      uploadFile = normalizeUploadFile(file);
     }
 
     var previewPromise = null;
@@ -464,6 +491,6 @@
     r2Ready: r2Ready,
     primeVideoThumbnail: primeVideoThumbnail,
     MAX_BYTES: MAX_BYTES,
-    VERSION: 12,
+    VERSION: 15,
   };
 })(typeof window !== 'undefined' ? window : global);

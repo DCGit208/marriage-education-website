@@ -1605,6 +1605,7 @@ body.ce2-msg-menu-open {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  touch-action: none;
 }
 
 .ce2-composer-bar {

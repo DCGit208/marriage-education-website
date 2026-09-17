@@ -14,11 +14,12 @@
  */
 
 import { parseFirestoreMap, userCanReceiveBoardNotification } from './notification-access.js';
+import { stripContentTypeParams, isTrustedUploadOrigin } from './upload-policy.js';
 
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'image/bmp',
   'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/3gpp',
-  'audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/x-caf',
+  'audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/x-caf', 'audio/aac', 'audio/x-m4a',
 ]);
 const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', 'dm_videos', 'dm_audio', 'course-covers']);
 
@@ -89,16 +90,14 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
     const allowedOrigins = (env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
-    const trustedOrigin =
-      allowedOrigins.includes(origin) ||
-      /^https:\/\/([a-z0-9-]+\.(web\.app|firebaseapp\.com)|marriageducation\.com|www\.marriageducation\.com)$/i.test(origin) ||
-      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+    const trustedOrigin = isTrustedUploadOrigin(origin, env.CORS_ORIGIN);
     const corsOrigin = trustedOrigin && origin ? origin : (allowedOrigins[0] || '*');
     const corsHeaders = {
       'Access-Control-Allow-Origin':  corsOrigin,
       'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Folder, X-Filename',
       'Access-Control-Max-Age':       '86400',
+      'Vary': 'Origin',
     };
     const respond = (body, status = 200) =>
       new Response(JSON.stringify(body), {
@@ -572,11 +571,14 @@ export default {
     // ── POST /upload (default) ───────────────────────────────────
     const folder      = request.headers.get('X-Folder') || '';
     const filename    = request.headers.get('X-Filename') || '';
-    const contentType = request.headers.get('Content-Type') || '';
+    const contentType = stripContentTypeParams(request.headers.get('Content-Type') || '');
 
     if (!ALLOWED_FOLDERS.has(folder))        return respond({ error: 'Invalid folder' }, 400);
     if (!ALLOWED_CONTENT_TYPES.has(contentType)) return respond({ error: 'Content type not allowed' }, 400);
     if (!filename)                           return respond({ error: 'Missing X-Filename header' }, 400);
+    if (request.headers.get('Content-Length') === '0') {
+      return respond({ error: 'Empty file' }, 400);
+    }
 
     const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
     const key          = `${folder}/${safeFilename}`;

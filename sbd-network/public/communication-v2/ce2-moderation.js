@@ -39,7 +39,11 @@
           .get()
           .then(function (udoc) {
             var d = udoc.exists ? udoc.data() : {};
-            participants.push({ tier: d.tier || 'foundation' });
+            var tier =
+              governance && governance.resolveMessagingTier
+                ? governance.resolveMessagingTier(d)
+                : d.tier || 'foundation';
+            participants.push({ tier: tier });
           })
           .catch(function () {
             participants.push({ tier: 'foundation' });
@@ -57,6 +61,6 @@
   global.Ce2Moderation = {
     isMessagingEnabled: isMessagingEnabled,
     resolveGroupSecurityFromMembers: resolveGroupSecurityFromMembers,
-    VERSION: 2,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : global);
