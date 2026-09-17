@@ -184,6 +184,13 @@ test('mic denial maps to a readable error', function () {
   assert.ok(/Microphone access was blocked/.test(msg));
 });
 
+test('containerMime strips codec params for the uploaded File type', function () {
+  assert.strictEqual(rec.containerMime('audio/webm;codecs=opus'), 'audio/webm');
+  assert.strictEqual(rec.containerMime('audio/mp4;codecs=mp4a.40.2'), 'audio/mp4');
+  assert.strictEqual(rec.containerMime('video/webm'), 'audio/webm');
+  assert.strictEqual(rec.containerMime(''), 'audio/webm');
+});
+
 console.log('\nVoice upload MIME + CORS policy\n');
 
 function loadUploadJs() {
@@ -217,6 +224,31 @@ test('maps m4a recordings to audio/mp4', function () {
     name: 'voice-1.m4a',
   });
   assert.strictEqual(type, 'audio/mp4');
+});
+
+test('empty-type .webm in dm_audio is audio/webm not video/webm', function () {
+  assert.strictEqual(
+    uploadSandbox.detectUploadContentType({ type: '', name: 'voice-1.webm' }, 'dm_audio'),
+    'audio/webm'
+  );
+  assert.strictEqual(
+    uploadSandbox.detectUploadContentType({ type: 'video/webm', name: 'voice-1.webm' }, 'dm_audio'),
+    'audio/webm'
+  );
+  assert.strictEqual(
+    uploadSandbox.detectUploadContentType({ type: '', name: 'clip.webm' }, 'dm_videos'),
+    'video/webm'
+  );
+});
+
+test('empty recordings are rejected before the worker call', function () {
+  assert.throws(
+    function () {
+      uploadSandbox.assertUploadableFile({ size: 0, name: 'voice-1.webm', type: 'audio/webm' });
+    },
+    /empty/i
+  );
+  uploadSandbox.assertUploadableFile({ size: 1200, name: 'voice-1.webm', type: 'audio/webm' });
 });
 
 test('CORS network errors fall back to Firebase Storage', function () {

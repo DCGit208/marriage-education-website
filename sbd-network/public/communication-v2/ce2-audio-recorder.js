@@ -108,6 +108,17 @@
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
 
+  function containerMime(mime) {
+    var t = String(mime || '')
+      .toLowerCase()
+      .split(';')[0]
+      .trim();
+    if (t.indexOf('audio/') === 0) return t;
+    if (t.indexOf('video/webm') === 0) return 'audio/webm';
+    if (t.indexOf('mp4') >= 0 || t.indexOf('m4a') >= 0) return 'audio/mp4';
+    return t || 'audio/webm';
+  }
+
   function pickMime() {
     if (typeof MediaRecorder === 'undefined') return '';
     if (!MediaRecorder.isTypeSupported) return '';
@@ -281,9 +292,14 @@
     }
 
     s.uploadDispatched = true;
-    var mime = s.mime || 'audio/webm';
+    var mime = containerMime(s.mime || 'audio/webm');
     var blob = new Blob(s.chunks, { type: mime });
     s.chunks = [];
+    if (!blob.size) {
+      surfaceHint('Recording was empty. Try again.');
+      resetSession();
+      return;
+    }
     var ext = mime.indexOf('mp4') >= 0 ? 'm4a' : 'webm';
     var file = new File([blob], 'voice-' + Date.now() + '.' + ext, { type: mime });
 
@@ -605,6 +621,7 @@
   global.Ce2AudioRecorder = {
     LOCK_TO_RECORD: LOCK_TO_RECORD,
     pickMime: pickMime,
+    containerMime: containerMime,
     isAppleCapture: isAppleCapture,
     microphoneErrorMessage: microphoneErrorMessage,
     init: function (d) {

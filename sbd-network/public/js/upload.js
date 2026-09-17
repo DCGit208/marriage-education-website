@@ -14,11 +14,31 @@ function stripUploadContentTypeParams(contentType) {
     .trim();
 }
 
-function detectUploadContentType(file) {
+function detectUploadContentType(file, folder) {
   let contentType = stripUploadContentTypeParams(file && file.type);
   if (contentType === 'image/x-png' || contentType === 'image/apng') contentType = 'image/png';
+  const ext = ((file && file.name) || '').split('.').pop().toLowerCase();
+  const folderName = String(folder || '');
+
+  // Voice notes go to dm_audio. Empty File.type or a video/* .webm recording
+  // must not become video/webm — Storage rules for dm_audio require audio/*.
+  if (folderName === 'dm_audio') {
+    if (
+      !contentType ||
+      contentType === 'application/octet-stream' ||
+      contentType.indexOf('video/') === 0
+    ) {
+      const audioExtMap = {
+        webm: 'audio/webm', m4a: 'audio/mp4', mp4: 'audio/mp4',
+        mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
+        aac: 'audio/mp4', caf: 'audio/x-caf',
+      };
+      contentType = audioExtMap[ext] || 'audio/webm';
+    }
+    return contentType;
+  }
+
   if (!contentType) {
-    const ext = ((file && file.name) || '').split('.').pop().toLowerCase();
     const extMap = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
       webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
@@ -39,6 +59,11 @@ function detectUploadContentType(file) {
     if (!contentType) contentType = 'application/octet-stream';
   }
   return contentType;
+}
+
+function assertUploadableFile(file) {
+  if (!file) throw new Error('No file to upload.');
+  if (!file.size) throw new Error('Recording is empty — nothing to upload.');
 }
 
 function canFallbackToFirebaseStorage(err) {
@@ -112,11 +137,12 @@ function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
 async function uploadToR2(file, folder, options) {
   const user = getCurrentUser();
   if (!user) throw new Error('Not authenticated');
+  assertUploadableFile(file);
 
   const idToken = await user.getIdToken();
   const uid = Math.random().toString(36).slice(2, 8);
-  const filename = `${Date.now()}_${uid}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-  const contentType = detectUploadContentType(file);
+  const filename = `${Date.now()}_${uid}_${(file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const contentType = detectUploadContentType(file, folder);
   options = options || {};
 
   try {
@@ -198,7 +224,13 @@ function uploadToFirebaseStorage(file, folder, options) {
       reject(new Error('Storage SDK not loaded'));
       return;
     }
-    const contentType = detectUploadContentType(file);
+    try {
+      assertUploadableFile(file);
+    } catch (emptyErr) {
+      reject(emptyErr);
+      return;
+    }
+    const contentType = detectUploadContentType(file, folder);
     const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
     const path =
       folder + '/' + user.uid + '/' + Date.now() + '_' +

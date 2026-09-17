@@ -97,6 +97,7 @@ export default {
       'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Folder, X-Filename',
       'Access-Control-Max-Age':       '86400',
+      'Vary': 'Origin',
     };
     const respond = (body, status = 200) =>
       new Response(JSON.stringify(body), {
@@ -575,6 +576,9 @@ export default {
     if (!ALLOWED_FOLDERS.has(folder))        return respond({ error: 'Invalid folder' }, 400);
     if (!ALLOWED_CONTENT_TYPES.has(contentType)) return respond({ error: 'Content type not allowed' }, 400);
     if (!filename)                           return respond({ error: 'Missing X-Filename header' }, 400);
+    if (request.headers.get('Content-Length') === '0') {
+      return respond({ error: 'Empty file' }, 400);
+    }
 
     const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
     const key          = `${folder}/${safeFilename}`;
