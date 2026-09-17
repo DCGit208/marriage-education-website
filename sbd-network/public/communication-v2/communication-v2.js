@@ -38,6 +38,11 @@
   var typingInputUnsub = null;
   var typingExpireTimer = null;
   var messengerNotifUnsub = null;
+  var inboxPrefsUnsub = null;
+  var directInboxUnsub = null;
+  var groupInboxUnsub = null;
+  var inboxLongPressTimer = null;
+  var inboxLongPressFired = false;
   var presenceWatchSet = null;
   var presenceHeartbeatStop = null;
   var presenceTickTimer = null;
@@ -102,6 +107,8 @@
     _renderedMsgIds: null,
     _metaLastMessageId: null,
     presenceByUid: {},
+    /** @type {Record<string, {muted:boolean, pinned:boolean, sortAt:number}>} */
+    inboxPrefs: {},
   };
 
   function threadComposerKey(ac) {
@@ -193,15 +200,69 @@
   }
 
   function syncVisibleGroupMeta(groupId, data) {
-    if (!groupId || !data) return;
+    syncInboxRowFromMeta({ type: 'group', id: groupId }, data);
+  }
+
+  function findInboxRow(kind, threadId) {
+    if (kind === 'group') {
+      return (CommunicationState.visibleGroups || []).find(function (row) {
+        return row.id === threadId;
+      });
+    }
+    return (CommunicationState.threads || []).find(function (row) {
+      return row.id === threadId || row.convId === threadId;
+    });
+  }
+
+  function syncInboxRowFromMeta(ac, data) {
+    if (!ac || !ac.id || !data) return;
     var me = CommunicationState.me;
     var rc = receipts();
-    var g = (CommunicationState.visibleGroups || []).find(function (row) {
-      return row.id === groupId;
+    var ib = inbox();
+    var kind = ac.type === 'group' ? 'group' : 'direct';
+    var row = findInboxRow(kind, ac.id);
+    if (!row || !me) return;
+    var preview = formatInboxPreview({
+      lastPreview: data.lastPreview,
+      lastMessageType: data.lastMessageType,
+      content: data.lastPreview,
+      lastSenderId: data.lastSenderId,
     });
-    if (!g || !me || !rc) return;
-    g.unread = rc.unreadCount(data, me.uid);
-    if (data.lastPreview) g.lastPreview = String(data.lastPreview).trim();
+    if (kind === 'group') row.lastPreview = preview;
+    else row.sub = preview;
+    row.lastActivityAt = ib ? ib.tsMs(data.lastMessageAt) : 0;
+    row.lastSenderId = data.lastSenderId || '';
+    applyInboxPrefToRow(row, kind, data.lastSenderId);
+    if (rc && ib) {
+      ib.mergeUnreadFromMeta(row, data, me.uid, rc.unreadCount);
+    } else if (rc) {
+      row.unread = rc.unreadCount(data, me.uid);
+    }
+    var open = CommunicationState.activeConversation;
+    if (open && open.id === ac.id && !open.needsJoin) {
+      row.unread = 0;
+      if (ib) ib.applyLocalRead(row);
+    }
+    sortVisibleInboxLists();
+  }
+
+  function clearThreadUnreadLocal(ac) {
+    if (!ac || !ac.id) return;
+    var ib = inbox();
+    var kind = ac.type === 'group' ? 'group' : 'direct';
+    var row = findInboxRow(kind, ac.id);
+    if (row) {
+      if (ib) ib.applyLocalRead(row);
+      else row.unread = 0;
+    }
+    var me = CommunicationState.me;
+    if (me && CommunicationState.convMeta) {
+      var unreadMap = Object.assign({}, CommunicationState.convMeta.unreadCount || {});
+      unreadMap[me.uid] = 0;
+      CommunicationState.convMeta = Object.assign({}, CommunicationState.convMeta, {
+        unreadCount: unreadMap,
+      });
+    }
   }
 
   function getComposerSlot(ac) {
@@ -523,6 +584,7 @@
       presenceTickTimer = null;
     }
     CommunicationState.presenceByUid = {};
+    stopInboxWatches();
   }
 
   function avatarWithPresence(label, presenceUid) {
@@ -541,6 +603,369 @@
 
   function receipts() {
     return typeof window !== 'undefined' ? window.Ce2Receipts : null;
+  }
+
+  function inbox() {
+    return typeof window !== 'undefined' ? window.Ce2Inbox : null;
+  }
+
+  function inboxStrip(text) {
+    if (root.Ce2Format && root.Ce2Format.stripFormattingForPreview) {
+      return root.Ce2Format.stripFormattingForPreview(text || '');
+    }
+    return text || '';
+  }
+
+  function formatInboxPreview(meta) {
+    var ib = inbox();
+    if (!ib) {
+      return inboxStrip((meta && (meta.content || meta.lastPreview)) || '').slice(0, 72);
+    }
+    return ib.formatLastPreview(meta, { strip: inboxStrip });
+  }
+
+  function getInboxPref(kind, threadId) {
+    var ib = inbox();
+    var id = ib ? ib.prefId(kind, threadId) : '';
+    var prefs = CommunicationState.inboxPrefs || {};
+    return (id && prefs[id]) || { muted: false, pinned: false, sortAt: 0 };
+  }
+
+  function applyInboxPrefToRow(row, kind, lastSenderId) {
+    var ib = inbox();
+    var me = CommunicationState.me;
+    if (!ib || !row) return row;
+    return ib.applyPrefToRow(
+      row,
+      getInboxPref(kind, row.id || row.convId),
+      lastSenderId,
+      me && me.uid
+    );
+  }
+
+  function sortVisibleInboxLists() {
+    var ib = inbox();
+    if (!ib) return;
+    CommunicationState.visibleGroups = ib.sortInboxRows(CommunicationState.visibleGroups || []);
+    CommunicationState.threads = ib.sortInboxRows(CommunicationState.threads || []);
+  }
+
+  function inboxPrefsCol(uid) {
+    return db.collection('users').doc(uid).collection('ce2_inbox');
+  }
+
+  function persistInboxPref(kind, threadId, patch) {
+    var me = CommunicationState.me;
+    var ib = inbox();
+    if (!me || !ib || !threadId) return Promise.resolve();
+    var id = ib.prefId(kind, threadId);
+    if (!id) return Promise.resolve();
+    var prev = getInboxPref(kind, threadId);
+    var next = ib.normalizePref(Object.assign({}, prev, patch || {}));
+    CommunicationState.inboxPrefs[id] = next;
+    var payload = ib.prefWritePayload(kind, threadId, next);
+    payload.updatedAt = firebase.firestore.Timestamp.now();
+    return inboxPrefsCol(me.uid)
+      .doc(id)
+      .set(payload, { merge: true })
+      .catch(function (err) {
+        console.warn('[CE2 inbox pref]', err);
+      });
+  }
+
+  function ingestInboxPrefDoc(doc) {
+    var ib = inbox();
+    if (!ib || !doc) return;
+    CommunicationState.inboxPrefs[doc.id] = ib.normalizePref(doc.data() || {});
+  }
+
+  function applyInboxPrefsToLists() {
+    (CommunicationState.visibleGroups || []).forEach(function (g) {
+      applyInboxPrefToRow(g, 'group', g.lastSenderId);
+    });
+    (CommunicationState.threads || []).forEach(function (t) {
+      applyInboxPrefToRow(t, 'direct', t.lastSenderId);
+    });
+    sortVisibleInboxLists();
+  }
+
+  async function loadInboxPrefs(uid) {
+    CommunicationState.inboxPrefs = {};
+    if (!uid) return;
+    try {
+      var snap = await inboxPrefsCol(uid).limit(200).get();
+      snap.forEach(ingestInboxPrefDoc);
+    } catch (err) {
+      console.warn('[CE2 inbox prefs]', err);
+    }
+  }
+
+  function stopInboxWatches() {
+    if (inboxPrefsUnsub) {
+      inboxPrefsUnsub();
+      inboxPrefsUnsub = null;
+    }
+    if (directInboxUnsub) {
+      directInboxUnsub();
+      directInboxUnsub = null;
+    }
+    if (groupInboxUnsub) {
+      groupInboxUnsub();
+      groupInboxUnsub = null;
+    }
+  }
+
+  function watchInboxPrefs(uid) {
+    if (inboxPrefsUnsub) {
+      inboxPrefsUnsub();
+      inboxPrefsUnsub = null;
+    }
+    if (!uid) return;
+    inboxPrefsUnsub = inboxPrefsCol(uid).limit(200).onSnapshot(
+      function (snap) {
+        CommunicationState.inboxPrefs = {};
+        snap.forEach(ingestInboxPrefDoc);
+        applyInboxPrefsToLists();
+        requestRender({ throttle: true });
+      },
+      function () {}
+    );
+  }
+
+  function inboxListSig(kind, row, data, uid) {
+    var ib = inbox();
+    var rc = receipts();
+    var unread = rc ? rc.unreadCount(data, uid) : 0;
+    return [
+      kind,
+      row && row.id,
+      data.lastMessageId || '',
+      data.lastPreview || '',
+      data.lastMessageType || '',
+      data.lastSenderId || '',
+      ib ? ib.tsMs(data.lastMessageAt) : 0,
+      unread,
+    ].join('|');
+  }
+
+  function mergeInboxSnapRows(kind, snap, uid) {
+    if (!snap) return;
+    var missing = false;
+    var changed = false;
+    snap.docs.forEach(function (doc) {
+      var data = doc.data() || {};
+      var row = findInboxRow(kind, doc.id);
+      if (!row) {
+        if (kind === 'direct') {
+          var other = (data.participantIds || []).filter(function (p) {
+            return p !== uid;
+          })[0];
+          if (other && isUserBlockedUid(other)) return;
+        }
+        missing = true;
+        return;
+      }
+      var sig = inboxListSig(kind, row, data, uid);
+      if (row._inboxSig === sig) return;
+      row._inboxSig = sig;
+      changed = true;
+      syncInboxRowFromMeta({ type: kind, id: doc.id }, data);
+    });
+    if (missing) {
+      if (kind === 'group') scheduleLoadGroups(uid);
+      else scheduleLoadThreads(uid);
+      return;
+    }
+    if (changed) {
+      sortVisibleInboxLists();
+      CommunicationState._pendingThreadOnly = false;
+      requestRender({ throttle: true });
+    }
+  }
+
+  function watchDirectInbox(uid) {
+    if (directInboxUnsub) {
+      directInboxUnsub();
+      directInboxUnsub = null;
+    }
+    if (!uid) return;
+    directInboxUnsub = db
+      .collection('ce2_conversations')
+      .where('participantIds', 'array-contains', uid)
+      .orderBy('lastMessageAt', 'desc')
+      .limit(30)
+      .onSnapshot(
+        function (snap) {
+          mergeInboxSnapRows('direct', snap, uid);
+        },
+        function () {}
+      );
+  }
+
+  function watchGroupInbox(u) {
+    if (groupInboxUnsub) {
+      groupInboxUnsub();
+      groupInboxUnsub = null;
+    }
+    if (!u) return;
+    var q;
+    if (u.isAdmin) {
+      q = db.collection('communicationGroups').limit(40);
+    } else {
+      var g = gov();
+      var allowedTiers =
+        g && g.tiersAtOrBelowRank ? g.tiersAtOrBelowRank(tierRank(u)) : ['foundation'];
+      if (allowedTiers.indexOf('free') < 0 && allowedTiers.indexOf('foundation') >= 0) {
+        allowedTiers.push('free');
+      }
+      if (!allowedTiers.length) allowedTiers.push('foundation');
+      q = db.collection('communicationGroups').where('requiredTier', 'in', allowedTiers).limit(40);
+    }
+    groupInboxUnsub = q.onSnapshot(
+      function (snap) {
+        mergeInboxSnapRows('group', snap, u.uid);
+      },
+      function () {}
+    );
+  }
+
+  function startInboxLayer(u) {
+    if (!u) return;
+    watchInboxPrefs(u.uid);
+    watchDirectInbox(u.uid);
+    watchGroupInbox(u);
+  }
+
+  function closeInboxMenu() {
+    var menu = el('ce2InboxMenu');
+    if (menu) menu.hidden = true;
+    document.body.classList.remove('ce2-inbox-menu-open');
+  }
+
+  function inboxMenuTargetFromLi(li) {
+    if (!li) return null;
+    var kind = li.dataset.inboxKind || (li.dataset.action === 'select-group' ? 'group' : 'direct');
+    var id = li.dataset.inboxId || li.dataset.groupId || li.dataset.convId;
+    if (!id) return null;
+    return { kind: kind, id: id, label: li.dataset.label || li.dataset.groupName || 'Conversation' };
+  }
+
+  function openInboxMenu(li) {
+    var target = inboxMenuTargetFromLi(li);
+    if (!target) return;
+    var pref = getInboxPref(target.kind, target.id);
+    var menu = el('ce2InboxMenu');
+    if (!menu) {
+      menu = document.createElement('div');
+      menu.id = 'ce2InboxMenu';
+      menu.className = 'ce2-inbox-menu';
+      menu.innerHTML =
+        '<div class="ce2-inbox-menu-backdrop" data-inbox-menu="close"></div>' +
+        '<div class="ce2-inbox-menu-panel" role="menu">' +
+        '<p class="ce2-inbox-menu-title" id="ce2InboxMenuTitle"></p>' +
+        '<button type="button" class="ce2-inbox-menu-item" data-inbox-act="pin"></button>' +
+        '<button type="button" class="ce2-inbox-menu-item" data-inbox-act="mute"></button>' +
+        '</div>';
+      document.body.appendChild(menu);
+      menu.addEventListener('click', function (e) {
+        if (e.target.closest('[data-inbox-menu="close"]')) {
+          closeInboxMenu();
+          return;
+        }
+        var btn = e.target.closest('[data-inbox-act]');
+        if (!btn) return;
+        var act = btn.getAttribute('data-inbox-act');
+        var kind = menu.dataset.inboxKind;
+        var id = menu.dataset.inboxId;
+        if (!kind || !id) return;
+        if (act === 'pin') toggleInboxPin(kind, id);
+        if (act === 'mute') toggleInboxMute(kind, id);
+        closeInboxMenu();
+      });
+    }
+    menu.dataset.inboxKind = target.kind;
+    menu.dataset.inboxId = target.id;
+    var title = el('ce2InboxMenuTitle');
+    if (title) title.textContent = target.label;
+    var pinBtn = menu.querySelector('[data-inbox-act="pin"]');
+    var muteBtn = menu.querySelector('[data-inbox-act="mute"]');
+    if (pinBtn) pinBtn.textContent = pref.pinned ? 'Unpin' : 'Pin to top';
+    if (muteBtn) muteBtn.textContent = pref.muted ? 'Unmute' : 'Mute notifications';
+    menu.hidden = false;
+    document.body.classList.add('ce2-inbox-menu-open');
+  }
+
+  function toggleInboxPin(kind, threadId) {
+    var row = findInboxRow(kind, threadId);
+    var pref = getInboxPref(kind, threadId);
+    var pinned = !pref.pinned;
+    if (row) row.pinned = pinned;
+    persistInboxPref(kind, threadId, { pinned: pinned, muted: !!pref.muted, sortAt: pref.sortAt });
+    applyInboxPrefsToLists();
+    CommunicationState._pendingThreadOnly = false;
+    requestRender();
+  }
+
+  function toggleInboxMute(kind, threadId) {
+    var row = findInboxRow(kind, threadId);
+    var pref = getInboxPref(kind, threadId);
+    var muted = !pref.muted;
+    var sortAt = muted ? (row && row.lastActivityAt) || Date.now() : 0;
+    if (row) {
+      row.muted = muted;
+      row.sortAt = muted ? sortAt : row.lastActivityAt || 0;
+    }
+    persistInboxPref(kind, threadId, { muted: muted, pinned: !!pref.pinned, sortAt: sortAt });
+    applyInboxPrefsToLists();
+    CommunicationState._pendingThreadOnly = false;
+    requestRender();
+  }
+
+  function bindInboxGestures() {
+    var sidebar = el('ce2Sidebar');
+    if (!sidebar || sidebar._ce2InboxGestures) return;
+    sidebar._ce2InboxGestures = true;
+    sidebar.addEventListener(
+      'click',
+      function (e) {
+        var more = e.target.closest('.ce2-li-more');
+        if (!more) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var li = more.closest('.ce2-li[data-action]');
+        if (li) openInboxMenu(li);
+      },
+      true
+    );
+    function onPointerDown(e) {
+      var more = e.target.closest('.ce2-li-more');
+      if (more) return;
+      var li = e.target.closest('.ce2-li[data-inbox-kind]');
+      if (!li) return;
+      inboxLongPressFired = false;
+      if (inboxLongPressTimer) clearTimeout(inboxLongPressTimer);
+      inboxLongPressTimer = setTimeout(function () {
+        inboxLongPressTimer = null;
+        inboxLongPressFired = true;
+        openInboxMenu(li);
+      }, 520);
+    }
+    function onPointerEnd() {
+      if (inboxLongPressTimer) {
+        clearTimeout(inboxLongPressTimer);
+        inboxLongPressTimer = null;
+      }
+    }
+    sidebar.addEventListener('pointerdown', onPointerDown);
+    sidebar.addEventListener('pointerup', onPointerEnd);
+    sidebar.addEventListener('pointercancel', onPointerEnd);
+    sidebar.addEventListener('contextmenu', function (e) {
+      var li = e.target.closest('.ce2-li[data-inbox-kind]');
+      if (!li) return;
+      e.preventDefault();
+      inboxLongPressFired = true;
+      openInboxMenu(li);
+    });
   }
 
   function replyModule() {
@@ -755,10 +1180,11 @@
           hideTypingIndicator();
         }
         if (!acNow || acNow.needsJoin) return;
-        if (acNow.type === 'group' && snap.exists) {
-          syncVisibleGroupMeta(acNow.id, snap.data());
+        if (snap.exists) {
+          syncInboxRowFromMeta(acNow, snap.data());
           requestRender({ throttle: true });
-        } else if (acNow.type === 'direct') {
+        }
+        if (acNow.type === 'direct') {
           updateReadReceiptFooters(acNow);
         }
       },
@@ -819,13 +1245,21 @@
   }
 
   function computeUnreadTotals() {
+    var ib = inbox();
+    var shout = ib
+      ? function (row) {
+          return ib.shoutingUnread(row);
+        }
+      : function (row) {
+          return row && row.unread > 0 ? row.unread : 0;
+        };
     var groups = 0;
     var direct = 0;
     (CommunicationState.visibleGroups || []).forEach(function (g) {
-      if (g.unread > 0) groups += g.unread;
+      groups += shout(g);
     });
     (CommunicationState.threads || []).forEach(function (t) {
-      if (t.unread > 0) direct += t.unread;
+      direct += shout(t);
     });
     return { total: groups + direct, groups: groups, direct: direct };
   }
@@ -1547,14 +1981,14 @@
   }
 
   function markThreadReadOnce(ac) {
+    clearThreadUnreadLocal(ac);
+    CommunicationState._pendingThreadOnly = false;
+    requestRender({ throttle: true });
     var rc = receipts();
     var ref = getMetaDocRef(ac);
     var me = CommunicationState.me;
     if (rc && ref && me) {
-      rc.markRead(ref, me.uid).then(function () {
-        if (ac && ac.type === 'group') scheduleLoadGroups(me.uid);
-        else scheduleLoadThreads(me.uid);
-      });
+      rc.markRead(ref, me.uid).catch(function () {});
     }
   }
 
@@ -1751,7 +2185,7 @@
       var messageId = await commitCe2Message(ac, patch, me);
       confirmSentMessage(pendingId, messageId, patch, ac);
       triggerCe2Push(ac, patch.content || '', me, messageId);
-      patchThreadPreviewLocal(ac, patch.content || '');
+      patchThreadPreviewLocal(ac, patch);
       CommunicationState.statusMessage = null;
       CommunicationState.error = null;
     } catch (err) {
@@ -1769,6 +2203,55 @@
       '<li class="ce2-placeholder ce2-placeholder-loading" aria-busy="true">' +
       escapeHtml(label || 'Loading…') +
       '</li>'
+    );
+  }
+
+  function inboxRowClass(row, selected) {
+    var cls = 'ce2-li ce2-li--inbox';
+    if (selected) cls += ' is-selected';
+    if (row && row.pinned) cls += ' is-pinned';
+    if (row && row.muted) cls += ' is-muted';
+    if (row && row.unread > 0) cls += ' has-unread';
+    return cls;
+  }
+
+  function inboxBadgeHtml(row) {
+    var ib = inbox();
+    var unread = (row && row.unread) || 0;
+    var mode = ib ? ib.unreadBadgeMode(unread, !!(row && row.muted)) : unread > 0 ? 'count' : 'none';
+    if (mode === 'dot') {
+      return '<span class="ce2-unread-dot" aria-label="Unread"></span>';
+    }
+    if (mode === 'count') {
+      var label = ib ? ib.formatUnreadCount(unread) : unread > 99 ? '99+' : String(unread);
+      return '<span class="ce2-unread-badge">' + escapeHtml(label) + '</span>';
+    }
+    if (row && row.muted) {
+      return '<span class="ce2-li-muted-icon" title="Muted" aria-label="Muted">🔕</span>';
+    }
+    return '';
+  }
+
+  function inboxRowInnerHtml(name, presenceUid, sub, row, isDraft) {
+    var pin = row && row.pinned ? '<span class="ce2-li-pin" title="Pinned" aria-hidden="true">📌</span>' : '';
+    var metaCls = 'ce2-li-meta';
+    if (isDraft) metaCls += ' ce2-li-meta--draft';
+    else if (row && row.unread > 0 && !row.muted) metaCls += ' ce2-li-meta--unread';
+    return (
+      '<div class="ce2-li-row">' +
+      avatarWithPresence(name, presenceUid || '') +
+      '<span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
+      escapeHtml(name) +
+      pin +
+      '</div>' +
+      inboxBadgeHtml(row) +
+      '</div><div class="' +
+      metaCls +
+      '">' +
+      escapeHtml(sub || '') +
+      '</div></span>' +
+      '<button type="button" class="ce2-li-more" aria-label="Conversation options" title="Pin or mute">⋮</button>' +
+      '</div>'
     );
   }
 
@@ -1812,32 +2295,19 @@
       } else {
         CommunicationState.visibleGroups.forEach(function (g) {
           const li = document.createElement('li');
-          li.className =
-            'ce2-li' + (CommunicationState.selectedGroupId === g.id ? ' is-selected' : '');
+          var selected = CommunicationState.selectedGroupId === g.id;
+          li.className = inboxRowClass(g, selected);
           li.dataset.groupId = g.id;
           var gMeta = listMetaLine(u.uid, 'g:' + g.id, g.lastPreview || '');
           var gSub = gMeta.text;
           if (!gSub && !gMeta.isDraft) {
             gSub = 'requires ' + g.requiredTier + (g.mentorLed ? ' · mentor-led' : '');
           }
-          li.innerHTML =
-            '<div class="ce2-li-row">' +
-            avatarWithPresence(g.name, '') +
-            '<span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
-            escapeHtml(g.name) +
-            '</div>' +
-            (g.unread
-              ? '<span class="ce2-unread-badge">' +
-                (g.unread > 99 ? '99+' : String(g.unread)) +
-                '</span>'
-              : '') +
-            '</div><div class="ce2-li-meta' +
-            (gMeta.isDraft ? ' ce2-li-meta--draft' : '') +
-            '">' +
-            escapeHtml(gSub) +
-            '</div></span></div>';
+          li.innerHTML = inboxRowInnerHtml(g.name, '', gSub, g, gMeta.isDraft);
           li.dataset.action = 'select-group';
           li.dataset.groupName = g.name || 'Group';
+          li.dataset.inboxKind = 'group';
+          li.dataset.inboxId = g.id;
           gList.appendChild(li);
         });
       }
@@ -1852,33 +2322,19 @@
         CommunicationState.threads.forEach(function (t) {
           var tMeta = listMetaLine(u.uid, 'd:' + t.id, t.sub || '');
           const li = document.createElement('li');
-          li.className =
-            'ce2-li' +
-            (CommunicationState.activeConversation &&
+          var selected = !!(
+            CommunicationState.activeConversation &&
             CommunicationState.activeConversation.id === t.id &&
             CommunicationState.activeConversation.type === 'direct'
-              ? ' is-selected'
-              : '');
-          li.innerHTML =
-            '<div class="ce2-li-row">' +
-            avatarWithPresence(t.label, t.otherUid || '') +
-            '<span class="ce2-li-body"><div class="ce2-li-name-row"><div class="ce2-li-name">' +
-            escapeHtml(t.label) +
-            '</div>' +
-            (t.unread
-              ? '<span class="ce2-unread-badge">' +
-                (t.unread > 99 ? '99+' : String(t.unread)) +
-                '</span>'
-              : '') +
-            '</div><div class="ce2-li-meta' +
-            (tMeta.isDraft ? ' ce2-li-meta--draft' : '') +
-            '">' +
-            escapeHtml(tMeta.text) +
-            '</div></span></div>';
+          );
+          li.className = inboxRowClass(t, selected);
+          li.innerHTML = inboxRowInnerHtml(t.label, t.otherUid || '', tMeta.text, t, tMeta.isDraft);
           li.dataset.action = 'open-thread';
           li.dataset.convId = t.id;
           li.dataset.otherUid = t.otherUid || '';
           li.dataset.label = t.label || 'Direct';
+          li.dataset.inboxKind = 'direct';
+          li.dataset.inboxId = t.id;
           tList.appendChild(li);
         });
       }
@@ -2047,28 +2503,36 @@
     CommunicationState._renderedMsgIds = null;
   }
 
-  function patchThreadPreviewLocal(ac, preview) {
-    if (!ac || !preview) return;
-    var text = String(preview).slice(0, 140);
-    if (ac.type === 'direct') {
-      var threads = CommunicationState.threads || [];
-      for (var i = 0; i < threads.length; i++) {
-        if (threads[i].convId === ac.id || threads[i].id === ac.id) {
-          threads[i].sub = text;
-          return;
-        }
-      }
-      return;
+  function patchThreadPreviewLocal(ac, previewOrText) {
+    if (!ac) return;
+    var meta =
+      previewOrText && typeof previewOrText === 'object'
+        ? previewOrText
+        : { content: previewOrText, lastPreview: previewOrText };
+    var text = formatInboxPreview(meta);
+    if (!text) return;
+    var me = CommunicationState.me;
+    var kind = ac.type === 'group' ? 'group' : 'direct';
+    var row = findInboxRow(kind, ac.id);
+    if (!row) return;
+    if (kind === 'direct') row.sub = text;
+    else row.lastPreview = text;
+    var senderId = meta.senderId || '';
+    var fromSelf = !!(me && senderId && senderId === me.uid);
+    if (!senderId && me) {
+      fromSelf = true;
+      senderId = me.uid;
     }
-    if (ac.type === 'group') {
-      var groups = CommunicationState.visibleGroups || [];
-      for (var j = 0; j < groups.length; j++) {
-        if (groups[j].id === ac.id) {
-          groups[j].lastPreview = text;
-          return;
-        }
-      }
+    row.lastActivityAt = Date.now();
+    row.lastSenderId = senderId || row.lastSenderId || '';
+    applyInboxPrefToRow(row, kind, senderId);
+    if (fromSelf && row.muted) {
+      row.sortAt = row.lastActivityAt;
+      persistInboxPref(kind, ac.id, { muted: true, pinned: !!row.pinned, sortAt: row.sortAt });
     }
+    sortVisibleInboxLists();
+    CommunicationState._pendingThreadOnly = false;
+    requestRender({ throttle: true });
   }
 
   function clearComposerTyping(ac) {
@@ -2112,7 +2576,8 @@
       _fromMeta: true,
     };
     forceAppendIncomingMessage(preview, ac, true);
-    patchThreadPreviewLocal(ac, preview.content);
+    patchThreadPreviewLocal(ac, preview);
+    markThreadReadOnce(ac);
     fetchAndShowMessage(msgId, ac);
   }
 
@@ -2253,7 +2718,8 @@
 
     CommunicationState._metaLastMessageId = msgId;
     forceAppendIncomingMessage(preview, ac, true);
-    patchThreadPreviewLocal(ac, content);
+    patchThreadPreviewLocal(ac, preview);
+    markThreadReadOnce(ac);
   }
 
   function fetchAndShowMessage(messageId, ac) {
@@ -2312,7 +2778,8 @@
     CommunicationState._metaLastMessageId = msgId;
     dropTypist(meta.lastSenderId);
     forceAppendIncomingMessage(preview, ac, true);
-    patchThreadPreviewLocal(ac, preview.content);
+    patchThreadPreviewLocal(ac, preview);
+    markThreadReadOnce(ac);
     fetchAndShowMessage(msgId, ac);
   }
 
@@ -2337,7 +2804,8 @@
       var msg = Object.assign({ id: msgId }, data);
       mergeMessageIntoState(msg);
       forceAppendIncomingMessage(msg, ac, true);
-      patchThreadPreviewLocal(ac, data.content || '');
+      patchThreadPreviewLocal(ac, msg);
+      markThreadReadOnce(ac);
       handled = true;
     });
     return handled;
@@ -3509,25 +3977,33 @@
           .get();
       }
       var rc = receipts();
+      var ib = inbox();
       var uid = u.uid;
       CommunicationState.visibleGroups = snap.docs
         .map(function (d) {
           const x = d.data();
-          return {
+          var preview = formatInboxPreview({
+            lastPreview: x.lastPreview,
+            lastMessageType: x.lastMessageType,
+            content: x.lastPreview,
+            lastSenderId: x.lastSenderId,
+          });
+          var row = {
             id: d.id,
             name: x.name || 'Group',
             requiredTier: normalizeTier(x.requiredTier),
             mentorLed: !!x.mentorLed,
             allowCrossTier: !!x.allowCrossTier,
             unread: rc ? rc.unreadCount(x, uid) : 0,
-            lastPreview: (x.lastPreview && String(x.lastPreview).trim()) || '',
+            lastPreview: preview,
+            lastActivityAt: ib ? ib.tsMs(x.lastMessageAt) : 0,
+            lastSenderId: x.lastSenderId || '',
           };
-        })
-        .sort(function (a, b) {
-          var unreadDiff = (b.unread || 0) - (a.unread || 0);
-          if (unreadDiff) return unreadDiff;
-          return (a.name || '').localeCompare(b.name || '');
+          applyInboxPrefToRow(row, 'group', x.lastSenderId);
+          if (ib && rc) ib.mergeUnreadFromMeta(row, x, uid, rc.unreadCount);
+          return row;
         });
+      sortVisibleInboxLists();
     } catch (err) {
       console.warn('loadGroupsForUser', err);
       CommunicationState.visibleGroups = [];
@@ -3600,8 +4076,13 @@
       })
     );
 
-    CommunicationState.threads = [];
     var rc = receipts();
+    var ib = inbox();
+    var existingById = {};
+    (CommunicationState.threads || []).forEach(function (t) {
+      existingById[t.id] = t;
+    });
+    var nextThreads = [];
     for (var j = 0; j < rows.length; j++) {
       var row = rows[j];
       var otherUid = row.other;
@@ -3609,9 +4090,14 @@
       var label = otherUid
         ? (peerUser && peerUser.name) || otherUid.slice(0, 8) + '…'
         : 'Direct';
-      var preview = (row.data.lastPreview && String(row.data.lastPreview).trim()) || '';
-      var unread = rc ? rc.unreadCount(row.data, uid) : 0;
-      CommunicationState.threads.push({
+      var preview = formatInboxPreview({
+        lastPreview: row.data.lastPreview,
+        lastMessageType: row.data.lastMessageType,
+        content: row.data.lastPreview,
+        lastSenderId: row.data.lastSenderId,
+      });
+      var prev = existingById[row.doc.id];
+      var thread = {
         id: row.doc.id,
         convId: row.doc.id,
         otherUid: otherUid,
@@ -3619,9 +4105,17 @@
         tier: peerUser ? peerUser.tier : 'foundation',
         peerUser: peerUser,
         sub: preview || fmtTime(row.data.lastMessageAt) || '',
-        unread: unread,
-      });
+        unread: rc ? rc.unreadCount(row.data, uid) : 0,
+        lastActivityAt: ib ? ib.tsMs(row.data.lastMessageAt) : 0,
+        lastSenderId: row.data.lastSenderId || '',
+        _localReadAt: prev && prev._localReadAt ? prev._localReadAt : 0,
+      };
+      applyInboxPrefToRow(thread, 'direct', row.data.lastSenderId);
+      if (ib && rc) ib.mergeUnreadFromMeta(thread, row.data, uid, rc.unreadCount);
+      nextThreads.push(thread);
     }
+    CommunicationState.threads = nextThreads;
+    sortVisibleInboxLists();
     syncPresenceWatches();
   }
 
@@ -4041,11 +4535,18 @@
         : {};
     var recipients =
       ac.type === 'direct' ? [ac.otherUid] : CommunicationState.memberIds || [];
-    var preview = (
-      root.Ce2Format && root.Ce2Format.stripFormattingForPreview
-        ? root.Ce2Format.stripFormattingForPreview(patch.content || '')
-        : patch.content || ''
-    ).slice(0, 140);
+    var preview = formatInboxPreview({
+      lastPreview: patch.content || '',
+      content: patch.content || '',
+      messageType: patch.messageType || 'text',
+      lastMessageType: patch.messageType || 'text',
+      imageUrl: patch.imageUrl,
+      videoUrl: patch.videoUrl,
+      audioUrl: patch.audioUrl,
+      boardShare: patch.boardShare,
+      replyTo: patch.replyTo,
+      deleted: patch.deleted,
+    });
     var metaPatch = {
       lastMessageAt: now,
       lastPreview: preview,
@@ -4567,8 +5068,8 @@
         updatePendingVoiceMessage(localId, { uploadState: 'sent', uploadProgress: 1 });
 
         return commitCe2Message(ac, patch, me).then(function (messageId) {
-          triggerCe2Push(ac, 'Voice message', me, messageId);
-          patchThreadPreviewLocal(ac, 'Voice message');
+          triggerCe2Push(ac, 'Voice note', me, messageId);
+          patchThreadPreviewLocal(ac, patch);
           if (root.Ce2AudioOutbox) {
             root.Ce2AudioOutbox.remove(localId).catch(function () {});
           }
@@ -5274,7 +5775,7 @@
         confirmSentMessage(pendingIds[i], lastMessageId, patches[i], ac);
       }
       triggerCe2Push(ac, patches[patches.length - 1].content || '', me, lastMessageId);
-      patchThreadPreviewLocal(ac, patches[patches.length - 1].content || '');
+      patchThreadPreviewLocal(ac, patches[patches.length - 1]);
       if (patches.length > 1) {
         CommunicationState.statusMessage = patches.length + ' messages sent';
       }
@@ -5338,6 +5839,12 @@
     if (!sidebar) return;
     ce2UiWired = true;
     sidebar.addEventListener('click', function (e) {
+      if (inboxLongPressFired) {
+        inboxLongPressFired = false;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       var li = e.target.closest('.ce2-li[data-action]');
       if (!li || !CommunicationState.me) return;
       var action = li.dataset.action;
@@ -5769,6 +6276,7 @@
     bindCe2VoiceUploadActions();
     initCe2MessageActions();
     wireCe2DelegatedClick();
+    bindInboxGestures();
     bindHubNav();
 
     document.querySelectorAll('.ce2-tab').forEach(function (btn) {
@@ -5898,7 +6406,7 @@
         };
         var messageId = await commitCe2Message(patchAc, patch, me);
         triggerCe2Push(patchAc, patch.content || '', me, messageId);
-        patchThreadPreviewLocal(patchAc, patch.content || '');
+        patchThreadPreviewLocal(patchAc, patch);
         q.remove(item.id);
         sent++;
       } catch (err) {
@@ -6002,8 +6510,12 @@
 
     var listsPromise = promiseWithTimeout(
       Promise.all([
-        loadGroupsForUser(CommunicationState.me),
-        loadThreads(user.uid),
+        loadInboxPrefs(user.uid).then(function () {
+          return Promise.all([
+            loadGroupsForUser(CommunicationState.me),
+            loadThreads(user.uid),
+          ]);
+        }),
         prefs,
       ]),
       15000,
@@ -6040,6 +6552,7 @@
       ]);
     } catch (_) {}
     render();
+    startInboxLayer(CommunicationState.me);
 
     if (!CommunicationState.offline) {
       flushCe2OfflineQueue().catch(function (e) {
@@ -6083,6 +6596,7 @@
       if (ce2BootedUid === user.uid) return;
       ce2BootedUid = user.uid;
       stopMessagesWatch();
+      stopInboxWatches();
       boot(user).catch(function (err) {
         handleCe2Error(err, 'boot');
         CommunicationState.loading = false;
