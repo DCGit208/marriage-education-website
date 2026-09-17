@@ -74,8 +74,8 @@ test('keeps typing APIs for existing CE2 wiring', function () {
   assert.strictEqual(typeof pr.setTypingMuted, 'function');
 });
 
-test('VERSION is 5', function () {
-  assert.strictEqual(pr.VERSION, 5);
+test('VERSION is 6', function () {
+  assert.strictEqual(pr.VERSION, 6);
 });
 
 test('recent lastActive is online', function () {
@@ -188,7 +188,7 @@ test('does not rewrite frozen keyboard function bodies (v60 contract still prese
 test('delivery and audio stable markers remain', function () {
   assert.ok(v2.indexOf('ce2-delivery-stable-v90') >= 0);
   assert.ok(v2.indexOf('ce2-audio-stable-1d') >= 0);
-  assert.ok(v2.indexOf('var CE2_TYPING_INDICATOR_ENABLED = false') >= 0);
+  assert.ok(v2.indexOf('var CE2_TYPING_INDICATOR_ENABLED = true') >= 0);
 });
 
 test('hub and header presence hooks are wired', function () {
@@ -196,7 +196,7 @@ test('hub and header presence hooks are wired', function () {
   assert.ok(v2.indexOf('function applyPresenceUi') >= 0);
   assert.ok(v2.indexOf('avatarWithPresence') >= 0);
   assert.ok(html.indexOf('ce2ThreadPresenceDot') >= 0);
-  assert.ok(html.indexOf('ce2-presence.js?v=5') >= 0);
+  assert.ok(html.indexOf('ce2-presence.js?v=6') >= 0);
   assert.ok(/communication-v2\.js\?v=\d+/.test(html));
   assert.ok(/communication-v2\.css\?v=\d+/.test(html));
 });

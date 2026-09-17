@@ -290,10 +290,11 @@ test('messenger cache-bust is above live for changed card/media assets', functio
   const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
   const shareVer = html.match(/ce2-share\.js\?v=(\d+)/);
   const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
-  assert.ok(cssVer && Number(cssVer[1]) >= 79, 'css cache-bust must be above live v=78');
+  assert.ok(cssVer && Number(cssVer[1]) >= 80, 'css cache-bust must be above live v=79');
   assert.ok(shareVer && Number(shareVer[1]) >= 10, 'ce2-share cache-bust must be above live v=9');
   assert.ok(mediaVer && Number(mediaVer[1]) >= 3, 'ce2-media-view cache-bust must be above live v=2');
-  assert.ok(/communication-v2\.js\?v=109/.test(html), 'leave communication-v2.js at main/live v=109');
+  const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
+  assert.ok(jsVer && Number(jsVer[1]) >= 110, 'communication-v2.js cache-bust must be above live v=109');
   assert.ok(/ce2-message-actions\.js\?v=23/.test(html), 'leave ce2-message-actions.js at main/live v=23');
 });
 
