@@ -58,22 +58,37 @@
   }
 
   /**
-   * @returns {'pending'|'sent'|'read'|''}
+   * Per-bubble send state for the author.
+   * @returns {'pending'|'sent'|'delivered'|'read'|'failed'|''}
    */
-  function deliveryStatus(message, selfUid, otherLastReadTs) {
+  function deliveryStatus(message, selfUid, otherLastReadTs, extras) {
+    extras = extras || {};
     if (!message || message.senderId !== selfUid) return '';
-    if (message._pending) return 'pending';
-    if (!otherLastReadTs) return 'sent';
+    if (message._failed || message.uploadState === 'failed') return 'failed';
+    if (
+      message._pending ||
+      message.uploadState === 'uploading' ||
+      message.uploadState === 'retrying'
+    ) {
+      return 'pending';
+    }
     var msgSec = tsSeconds(message.createdAt);
     var readSec = tsSeconds(otherLastReadTs);
-    if (readSec >= msgSec) return 'read';
+    if (msgSec > 0 && readSec >= msgSec) return 'read';
+    if (extras.otherOnline) return 'delivered';
+    var activeMs = extras.otherLastActiveMs;
+    if (typeof activeMs === 'number' && activeMs > 0 && msgSec > 0 && activeMs / 1000 >= msgSec) {
+      return 'delivered';
+    }
     return 'sent';
   }
 
   function statusLabel(status) {
     if (status === 'pending') return 'Sending…';
+    if (status === 'sent') return 'Sent';
+    if (status === 'delivered') return 'Delivered';
     if (status === 'read') return 'Read';
-    if (status === 'sent') return 'Delivered';
+    if (status === 'failed') return 'Failed to send';
     return '';
   }
 
@@ -86,6 +101,6 @@
     deliveryStatus: deliveryStatus,
     statusLabel: statusLabel,
     tsSeconds: tsSeconds,
-    VERSION: 2,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : global);

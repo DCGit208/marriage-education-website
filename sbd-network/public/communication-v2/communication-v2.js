@@ -424,6 +424,8 @@
       pr.applyDot(wrap.querySelector('.ce2-presence-dot'), rec);
     });
     applyPresenceHeader();
+    var ac = CommunicationState.activeConversation;
+    if (ac && ac.type === 'direct') updateReadReceiptFooters(ac);
   }
 
   function applyPresenceHeader() {
@@ -863,6 +865,8 @@
       requestRender: requestRender,
       copyMessageText: copyMessageText,
       removeOptimisticMessage: removeOptimisticMessage,
+      retryFailedMessage: retryFailedMessage,
+      markOptimisticFailed: markOptimisticFailed,
       canReadMessageContent: canReadMessageContent,
       ensureDirectConv: ensureDirectConv,
       directConvId: directConvId,
@@ -1118,6 +1122,23 @@
 
   function canReadClassification(reader, classification) {
     if (!reader) return false;
+    var g = gov();
+    if (g && g.canReadClassificationAsUser) {
+      var raw = reader.raw || {};
+      return g.canReadClassificationAsUser(
+        {
+          tier: reader.tier || raw.tier,
+          subscription: raw.subscription,
+          mentor: reader.mentor,
+        },
+        classification,
+        {
+          isAdmin: !!reader.isAdmin,
+          mentor: !!reader.mentor,
+        }
+      );
+    }
+    if (reader.isAdmin) return true;
     if (classification === 'public') return true;
     if (classification === 'mentor') return reader.mentor || reader.isAdmin;
     return tierRank(reader) >= classRank(classification);
@@ -1238,12 +1259,11 @@
   }
 
   function canReadMessageContent(reader, message, activeConversation) {
-    if (!canReadClassification(reader, message.classification)) return false;
-    if (!governanceEnabled() || !activeConversation) return true;
-    if (typeof activeConversation.securityLevel !== 'number') return true;
-    if (message.senderId === (reader && reader.uid)) return true;
-    var g = gov();
-    return g.classificationAllowedAtFloor(message.classification, activeConversation.securityLevel);
+    // Personal eligibility only. Conversation securityLevel clamps *send*
+    // (downward formation flow). Applying it on receive hid Elite-classified
+    // history in DMs whose stored floor lagged paid subscription.tier.
+    void activeConversation;
+    return canReadClassification(reader, message && message.classification);
   }
 
   function syncClassificationSelect(activeConversation) {
@@ -1583,6 +1603,88 @@
     CommunicationState.messages = mergeServerAndPending(
       CommunicationState.lastServerMessages || []
     );
+  }
+
+  function markOptimisticFailed(pendingId, err) {
+    var reason = (err && err.message) || 'Send failed';
+    var found = false;
+    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).map(
+      function (p) {
+        if (p.id !== pendingId) return p;
+        found = true;
+        return Object.assign({}, p, {
+          _pending: true,
+          _failed: true,
+          _failReason: reason,
+        });
+      }
+    );
+    if (!found) return;
+    CommunicationState.messages = mergeServerAndPending(
+      CommunicationState.lastServerMessages || []
+    );
+  }
+
+  function patchForRetry(pending) {
+    var patch = Object.assign({}, pending);
+    delete patch.id;
+    delete patch._pending;
+    delete patch._failed;
+    delete patch._failReason;
+    delete patch.uploadState;
+    delete patch.uploadProgress;
+    delete patch._voiceLocalId;
+    delete patch._localAudioUrl;
+    return patch;
+  }
+
+  async function retryFailedMessage(pendingId) {
+    var pending = (CommunicationState.pendingMessages || []).find(function (p) {
+      return p.id === pendingId;
+    });
+    if (!pending) return;
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me) return;
+    if (pending.conversationId && ac.id && pending.conversationId !== ac.id) {
+      CommunicationState.statusMessage = 'Open that thread to retry this message.';
+      render();
+      return;
+    }
+    if (pending._voiceLocalId) {
+      retryVoiceNote(pending._voiceLocalId);
+      return;
+    }
+    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).map(
+      function (p) {
+        if (p.id !== pendingId) return p;
+        var next = Object.assign({}, p);
+        delete next._failed;
+        delete next._failReason;
+        next._pending = true;
+        return next;
+      }
+    );
+    CommunicationState.messages = mergeServerAndPending(
+      CommunicationState.lastServerMessages || []
+    );
+    requestRender({ threadOnly: true });
+    try {
+      var patch = patchForRetry(pending);
+      var messageId = await commitCe2Message(ac, patch, me);
+      confirmSentMessage(pendingId, messageId, patch, ac);
+      triggerCe2Push(ac, patch.content || '', me, messageId);
+      patchThreadPreviewLocal(ac, patch.content || '');
+      CommunicationState.statusMessage = null;
+      CommunicationState.error = null;
+    } catch (err) {
+      markOptimisticFailed(pendingId, err);
+      handleCe2Error(
+        err,
+        ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
+      );
+      requestRender({ threadOnly: true });
+    }
   }
 
   function sidebarListLoadingHtml(label) {
@@ -2188,28 +2290,64 @@
     }
   }
 
+  function otherDeliveryExtras(ac) {
+    var extras = { otherOnline: false, otherLastActiveMs: 0 };
+    if (!ac || ac.type !== 'direct' || !ac.otherUid) return extras;
+    var rec = CommunicationState.presenceByUid[ac.otherUid];
+    if (!rec) return extras;
+    extras.otherOnline = rec.state === 'online';
+    extras.otherLastActiveMs = rec.atMs || 0;
+    return extras;
+  }
+
+  function selfDeliveryStatus(m, ac) {
+    var rc = receipts();
+    if (!rc || !CommunicationState.me) return '';
+    var otherRead =
+      ac && ac.type === 'direct' && CommunicationState.convMeta
+        ? (CommunicationState.convMeta.lastRead || {})[ac.otherUid]
+        : null;
+    return rc.deliveryStatus(m, CommunicationState.me.uid, otherRead, otherDeliveryExtras(ac));
+  }
+
   function updateReadReceiptFooters(ac) {
     if (!ac || ac.type !== 'direct' || !CommunicationState.me) return;
     var scroll = el('ce2MessageScroll');
     if (!scroll) return;
     var rc = receipts();
     if (!rc) return;
-    var otherRead =
-      CommunicationState.convMeta && CommunicationState.convMeta.lastRead
-        ? CommunicationState.convMeta.lastRead[ac.otherUid]
-        : null;
     scroll.querySelectorAll('.ce2-row.is-self').forEach(function (row) {
       var mid = row.dataset.messageId;
-      if (!mid || String(mid).indexOf('pending-') === 0) return;
+      if (!mid) return;
       var m = CommunicationState.messages.find(function (x) {
         return x.id === mid;
       });
       if (!m) return;
       var footMeta = row.querySelector('.ce2-msg-foot-meta');
       if (!footMeta) return;
-      var status = rc.deliveryStatus(m, CommunicationState.me.uid, otherRead);
-      footMeta.textContent =
-        (status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
+      var status = selfDeliveryStatus(m, ac);
+      row.classList.toggle('is-pending', status === 'pending');
+      row.classList.toggle('is-failed', status === 'failed');
+      row.classList.toggle('is-sent', status === 'sent');
+      row.classList.toggle('is-delivered', status === 'delivered');
+      row.classList.toggle('is-read', status === 'read');
+      row.setAttribute('data-delivery', status || '');
+      if (m._voiceLocalId && m.uploadState === 'uploading') {
+        footMeta.textContent =
+          'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
+        return;
+      }
+      if (m._voiceLocalId && m.uploadState === 'retrying') {
+        footMeta.textContent = 'Retrying upload…';
+        return;
+      }
+      if (status === 'failed') {
+        footMeta.textContent = rc.statusLabel('failed');
+        return;
+      }
+      footMeta.textContent = m._pending
+        ? rc.statusLabel('pending')
+        : (status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
     });
   }
 
@@ -2221,15 +2359,21 @@
     var isHighlight =
       CommunicationState.highlightMessageId &&
       m.id === CommunicationState.highlightMessageId;
+    var status = self ? selfDeliveryStatus(m, ac) : '';
     const row = document.createElement('div');
     row.className =
       'ce2-row' +
       (self ? ' is-self' : '') +
-      (m._pending ? ' is-pending' : '') +
+      (status === 'pending' || m._pending ? ' is-pending' : '') +
+      (status === 'failed' || m._failed || m.uploadState === 'failed' ? ' is-failed' : '') +
+      (status === 'sent' ? ' is-sent' : '') +
+      (status === 'delivered' ? ' is-delivered' : '') +
+      (status === 'read' ? ' is-read' : '') +
       (m.uploadState === 'failed' ? ' is-voice-failed' : '') +
       (searchHit ? ' is-search-hit' : '') +
       (isHighlight ? ' is-highlighted' : '');
     row.dataset.messageId = m.id || '';
+    if (status) row.setAttribute('data-delivery', status);
     const reader = CommunicationState.me;
     const canRead = canReadMessageContent(reader, m, ac);
     const bubble = document.createElement('div');
@@ -2265,28 +2409,19 @@
     const foot = document.createElement('div');
     foot.className = 'ce2-msg-foot';
     var rc = receipts();
-    var otherRead =
-      ac && ac.type === 'direct' && CommunicationState.convMeta
-        ? (CommunicationState.convMeta.lastRead || {})[ac.otherUid]
-        : null;
-    var status =
-      rc && self && !m._pending
-        ? rc.deliveryStatus(m, CommunicationState.me.uid, otherRead)
-        : m._pending
-          ? 'pending'
-          : '';
     var footMeta = document.createElement('span');
     footMeta.className = 'ce2-msg-foot-meta';
+    footMeta.setAttribute('role', 'status');
     if (m._voiceLocalId && m.uploadState === 'uploading') {
       footMeta.textContent =
         'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
     } else if (m._voiceLocalId && m.uploadState === 'retrying') {
       footMeta.textContent = 'Retrying upload…';
-    } else if (m._voiceLocalId && m.uploadState === 'failed') {
-      footMeta.textContent = 'Failed to send';
+    } else if (status === 'failed' || (m._voiceLocalId && m.uploadState === 'failed')) {
+      footMeta.textContent = (rc && rc.statusLabel('failed')) || 'Failed to send';
     } else {
       footMeta.textContent = m._pending
-        ? 'Sending…'
+        ? (rc && rc.statusLabel('pending')) || 'Sending…'
         : (rc && status ? rc.statusLabel(status) + ' · ' : '') + (fmtTime(m.createdAt) || '');
     }
     if (ma && ma.isMessageSaved(m)) {
@@ -2297,6 +2432,15 @@
       footMeta.appendChild(star);
     }
     foot.appendChild(footMeta);
+    if (self && (status === 'failed' || m._failed) && !m._voiceLocalId) {
+      var retryWrap = document.createElement('div');
+      retryWrap.className = 'ce2-send-failed-actions';
+      retryWrap.innerHTML =
+        '<button type="button" class="ce2-send-retry" data-pending-id="' +
+        escapeHtml(m.id || '') +
+        '">Retry</button>';
+      foot.appendChild(retryWrap);
+    }
     if (ma) ma.renderEditedLabel(foot, m);
     row.appendChild(foot);
     wireMessageRowMenu(row, m, ac, self, canRead);
@@ -3081,14 +3225,34 @@
     if (openToken !== CommunicationState._openToken) return;
 
     var security = null;
+    var storedLevel = -1;
     if (snap.exists) {
       var cdata = snap.data();
       if (typeof cdata.securityLevel === 'number') {
+        storedLevel = cdata.securityLevel;
         security = { tier: cdata.securityTier || 'foundation', level: cdata.securityLevel };
       }
     }
-    if (!security) {
-      security = await loadConversationSecurity(readyId);
+    var liveSecurity = await resolveDirectSecurity(otherUid);
+    if (openToken !== CommunicationState._openToken) return;
+    var gRaise = gov();
+    if (
+      liveSecurity &&
+      gRaise &&
+      gRaise.shouldRaiseConversationSecurity &&
+      gRaise.shouldRaiseConversationSecurity(storedLevel, liveSecurity.level)
+    ) {
+      security = liveSecurity;
+      convRef
+        .set(
+          { securityTier: liveSecurity.tier, securityLevel: liveSecurity.level },
+          { merge: true }
+        )
+        .catch(function (secErr) {
+          console.warn('[CE2] raise conversation security', secErr);
+        });
+    } else if (!security) {
+      security = liveSecurity || (await loadConversationSecurity(readyId));
     }
     if (openToken !== CommunicationState._openToken) return;
 
@@ -4478,6 +4642,13 @@
         if (rid) retryVoiceNote(rid);
         return;
       }
+      var sendRetryBtn = e.target.closest('.ce2-send-retry');
+      if (sendRetryBtn) {
+        e.preventDefault();
+        var pid = sendRetryBtn.getAttribute('data-pending-id');
+        if (pid) retryFailedMessage(pid);
+        return;
+      }
       var discardBtn = e.target.closest('.ce2-voice-discard');
       if (discardBtn) {
         e.preventDefault();
@@ -4976,7 +5147,7 @@
       }
     } catch (err) {
       pendingIds.forEach(function (pid) {
-        removeOptimisticMessage(pid);
+        markOptimisticFailed(pid, err);
       });
       handleCe2Error(
         err,

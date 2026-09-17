@@ -73,7 +73,8 @@
   function isSubscriptionCurrentlyActive(sub, nowMs) {
     if (!sub) return false;
     var status = String(sub.status || '').toLowerCase();
-    if (status && status !== 'active') return false;
+    if (status === 'canceled') status = 'cancelled';
+    if (status && status !== 'active' && status !== 'trialing') return false;
     if (!status) return false;
     var end = subscriptionEndMs(sub);
     var now = typeof nowMs === 'number' ? nowMs : Date.now();
@@ -95,6 +96,35 @@
     var subTier = normalizeTier(sub.tier);
     if (!isBillingTier(subTier)) return docTier;
     return tierRank(subTier) > tierRank(docTier) ? subTier : docTier;
+  }
+
+  /** True when live billing or users.tier grants Elite messaging rank. */
+  function hasEliteMessagingAccess(userData, nowMs) {
+    return tierRank(resolveMessagingTier(userData, nowMs)) >= 2;
+  }
+
+  /**
+   * Conversation floor is min(participants). Raise stored floor when live
+   * resolved tiers would be higher (stale users.tier wrote premium on Elite DMs).
+   * Never lower — that would clamp existing Elite-classified history.
+   */
+  function shouldRaiseConversationSecurity(storedLevel, liveLevel) {
+    if (typeof liveLevel !== 'number' || liveLevel < 0) return false;
+    if (typeof storedLevel !== 'number' || storedLevel < 0) return true;
+    return liveLevel > storedLevel;
+  }
+
+  /**
+   * Read eligibility: personal rank vs classification.
+   * Conversation securityLevel is a send-side clamp, not a receive filter.
+   */
+  function canReadClassificationAsUser(userData, classification, extras) {
+    var x = extras || {};
+    if (x.isAdmin) return true;
+    var c = (classification && String(classification).toLowerCase()) || 'public';
+    if (c === 'public') return true;
+    if (c === 'mentor') return !!(x.mentor || (userData && userData.mentor));
+    return tierRank(resolveMessagingTier(userData)) >= classRank(c);
   }
 
   /** Formation tier only — admin role does not raise conversation floor. */
@@ -202,6 +232,9 @@
     normalizeTier: normalizeTier,
     tierRank: tierRank,
     resolveMessagingTier: resolveMessagingTier,
+    hasEliteMessagingAccess: hasEliteMessagingAccess,
+    shouldRaiseConversationSecurity: shouldRaiseConversationSecurity,
+    canReadClassificationAsUser: canReadClassificationAsUser,
     isSubscriptionCurrentlyActive: isSubscriptionCurrentlyActive,
     tierRankFromParticipant: tierRankFromParticipant,
     formationRankFromParticipant: formationRankFromParticipant,
@@ -215,6 +248,6 @@
     classificationAllowedAtFloor: classificationAllowedAtFloor,
     clampClassification: clampClassification,
     classificationsAtOrBelowFloor: classificationsAtOrBelowFloor,
-    VERSION: 5,
+    VERSION: 6,
   };
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
