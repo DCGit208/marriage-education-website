@@ -26,11 +26,9 @@
 /* ── Return to messenger (CE2 board-share origin) ─────────────── */
 .messenger-return-bar {
   display: none;
-  position: fixed;
-  top: calc(60px + env(safe-area-inset-top));
-  left: 0;
-  right: 0;
-  z-index: 999;
+  position: sticky;
+  top: calc(60px + env(safe-area-inset-top, 0px));
+  z-index: 99;
   align-items: center;
   gap: 10px;
   min-height: 48px;
@@ -62,11 +60,16 @@
 .board-page.from-messenger .messenger-return-bar:not([hidden]) {
   display: flex;
 }
-.board-page.from-messenger.has-header {
-  padding-top: calc(108px + env(safe-area-inset-top));
-}
 .board-page.from-messenger .pinned-banner {
-  top: calc(108px + env(safe-area-inset-top));
+  top: calc(108px + env(safe-area-inset-top, 0px));
+}
+@media (max-width: 767px) {
+  .messenger-return-bar {
+    top: calc(56px + env(safe-area-inset-top, 0px));
+  }
+  .board-page.from-messenger .pinned-banner {
+    top: calc(104px + env(safe-area-inset-top, 0px));
+  }
 }
 
 /* ── Pinned banner ─────────────────────────────────────────────── */

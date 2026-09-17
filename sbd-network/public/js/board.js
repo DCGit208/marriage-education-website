@@ -321,6 +321,15 @@ function initMessengerReturnChrome() {
 
 initMessengerReturnChrome();
 
+backBtn && backBtn.addEventListener('click', () => {
+  if (messengerReturnInfo && messengerReturnHref) {
+    window.location.href = messengerReturnHref;
+    return;
+  }
+  const gid = currentBoardData && currentBoardData.groupId;
+  window.location.href = gid ? `group.html?id=${gid}` : 'dashboard.html';
+});
+
 // ── Retry helper for Firestore queries (especially important for Safari) ──
 async function retryFirestoreQuery(queryFn, maxRetries = 3, timeoutMs = 20000) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -2126,16 +2135,6 @@ async function openSaveCollectionModal(post) {
     };
   }
 }
-
-// ── Nav buttons ──────────────────────────────────────────────────
-backBtn && backBtn.addEventListener('click', () => {
-  if (messengerReturnInfo && messengerReturnHref) {
-    window.location.href = messengerReturnHref;
-    return;
-  }
-  const gid = currentBoardData && currentBoardData.groupId;
-  window.location.href = gid ? `group.html?id=${gid}` : 'dashboard.html';
-});
 
 logoutBtn && logoutBtn.addEventListener('click', async () => {
   await auth.signOut();
