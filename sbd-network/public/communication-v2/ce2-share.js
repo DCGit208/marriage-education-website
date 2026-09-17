@@ -139,6 +139,11 @@
     return token;
   }
 
+  function boardShareThumbUrl(bs) {
+    if (!bs) return '';
+    return String(bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '').trim();
+  }
+
   function renderBoardShareHtml(m, escapeHtml, returnInfo) {
     var bs = m.boardShare;
     if (!bs || !bs.boardId || !bs.postId) return '';
@@ -146,21 +151,26 @@
     var title = escapeHtml(bs.title || 'Board post');
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
     var note = bs.note ? escapeHtml(String(bs.note).slice(0, 240)) : '';
-    var thumb = bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '';
+    var thumb = boardShareThumbUrl(bs);
+    var safeThumb = thumb ? escapeHtml(thumb).replace(/"/g, '&quot;') : '';
     // Keep the thumbnail outside the <a>. Wrapping it in the link made
     // long-press/click-to-reply a no-op: isInteractiveMsgTarget skipped the
     // message menu, and iOS often stole the image gesture (save/open sheet).
-    var thumbHtml = thumb
-      ? '<button type="button" class="ce2-board-share-thumb" aria-label="Reply to this message">' +
-        '<img class="ce2-board-share-thumb-img" src="' +
-        escapeHtml(thumb).replace(/"/g, '&quot;') +
-        '" alt="" loading="lazy" draggable="false"></button>'
-      : '';
+    var thumbHtml =
+      '<button type="button" class="ce2-board-share-thumb' +
+      (thumb ? '' : ' is-fallback') +
+      '" aria-label="Reply to this message">' +
+      '<span class="ce2-board-share-thumb-ph" aria-hidden="true"></span>' +
+      (thumb
+        ? '<img class="ce2-board-share-thumb-img" src="' +
+          safeThumb +
+          '" alt="" loading="lazy" decoding="async" draggable="false">'
+        : '') +
+      '</button>';
     var bodyHtml =
       '<a class="ce2-board-share-body" href="' +
       href.replace(/"/g, '&quot;') +
       '">' +
-      (note ? '<span class="ce2-board-share-note">' + note + '</span>' : '') +
       '<span class="ce2-board-share-kicker">Board share</span>' +
       '<span class="ce2-board-share-title">' +
       title +
@@ -168,7 +178,8 @@
       (excerpt
         ? '<span class="ce2-board-share-excerpt">' + excerpt + '</span>'
         : '') +
-      '<span class="ce2-board-share-cta">Open post →</span></a>';
+      (note ? '<span class="ce2-board-share-note">' + note + '</span>' : '') +
+      '<span class="ce2-board-share-cta">Open post</span></a>';
     return '<div class="ce2-board-share">' + thumbHtml + bodyHtml + '</div>';
   }
 
@@ -180,8 +191,9 @@
     messengerReturnHref: messengerReturnHref,
     parseMessengerReturnFromSearch: parseMessengerReturnFromSearch,
     normalizeMessengerReturn: normalizeMessengerReturn,
+    boardShareThumbUrl: boardShareThumbUrl,
     renderBoardShareHtml: renderBoardShareHtml,
     FROM_MESSENGER: FROM_MESSENGER,
-    VERSION: 2,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : global);
