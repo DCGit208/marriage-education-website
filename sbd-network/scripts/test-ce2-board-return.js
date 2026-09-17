@@ -183,6 +183,24 @@ test('board page template includes a hidden Back to messenger control', function
   });
 });
 
+test('messenger return control is position:fixed (not sticky)', function () {
+  const css = fs.readFileSync(path.join(ROOT, 'public/css/board-media.css'), 'utf8');
+  const block = css.match(/\.messenger-return-bar\s*\{[^}]+\}/);
+  assert.ok(block, 'expected .messenger-return-bar rule');
+  assert.ok(/position:\s*fixed/.test(block[0]), 'Back to messenger must stay on-screen while scrolling');
+  assert.ok(!/position:\s*sticky/.test(block[0]));
+  assert.ok(/bottom:\s*calc\(76px/.test(block[0]), 'chip sits above the bottom nav / safe area');
+});
+
+test('board cache-bust for board-media.css is above live', function () {
+  const src = fs.readFileSync(path.join(ROOT, 'src/pages/board.html'), 'utf8');
+  const pub = fs.readFileSync(path.join(ROOT, 'public/board.html'), 'utf8');
+  assert.ok(/board-media\.css\?v=64/.test(src));
+  const pubVer = pub.match(/board-media\.css\?v=(\d+)/);
+  assert.ok(pubVer, 'public board.html must version board-media.css');
+  assert.ok(Number(pubVer[1]) > 1789602190001, 'public CSS cache-bust must be above live v=1789602190001');
+});
+
 if (failed) {
   console.error('\n' + failed + ' test(s) failed\n');
   process.exit(1);

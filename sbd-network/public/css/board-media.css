@@ -24,32 +24,47 @@
 }
 
 /* ── Return to messenger (CE2 board-share origin) ─────────────── */
+/*
+  position:fixed — not sticky. html/body set overflow-x:hidden in styles.css,
+  which creates a scroll containing block so sticky chrome scrolls away with
+  the feed. A compact lower-left chip stays on-screen (and clear of the FAB).
+*/
 .messenger-return-bar {
   display: none;
-  position: sticky;
-  top: calc(60px + env(safe-area-inset-top, 0px));
-  z-index: 99;
+  position: fixed;
+  z-index: 400;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 48px;
-  padding: 10px 16px;
-  background: rgba(0, 24, 32, 0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(0, 188, 212, 0.35);
+  max-width: calc(100vw - 96px);
+  padding: 10px 16px 10px 14px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(0, 24, 32, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 188, 212, 0.45);
   color: #fff;
   text-decoration: none;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   letter-spacing: 0.01em;
-  box-sizing: border-box;
+  white-space: nowrap;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(0, 188, 212, 0.25);
+  touch-action: manipulation;
 }
 .messenger-return-bar:hover,
 .messenger-return-bar:focus-visible {
-  background: rgba(0, 188, 212, 0.16);
+  background: rgba(0, 188, 212, 0.22);
   color: #fff;
+  outline: none;
+}
+.messenger-return-bar:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.45), 0 6px 22px rgba(0, 0, 0, 0.45);
 }
 .messenger-return-arrow {
   font-size: 1.15rem;
@@ -57,18 +72,17 @@
   color: var(--accent-primary, #00bcd4);
   flex-shrink: 0;
 }
+.messenger-return-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .board-page.from-messenger .messenger-return-bar:not([hidden]) {
-  display: flex;
+  display: inline-flex;
 }
-.board-page.from-messenger .pinned-banner {
-  top: calc(108px + env(safe-area-inset-top, 0px));
-}
-@media (max-width: 767px) {
+@media (min-width: 712px) {
   .messenger-return-bar {
-    top: calc(56px + env(safe-area-inset-top, 0px));
-  }
-  .board-page.from-messenger .pinned-banner {
-    top: calc(104px + env(safe-area-inset-top, 0px));
+    left: max(16px, calc(50% - 340px + 12px));
   }
 }
 
