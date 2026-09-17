@@ -156,7 +156,9 @@ test('renderBoardShareHtml Open post href includes messenger return', function (
     escapeHtml,
     { type: 'direct', id: 'd_uid1_uid2' }
   );
-  assert.ok(html.indexOf('class="ce2-board-share"') !== -1);
+  assert.ok(/<div class="ce2-board-share">/.test(html));
+  assert.ok(/<a class="ce2-board-share-body" href="/.test(html));
+  assert.ok(!/<a class="ce2-board-share"/.test(html));
   assert.ok(html.indexOf('from=ce2') !== -1);
   assert.ok(html.indexOf('conv=d_uid1_uid2') !== -1);
   assert.ok(html.indexOf('Open post') !== -1);
