@@ -2167,22 +2167,38 @@ body.ce2-msg-menu-open {
 .ce2-board-share-thumb {
   display: block;
   width: 100%;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+  padding: 0;
+  border: none;
   border-radius: 8px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.ce2-board-share-thumb:active {
+  opacity: 0.92;
 }
 
 .ce2-board-share-thumb-img {
   display: block;
   width: 100%;
   height: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .ce2-board-share-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .ce2-board-share-note {

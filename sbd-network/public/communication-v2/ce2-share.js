@@ -65,17 +65,19 @@
     var excerpt = escapeHtml((bs.excerpt || m.content || '').slice(0, 120));
     var note = bs.note ? escapeHtml(String(bs.note).slice(0, 240)) : '';
     var thumb = bs.thumbnailUrl || bs.thumbUrl || bs.imageUrl || '';
+    // Keep the thumbnail outside the <a>. Wrapping it in the link made
+    // long-press/click-to-reply a no-op: isInteractiveMsgTarget skipped the
+    // message menu, and iOS often stole the image gesture (save/open sheet).
     var thumbHtml = thumb
-      ? '<span class="ce2-board-share-thumb"><img class="ce2-board-share-thumb-img" src="' +
+      ? '<button type="button" class="ce2-board-share-thumb" aria-label="Reply to this message">' +
+        '<img class="ce2-board-share-thumb-img" src="' +
         escapeHtml(thumb).replace(/"/g, '&quot;') +
-        '" alt="" loading="lazy"></span>'
+        '" alt="" loading="lazy" draggable="false"></button>'
       : '';
-    return (
-      '<a class="ce2-board-share" href="' +
+    var bodyHtml =
+      '<a class="ce2-board-share-body" href="' +
       href.replace(/"/g, '&quot;') +
       '">' +
-      thumbHtml +
-      '<span class="ce2-board-share-body">' +
       (note ? '<span class="ce2-board-share-note">' + note + '</span>' : '') +
       '<span class="ce2-board-share-kicker">Board share</span>' +
       '<span class="ce2-board-share-title">' +
@@ -84,8 +86,8 @@
       (excerpt
         ? '<span class="ce2-board-share-excerpt">' + excerpt + '</span>'
         : '') +
-      '<span class="ce2-board-share-cta">Open post →</span></span></a>'
-    );
+      '<span class="ce2-board-share-cta">Open post →</span></a>';
+    return '<div class="ce2-board-share">' + thumbHtml + bodyHtml + '</div>';
   }
 
   global.Ce2Share = {
@@ -93,6 +95,6 @@
     mintBoardShareToken: mintBoardShareToken,
     shareHref: shareHref,
     renderBoardShareHtml: renderBoardShareHtml,
-    VERSION: 1,
+    VERSION: 2,
   };
 })(typeof window !== 'undefined' ? window : global);

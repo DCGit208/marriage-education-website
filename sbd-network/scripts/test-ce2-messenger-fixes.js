@@ -191,6 +191,65 @@ test('containerMime strips codec params for the uploaded File type', function ()
   assert.strictEqual(rec.containerMime(''), 'audio/webm');
 });
 
+console.log('\nBoard-share thumbnail reply markup\n');
+
+const shareSandbox = loadIife('public/communication-v2/ce2-share.js', {
+  location: { origin: 'https://sbd-network.web.app' },
+});
+const share = shareSandbox.Ce2Share;
+assert.ok(share, 'Ce2Share did not load');
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+test('OG thumbnail is a reply button outside the open-post link', function () {
+  const html = share.renderBoardShareHtml(
+    {
+      content: 'Shared a board post',
+      boardShare: {
+        boardId: 'b1',
+        postId: 'p1',
+        token: 'tok',
+        url: 'https://sbd-network.web.app/board.html?boardId=b1&post=p1',
+        title: 'Formation post',
+        excerpt: 'Excerpt text',
+        thumbnailUrl: 'https://cdn.example/thumb.jpg',
+      },
+    },
+    escapeHtml
+  );
+  assert.ok(/<button type="button" class="ce2-board-share-thumb"/.test(html));
+  assert.ok(/aria-label="Reply to this message"/.test(html));
+  assert.ok(/<a class="ce2-board-share-body" href="https:\/\/sbd-network\.web\.app\/board\.html\?boardId=b1&amp;post=p1"/.test(html) ||
+    /<a class="ce2-board-share-body" href="https:\/\/sbd-network\.web\.app\/board\.html\?boardId=b1&post=p1"/.test(html));
+  const thumbIdx = html.indexOf('ce2-board-share-thumb');
+  const linkIdx = html.indexOf('ce2-board-share-body');
+  const thumbClose = html.indexOf('</button>', thumbIdx);
+  assert.ok(thumbIdx >= 0 && linkIdx > thumbClose, 'thumbnail button must close before the open-post <a>');
+  assert.ok(!/<a class="ce2-board-share"/.test(html));
+  assert.ok(html.indexOf('Open post') > linkIdx);
+});
+
+test('board share without a thumbnail still opens via the body link', function () {
+  const html = share.renderBoardShareHtml(
+    {
+      boardShare: {
+        boardId: 'b1',
+        postId: 'p1',
+        url: 'https://sbd-network.web.app/board.html?boardId=b1&post=p1',
+        title: 'No media',
+      },
+    },
+    escapeHtml
+  );
+  assert.ok(!/ce2-board-share-thumb/.test(html));
+  assert.ok(/<a class="ce2-board-share-body" href="/.test(html));
+});
+
 console.log('\nVoice upload MIME + CORS policy\n');
 
 function loadUploadJs() {

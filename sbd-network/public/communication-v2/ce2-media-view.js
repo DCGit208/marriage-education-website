@@ -104,7 +104,7 @@
   }
 
   function onMessageScrollClick(e) {
-    if (e.target.closest('a, button:not(.ce2-media-tap), audio, video')) return;
+    if (e.target.closest('a, button:not(.ce2-media-tap):not(.ce2-board-share-thumb), audio, video')) return;
     var btn = e.target.closest('.ce2-media-tap');
     if (!btn) return;
     e.preventDefault();
@@ -146,6 +146,6 @@
     appendChatImage: appendChatImage,
     appendChatVideo: appendChatVideo,
     afterMessagePanelRender: afterMessagePanelRender,
-    VERSION: 1,
+    VERSION: 2,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
