@@ -195,6 +195,8 @@ console.log('\nBoard-share thumbnail reply markup\n');
 
 const shareSandbox = loadIife('public/communication-v2/ce2-share.js', {
   location: { origin: 'https://sbd-network.web.app' },
+  URL: URL,
+  URLSearchParams: URLSearchParams,
 });
 const share = shareSandbox.Ce2Share;
 assert.ok(share, 'Ce2Share did not load');
@@ -224,8 +226,8 @@ test('OG thumbnail is a reply button outside the open-post link', function () {
   );
   assert.ok(/<button type="button" class="ce2-board-share-thumb"/.test(html));
   assert.ok(/aria-label="Reply to this message"/.test(html));
-  assert.ok(/<a class="ce2-board-share-body" href="https:\/\/sbd-network\.web\.app\/board\.html\?boardId=b1&amp;post=p1"/.test(html) ||
-    /<a class="ce2-board-share-body" href="https:\/\/sbd-network\.web\.app\/board\.html\?boardId=b1&post=p1"/.test(html));
+  assert.ok(/<a class="ce2-board-share-body" href="[^"]*boardId=b1[^"]*post=p1/.test(html));
+  assert.ok(/from=ce2/.test(html));
   const thumbIdx = html.indexOf('ce2-board-share-thumb');
   const linkIdx = html.indexOf('ce2-board-share-body');
   const thumbClose = html.indexOf('</button>', thumbIdx);

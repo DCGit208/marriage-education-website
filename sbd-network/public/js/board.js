@@ -167,6 +167,7 @@ function getWardrobeDestinationLabel(category) {
 
 // ── DOM refs ─────────────────────────────────────────────────────
 const backBtn           = document.getElementById('backBtn');
+const messengerReturnBar = document.getElementById('messengerReturnBar');
 const logoutBtn         = document.getElementById('logoutBtn');
 const boardTitle        = document.getElementById('boardTitle');
 const boardDescription  = document.getElementById('boardDescription');
@@ -221,6 +222,113 @@ const bulkCancelBtn    = document.getElementById('bulkCancelBtn');
 
 // Track object URLs so we can revoke them when the modal closes
 let _mediaObjectURLs = [];
+
+// ── Return to messenger (board-share Open post from CE2) ─────────
+const CE2_BOARD_RETURN_KEY = 'sbd.ce2.boardReturn';
+let messengerReturnInfo = null;
+let messengerReturnHref = '';
+
+function sameOriginReferrerPath() {
+  try {
+    if (!document.referrer) return '';
+    const ref = new URL(document.referrer);
+    if (ref.origin !== location.origin) return '';
+    return ref.pathname || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function readStoredMessengerReturn() {
+  try {
+    const raw = sessionStorage.getItem(CE2_BOARD_RETURN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.from !== 'ce2') return null;
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function persistMessengerReturn(info) {
+  try {
+    if (info && info.from === 'ce2') {
+      sessionStorage.setItem(CE2_BOARD_RETURN_KEY, JSON.stringify(info));
+    } else {
+      sessionStorage.removeItem(CE2_BOARD_RETURN_KEY);
+    }
+  } catch (_) {}
+}
+
+function resolveMessengerReturn() {
+  const share = window.Ce2Share;
+  const fromUrl = share && share.parseMessengerReturnFromSearch
+    ? share.parseMessengerReturnFromSearch(urlParams)
+    : (urlParams.get('from') === 'ce2'
+      ? { from: 'ce2', conv: urlParams.get('conv') || '', group: urlParams.get('group') || '' }
+      : null);
+  if (fromUrl) {
+    persistMessengerReturn(fromUrl);
+    return fromUrl;
+  }
+
+  const refPath = sameOriginReferrerPath();
+  if (refPath.indexOf('/communication-v2') === 0) {
+    const fromRef = { from: 'ce2', conv: '', group: '' };
+    persistMessengerReturn(fromRef);
+    return fromRef;
+  }
+
+  const stored = readStoredMessengerReturn();
+  const fromBoard = /\/board(?:\.html)?$/.test(refPath);
+  if (stored && fromBoard) return stored;
+
+  persistMessengerReturn(null);
+  return null;
+}
+
+function boardHrefWithMessengerReturn(href) {
+  if (!messengerReturnInfo || !window.Ce2Share || !Ce2Share.withMessengerReturn) return href;
+  return Ce2Share.withMessengerReturn(href, messengerReturnInfo);
+}
+
+function initMessengerReturnChrome() {
+  messengerReturnInfo = resolveMessengerReturn();
+  messengerReturnHref = window.Ce2Share && Ce2Share.messengerReturnHref
+    ? Ce2Share.messengerReturnHref(messengerReturnInfo)
+    : '/communication-v2/';
+
+  if (!messengerReturnInfo) {
+    document.body.classList.remove('from-messenger');
+    if (messengerReturnBar) {
+      messengerReturnBar.hidden = true;
+      messengerReturnBar.removeAttribute('href');
+    }
+    return;
+  }
+
+  document.body.classList.add('from-messenger');
+  if (messengerReturnBar) {
+    messengerReturnBar.hidden = false;
+    messengerReturnBar.href = messengerReturnHref;
+  }
+  if (backBtn) {
+    backBtn.setAttribute('aria-label', 'Back to messenger');
+    backBtn.title = 'Back to messenger';
+  }
+}
+
+initMessengerReturnChrome();
+
+backBtn && backBtn.addEventListener('click', () => {
+  if (messengerReturnInfo && messengerReturnHref) {
+    window.location.href = messengerReturnHref;
+    return;
+  }
+  const gid = currentBoardData && currentBoardData.groupId;
+  window.location.href = gid ? `group.html?id=${gid}` : 'dashboard.html';
+});
 
 // ── Retry helper for Firestore queries (especially important for Safari) ──
 async function retryFirestoreQuery(queryFn, maxRetries = 3, timeoutMs = 20000) {
@@ -2028,12 +2136,6 @@ async function openSaveCollectionModal(post) {
   }
 }
 
-// ── Nav buttons ──────────────────────────────────────────────────
-backBtn && backBtn.addEventListener('click', () => {
-  const gid = currentBoardData && currentBoardData.groupId;
-  window.location.href = gid ? `group.html?id=${gid}` : 'dashboard.html';
-});
-
 logoutBtn && logoutBtn.addEventListener('click', async () => {
   await auth.signOut();
   window.location.href = '/auth';
@@ -3095,7 +3197,9 @@ async function submitRepost(originalPost, targetBoardId, userThoughts, selectedM
         if (bDoc.exists) targetBoardTitle = bDoc.data().title || targetBoardTitle;
       } catch (_) {}
       showActionToast(`Reposted to ${targetBoardTitle}`, 'View repost', () => {
-        window.location.href = `/board.html?boardId=${encodeURIComponent(targetBoardId)}&post=${encodeURIComponent(newPostId)}`;
+        window.location.href = boardHrefWithMessengerReturn(
+          `/board.html?boardId=${encodeURIComponent(targetBoardId)}&post=${encodeURIComponent(newPostId)}`
+        );
       });
     }
     

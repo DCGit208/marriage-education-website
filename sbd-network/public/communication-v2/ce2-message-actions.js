@@ -151,7 +151,12 @@
     var sh = deps && deps.share ? deps.share() : null;
     if (!m || !m.boardShare || !sh || !sh.shareHref) return '';
     var bs = m.boardShare;
-    return sh.shareHref(bs.boardId, bs.postId, bs.token);
+    var href = sh.shareHref(bs.boardId, bs.postId, bs.token);
+    if (sh.withMessengerReturn) {
+      var st = state();
+      href = sh.withMessengerReturn(href, (st && st.activeConversation) || { from: 'ce2' });
+    }
+    return href;
   }
 
   function directPeerUid(ac) {
