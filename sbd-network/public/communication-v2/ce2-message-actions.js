@@ -7,7 +7,15 @@
   var deps = null;
   /** Align with unsend window (communication-v2.js). */
   var EDIT_WINDOW_MS = 60 * 60 * 1000;
-  var REACTIONS = ['👍', '❤️', '🙏', '✨', '😂', '😮'];
+  var REACTIONS = ['👍', '❤️', '🙏', '✨', '😂', '😮', '😢'];
+  /** Swipe-to-reply: rightward, iMessage/WhatsApp-style; ignore left-edge back gestures. */
+  var SWIPE_REPLY = {
+    EDGE_GUARD: 28,
+    LOCK_PX: 12,
+    MOVE_CANCEL_PX: 14,
+    THRESHOLD: 56,
+    MAX_X: 72,
+  };
   var TEMPLATES = [
     { label: 'Grace & peace', text: 'Grace and peace to you in this formation season.' },
     { label: 'Thank you', text: 'Thank you — receiving this with gratitude.' },
@@ -29,6 +37,104 @@
     More: { aria: 'More — pin, star, and other tools' },
     Formation: { aria: 'Formation — notes, prayer, templates' },
   };
+
+  function aggregateReactions(reactions, myUid) {
+    var groups = {};
+    var order = [];
+    Object.keys(reactions || {}).forEach(function (uid) {
+      var emoji = reactions[uid];
+      if (!emoji || typeof emoji !== 'string') return;
+      if (!groups[emoji]) {
+        groups[emoji] = { emoji: emoji, count: 0, uids: [], mine: false };
+        order.push(emoji);
+      }
+      groups[emoji].count += 1;
+      groups[emoji].uids.push(uid);
+      if (myUid && uid === myUid) groups[emoji].mine = true;
+    });
+    return order.map(function (e) {
+      return groups[e];
+    });
+  }
+
+  function applyReactionToggle(reactions, uid, emoji) {
+    var next = Object.assign({}, reactions || {});
+    if (!uid || !emoji) return next;
+    if (next[uid] === emoji) delete next[uid];
+    else next[uid] = emoji;
+    return next;
+  }
+
+  function reactionWritePatch(uid, nextReactions, deleteValue) {
+    var patch = {};
+    if (!uid) return patch;
+    if (nextReactions && nextReactions[uid]) patch['reactions.' + uid] = nextReactions[uid];
+    else patch['reactions.' + uid] = deleteValue !== undefined ? deleteValue : { _delete: true };
+    return patch;
+  }
+
+  /**
+   * Pure swipe-axis helper. Vertical stays scroll; left-edge stays back-gesture;
+   * rightward horizontal can commit reply after THRESHOLD.
+   */
+  function decideSwipeReply(dx, dy, startX, lockedAxis) {
+    var absDx = Math.abs(dx);
+    var absDy = Math.abs(dy);
+    var cancelLongPress =
+      absDx > SWIPE_REPLY.MOVE_CANCEL_PX || absDy > SWIPE_REPLY.MOVE_CANCEL_PX;
+    var axis = lockedAxis || null;
+
+    if (typeof startX === 'number' && startX < SWIPE_REPLY.EDGE_GUARD) {
+      return {
+        axis: axis || (cancelLongPress ? 'v' : null),
+        translateX: 0,
+        iconOpacity: 0,
+        commit: false,
+        cancelLongPress: cancelLongPress,
+      };
+    }
+
+    if (!axis) {
+      if (absDx < SWIPE_REPLY.LOCK_PX && absDy < SWIPE_REPLY.LOCK_PX) {
+        return {
+          axis: null,
+          translateX: 0,
+          iconOpacity: 0,
+          commit: false,
+          cancelLongPress: false,
+        };
+      }
+      axis = absDy >= absDx ? 'v' : 'h';
+    }
+
+    if (axis === 'v' || dx <= 0) {
+      return {
+        axis: axis,
+        translateX: 0,
+        iconOpacity: 0,
+        commit: false,
+        cancelLongPress: cancelLongPress,
+      };
+    }
+
+    var x =
+      dx > SWIPE_REPLY.MAX_X ? SWIPE_REPLY.MAX_X + (dx - SWIPE_REPLY.MAX_X) * 0.2 : dx;
+    if (x > SWIPE_REPLY.MAX_X + 16) x = SWIPE_REPLY.MAX_X + 16;
+
+    return {
+      axis: 'h',
+      translateX: x,
+      iconOpacity: Math.min(dx / SWIPE_REPLY.THRESHOLD, 1),
+      commit: dx >= SWIPE_REPLY.THRESHOLD,
+      cancelLongPress: true,
+    };
+  }
+
+  function eventPoint(e) {
+    if (e.touches && e.touches[0]) return e.touches[0];
+    if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0];
+    return e;
+  }
 
   function state() {
     return deps && deps.getState ? deps.getState() : null;
@@ -515,6 +621,7 @@
         if (groups[sec] && groups[sec].length) navN += 1;
       });
       if (navN > 0) h += 28 + navN * 46;
+      h += 56;
       return h;
     }
     var sub = groups[view] ? groups[view].length : 0;
@@ -530,6 +637,33 @@
     requestAnimationFrame(function () {
       list.classList.remove('ce2-msg-menu-list--enter-back', 'ce2-msg-menu-list--enter-forward');
     });
+  }
+
+  function appendMenuReactRow(list, m, ac) {
+    var li = document.createElement('li');
+    li.className = 'ce2-msg-menu-react';
+    var st = state();
+    var myUid = st && st.me && st.me.uid;
+    var mine = (m && m.reactions && myUid && m.reactions[myUid]) || '';
+    REACTIONS.forEach(function (emoji) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ce2-msg-menu-react-btn' + (mine === emoji ? ' is-mine' : '');
+      btn.textContent = emoji;
+      btn.setAttribute(
+        'aria-label',
+        mine === emoji ? 'Remove ' + emoji + ' reaction' : 'React with ' + emoji
+      );
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeMessageMenu();
+        setReaction(m, ac, emoji).catch(function (err) {
+          if (deps.handleCe2Error) deps.handleCe2Error(err, 'react');
+        });
+      });
+      li.appendChild(btn);
+    });
+    list.appendChild(li);
   }
 
   function appendMenuActionRow(list, action) {
@@ -694,6 +828,9 @@
     if (view === 'root') {
       panel.setAttribute('aria-label', 'Message actions');
       panel.classList.remove('ce2-msg-menu-panel--sub');
+      if (menuSession.m && !menuSession.m._pending && !menuSession.m.deleted) {
+        appendMenuReactRow(list, menuSession.m, menuSession.ac);
+      }
       groups.Actions.forEach(function (action, idx) {
         appendMenuActionRow(list, action);
         if (idx < groups.Actions.length - 1) {
@@ -772,7 +909,7 @@
     }
   }
 
-  function openMessageMenu(actions, anchorRow, clientX, clientY) {
+  function openMessageMenu(actions, anchorRow, clientX, clientY, ctx) {
     if (!actions || !actions.length) return;
 
     var menu = el('ce2MsgMenu');
@@ -782,6 +919,7 @@
 
     closeMessageMenu();
     activeCtx = null;
+    ctx = ctx || {};
 
     var sheet = deps.isCoarsePointer ? deps.isCoarsePointer() : false;
     menuSession = {
@@ -791,6 +929,8 @@
       clientY: clientY,
       isSheet: sheet,
       view: 'root',
+      m: ctx.m || null,
+      ac: ctx.ac || null,
     };
 
     menu.classList.add(sheet ? 'is-sheet' : 'is-popover');
@@ -810,6 +950,63 @@
     });
   }
 
+  function ensureSwipeReplyIcon(row) {
+    var icon = row.querySelector('.ce2-swipe-reply-icon');
+    if (icon) return icon;
+    icon = document.createElement('span');
+    icon.className = 'ce2-swipe-reply-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '↩';
+    row.insertBefore(icon, row.firstChild);
+    return icon;
+  }
+
+  function applySwipeVisual(row, x, opacity) {
+    var bubble = row.querySelector('.ce2-bubble');
+    var foot = row.querySelector('.ce2-msg-foot');
+    var icon = ensureSwipeReplyIcon(row);
+    var t = 'translateX(' + Math.max(0, x) + 'px)';
+    row.classList.add('ce2-row-swiping');
+    if (bubble) {
+      bubble.style.transition = 'none';
+      bubble.style.transform = t;
+    }
+    if (foot) {
+      foot.style.transition = 'none';
+      foot.style.transform = t;
+    }
+    icon.style.transition = 'none';
+    icon.style.opacity = String(opacity || 0);
+    icon.classList.toggle('is-armed', (opacity || 0) >= 1);
+  }
+
+  function clearSwipeVisual(row, animate) {
+    var bubble = row.querySelector('.ce2-bubble');
+    var foot = row.querySelector('.ce2-msg-foot');
+    var icon = row.querySelector('.ce2-swipe-reply-icon');
+    var trans = animate ? 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+    row.classList.remove('ce2-row-swiping');
+    if (bubble) {
+      bubble.style.transition = trans;
+      bubble.style.transform = '';
+    }
+    if (foot) {
+      foot.style.transition = trans;
+      foot.style.transform = '';
+    }
+    if (icon) {
+      icon.style.transition = animate ? 'opacity 0.22s ease' : 'none';
+      icon.style.opacity = '0';
+      icon.classList.remove('is-armed');
+    }
+  }
+
+  function canSwipeReply(m, canRead) {
+    if (!m || !canRead || m.deleted || m._pending) return false;
+    if (!m.id || String(m.id).indexOf('pending-') === 0) return false;
+    return true;
+  }
+
   function wireMessageRow(row, m, ac, self, canRead) {
     var actionsFn = function () {
       return buildMenuItems(m, ac, self, canRead);
@@ -821,7 +1018,7 @@
 
     function openAt(clientX, clientY) {
       var actions = actionsFn();
-      if (actions.length) openMessageMenu(actions, row, clientX, clientY);
+      if (actions.length) openMessageMenu(actions, row, clientX, clientY, { m: m, ac: ac });
     }
 
     row.addEventListener('contextmenu', function (e) {
@@ -835,6 +1032,9 @@
     var pressTimer = null;
     var pressX = 0;
     var pressY = 0;
+    var swipeAxis = null;
+    var swipeActive = false;
+    var swipeTracking = false;
 
     function clearPress() {
       if (pressTimer) {
@@ -844,38 +1044,75 @@
       row.classList.remove('ce2-bubble-pressing');
     }
 
+    function resetSwipeState() {
+      swipeAxis = null;
+      swipeActive = false;
+      swipeTracking = false;
+    }
+
     function onPressStart(e) {
       if (e.button !== undefined && e.button !== 0) return;
       if (deps.isInteractiveMsgTarget && deps.isInteractiveMsgTarget(e.target)) return;
+      if (typeof document !== 'undefined' && document.body &&
+          document.body.classList.contains('ce2-msg-menu-open')) return;
       if (!e.target.closest('.ce2-bubble') && !e.target.closest('.ce2-msg-foot')) return;
       clearPress();
-      var pt = e.touches && e.touches[0] ? e.touches[0] : e;
+      resetSwipeState();
+      var pt = eventPoint(e);
       pressX = pt.clientX;
       pressY = pt.clientY;
+      swipeTracking = true;
       row.classList.add('ce2-bubble-pressing');
       pressTimer = setTimeout(function () {
         pressTimer = null;
+        if (swipeActive) return;
         row.classList.remove('ce2-bubble-pressing');
+        swipeTracking = false;
         msgMenuSuppressClick = true;
         openAt(pressX, pressY);
       }, MSG_MENU_LONG_PRESS_MS);
     }
 
     function onPressMove(e) {
-      if (!pressTimer) return;
-      var pt = e.touches && e.touches[0] ? e.touches[0] : e;
-      if (
-        Math.abs(pt.clientX - pressX) > MSG_MENU_MOVE_PX ||
-        Math.abs(pt.clientY - pressY) > MSG_MENU_MOVE_PX
-      ) {
-        clearPress();
+      if (!swipeTracking && !pressTimer) return;
+      var pt = eventPoint(e);
+      var dx = pt.clientX - pressX;
+      var dy = pt.clientY - pressY;
+      var decision = decideSwipeReply(dx, dy, pressX, swipeAxis);
+      if (decision.cancelLongPress) clearPress();
+      if (decision.axis) swipeAxis = decision.axis;
+      if (!canSwipeReply(m, canRead) || !(deps && deps.setReply)) return;
+      if (decision.axis === 'h') {
+        swipeActive = true;
+        applySwipeVisual(row, decision.translateX, decision.iconOpacity);
       }
+    }
+
+    function onPressEnd(e) {
+      var cancelled = !!(e && e.type === 'touchcancel');
+      var wasSwiping = swipeActive;
+      var dx = 0;
+      if (e) {
+        var pt = eventPoint(e);
+        dx = pt.clientX - pressX;
+      }
+      var decision = decideSwipeReply(dx, 0, pressX, swipeAxis);
+      clearPress();
+      if (wasSwiping) {
+        msgMenuSuppressClick = true;
+        clearSwipeVisual(row, true);
+        if (!cancelled && decision.commit && deps.setReply) {
+          deps.setReply(m);
+          if (navigator.vibrate) navigator.vibrate(8);
+        }
+      }
+      resetSwipeState();
     }
 
     row.addEventListener('touchstart', onPressStart, { passive: true });
     row.addEventListener('touchmove', onPressMove, { passive: true });
-    row.addEventListener('touchend', clearPress);
-    row.addEventListener('touchcancel', clearPress);
+    row.addEventListener('touchend', onPressEnd, { passive: true });
+    row.addEventListener('touchcancel', onPressEnd, { passive: true });
 
     row.addEventListener(
       'click',
@@ -1033,13 +1270,21 @@
     var row = el('ce2ReactRow');
     if (!row) return;
     row.innerHTML = '';
+    var st = state();
+    var mine = (st && st.me && m.reactions && m.reactions[st.me.uid]) || '';
     REACTIONS.forEach(function (emoji) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'ce2-react-btn';
+      btn.className = 'ce2-react-btn' + (mine === emoji ? ' is-mine' : '');
       btn.textContent = emoji;
+      btn.setAttribute(
+        'aria-label',
+        mine === emoji ? 'Remove ' + emoji + ' reaction' : 'React with ' + emoji
+      );
       btn.addEventListener('click', function () {
-        setReaction(m, ac, emoji).catch(deps.handleCe2Error);
+        setReaction(m, ac, emoji).catch(function (err) {
+          if (deps.handleCe2Error) deps.handleCe2Error(err, 'react');
+        });
         closeAllSheets();
       });
       row.appendChild(btn);
@@ -1048,18 +1293,38 @@
     activeCtx = { m: m, ac: ac };
   }
 
+  function reactionDeleteValue() {
+    if (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
+      return firebase.firestore.FieldValue.delete();
+    }
+    return { _delete: true };
+  }
+
   async function setReaction(m, ac, emoji) {
     var col = messageCol(ac);
-    var me = state().me;
-    if (!col || !m.id || !me) return;
-    var reactions = Object.assign({}, m.reactions || {});
-    if (reactions[me.uid] === emoji) {
-      delete reactions[me.uid];
-    } else {
-      reactions[me.uid] = emoji;
+    var st = state();
+    var me = st && st.me;
+    if (!col || !m || !m.id || !me || String(m.id).indexOf('pending-') === 0) return;
+    var prev = Object.assign({}, m.reactions || {});
+    var next = applyReactionToggle(prev, me.uid, emoji);
+    var patch = reactionWritePatch(me.uid, next, reactionDeleteValue());
+
+    m.reactions = next;
+    patchLocalMessage(m.id, { reactions: next });
+    var host =
+      typeof document !== 'undefined'
+        ? document.querySelector('.ce2-row[data-message-id="' + m.id + '"]')
+        : null;
+    if (host) syncReactionsRow(host, m, ac);
+
+    try {
+      await col.doc(m.id).update(patch);
+    } catch (err) {
+      m.reactions = prev;
+      patchLocalMessage(m.id, { reactions: prev });
+      if (host) syncReactionsRow(host, m, ac);
+      throw err;
     }
-    await col.doc(m.id).update({ reactions: reactions });
-    statusMsg('Reaction updated');
   }
 
   function showEditSheet(m, ac) {
@@ -1521,18 +1786,95 @@
     scroll.appendChild(bar);
   }
 
-  function appendReactionsRow(bubble, m) {
-    if (!m.reactions || !Object.keys(m.reactions).length) return;
-    var row = document.createElement('div');
-    row.className = 'ce2-msg-reactions';
-    Object.keys(m.reactions).forEach(function (uid) {
-      var span = document.createElement('span');
-      span.className = 'ce2-msg-reaction';
-      span.textContent = m.reactions[uid];
-      span.title = uid;
-      row.appendChild(span);
+  function reactionsHostBubble(host) {
+    if (!host) return null;
+    if (host.classList && host.classList.contains('ce2-bubble')) return host;
+    return host.querySelector ? host.querySelector('.ce2-bubble') : null;
+  }
+
+  function appendReactionsRow(bubble, m, ac) {
+    syncReactionsRow(bubble, m, ac);
+  }
+
+  function syncReactionsRow(host, m, ac) {
+    var bubble = reactionsHostBubble(host);
+    if (!bubble || !m) return;
+    ac = ac || (state() && state().activeConversation);
+    var st = state();
+    var myUid = st && st.me && st.me.uid;
+    var grouped = aggregateReactions(m.reactions, myUid);
+    var existing = bubble.querySelector('.ce2-msg-reactions');
+    var canWrite =
+      !m.deleted && !m._pending && m.id && String(m.id).indexOf('pending-') !== 0;
+
+    if (!grouped.length) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    var row = existing;
+    if (!row) {
+      row = document.createElement('div');
+      row.className = 'ce2-msg-reactions';
+      bubble.appendChild(row);
+    }
+    row.innerHTML = '';
+
+    grouped.forEach(function (g) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ce2-msg-reaction' + (g.mine ? ' is-mine' : '');
+      btn.dataset.emoji = g.emoji;
+      var label = document.createElement('span');
+      label.className = 'ce2-msg-reaction-emoji';
+      label.textContent = g.emoji;
+      btn.appendChild(label);
+      if (g.count > 1) {
+        var count = document.createElement('span');
+        count.className = 'ce2-msg-reaction-count';
+        count.textContent = String(g.count);
+        btn.appendChild(count);
+      }
+      btn.setAttribute(
+        'aria-label',
+        (g.mine ? 'Remove your ' : 'React with ') +
+          g.emoji +
+          (g.count > 1 ? ', ' + g.count : '')
+      );
+      btn.title = g.uids.join(', ');
+      if (canWrite) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          setReaction(m, ac, g.emoji).catch(function (err) {
+            if (deps.handleCe2Error) deps.handleCe2Error(err, 'react');
+          });
+        });
+      } else {
+        btn.disabled = true;
+      }
+      row.appendChild(btn);
     });
-    bubble.appendChild(row);
+
+    var addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ce2-msg-reaction ce2-msg-reaction-add';
+    addBtn.setAttribute('aria-label', 'Add reaction');
+    addBtn.textContent = '+';
+    addBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showReactSheet(m, ac);
+    });
+    row.appendChild(addBtn);
+
+    row.onclick = function (e) {
+      if (e.target === row) {
+        e.preventDefault();
+        e.stopPropagation();
+        showReactSheet(m, ac);
+      }
+    };
   }
 
   function renderFormationBadge(bubble, m) {
@@ -1566,7 +1908,7 @@
   }
 
   global.Ce2MessageActions = {
-    VERSION: 1,
+    VERSION: 2,
     init: function (d) {
       deps = d;
     },
@@ -1581,11 +1923,18 @@
     isUserBlocked: isUserBlocked,
     renderPinnedBanner: renderPinnedBanner,
     appendReactionsRow: appendReactionsRow,
+    syncReactionsRow: syncReactionsRow,
     renderFormationBadge: renderFormationBadge,
     renderForwardQuote: renderForwardQuote,
     renderEditedLabel: renderEditedLabel,
     messageMatchesSearch: messageMatchesSearch,
     messageCopyText: messageCopyText,
+    aggregateReactions: aggregateReactions,
+    applyReactionToggle: applyReactionToggle,
+    reactionWritePatch: reactionWritePatch,
+    decideSwipeReply: decideSwipeReply,
+    canSwipeReply: canSwipeReply,
     REACTIONS: REACTIONS,
+    SWIPE_REPLY: SWIPE_REPLY,
   };
 })(typeof window !== 'undefined' ? window : global);
