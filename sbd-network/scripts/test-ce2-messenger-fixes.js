@@ -256,7 +256,9 @@ test('board share without a thumbnail still opens via the body link', function (
     },
     escapeHtml
   );
-  assert.ok(!/ce2-board-share-thumb/.test(html));
+  assert.ok(/<button type="button" class="ce2-board-share-thumb is-fallback"/.test(html));
+  assert.ok(/ce2-board-share-thumb-ph/.test(html));
+  assert.ok(!/ce2-board-share-thumb-img/.test(html));
   assert.ok(/<a class="ce2-board-share-body" href="/.test(html));
 });
 

@@ -4,6 +4,14 @@
 (function (global) {
   'use strict';
 
+  function makePlaceholder(label) {
+    var ph = document.createElement('span');
+    ph.className = 'ce2-media-ph';
+    ph.setAttribute('aria-hidden', 'true');
+    ph.textContent = label || '';
+    return ph;
+  }
+
   function appendChatImage(bubble, m) {
     if (!bubble || !m || !m.imageUrl) return;
     var btn = document.createElement('button');
@@ -13,15 +21,20 @@
     btn.setAttribute('data-full-url', m.imageUrl);
     if (m.imageThumbUrl) btn.setAttribute('data-thumb-url', m.imageThumbUrl);
 
-    var img = document.createElement('img');
-    img.className = 'ce2-msg-image ce2-media-thumb';
-    img.alt = 'Photo';
-    img.loading = 'lazy';
-    img.decoding = 'async';
+    btn.appendChild(makePlaceholder(m.imageThumbUrl ? '' : 'Photo'));
+
     if (m.imageThumbUrl) {
+      var img = document.createElement('img');
+      img.className = 'ce2-msg-image ce2-media-thumb';
+      img.alt = 'Photo';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.draggable = false;
       img.src = m.imageThumbUrl;
+      btn.appendChild(img);
+    } else {
+      btn.classList.add('is-fallback');
     }
-    btn.appendChild(img);
 
     var hint = document.createElement('span');
     hint.className = 'ce2-media-tap-hint';
@@ -39,20 +52,19 @@
     btn.setAttribute('data-full-url', m.videoUrl);
     if (m.videoPosterUrl) btn.setAttribute('data-poster-url', m.videoPosterUrl);
 
+    btn.appendChild(makePlaceholder('Video'));
+
     if (m.videoPosterUrl) {
       var poster = document.createElement('img');
       poster.className = 'ce2-media-video-poster';
       poster.alt = '';
       poster.loading = 'lazy';
       poster.decoding = 'async';
+      poster.draggable = false;
       poster.src = m.videoPosterUrl;
       btn.appendChild(poster);
     } else {
-      var ph = document.createElement('div');
-      ph.className = 'ce2-media-video-placeholder';
-      ph.setAttribute('aria-hidden', 'true');
-      ph.textContent = 'Video';
-      btn.appendChild(ph);
+      btn.classList.add('is-fallback');
     }
 
     var play = document.createElement('span');
@@ -67,25 +79,40 @@
     bubble.appendChild(btn);
   }
 
+  function setHint(btn, text) {
+    var hint = btn && btn.querySelector ? btn.querySelector('.ce2-media-tap-hint') : null;
+    if (hint) hint.textContent = text;
+  }
+
   function activateMediaTap(btn) {
-    if (!btn || btn.classList.contains('is-loaded')) return;
+    if (!btn || btn.classList.contains('is-opening') || btn.classList.contains('is-loaded')) return;
     var kind = btn.getAttribute('data-ce2-media');
     var full = btn.getAttribute('data-full-url');
     if (!full) return;
 
-    btn.classList.add('is-loaded');
-
     if (kind === 'image') {
+      btn.classList.add('is-opening');
+      btn.classList.remove('is-fallback');
+      setHint(btn, 'Loading');
       var img = document.createElement('img');
       img.className = 'ce2-msg-image ce2-media-full';
       img.alt = 'Photo';
       img.decoding = 'async';
+      img.addEventListener('error', function () {
+        btn.classList.remove('is-opening');
+        btn.classList.add('is-fallback');
+        setHint(btn, 'Tap to retry');
+      });
+      img.addEventListener('load', function () {
+        btn.classList.add('is-loaded');
+        btn.replaceWith(img);
+      });
       img.src = full;
-      btn.replaceWith(img);
       return;
     }
 
     if (kind === 'video') {
+      btn.classList.add('is-loaded');
       var poster = btn.getAttribute('data-poster-url') || '';
       var wrap = document.createElement('div');
       wrap.className = 'ce2-msg-video-wrap is-playing';
@@ -101,6 +128,31 @@
       btn.replaceWith(wrap);
       vid.play().catch(function () {});
     }
+  }
+
+  function markBrokenMedia(img) {
+    if (!img || !img.classList) return;
+    img.classList.add('is-broken');
+    var frame =
+      img.closest && img.closest('.ce2-board-share-thumb, .ce2-media-tap');
+    if (frame && frame.classList) frame.classList.add('is-fallback');
+  }
+
+  function bindBrokenMedia(root) {
+    if (!root || !root.querySelectorAll) return;
+    root
+      .querySelectorAll(
+        '.ce2-board-share-thumb-img:not([data-ce2-err]), .ce2-media-thumb:not([data-ce2-err]), .ce2-media-video-poster:not([data-ce2-err]), .ce2-media-full:not([data-ce2-err])'
+      )
+      .forEach(function (img) {
+        img.setAttribute('data-ce2-err', '1');
+        img.addEventListener('error', function () {
+          markBrokenMedia(img);
+        });
+        if (img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src)) {
+          markBrokenMedia(img);
+        }
+      });
   }
 
   function onMessageScrollClick(e) {
@@ -140,12 +192,15 @@
   function afterMessagePanelRender(scroll) {
     wireMessageScroll(scroll);
     observeMessageMedia(scroll);
+    bindBrokenMedia(scroll);
   }
 
   global.Ce2MediaView = {
     appendChatImage: appendChatImage,
     appendChatVideo: appendChatVideo,
     afterMessagePanelRender: afterMessagePanelRender,
-    VERSION: 2,
+    activateMediaTap: activateMediaTap,
+    bindBrokenMedia: bindBrokenMedia,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

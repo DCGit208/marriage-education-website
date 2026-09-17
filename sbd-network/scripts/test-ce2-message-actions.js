@@ -205,8 +205,9 @@ test('Firestore reaction updates may only change the caller uid key', function (
   assert.ok(/after\[request\.auth\.uid\]\.size\(\) <= 32/.test(rules));
 });
 
-test('cache-bust tokens sit above live 108/77/22', function () {
-  assert.ok(/communication-v2\.css\?v=78/.test(indexHtml));
+test('cache-bust tokens sit above live 108/77/22 (css may rise further for card polish)', function () {
+  const cssVer = indexHtml.match(/communication-v2\.css\?v=(\d+)/);
+  assert.ok(cssVer && Number(cssVer[1]) >= 78);
   assert.ok(/ce2-message-actions\.js\?v=23/.test(indexHtml));
   assert.ok(/communication-v2\.js\?v=109/.test(indexHtml));
 });
