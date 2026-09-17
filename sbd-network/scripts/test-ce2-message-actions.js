@@ -207,9 +207,10 @@ test('Firestore reaction updates may only change the caller uid key', function (
 
 test('cache-bust tokens sit above live 108/77/22 (css may rise further for card polish)', function () {
   const cssVer = indexHtml.match(/communication-v2\.css\?v=(\d+)/);
-  assert.ok(cssVer && Number(cssVer[1]) >= 78);
+  const jsVer = indexHtml.match(/communication-v2\.js\?v=(\d+)/);
+  assert.ok(cssVer && Number(cssVer[1]) >= 80);
   assert.ok(/ce2-message-actions\.js\?v=23/.test(indexHtml));
-  assert.ok(/communication-v2\.js\?v=109/.test(indexHtml));
+  assert.ok(jsVer && Number(jsVer[1]) >= 110);
 });
 
 test('CSS keeps swipe pan-y so vertical thread scroll still wins', function () {

@@ -36,6 +36,7 @@
   let messagesUnsub = null;
   var convMetaUnsub = null;
   var typingInputUnsub = null;
+  var typingExpireTimer = null;
   var messengerNotifUnsub = null;
   var presenceWatchSet = null;
   var presenceHeartbeatStop = null;
@@ -46,8 +47,8 @@
   var ce2UiWired = false;
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
-  /** Off until real-time delivery is stable — stale typing pulses confuse users. */
-  var CE2_TYPING_INDICATOR_ENABLED = false;
+  /** In-thread typing cue (header + above composer). Pulses typing.{uid} on the conv/group doc. */
+  var CE2_TYPING_INDICATOR_ENABLED = true;
   var MAX_COMPOSER_ATTACHMENTS = 6;
   /** How long senders can remove their own messages (soft delete). */
   var UNSEND_WINDOW_MS = 60 * 60 * 1000;
@@ -80,6 +81,7 @@
     convMeta: null,
     replyTo: null,
     typingLabel: null,
+    typingUids: [],
     memberIds: [],
     hasMoreMessages: false,
     loadingOlder: false,
@@ -400,6 +402,8 @@
 
   function presenceHeaderText(ac) {
     if (!ac || ac.needsJoin || showDebugUi()) return null;
+    var typingText = currentTypingLabel(ac);
+    if (typingText) return typingText;
     var pr = presence();
     if (!pr) return null;
     if (ac.type === 'direct' && ac.otherUid) {
@@ -423,7 +427,7 @@
       var rec = uid ? CommunicationState.presenceByUid[uid] : null;
       pr.applyDot(wrap.querySelector('.ce2-presence-dot'), rec);
     });
-    applyPresenceHeader();
+    updateTypingLineOnly();
     var ac = CommunicationState.activeConversation;
     if (ac && ac.type === 'direct') updateReadReceiptFooters(ac);
   }
@@ -452,13 +456,18 @@
       dot.hidden = true;
     }
     if (!meta) return;
+    var typingText = currentTypingLabel(ac);
     var presenceText = presenceHeaderText(ac);
-    meta.classList.toggle('ce2-thread-meta--presence', !!presenceText);
+    meta.classList.toggle('ce2-thread-meta--typing', !!typingText);
+    meta.classList.toggle('ce2-thread-meta--presence', !!presenceText && !typingText);
     meta.classList.toggle(
       'is-online',
-      !!(presenceText && rec && rec.state === 'online') || groupOnline > 0
+      !typingText && (!!(presenceText && rec && rec.state === 'online') || groupOnline > 0)
     );
-    meta.classList.toggle('is-away', !!(presenceText && rec && rec.state === 'away'));
+    meta.classList.toggle(
+      'is-away',
+      !typingText && !!(presenceText && rec && rec.state === 'away')
+    );
     if (presenceText) meta.textContent = presenceText;
     else if (ac) meta.textContent = formatThreadMeta(ac);
   }
@@ -559,7 +568,7 @@
       typingInputUnsub = null;
     }
     CommunicationState.convMeta = null;
-    CommunicationState.typingLabel = null;
+    hideTypingIndicator();
   }
 
   function stopMessengerNotifWatch() {
@@ -586,8 +595,90 @@
     return false;
   }
 
+  function composerInputFocused() {
+    var input = el('ce2Input');
+    return !!(input && typeof document !== 'undefined' && document.activeElement === input);
+  }
+
+  function typingNameForUid(uid, ac) {
+    if (!uid) return '';
+    if (ac && ac.type === 'direct') {
+      return (ac.title || '').trim();
+    }
+    var rec = CommunicationState.presenceByUid[uid];
+    if (rec && rec.name) return rec.name;
+    var users = CommunicationState.visibleUsers || [];
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].uid === uid && users[i].name) return users[i].name;
+    }
+    var threads = CommunicationState.threads || [];
+    for (var j = 0; j < threads.length; j++) {
+      if (threads[j].otherUid === uid && threads[j].label) return threads[j].label;
+    }
+    return '';
+  }
+
+  function currentTypingLabel(ac) {
+    if (!CE2_TYPING_INDICATOR_ENABLED) return null;
+    var uids = CommunicationState.typingUids || [];
+    if (!uids.length) return CommunicationState.typingLabel || null;
+    var pr = presence();
+    if (pr && pr.formatTypingLabel) {
+      return (
+        pr.formatTypingLabel(uids, function (uid) {
+          return typingNameForUid(uid, ac);
+        }) || null
+      );
+    }
+    return CommunicationState.typingLabel || null;
+  }
+
+  function clearTypingExpireTimer() {
+    if (typingExpireTimer) {
+      clearTimeout(typingExpireTimer);
+      typingExpireTimer = null;
+    }
+  }
+
+  function scheduleTypingExpire(typing) {
+    clearTypingExpireTimer();
+    var pr = presence();
+    if (!pr || !typing) return;
+    var ttlMs = (pr.TYPING_TTL_SEC || 8) * 1000;
+    var now = Date.now();
+    var soonest = Infinity;
+    Object.keys(typing).forEach(function (uid) {
+      var ms = pr.tsToMs ? pr.tsToMs(typing[uid]) : 0;
+      if (!ms) return;
+      var expires = ms + ttlMs;
+      if (expires > now && expires < soonest) soonest = expires;
+    });
+    if (soonest === Infinity) return;
+    typingExpireTimer = setTimeout(function () {
+      typingExpireTimer = null;
+      var ac = CommunicationState.activeConversation;
+      updateTypingFromMeta(CommunicationState.convMeta, ac);
+    }, Math.min(ttlMs, Math.max(250, soonest - now + 40)));
+  }
+
   function hideTypingIndicator() {
+    CommunicationState.typingUids = [];
     CommunicationState.typingLabel = null;
+    clearTypingExpireTimer();
+    updateTypingLineOnly();
+  }
+
+  function dropTypist(uid) {
+    if (!uid) {
+      updateTypingLineOnly();
+      return;
+    }
+    var list = CommunicationState.typingUids || [];
+    var next = list.filter(function (u) {
+      return u !== uid;
+    });
+    CommunicationState.typingUids = next;
+    CommunicationState.typingLabel = currentTypingLabel(CommunicationState.activeConversation);
     updateTypingLineOnly();
   }
 
@@ -598,35 +689,28 @@
     }
     var pr = presence();
     var me = CommunicationState.me;
-    if (!pr || !me || !data) {
+    if (!pr || !me || !data || !ac || ac.needsJoin) {
       hideTypingIndicator();
       return;
     }
-    var input = el('ce2Input');
-    if (
-      CommunicationState.sending ||
-      (input &&
-        (document.activeElement === input || (input.value || '').trim().length > 0))
-    ) {
-      hideTypingIndicator();
-      return;
-    }
-    var rc = receipts();
     var typing = data.typing || {};
-    var nowSec = Date.now() / 1000;
-    var activeUids = Object.keys(typing).filter(function (uid) {
-      if (uid === me.uid) return false;
-      var ts = typing[uid];
-      if (!ts || !pr.isTypingActive(ts)) return false;
-      var typSec = rc ? rc.tsSeconds(ts) : 0;
-      if (!typSec || nowSec - typSec > 3) return false;
-      if (data.lastSenderId === uid && data.lastMessageAt) {
-        var msgSec = rc.tsSeconds(data.lastMessageAt);
-        if (typSec <= msgSec) return false;
-      }
-      return true;
-    });
-    CommunicationState.typingLabel = formatTypingLabel(activeUids, ac);
+    var activeUids = pr.activeTypingUids
+      ? pr.activeTypingUids(typing, me.uid)
+      : Object.keys(typing).filter(function (uid) {
+          return uid !== me.uid && pr.isTypingActive(typing[uid]);
+        });
+    var rc = receipts();
+    if (data.lastSenderId && data.lastMessageAt && rc && rc.tsSeconds) {
+      var msgSec = rc.tsSeconds(data.lastMessageAt);
+      activeUids = activeUids.filter(function (uid) {
+        if (uid !== data.lastSenderId) return true;
+        var typSec = rc.tsSeconds(typing[uid]);
+        return !msgSec || !typSec || typSec > msgSec;
+      });
+    }
+    CommunicationState.typingUids = activeUids;
+    CommunicationState.typingLabel = currentTypingLabel(ac);
+    scheduleTypingExpire(typing);
     updateTypingLineOnly();
   }
 
@@ -653,28 +737,12 @@
       );
   }
 
-  function formatTypingLabel(activeUids, ac) {
-    if (!activeUids || !activeUids.length) return null;
-    if (ac && ac.type === 'direct' && activeUids.length === 1) {
-      var peerName = (ac.title || '').trim() || 'They';
-      return peerName + ' is typing…';
-    }
-    if (activeUids.length === 1) {
-      return 'Someone is typing…';
-    }
-    if (activeUids.length === 2) {
-      return '2 people are typing…';
-    }
-    return activeUids.length + ' people are typing…';
-  }
-
   function watchConvMeta(ac) {
     stopConvMetaWatch();
     var me = CommunicationState.me;
     var ref = getMetaDocRef(ac);
     if (!ref || !me) return;
     var pr = presence();
-    var rc = receipts();
     convMetaUnsub = ref.onSnapshot(
       function (snap) {
         var data = snap.exists ? snap.data() : null;
@@ -684,8 +752,7 @@
           handleMetaMessageDelivery(data);
           updateTypingFromMeta(data, acNow);
         } else {
-          CommunicationState.typingLabel = null;
-          updateTypingLineOnly();
+          hideTypingIndicator();
         }
         if (!acNow || acNow.needsJoin) return;
         if (acNow.type === 'group' && snap.exists) {
@@ -699,7 +766,17 @@
     );
     var input = el('ce2Input');
     if (CE2_TYPING_INDICATOR_ENABLED && pr && input) {
-      typingInputUnsub = pr.bindTypingInput(input, ref, me.uid, 5000);
+      var unbindTyping = pr.bindTypingInput(input, ref, me.uid, 5000);
+      function onComposerFocusChange() {
+        updateTypingLineOnly();
+      }
+      input.addEventListener('focus', onComposerFocusChange);
+      input.addEventListener('blur', onComposerFocusChange);
+      typingInputUnsub = function () {
+        input.removeEventListener('focus', onComposerFocusChange);
+        input.removeEventListener('blur', onComposerFocusChange);
+        if (unbindTyping) unbindTyping();
+      };
     }
   }
 
@@ -1948,7 +2025,12 @@
           ? 'Loading…'
           : CommunicationState.error || CommunicationState.statusMessage || '';
       if (!ac) {
-        meta.classList.remove('ce2-thread-meta--presence', 'is-online', 'is-away');
+        meta.classList.remove(
+          'ce2-thread-meta--presence',
+          'ce2-thread-meta--typing',
+          'is-online',
+          'is-away'
+        );
       }
     }
     applyPresenceUi();
@@ -2013,14 +2095,12 @@
     var msgId = data.lastMessageId;
     if (isMessageAlreadyRendered(msgId)) {
       CommunicationState._metaLastMessageId = msgId;
-      CommunicationState.typingLabel = null;
-      updateTypingLineOnly();
+      dropTypist(data.lastSenderId);
       return;
     }
 
     CommunicationState._metaLastMessageId = msgId;
-    CommunicationState.typingLabel = null;
-    updateTypingLineOnly();
+    dropTypist(data.lastSenderId);
 
     var preview = {
       id: msgId,
@@ -2153,8 +2233,7 @@
     }
     if (isMessageAlreadyRendered(msgId)) return;
 
-    CommunicationState.typingLabel = null;
-    updateTypingLineOnly();
+    dropTypist(n.senderId);
 
     var content = n.body || '';
     if (type === 'group_message') {
@@ -2192,8 +2271,7 @@
         if (!acNow || acNow.id !== ac.id) return;
         var msg = Object.assign({ id: doc.id }, doc.data());
         CommunicationState._metaLastMessageId = messageId;
-        CommunicationState.typingLabel = null;
-        updateTypingLineOnly();
+        dropTypist(msg.senderId);
         if (isMessageAlreadyRendered(messageId)) {
           mergeMessageIntoState(msg);
           reconcileRenderedMessage(msg, acNow);
@@ -2232,8 +2310,7 @@
     };
 
     CommunicationState._metaLastMessageId = msgId;
-    CommunicationState.typingLabel = null;
-    updateTypingLineOnly();
+    dropTypist(meta.lastSenderId);
     forceAppendIncomingMessage(preview, ac, true);
     patchThreadPreviewLocal(ac, preview.content);
     fetchAndShowMessage(msgId, ac);
@@ -2255,8 +2332,7 @@
 
       var msgId = change.doc.id;
       CommunicationState._metaLastMessageId = msgId;
-      CommunicationState.typingLabel = null;
-      updateTypingLineOnly();
+      dropTypist(data.senderId);
 
       var msg = Object.assign({ id: msgId }, data);
       mergeMessageIntoState(msg);
@@ -2298,23 +2374,27 @@
 
   function updateTypingLineOnly() {
     var ac = CommunicationState.activeConversation;
+    var label = currentTypingLabel(ac);
+    CommunicationState.typingLabel = label;
     var typingEl = el('ce2TypingLine');
-    if (!typingEl) return;
-    var typingText = typingEl.querySelector('.ce2-typing-text');
-    var show =
-      CE2_TYPING_INDICATOR_ENABLED &&
-      CommunicationState.typingLabel &&
-      ac &&
-      !ac.needsJoin;
-    if (show) {
-      typingEl.hidden = false;
-      if (typingText) typingText.textContent = CommunicationState.typingLabel;
-      else typingEl.textContent = CommunicationState.typingLabel;
-    } else {
-      typingEl.hidden = true;
-      if (typingText) typingText.textContent = '';
-      else typingEl.textContent = '';
+    if (typingEl) {
+      var typingText = typingEl.querySelector('.ce2-typing-text');
+      var showLine =
+        !!label &&
+        ac &&
+        !ac.needsJoin &&
+        !composerInputFocused();
+      if (showLine) {
+        typingEl.hidden = false;
+        if (typingText) typingText.textContent = label;
+        else typingEl.textContent = label;
+      } else {
+        typingEl.hidden = true;
+        if (typingText) typingText.textContent = '';
+        else typingEl.textContent = '';
+      }
     }
+    applyPresenceHeader();
   }
 
   function otherDeliveryExtras(ac) {
@@ -3125,8 +3205,7 @@
               var msgId = change.doc.id;
               if (isMessageAlreadyRendered(msgId)) return;
               CommunicationState._metaLastMessageId = msgId;
-              CommunicationState.typingLabel = null;
-              updateTypingLineOnly();
+              dropTypist(data.senderId);
               var msg = Object.assign({ id: msgId }, data);
               mergeMessageIntoState(msg);
               forceAppendIncomingMessage(msg, ac, true);
@@ -5857,6 +5936,26 @@
       applyPresenceUi();
       return rec;
     },
+    /** QA: paint typing without a second session. uids = string or array of other uids */
+    simulateTyping: function (uids, namesByUid) {
+      var list = !uids
+        ? []
+        : Object.prototype.toString.call(uids) === '[object Array]'
+          ? uids
+          : [uids];
+      var ac = CommunicationState.activeConversation;
+      CommunicationState.typingUids = list.filter(Boolean);
+      if (namesByUid) {
+        Object.keys(namesByUid).forEach(function (uid) {
+          var rec = CommunicationState.presenceByUid[uid] || {};
+          rec.name = namesByUid[uid];
+          CommunicationState.presenceByUid[uid] = rec;
+        });
+      }
+      CommunicationState.typingLabel = currentTypingLabel(ac);
+      updateTypingLineOnly();
+      return CommunicationState.typingLabel;
+    },
   };
 
   async function boot(user) {
@@ -6021,7 +6120,9 @@
     console.log(
       '[CE2] presence v' +
         presence().VERSION +
-        ' (online/last-seen · users.lastActive)'
+        ' (online/last-seen · typing ' +
+        (CE2_TYPING_INDICATOR_ENABLED ? 'on' : 'off') +
+        ')'
     );
   }
 })();

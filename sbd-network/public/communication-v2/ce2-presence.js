@@ -2,14 +2,14 @@
  * CE2 Phase 6 — typing presence + online / last-seen (users.lastActive)
  *
  * Online feel uses the existing `users/{uid}.lastActive` field (same as legacy /dm).
- * No new Firestore collection or rules: signed-in users may update their own
- * profile, and other signed-in members may read it. Last-seen copy is bucketed
- * (not clock-time) and omitted after a week.
+ * Typing pulses `typing.{uid}` on the open conversation / group doc (own key only).
+ * Last-seen copy is bucketed (not clock-time) and omitted after a week.
  */
 (function (global) {
   'use strict';
 
   var TYPING_TTL_SEC = 8;
+  var PULSE_GAP_MS = 1800;
   var HEARTBEAT_MS = 40000;
   var MIN_WRITE_GAP_MS = 20000;
   var ONLINE_MS = 120000;
@@ -18,14 +18,42 @@
   var LAST_SEEN_MAX_MS = 7 * 24 * 60 * 60 * 1000;
   var typingMutedUntil = 0;
 
-  function isTypingActive(ts) {
+  function isTypingActive(ts, nowMs) {
     if (!ts) return false;
     try {
       var sec = ts.toDate ? ts.toDate().getTime() / 1000 : ts.seconds || 0;
-      return Date.now() / 1000 - sec < TYPING_TTL_SEC;
+      var now = (nowMs != null ? nowMs : Date.now()) / 1000;
+      return now - sec < TYPING_TTL_SEC;
     } catch (_) {
       return false;
     }
+  }
+
+  function firstName(label) {
+    var s = String(label || '').trim();
+    if (!s) return '';
+    return s.split(/\s+/)[0];
+  }
+
+  function formatTypingLabel(uids, nameForUid) {
+    if (!uids || !uids.length) return '';
+    function nameAt(i) {
+      var raw = '';
+      try {
+        raw = typeof nameForUid === 'function' ? nameForUid(uids[i], i) : nameForUid;
+      } catch (_) {}
+      return firstName(raw) || 'Someone';
+    }
+    if (uids.length === 1) return nameAt(0) + ' is typing';
+    if (uids.length === 2) return nameAt(0) + ' and ' + nameAt(1) + ' are typing';
+    return nameAt(0) + ', ' + nameAt(1) + ' and others are typing';
+  }
+
+  function activeTypingUids(typing, selfUid, nowMs) {
+    typing = typing || {};
+    return Object.keys(typing).filter(function (uid) {
+      return uid && uid !== selfUid && isTypingActive(typing[uid], nowMs);
+    });
   }
 
   function setTypingMuted(ms) {
@@ -74,7 +102,6 @@
     var timer = null;
     var pulseTimer = null;
     var lastPulseMs = 0;
-    var PULSE_GAP_MS = 450;
     if (!inputEl || !docRef || !uid) return function () {};
     function schedulePulse() {
       if (isTypingMuted()) return;
@@ -185,7 +212,11 @@
     nowMs = nowMs || Date.now();
     var src = data || {};
     var ts = src.lastActive || src.ce2PresenceAt || src.lastSeen || null;
-    var rec = { atMs: tsToMs(ts), ts: ts };
+    var rec = {
+      atMs: tsToMs(ts),
+      ts: ts,
+      name: String(src.name || src.displayName || '').trim(),
+    };
     applyState(rec, nowMs);
     return rec;
   }
@@ -345,6 +376,9 @@
     watchTyping: watchTyping,
     bindTypingInput: bindTypingInput,
     isTypingActive: isTypingActive,
+    activeTypingUids: activeTypingUids,
+    firstName: firstName,
+    formatTypingLabel: formatTypingLabel,
     setTypingMuted: setTypingMuted,
     isTypingMuted: isTypingMuted,
     tsToMs: tsToMs,
@@ -362,6 +396,8 @@
     RECENT_MS: RECENT_MS,
     LAST_SEEN_MAX_MS: LAST_SEEN_MAX_MS,
     HEARTBEAT_MS: HEARTBEAT_MS,
-    VERSION: 5,
+    TYPING_TTL_SEC: TYPING_TTL_SEC,
+    PULSE_GAP_MS: PULSE_GAP_MS,
+    VERSION: 6,
   };
 })(typeof window !== 'undefined' ? window : global);

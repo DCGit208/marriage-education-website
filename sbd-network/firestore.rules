@@ -197,6 +197,22 @@ service cloud.firestore {
           )
         );
     }
+    function ce2TypingMap(data) {
+      return data != null && ('typing' in data) && data.typing is map ? data.typing : {};
+    }
+    function ce2TypingOwnKeyOnly() {
+      let before = ce2TypingMap(resource.data);
+      let after = ce2TypingMap(request.resource.data);
+      return after.diff(before).affectedKeys().hasOnly([request.auth.uid]) &&
+        (
+          !(request.auth.uid in after) ||
+          after[request.auth.uid] is timestamp
+        );
+    }
+    function ce2TypingKeysOwnOnlyIfPresent() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['typing']) ||
+        ce2TypingOwnKeyOnly();
+    }
     function ce2MessageFormationTagOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['formationTag']) &&
         (!('formationTag' in request.resource.data) ||
@@ -1064,7 +1080,8 @@ service cloud.firestore {
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
         (
           ce2IsGroupMember(groupId, request.auth.uid) &&
-          ce2GroupMetaUpdateKeysOnly()
+          ce2GroupMetaUpdateKeysOnly() &&
+          ce2TypingKeysOwnOnlyIfPresent()
         )
       );
       allow delete: if request.auth != null &&
@@ -1177,12 +1194,12 @@ service cloud.firestore {
           request.auth.uid,
           ce2DirectOtherUid(request.resource.data.participantIds, request.auth.uid)
         );
-      allow update: if request.auth != null &&
-        (
+      allow update: if request.auth != null && (
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
           request.auth.uid in resource.data.participantIds
         ) &&
-        ce2ConvMetaUpdateKeysOnly();
+        ce2ConvMetaUpdateKeysOnly() &&
+        ce2TypingKeysOwnOnlyIfPresent();
       allow delete: if false;
 
       match /ce2_messages/{messageId} {

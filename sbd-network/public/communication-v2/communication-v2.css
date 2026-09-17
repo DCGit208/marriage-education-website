@@ -610,6 +610,12 @@ body.ce2-body-root.ce2-kb-active {
   color: #d2c4a4;
 }
 
+.ce2-thread-meta.ce2-thread-meta--typing {
+  opacity: 0.88;
+  color: #c9b892;
+  font-style: italic;
+}
+
 .ce2-thread-search-toggle {
   flex-shrink: 0;
   width: 36px;
@@ -1393,7 +1399,7 @@ body.ce2-msg-menu-open {
 
 .ce2-typing-line {
   flex-shrink: 0;
-  display: none !important;
+  display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
@@ -1402,6 +1408,10 @@ body.ce2-msg-menu-open {
   font-style: italic;
   opacity: 0.72;
   color: #c9b892;
+}
+
+.ce2-typing-line[hidden] {
+  display: none !important;
 }
 
 .ce2-typing-text {
