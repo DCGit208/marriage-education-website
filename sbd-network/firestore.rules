@@ -179,9 +179,23 @@ service cloud.firestore {
           request.resource.data.formationTag in ['prayer', 'check_in']) &&
         (!('reactions' in request.resource.data) || request.resource.data.reactions is map);
     }
+    function ce2ReactionsMap(data) {
+      return ('reactions' in data) && data.reactions is map ? data.reactions : {};
+    }
     function ce2MessageReactionsOnly() {
+      let before = ce2ReactionsMap(resource.data);
+      let after = request.resource.data.reactions;
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) &&
-        request.resource.data.reactions is map;
+        after is map &&
+        after.diff(before).affectedKeys().hasOnly([request.auth.uid]) &&
+        (
+          !(request.auth.uid in after) ||
+          (
+            after[request.auth.uid] is string &&
+            after[request.auth.uid].size() > 0 &&
+            after[request.auth.uid].size() <= 32
+          )
+        );
     }
     function ce2MessageFormationTagOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['formationTag']) &&

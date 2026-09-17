@@ -706,9 +706,50 @@ body.ce2-body-root.ce2-kb-active {
   opacity: 0.7;
 }
 
+.ce2-row-actionable {
+  position: relative;
+  touch-action: pan-y;
+}
+
 .ce2-row-actionable .ce2-bubble {
   cursor: context-menu;
   -webkit-touch-callout: none;
+}
+
+.ce2-row-actionable .ce2-bubble,
+.ce2-row-actionable .ce2-msg-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.ce2-swipe-reply-icon {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(201, 184, 146, 0.16);
+  color: #e8dcc4;
+  font-size: 0.95rem;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+.ce2-swipe-reply-icon.is-armed {
+  background: rgba(201, 184, 146, 0.32);
+  color: #f3ead4;
+}
+
+.ce2-row-swiping {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .ce2-row.ce2-bubble-pressing .ce2-bubble,
@@ -901,6 +942,38 @@ body.ce2-body-root.ce2-kb-active {
 
 .ce2-msg-menu.is-popover.is-flip-above.is-open .ce2-msg-menu-panel {
   transform-origin: left bottom;
+}
+
+.ce2-msg-menu-react {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 10px 12px 8px;
+  list-style: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.ce2-msg-menu-react-btn {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-msg-menu-react-btn.is-mine {
+  background: rgba(201, 184, 146, 0.2);
+  border-color: rgba(201, 184, 146, 0.45);
+}
+
+.ce2-msg-menu-react-btn:active {
+  transform: scale(0.94);
 }
 
 .ce2-msg-menu-list {
@@ -2704,6 +2777,11 @@ body.ce2-msg-menu-open {
   cursor: pointer;
 }
 
+.ce2-react-btn.is-mine {
+  background: rgba(201, 184, 146, 0.22);
+  border-color: rgba(201, 184, 146, 0.55);
+}
+
 .ce2-thread-search {
   flex-shrink: 0;
   display: flex;
@@ -2759,15 +2837,60 @@ body.ce2-msg-menu-open {
 .ce2-msg-reactions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 8px;
+}
+
+.ce2-row.is-self .ce2-msg-reactions {
+  justify-content: flex-end;
 }
 
 .ce2-msg-reaction {
-  font-size: 0.85rem;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.28);
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ce2-msg-reaction.is-mine {
+  background: rgba(201, 184, 146, 0.22);
+  border-color: rgba(201, 184, 146, 0.5);
+  box-shadow: 0 0 0 1px rgba(201, 184, 146, 0.18);
+}
+
+.ce2-msg-reaction-count {
+  font-size: 0.72rem;
+  opacity: 0.88;
+  min-width: 0.7em;
+}
+
+.ce2-msg-reaction-add {
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  justify-content: center;
+  font-size: 0.95rem;
+  opacity: 0.72;
+}
+
+.ce2-msg-reaction:active {
+  transform: scale(0.94);
+}
+
+.ce2-msg-reaction:disabled {
+  cursor: default;
+  transform: none;
 }
 
 .ce2-formation-tag {

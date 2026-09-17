@@ -2036,13 +2036,40 @@
     fetchAndShowMessage(msgId, ac);
   }
 
+  function messageBodySig(m) {
+    if (!m) return '';
+    var edited = '';
+    if (m.editedAt) {
+      if (typeof m.editedAt.seconds === 'number') edited = String(m.editedAt.seconds);
+      else if (typeof m.editedAt.toMillis === 'function') edited = String(m.editedAt.toMillis());
+      else edited = '1';
+    }
+    return [
+      m.deleted ? '1' : '0',
+      m.content || '',
+      edited,
+      m.formationTag || '',
+      m.imageUrl || '',
+      m.videoUrl || '',
+      m.audioUrl || '',
+      m.uploadState || '',
+      m._pending ? 'p' : '',
+      m._failed ? 'f' : '',
+    ].join('\x1f');
+  }
+
   function reconcileRenderedMessage(msg, ac) {
     var scroll = el('ce2MessageScroll');
     if (!scroll || !msg || !msg.id) return;
     var row = scroll.querySelector('[data-message-id="' + msg.id + '"]');
-    if (!row || !row.classList.contains('is-meta-preview')) return;
-    row.replaceWith(buildMessageRow(msg, ac));
-    if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+    if (!row) return;
+    if (row.classList.contains('is-meta-preview')) {
+      row.replaceWith(buildMessageRow(msg, ac));
+      if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
+      return;
+    }
+    var ma = msgActions();
+    if (ma && ma.syncReactionsRow) ma.syncReactionsRow(row, msg, ac);
   }
 
   function isMessageAlreadyRendered(msgId) {
@@ -2374,6 +2401,7 @@
       (isHighlight ? ' is-highlighted' : '');
     row.dataset.messageId = m.id || '';
     if (status) row.setAttribute('data-delivery', status);
+    row.dataset.bodySig = messageBodySig(m);
     const reader = CommunicationState.me;
     const canRead = canReadMessageContent(reader, m, ac);
     const bubble = document.createElement('div');
@@ -2399,7 +2427,7 @@
     }
     if (canRead) {
       appendMessageBody(bubble, m);
-      if (ma) ma.appendReactionsRow(bubble, m);
+      if (ma) ma.appendReactionsRow(bubble, m, ac);
     } else {
       bubble.appendChild(
         document.createTextNode('This space unlocks through formation progression.')
@@ -2520,6 +2548,32 @@
         return true;
       }
     }
+
+    if (nextIds.length === prev.length) {
+      var sameIds = true;
+      for (var k = 0; k < prev.length; k++) {
+        if (prev[k] !== nextIds[k]) {
+          sameIds = false;
+          break;
+        }
+      }
+      if (sameIds) {
+        var ma = msgActions();
+        for (var r = 0; r < visibleMsgs.length; r++) {
+          var msg = visibleMsgs[r];
+          var rowEl = scroll.querySelector('[data-message-id="' + msg.id + '"]');
+          if (!rowEl) continue;
+          if (rowEl.dataset.bodySig !== messageBodySig(msg)) {
+            rowEl.replaceWith(buildMessageRow(msg, ac));
+            continue;
+          }
+          if (ma && ma.syncReactionsRow) ma.syncReactionsRow(rowEl, msg, ac);
+        }
+        updateTypingLineOnly();
+        return true;
+      }
+    }
+
     return false;
   }
 
