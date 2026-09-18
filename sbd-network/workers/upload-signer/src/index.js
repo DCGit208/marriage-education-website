@@ -256,7 +256,6 @@ export default {
         senderId,
         recipientId,
         message,
-        fcmToken,
         title,
         body,
         url,
@@ -274,11 +273,18 @@ export default {
           return respond({ success: true, pushSent: false, reason: 'push_not_configured' });
         }
 
-        let token = fcmToken || null;
+        let token = null;
+        const headers = { 'Authorization': `Bearer ${accessToken}` };
+        const privRes = await fetch(
+          `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${recipientId}/ce2_push/token?mask.fieldPaths=fcmToken`,
+          { headers }
+        );
+        const privData = await privRes.json().catch(() => ({}));
+        token = privData.fields?.fcmToken?.stringValue || null;
         if (!token) {
           const userRes = await fetch(
             `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${recipientId}?mask.fieldPaths=fcmToken`,
-            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+            { headers }
           );
           const userData = await userRes.json().catch(() => ({}));
           token = userData.fields?.fcmToken?.stringValue || null;

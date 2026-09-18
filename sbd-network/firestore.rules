@@ -320,6 +320,31 @@ service cloud.firestore {
         || (c == 'mentor' && ce2IsMentor(ud))
         || (c != 'mentor' && ce2PolicyTierRank(ud) >= ce2ClassRank(c));
     }
+    function ce2CanReadStoredMessage(ud, data) {
+      return ce2CanReadMessageClassification(
+        ud,
+        data != null && ('classification' in data) ? data.classification : 'public'
+      );
+    }
+    function ce2CanListGroup(gdata) {
+      let ud = ce2UserDataOrNull(request.auth.uid);
+      return request.auth != null && (
+        ce2IsAdmin(ud) ||
+        ce2UserMeetsGroupTier(ud, gdata)
+      );
+    }
+    function ce2UserPushSecretsPresent(data) {
+      return data != null && (
+        ('fcmToken' in data) ||
+        ('pushToken' in data) ||
+        ('notificationToken' in data)
+      );
+    }
+    function ce2UserPushSecretsUnchangedOrStripped() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return !affected.hasAny(['fcmToken', 'pushToken', 'notificationToken']) ||
+        !ce2UserPushSecretsPresent(request.resource.data);
+    }
     // Governance v1: conversation content floor (-1 = legacy conv, no floor field)
     function ce2ConvSecurityLevel(convData) {
       return convData != null && convData.securityLevel is int ? convData.securityLevel : -1;
@@ -647,14 +672,17 @@ service cloud.firestore {
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
     }
 
-    // Users (sbd-network profiles)
+    // Users (sbd-network profiles). Presence (lastActive / lastSeen) stays
+    // readable for peers. Push tokens live at users/{uid}/ce2_push/token
+    // (owner-only). Writes may not add fcmToken to this public document.
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+        !ce2UserPushSecretsPresent(request.resource.data);
       allow update: if request.auth != null && (
         request.auth.uid == userId ||
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
-      );
+      ) && ce2UserPushSecretsUnchangedOrStripped();
       allow delete: if request.auth != null &&
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid));
 
@@ -1074,8 +1102,9 @@ service cloud.firestore {
 
     // ── Communication Engine V2 (isolated; legacy /conversations untouched) ──
     match /communicationGroups/{groupId} {
-      // list: must not use per-doc tier checks (breaks requiredTier "in" queries); get stays gated
-      allow list: if request.auth != null;
+      // list is query-safe: admin or requiredTier the caller already meets.
+      // Membership-without-tier stays get-by-id (open from a link), not directory list.
+      allow list: if ce2CanListGroup(resource.data);
       allow get: if request.auth != null && (
         ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data) ||
         ce2IsGroupMember(groupId, request.auth.uid) ||
@@ -1142,7 +1171,10 @@ service cloud.firestore {
         allow read: if request.auth != null &&
           (
             ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            ce2IsGroupMember(groupId, request.auth.uid)
+            (
+              ce2IsGroupMember(groupId, request.auth.uid) &&
+              ce2CanReadStoredMessage(ce2UserDataOrNull(request.auth.uid), resource.data)
+            )
           );
         allow create: if request.auth != null &&
           ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
@@ -1216,10 +1248,14 @@ service cloud.firestore {
       allow delete: if false;
 
       match /ce2_messages/{messageId} {
-        // Read: participants only; classification floor enforced in CE2 UI (not on query)
+        // Read: participants who meet the classification floor (not UI-only).
         allow read: if request.auth != null &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
-          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds;
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+            ce2CanReadStoredMessage(ce2UserDataOrNull(request.auth.uid), resource.data)
+          );
         allow create: if request.auth != null &&
           ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
@@ -1308,8 +1344,18 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    match /users/{userId}/ce2_push/{docId} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid == userId &&
+        docId == 'token';
+    }
+
     match /ce2_share_tokens/{tokenId} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+      );
       allow create: if request.auth != null &&
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.boardId is string &&

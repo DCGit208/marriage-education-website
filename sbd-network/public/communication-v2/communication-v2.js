@@ -1605,12 +1605,12 @@
       }
     }
     if (!ts) return false;
-    var beforeSnap = await col
+    var beforeSnap = await constrainCe2MessagesQuery(col, CommunicationState.me)
       .orderBy('createdAt', 'asc')
       .endAt(ts)
       .limitToLast(JUMP_BEFORE)
       .get();
-    var afterSnap = await col
+    var afterSnap = await constrainCe2MessagesQuery(col, CommunicationState.me)
       .orderBy('createdAt', 'asc')
       .startAfter(ts)
       .limit(JUMP_AFTER)
@@ -1676,7 +1676,7 @@
     var pages = 0;
     while (pages < JUMP_FORWARD_MAX_PAGES && !overlapsLive()) {
       pages += 1;
-      var snap = await col
+      var snap = await constrainCe2MessagesQuery(col, CommunicationState.me)
         .orderBy('createdAt', 'asc')
         .startAfter(cursorDoc)
         .limit(MESSAGE_PAGE)
@@ -1752,6 +1752,9 @@
       requestRender: requestRender,
       syncFocusableInputs: syncCe2FocusableInputs,
       messagesCollection: messagesCollection,
+      constrainMessagesQuery: function (col) {
+        return constrainCe2MessagesQuery(col, CommunicationState.me);
+      },
       listParticipants: listThreadSearchParticipants,
       hydrateParticipants: hydrateThreadSearchParticipants,
       jumpToHit: function (hit) {
@@ -2008,6 +2011,37 @@
     if (classification === 'public') return true;
     if (classification === 'mentor') return reader.mentor || reader.isAdmin;
     return tierRank(reader) >= classRank(classification);
+  }
+
+  function readableClassificationsForReader(reader) {
+    var g = gov();
+    if (g && g.classificationsReadableByUser) {
+      var raw = (reader && reader.raw) || {};
+      return g.classificationsReadableByUser(
+        {
+          tier: (reader && reader.tier) || raw.tier,
+          subscription: raw.subscription,
+          mentor: reader && reader.mentor,
+        },
+        {
+          isAdmin: !!(reader && reader.isAdmin),
+          mentor: !!(reader && reader.mentor),
+        }
+      );
+    }
+    var all = ['public', 'foundation', 'premium', 'elite', 'ambassador', 'senior_ambassador', 'rd', 'mentor'];
+    return all.filter(function (c) {
+      return canReadClassification(reader, c);
+    });
+  }
+
+  function constrainCe2MessagesQuery(col, reader) {
+    if (!col) return col;
+    if (reader && reader.isAdmin) return col;
+    var classes = readableClassificationsForReader(reader);
+    if (!classes.length) classes = ['public', 'foundation'];
+    if (classes.length > 10) classes = classes.slice(0, 10);
+    return col.where('classification', 'in', classes);
   }
 
   function gov() {
@@ -4418,7 +4452,7 @@
     var ac = CommunicationState.activeConversation;
     var errContext = ac && ac.type === 'group' ? 'group' : 'messages';
     var firstSnap = true;
-    messagesUnsub = messagesCol
+    messagesUnsub = constrainCe2MessagesQuery(messagesCol, CommunicationState.me)
       .orderBy('createdAt', 'asc')
       .limitToLast(MESSAGE_PAGE)
       .onSnapshot(
@@ -4494,7 +4528,7 @@
     try {
       var col = messagesCollection(ac);
       if (!col) return;
-      var snap = await col
+      var snap = await constrainCe2MessagesQuery(col, me)
         .orderBy('createdAt', 'asc')
         .endBefore(oldest)
         .limitToLast(MESSAGE_PAGE)
@@ -4548,7 +4582,7 @@
     try {
       var col = messagesCollection(ac);
       if (!col) return;
-      var snap = await col
+      var snap = await constrainCe2MessagesQuery(col, me)
         .orderBy('createdAt', 'asc')
         .startAfter(cursor)
         .limit(MESSAGE_PAGE)
@@ -5421,8 +5455,6 @@
             : '/communication-v2/?conv=' + encodeURIComponent(convId);
 
       if (ac.type === 'direct' && ac.otherUid) {
-        var recipDoc = await db.collection('users').doc(ac.otherUid).get();
-        var token = recipDoc.exists ? recipDoc.data().fcmToken || '' : '';
         await fetch(
           'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
           {
@@ -5435,7 +5467,6 @@
               senderId: user.uid,
               recipientId: ac.otherUid,
               message: copy.body,
-              recipientToken: token,
               senderName: senderName,
               title: copy.title,
               body: copy.body,

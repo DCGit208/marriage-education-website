@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=86">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=87">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -21,7 +21,7 @@
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
   <script defer src="/js/firebase.js?v=rt2"></script>
   <script defer src="/js/upload.js?v=9"></script>
-  <script defer src="/communication-v2/ce2-governance.js?v=6"></script>
+  <script defer src="/communication-v2/ce2-governance.js?v=7"></script>
   <script defer src="/communication-v2/ce2-moderation.js?v=3"></script>
   <script defer src="/communication-v2/ce2-links.js?v=3"></script>
   <script defer src="/communication-v2/ce2-attachments.js?v=15"></script>
@@ -31,11 +31,11 @@
   <script defer src="/communication-v2/ce2-inbox.js?v=2"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=4"></script>
   <script defer src="/communication-v2/ce2-message-actions.js?v=24"></script>
-  <script defer src="/communication-v2/ce2-thread-search.js?v=1"></script>
+  <script defer src="/communication-v2/ce2-thread-search.js?v=2"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=2"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
   <script defer src="/communication-v2/ce2-push.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-pwa.js?v=6"></script>
+  <script defer src="/communication-v2/ce2-pwa.js?v=7"></script>
   <script defer src="/communication-v2/ce2-audio-waveform.js?v=1"></script>
   <script defer src="/communication-v2/ce2-audio-playback.js?v=2"></script>
   <script defer src="/communication-v2/ce2-audio-outbox.js?v=1"></script>
@@ -43,7 +43,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=3"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=118"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=119"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -162,12 +162,12 @@
             </label>
             <input type="file" id="ce2AttachInput" class="ce2-attach-hidden-input" accept="image/*,video/*" multiple tabindex="-1" aria-label="Attach photo or video">
             <button type="button" class="ce2-composer-voice" id="ce2VoiceBtn" title="Tap to record voice" aria-label="Tap to record voice">🎙</button>
-            <button type="button" class="ce2-composer-more" id="ce2ComposerMore" aria-expanded="false" aria-controls="ce2ComposerDrawer" title="Format, formation, and sharing">+</button>
             <div class="ce2-input-shell">
               <div id="ce2InputMirror" class="ce2-input-mirror" aria-hidden="true"></div>
               <label class="ce2-sr-only" for="ce2Input">Message</label>
               <textarea id="ce2Input" class="ce2-input ce2-input--rich" rows="1" placeholder="Message…" maxlength="8000" enterkeyhint="send" autocomplete="off" autocorrect="on"></textarea>
             </div>
+            <button type="button" class="ce2-composer-more" id="ce2ComposerMore" aria-expanded="false" aria-controls="ce2ComposerDrawer" title="Format, formation, and sharing" aria-label="More message options">+</button>
             <button type="button" class="ce2-btn ce2-btn-send" id="ce2SendBtn" aria-label="Send"><span class="ce2-send-icon" aria-hidden="true">↑</span><span class="ce2-send-text">Send</span></button>
           </div>
           <div id="ce2ComposerDrawer" class="ce2-composer-drawer" hidden>

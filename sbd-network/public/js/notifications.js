@@ -595,8 +595,18 @@ async function _initPush(userId) {
     const token     = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
     if (!token) { console.warn('[Push] No token returned'); return; }
 
-    // Persist token on user doc
-    await db.collection('users').doc(userId).update({ fcmToken: token });
+    // Persist token on owner-only private doc (not the world-readable profile)
+    await db.collection('users').doc(userId).collection('ce2_push').doc('token').set({
+      fcmToken: token,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    try {
+      await db.collection('users').doc(userId).update({
+        fcmToken: firebase.firestore.FieldValue.delete(),
+        pushToken: firebase.firestore.FieldValue.delete(),
+        notificationToken: firebase.firestore.FieldValue.delete(),
+      });
+    } catch (_) {}
 
     // Subscribe to /topics/sbd-all via Worker
     const idToken = await firebase.auth().currentUser.getIdToken();

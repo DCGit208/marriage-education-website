@@ -1222,12 +1222,6 @@ async function _triggerDmPush(convId, recipientId, body, messageId = '') {
   try {
     const user = firebase.auth().currentUser;
     if (!user) return;
-    // Get the recipient's FCM token
-    const recipDoc = await db.collection('users').doc(recipientId).get();
-    if (!recipDoc.exists) return;
-    const token = recipDoc.data().fcmToken;
-    if (!token) return;
-
     const senderName = currentUserData.name || 'Someone';
     const idToken = await user.getIdToken();
     await fetch('https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2', {
@@ -1240,7 +1234,6 @@ async function _triggerDmPush(convId, recipientId, body, messageId = '') {
         senderId: user.uid,
         recipientId,
         message: body,
-        recipientToken: token,
         senderName,
         title:    `💬 ${senderName}`,
         body:     body.slice(0, 100),

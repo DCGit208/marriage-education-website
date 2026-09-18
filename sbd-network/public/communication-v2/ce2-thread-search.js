@@ -5,7 +5,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = 1;
+  var VERSION = 2;
   var MAX_HITS = 40;
   var PAGE_SIZE = 80;
   var DATE_PAGE_SIZE = 120;
@@ -223,6 +223,9 @@
   function defaultQueryPage(col, plan, cursorDoc) {
     if (!col) return Promise.resolve({ docs: [] });
     var q = col;
+    if (deps && typeof deps.constrainMessagesQuery === 'function') {
+      q = deps.constrainMessagesQuery(q) || q;
+    }
     if (plan.senderId) q = q.where('senderId', '==', plan.senderId);
     if (plan.startMs) q = q.where('createdAt', '>=', tsFromMs(plan.startMs));
     if (plan.endMs) q = q.where('createdAt', '<', tsFromMs(plan.endMs));
