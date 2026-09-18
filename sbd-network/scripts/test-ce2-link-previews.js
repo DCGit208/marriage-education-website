@@ -80,6 +80,27 @@ function thumbIsInsideOpenLink(html) {
   return after.slice(0, bodyClose).indexOf('ce2-link-preview-thumb') >= 0;
 }
 
+function assertRealThumb(html, label) {
+  const prefix = label ? label + ': ' : '';
+  assert.ok(html.indexOf('ce2-link-preview-thumb-img') >= 0, prefix + 'missing thumb <img>');
+  const src = html.match(/class="ce2-link-preview-thumb-img"[^>]*src="([^"]+)"/);
+  const srcAlt = html.match(/src="([^"]+)"[^>]*class="ce2-link-preview-thumb-img"/);
+  const url = (src && src[1]) || (srcAlt && srcAlt[1]) || '';
+  assert.ok(url, prefix + 'thumb has no src');
+  assert.ok(
+    url.indexOf('/assets/') === 0 || url.indexOf('/images/') === 0,
+    prefix + 'thumb src must be a same-origin site asset, got ' + url
+  );
+  assert.ok(!/ce2-link-preview-thumb is-fallback/.test(html), prefix + 'empty fallback thumb');
+  assert.ok(!/src=""/.test(html), prefix + 'empty src');
+  const thumbBtn = html.match(/<button type="button" class="ce2-link-preview-thumb"[^>]*>[\s\S]*?<\/button>/);
+  assert.ok(thumbBtn, prefix + 'missing thumb button');
+  assert.ok(
+    !/>\s*LINK\s*</i.test(thumbBtn[0]) && thumbBtn[0].indexOf('>Link<') < 0,
+    prefix + 'thumb must not be only the word LINK'
+  );
+}
+
 console.log('\nCE2 link previews\n');
 
 const links = loadIife('public/communication-v2/ce2-links.js').Ce2Links;
@@ -87,8 +108,8 @@ const share = loadIife('public/communication-v2/ce2-share.js').Ce2Share;
 assert.ok(links, 'Ce2Links did not load');
 assert.ok(share, 'Ce2Share did not load');
 
-test('Ce2Links VERSION is 2', function () {
-  assert.strictEqual(links.VERSION, 2);
+test('Ce2Links VERSION is 3', function () {
+  assert.strictEqual(links.VERSION, 3);
 });
 
 test('allowlist is unchanged and does not add open-web hosts', function () {
@@ -134,6 +155,8 @@ test('allowed DM/group link renders a title card, not only the raw URL', functio
   assert.ok(dm.indexOf('ce2-msg-text') < 0, 'bare URL must not remain the whole message');
   assert.notStrictEqual(dm.trim(), dmUrl);
   assert.ok(!/^<div class="ce2-msg-text"><a[^>]*>https?:/.test(dm));
+  assertRealThumb(dm, 'DM /learn');
+  assertRealThumb(group, 'group /dashboard');
 });
 
 test('text plus an allowed link keeps the words and still shows a card', function () {
@@ -163,6 +186,7 @@ test('thumbnail and open-link are split tap targets (PR #8)', function () {
   assert.ok(!thumbIsInsideOpenLink(html), 'thumbnail must not sit inside the open-link <a>');
   assert.ok(/<a class="ce2-link-preview-body" href="https:\/\/sbd\.marriageducation\.com\/courses"/.test(html));
   assert.ok(!/<button[^>]*href=/.test(html));
+  assertRealThumb(html, 'courses card');
 });
 
 test('board-post URLs do not grow a second weaker preview', function () {
@@ -200,6 +224,30 @@ test('unknown allowed path still unfurls from the route, without scraping', func
   assert.ok(preview.title);
   assert.notStrictEqual(preview.title, 'https://localhost/admin-course-builder');
   assert.ok(preview.excerpt);
+  assert.ok(preview.thumbnailUrl);
+  assert.ok(
+    preview.thumbnailUrl.indexOf('/assets/') === 0 || preview.thumbnailUrl.indexOf('/images/') === 0
+  );
+  assertRealThumb(links.renderLinkPreviewHtml('https://localhost/admin-course-builder', escapeHtml), 'unknown path');
+});
+
+test('Formation, courses, shop, home, and messages cards all have a real picture', function () {
+  const cases = [
+    ['https://sbd.marriageducation.com/learn', '/images/the-woman-the-wife-the-mother-cover.png'],
+    ['https://sbd.marriageducation.com/courses', '/images/course-covers/anthropology-of-wholeness-cover.png'],
+    ['https://sbd.marriageducation.com/shop', '/assets/book-covers/sbd-canonical.png'],
+    ['https://sbd.marriageducation.com/dashboard', '/assets/background/dashboard-main.jpg'],
+    ['https://sbd.marriageducation.com/communication-v2/', '/assets/images/hands-chiaroscuro.png'],
+  ];
+  cases.forEach(function (pair) {
+    const preview = links.previewFromUrl(pair[0]);
+    assert.ok(preview, pair[0] + ' should preview');
+    assert.strictEqual(preview.thumbnailUrl, pair[1]);
+    const html = links.renderLinkPreviewHtml(pair[0], escapeHtml);
+    assertRealThumb(html, pair[0]);
+    assert.ok(html.indexOf('src="' + pair[1] + '"') >= 0, pair[0] + ' should paint ' + pair[1]);
+  });
+  assert.strictEqual(links.DEFAULT_THUMB, '/assets/background/dashboard-main.jpg');
 });
 
 test('thread renderer wires preview cards and keeps thumb reply', function () {
@@ -215,17 +263,18 @@ test('thread renderer wires preview cards and keeps thumb reply', function () {
   );
 });
 
-test('CSS keeps the thumb outside the body link and cover-crops when an image exists', function () {
+test('CSS keeps the thumb outside the body link and cover-crops a real image', function () {
   const css = fs.readFileSync(path.join(ROOT, 'public/communication-v2/communication-v2.css'), 'utf8');
   const thumb = css.match(/\.ce2-link-preview-thumb\s*\{[^}]+\}/);
   const img = css.match(/\.ce2-link-preview-thumb-img\s*\{[^}]+\}/);
   assert.ok(thumb && /aspect-ratio:\s*16\s*\/\s*9/.test(thumb[0]));
+  assert.ok(thumb && /min-height:\s*112px/.test(thumb[0]));
   assert.ok(img && /object-fit:\s*cover/.test(img[0]));
   assert.ok(img && /pointer-events:\s*none/.test(img[0]));
-  assert.ok(/\.ce2-link-preview-thumb-ph::before/.test(css));
+  assert.ok(!/\.ce2-link-preview-thumb-ph::before\s*\{[^}]*content:\s*['"]Link['"]/.test(css));
 });
 
-test('cache-bust versions stay strictly above live 116/84/4/1', function () {
+test('cache-bust versions stay strictly above live 117/85/4/2', function () {
   const html = fs.readFileSync(
     path.join(ROOT, 'public/communication-v2/index.html'),
     'utf8'
@@ -241,11 +290,11 @@ test('cache-bust versions stay strictly above live 116/84/4/1', function () {
   const offlineVer = html.match(/ce2-offline-queue\.js\?v=(\d+)/);
   const receiptsVer = html.match(/ce2-receipts\.js\?v=(\d+)/);
   const searchVer = html.match(/ce2-thread-search\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) > 116, 'communication-v2.js must be newer than live v=116');
-  assert.ok(cssVer && Number(cssVer[1]) > 84, 'communication-v2.css must be newer than live v=84');
+  assert.ok(jsVer && Number(jsVer[1]) >= 117, 'communication-v2.js must not go backwards from live v=117');
+  assert.ok(cssVer && Number(cssVer[1]) > 85, 'communication-v2.css must be newer than live v=85');
   assert.ok(replyVer && Number(replyVer[1]) >= 4, 'ce2-reply.js must not go backwards from live v=4');
-  assert.ok(linksVer && Number(linksVer[1]) > 1, 'ce2-links.js must be newer than live v=1');
-  assert.ok(inboxVer && Number(inboxVer[1]) >= 2, 'ce2-inbox.js must be bumped for Link labels');
+  assert.ok(linksVer && Number(linksVer[1]) > 2, 'ce2-links.js must be newer than live v=2');
+  assert.ok(inboxVer && Number(inboxVer[1]) >= 2, 'ce2-inbox.js must not go backwards from live v=2');
   assert.ok(shareVer && Number(shareVer[1]) >= 10);
   assert.ok(mediaVer && Number(mediaVer[1]) >= 3);
   assert.ok(actionsVer && Number(actionsVer[1]) >= 24);

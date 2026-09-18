@@ -18,50 +18,71 @@
   var URL_RE = /https?:\/\/[^\s<>"']+/gi;
   var ORIGIN_FALLBACK = 'https://sbd-network.web.app';
   var EXCERPT_MAX = 96;
-  var VERSION = 2;
+  var VERSION = 3;
 
   /**
-   * Known in-app routes → title + one line of context.
+   * Same-origin stills already used on the live site (heroes, covers, board art).
+   * Never scrape user URLs; if a route has no picture, use DEFAULT_THUMB.
+   */
+  var DEFAULT_THUMB = '/assets/background/dashboard-main.jpg';
+  var THUMB_HOME = '/assets/background/dashboard-main.jpg';
+  var THUMB_LEARN = '/images/the-woman-the-wife-the-mother-cover.png';
+  var THUMB_COURSES = '/images/course-covers/anthropology-of-wholeness-cover.png';
+  var THUMB_SHOP = '/assets/book-covers/sbd-canonical.png';
+  var THUMB_MESSAGES = '/assets/images/hands-chiaroscuro.png';
+  var THUMB_BOARDS = '/images/SBD-Real-Couples.jpg';
+  var THUMB_MV = '/assets/background/mv-house-video-poster.jpg';
+
+  /**
+   * Known in-app routes → title + one line of context + site image.
    * Paths are matched after stripping a trailing slash and `.html`.
    */
   var ROUTE_META = {
-    '/': { title: 'SBD Network', excerpt: 'Home for formation, boards, and messages' },
-    '/dashboard': { title: 'Home', excerpt: 'SBD Network dashboard' },
-    '/index': { title: 'Home', excerpt: 'SBD Network dashboard' },
-    '/communication-v2': { title: 'Messages', excerpt: 'Formation-gated messenger' },
-    '/messaging-v2': { title: 'Messages', excerpt: 'SBD messenger' },
-    '/dm': { title: 'Messages', excerpt: 'Direct messages' },
-    '/dm-v2': { title: 'Messages', excerpt: 'Direct messages' },
-    '/learn': { title: 'Formation', excerpt: 'Courses and weekly lessons' },
-    '/courses': { title: 'Courses', excerpt: 'Marriage Education catalogue' },
-    '/lesson': { title: 'Lesson', excerpt: 'Open this formation lesson' },
-    '/quiz': { title: 'Quiz', excerpt: 'Formation quiz' },
-    '/entry-quiz': { title: 'Entry quiz', excerpt: 'Placement quiz' },
-    '/assignment': { title: 'Assignment', excerpt: 'Course assignment' },
-    '/board': { title: 'Discussion board', excerpt: 'Open this formation board' },
-    '/boards': { title: 'Boards', excerpt: 'The Salon Floor' },
-    '/group': { title: 'Group', excerpt: 'Formation group' },
-    '/shop': { title: 'Shop', excerpt: 'Books and resources' },
-    '/library': { title: 'Library', excerpt: 'Formation library' },
-    '/resources': { title: 'Resources', excerpt: 'Library of formation resources' },
-    '/book': { title: 'Book', excerpt: 'SBD reading' },
-    '/profile': { title: 'Profile', excerpt: 'Your SBD profile' },
-    '/member': { title: 'Member', excerpt: 'Member profile' },
-    '/mv-house': { title: 'MV House', excerpt: 'Marriage Vision House' },
-    '/dating': { title: 'Dating', excerpt: 'Dating in the SBD network' },
-    '/pricing': { title: 'Membership', excerpt: 'SBD membership and pricing' },
-    '/tier': { title: 'Membership', excerpt: 'Covenant access' },
-    '/certificates': { title: 'Certifications', excerpt: 'Your formation certificates' },
-    '/schools': { title: 'Schools', excerpt: 'Marriage Education schools' },
-    '/explore': { title: 'Explore', excerpt: 'Explore the SBD network' },
-    '/search': { title: 'Search', excerpt: 'Search the network' },
-    '/auth': { title: 'Sign in', excerpt: 'SBD Network sign in' },
-    '/start-here': { title: 'Start here', excerpt: 'Begin formation' },
-    '/what-is': { title: 'What is SBD', excerpt: 'Sex by Design' },
-    '/checkout': { title: 'Checkout', excerpt: 'Complete your order' },
-    '/payment': { title: 'Payment', excerpt: 'Membership payment' },
-    '/admin': { title: 'Admin', excerpt: 'SBD Network admin' },
+    '/': { title: 'SBD Network', excerpt: 'Home for formation, boards, and messages', thumb: THUMB_HOME },
+    '/dashboard': { title: 'Home', excerpt: 'SBD Network dashboard', thumb: THUMB_HOME },
+    '/index': { title: 'Home', excerpt: 'SBD Network dashboard', thumb: THUMB_HOME },
+    '/communication-v2': { title: 'Messages', excerpt: 'Formation-gated messenger', thumb: THUMB_MESSAGES },
+    '/messaging-v2': { title: 'Messages', excerpt: 'SBD messenger', thumb: THUMB_MESSAGES },
+    '/dm': { title: 'Messages', excerpt: 'Direct messages', thumb: THUMB_MESSAGES },
+    '/dm-v2': { title: 'Messages', excerpt: 'Direct messages', thumb: THUMB_MESSAGES },
+    '/learn': { title: 'Formation', excerpt: 'Courses and weekly lessons', thumb: THUMB_LEARN },
+    '/courses': { title: 'Courses', excerpt: 'Marriage Education catalogue', thumb: THUMB_COURSES },
+    '/lesson': { title: 'Lesson', excerpt: 'Open this formation lesson', thumb: THUMB_LEARN },
+    '/quiz': { title: 'Quiz', excerpt: 'Formation quiz', thumb: THUMB_LEARN },
+    '/entry-quiz': { title: 'Entry quiz', excerpt: 'Placement quiz', thumb: THUMB_LEARN },
+    '/assignment': { title: 'Assignment', excerpt: 'Course assignment', thumb: THUMB_LEARN },
+    '/board': { title: 'Discussion board', excerpt: 'Open this formation board', thumb: THUMB_BOARDS },
+    '/boards': { title: 'Boards', excerpt: 'The Salon Floor', thumb: THUMB_BOARDS },
+    '/group': { title: 'Group', excerpt: 'Formation group', thumb: THUMB_BOARDS },
+    '/shop': { title: 'Shop', excerpt: 'Books and resources', thumb: THUMB_SHOP },
+    '/library': { title: 'Library', excerpt: 'Formation library', thumb: THUMB_SHOP },
+    '/resources': { title: 'Resources', excerpt: 'Library of formation resources', thumb: THUMB_SHOP },
+    '/book': { title: 'Book', excerpt: 'SBD reading', thumb: THUMB_SHOP },
+    '/profile': { title: 'Profile', excerpt: 'Your SBD profile', thumb: THUMB_HOME },
+    '/member': { title: 'Member', excerpt: 'Member profile', thumb: THUMB_HOME },
+    '/mv-house': { title: 'MV House', excerpt: 'Marriage Vision House', thumb: THUMB_MV },
+    '/dating': { title: 'Dating', excerpt: 'Dating in the SBD network', thumb: '/assets/images/mv/female-1.jpg' },
+    '/pricing': { title: 'Membership', excerpt: 'SBD membership and pricing', thumb: THUMB_HOME },
+    '/tier': { title: 'Membership', excerpt: 'Covenant access', thumb: THUMB_HOME },
+    '/certificates': { title: 'Certifications', excerpt: 'Your formation certificates', thumb: THUMB_HOME },
+    '/schools': { title: 'Schools', excerpt: 'Marriage Education schools', thumb: THUMB_COURSES },
+    '/explore': { title: 'Explore', excerpt: 'Explore the SBD network', thumb: THUMB_HOME },
+    '/search': { title: 'Search', excerpt: 'Search the network', thumb: THUMB_HOME },
+    '/auth': { title: 'Sign in', excerpt: 'SBD Network sign in', thumb: THUMB_HOME },
+    '/start-here': { title: 'Start here', excerpt: 'Begin formation', thumb: THUMB_LEARN },
+    '/what-is': { title: 'What is SBD', excerpt: 'Sex by Design', thumb: THUMB_SHOP },
+    '/checkout': { title: 'Checkout', excerpt: 'Complete your order', thumb: THUMB_SHOP },
+    '/payment': { title: 'Payment', excerpt: 'Membership payment', thumb: THUMB_SHOP },
+    '/admin': { title: 'Admin', excerpt: 'SBD Network admin', thumb: THUMB_HOME },
   };
+
+  function siteThumb(url) {
+    var s = String(url || '').trim();
+    if (!s) return DEFAULT_THUMB;
+    if (s.charAt(0) !== '/') return DEFAULT_THUMB;
+    if (s.indexOf('/assets/') !== 0 && s.indexOf('/images/') !== 0) return DEFAULT_THUMB;
+    return s;
+  }
 
   function hostAllowed(hostname) {
     if (!hostname) return false;
@@ -192,7 +213,7 @@
       host: u.hostname.replace(/^www\./i, ''),
       title: title,
       excerpt: clip(excerpt),
-      thumbnailUrl: '',
+      thumbnailUrl: siteThumb(meta && meta.thumb),
     };
   }
 
@@ -239,20 +260,23 @@
     var title = esc(preview.title || 'SBD page');
     var excerpt = esc(preview.excerpt || '');
     var host = esc(preview.host || '');
-    var thumb = String(preview.thumbnailUrl || '').trim();
-    var safeThumb = thumb ? esc(thumb).replace(/"/g, '&quot;') : '';
+    var thumb = siteThumb(preview.thumbnailUrl);
+    var safeThumb = esc(thumb).replace(/"/g, '&quot;');
+    var safeFallback = esc(DEFAULT_THUMB).replace(/"/g, '&quot;');
+    var errAttr =
+      thumb === DEFAULT_THUMB
+        ? ''
+        : " onerror=\"this.onerror=null;this.src='" + safeFallback + "'\"";
     // Keep the thumbnail outside the <a>. Wrapping it in the link made
     // tap/long-press-to-reply a no-op (PR #8). Card body opens the URL.
     var thumbHtml =
-      '<button type="button" class="ce2-link-preview-thumb' +
-      (thumb ? '' : ' is-fallback') +
-      '" aria-label="Reply to this message">' +
+      '<button type="button" class="ce2-link-preview-thumb" aria-label="Reply to this message">' +
       '<span class="ce2-link-preview-thumb-ph" aria-hidden="true"></span>' +
-      (thumb
-        ? '<img class="ce2-link-preview-thumb-img" src="' +
-          safeThumb +
-          '" alt="" loading="lazy" decoding="async" draggable="false">'
-        : '') +
+      '<img class="ce2-link-preview-thumb-img" src="' +
+      safeThumb +
+      '" alt="" loading="lazy" decoding="async" draggable="false"' +
+      errAttr +
+      '>' +
       '</button>';
     var bodyHtml =
       '<a class="ce2-link-preview-body" href="' +
@@ -307,7 +331,9 @@
     stripPreviewedUrls: stripPreviewedUrls,
     renderLinkPreviewHtml: renderLinkPreviewHtml,
     renderPreviewHtmlForMessage: renderPreviewHtmlForMessage,
+    siteThumb: siteThumb,
     ALLOWED_HOSTS: ALLOWED_HOSTS.slice(),
+    DEFAULT_THUMB: DEFAULT_THUMB,
     VERSION: VERSION,
   };
 })(typeof window !== 'undefined' ? window : global);
