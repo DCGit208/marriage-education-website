@@ -1165,11 +1165,19 @@
 
     function closeThreadSearchBar() {
       var st = state();
-      if (st) st.threadSearchQuery = '';
+      if (st) {
+        st.threadSearchQuery = '';
+        st.threadSearchSenderId = '';
+        st.threadSearchStartMs = 0;
+        st.threadSearchEndMs = 0;
+      }
       var bar = el('ce2ThreadSearch');
       var input = el('ce2ThreadSearchInput');
       if (bar) bar.hidden = true;
       if (input) input.value = '';
+      if (global.Ce2ThreadSearch && global.Ce2ThreadSearch.onClose) {
+        global.Ce2ThreadSearch.onClose();
+      }
       syncThreadSearchToggleUi();
       if (deps.requestRender) deps.requestRender({ threadOnly: true });
     }
@@ -1194,7 +1202,11 @@
       searchInput.addEventListener('input', function () {
         var st = state();
         if (st) st.threadSearchQuery = searchInput.value.trim().toLowerCase();
-        if (deps.requestRender) deps.requestRender({ threadOnly: true });
+        if (global.Ce2ThreadSearch && global.Ce2ThreadSearch.scheduleSearch) {
+          global.Ce2ThreadSearch.scheduleSearch();
+        } else if (deps.requestRender) {
+          deps.requestRender({ threadOnly: true });
+        }
       });
     }
   }
@@ -1724,6 +1736,9 @@
       toggle.classList.add('is-active');
     }
     input.focus();
+    if (global.Ce2ThreadSearch && global.Ce2ThreadSearch.onOpen) {
+      global.Ce2ThreadSearch.onOpen();
+    }
     if (deps.requestRender) deps.requestRender({ threadOnly: true });
   }
 
@@ -1902,6 +1917,16 @@
   }
 
   function messageMatchesSearch(m, q) {
+    var ts = global.Ce2ThreadSearch;
+    var st = state();
+    if (ts && ts.messageMatches) {
+      return ts.messageMatches(m, {
+        word: q || (st && st.threadSearchQuery) || '',
+        senderId: st && st.threadSearchSenderId,
+        startMs: st && st.threadSearchStartMs,
+        endMs: st && st.threadSearchEndMs,
+      });
+    }
     if (!q) return false;
     var t = messageCopyText(m).toLowerCase();
     return t.indexOf(q) >= 0;

@@ -100,7 +100,13 @@
     userMsgPrefs: { hidden: {}, saved: {}, blocked: {} },
     savedItems: [],
     threadSearchQuery: '',
+    threadSearchSenderId: '',
+    threadSearchStartMs: 0,
+    threadSearchEndMs: 0,
     highlightMessageId: null,
+    searchJumpMessages: null,
+    searchJumpOldestDoc: null,
+    searchJumpHasMore: false,
     offline: false,
     discoveryLoaded: false,
     shareDraft: null,
@@ -1410,6 +1416,200 @@
     window.Ce2MessageActions.wireMessageMenuUi();
   }
 
+  function messagesCollection(ac) {
+    if (!ac || !ac.id) return null;
+    return ac.type === 'direct'
+      ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
+      : db.collection('communicationGroups').doc(ac.id).collection('ce2_messages');
+  }
+
+  function listThreadSearchParticipants() {
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    var people = [];
+    if (!ac) return people;
+    if (me) {
+      people.push({ uid: me.uid, name: me.name || 'Me', isMe: true });
+    }
+    if (ac.type === 'direct' && ac.otherUid) {
+      people.push({
+        uid: ac.otherUid,
+        name: ac.title || typingNameForUid(ac.otherUid, ac) || 'Member',
+        isMe: false,
+      });
+    } else if (ac.type === 'group') {
+      (CommunicationState.memberIds || []).forEach(function (uid) {
+        if (me && uid === me.uid) return;
+        people.push({
+          uid: uid,
+          name: typingNameForUid(uid, ac) || 'Member',
+          isMe: false,
+        });
+      });
+    }
+    return people;
+  }
+
+  function hydrateThreadSearchParticipants() {
+    var people = listThreadSearchParticipants();
+    var jobs = [];
+    people.forEach(function (p) {
+      if (!p || p.isMe || !p.uid) return;
+      if (p.name && p.name !== 'Member') return;
+      if (jobs.length >= 24) return;
+      jobs.push(
+        db
+          .collection('users')
+          .doc(p.uid)
+          .get()
+          .then(function (doc) {
+            if (!doc.exists) return;
+            var d = doc.data() || {};
+            var name = String(d.name || d.displayName || '').trim();
+            if (!name) return;
+            var rec = CommunicationState.presenceByUid[p.uid] || {};
+            rec.name = name;
+            CommunicationState.presenceByUid[p.uid] = rec;
+          })
+          .catch(function () {})
+      );
+    });
+    return Promise.all(jobs);
+  }
+
+  function clearSearchJump() {
+    CommunicationState.searchJumpMessages = null;
+    CommunicationState.searchJumpOldestDoc = null;
+    CommunicationState.searchJumpHasMore = false;
+    if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.syncLatestButton) {
+      root.Ce2ThreadSearch.syncLatestButton();
+    }
+    requestRender({ threadOnly: true });
+  }
+
+  function toFsTimestamp(value) {
+    var ms = typeof value === 'number' ? value : messageTimeMs({ createdAt: value });
+    if (!ms) return null;
+    return firebase.firestore.Timestamp.fromMillis(ms);
+  }
+
+  async function loadSearchJumpWindow(hit) {
+    var ac = CommunicationState.activeConversation;
+    var col = messagesCollection(ac);
+    if (!ac || !col || !hit || !hit.id) return false;
+    var ts = toFsTimestamp(hit.createdAt || hit.createdAtMs);
+    if (!ts) {
+      try {
+        var doc = await col.doc(hit.id).get();
+        if (!doc.exists) return false;
+        var data = Object.assign({ id: doc.id }, doc.data());
+        ts = toFsTimestamp(data.createdAt);
+        hit = Object.assign({}, hit, data);
+      } catch (_) {
+        return false;
+      }
+    }
+    if (!ts) return false;
+    var beforeSnap = await col
+      .orderBy('createdAt', 'asc')
+      .endAt(ts)
+      .limitToLast(36)
+      .get();
+    var afterSnap = await col
+      .orderBy('createdAt', 'asc')
+      .startAfter(ts)
+      .limit(16)
+      .get();
+    var msgs = beforeSnap.docs
+      .concat(afterSnap.docs)
+      .map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+    if (
+      !msgs.some(function (m) {
+        return m.id === hit.id;
+      })
+    ) {
+      try {
+        var missing = await col.doc(hit.id).get();
+        if (missing.exists) {
+          msgs.push(Object.assign({ id: missing.id }, missing.data()));
+          msgs = sortMessagesByTime(msgs);
+        }
+      } catch (_) {}
+    }
+    if (!msgs.length) return false;
+    CommunicationState.searchJumpMessages = msgs;
+    CommunicationState.searchJumpOldestDoc = beforeSnap.docs[0] || null;
+    CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= 36;
+    return true;
+  }
+
+  async function ensureSearchHitVisible(hit) {
+    if (!hit || !hit.id) return;
+    var ac = CommunicationState.activeConversation;
+    if (!ac) return;
+    CommunicationState.highlightMessageId = hit.id;
+    function inList(list) {
+      return (list || []).some(function (m) {
+        return m.id === hit.id;
+      });
+    }
+    if (inList(CommunicationState.messages)) {
+      CommunicationState.searchJumpMessages = null;
+      CommunicationState.searchJumpOldestDoc = null;
+      CommunicationState.searchJumpHasMore = false;
+      requestRender({ threadOnly: true });
+      window.requestAnimationFrame(scrollToHighlightedMessage);
+      return;
+    }
+    var pages = 0;
+    while (CommunicationState.hasMoreMessages && pages < 8) {
+      await loadOlderMessages({ quiet: true, skipRender: true });
+      pages += 1;
+      if (inList(CommunicationState.messages)) {
+        requestRender({ threadOnly: true });
+        window.requestAnimationFrame(scrollToHighlightedMessage);
+        return;
+      }
+    }
+    var loaded = await loadSearchJumpWindow(hit);
+    requestRender({ threadOnly: true });
+    if (loaded) {
+      window.requestAnimationFrame(scrollToHighlightedMessage);
+    }
+    if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.syncLatestButton) {
+      root.Ce2ThreadSearch.syncLatestButton();
+    }
+  }
+
+  function initCe2ThreadSearch() {
+    if (!root.Ce2ThreadSearch) return;
+    root.Ce2ThreadSearch.init({
+      getState: function () {
+        return CommunicationState;
+      },
+      el: el,
+      db: db,
+      escapeHtml: escapeHtml,
+      fmtTime: fmtTime,
+      messageTimeMs: messageTimeMs,
+      requestRender: requestRender,
+      syncFocusableInputs: syncCe2FocusableInputs,
+      messagesCollection: messagesCollection,
+      listParticipants: listThreadSearchParticipants,
+      hydrateParticipants: hydrateThreadSearchParticipants,
+      jumpToHit: function (hit) {
+        ensureSearchHitVisible(hit).catch(handleCe2Error);
+      },
+      clearSearchJump: clearSearchJump,
+      isMessageHidden: function (m, ac) {
+        var ma = msgActions();
+        return !!(ma && ma.isMessageHidden(m, ac));
+      },
+    });
+  }
+
   function closeMessageMenu() {
     if (window.Ce2MessageActions) window.Ce2MessageActions.closeMessageMenu();
   }
@@ -2464,6 +2664,15 @@
         searchToggle.setAttribute('aria-expanded', 'false');
         searchToggle.classList.remove('is-active');
         CommunicationState.threadSearchQuery = '';
+        CommunicationState.threadSearchSenderId = '';
+        CommunicationState.threadSearchStartMs = 0;
+        CommunicationState.threadSearchEndMs = 0;
+        CommunicationState.searchJumpMessages = null;
+        CommunicationState.searchJumpOldestDoc = null;
+        CommunicationState.searchJumpHasMore = false;
+        if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.resetUi) {
+          root.Ce2ThreadSearch.resetUi();
+        }
       } else if (searchBar) {
         var searchOpen = !searchBar.hidden;
         searchToggle.setAttribute('aria-expanded', searchOpen ? 'true' : 'false');
@@ -2825,7 +3034,14 @@
 
   function getVisibleMessages(ac) {
     var ma = msgActions();
-    return (CommunicationState.messages || []).filter(function (m) {
+    var list = CommunicationState.messages || [];
+    if (
+      CommunicationState.searchJumpMessages &&
+      CommunicationState.searchJumpMessages.length
+    ) {
+      list = CommunicationState.searchJumpMessages;
+    }
+    return list.filter(function (m) {
       if (
         m._pending &&
         m.conversationId &&
@@ -2930,7 +3146,7 @@
     var ma = msgActions();
     const self = CommunicationState.me && m.senderId === CommunicationState.me.uid;
     var searchQ = CommunicationState.threadSearchQuery || '';
-    var searchHit = searchQ && ma && ma.messageMatchesSearch(m, searchQ);
+    var searchHit = ma && ma.messageMatchesSearch(m, searchQ);
     var isHighlight =
       CommunicationState.highlightMessageId &&
       m.id === CommunicationState.highlightMessageId;
@@ -3029,7 +3245,9 @@
       !ac ||
       CommunicationState.loadingOlder ||
       CommunicationState.threadSearchQuery ||
-      CommunicationState.highlightMessageId
+      CommunicationState.highlightMessageId ||
+      (CommunicationState.searchJumpMessages &&
+        CommunicationState.searchJumpMessages.length)
     ) {
       return false;
     }
@@ -3143,7 +3361,13 @@
       return;
     }
 
-    if (!CommunicationState.messages.length) {
+    if (
+      !CommunicationState.messages.length &&
+      !(
+        CommunicationState.searchJumpMessages &&
+        CommunicationState.searchJumpMessages.length
+      )
+    ) {
       invalidateMessageRenderCache();
       closeMessageMenu();
       scroll.innerHTML = '<div class="ce2-placeholder">No messages yet.</div>';
@@ -3162,7 +3386,22 @@
     invalidateMessageRenderCache();
     closeMessageMenu();
     scroll.innerHTML = '';
-    if (CommunicationState.hasMoreMessages) {
+    var jumping = !!(
+      CommunicationState.searchJumpMessages &&
+      CommunicationState.searchJumpMessages.length
+    );
+    var hasMore = jumping
+      ? CommunicationState.searchJumpHasMore
+      : CommunicationState.hasMoreMessages;
+    if (jumping) {
+      var backBtn = document.createElement('button');
+      backBtn.type = 'button';
+      backBtn.className = 'ce2-btn ce2-btn-ghost ce2-search-jump-back';
+      backBtn.id = 'ce2SearchJumpBack';
+      backBtn.textContent = 'Back to latest messages';
+      scroll.appendChild(backBtn);
+    }
+    if (hasMore) {
       var olderBtn = document.createElement('button');
       olderBtn.type = 'button';
       olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
@@ -3652,6 +3891,9 @@
     CommunicationState.oldestMessageDoc = null;
     CommunicationState._renderedMsgIds = null;
     CommunicationState._metaLastMessageId = null;
+    CommunicationState.searchJumpMessages = null;
+    CommunicationState.searchJumpOldestDoc = null;
+    CommunicationState.searchJumpHasMore = false;
     clearReply();
   }
 
@@ -3712,41 +3954,63 @@
       );
   }
 
-  async function loadOlderMessages() {
+  async function loadOlderMessages(opts) {
+    opts = opts || {};
     var ac = CommunicationState.activeConversation;
     var me = CommunicationState.me;
-    if (!ac || !me || CommunicationState.loadingOlder || !CommunicationState.messages.length) {
+    var jumping = !!(
+      CommunicationState.searchJumpMessages &&
+      CommunicationState.searchJumpMessages.length
+    );
+    if (!ac || !me || CommunicationState.loadingOlder) {
       return;
     }
-    if (!CommunicationState.oldestMessageDoc) return;
+    if (!jumping && !CommunicationState.messages.length) {
+      return;
+    }
+    var oldest = jumping
+      ? CommunicationState.searchJumpOldestDoc
+      : CommunicationState.oldestMessageDoc;
+    if (!oldest) return;
     CommunicationState.loadingOlder = true;
-    render();
+    if (!opts.quiet) render();
     try {
-      var col =
-        ac.type === 'direct'
-          ? db.collection('ce2_conversations').doc(ac.id).collection('ce2_messages')
-          : db.collection('communicationGroups').doc(ac.id).collection('ce2_messages');
+      var col = messagesCollection(ac);
+      if (!col) return;
       var snap = await col
         .orderBy('createdAt', 'asc')
-        .endBefore(CommunicationState.oldestMessageDoc)
+        .endBefore(oldest)
         .limitToLast(MESSAGE_PAGE)
         .get();
       if (!snap.docs.length) {
-        CommunicationState.hasMoreMessages = false;
+        if (jumping) CommunicationState.searchJumpHasMore = false;
+        else CommunicationState.hasMoreMessages = false;
         return;
       }
-      CommunicationState.oldestMessageDoc = snap.docs[0];
       var older = snap.docs.map(function (d) {
         return Object.assign({ id: d.id }, d.data());
       });
-      CommunicationState.hasMoreMessages = snap.docs.length >= MESSAGE_PAGE;
-      CommunicationState.lastServerMessages = older.concat(CommunicationState.lastServerMessages);
-      CommunicationState.messages = mergeServerAndPending(CommunicationState.lastServerMessages);
+      if (jumping) {
+        CommunicationState.searchJumpOldestDoc = snap.docs[0];
+        CommunicationState.searchJumpHasMore = snap.docs.length >= MESSAGE_PAGE;
+        CommunicationState.searchJumpMessages = older.concat(
+          CommunicationState.searchJumpMessages
+        );
+      } else {
+        CommunicationState.oldestMessageDoc = snap.docs[0];
+        CommunicationState.hasMoreMessages = snap.docs.length >= MESSAGE_PAGE;
+        CommunicationState.lastServerMessages = older.concat(
+          CommunicationState.lastServerMessages
+        );
+        CommunicationState.messages = mergeServerAndPending(
+          CommunicationState.lastServerMessages
+        );
+      }
     } catch (err) {
       handleCe2Error(err);
     } finally {
       CommunicationState.loadingOlder = false;
-      requestRender();
+      if (!opts.skipRender) requestRender();
     }
   }
 
@@ -6053,7 +6317,11 @@
   function syncCe2FocusableInputs() {
     var active = document.activeElement;
     var composerFocused = !!(active && active.closest && active.closest('.ce2-composer'));
-    var searchFocused = !!(active && active.id === 'ce2ThreadSearchInput');
+    var searchIds =
+      root.Ce2ThreadSearch && root.Ce2ThreadSearch.SEARCH_FIELD_IDS
+        ? root.Ce2ThreadSearch.SEARCH_FIELD_IDS
+        : ['ce2ThreadSearchInput'];
+    var searchFocused = !!(active && searchIds.indexOf(active.id) >= 0);
     var editFocused = !!(active && active.closest && active.closest('.ce2-sheet--edit'));
 
     document.querySelectorAll('.ce2-sheet').forEach(function (sheet) {
@@ -6073,13 +6341,15 @@
       });
     });
     var searchBar = el('ce2ThreadSearch');
-    var searchInput = el('ce2ThreadSearchInput');
-    if (searchInput) {
-      var searchOff = !searchBar || searchBar.hidden || composerFocused || editFocused;
-      searchInput.disabled = searchOff;
-      if (searchOff) searchInput.setAttribute('tabindex', '-1');
-      else searchInput.removeAttribute('tabindex');
-    }
+    searchIds.forEach(function (id) {
+      var node = el(id);
+      if (!node) return;
+      var off = !searchBar || searchBar.hidden || composerFocused || editFocused;
+      if (searchFocused && active && node !== active) off = true;
+      node.disabled = off;
+      if (off) node.setAttribute('tabindex', '-1');
+      else node.removeAttribute('tabindex');
+    });
     var composerInput = el('ce2Input');
     if (composerInput) {
       var composerOff = searchFocused || editFocused;
@@ -6275,6 +6545,7 @@
     initCe2AudioRecorder();
     bindCe2VoiceUploadActions();
     initCe2MessageActions();
+    initCe2ThreadSearch();
     wireCe2DelegatedClick();
     bindInboxGestures();
     bindHubNav();
@@ -6355,6 +6626,9 @@
     document.addEventListener('click', function (e) {
       if (e.target && e.target.id === 'ce2LoadOlder') {
         loadOlderMessages().catch(handleCe2Error);
+      }
+      if (e.target && e.target.id === 'ce2SearchJumpBack') {
+        clearSearchJump();
       }
     });
 

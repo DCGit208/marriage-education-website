@@ -295,7 +295,8 @@ test('messenger cache-bust is above live for changed card/media assets', functio
   assert.ok(mediaVer && Number(mediaVer[1]) >= 3, 'ce2-media-view cache-bust must be above live v=2');
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
   assert.ok(jsVer && Number(jsVer[1]) >= 110, 'communication-v2.js cache-bust must be above live v=109');
-  assert.ok(/ce2-message-actions\.js\?v=23/.test(html), 'leave ce2-message-actions.js at main/live v=23');
+  const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
+  assert.ok(actionsVer && Number(actionsVer[1]) >= 23, 'ce2-message-actions.js cache-bust must stay at or above live v=23');
 });
 
 const document = createDom();

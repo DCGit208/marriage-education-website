@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=81">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=82">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -30,7 +30,8 @@
   <script defer src="/communication-v2/ce2-receipts.js?v=4"></script>
   <script defer src="/communication-v2/ce2-inbox.js?v=1"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=2"></script>
-  <script defer src="/communication-v2/ce2-message-actions.js?v=23"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=24"></script>
+  <script defer src="/communication-v2/ce2-thread-search.js?v=1"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=1"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
   <script defer src="/communication-v2/ce2-pwa.js?v=5"></script>
@@ -41,7 +42,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=3"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=111"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=112"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -114,8 +115,21 @@
           <button type="button" class="ce2-thread-search-toggle" id="ce2ThreadSearchToggle" hidden aria-label="Find in chat" aria-expanded="false" title="Find in chat">⌕</button>
         </div>
         <div id="ce2ThreadSearch" class="ce2-thread-search" hidden>
-          <input type="search" id="ce2ThreadSearchInput" class="ce2-thread-search-input" placeholder="Find in this chat…" aria-label="Find in chat">
-          <button type="button" id="ce2ThreadSearchClose" class="ce2-thread-search-close" aria-label="Close search">×</button>
+          <div class="ce2-thread-search-row">
+            <input type="search" id="ce2ThreadSearchInput" class="ce2-thread-search-input" placeholder="Find in this chat…" aria-label="Find in chat" autocomplete="off" enterkeyhint="search">
+            <button type="button" id="ce2ThreadSearchClose" class="ce2-thread-search-close" aria-label="Close search">×</button>
+          </div>
+          <div class="ce2-thread-search-filters">
+            <label class="ce2-sr-only" for="ce2ThreadSearchPerson">From</label>
+            <select id="ce2ThreadSearchPerson" class="ce2-thread-search-person" aria-label="Filter by person">
+              <option value="">Anyone</option>
+            </select>
+            <label class="ce2-sr-only" for="ce2ThreadSearchDay">Day</label>
+            <input type="date" id="ce2ThreadSearchDay" class="ce2-thread-search-day" aria-label="Jump to day">
+            <button type="button" id="ce2ThreadSearchLatest" class="ce2-thread-search-latest" hidden>Latest</button>
+          </div>
+          <p id="ce2ThreadSearchStatus" class="ce2-thread-search-status" role="status">Type a word, pick a person, or choose a day.</p>
+          <ul id="ce2ThreadSearchHits" class="ce2-thread-search-hits" hidden></ul>
         </div>
         <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite"></div>
         <p id="ce2TypingLine" class="ce2-typing-line" hidden aria-live="polite">

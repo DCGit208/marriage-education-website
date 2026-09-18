@@ -241,16 +241,21 @@ test('preview never dumps raw payloads', function () {
   assert.ok(inbox.looksLikePayloadDump('{not a message}'));
 });
 
-test('cache-bust versions are strictly above live 110/80/6', function () {
+test('cache-bust versions stay strictly above live 110/80/3/6', function () {
   const html = fs.readFileSync(
     path.join(ROOT, 'public/communication-v2/index.html'),
     'utf8'
   );
-  assert.ok(html.indexOf('communication-v2.js?v=111') >= 0);
-  assert.ok(html.indexOf('communication-v2.css?v=81') >= 0);
-  assert.ok(html.indexOf('ce2-inbox.js?v=1') >= 0);
-  assert.ok(html.indexOf('ce2-receipts.js?v=4') >= 0);
-  assert.ok(html.indexOf('ce2-presence.js?v=6') >= 0);
+  const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
+  const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
+  const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
+  const receiptsVer = html.match(/ce2-receipts\.js\?v=(\d+)/);
+  const presenceVer = html.match(/ce2-presence\.js\?v=(\d+)/);
+  assert.ok(jsVer && Number(jsVer[1]) > 110);
+  assert.ok(cssVer && Number(cssVer[1]) > 80);
+  assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
+  assert.ok(receiptsVer && Number(receiptsVer[1]) >= 4);
+  assert.ok(presenceVer && Number(presenceVer[1]) >= 6);
   assert.ok(html.indexOf('communication-v2.js?v=110') < 0);
   assert.ok(html.indexOf('communication-v2.css?v=80') < 0);
 });
