@@ -40,6 +40,28 @@
     return 'dm_attachments';
   }
 
+  function conversationIdFromOptions(options) {
+    var raw = options && (options.conversationId || options.scopeId);
+    var id = String(raw || '').trim();
+    if (!/^[A-Za-z0-9._-]{1,128}$/.test(id)) return '';
+    return id;
+  }
+
+  function requireConversationId(options) {
+    var id = conversationIdFromOptions(options);
+    if (!id) {
+      throw new Error('Upload needs an open conversation.');
+    }
+    return id;
+  }
+
+  function withConversationScope(options) {
+    var conversationId = requireConversationId(options);
+    var next = Object.assign({}, options || {});
+    next.conversationId = conversationId;
+    return next;
+  }
+
   function kindForFile(file) {
     if (isVideoFile(file)) return 'video';
     if (isAudioFile(file)) return 'audio';
@@ -313,7 +335,7 @@
     if (!r2Ready()) {
       return Promise.reject(new Error('R2 upload service not available.'));
     }
-    return uploadToR2(file, folder, options || {});
+    return uploadToR2(file, folder, withConversationScope(options));
   }
 
   function captureVideoPosterBlob(file) {
@@ -427,6 +449,7 @@
   }
 
   async function uploadCe2Media(file, options) {
+    var scopedOpts = withConversationScope(options);
     validateFile(file);
     var uploadFile = file;
     if (isImageFile(file)) {
@@ -442,7 +465,7 @@
         .then(function (imageThumb) {
           if (!imageThumb) return null;
           var imgBase = (file.name || 'photo').replace(/\.[^.]+$/, '');
-          return uploadChatThumb(imageThumb, imgBase, {});
+          return uploadChatThumb(imageThumb, imgBase, scopedOpts);
         })
         .catch(function () { return null; });
     } else if (isVideoFile(file)) {
@@ -451,14 +474,14 @@
           if (!posterBlob) return null;
           var base = (file.name || 'video').replace(/\.[^.]+$/, '');
           var posterFile = new File([posterBlob], base + '_thumb.jpg', { type: 'image/jpeg' });
-          return withUploadTimeout(uploadMediaFile(posterFile, 'dm_attachments', {}), 30000);
+          return withUploadTimeout(uploadMediaFile(posterFile, 'dm_attachments', scopedOpts), 30000);
         })
         .catch(function () { return null; });
     }
 
     var folder = folderForFile(uploadFile);
     var url = await withUploadTimeout(
-      uploadMediaFile(uploadFile, folder, options || {}),
+      uploadMediaFile(uploadFile, folder, scopedOpts),
       180000
     );
     if (!url) throw new Error('Upload returned no URL.');
@@ -489,8 +512,10 @@
     isVideoFile: isVideoFile,
     isImageFile: isImageFile,
     r2Ready: r2Ready,
+    requireConversationId: requireConversationId,
+    conversationIdFromOptions: conversationIdFromOptions,
     primeVideoThumbnail: primeVideoThumbnail,
     MAX_BYTES: MAX_BYTES,
-    VERSION: 15,
+    VERSION: 16,
   };
 })(typeof window !== 'undefined' ? window : global);

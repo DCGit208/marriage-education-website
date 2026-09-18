@@ -6060,6 +6060,7 @@
     }
 
     var uploadOpts = {
+      conversationId: ac.id,
       onProgress: function (p) {
         updatePendingVoiceMessage(localId, {
           uploadState: 'uploading',
@@ -6491,6 +6492,7 @@
     render();
     var lastProgressUi = 0;
     var uploadOpts = {
+      conversationId: ac.id,
       onProgress: function (p) {
         var s = CommunicationState.threadComposer[threadKey];
         if (!s) return;
