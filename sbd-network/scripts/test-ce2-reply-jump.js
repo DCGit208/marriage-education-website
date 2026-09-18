@@ -337,7 +337,8 @@ test('frozen keyboard, delivery, audio, inbox, search, push, queue stay intact',
   assert.ok(v2.indexOf('function handleMetaMessageDelivery') !== -1);
   assert.ok(v2.indexOf('initCe2ThreadSearch') !== -1);
   assert.ok(v2.indexOf('flushCe2OfflineQueue') !== -1);
-  assert.ok(html.indexOf('ce2-inbox.js?v=1') !== -1);
+  const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
+  assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
   assert.ok(html.indexOf('ce2-thread-search.js?v=1') !== -1);
   assert.ok(html.indexOf('ce2-push.js?v=1') !== -1);
   assert.ok(html.indexOf('ce2-offline-queue.js?v=2') !== -1);

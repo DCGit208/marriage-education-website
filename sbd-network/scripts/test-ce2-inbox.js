@@ -71,8 +71,8 @@ const receipts = loadIife('public/communication-v2/ce2-receipts.js').Ce2Receipts
 assert.ok(inbox, 'Ce2Inbox did not load');
 assert.ok(receipts, 'Ce2Receipts did not load');
 
-test('VERSION is 1 and preview/sort APIs are exported', function () {
-  assert.strictEqual(inbox.VERSION, 1);
+test('VERSION is 2 and preview/sort APIs are exported', function () {
+  assert.strictEqual(inbox.VERSION, 2);
   assert.strictEqual(typeof inbox.formatLastPreview, 'function');
   assert.strictEqual(typeof inbox.sortInboxRows, 'function');
   assert.strictEqual(typeof inbox.unreadBadgeMode, 'function');
@@ -219,6 +219,24 @@ test('preview labels voice, photo, video, and board posts', function () {
     'Sabbath rest'
   );
   assert.strictEqual(inbox.formatLastPreview({ messageType: 'board_share' }), 'Board post');
+});
+
+test('preview labels a bare link as Link without dumping the URL', function () {
+  assert.strictEqual(
+    inbox.formatLastPreview({ content: 'https://sbd.marriageducation.com/learn' }),
+    'Link'
+  );
+  assert.strictEqual(
+    inbox.formatLastPreview({
+      content:
+        'https://sbd.marriageducation.com/lesson.html?id=wwm-week-1-and-a-very-long-query-to-exceed-eighty-chars',
+    }),
+    'Link'
+  );
+  assert.notStrictEqual(
+    inbox.formatLastPreview({ content: 'See https://sbd.marriageducation.com/learn' }),
+    'Link'
+  );
 });
 
 test('preview keeps a short text snippet and quoted reply', function () {
