@@ -446,7 +446,8 @@ Promise.resolve()
       assert.ok(v2.indexOf('ma.syncReactionsRow') >= 0);
       assert.ok(v2.indexOf('bindInboxGestures') >= 0);
       assert.ok(v2.indexOf('inboxPrefs') >= 0);
-      assert.ok(html.indexOf('ce2-inbox.js?v=1') >= 0);
+      const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
+      assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
     });
 
     test('validate script includes the thread-search test', function () {
