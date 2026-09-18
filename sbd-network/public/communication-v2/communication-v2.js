@@ -1566,7 +1566,7 @@
       CommunicationState.searchJumpOldestDoc = null;
       CommunicationState.searchJumpHasMore = false;
       requestRender({ threadOnly: true });
-      window.requestAnimationFrame(scrollToHighlightedMessage);
+      scheduleScrollToHighlightedMessage();
       return;
     }
     var pages = 0;
@@ -1575,14 +1575,14 @@
       pages += 1;
       if (inList(CommunicationState.messages)) {
         requestRender({ threadOnly: true });
-        window.requestAnimationFrame(scrollToHighlightedMessage);
+        scheduleScrollToHighlightedMessage();
         return;
       }
     }
     var loaded = await loadSearchJumpWindow(hit);
     requestRender({ threadOnly: true });
     if (loaded) {
-      window.requestAnimationFrame(scrollToHighlightedMessage);
+      scheduleScrollToHighlightedMessage();
     }
     if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.syncLatestButton) {
       root.Ce2ThreadSearch.syncLatestButton();
@@ -2834,22 +2834,37 @@
     renderHubUnreadBadges();
   }
 
+  function findLoadedMessageById(messageId) {
+    if (!messageId) return null;
+    function from(list) {
+      if (!list) return null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === messageId) return list[i];
+      }
+      return null;
+    }
+    return (
+      from(CommunicationState.messages) ||
+      from(CommunicationState.lastServerMessages) ||
+      from(CommunicationState.searchJumpMessages)
+    );
+  }
+
+  function scheduleScrollToHighlightedMessage() {
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        scrollToHighlightedMessage();
+      });
+    });
+  }
+
   function scrollToReplyMessage(messageId) {
     if (!messageId) return;
-    var scroll = el('ce2MessageScroll');
-    if (!scroll) return;
-    CommunicationState.highlightMessageId = messageId;
-    render({ threadOnly: true });
-    requestAnimationFrame(function () {
-      var row = scroll.querySelector('.ce2-row[data-message-id="' + messageId + '"]');
-      if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(function () {
-        if (CommunicationState.highlightMessageId === messageId) {
-          CommunicationState.highlightMessageId = null;
-          render({ threadOnly: true });
-        }
-      }, 2200);
-    });
+    var found = findLoadedMessageById(messageId);
+    var hit = found
+      ? { id: found.id, createdAt: found.createdAt, createdAtMs: messageTimeMs(found) }
+      : { id: messageId };
+    ensureSearchHitVisible(hit).catch(handleCe2Error);
   }
 
   function renderThreadChrome() {
@@ -3664,7 +3679,7 @@
       return m.id;
     });
     updateTypingLineOnly();
-    if (stickBottom) {
+    if (stickBottom && !CommunicationState.highlightMessageId) {
       scroll.scrollTop = scroll.scrollHeight;
     }
     if (CommunicationState.highlightMessageId) {
@@ -4665,16 +4680,53 @@
     }
   }
 
-  function scrollToHighlightedMessage() {
+  function scrollToHighlightedMessage(retry) {
     var id = CommunicationState.highlightMessageId;
     if (!id) return;
     var scroll = el('ce2MessageScroll');
     if (!scroll) return;
-    var row = scroll.querySelector('[data-message-id="' + id + '"]');
-    if (!row) return;
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var rm = replyModule();
+    var row = rm && rm.queryMessageRow ? rm.queryMessageRow(scroll, id) : null;
+    if (!row) {
+      try {
+        row = scroll.querySelector('[data-message-id="' + String(id).replace(/"/g, '\\"') + '"]');
+      } catch (_) {
+        row = null;
+      }
+    }
+    if (!row) {
+      if (!retry) {
+        window.requestAnimationFrame(function () {
+          scrollToHighlightedMessage(true);
+        });
+      }
+      return;
+    }
+    var focus = rm && rm.findReplyJumpFocus ? rm.findReplyJumpFocus(row) : row;
+    var next =
+      rm && rm.computeThreadScrollTop
+        ? rm.computeThreadScrollTop(
+            scroll.getBoundingClientRect(),
+            focus.getBoundingClientRect(),
+            scroll.scrollTop,
+            { padTop: 12 }
+          )
+        : null;
+    if (typeof next === 'number' && rm && rm.applyThreadScrollTop) {
+      rm.applyThreadScrollTop(scroll, next);
+    } else if (typeof next === 'number') {
+      scroll.scrollTop = Math.max(0, next);
+    } else {
+      try {
+        row.scrollIntoView({ behavior: 'auto', block: 'start' });
+      } catch (_) {
+        row.scrollIntoView(true);
+      }
+    }
     window.setTimeout(function () {
-      CommunicationState.highlightMessageId = null;
+      if (CommunicationState.highlightMessageId === id) {
+        CommunicationState.highlightMessageId = null;
+      }
     }, 4000);
   }
 

@@ -47,9 +47,65 @@
     );
   }
 
+  function cssAttrEscape(value) {
+    return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  function queryMessageRow(root, messageId) {
+    if (!root || !root.querySelector || !messageId) return null;
+    var safe = cssAttrEscape(messageId);
+    return (
+      root.querySelector('.ce2-row[data-message-id="' + safe + '"]') ||
+      root.querySelector('[data-message-id="' + safe + '"]')
+    );
+  }
+
+  function findReplyJumpFocus(row) {
+    if (!row || !row.querySelector) return row || null;
+    return (
+      row.querySelector('.ce2-media-tap--video') ||
+      row.querySelector('.ce2-msg-video-wrap') ||
+      row.querySelector('.ce2-msg-video') ||
+      row.querySelector('.ce2-media-tap') ||
+      row.querySelector('.ce2-msg-audio-wrap') ||
+      row.querySelector('.ce2-bubble') ||
+      row
+    );
+  }
+
+  /**
+   * Align the quoted target to the top of #ce2MessageScroll (not the window).
+   * Tall video cards stay above the composer so tap-to-play remains reachable.
+   */
+  function computeThreadScrollTop(scrollRect, focusRect, scrollTop, opts) {
+    opts = opts || {};
+    var padTop = opts.padTop != null ? Number(opts.padTop) : 12;
+    if (!isFinite(padTop)) padTop = 12;
+    var current = Number(scrollTop) || 0;
+    if (!scrollRect || !focusRect) return current < 0 ? 0 : current;
+    var next = current + (Number(focusRect.top) - Number(scrollRect.top)) - padTop;
+    return next < 0 ? 0 : next;
+  }
+
+  function applyThreadScrollTop(scroll, top) {
+    if (!scroll) return 0;
+    var max = Math.max(0, (scroll.scrollHeight || 0) - (scroll.clientHeight || 0));
+    var next = Number(top);
+    if (!isFinite(next)) next = 0;
+    if (next < 0) next = 0;
+    if (next > max) next = max;
+    scroll.scrollTop = next;
+    return next;
+  }
+
   global.Ce2Reply = {
     buildReplyPayload: buildReplyPayload,
     renderReplyQuoteHtml: renderReplyQuoteHtml,
-    VERSION: 2,
+    cssAttrEscape: cssAttrEscape,
+    queryMessageRow: queryMessageRow,
+    findReplyJumpFocus: findReplyJumpFocus,
+    computeThreadScrollTop: computeThreadScrollTop,
+    applyThreadScrollTop: applyThreadScrollTop,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : global);
