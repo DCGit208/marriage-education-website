@@ -14,7 +14,7 @@
  */
 
 import { parseFirestoreMap, userCanReceiveBoardNotification } from './notification-access.js';
-import { stripContentTypeParams, isTrustedUploadOrigin } from './upload-policy.js';
+import { stripContentTypeParams, isTrustedUploadOrigin, isAllowedUploadFolder } from './upload-policy.js';
 
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'image/bmp',
@@ -579,7 +579,7 @@ export default {
     const filename    = request.headers.get('X-Filename') || '';
     const contentType = stripContentTypeParams(request.headers.get('Content-Type') || '');
 
-    if (!ALLOWED_FOLDERS.has(folder))        return respond({ error: 'Invalid folder' }, 400);
+    if (!isAllowedUploadFolder(folder))      return respond({ error: 'Invalid folder' }, 400);
     if (!ALLOWED_CONTENT_TYPES.has(contentType)) return respond({ error: 'Content type not allowed' }, 400);
     if (!filename)                           return respond({ error: 'Missing X-Filename header' }, 400);
     if (request.headers.get('Content-Length') === '0') {

@@ -7,11 +7,65 @@
 // Update this after running: cd workers/upload-signer && npx wrangler deploy
 const UPLOAD_WORKER_URL = 'https://sbd-upload-signer.sbdnetwork.workers.dev';
 
+const CE2_DM_UPLOAD_FOLDERS = ['dm_attachments', 'dm_videos', 'dm_audio'];
+
 function stripUploadContentTypeParams(contentType) {
   return String(contentType || '')
     .toLowerCase()
     .split(';')[0]
     .trim();
+}
+
+function isCe2DmUploadFolder(folder) {
+  return CE2_DM_UPLOAD_FOLDERS.indexOf(String(folder || '')) >= 0;
+}
+
+function sanitizeUploadScopeId(scopeId) {
+  const s = String(scopeId || '').trim();
+  if (!/^[A-Za-z0-9._-]{1,128}$/.test(s)) return '';
+  return s;
+}
+
+/**
+ * CE2 media: `dm_attachments/{convOrGroupId}`.
+ * Legacy / non-CE2 callers omit conversationId and keep `{folder}`.
+ */
+function scopedUploadFolder(folder, conversationId) {
+  const base = String(folder || '');
+  if (!isCe2DmUploadFolder(base)) return base;
+  const scope = sanitizeUploadScopeId(conversationId);
+  if (!scope) return base;
+  return base + '/' + scope;
+}
+
+function firebaseStorageObjectPath(folder, uid, filename, options) {
+  options = options || {};
+  const scoped = scopedUploadFolder(folder, options.conversationId);
+  return scoped + '/' + uid + '/' + filename;
+}
+
+function r2ObjectKey(folder, filename, options) {
+  options = options || {};
+  return scopedUploadFolder(folder, options.conversationId) + '/' + filename;
+}
+
+function isLegacyFirebaseStoragePath(path) {
+  const parts = String(path || '').split('/').filter(Boolean);
+  return (
+    parts.length === 3 &&
+    CE2_DM_UPLOAD_FOLDERS.indexOf(parts[0]) >= 0
+  );
+}
+
+function isConversationScopedFirebaseStoragePath(path) {
+  const parts = String(path || '').split('/').filter(Boolean);
+  return (
+    parts.length === 4 &&
+    CE2_DM_UPLOAD_FOLDERS.indexOf(parts[0]) >= 0 &&
+    !!sanitizeUploadScopeId(parts[1]) &&
+    !!parts[2] &&
+    !!parts[3]
+  );
 }
 
 function detectUploadContentType(file, folder) {
@@ -74,12 +128,13 @@ function canFallbackToFirebaseStorage(err) {
 
 function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
   options = options || {};
+  const folderPath = scopedUploadFolder(folder, options.conversationId);
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${UPLOAD_WORKER_URL}/upload`);
     xhr.setRequestHeader('Authorization', `Bearer ${idToken}`);
     xhr.setRequestHeader('Content-Type', contentType);
-    xhr.setRequestHeader('X-Folder', folder);
+    xhr.setRequestHeader('X-Folder', folderPath);
     xhr.setRequestHeader('X-Filename', filename);
 
     if (options.onProgress) {
@@ -144,6 +199,7 @@ async function uploadToR2(file, folder, options) {
   const filename = `${Date.now()}_${uid}_${(file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_')}`;
   const contentType = detectUploadContentType(file, folder);
   options = options || {};
+  const folderPath = scopedUploadFolder(folder, options.conversationId);
 
   try {
     if (options.onProgress || options.signal) {
@@ -155,7 +211,7 @@ async function uploadToR2(file, folder, options) {
       headers: {
         'Authorization': `Bearer ${idToken}`,
         'Content-Type': contentType,
-        'X-Folder': folder,
+        'X-Folder': folderPath,
         'X-Filename': filename,
       },
       body: file,
@@ -232,9 +288,12 @@ function uploadToFirebaseStorage(file, folder, options) {
     }
     const contentType = detectUploadContentType(file, folder);
     const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path =
-      folder + '/' + user.uid + '/' + Date.now() + '_' +
-      Math.random().toString(36).slice(2, 8) + '_' + safeName;
+    const path = firebaseStorageObjectPath(
+      folder,
+      user.uid,
+      Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + safeName,
+      options
+    );
     const ref = firebase.storage().ref(path);
     const task = ref.put(file, { contentType: contentType });
 
