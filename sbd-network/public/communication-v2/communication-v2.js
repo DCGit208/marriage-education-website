@@ -4081,7 +4081,15 @@
           aud.className = 'ce2-msg-audio';
           aud.preload = 'metadata';
           aud.controls = true;
-          aud.src = playSrc;
+          if (typeof resolveR2MediaUrl === 'function') {
+            resolveR2MediaUrl(playSrc)
+              .then(function (src) {
+                aud.src = src;
+              })
+              .catch(function () {});
+          } else {
+            aud.src = playSrc;
+          }
           audioWrap.appendChild(aud);
         }
       }

@@ -2,11 +2,10 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // These rules govern Firebase Storage only. Cloudflare R2 (upload-signer
-    // worker) serves public object URLs and cannot enforce conversation
-    // membership the same way. Voice notes and other CE2 media that land on
-    // R2 stay world-readable if the URL is known. Do not treat R2 as locked
-    // because these rules exist.
+    // These rules govern Firebase Storage only. CE2 objects on R2 under the
+    // private `ce2/` prefix are membership-gated by the upload-signer Worker
+    // (POST /sign-get + GET /media). Do not reopen these Storage paths to
+    // any-auth. Legacy R2 objects on the public CDN remain a residual.
 
     function ce2UserDoc() {
       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));

@@ -12,3 +12,10 @@ CORS_ORIGIN      = "https://sbd-network.web.app,https://sbd-network.firebaseapp.
 [[r2_buckets]]
 binding     = "BUCKET"
 bucket_name = "sbd-media"
+
+# Private CE2 media. Create this bucket with public access DISABLED before deploy.
+# Until it exists, wrangler deploy fails — do not point this at sbd-media (that
+# would leave ce2/ objects world-readable on r2.dev).
+[[r2_buckets]]
+binding     = "CE2_BUCKET"
+bucket_name = "sbd-media-ce2"

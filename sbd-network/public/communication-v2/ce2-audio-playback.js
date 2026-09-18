@@ -37,7 +37,13 @@
   function guessMime(url, mime) {
     if (mime) return mime;
     if (!url) return '';
-    var u = String(url).split('?')[0].toLowerCase();
+    var raw = String(url);
+    try {
+      var parsed = new URL(raw, 'https://sbd-upload-signer.sbdnetwork.workers.dev');
+      var key = parsed.searchParams.get('key');
+      if (key) raw = key;
+    } catch (_) {}
+    var u = raw.split('?')[0].toLowerCase();
     if (u.indexOf('.m4a') >= 0 || u.indexOf('.mp4') >= 0) return 'audio/mp4';
     if (u.indexOf('.webm') >= 0) return 'audio/webm';
     if (u.indexOf('.ogg') >= 0) return 'audio/ogg';
@@ -148,6 +154,11 @@
     }
   }
 
+  function resolvePlayUrl(url) {
+    if (typeof resolveR2MediaUrl === 'function') return resolveR2MediaUrl(url);
+    return Promise.resolve(url);
+  }
+
   function play(messageId, url, opts) {
     opts = opts || {};
     if (!messageId || !url) return Promise.resolve();
@@ -155,26 +166,31 @@
       return Promise.reject(new Error('This device cannot play this voice format.'));
     }
 
-    var a = ensureAudio();
-
-    if (activeId && activeId !== messageId && !a.paused) {
-      positionMap[activeId] = a.currentTime;
-    }
-
-    var sameTrack = activeId === messageId && activeUrl === url;
-    if (!sameTrack) {
-      a.pause();
-      activeId = messageId;
-      activeUrl = url;
-      a.src = url;
-      var resumeAt = positionMap[messageId];
-      if (typeof resumeAt === 'number' && resumeAt > 0) {
-        a.currentTime = resumeAt;
+    return resolvePlayUrl(url).then(function (playUrl) {
+      if (!playUrl) {
+        throw new Error('Could not load voice note.');
       }
-    }
+      var a = ensureAudio();
 
-    return a.play().then(function () {
-      scheduleSync();
+      if (activeId && activeId !== messageId && !a.paused) {
+        positionMap[activeId] = a.currentTime;
+      }
+
+      var sameTrack = activeId === messageId && activeUrl === playUrl;
+      if (!sameTrack) {
+        a.pause();
+        activeId = messageId;
+        activeUrl = playUrl;
+        a.src = playUrl;
+        var resumeAt = positionMap[messageId];
+        if (typeof resumeAt === 'number' && resumeAt > 0) {
+          a.currentTime = resumeAt;
+        }
+      }
+
+      return a.play().then(function () {
+        scheduleSync();
+      });
     });
   }
 
@@ -321,6 +337,6 @@
         rafId = 0;
       }
     },
-    VERSION: 1,
+    VERSION: 3,
   };
 })(typeof window !== 'undefined' ? window : global);

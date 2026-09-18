@@ -9,7 +9,8 @@ service firebase.storage {
 
     // SBD Network CE2 / DM media (Firebase Storage fallback when R2 is blocked).
     // Same layout and membership checks as sbd-network/storage.rules — keep in
-    // sync. These rules do not apply to public Cloudflare R2 object URLs.
+    // sync. These rules do not apply to R2; CE2 R2 objects under `ce2/` are
+    // gated by the upload-signer Worker. Do not reopen these paths to any-auth.
     function ce2UserDoc() {
       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
     }

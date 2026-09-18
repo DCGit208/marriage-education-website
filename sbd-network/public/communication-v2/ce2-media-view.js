@@ -4,6 +4,31 @@
 (function (global) {
   'use strict';
 
+  function isPrivateLocator(url) {
+    return typeof isCe2PrivateMediaLocator === 'function' && isCe2PrivateMediaLocator(url);
+  }
+
+  function playableUrl(stored) {
+    if (typeof resolveR2MediaUrl === 'function') return resolveR2MediaUrl(stored);
+    return Promise.resolve(stored);
+  }
+
+  function assignMediaSrc(el, stored, onError) {
+    if (!el) return;
+    if (!isPrivateLocator(stored)) {
+      el.src = stored;
+      return;
+    }
+    playableUrl(stored)
+      .then(function (src) {
+        if (src) el.src = src;
+        else if (typeof onError === 'function') onError();
+      })
+      .catch(function () {
+        if (typeof onError === 'function') onError();
+      });
+  }
+
   function makePlaceholder(label) {
     var ph = document.createElement('span');
     ph.className = 'ce2-media-ph';
@@ -30,7 +55,12 @@
       img.loading = 'lazy';
       img.decoding = 'async';
       img.draggable = false;
-      img.src = m.imageThumbUrl;
+      assignMediaSrc(img, m.imageThumbUrl, function () {
+        btn.classList.add('is-fallback');
+        var thumb = btn.querySelector('.ce2-media-thumb');
+        if (thumb && thumb.parentNode) thumb.parentNode.removeChild(thumb);
+        setHint(btn, 'Tap to load');
+      });
       btn.appendChild(img);
     } else {
       btn.classList.add('is-fallback');
@@ -61,7 +91,9 @@
       poster.loading = 'lazy';
       poster.decoding = 'async';
       poster.draggable = false;
-      poster.src = m.videoPosterUrl;
+      assignMediaSrc(poster, m.videoPosterUrl, function () {
+        btn.classList.add('is-fallback');
+      });
       btn.appendChild(poster);
     } else {
       btn.classList.add('is-fallback');
@@ -107,26 +139,49 @@
         btn.classList.add('is-loaded');
         btn.replaceWith(img);
       });
-      img.src = full;
+      assignMediaSrc(img, full, function () {
+        btn.classList.remove('is-opening');
+        btn.classList.add('is-fallback');
+        setHint(btn, 'Tap to retry');
+      });
       return;
     }
 
     if (kind === 'video') {
-      btn.classList.add('is-loaded');
+      btn.classList.add('is-opening');
+      setHint(btn, 'Loading');
       var poster = btn.getAttribute('data-poster-url') || '';
-      var wrap = document.createElement('div');
-      wrap.className = 'ce2-msg-video-wrap is-playing';
-      var vid = document.createElement('video');
-      vid.className = 'ce2-msg-video';
-      vid.controls = true;
-      vid.preload = 'auto';
-      vid.playsInline = true;
-      vid.setAttribute('playsinline', '');
-      if (poster) vid.poster = poster;
-      vid.src = full;
-      wrap.appendChild(vid);
-      btn.replaceWith(wrap);
-      vid.play().catch(function () {});
+      playableUrl(full)
+        .then(function (src) {
+          return Promise.all([
+            src,
+            poster && isPrivateLocator(poster) ? playableUrl(poster) : Promise.resolve(poster),
+          ]);
+        })
+        .then(function (pair) {
+          var src = pair[0];
+          var posterSrc = pair[1];
+          btn.classList.remove('is-opening');
+          btn.classList.add('is-loaded');
+          var wrap = document.createElement('div');
+          wrap.className = 'ce2-msg-video-wrap is-playing';
+          var vid = document.createElement('video');
+          vid.className = 'ce2-msg-video';
+          vid.controls = true;
+          vid.preload = 'auto';
+          vid.playsInline = true;
+          vid.setAttribute('playsinline', '');
+          if (posterSrc) vid.poster = posterSrc;
+          vid.src = src;
+          wrap.appendChild(vid);
+          btn.replaceWith(wrap);
+          vid.play().catch(function () {});
+        })
+        .catch(function () {
+          btn.classList.remove('is-opening');
+          btn.classList.add('is-fallback');
+          setHint(btn, 'Tap to retry');
+        });
     }
   }
 
@@ -201,6 +256,6 @@
     afterMessagePanelRender: afterMessagePanelRender,
     activateMediaTap: activateMediaTap,
     bindBrokenMedia: bindBrokenMedia,
-    VERSION: 3,
+    VERSION: 4,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -46,7 +46,126 @@ function firebaseStorageObjectPath(folder, uid, filename, options) {
 
 function r2ObjectKey(folder, filename, options) {
   options = options || {};
-  return scopedUploadFolder(folder, options.conversationId) + '/' + filename;
+  const scoped = scopedUploadFolder(folder, options.conversationId);
+  if (isCe2DmUploadFolder(folder) && sanitizeUploadScopeId(options.conversationId)) {
+    return 'ce2/' + scoped + '/' + filename;
+  }
+  return scoped + '/' + filename;
+}
+
+function isCe2PrivateObjectKey(key) {
+  const parts = String(key || '').replace(/^\/+/, '').split('/').filter(Boolean);
+  return (
+    parts.length === 4 &&
+    parts[0] === 'ce2' &&
+    isCe2DmUploadFolder(parts[1]) &&
+    !!sanitizeUploadScopeId(parts[2]) &&
+    !!parts[3] &&
+    String(parts[3]).indexOf('..') < 0
+  );
+}
+
+function isR2PublicCdnUrl(url) {
+  const raw = String(url || '');
+  if (!raw) return false;
+  try {
+    return /\.r2\.dev$/i.test(new URL(raw).hostname);
+  } catch (_) {
+    return /\.r2\.dev\//i.test(raw);
+  }
+}
+
+function isCe2PrivateMediaLocator(url) {
+  if (isCe2PrivateObjectKey(url)) return true;
+  const raw = String(url || '');
+  if (!raw || isR2PublicCdnUrl(raw)) return false;
+  try {
+    const u = new URL(raw, UPLOAD_WORKER_URL);
+    const key = u.searchParams.get('key');
+    if (key && isCe2PrivateObjectKey(key)) return true;
+  } catch (_) {}
+  return false;
+}
+
+function extractCe2ObjectKey(urlOrKey) {
+  if (isCe2PrivateObjectKey(urlOrKey)) {
+    return String(urlOrKey).replace(/^\/+/, '').split('?')[0];
+  }
+  try {
+    const u = new URL(String(urlOrKey || ''), UPLOAD_WORKER_URL);
+    const key = u.searchParams.get('key');
+    if (key && isCe2PrivateObjectKey(key)) return key;
+  } catch (_) {}
+  return '';
+}
+
+function workerMediaLocatorFromKey(objectKey) {
+  return `${UPLOAD_WORKER_URL}/media?key=${encodeURIComponent(objectKey)}`;
+}
+
+function isCe2PrivateUploadRequest(folder, options) {
+  return isCe2DmUploadFolder(folder) && !!sanitizeUploadScopeId(options && options.conversationId);
+}
+
+/**
+ * New CE2 R2 uploads store a Worker locator (objectKey), never a public CDN URL.
+ * If the Worker is old and only returns publicUrl, return empty so the caller
+ * can fall back to membership-locked Firebase Storage.
+ */
+function ce2UploadLocator(data, folder, options) {
+  if (!isCe2PrivateUploadRequest(folder, options)) {
+    return (data && data.publicUrl) || '';
+  }
+  if (data && data.objectKey && isCe2PrivateObjectKey(data.objectKey)) {
+    if (data.url && isCe2PrivateMediaLocator(data.url) && !isR2PublicCdnUrl(data.url)) {
+      return data.url;
+    }
+    return workerMediaLocatorFromKey(data.objectKey);
+  }
+  if (data && data.url && isCe2PrivateMediaLocator(data.url) && !isR2PublicCdnUrl(data.url)) {
+    return data.url;
+  }
+  return '';
+}
+
+var _ce2SignedUrlCache = Object.create(null);
+
+/**
+ * Resolve a stored CE2 media locator to a short-lived playable URL.
+ * Public CDN leftovers, Firebase Storage URLs, and blob: URLs pass through.
+ */
+function resolveR2MediaUrl(storedUrl) {
+  const raw = String(storedUrl || '');
+  if (!raw) return Promise.resolve('');
+  if (!isCe2PrivateMediaLocator(raw)) return Promise.resolve(raw);
+  const key = extractCe2ObjectKey(raw);
+  if (!key) return Promise.resolve(raw);
+  const cached = _ce2SignedUrlCache[key];
+  if (cached && cached.expiresAt * 1000 > Date.now() + 15000 && cached.signedUrl) {
+    return Promise.resolve(cached.signedUrl);
+  }
+  const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if (!user || typeof user.getIdToken !== 'function') {
+    return Promise.reject(new Error('Not authenticated'));
+  }
+  return user.getIdToken().then(function (idToken) {
+    return fetch(`${UPLOAD_WORKER_URL}/sign-get`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + idToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ key: key }),
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok || !data || !data.signedUrl) {
+          throw new Error((data && data.error) || 'Could not load media');
+        }
+        _ce2SignedUrlCache[key] = data;
+        return data.signedUrl;
+      });
+    });
+  });
 }
 
 function isLegacyFirebaseStoragePath(path) {
@@ -122,8 +241,8 @@ function assertUploadableFile(file) {
 
 function canFallbackToFirebaseStorage(err) {
   const msg = String((err && err.message) || err || '');
-  if (/not authenticated/i.test(msg)) return false;
-  return /network error|failed to fetch|content type not allowed|upload failed|load failed|cors/i.test(msg);
+  if (/not authenticated|forbidden/i.test(msg)) return false;
+  return /network error|failed to fetch|content type not allowed|upload failed|load failed|cors|not configured|private media locator/i.test(msg);
 }
 
 function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
@@ -147,7 +266,16 @@ function uploadToR2XHR(file, folder, idToken, filename, contentType, options) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          resolve(data.publicUrl);
+          const locator = ce2UploadLocator(data, folder, options);
+          if (!locator) {
+            reject(new Error(
+              isCe2PrivateUploadRequest(folder, options)
+                ? 'Upload did not return a private media locator'
+                : 'Invalid upload response'
+            ));
+            return;
+          }
+          resolve(locator);
         } catch (err) {
           reject(new Error('Invalid upload response'));
         }
@@ -222,8 +350,16 @@ async function uploadToR2(file, folder, options) {
       throw new Error(err.error || `Upload failed (${res.status})`);
     }
 
-    const { publicUrl } = await res.json();
-    return publicUrl;
+    const data = await res.json().catch(() => ({}));
+    const locator = ce2UploadLocator(data, folder, options);
+    if (!locator) {
+      throw new Error(
+        isCe2PrivateUploadRequest(folder, options)
+          ? 'Upload did not return a private media locator'
+          : (data.error || 'Invalid upload response')
+      );
+    }
+    return locator;
   } catch (err) {
     if (!canFallbackToFirebaseStorage(err)) throw err;
     console.warn('[upload] R2 failed; falling back to Firebase Storage:', err && err.message);
@@ -242,13 +378,14 @@ async function deleteFromR2(url) {
   if (!user) return;
   const idToken = await user.getIdToken().catch(() => null);
   if (!idToken) return;
+  const objectKey = extractCe2ObjectKey(url);
   await fetch(`${UPLOAD_WORKER_URL}/delete`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${idToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify(objectKey ? { objectKey: objectKey, url: url } : { url: url }),
   }).catch(() => {});
 }
 
