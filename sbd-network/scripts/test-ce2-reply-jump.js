@@ -231,7 +231,7 @@ test('quote tap uses search-style history paging instead of an in-window no-op',
   assert.ok(jumpFn.indexOf('scrollIntoView') === -1);
   assert.ok(v2.indexOf('function ensureSearchHitVisible') !== -1);
   assert.ok(v2.indexOf('function loadSearchJumpWindow') !== -1);
-  assert.ok(v2.indexOf("loadOlderMessages({ quiet: true, skipRender: true })") !== -1);
+  assert.ok(v2.indexOf('loadSearchJumpWindow(hit)') !== -1);
   assert.ok(v2.indexOf('scheduleScrollToHighlightedMessage') !== -1);
   assert.ok(v2.indexOf('stickBottom && !CommunicationState.highlightMessageId') !== -1);
   assert.ok(v2.indexOf("setTimeout(function () {\n        if (CommunicationState.highlightMessageId === messageId) {\n          CommunicationState.highlightMessageId = null;\n          render({ threadOnly: true });") === -1);

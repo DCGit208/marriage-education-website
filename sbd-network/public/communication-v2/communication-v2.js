@@ -52,6 +52,14 @@
   var ce2UiWired = false;
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
+  /** Bounded reply/search jump: older context + after-window. Gap pages in on scroll. */
+  var JUMP_BEFORE = 36;
+  var JUMP_AFTER = 16;
+  /** 0 = do not preload the gap; page forward ~50 at a time on scroll instead. */
+  var JUMP_FORWARD_MAX_PAGES = 0;
+  var JUMP_PAINT_CAP = MESSAGE_PAGE + JUMP_BEFORE + JUMP_AFTER;
+  /** Near-end slack that starts the next newer page after a jump (px). */
+  var JUMP_NEWER_SCROLL_PX = 140;
   /** In-thread typing cue (header + above composer). Pulses typing.{uid} on the conv/group doc. */
   var CE2_TYPING_INDICATOR_ENABLED = true;
   var MAX_COMPOSER_ATTACHMENTS = 6;
@@ -107,7 +115,10 @@
     highlightMessageId: null,
     searchJumpMessages: null,
     searchJumpOldestDoc: null,
+    searchJumpNewestDoc: null,
     searchJumpHasMore: false,
+    searchJumpHasNewer: false,
+    loadingNewer: false,
     offline: false,
     discoveryLoaded: false,
     shareDraft: null,
@@ -1491,10 +1502,52 @@
     return (jumpMsgs || []).concat(liveMsgs || []);
   }
 
-  function clearSearchJump() {
+  function jumpListsOverlap(a, b) {
+    var have = {};
+    (a || []).forEach(function (m) {
+      if (m && m.id) have[m.id] = true;
+    });
+    return (b || []).some(function (m) {
+      return m && m.id && have[m.id];
+    });
+  }
+
+  function appendUniqueById(base, extra) {
+    var have = {};
+    var out = [];
+    function add(m) {
+      if (!m || !m.id || have[m.id]) return;
+      have[m.id] = true;
+      out.push(m);
+    }
+    (base || []).forEach(add);
+    (extra || []).forEach(add);
+    return out;
+  }
+
+  function liveMessagesForJump() {
+    return CommunicationState.lastServerMessages && CommunicationState.lastServerMessages.length
+      ? CommunicationState.lastServerMessages
+      : CommunicationState.messages || [];
+  }
+
+  function resetSearchJumpState() {
     CommunicationState.searchJumpMessages = null;
     CommunicationState.searchJumpOldestDoc = null;
+    CommunicationState.searchJumpNewestDoc = null;
     CommunicationState.searchJumpHasMore = false;
+    CommunicationState.searchJumpHasNewer = false;
+    CommunicationState.loadingNewer = false;
+  }
+
+  function consumePreserveJumpScroll() {
+    if (!CommunicationState._preserveScrollOnPaint) return false;
+    CommunicationState._preserveScrollOnPaint = false;
+    return true;
+  }
+
+  function clearSearchJump() {
+    resetSearchJumpState();
     if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.syncLatestButton) {
       root.Ce2ThreadSearch.syncLatestButton();
     }
@@ -1555,12 +1608,12 @@
     var beforeSnap = await col
       .orderBy('createdAt', 'asc')
       .endAt(ts)
-      .limitToLast(36)
+      .limitToLast(JUMP_BEFORE)
       .get();
     var afterSnap = await col
       .orderBy('createdAt', 'asc')
       .startAfter(ts)
-      .limit(16)
+      .limit(JUMP_AFTER)
       .get();
     var msgs = beforeSnap.docs
       .concat(afterSnap.docs)
@@ -1581,14 +1634,21 @@
       } catch (_) {}
     }
     if (!msgs.length) return false;
-    var live =
-      CommunicationState.lastServerMessages && CommunicationState.lastServerMessages.length
-        ? CommunicationState.lastServerMessages
-        : CommunicationState.messages || [];
+    var live = liveMessagesForJump();
     msgs = await fillForwardToLive(col, afterSnap, msgs, live);
-    CommunicationState.searchJumpMessages = connectRenderedJumpList(msgs, live);
+    var overlaps = jumpListsOverlap(msgs, live);
+    CommunicationState.searchJumpMessages = connectRenderedJumpList(
+      msgs,
+      overlaps ? live : []
+    );
     CommunicationState.searchJumpOldestDoc = beforeSnap.docs[0] || null;
-    CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= 36;
+    CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= JUMP_BEFORE;
+    var newestDoc =
+      afterSnap.docs.length
+        ? afterSnap.docs[afterSnap.docs.length - 1]
+        : beforeSnap.docs[beforeSnap.docs.length - 1] || null;
+    CommunicationState.searchJumpNewestDoc = overlaps ? null : newestDoc;
+    CommunicationState.searchJumpHasNewer = !overlaps && !!newestDoc;
     return true;
   }
 
@@ -1610,11 +1670,11 @@
       afterSnap && afterSnap.docs && afterSnap.docs.length
         ? afterSnap.docs[afterSnap.docs.length - 1]
         : null;
-    if (!cursorDoc) {
-      return connectRenderedJumpList(msgs, live);
+    if (!cursorDoc || JUMP_FORWARD_MAX_PAGES <= 0) {
+      return msgs || [];
     }
     var pages = 0;
-    while (pages < 20 && !overlapsLive()) {
+    while (pages < JUMP_FORWARD_MAX_PAGES && !overlapsLive()) {
       pages += 1;
       var snap = await col
         .orderBy('createdAt', 'asc')
@@ -1628,8 +1688,15 @@
       });
       cursorDoc = snap.docs[snap.docs.length - 1];
       if (snap.docs.length < MESSAGE_PAGE) break;
+      if ((msgs || []).length + extra.length + (live || []).length >= JUMP_PAINT_CAP) {
+        break;
+      }
     }
-    return connectRenderedJumpList((msgs || []).concat(extra), live);
+    var combined = (msgs || []).concat(extra);
+    if (overlapsLive()) {
+      return connectRenderedJumpList(combined, live);
+    }
+    return combined;
   }
 
   async function ensureSearchHitVisible(hit) {
@@ -1642,27 +1709,24 @@
         return m.id === hit.id;
       });
     }
-    if (inList(CommunicationState.messages)) {
-      CommunicationState.searchJumpMessages = null;
-      CommunicationState.searchJumpOldestDoc = null;
-      CommunicationState.searchJumpHasMore = false;
+    var scroll = el('ce2MessageScroll');
+    var alreadyPainted = false;
+    if (scroll) {
+      try {
+        alreadyPainted = !!scroll.querySelector('[data-message-id="' + hit.id + '"]');
+      } catch (_) {
+        alreadyPainted = false;
+      }
+    }
+    if (alreadyPainted || inList(CommunicationState.searchJumpMessages)) {
       requestRender({ threadOnly: true });
       scheduleScrollToHighlightedMessage();
       return;
     }
-    var pages = 0;
-    while (CommunicationState.hasMoreMessages && pages < 8) {
-      await loadOlderMessages({ quiet: true, skipRender: true });
-      pages += 1;
-      if (inList(CommunicationState.messages)) {
-        CommunicationState.searchJumpMessages = connectRenderedJumpList(
-          CommunicationState.messages,
-          CommunicationState.lastServerMessages
-        );
-        requestRender({ threadOnly: true });
-        scheduleScrollToHighlightedMessage();
-        return;
-      }
+    if (inList(CommunicationState.messages)) {
+      requestRender({ threadOnly: true });
+      scheduleScrollToHighlightedMessage();
+      return;
     }
     var loaded = await loadSearchJumpWindow(hit);
     requestRender({ threadOnly: true });
@@ -2996,9 +3060,7 @@
         CommunicationState.threadSearchSenderId = '';
         CommunicationState.threadSearchStartMs = 0;
         CommunicationState.threadSearchEndMs = 0;
-        CommunicationState.searchJumpMessages = null;
-        CommunicationState.searchJumpOldestDoc = null;
-        CommunicationState.searchJumpHasMore = false;
+        resetSearchJumpState();
         if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.resetUi) {
           root.Ce2ThreadSearch.resetUi();
         }
@@ -3192,6 +3254,9 @@
     if (isMessageAlreadyRendered(msg.id)) return true;
 
     mergeMessageIntoState(msg);
+    if (CommunicationState.searchJumpHasNewer) {
+      return true;
+    }
 
     var stickBottom =
       scrollToEnd !== false &&
@@ -3370,7 +3435,8 @@
       CommunicationState.searchJumpMessages &&
       CommunicationState.searchJumpMessages.length
     ) {
-      list = connectRenderedJumpList(CommunicationState.searchJumpMessages, list);
+      var liveForJump = CommunicationState.searchJumpHasNewer ? [] : list;
+      list = connectRenderedJumpList(CommunicationState.searchJumpMessages, liveForJump);
     }
     return list.filter(function (m) {
       if (
@@ -3582,16 +3648,126 @@
     return row;
   }
 
+  function renderedIdsAreAppend(prev, next) {
+    if (!prev || !next || next.length <= prev.length) return false;
+    for (var i = 0; i < prev.length; i++) {
+      if (prev[i] !== next[i]) return false;
+    }
+    return true;
+  }
+
+  function renderedIdsArePrepend(prev, next) {
+    if (!prev || !next || next.length <= prev.length) return false;
+    var offset = next.length - prev.length;
+    for (var i = 0; i < prev.length; i++) {
+      if (prev[i] !== next[offset + i]) return false;
+    }
+    return true;
+  }
+
+  function syncRowSearchAndHighlight(rowEl, msg) {
+    if (!rowEl || !msg) return;
+    var searchQ = CommunicationState.threadSearchQuery || '';
+    var ma = msgActions();
+    var searchHit = !!(searchQ && ma && ma.messageMatchesSearch(msg, searchQ));
+    rowEl.classList.toggle('is-search-hit', searchHit);
+    var isHighlight = !!(
+      CommunicationState.highlightMessageId && msg.id === CommunicationState.highlightMessageId
+    );
+    rowEl.classList.toggle('is-highlighted', isHighlight);
+  }
+
+  function insertBeforeFirstMessageRow(scroll, node) {
+    if (!scroll || !node) return;
+    var firstRow = scroll.querySelector('.ce2-row');
+    if (firstRow) scroll.insertBefore(node, firstRow);
+    else scroll.appendChild(node);
+  }
+
+  function syncMessageHistoryChrome(scroll) {
+    if (!scroll) return;
+    var jumping = !!(
+      CommunicationState.searchJumpMessages &&
+      CommunicationState.searchJumpMessages.length
+    );
+    var hasMore = jumping
+      ? CommunicationState.searchJumpHasMore
+      : CommunicationState.hasMoreMessages;
+    var firstRow = scroll.querySelector('.ce2-row');
+
+    var backBtn = el('ce2SearchJumpBack');
+    if (jumping) {
+      if (!backBtn) {
+        backBtn = document.createElement('button');
+        backBtn.type = 'button';
+        backBtn.className = 'ce2-btn ce2-btn-ghost ce2-search-jump-back';
+        backBtn.id = 'ce2SearchJumpBack';
+        backBtn.textContent = 'Back to latest messages';
+        var olderExisting = el('ce2LoadOlder');
+        if (olderExisting && olderExisting.parentNode === scroll) {
+          scroll.insertBefore(backBtn, olderExisting);
+        } else if (firstRow) {
+          scroll.insertBefore(backBtn, firstRow);
+        } else if (scroll.firstChild) {
+          scroll.insertBefore(backBtn, scroll.firstChild);
+        } else {
+          scroll.appendChild(backBtn);
+        }
+      }
+    } else if (backBtn) {
+      backBtn.remove();
+    }
+
+    var olderBtn = el('ce2LoadOlder');
+    if (hasMore) {
+      if (!olderBtn) {
+        olderBtn = document.createElement('button');
+        olderBtn.type = 'button';
+        olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
+        olderBtn.id = 'ce2LoadOlder';
+        var backNow = el('ce2SearchJumpBack');
+        firstRow = scroll.querySelector('.ce2-row');
+        if (backNow && backNow.parentNode === scroll) {
+          if (backNow.nextSibling) scroll.insertBefore(olderBtn, backNow.nextSibling);
+          else scroll.appendChild(olderBtn);
+        } else if (firstRow) {
+          scroll.insertBefore(olderBtn, firstRow);
+        } else {
+          scroll.appendChild(olderBtn);
+        }
+      }
+      olderBtn.textContent = CommunicationState.loadingOlder
+        ? 'Loading…'
+        : 'Load older messages';
+      olderBtn.disabled = !!CommunicationState.loadingOlder;
+    } else if (olderBtn) {
+      olderBtn.remove();
+    }
+  }
+
+  function afterIncrementalMessagePaint(scroll, opts) {
+    opts = opts || {};
+    var preserve = consumePreserveJumpScroll();
+    updateTypingLineOnly();
+    if (opts.stickBottom && !preserve) {
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+    if (opts.syncAudio && root.Ce2AudioPlayback) {
+      root.Ce2AudioPlayback.syncAll();
+    }
+    if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+      root.Ce2MediaView.afterMessagePanelRender(scroll);
+    }
+    syncMessageHistoryChrome(scroll);
+    syncJumpLatestControl();
+    if (CommunicationState.highlightMessageId && !preserve) {
+      window.requestAnimationFrame(scrollToHighlightedMessage);
+    }
+    maybeLoadNewerOnScroll();
+  }
+
   function tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom) {
-    if (
-      !scroll ||
-      !ac ||
-      CommunicationState.loadingOlder ||
-      CommunicationState.threadSearchQuery ||
-      CommunicationState.highlightMessageId ||
-      (CommunicationState.searchJumpMessages &&
-        CommunicationState.searchJumpMessages.length)
-    ) {
+    if (!scroll || !ac) {
       return false;
     }
     var prev = CommunicationState._renderedMsgIds;
@@ -3622,40 +3798,33 @@
         if (oldRow) oldRow.remove();
         scroll.appendChild(buildMessageRow(visibleMsgs[visibleMsgs.length - 1], ac));
         CommunicationState._renderedMsgIds = nextIds;
-        if (stickBottom) {
-          scroll.scrollTop = scroll.scrollHeight;
-        }
-        updateTypingLineOnly();
-        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-          root.Ce2MediaView.afterMessagePanelRender(scroll);
-        }
+        afterIncrementalMessagePaint(scroll, { stickBottom: stickBottom });
         return true;
       }
     }
 
-    if (nextIds.length > prev.length) {
-      var samePrefix = true;
-      for (var i = 0; i < prev.length; i++) {
-        if (prev[i] !== nextIds[i]) {
-          samePrefix = false;
-          break;
-        }
+    if (renderedIdsAreAppend(prev, nextIds)) {
+      for (var j = prev.length; j < visibleMsgs.length; j++) {
+        scroll.appendChild(buildMessageRow(visibleMsgs[j], ac));
       }
-      if (samePrefix) {
-        for (var j = prev.length; j < visibleMsgs.length; j++) {
-          scroll.appendChild(buildMessageRow(visibleMsgs[j], ac));
-        }
-        CommunicationState._renderedMsgIds = nextIds;
-        if (stickBottom) {
-          scroll.scrollTop = scroll.scrollHeight;
-        }
-        updateTypingLineOnly();
-        if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
-        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-          root.Ce2MediaView.afterMessagePanelRender(scroll);
-        }
-        return true;
+      CommunicationState._renderedMsgIds = nextIds;
+      afterIncrementalMessagePaint(scroll, { stickBottom: stickBottom, syncAudio: true });
+      return true;
+    }
+
+    if (renderedIdsArePrepend(prev, nextIds)) {
+      var prevHeight = scroll.scrollHeight;
+      var prevTop = scroll.scrollTop;
+      var offset = nextIds.length - prev.length;
+      var frag = document.createDocumentFragment();
+      for (var pre = 0; pre < offset; pre++) {
+        frag.appendChild(buildMessageRow(visibleMsgs[pre], ac));
       }
+      insertBeforeFirstMessageRow(scroll, frag);
+      CommunicationState._renderedMsgIds = nextIds;
+      scroll.scrollTop = prevTop + (scroll.scrollHeight - prevHeight);
+      afterIncrementalMessagePaint(scroll, { stickBottom: false, syncAudio: true });
+      return true;
     }
 
     if (nextIds.length === prev.length) {
@@ -3677,8 +3846,9 @@
             continue;
           }
           if (ma && ma.syncReactionsRow) ma.syncReactionsRow(rowEl, msg, ac);
+          syncRowSearchAndHighlight(rowEl, msg);
         }
-        updateTypingLineOnly();
+        afterIncrementalMessagePaint(scroll, { stickBottom: false });
         return true;
       }
     }
@@ -3691,7 +3861,9 @@
     const scroll = el('ce2MessageScroll');
     if (!scroll) return;
 
+    var preserve = !!CommunicationState._preserveScrollOnPaint;
     var stickBottom =
+      !preserve &&
       scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
 
     if (!ac) {
@@ -3723,42 +3895,14 @@
     var visibleMsgs = getVisibleMessages(ac);
     var prevScrollTop = scroll.scrollTop;
     if (tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom)) {
-      if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-        root.Ce2MediaView.afterMessagePanelRender(scroll);
-      }
-      syncJumpLatestControl();
       return;
     }
 
+    var skipHighlight = consumePreserveJumpScroll();
     invalidateMessageRenderCache();
     closeMessageMenu();
     scroll.innerHTML = '';
-    var jumping = !!(
-      CommunicationState.searchJumpMessages &&
-      CommunicationState.searchJumpMessages.length
-    );
-    var hasMore = jumping
-      ? CommunicationState.searchJumpHasMore
-      : CommunicationState.hasMoreMessages;
-    if (jumping) {
-      var backBtn = document.createElement('button');
-      backBtn.type = 'button';
-      backBtn.className = 'ce2-btn ce2-btn-ghost ce2-search-jump-back';
-      backBtn.id = 'ce2SearchJumpBack';
-      backBtn.textContent = 'Back to latest messages';
-      scroll.appendChild(backBtn);
-    }
-    if (hasMore) {
-      var olderBtn = document.createElement('button');
-      olderBtn.type = 'button';
-      olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
-      olderBtn.id = 'ce2LoadOlder';
-      olderBtn.textContent = CommunicationState.loadingOlder
-        ? 'Loading…'
-        : 'Load older messages';
-      olderBtn.disabled = CommunicationState.loadingOlder;
-      scroll.appendChild(olderBtn);
-    }
+    syncMessageHistoryChrome(scroll);
     var ma = msgActions();
     if (ma) ma.renderPinnedBanner(scroll, ac);
     visibleMsgs.forEach(function (m) {
@@ -3770,10 +3914,10 @@
     updateTypingLineOnly();
     if (stickBottom && !CommunicationState.highlightMessageId) {
       scroll.scrollTop = scroll.scrollHeight;
-    } else if (!CommunicationState.highlightMessageId) {
+    } else if (!CommunicationState.highlightMessageId || skipHighlight) {
       scroll.scrollTop = prevScrollTop;
     }
-    if (CommunicationState.highlightMessageId) {
+    if (CommunicationState.highlightMessageId && !skipHighlight) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
     }
     if (root.Ce2AudioPlayback) {
@@ -3783,6 +3927,7 @@
       root.Ce2MediaView.afterMessagePanelRender(scroll);
     }
     syncJumpLatestControl();
+    maybeLoadNewerOnScroll();
   }
 
   function render(opts) {
@@ -4265,9 +4410,7 @@
     CommunicationState.oldestMessageDoc = null;
     CommunicationState._renderedMsgIds = null;
     CommunicationState._metaLastMessageId = null;
-    CommunicationState.searchJumpMessages = null;
-    CommunicationState.searchJumpOldestDoc = null;
-    CommunicationState.searchJumpHasMore = false;
+    resetSearchJumpState();
     clearReply();
   }
 
@@ -4336,7 +4479,7 @@
       CommunicationState.searchJumpMessages &&
       CommunicationState.searchJumpMessages.length
     );
-    if (!ac || !me || CommunicationState.loadingOlder) {
+    if (!ac || !me || CommunicationState.loadingOlder || CommunicationState.loadingNewer) {
       return;
     }
     if (!jumping && !CommunicationState.messages.length) {
@@ -4347,7 +4490,7 @@
       : CommunicationState.oldestMessageDoc;
     if (!oldest) return;
     CommunicationState.loadingOlder = true;
-    if (!opts.quiet) render();
+    if (!opts.quiet) syncMessageHistoryChrome(el('ce2MessageScroll'));
     try {
       var col = messagesCollection(ac);
       if (!col) return;
@@ -4384,7 +4527,77 @@
       handleCe2Error(err);
     } finally {
       CommunicationState.loadingOlder = false;
-      if (!opts.skipRender) requestRender();
+      if (!opts.skipRender) requestRender({ threadOnly: true });
+      else syncMessageHistoryChrome(el('ce2MessageScroll'));
+    }
+  }
+
+  async function loadNewerMessages() {
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me) return;
+    if (!CommunicationState.searchJumpHasNewer) return;
+    if (CommunicationState.loadingNewer || CommunicationState.loadingOlder) return;
+    var cursor = CommunicationState.searchJumpNewestDoc;
+    if (!cursor) {
+      CommunicationState.searchJumpHasNewer = false;
+      return;
+    }
+    var token = CommunicationState._openToken;
+    CommunicationState.loadingNewer = true;
+    try {
+      var col = messagesCollection(ac);
+      if (!col) return;
+      var snap = await col
+        .orderBy('createdAt', 'asc')
+        .startAfter(cursor)
+        .limit(MESSAGE_PAGE)
+        .get();
+      if (token !== CommunicationState._openToken) return;
+      var live = liveMessagesForJump();
+      if (!snap.docs.length) {
+        CommunicationState.searchJumpMessages = connectRenderedJumpList(
+          CommunicationState.searchJumpMessages,
+          live
+        );
+        CommunicationState.searchJumpHasNewer = false;
+        CommunicationState.searchJumpNewestDoc = null;
+        return;
+      }
+      var newer = snap.docs.map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+      var combined = appendUniqueById(CommunicationState.searchJumpMessages, newer);
+      var reachedEnd = snap.docs.length < MESSAGE_PAGE;
+      var overlaps = jumpListsOverlap(combined, live);
+      CommunicationState.searchJumpNewestDoc = snap.docs[snap.docs.length - 1];
+      if (overlaps || reachedEnd) {
+        CommunicationState.searchJumpMessages = connectRenderedJumpList(combined, live);
+        CommunicationState.searchJumpHasNewer = false;
+        CommunicationState.searchJumpNewestDoc = null;
+      } else {
+        CommunicationState.searchJumpMessages = combined;
+        CommunicationState.searchJumpHasNewer = true;
+      }
+    } catch (err) {
+      handleCe2Error(err);
+    } finally {
+      CommunicationState.loadingNewer = false;
+      if (token === CommunicationState._openToken) {
+        CommunicationState._preserveScrollOnPaint = true;
+        requestRender({ threadOnly: true });
+      }
+    }
+  }
+
+  function maybeLoadNewerOnScroll() {
+    if (!CommunicationState.searchJumpHasNewer) return;
+    if (CommunicationState.loadingNewer || CommunicationState.loadingOlder) return;
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) return;
+    var room = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+    if (room < JUMP_NEWER_SCROLL_PX) {
+      loadNewerMessages().catch(handleCe2Error);
     }
   }
 
@@ -6146,6 +6359,7 @@
         'scroll',
         function () {
           syncJumpLatestControl();
+          maybeLoadNewerOnScroll();
         },
         { passive: true }
       );

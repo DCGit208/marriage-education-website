@@ -388,7 +388,8 @@ Promise.resolve()
       assert.ok(v2.indexOf('searchJumpMessages') >= 0);
       assert.ok(v2.indexOf('ce2SearchJumpBack') >= 0);
       assert.ok(v2.indexOf('initCe2ThreadSearch') >= 0);
-      assert.ok(v2.indexOf('loadOlderMessages({ quiet: true, skipRender: true })') >= 0);
+      assert.ok(v2.indexOf('loadSearchJumpWindow(hit)') >= 0);
+      assert.ok(v2.indexOf('var JUMP_FORWARD_MAX_PAGES = 0') >= 0);
     });
 
     test('person filter is filled from DM peer and group members', function () {
