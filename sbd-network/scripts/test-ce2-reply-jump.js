@@ -75,14 +75,17 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-test('VERSION is 3 and jump helpers are exported', function () {
-  assert.strictEqual(rm.VERSION, 3);
+test('VERSION is 4 and jump helpers are exported', function () {
+  assert.strictEqual(rm.VERSION, 4);
   assert.strictEqual(typeof rm.buildReplyPayload, 'function');
   assert.strictEqual(typeof rm.renderReplyQuoteHtml, 'function');
   assert.strictEqual(typeof rm.findReplyJumpFocus, 'function');
   assert.strictEqual(typeof rm.computeThreadScrollTop, 'function');
   assert.strictEqual(typeof rm.applyThreadScrollTop, 'function');
   assert.strictEqual(typeof rm.queryMessageRow, 'function');
+  assert.strictEqual(typeof rm.connectJumpToLatest, 'function');
+  assert.strictEqual(typeof rm.laterMessagesUnreachable, 'function');
+  assert.strictEqual(typeof rm.shouldShowLatestControl, 'function');
 });
 
 test('video payload preview is Video and keeps the message id', function () {
@@ -181,6 +184,43 @@ test('applyThreadScrollTop writes the pane, not the window, and clamps', functio
   assert.strictEqual(rm.applyThreadScrollTop(scroll, -40), 0);
 });
 
+test('connectJumpToLatest keeps later live messages after an old video', function () {
+  const jumpSlice = [
+    { id: 'vid', createdAtMs: 100, videoUrl: 'https://cdn.example/a.mp4' },
+    { id: 'c1', createdAtMs: 110 },
+  ];
+  const live = [
+    { id: 'c1', createdAtMs: 110 },
+    { id: 'c2', createdAtMs: 120 },
+    { id: 'latest', createdAtMs: 200 },
+  ];
+  const merged = rm.connectJumpToLatest(jumpSlice, live);
+  assert.strictEqual(
+    merged
+      .map(function (m) {
+        return m.id;
+      })
+      .join(','),
+    'vid,c1,c2,latest'
+  );
+  assert.strictEqual(
+    rm.laterMessagesUnreachable(merged, 'vid', ['c1', 'c2', 'latest']),
+    false
+  );
+  assert.strictEqual(
+    rm.laterMessagesUnreachable(jumpSlice, 'vid', ['c1', 'c2', 'latest']),
+    true
+  );
+});
+
+test('latest control shows when scrolled up and hides at the bottom', function () {
+  assert.strictEqual(rm.shouldShowLatestControl({ threadOpen: true, atLatest: false }), true);
+  assert.strictEqual(rm.shouldShowLatestControl({ threadOpen: true, atLatest: true }), false);
+  assert.strictEqual(rm.shouldShowLatestControl({ threadOpen: false, atLatest: false }), false);
+  assert.ok(rm.isScrolledToLatest({ scrollHeight: 1000, scrollTop: 960, clientHeight: 50 }, 56));
+  assert.ok(!rm.isScrolledToLatest({ scrollHeight: 1000, scrollTop: 100, clientHeight: 50 }, 56));
+});
+
 test('quote tap uses search-style history paging instead of an in-window no-op', function () {
   const jumpFn = v2.slice(
     v2.indexOf('function scrollToReplyMessage'),
@@ -195,6 +235,40 @@ test('quote tap uses search-style history paging instead of an in-window no-op',
   assert.ok(v2.indexOf('scheduleScrollToHighlightedMessage') !== -1);
   assert.ok(v2.indexOf('stickBottom && !CommunicationState.highlightMessageId') !== -1);
   assert.ok(v2.indexOf("setTimeout(function () {\n        if (CommunicationState.highlightMessageId === messageId) {\n          CommunicationState.highlightMessageId = null;\n          render({ threadOnly: true });") === -1);
+});
+
+test('jump window is merged with the live tail so later messages stay reachable', function () {
+  assert.ok(v2.indexOf('function fillForwardToLive') !== -1);
+  assert.ok(v2.indexOf('function connectRenderedJumpList') !== -1);
+  assert.ok(v2.indexOf('connectJumpToLatest') !== -1);
+  const loadWin = v2.slice(
+    v2.indexOf('async function loadSearchJumpWindow'),
+    v2.indexOf('async function fillForwardToLive')
+  );
+  assert.ok(loadWin.indexOf('fillForwardToLive') !== -1);
+  assert.ok(loadWin.indexOf('connectRenderedJumpList') !== -1);
+  assert.ok(v2.indexOf('list = CommunicationState.searchJumpMessages;') === -1);
+  const visible = v2.slice(
+    v2.indexOf('function getVisibleMessages'),
+    v2.indexOf('function getVisibleMessages') + 520
+  );
+  assert.ok(visible.indexOf('connectRenderedJumpList') !== -1);
+});
+
+test('Latest chip jumps to the bottom and hides once there', function () {
+  assert.ok(html.indexOf('id="ce2JumpLatest"') !== -1);
+  assert.ok(html.indexOf('Jump to latest message') !== -1);
+  assert.ok(/\.ce2-jump-latest\[hidden\]/.test(css));
+  assert.ok(v2.indexOf('function jumpToLatestMessage') !== -1);
+  assert.ok(v2.indexOf('function syncJumpLatestControl') !== -1);
+  assert.ok(v2.indexOf('function bindJumpLatestControl') !== -1);
+  assert.ok(v2.indexOf('clearSearchJump: jumpToLatestMessage') !== -1);
+  const jumpLatest = v2.slice(
+    v2.indexOf('function jumpToLatestMessage'),
+    v2.indexOf('function syncJumpLatestControl')
+  );
+  assert.ok(jumpLatest.indexOf('scroll.scrollTop = scroll.scrollHeight') !== -1);
+  assert.ok(jumpLatest.indexOf('clearSearchJump()') !== -1);
 });
 
 test('quote click still stopPropagates and reads data-reply-to-id', function () {
@@ -232,19 +306,27 @@ test('highlighted video keeps scroll-margin so it is not under chrome', function
   assert.ok(/\.ce2-media-tap--video\s*\{[^}]*min-height:\s*132px/.test(css));
 });
 
-test('cache-bust sits strictly above live 114 / 82 / 2', function () {
+test('cache-bust sits strictly above live 115 / 83 / 3', function () {
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
   const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
   const replyVer = html.match(/ce2-reply\.js\?v=(\d+)/);
   const queueVer = html.match(/ce2-offline-queue\.js\?v=(\d+)/);
   const receiptsVer = html.match(/ce2-receipts\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) > 114);
-  assert.ok(cssVer && Number(cssVer[1]) > 82);
-  assert.ok(replyVer && Number(replyVer[1]) > 2);
+  const searchVer = html.match(/ce2-thread-search\.js\?v=(\d+)/);
+  const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
+  const shareVer = html.match(/ce2-share\.js\?v=(\d+)/);
+  const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
+  assert.ok(jsVer && Number(jsVer[1]) > 115);
+  assert.ok(cssVer && Number(cssVer[1]) > 83);
+  assert.ok(replyVer && Number(replyVer[1]) > 3);
   assert.ok(queueVer && Number(queueVer[1]) >= 2);
   assert.ok(receiptsVer && Number(receiptsVer[1]) >= 5);
-  assert.ok(html.indexOf('communication-v2.js?v=114') < 0);
-  assert.ok(html.indexOf('ce2-reply.js?v=2"') < 0);
+  assert.ok(searchVer && Number(searchVer[1]) >= 1);
+  assert.ok(actionsVer && Number(actionsVer[1]) >= 24);
+  assert.ok(shareVer && Number(shareVer[1]) >= 10);
+  assert.ok(mediaVer && Number(mediaVer[1]) >= 3);
+  assert.ok(html.indexOf('communication-v2.js?v=115') < 0);
+  assert.ok(html.indexOf('ce2-reply.js?v=3"') < 0);
 });
 
 test('frozen keyboard, delivery, audio, inbox, search, push, queue stay intact', function () {

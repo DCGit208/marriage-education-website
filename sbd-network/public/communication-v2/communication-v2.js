@@ -1483,6 +1483,14 @@
     return Promise.all(jobs);
   }
 
+  function connectRenderedJumpList(jumpMsgs, liveMsgs) {
+    var rm = replyModule();
+    if (rm && rm.connectJumpToLatest) {
+      return rm.connectJumpToLatest(jumpMsgs, liveMsgs, messageTimeMs);
+    }
+    return (jumpMsgs || []).concat(liveMsgs || []);
+  }
+
   function clearSearchJump() {
     CommunicationState.searchJumpMessages = null;
     CommunicationState.searchJumpOldestDoc = null;
@@ -1491,6 +1499,34 @@
       root.Ce2ThreadSearch.syncLatestButton();
     }
     requestRender({ threadOnly: true });
+  }
+
+  function jumpToLatestMessage() {
+    CommunicationState.highlightMessageId = null;
+    clearSearchJump();
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        var scroll = el('ce2MessageScroll');
+        if (scroll) scroll.scrollTop = scroll.scrollHeight;
+        syncJumpLatestControl();
+      });
+    });
+  }
+
+  function syncJumpLatestControl() {
+    var btn = el('ce2JumpLatest');
+    if (!btn) return;
+    var ac = CommunicationState.activeConversation;
+    var scroll = el('ce2MessageScroll');
+    var rm = replyModule();
+    var threadOpen = !!(ac && !ac.needsJoin);
+    var atLatest =
+      rm && rm.isScrolledToLatest ? rm.isScrolledToLatest(scroll, 56) : true;
+    var show =
+      rm && rm.shouldShowLatestControl
+        ? rm.shouldShowLatestControl({ threadOpen: threadOpen, atLatest: atLatest })
+        : threadOpen && !atLatest;
+    btn.hidden = !show;
   }
 
   function toFsTimestamp(value) {
@@ -1545,10 +1581,55 @@
       } catch (_) {}
     }
     if (!msgs.length) return false;
-    CommunicationState.searchJumpMessages = msgs;
+    var live =
+      CommunicationState.lastServerMessages && CommunicationState.lastServerMessages.length
+        ? CommunicationState.lastServerMessages
+        : CommunicationState.messages || [];
+    msgs = await fillForwardToLive(col, afterSnap, msgs, live);
+    CommunicationState.searchJumpMessages = connectRenderedJumpList(msgs, live);
     CommunicationState.searchJumpOldestDoc = beforeSnap.docs[0] || null;
     CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= 36;
     return true;
+  }
+
+  async function fillForwardToLive(col, afterSnap, msgs, live) {
+    var have = {};
+    (msgs || []).forEach(function (m) {
+      if (m && m.id) have[m.id] = true;
+    });
+    function overlapsLive() {
+      return (live || []).some(function (m) {
+        return m && have[m.id];
+      });
+    }
+    if (overlapsLive()) {
+      return connectRenderedJumpList(msgs, live);
+    }
+    var extra = [];
+    var cursorDoc =
+      afterSnap && afterSnap.docs && afterSnap.docs.length
+        ? afterSnap.docs[afterSnap.docs.length - 1]
+        : null;
+    if (!cursorDoc) {
+      return connectRenderedJumpList(msgs, live);
+    }
+    var pages = 0;
+    while (pages < 20 && !overlapsLive()) {
+      pages += 1;
+      var snap = await col
+        .orderBy('createdAt', 'asc')
+        .startAfter(cursorDoc)
+        .limit(MESSAGE_PAGE)
+        .get();
+      if (!snap.docs.length) break;
+      snap.docs.forEach(function (d) {
+        extra.push(Object.assign({ id: d.id }, d.data()));
+        have[d.id] = true;
+      });
+      cursorDoc = snap.docs[snap.docs.length - 1];
+      if (snap.docs.length < MESSAGE_PAGE) break;
+    }
+    return connectRenderedJumpList((msgs || []).concat(extra), live);
   }
 
   async function ensureSearchHitVisible(hit) {
@@ -1574,6 +1655,10 @@
       await loadOlderMessages({ quiet: true, skipRender: true });
       pages += 1;
       if (inList(CommunicationState.messages)) {
+        CommunicationState.searchJumpMessages = connectRenderedJumpList(
+          CommunicationState.messages,
+          CommunicationState.lastServerMessages
+        );
         requestRender({ threadOnly: true });
         scheduleScrollToHighlightedMessage();
         return;
@@ -1608,7 +1693,7 @@
       jumpToHit: function (hit) {
         ensureSearchHitVisible(hit).catch(handleCe2Error);
       },
-      clearSearchJump: clearSearchJump,
+      clearSearchJump: jumpToLatestMessage,
       isMessageHidden: function (m, ac) {
         var ma = msgActions();
         return !!(ma && ma.isMessageHidden(m, ac));
@@ -3285,7 +3370,7 @@
       CommunicationState.searchJumpMessages &&
       CommunicationState.searchJumpMessages.length
     ) {
-      list = CommunicationState.searchJumpMessages;
+      list = connectRenderedJumpList(CommunicationState.searchJumpMessages, list);
     }
     return list.filter(function (m) {
       if (
@@ -3616,6 +3701,7 @@
         ? '<div class="ce2-placeholder ce2-placeholder-loading">Loading messages…</div>'
         : '<div class="ce2-placeholder">Choose a formation group or direct thread.</div>';
       updateTypingLineOnly();
+      syncJumpLatestControl();
       return;
     }
 
@@ -3630,14 +3716,17 @@
       closeMessageMenu();
       scroll.innerHTML = '<div class="ce2-placeholder">No messages yet.</div>';
       updateTypingLineOnly();
+      syncJumpLatestControl();
       return;
     }
 
     var visibleMsgs = getVisibleMessages(ac);
+    var prevScrollTop = scroll.scrollTop;
     if (tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom)) {
       if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
         root.Ce2MediaView.afterMessagePanelRender(scroll);
       }
+      syncJumpLatestControl();
       return;
     }
 
@@ -3681,6 +3770,8 @@
     updateTypingLineOnly();
     if (stickBottom && !CommunicationState.highlightMessageId) {
       scroll.scrollTop = scroll.scrollHeight;
+    } else if (!CommunicationState.highlightMessageId) {
+      scroll.scrollTop = prevScrollTop;
     }
     if (CommunicationState.highlightMessageId) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
@@ -3691,6 +3782,7 @@
     if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
       root.Ce2MediaView.afterMessagePanelRender(scroll);
     }
+    syncJumpLatestControl();
   }
 
   function render(opts) {
@@ -4727,7 +4819,9 @@
       if (CommunicationState.highlightMessageId === id) {
         CommunicationState.highlightMessageId = null;
       }
+      syncJumpLatestControl();
     }, 4000);
+    syncJumpLatestControl();
   }
 
   async function applyCe2EntryParams(uid) {
@@ -6029,6 +6123,28 @@
     return flushCe2OfflineQueue();
   }
 
+  function bindJumpLatestControl() {
+    var scroll = el('ce2MessageScroll');
+    if (scroll && !scroll.dataset.ce2JumpLatestBound) {
+      scroll.dataset.ce2JumpLatestBound = '1';
+      scroll.addEventListener(
+        'scroll',
+        function () {
+          syncJumpLatestControl();
+        },
+        { passive: true }
+      );
+    }
+    var btn = el('ce2JumpLatest');
+    if (btn && !btn.dataset.ce2JumpLatestBound) {
+      btn.dataset.ce2JumpLatestBound = '1';
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        jumpToLatestMessage();
+      });
+    }
+  }
+
   function bindCe2VoiceUploadActions() {
     var scroll = el('ce2MessageScroll');
     if (!scroll || scroll.dataset.ce2VoiceActionsBound) return;
@@ -7114,6 +7230,7 @@
     bindInboxGestures();
     bindHubNav();
     bindPushThreadOpen();
+    bindJumpLatestControl();
 
     document.querySelectorAll('.ce2-tab').forEach(function (btn) {
       function onDiscoveryTab(e) {
@@ -7193,7 +7310,11 @@
         loadOlderMessages().catch(handleCe2Error);
       }
       if (e.target && e.target.id === 'ce2SearchJumpBack') {
-        clearSearchJump();
+        jumpToLatestMessage();
+      }
+      if (e.target && e.target.id === 'ce2JumpLatest') {
+        e.preventDefault();
+        jumpToLatestMessage();
       }
     });
 

@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=83">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=84">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -29,7 +29,7 @@
   <script defer src="/communication-v2/ce2-presence.js?v=6"></script>
   <script defer src="/communication-v2/ce2-receipts.js?v=5"></script>
   <script defer src="/communication-v2/ce2-inbox.js?v=1"></script>
-  <script defer src="/communication-v2/ce2-reply.js?v=3"></script>
+  <script defer src="/communication-v2/ce2-reply.js?v=4"></script>
   <script defer src="/communication-v2/ce2-message-actions.js?v=24"></script>
   <script defer src="/communication-v2/ce2-thread-search.js?v=1"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=2"></script>
@@ -43,7 +43,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=3"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=115"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=116"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -133,6 +133,9 @@
           <ul id="ce2ThreadSearchHits" class="ce2-thread-search-hits" hidden></ul>
         </div>
         <div class="ce2-messages" id="ce2MessageScroll" role="log" aria-live="polite"></div>
+        <div class="ce2-jump-latest-slot">
+          <button type="button" id="ce2JumpLatest" class="ce2-jump-latest" hidden aria-label="Jump to latest message">Latest</button>
+        </div>
         <p id="ce2TypingLine" class="ce2-typing-line" hidden aria-live="polite">
           <span class="ce2-typing-text"></span>
           <span class="ce2-typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
