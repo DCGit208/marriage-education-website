@@ -1013,13 +1013,14 @@
   function isNotifForOpenThread(n) {
     var ac = CommunicationState.activeConversation;
     if (!ac || ac.needsJoin || !n) return false;
-    if (n.type === 'direct_message') {
+    var type = n.type === 'dm' ? 'direct_message' : n.type === 'group' ? 'group_message' : n.type;
+    if (type === 'direct_message') {
       if (ac.type !== 'direct') return false;
       if (n.convId && ac.id && n.convId === ac.id) return true;
       if (n.senderId && ac.otherUid && n.senderId === ac.otherUid) return true;
       return false;
     }
-    if (n.type === 'group_message') {
+    if (type === 'group_message') {
       var gid = n.groupId || n.convId;
       return ac.type === 'group' && !!gid && ac.id === gid;
     }
@@ -1301,8 +1302,12 @@
         badge.hidden = true;
       }
     });
-    if ('setAppBadge' in navigator) {
+    if (root.Ce2Push && typeof root.Ce2Push.applyAppBadge === 'function') {
+      var badgeOp = root.Ce2Push.applyAppBadge(navigator, counts.total);
+      if (badgeOp && typeof badgeOp.catch === 'function') badgeOp.catch(function () {});
+    } else if ('setAppBadge' in navigator) {
       if (counts.total > 0) navigator.setAppBadge(counts.total).catch(function () {});
+      else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(function () {});
     }
   }
 
@@ -2384,7 +2389,7 @@
       var patch = patchForRetry(pending);
       var messageId = await commitCe2Message(ac, patch, me);
       confirmSentMessage(pendingId, messageId, patch, ac);
-      triggerCe2Push(ac, patch.content || '', me, messageId);
+      triggerCe2Push(ac, patch, me, messageId);
       patchThreadPreviewLocal(ac, patch);
       CommunicationState.statusMessage = null;
       CommunicationState.error = null;
@@ -4489,6 +4494,49 @@
     if (other) await openDirectThread(conv, other, 'Conversation');
   }
 
+  async function openThreadFromPush(data) {
+    var me = CommunicationState.me;
+    if (!me) return;
+    var target =
+      root.Ce2Push && typeof root.Ce2Push.parseThreadTarget === 'function'
+        ? root.Ce2Push.parseThreadTarget(data)
+        : data || {};
+    if (target.messageId) CommunicationState.highlightMessageId = target.messageId;
+    if (target.groupId) {
+      var gmeta = (CommunicationState.visibleGroups || []).find(function (g) {
+        return g.id === target.groupId;
+      });
+      await openGroupThread(target.groupId, gmeta ? gmeta.name : 'Group');
+      return;
+    }
+    if (!target.convId) return;
+    var thread = (CommunicationState.threads || []).find(function (t) {
+      return t.id === target.convId;
+    });
+    if (thread) {
+      await openDirectThread(target.convId, thread.otherUid, thread.label);
+      return;
+    }
+    await openDirectThread(target.convId, '', 'Conversation');
+  }
+
+  function bindPushThreadOpen() {
+    if (root.__ce2PushThreadOpenBound) return;
+    root.__ce2PushThreadOpenBound = true;
+    if (navigator.serviceWorker && navigator.serviceWorker.addEventListener) {
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        var payload = (event && event.data) || {};
+        if (payload.type !== 'CE2_OPEN_THREAD') return;
+        openThreadFromPush(payload).catch(function (err) {
+          console.warn('[CE2 Push] open thread', err);
+        });
+      });
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') renderHubUnreadBadges();
+    });
+  }
+
   function ensureDiscoveryLoaded(forceReload) {
     var me = CommunicationState.me;
     if (!me) return Promise.resolve();
@@ -4706,7 +4754,12 @@
     }
   }
 
-  async function triggerCe2Push(ac, preview, me, messageId) {
+  function pushPreviewMeta(previewOrPatch) {
+    if (previewOrPatch && typeof previewOrPatch === 'object') return previewOrPatch;
+    return { content: previewOrPatch || '' };
+  }
+
+  async function triggerCe2Push(ac, previewOrPatch, me, messageId) {
     if (!ac || !me) return;
     if (ac.type === 'direct') {
       if (!ac.otherUid || ac.otherUid === me.uid) return;
@@ -4718,50 +4771,62 @@
       if (!user) return;
       var senderName = ((me && me.name) || 'Someone').trim() || 'Someone';
       var idToken = await user.getIdToken();
-      var messageText = (
-        root.Ce2Format && root.Ce2Format.stripFormattingForPreview
-          ? root.Ce2Format.stripFormattingForPreview(preview || 'New message')
-          : preview || 'New message'
-      ).slice(0, 100);
+      var meta = pushPreviewMeta(previewOrPatch);
+      var messageText = formatInboxPreview(meta) || 'New message';
+      var copy =
+        root.Ce2Push && typeof root.Ce2Push.pushCopy === 'function'
+          ? root.Ce2Push.pushCopy({
+              kind: ac.type === 'group' ? 'group' : 'direct',
+              title: ac.type === 'group' ? ac.title || 'Group' : senderName,
+              senderName: senderName,
+              groupName: ac.title || 'Group',
+              body: messageText,
+            })
+          : { title: ac.type === 'group' ? ac.title || 'Group' : senderName, body: messageText };
+      var convId = ac.type === 'direct' ? ac.id || directConvId(me.uid, ac.otherUid) : ac.id;
+      var threadUrl =
+        root.Ce2Push && typeof root.Ce2Push.buildThreadUrl === 'function'
+          ? root.Ce2Push.buildThreadUrl({
+              convId: ac.type === 'direct' ? convId : '',
+              groupId: ac.type === 'group' ? ac.id : '',
+              messageId: messageId || '',
+            })
+          : ac.type === 'group'
+            ? '/communication-v2/?group=' + encodeURIComponent(ac.id)
+            : '/communication-v2/?conv=' + encodeURIComponent(convId);
 
       if (ac.type === 'direct' && ac.otherUid) {
         var recipDoc = await db.collection('users').doc(ac.otherUid).get();
-        if (!recipDoc.exists) return;
-        var token = recipDoc.data().fcmToken;
-        var convId = ac.id || directConvId(me.uid, ac.otherUid);
-        if (token) {
-          var dmUrl = '/communication-v2/?conv=' + encodeURIComponent(convId);
-          if (messageId) dmUrl += '&msg=' + encodeURIComponent(messageId);
-          await fetch(
-            'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
-            {
-              method: 'POST',
-              headers: {
-                Authorization: 'Bearer ' + idToken,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                senderId: user.uid,
-                recipientId: ac.otherUid,
-                message: messageText,
-                recipientToken: token,
-                senderName: senderName,
-                title: senderName,
-                body: messageText,
-                url: dmUrl,
-                convId: convId,
-                messageId: messageId || '',
-              }),
-            }
-          );
-        }
-        writeDirectMessageNotification(ac.otherUid, preview, me, convId, messageId);
+        var token = recipDoc.exists ? recipDoc.data().fcmToken || '' : '';
+        await fetch(
+          'https://us-central1-marriage-education.cloudfunctions.net/notifyDmV2',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + idToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              senderId: user.uid,
+              recipientId: ac.otherUid,
+              message: copy.body,
+              recipientToken: token,
+              senderName: senderName,
+              title: copy.title,
+              body: copy.body,
+              url: threadUrl,
+              convId: convId,
+              messageId: messageId || '',
+              classification: meta.classification || '',
+              messageType: meta.messageType || '',
+            }),
+          }
+        );
+        writeDirectMessageNotification(ac.otherUid, copy.body, me, convId, messageId);
         return;
       }
 
       if (ac.type === 'group' && ac.id) {
-        var groupUrl = '/communication-v2/?group=' + encodeURIComponent(ac.id);
-        if (messageId) groupUrl += '&msg=' + encodeURIComponent(messageId);
         await fetch(
           'https://us-central1-marriage-education.cloudfunctions.net/notifyGroupV2',
           {
@@ -4773,16 +4838,20 @@
             body: JSON.stringify({
               senderId: user.uid,
               groupId: ac.id,
-              message: messageText,
+              message: copy.body,
               senderName: senderName,
               groupName: ac.title || 'Group',
-              url: groupUrl,
+              title: copy.title,
+              body: copy.body,
+              url: threadUrl,
               convId: ac.id,
               messageId: messageId || '',
+              classification: meta.classification || '',
+              messageType: meta.messageType || '',
             }),
           }
         );
-        writeGroupMessageNotifications(ac, preview, me, messageId);
+        writeGroupMessageNotifications(ac, copy.body, me, messageId);
       }
     } catch (e) {
       console.warn('[CE2 Push]', e);
@@ -5332,7 +5401,7 @@
         updatePendingVoiceMessage(localId, { uploadState: 'sent', uploadProgress: 1 });
 
         return commitCe2Message(ac, patch, me).then(function (messageId) {
-          triggerCe2Push(ac, 'Voice note', me, messageId);
+          triggerCe2Push(ac, patch, me, messageId);
           patchThreadPreviewLocal(ac, patch);
           if (root.Ce2AudioOutbox) {
             root.Ce2AudioOutbox.remove(localId).catch(function () {});
@@ -6038,7 +6107,7 @@
         lastMessageId = await commitCe2Message(ac, patches[i], me);
         confirmSentMessage(pendingIds[i], lastMessageId, patches[i], ac);
       }
-      triggerCe2Push(ac, patches[patches.length - 1].content || '', me, lastMessageId);
+      triggerCe2Push(ac, patches[patches.length - 1], me, lastMessageId);
       patchThreadPreviewLocal(ac, patches[patches.length - 1]);
       if (patches.length > 1) {
         CommunicationState.statusMessage = patches.length + ' messages sent';
@@ -6549,6 +6618,7 @@
     wireCe2DelegatedClick();
     bindInboxGestures();
     bindHubNav();
+    bindPushThreadOpen();
 
     document.querySelectorAll('.ce2-tab').forEach(function (btn) {
       function onDiscoveryTab(e) {
@@ -6679,7 +6749,7 @@
           messageType: 'text',
         };
         var messageId = await commitCe2Message(patchAc, patch, me);
-        triggerCe2Push(patchAc, patch.content || '', me, messageId);
+        triggerCe2Push(patchAc, patch, me, messageId);
         patchThreadPreviewLocal(patchAc, patch);
         q.remove(item.id);
         sent++;
@@ -6704,6 +6774,9 @@
     },
     ingestIncomingNotif: function (notif) {
       ingestIncomingNotif(notif);
+    },
+    openFromPush: function (data) {
+      return openThreadFromPush(data);
     },
     /** QA: paint presence without a second session. stateOrMs = 'online'|'away'|'recent'|epochMs */
     simulatePresence: function (uid, stateOrMs) {

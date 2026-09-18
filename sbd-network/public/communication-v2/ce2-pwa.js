@@ -140,6 +140,41 @@
     });
   }
 
+  function parseForegroundPayload(payload) {
+    if (root.Ce2Push && typeof root.Ce2Push.normalizePushPayload === 'function') {
+      return root.Ce2Push.normalizePushPayload(payload || {});
+    }
+    var data = (payload && payload.data) || {};
+    return {
+      type:
+        data.type === 'dm'
+          ? 'direct_message'
+          : data.type === 'group_message'
+            ? 'group_message'
+            : data.type || '',
+      convId: data.convId || '',
+      senderId: data.senderId || '',
+      groupId: data.groupId || '',
+      messageId: data.messageId || '',
+      title: (payload.notification && payload.notification.title) || data.title || '',
+      body:
+        (payload.notification && payload.notification.body) ||
+        data.body ||
+        '',
+      url: data.url || '',
+      tag: data.tag || '',
+    };
+  }
+
+  function isMutedForeground(notif) {
+    if (!notif || !root.Ce2Inbox || !root.CommunicationState) return false;
+    var kind = notif.type === 'group_message' ? 'group' : 'direct';
+    var threadId = notif.groupId || notif.convId;
+    var prefId = root.Ce2Inbox.prefId(kind, threadId);
+    var pref = (root.CommunicationState.inboxPrefs || {})[prefId];
+    return !!(pref && pref.muted);
+  }
+
   function bindForegroundPushSuppress() {
     if (root.__ce2ForegroundPushBound) return;
     root.__ce2ForegroundPushBound = true;
@@ -147,34 +182,52 @@
     try {
       var messaging = firebase.messaging();
       messaging.onMessage(function (payload) {
-        var data = (payload && payload.data) || {};
-        var notif = {
-          type:
-            data.type === 'dm'
-              ? 'direct_message'
-              : data.type === 'group_message'
-                ? 'group_message'
-                : '',
-          convId: data.convId || '',
-          senderId: data.senderId || '',
-          groupId: data.groupId || '',
-          messageId: data.messageId || '',
-          body:
-            (payload.notification && payload.notification.body) ||
-            data.body ||
-            '',
-        };
-        if (
+        var notif = parseForegroundPayload(payload);
+        var threadOpen = !!(
           notif.type &&
           root.Ce2Runtime &&
           typeof root.Ce2Runtime.isMessengerThreadOpen === 'function' &&
           root.Ce2Runtime.isMessengerThreadOpen(notif)
-        ) {
-          if (typeof root.Ce2Runtime.ingestIncomingNotif === 'function') {
+        );
+        var visible =
+          typeof document !== 'undefined' && document.visibilityState === 'visible';
+        var me = root.CommunicationState && root.CommunicationState.me;
+        var suppress = root.Ce2Push
+          ? root.Ce2Push.shouldSuppressForeground({
+              threadOpen: threadOpen,
+              documentVisible: visible,
+              muted: isMutedForeground(notif),
+              isSender: !!(me && notif.senderId && notif.senderId === me.uid),
+              permissionDenied: hasNotificationApi() && NotifApi.permission === 'denied',
+            })
+          : threadOpen && visible;
+        if (suppress) {
+          if (threadOpen && typeof root.Ce2Runtime.ingestIncomingNotif === 'function') {
             root.Ce2Runtime.ingestIncomingNotif(notif);
           }
           return;
         }
+        if (!hasNotificationApi() || NotifApi.permission !== 'granted') return;
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.ready
+          .then(function (reg) {
+            return reg.showNotification(notif.title || 'New message', {
+              body: notif.body || 'New message',
+              icon: '/assets/icons/icon-192.png',
+              badge: '/assets/icons/icon-72.png',
+              tag: notif.tag || 'sbd-notification',
+              renotify: true,
+              data: {
+                url: notif.url,
+                convId: notif.convId,
+                groupId: notif.groupId,
+                messageId: notif.messageId,
+                type: notif.type,
+                senderId: notif.senderId,
+              },
+            });
+          })
+          .catch(function () {});
       });
     } catch (_) {}
   }

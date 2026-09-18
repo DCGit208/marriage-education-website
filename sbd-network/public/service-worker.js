@@ -14,36 +14,81 @@ if (!firebase.apps.length) {
   });
 }
 
+try {
+  importScripts('/communication-v2/ce2-push.js');
+} catch (err) {
+  console.warn('[Service Worker] CE2 push helpers unavailable', err);
+}
+
 const messaging = firebase.messaging();
+
+function ce2PushApi() {
+  return self.Ce2Push || null;
+}
+
+function notificationDataFromPayload(payload) {
+  const api = ce2PushApi();
+  if (api && typeof api.normalizePushPayload === 'function') {
+    const parsed = api.normalizePushPayload(payload || {});
+    return {
+      title: parsed.title,
+      body: parsed.body,
+      tag: parsed.tag,
+      data: {
+        url: parsed.url,
+        convId: parsed.convId,
+        groupId: parsed.groupId,
+        messageId: parsed.messageId,
+        type: parsed.type,
+        senderId: parsed.senderId,
+        title: parsed.title,
+        body: parsed.body,
+      },
+    };
+  }
+  const data = (payload && payload.data) || {};
+  const url = data.url || '/dashboard.html';
+  return {
+    title: data.title || 'SBD Network',
+    body: data.body || 'New activity in SBD Network',
+    tag: data.tag || 'sbd-notification',
+    data: { url, convId: data.convId || '', groupId: data.groupId || '', messageId: data.messageId || '', type: data.type || '' },
+  };
+}
+
+function clientIsVisible(client) {
+  return !!(client && (client.visibilityState === 'visible' || client.focused));
+}
 
 // Raw push listener — runs ALONGSIDE Firebase's handler.
 // Firebase handles showNotification() when "notification" key is present.
-// We only handle the app icon badge here (Web App Badging API).
-self.addEventListener('push', () => {
-  if ('setAppBadge' in self.navigator) {
-    self.navigator.setAppBadge(1).catch(() => {});
-  }
+// Badge: leave it to a visible CE2 page; otherwise mark unread with 1.
+self.addEventListener('push', (event) => {
+  event.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (list.some(clientIsVisible)) return;
+    if ('setAppBadge' in self.navigator) {
+      self.navigator.setAppBadge(1).catch(() => {});
+    }
+  })());
 });
 
 // onBackgroundMessage — fires for data-only messages (no "notification" key).
 // Kept as fallback for non-iOS browsers / Android Chrome.
 messaging.onBackgroundMessage((payload) => {
-  const data  = payload.data || {};
-  const title = data.title || 'SBD Network';
-  const body  = data.body  || 'New activity in SBD Network';
-  const url   = data.url   || '/dashboard.html';
-  return self.registration.showNotification(title, {
-    body,
+  const parsed = notificationDataFromPayload(payload);
+  return self.registration.showNotification(parsed.title, {
+    body: parsed.body,
     icon:     '/assets/icons/icon-192.png',
     badge:    '/assets/icons/icon-72.png',
     vibrate:  [200, 100, 200],
-    tag:      'sbd-notification',
+    tag:      parsed.tag,
     renotify: true,
-    data:     { url },
+    data:     parsed.data,
   });
 });
 
-const CACHE_VERSION = 'sbd-network-v1789610000001';
+const CACHE_VERSION = 'sbd-network-v1789692000001';
 const CACHE_NAME = `${CACHE_VERSION}::static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}::runtime`;
 
@@ -296,24 +341,56 @@ async function syncPosts() {
   console.log('[Service Worker] Syncing offline posts...');
 }
 
-// Notification click handler — open the relevant board/page
-self.addEventListener('notificationclick', (event) => {
+async function handleNotificationClick(event) {
   event.notification.close();
-  // Clear the app icon badge when user taps the notification
-  if ('clearAppBadge' in self.navigator) self.navigator.clearAppBadge().catch(() => {});
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      const targetUrl = event.notification.data?.url || '/dashboard.html';
-      // Focus and navigate existing open window if possible
-      for (const client of windowClients) {
-        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
-        }
+  const api = ce2PushApi();
+  const raw = event.notification.data || {};
+  const target = api
+    ? api.parseThreadTarget(raw)
+    : { url: raw.url || '/dashboard.html', convId: raw.convId || '', groupId: raw.groupId || '', messageId: raw.messageId || '' };
+  const targetUrl = target.url || raw.url || '/dashboard.html';
+  let isCe2 = /\/communication-v2/.test(targetUrl);
+  try {
+    if (api) {
+      isCe2 = api.isCe2Path(new URL(api.absoluteUrl(targetUrl, self.location.origin)).pathname);
+    }
+  } catch (_) {}
+  // CE2 unread badge is owned by the inbox; do not wipe other threads on tap.
+  if (!isCe2 && 'clearAppBadge' in self.navigator) {
+    self.navigator.clearAppBadge().catch(() => {});
+  }
+
+  const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const plan = api
+    ? api.notificationClickPlan(windowClients, targetUrl, self.location.origin)
+    : { action: 'open', url: targetUrl };
+
+  if (plan.action === 'focus-message' && plan.client) {
+    if (typeof plan.client.postMessage === 'function' && plan.message) {
+      plan.client.postMessage(plan.message);
+    }
+    if (typeof plan.client.focus === 'function') return plan.client.focus();
+    return plan.client;
+  }
+  if (plan.action === 'navigate' && plan.client) {
+    if (typeof plan.client.navigate === 'function') {
+      try {
+        await plan.client.navigate(plan.url);
+      } catch (_) {
+        return clients.openWindow(plan.url);
       }
-      return clients.openWindow(targetUrl);
-    })
-  );
+    } else {
+      return clients.openWindow(plan.url);
+    }
+    if (typeof plan.client.focus === 'function') return plan.client.focus();
+    return plan.client;
+  }
+  return clients.openWindow(plan.url || targetUrl);
+}
+
+// Notification click handler — open the exact CE2 thread, or the board/page
+self.addEventListener('notificationclick', (event) => {
+  event.waitUntil(handleNotificationClick(event));
 });
 
 // Message handler — for update notifications
