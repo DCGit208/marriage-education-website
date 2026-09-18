@@ -11,23 +11,44 @@ const PUSH_ORIGIN = "https://sbd.marriageducation.com";
 const PUSH_ICON = "https://sbd-network.web.app/assets/icons/icon-192.png";
 const PUSH_BADGE = "https://sbd-network.web.app/assets/icons/icon-72.png";
 
-async function resolveRecipient(recipientId, fallbackToken) {
-  const result = { token: "", userData: null };
-  if (typeof fallbackToken === "string" && fallbackToken.trim()) {
-    result.token = fallbackToken.trim();
+async function lookupPushToken(recipientId) {
+  const db = admin.firestore();
+  try {
+    const priv = await db
+      .collection("users")
+      .doc(recipientId)
+      .collection("ce2_push")
+      .doc("token")
+      .get();
+    if (priv.exists) {
+      const token = (priv.data() || {}).fcmToken;
+      if (typeof token === "string" && token.trim()) {
+        return token.trim();
+      }
+    }
+  } catch (error) {
+    logger.warn("CE2 push token private lookup failed", {
+      recipientId,
+      error: error.message,
+    });
   }
 
+  const doc = await db.collection("users").doc(recipientId).get();
+  if (!doc.exists) return "";
+  const data = doc.data() || {};
+  const token = data.fcmToken || data.pushToken || data.notificationToken || "";
+  return typeof token === "string" ? token.trim() : "";
+}
+
+async function resolveRecipient(recipientId) {
+  const result = { token: "", userData: null };
   const doc = await admin.firestore().collection("users").doc(recipientId).get();
   if (!doc.exists) {
     return result;
   }
 
-  const data = doc.data() || {};
-  result.userData = data;
-  if (!result.token) {
-    const token = data.fcmToken || data.pushToken || data.notificationToken || "";
-    result.token = typeof token === "string" ? token.trim() : "";
-  }
+  result.userData = doc.data() || {};
+  result.token = await lookupPushToken(recipientId);
   return result;
 }
 
@@ -179,7 +200,7 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
       });
     }
 
-    const recipient = await resolveRecipient(recipientId, body.recipientToken);
+    const recipient = await resolveRecipient(recipientId);
     const canRead = pushHelpers.recipientCanReadClassification(
       recipient.userData,
       body.classification
@@ -337,7 +358,7 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
           return;
         }
 
-        const recipient = await resolveRecipient(recipientId, null);
+        const recipient = await resolveRecipient(recipientId);
         const canRead = pushHelpers.recipientCanReadClassification(
           recipient.userData,
           body.classification

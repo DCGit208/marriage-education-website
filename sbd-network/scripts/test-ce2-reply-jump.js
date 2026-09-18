@@ -321,7 +321,7 @@ test('cache-bust sits strictly above live 115 / 83 / 3', function () {
   assert.ok(replyVer && Number(replyVer[1]) > 3);
   assert.ok(queueVer && Number(queueVer[1]) >= 2);
   assert.ok(receiptsVer && Number(receiptsVer[1]) >= 5);
-  assert.ok(searchVer && Number(searchVer[1]) >= 1);
+  assert.ok(searchVer && Number(searchVer[1]) >= 2);
   assert.ok(actionsVer && Number(actionsVer[1]) >= 24);
   assert.ok(shareVer && Number(shareVer[1]) >= 10);
   assert.ok(mediaVer && Number(mediaVer[1]) >= 3);
@@ -339,7 +339,7 @@ test('frozen keyboard, delivery, audio, inbox, search, push, queue stay intact',
   assert.ok(v2.indexOf('flushCe2OfflineQueue') !== -1);
   const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
   assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
-  assert.ok(html.indexOf('ce2-thread-search.js?v=1') !== -1);
+  assert.ok(/ce2-thread-search\.js\?v=\d+/.test(html));
   assert.ok(html.indexOf('ce2-push.js?v=1') !== -1);
   assert.ok(html.indexOf('ce2-offline-queue.js?v=2') !== -1);
 });

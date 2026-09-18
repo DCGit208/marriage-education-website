@@ -226,6 +226,13 @@
     });
   }
 
+  function classificationsReadableByUser(userData, extras) {
+    var all = ['public', 'foundation', 'premium', 'elite', 'ambassador', 'senior_ambassador', 'rd', 'mentor'];
+    return all.filter(function (c) {
+      return canReadClassificationAsUser(userData, c, extras);
+    });
+  }
+
   global.Ce2Governance = {
     isEnabled: isEnabled,
     setEnabled: setEnabled,
@@ -248,6 +255,7 @@
     classificationAllowedAtFloor: classificationAllowedAtFloor,
     clampClassification: clampClassification,
     classificationsAtOrBelowFloor: classificationsAtOrBelowFloor,
-    VERSION: 6,
+    classificationsReadableByUser: classificationsReadableByUser,
+    VERSION: 7,
   };
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

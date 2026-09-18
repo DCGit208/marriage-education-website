@@ -275,6 +275,15 @@
       ]
     },
     {
+      "collectionGroup": "ce2_messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "senderId", "order": "ASCENDING" },
+        { "fieldPath": "classification", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "modules",
       "queryScope": "COLLECTION",
       "fields": [

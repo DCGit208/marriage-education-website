@@ -51,7 +51,25 @@
       });
       if (!token || typeof db === 'undefined') return;
 
-      await db.collection('users').doc(userId).update({ fcmToken: token });
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('ce2_push')
+        .doc('token')
+        .set(
+          {
+            fcmToken: token,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      try {
+        await db.collection('users').doc(userId).update({
+          fcmToken: firebase.firestore.FieldValue.delete(),
+          pushToken: firebase.firestore.FieldValue.delete(),
+          notificationToken: firebase.firestore.FieldValue.delete(),
+        });
+      } catch (_) {}
 
       var user = firebase.auth().currentUser;
       if (user) {

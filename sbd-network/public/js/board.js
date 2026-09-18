@@ -3544,9 +3544,6 @@ async function notifyBoardShareRecipient(otherUser, otherData, convId, messageId
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
   }).catch(() => {});
 
-  const token = otherData?.fcmToken || otherData?.pushToken || otherData?.notificationToken || '';
-  if (!token) return;
-
   const user = firebase.auth().currentUser;
   if (!user) return;
   const idToken = await user.getIdToken();
@@ -3559,7 +3556,6 @@ async function notifyBoardShareRecipient(otherUser, otherData, convId, messageId
     body: JSON.stringify({
       senderId: currentUserId,
       recipientId: otherUser.id,
-      recipientToken: token,
       senderName,
       title: senderName,
       body: body.slice(0, 100),

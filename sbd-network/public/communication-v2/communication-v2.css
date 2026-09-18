@@ -1229,12 +1229,33 @@ body.ce2-msg-menu-open {
 
 @media (max-width: 719px) {
   .ce2-composer-bar {
-    gap: 5px;
-    --ce2-composer-control: 36px;
+    gap: 6px;
+    --ce2-composer-control: 44px;
+  }
+
+  .ce2-attach-wrap,
+  .ce2-composer-voice,
+  .ce2-composer-more,
+  .ce2-btn-send {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ce2-composer-more {
+    opacity: 0.55;
+    background: transparent;
+    border-color: transparent;
+    font-size: 1.4rem;
+  }
+
+  .ce2-composer-more.is-open {
+    opacity: 1;
+    background: rgba(201, 184, 146, 0.14);
+    border-color: rgba(201, 184, 146, 0.35);
   }
 
   .ce2-composer-voice {
-    margin-left: 4px;
+    margin-left: 0;
   }
 
   .ce2-input-shell {
@@ -1243,20 +1264,56 @@ body.ce2-msg-menu-open {
     width: auto;
   }
 
-  .ce2-btn-send {
-    min-width: 52px;
-    width: auto;
-    padding: 0 11px;
+  .ce2-li-more {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    margin-right: -8px;
   }
 
-  .ce2-send-text {
-    display: inline;
-    font-size: 0.76rem;
+  .ce2-thread-search-toggle {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ce2-back-thread {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .ce2-inbox-menu-item {
+    min-height: 44px;
   }
 }
 
 .ce2-send-icon {
   display: none;
+}
+
+@media (max-width: 719px) {
+  .ce2-send-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .ce2-send-text {
+    display: none;
+  }
+
+  .ce2-btn-send {
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+  }
 }
 
 .ce2-composer-more {

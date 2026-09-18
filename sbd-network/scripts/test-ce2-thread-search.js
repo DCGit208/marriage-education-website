@@ -107,8 +107,8 @@ function msg(id, opts) {
   };
 }
 
-test('VERSION is 1 and search APIs are exported', function () {
-  assert.strictEqual(ts.VERSION, 1);
+test('VERSION is 2 and search APIs are exported', function () {
+  assert.strictEqual(ts.VERSION, 2);
   assert.strictEqual(typeof ts.searchableText, 'function');
   assert.strictEqual(typeof ts.messageMatches, 'function');
   assert.strictEqual(typeof ts.resolvePersonFilter, 'function');
@@ -365,7 +365,7 @@ Promise.resolve()
       assert.ok(html.indexOf('id="ce2ThreadSearchDay"') >= 0);
       assert.ok(html.indexOf('id="ce2ThreadSearchHits"') >= 0);
       assert.ok(html.indexOf('id="ce2ThreadSearchStatus"') >= 0);
-      assert.ok(html.indexOf('ce2-thread-search.js?v=1') >= 0);
+      assert.ok(/ce2-thread-search\.js\?v=\d+/.test(html));
       assert.ok(/Type a word, pick a person, or choose a day/.test(html));
     });
 
@@ -376,7 +376,7 @@ Promise.resolve()
       const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
       assert.ok(jsVer && Number(jsVer[1]) > 111);
       assert.ok(cssVer && Number(cssVer[1]) > 81);
-      assert.ok(searchVer && Number(searchVer[1]) >= 1);
+      assert.ok(searchVer && Number(searchVer[1]) >= 2);
       assert.ok(actionsVer && Number(actionsVer[1]) > 23);
     });
 
