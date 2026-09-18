@@ -170,6 +170,22 @@ test('failed bubble is Failed to send and beats pending', function () {
   assert.strictEqual(receipts.statusLabel('failed'), 'Failed to send');
 });
 
+test('queued bubble is Queued and beats pending, but failed still wins', function () {
+  assert.strictEqual(
+    receipts.deliveryStatus(msg({ _pending: true, _queued: true }), selfUid),
+    'queued'
+  );
+  assert.strictEqual(
+    receipts.deliveryStatus(msg({ uploadState: 'queued' }), selfUid),
+    'queued'
+  );
+  assert.strictEqual(
+    receipts.deliveryStatus(msg({ _queued: true, _failed: true }), selfUid),
+    'failed'
+  );
+  assert.strictEqual(receipts.statusLabel('queued'), 'Queued');
+});
+
 test('incoming (other sender) has no status', function () {
   assert.strictEqual(receipts.deliveryStatus(msg({ senderId: 'them' }), selfUid), '');
 });

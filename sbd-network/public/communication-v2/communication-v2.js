@@ -59,6 +59,7 @@
   var UNSEND_WINDOW_MS = 60 * 60 * 1000;
   /** Prevents duplicate Firestore sends per voice recording (Phase 1B). */
   var voiceUploadCommitted = Object.create(null);
+  var ce2OfflineFlushInFlight = false;
 
   const CommunicationState = {
     me: null,
@@ -2229,6 +2230,8 @@
           };
     var stillPending = pending.filter(function (p) {
       return !serverMsgs.some(function (s) {
+        if (s.id && p.id && s.id === p.id) return true;
+        if (p._queued || p._failed || p._voiceLocalId) return false;
         if (s.senderId !== p.senderId) return false;
         if (s.content === p.content) return true;
         return strip(s.content) === strip(p.content);
@@ -2260,6 +2263,7 @@
     CommunicationState.lastServerMessages = list;
     CommunicationState.messages = mergeServerAndPending(list);
     CommunicationState._metaLastMessageId = serverId;
+    if (root.Ce2OfflineQueue) root.Ce2OfflineQueue.remove(pendingId);
 
     var scroll = el('ce2MessageScroll');
     if (!scroll) {
@@ -2284,10 +2288,9 @@
   }
 
   function pushOptimisticMessage(patch) {
-    var opt = Object.assign({}, patch, {
-      id: 'pending-' + Date.now(),
-      _pending: true,
-    });
+    var opt = Object.assign({}, patch);
+    opt.id = opt.id || 'pending-' + Date.now();
+    opt._pending = true;
     if (!CommunicationState.pendingMessages) CommunicationState.pendingMessages = [];
     CommunicationState.pendingMessages.push(opt);
     CommunicationState.messages = mergeServerAndPending(
@@ -2311,6 +2314,7 @@
   }
 
   function removeOptimisticMessage(pendingId) {
+    var pending = pendingById(pendingId);
     CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).filter(
       function (p) {
         return p.id !== pendingId;
@@ -2319,6 +2323,15 @@
     CommunicationState.messages = mergeServerAndPending(
       CommunicationState.lastServerMessages || []
     );
+    var q = offlineQueue();
+    if (q) {
+      q.remove(pendingId);
+      if (pending && pending._voiceLocalId) {
+        q.removeMatching(function (item) {
+          return item && item.voiceLocalId === pending._voiceLocalId;
+        });
+      }
+    }
   }
 
   function markOptimisticFailed(pendingId, err) {
@@ -2331,6 +2344,7 @@
         return Object.assign({}, p, {
           _pending: true,
           _failed: true,
+          _queued: false,
           _failReason: reason,
         });
       }
@@ -2341,12 +2355,207 @@
     );
   }
 
+  function offlineQueue() {
+    return root.Ce2OfflineQueue || null;
+  }
+
+  function serializableSendPatch(patch) {
+    if (!patch) return {};
+    var out = {};
+    var keys = [
+      'content',
+      'classification',
+      'shareable',
+      'messageType',
+      'replyTo',
+      'imageUrl',
+      'imageThumbUrl',
+      'videoUrl',
+      'videoPosterUrl',
+      'audioUrl',
+      'boardShare',
+      'receiverId',
+      'tier',
+      'senderId',
+      'conversationId',
+      'audioDurationMs',
+      'audioMime',
+      'audioWaveformPeaks',
+      'durationMs',
+    ];
+    keys.forEach(function (k) {
+      if (patch[k] !== undefined) out[k] = patch[k];
+    });
+    return out;
+  }
+
+  function enqueueOfflineItem(item) {
+    var q = offlineQueue();
+    if (!q) return null;
+    return q.enqueue(item);
+  }
+
+  function markOptimisticQueued(pendingId) {
+    var found = false;
+    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).map(
+      function (p) {
+        if (p.id !== pendingId) return p;
+        found = true;
+        var next = Object.assign({}, p, {
+          _pending: true,
+          _queued: true,
+          _failed: false,
+        });
+        delete next._failReason;
+        if (next._voiceLocalId) next.uploadState = 'queued';
+        return next;
+      }
+    );
+    if (!found) return;
+    CommunicationState.messages = mergeServerAndPending(
+      CommunicationState.lastServerMessages || []
+    );
+  }
+
+  function markOptimisticSending(pendingId) {
+    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).map(
+      function (p) {
+        if (p.id !== pendingId) return p;
+        var next = Object.assign({}, p);
+        next._pending = true;
+        delete next._failed;
+        delete next._failReason;
+        delete next._queued;
+        if (next._voiceLocalId) next.uploadState = 'retrying';
+        return next;
+      }
+    );
+    CommunicationState.messages = mergeServerAndPending(
+      CommunicationState.lastServerMessages || []
+    );
+  }
+
+  function pendingById(pendingId) {
+    return (CommunicationState.pendingMessages || []).find(function (p) {
+      return p.id === pendingId;
+    });
+  }
+
+  function queueItemFromPending(pending, ac, extra) {
+    extra = extra || {};
+    ac = ac || CommunicationState.activeConversation || {};
+    var kind = extra.kind || (pending && pending._voiceLocalId ? 'voice' : 'text');
+    return {
+      id: (pending && pending.id) || extra.id,
+      kind: kind,
+      convId: extra.convId || ac.id || (pending && pending.conversationId) || '',
+      convType: extra.convType || ac.type || 'direct',
+      otherUid: extra.otherUid || ac.otherUid || '',
+      text: extra.text || (pending && pending.content) || '',
+      classification:
+        extra.classification || (pending && pending.classification) || 'foundation',
+      shareable:
+        extra.shareable !== undefined
+          ? !!extra.shareable
+          : pending
+            ? !!pending.shareable
+            : true,
+      replyTo: extra.replyTo || (pending && pending.replyTo) || null,
+      messageType:
+        extra.messageType ||
+        (pending && pending.messageType) ||
+        (kind === 'voice' ? 'voice' : 'text'),
+      voiceLocalId: extra.voiceLocalId || (pending && pending._voiceLocalId) || '',
+      patch: extra.patch || serializableSendPatch(pending),
+      status: extra.status || 'queued',
+      retryable: extra.retryable !== false,
+      blobMissing: !!extra.blobMissing,
+      createdAt: extra.createdAt || Date.now(),
+    };
+  }
+
+  function applySendFailureToPending(pendingId, patch, ac, err) {
+    var q = offlineQueue();
+    var retryable = q ? q.isRetryableError(err) : true;
+    var pending = pendingById(pendingId);
+    if (!pending) return retryable;
+    if (retryable) {
+      markOptimisticQueued(pendingId);
+      enqueueOfflineItem(
+        queueItemFromPending(pending, ac, {
+          patch: serializableSendPatch(patch || pending),
+          status: 'queued',
+          retryable: true,
+        })
+      );
+      return true;
+    }
+    markOptimisticFailed(pendingId, err);
+    enqueueOfflineItem(
+      queueItemFromPending(pending, ac, {
+        patch: serializableSendPatch(patch || pending),
+        status: 'failed',
+        retryable: false,
+        failReason: (err && err.message) || 'Send failed',
+      })
+    );
+    return false;
+  }
+
+  function hydratePendingFromQueue(ac) {
+    var q = offlineQueue();
+    var me = CommunicationState.me;
+    if (!q || !me || !ac || !ac.id) return;
+    var items = q.listForConversation(ac.id);
+    items.forEach(function (item) {
+      if (!item) return;
+      var exists = (CommunicationState.pendingMessages || []).some(function (p) {
+        if (p.id === item.id) return true;
+        if (item.voiceLocalId && p._voiceLocalId === item.voiceLocalId) return true;
+        return false;
+      });
+      if (exists) return;
+      var failed = item.retryable === false || item.status === 'failed' || item.blobMissing;
+      var patch = Object.assign({}, item.patch || {}, {
+        id: item.id,
+        messageType:
+          item.messageType ||
+          (item.kind === 'voice' ? 'voice' : (item.patch && item.patch.messageType) || 'text'),
+        content:
+          (item.patch && item.patch.content) ||
+          item.text ||
+          (item.kind === 'voice' ? 'Voice message' : ''),
+        senderId: me.uid,
+        tier: me.isAdmin ? 'elite' : me.tier,
+        classification: item.classification || 'foundation',
+        shareable: item.shareable !== false,
+        replyTo: item.replyTo || (item.patch && item.patch.replyTo) || null,
+        conversationId: ac.id,
+        _pending: true,
+        _queued: !failed,
+        _failed: failed,
+        _failReason: item.failReason || (item.blobMissing ? 'Voice note is gone from this device.' : ''),
+        _voiceLocalId: item.voiceLocalId || '',
+        _blobMissing: !!item.blobMissing,
+        createdAt: firebase.firestore.Timestamp.fromMillis(item.createdAt || Date.now()),
+      });
+      if (item.kind === 'voice' || item.voiceLocalId) {
+        patch.messageType = 'voice';
+        patch.uploadState = failed || item.blobMissing ? 'failed' : 'queued';
+        patch.content = patch.content || 'Voice message';
+      }
+      pushOptimisticMessage(patch);
+    });
+  }
+
   function patchForRetry(pending) {
     var patch = Object.assign({}, pending);
     delete patch.id;
     delete patch._pending;
     delete patch._failed;
     delete patch._failReason;
+    delete patch._queued;
+    delete patch._blobMissing;
     delete patch.uploadState;
     delete patch.uploadProgress;
     delete patch._voiceLocalId;
@@ -2355,9 +2564,7 @@
   }
 
   async function retryFailedMessage(pendingId) {
-    var pending = (CommunicationState.pendingMessages || []).find(function (p) {
-      return p.id === pendingId;
-    });
+    var pending = pendingById(pendingId);
     if (!pending) return;
     var ac = CommunicationState.activeConversation;
     var me = CommunicationState.me;
@@ -2371,34 +2578,51 @@
       retryVoiceNote(pending._voiceLocalId);
       return;
     }
-    CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).map(
-      function (p) {
-        if (p.id !== pendingId) return p;
-        var next = Object.assign({}, p);
-        delete next._failed;
-        delete next._failReason;
-        next._pending = true;
-        return next;
-      }
-    );
-    CommunicationState.messages = mergeServerAndPending(
-      CommunicationState.lastServerMessages || []
-    );
+    if (pending._blobMissing) {
+      CommunicationState.error =
+        'This voice note is gone from the device. Record it again to send.';
+      render();
+      return;
+    }
+    markOptimisticSending(pendingId);
     requestRender({ threadOnly: true });
+    if (CommunicationState.offline) {
+      markOptimisticQueued(pendingId);
+      enqueueOfflineItem(
+        queueItemFromPending(pending, ac, { status: 'queued', retryable: true })
+      );
+      CommunicationState.statusMessage = 'Queued — will send when you reconnect.';
+      requestRender({ threadOnly: true });
+      return;
+    }
+    var q = offlineQueue();
+    var queued = q && q.get(pendingId);
+    if (queued && queued.retryable !== false && !queued.blobMissing) {
+      flushCe2OfflineQueue().catch(function (e) {
+        console.warn('flushCe2OfflineQueue', e);
+      });
+      return;
+    }
     try {
       var patch = patchForRetry(pending);
       var messageId = await commitCe2Message(ac, patch, me);
       confirmSentMessage(pendingId, messageId, patch, ac);
       triggerCe2Push(ac, patch, me, messageId);
       patchThreadPreviewLocal(ac, patch);
+      if (q) q.remove(pendingId);
       CommunicationState.statusMessage = null;
       CommunicationState.error = null;
     } catch (err) {
-      markOptimisticFailed(pendingId, err);
-      handleCe2Error(
-        err,
-        ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
-      );
+      var retryable = applySendFailureToPending(pendingId, pending, ac, err);
+      if (!retryable) {
+        handleCe2Error(
+          err,
+          ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
+        );
+      } else {
+        CommunicationState.error = null;
+        CommunicationState.statusMessage = 'Queued — will send when you reconnect.';
+      }
       requestRender({ threadOnly: true });
     }
   }
@@ -2814,6 +3038,8 @@
       m.uploadState || '',
       m._pending ? 'p' : '',
       m._failed ? 'f' : '',
+      m._queued ? 'q' : '',
+      m._blobMissing ? 'b' : '',
     ].join('\x1f');
   }
 
@@ -3122,7 +3348,7 @@
       var footMeta = row.querySelector('.ce2-msg-foot-meta');
       if (!footMeta) return;
       var status = selfDeliveryStatus(m, ac);
-      row.classList.toggle('is-pending', status === 'pending');
+      row.classList.toggle('is-pending', status === 'pending' || status === 'queued');
       row.classList.toggle('is-failed', status === 'failed');
       row.classList.toggle('is-sent', status === 'sent');
       row.classList.toggle('is-delivered', status === 'delivered');
@@ -3135,6 +3361,10 @@
       }
       if (m._voiceLocalId && m.uploadState === 'retrying') {
         footMeta.textContent = 'Retrying upload…';
+        return;
+      }
+      if (status === 'queued' || (m._voiceLocalId && m.uploadState === 'queued')) {
+        footMeta.textContent = rc.statusLabel('queued');
         return;
       }
       if (status === 'failed') {
@@ -3160,7 +3390,7 @@
     row.className =
       'ce2-row' +
       (self ? ' is-self' : '') +
-      (status === 'pending' || m._pending ? ' is-pending' : '') +
+      (status === 'pending' || status === 'queued' || m._pending ? ' is-pending' : '') +
       (status === 'failed' || m._failed || m.uploadState === 'failed' ? ' is-failed' : '') +
       (status === 'sent' ? ' is-sent' : '') +
       (status === 'delivered' ? ' is-delivered' : '') +
@@ -3214,8 +3444,12 @@
         'Uploading voice… ' + Math.round((m.uploadProgress || 0) * 100) + '%';
     } else if (m._voiceLocalId && m.uploadState === 'retrying') {
       footMeta.textContent = 'Retrying upload…';
+    } else if (status === 'queued' || (m._voiceLocalId && m.uploadState === 'queued')) {
+      footMeta.textContent = (rc && rc.statusLabel('queued')) || 'Queued';
     } else if (status === 'failed' || (m._voiceLocalId && m.uploadState === 'failed')) {
-      footMeta.textContent = (rc && rc.statusLabel('failed')) || 'Failed to send';
+      footMeta.textContent = m._blobMissing
+        ? 'Voice note is gone from this device'
+        : (rc && rc.statusLabel('failed')) || 'Failed to send';
     } else {
       footMeta.textContent = m._pending
         ? (rc && rc.statusLabel('pending')) || 'Sending…'
@@ -3229,7 +3463,11 @@
       footMeta.appendChild(star);
     }
     foot.appendChild(footMeta);
-    if (self && (status === 'failed' || m._failed) && !m._voiceLocalId) {
+    if (
+      self &&
+      (status === 'failed' || status === 'queued' || m._failed || m._queued) &&
+      !m._voiceLocalId
+    ) {
       var retryWrap = document.createElement('div');
       retryWrap.className = 'ce2-send-failed-actions';
       retryWrap.innerHTML =
@@ -3574,7 +3812,16 @@
           (m.uploadState === 'retrying' ? 'Retrying… ' : 'Uploading… ') + pct + '%';
         audioWrap.appendChild(uplbl);
       }
-      if (m.uploadState === 'failed' && m._voiceLocalId) {
+      if (
+        m._voiceLocalId &&
+        (m.uploadState === 'failed' || m.uploadState === 'queued' || m._blobMissing)
+      ) {
+        if (m._blobMissing) {
+          var gone = document.createElement('p');
+          gone.className = 'ce2-voice-upload-label';
+          gone.textContent = 'Voice note is gone from this device. Record it again to send.';
+          audioWrap.appendChild(gone);
+        }
         var actions = document.createElement('div');
         actions.className = 'ce2-voice-failed-actions';
         actions.innerHTML =
@@ -4147,6 +4394,8 @@
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
+    hydratePendingFromQueue(CommunicationState.activeConversation);
+    attachVoiceBlobsForOpenThread();
     syncCe2ThreadUrl(CommunicationState.activeConversation);
     syncPresenceWatches();
     render();
@@ -4219,6 +4468,8 @@
     syncGlobalsFromComposerSlot();
     updateAttachPreview();
     restoreComposerDraft(CommunicationState.activeConversation);
+    hydratePendingFromQueue(CommunicationState.activeConversation);
+    attachVoiceBlobsForOpenThread();
     syncCe2ThreadUrl(CommunicationState.activeConversation);
     syncPresenceWatches();
     render();
@@ -5282,12 +5533,15 @@
     }
 
     requestRender({ threadOnly: true });
-    runVoiceNoteUpload(localId, file, ac, meta);
+    var uploadPromise = runVoiceNoteUpload(localId, file, ac, meta);
+    if (uploadPromise && typeof uploadPromise.catch === 'function') {
+      uploadPromise.catch(function () {});
+    }
   }
 
   function persistVoiceOutbox(file, ac, localId, pendingId, meta) {
     var ob = root.Ce2AudioOutbox;
-    if (!ob) return Promise.resolve();
+    if (!ob || !file) return Promise.resolve(false);
     var cm = composerVoiceMeta();
     meta = meta || {};
     return ob
@@ -5308,40 +5562,96 @@
           retryCount: meta.retryCount || 0,
         });
       })
+      .then(function () {
+        return true;
+      })
       .catch(function (e) {
         console.warn('[CE2 audio outbox]', e);
+        return false;
       });
+  }
+
+  function queueVoiceForLater(localId, file, ac, pending, pendingId, uploadMeta, err) {
+    uploadMeta = uploadMeta || {};
+    var q = offlineQueue();
+    var retryable = !err || (q ? q.isRetryableError(err) : true);
+    return persistVoiceOutbox(file, ac, localId, pendingId, {
+      durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
+      audioWaveformPeaks:
+        (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
+      audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
+    }).then(function (ok) {
+      var blobMissing = !ok;
+      var canRetry = retryable && ok;
+      updatePendingVoiceMessage(localId, {
+        uploadState: canRetry ? 'queued' : 'failed',
+        _queued: canRetry,
+        _failed: !canRetry,
+        _blobMissing: blobMissing,
+      });
+      enqueueOfflineItem({
+        id: pendingId || 'pending-voice-' + localId,
+        kind: 'voice',
+        convId: ac.id || '',
+        convType: ac.type || 'direct',
+        otherUid: ac.otherUid || '',
+        classification:
+          (pending && pending.classification) || composerVoiceMeta().classification,
+        shareable: pending ? !!pending.shareable : true,
+        replyTo: (pending && pending.replyTo) || null,
+        messageType: 'voice',
+        voiceLocalId: localId,
+        status: canRetry ? 'queued' : 'failed',
+        retryable: canRetry,
+        blobMissing: blobMissing,
+        failReason: blobMissing
+          ? 'Voice note is gone from this device. Record it again to send.'
+          : (err && err.message) || '',
+      });
+      if (blobMissing) {
+        CommunicationState.statusMessage =
+          'Voice note could not be saved on this device. Record it again to send.';
+      } else if (canRetry) {
+        CommunicationState.statusMessage =
+          'Voice note queued — will send when you reconnect.';
+      } else {
+        var detail = err && err.message ? String(err.message) : 'unknown error';
+        CommunicationState.statusMessage =
+          'Voice note failed to send (' + detail + '). Tap Retry or Discard.';
+      }
+      requestRender({ threadOnly: true });
+      if (blobMissing) {
+        var gone = new Error(
+          'Voice note is gone from this device. Record it again to send.'
+        );
+        gone._blobMissing = true;
+        gone.code = 'failed-precondition';
+        throw gone;
+      }
+      if (err) throw err;
+    });
   }
 
   function runVoiceNoteUpload(localId, file, ac, uploadMeta) {
     uploadMeta = uploadMeta || {};
-    if (voiceUploadCommitted[localId]) return;
+    if (voiceUploadCommitted[localId]) return Promise.resolve();
     var me = CommunicationState.me;
-    if (!me || !ac) return;
+    if (!me || !ac) return Promise.resolve();
 
     var pending = findPendingVoiceMessage(localId);
     var pendingId = pending && pending.id;
 
     if (CommunicationState.offline) {
-      updatePendingVoiceMessage(localId, { uploadState: 'failed' });
-      persistVoiceOutbox(file, ac, localId, pendingId, {
-        durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
-        audioWaveformPeaks:
-          (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
-        audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
-      }).then(function () {
-        CommunicationState.statusMessage =
-          'Voice note saved — tap Retry when you are back online.';
-        requestRender({ threadOnly: true });
-      });
-      return;
+      return queueVoiceForLater(localId, file, ac, pending, pendingId, uploadMeta, null).catch(
+        function () {}
+      );
     }
 
     var att = attachments();
     if (!att || !att.uploadCe2Media) {
-      updatePendingVoiceMessage(localId, { uploadState: 'failed' });
+      updatePendingVoiceMessage(localId, { uploadState: 'failed', _failed: true });
       handleCe2Error(new Error('Media upload is not available.'));
-      return;
+      return Promise.resolve();
     }
 
     var uploadOpts = {
@@ -5354,10 +5664,13 @@
       },
     };
 
-    att
+    return att
       .uploadCe2Media(file, uploadOpts)
       .then(function (result) {
         if (voiceUploadCommitted[localId]) return;
+
+        pending = findPendingVoiceMessage(localId) || pending;
+        pendingId = pending && pending.id;
 
         var gSend = gov();
         var classification =
@@ -5406,6 +5719,13 @@
           if (root.Ce2AudioOutbox) {
             root.Ce2AudioOutbox.remove(localId).catch(function () {});
           }
+          var q = offlineQueue();
+          if (q) {
+            q.remove(pendingId);
+            q.removeMatching(function (item) {
+              return item && item.voiceLocalId === localId;
+            });
+          }
           if (pending && pending._localAudioUrl) {
             try {
               URL.revokeObjectURL(pending._localAudioUrl);
@@ -5418,32 +5738,25 @@
       })
       .catch(function (err) {
         if (err && err.message === 'Upload cancelled') return;
-        updatePendingVoiceMessage(localId, { uploadState: 'failed' });
-        persistVoiceOutbox(file, ac, localId, pendingId, {
-          durationMs: (pending && pending.durationMs) || uploadMeta.durationMs,
-          audioWaveformPeaks:
-            (pending && pending.audioWaveformPeaks) || uploadMeta.audioWaveformPeaks,
-          audioMime: (pending && pending.audioMime) || uploadMeta.audioMime,
-        }).then(function () {
-          var detail = err && err.message ? String(err.message) : 'unknown error';
-          CommunicationState.statusMessage =
-            'Voice note failed to upload (' + detail + '). Tap Retry or Discard.';
-          requestRender({ threadOnly: true });
-        });
+        voiceUploadCommitted[localId] = false;
+        return queueVoiceForLater(localId, file, ac, pending, pendingId, uploadMeta, err);
       });
   }
 
   function retryVoiceNote(localId) {
     var ob = root.Ce2AudioOutbox;
-    if (!ob) return;
+    var pending = findPendingVoiceMessage(localId);
+    if (!ob) {
+      markVoiceBlobGone(localId, pending);
+      return;
+    }
     ob.init()
       .then(function () {
         return ob.get(localId);
       })
       .then(function (entry) {
-        if (!entry) {
-          CommunicationState.error = 'Voice note no longer available to retry.';
-          render();
+        if (!entry || !entry.blobBuffer) {
+          markVoiceBlobGone(localId, pending);
           return;
         }
         return ob.incrementRetry(localId).then(function () {
@@ -5459,18 +5772,55 @@
           render();
           return;
         }
-        var file = ob.toFile(entry);
-        startVoiceNoteUpload(file, {
-          localId: localId,
-          retry: true,
-          durationMs: entry.durationMs,
-          audioWaveformPeaks: entry.audioWaveformPeaks,
-          audioMime: entry.mime,
-        });
+        adoptVoiceOutboxIntoQueue([entry]);
+        if (CommunicationState.offline) {
+          updatePendingVoiceMessage(localId, {
+            uploadState: 'queued',
+            _queued: true,
+            _failed: false,
+            _blobMissing: false,
+          });
+          CommunicationState.statusMessage =
+            'Voice note queued — will send when you reconnect.';
+          requestRender({ threadOnly: true });
+          return;
+        }
+        return flushCe2OfflineQueue();
       })
       .catch(function (e) {
         console.warn('[CE2 retryVoiceNote]', e);
       });
+  }
+
+  function markVoiceBlobGone(localId, pending) {
+    updatePendingVoiceMessage(localId, {
+      uploadState: 'failed',
+      _failed: true,
+      _queued: false,
+      _blobMissing: true,
+    });
+    var q = offlineQueue();
+    if (q) {
+      if (pending && pending.id) {
+        q.update(pending.id, {
+          status: 'failed',
+          retryable: false,
+          blobMissing: true,
+          failReason: 'Voice note is gone from this device. Record it again to send.',
+        });
+      }
+      q.removeMatching(function (item) {
+        return (
+          item &&
+          item.voiceLocalId === localId &&
+          item.retryable !== false &&
+          (!pending || item.id !== pending.id)
+        );
+      });
+    }
+    CommunicationState.error =
+      'This voice note is gone from the device. Record it again to send.';
+    requestRender({ threadOnly: true });
   }
 
   function discardVoiceNote(localId) {
@@ -5482,6 +5832,14 @@
         } catch (_) {}
       }
       removeOptimisticMessage(pending.id);
+      var q = offlineQueue();
+      if (q) q.remove(pending.id);
+    }
+    var qAll = offlineQueue();
+    if (qAll) {
+      qAll.removeMatching(function (item) {
+        return item && item.voiceLocalId === localId;
+      });
     }
     var ob = root.Ce2AudioOutbox;
     if (ob) {
@@ -5495,45 +5853,120 @@
     requestRender({ threadOnly: true });
   }
 
+  function adoptVoiceOutboxIntoQueue(entries) {
+    var q = offlineQueue();
+    if (!q) return;
+    (entries || []).forEach(function (entry) {
+      if (!entry || !entry.localId) return;
+      var exists = q.list().some(function (item) {
+        return item && item.voiceLocalId === entry.localId;
+      });
+      if (exists) return;
+      q.enqueue({
+        id: entry.pendingId || 'pending-voice-' + entry.localId,
+        kind: 'voice',
+        convId: entry.conversationId || '',
+        convType: entry.convType || 'direct',
+        otherUid: entry.otherUid || '',
+        classification: entry.classification || 'foundation',
+        shareable: entry.shareable !== false,
+        replyTo: entry.replyTo || null,
+        messageType: 'voice',
+        voiceLocalId: entry.localId,
+        status: 'queued',
+        retryable: true,
+        createdAt: entry.createdAt || Date.now(),
+      });
+    });
+  }
+
+  function attachVoiceBlobsForOpenThread() {
+    var ob = root.Ce2AudioOutbox;
+    var ac = CommunicationState.activeConversation;
+    if (!ob || !ac || !ac.id) return Promise.resolve();
+    return ob
+      .init()
+      .then(function () {
+        return ob.listForConversation ? ob.listForConversation(ac.id) : ob.list();
+      })
+      .then(function (items) {
+        var mine = (items || []).filter(function (entry) {
+          return !entry.conversationId || entry.conversationId === ac.id;
+        });
+        adoptVoiceOutboxIntoQueue(mine);
+        hydratePendingFromQueue(ac);
+        return Promise.all(
+          mine.map(function (entry) {
+            var pending = findPendingVoiceMessage(entry.localId);
+            if (!pending) return null;
+            if (pending._localAudioUrl) return null;
+            if (!entry.blobBuffer) {
+              updatePendingVoiceMessage(entry.localId, {
+                uploadState: 'failed',
+                _failed: true,
+                _queued: false,
+                _blobMissing: true,
+              });
+              return null;
+            }
+            var blobUrl = URL.createObjectURL(
+              new Blob([entry.blobBuffer], { type: entry.mime || 'audio/webm' })
+            );
+            updatePendingVoiceMessage(entry.localId, {
+              _localAudioUrl: blobUrl,
+              durationMs: entry.durationMs || pending.durationMs || 0,
+              audioDurationMs: entry.durationMs || pending.audioDurationMs || 0,
+              audioWaveformPeaks: entry.audioWaveformPeaks || pending.audioWaveformPeaks,
+              audioMime: entry.mime || pending.audioMime,
+              _blobMissing: false,
+            });
+            return null;
+          })
+        );
+      })
+      .then(function () {
+        var q = offlineQueue();
+        if (!q) return;
+        q.listForConversation(ac.id).forEach(function (item) {
+          if (!item || !item.voiceLocalId) return;
+          var pending = findPendingVoiceMessage(item.voiceLocalId);
+          if (!pending) return;
+          if (pending._localAudioUrl) return;
+          updatePendingVoiceMessage(item.voiceLocalId, {
+            uploadState: 'failed',
+            _failed: true,
+            _queued: false,
+            _blobMissing: true,
+          });
+        });
+        requestRender({ threadOnly: true });
+      })
+      .catch(function (e) {
+        console.warn('[CE2 attachVoiceBlobs]', e);
+      });
+  }
+
   function hydrateVoiceOutboxPending() {
     var ob = root.Ce2AudioOutbox;
     var me = CommunicationState.me;
-    if (!ob || !me) return Promise.resolve();
+    if (!ob || !me) {
+      var ac = CommunicationState.activeConversation;
+      if (ac) hydratePendingFromQueue(ac);
+      return Promise.resolve();
+    }
     return ob
       .init()
       .then(function () {
         return ob.list();
       })
       .then(function (items) {
-        (items || []).forEach(function (entry) {
-          if (voiceUploadCommitted[entry.localId]) return;
-          if (findPendingVoiceMessage(entry.localId)) return;
-          var blobUrl = URL.createObjectURL(
-            new Blob([entry.blobBuffer], { type: entry.mime || 'audio/webm' })
-          );
-          pushOptimisticMessage({
-            messageType: 'voice',
-            content: 'Voice message',
-            senderId: me.uid,
-            tier: me.isAdmin ? 'elite' : me.tier,
-            classification: entry.classification || 'foundation',
-            shareable: entry.shareable !== false,
-            replyTo: entry.replyTo || null,
-            conversationId: entry.conversationId || '',
-            _voiceLocalId: entry.localId,
-            uploadState: 'failed',
-            uploadProgress: 0,
-            _localAudioUrl: blobUrl,
-            durationMs: entry.durationMs || 0,
-            audioDurationMs: entry.durationMs || 0,
-            audioWaveformPeaks: entry.audioWaveformPeaks || null,
-            audioMime: entry.mime || '',
-            createdAt: firebase.firestore.Timestamp.fromMillis(
-              entry.createdAt || Date.now()
-            ),
-          });
-        });
-        requestRender({ throttle: true });
+        adoptVoiceOutboxIntoQueue(items || []);
+        var ac = CommunicationState.activeConversation;
+        if (ac && ac.id) {
+          hydratePendingFromQueue(ac);
+          return attachVoiceBlobsForOpenThread();
+        }
+        return null;
       })
       .catch(function (e) {
         console.warn('[CE2 hydrateVoiceOutbox]', e);
@@ -5541,36 +5974,7 @@
   }
 
   function flushCe2AudioOutbox() {
-    var ob = root.Ce2AudioOutbox;
-    if (!ob || CommunicationState.offline || !CommunicationState.me) return Promise.resolve();
-    return ob
-      .init()
-      .then(function () {
-        return ob.list();
-      })
-      .then(function (items) {
-        if (!items || !items.length) return;
-        var ac = CommunicationState.activeConversation;
-        if (!ac || !ac.id) return;
-        for (var i = 0; i < items.length; i++) {
-          var entry = items[i];
-          if (voiceUploadCommitted[entry.localId]) continue;
-          if (entry.conversationId !== ac.id) continue;
-          var pending = findPendingVoiceMessage(entry.localId);
-          if (!pending || pending.uploadState === 'failed') {
-            var file = ob.toFile(entry);
-            startVoiceNoteUpload(file, {
-              localId: entry.localId,
-              retry: true,
-              durationMs: entry.durationMs,
-            });
-            break;
-          }
-        }
-      })
-      .catch(function (e) {
-        console.warn('[CE2 flushCe2AudioOutbox]', e);
-      });
+    return flushCe2OfflineQueue();
   }
 
   function bindCe2VoiceUploadActions() {
@@ -5824,6 +6228,51 @@
     };
   }
 
+  function clearComposerAfterQueue(ac) {
+    var input = el('ce2Input');
+    if (input) input.value = '';
+    if (root.Ce2Format) root.Ce2Format.syncInputMirror();
+    syncCe2ComposerInputHeight();
+    requestAnimationFrame(function () {
+      syncCe2ComposerInputHeight();
+    });
+    clearComposerDraft(ac);
+    clearReply();
+  }
+
+  function queueOfflineTextSend(ac, me, text, classification, shareable) {
+    var now = firebase.firestore.Timestamp.now();
+    var patch = {
+      conversationId: ac.id,
+      senderId: me.uid,
+      tier: me.isAdmin ? 'elite' : me.tier,
+      classification: classification,
+      shareable: shareable,
+      content: text,
+      messageType: 'text',
+      createdAt: now,
+      _queued: true,
+    };
+    if (CommunicationState.replyTo) patch.replyTo = CommunicationState.replyTo;
+    if (ac.type === 'direct') patch.receiverId = ac.otherUid;
+    var pendingId = pushOptimisticMessage(patch);
+    enqueueOfflineItem(
+      queueItemFromPending(pendingById(pendingId) || patch, ac, {
+        id: pendingId,
+        text: text,
+        classification: classification,
+        shareable: shareable,
+        patch: serializableSendPatch(patch),
+        status: 'queued',
+        retryable: true,
+      })
+    );
+    clearComposerAfterQueue(ac);
+    CommunicationState.error = null;
+    CommunicationState.statusMessage = 'Queued — will send when you reconnect.';
+    render();
+  }
+
   async function sendMessage() {
     var me = CommunicationState.me;
     var ac = CommunicationState.activeConversation;
@@ -5954,26 +6403,8 @@
     }
 
     if (CommunicationState.offline) {
-      if (text && !mediaList.length && !boardParsed && root.Ce2OfflineQueue) {
-        root.Ce2OfflineQueue.enqueue({
-          id: 'q_' + Date.now(),
-          convId: ac.id,
-          convType: ac.type,
-          otherUid: ac.otherUid || '',
-          text: text,
-          classification: classification,
-          shareable: shareable,
-        });
-        el('ce2Input').value = '';
-        if (root.Ce2Format) root.Ce2Format.syncInputMirror();
-        syncCe2ComposerInputHeight();
-        requestAnimationFrame(function () {
-          syncCe2ComposerInputHeight();
-        });
-        clearComposerDraft(ac);
-        CommunicationState.statusMessage =
-          'Saved offline — will send when you reconnect.';
-        render();
+      if (text && !mediaList.length && !boardParsed) {
+        queueOfflineTextSend(ac, me, text, classification, shareable);
         return;
       }
       CommunicationState.error = 'You are offline. Reconnect to send messages.';
@@ -6113,13 +6544,25 @@
         CommunicationState.statusMessage = patches.length + ' messages sent';
       }
     } catch (err) {
-      pendingIds.forEach(function (pid) {
-        markOptimisticFailed(pid, err);
+      pendingIds.forEach(function (pid, idx) {
+        var still = (CommunicationState.pendingMessages || []).some(function (p) {
+          return p.id === pid;
+        });
+        if (!still) return;
+        applySendFailureToPending(pid, patches[idx], ac, err);
       });
-      handleCe2Error(
-        err,
-        ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
-      );
+      var q = offlineQueue();
+      var retryable = q ? q.isRetryableError(err) : true;
+      if (retryable) {
+        CommunicationState.error = null;
+        CommunicationState.statusMessage = 'Queued — will send when you reconnect.';
+        syncComposerAlert();
+      } else {
+        handleCe2Error(
+          err,
+          ac && ac.type === 'direct' ? 'send' : ac && ac.type === 'group' ? 'group' : null
+        );
+      }
     } finally {
       CommunicationState.sending = false;
       updateComposerState();
@@ -6719,49 +7162,155 @@
     }
   }
 
-  async function flushCe2OfflineQueue() {
-    var q = root.Ce2OfflineQueue;
-    var me = CommunicationState.me;
-    if (!q || !me || CommunicationState.offline) return;
-    var items = q.list();
-    if (!items.length) return;
-    var sent = 0;
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      try {
-        var patchAc = {
-          type: item.convType || 'direct',
-          id: item.convId,
-          otherUid: item.otherUid,
-          convReady: !!item.convId,
-        };
-        if (patchAc.type === 'direct' && item.otherUid && !patchAc.id) {
-          patchAc.id = await ensureDirectConv(item.otherUid);
-          patchAc.convReady = true;
-        }
-        var now = firebase.firestore.Timestamp.now();
-        var patch = {
-          content: item.text || '',
-          classification: item.classification || 'foundation',
-          shareable: !!item.shareable,
-          senderId: me.uid,
-          createdAt: now,
-          messageType: 'text',
-        };
-        var messageId = await commitCe2Message(patchAc, patch, me);
-        triggerCe2Push(patchAc, patch, me, messageId);
-        patchThreadPreviewLocal(patchAc, patch);
-        q.remove(item.id);
-        sent++;
-      } catch (err) {
-        console.warn('flushCe2OfflineQueue', err);
-        break;
-      }
+  async function flushVoiceQueueItem(item, me) {
+    var ob = root.Ce2AudioOutbox;
+    var gone = new Error('Voice note is gone from this device. Record it again to send.');
+    gone._blobMissing = true;
+    gone.code = 'failed-precondition';
+    if (!ob || !item.voiceLocalId) throw gone;
+    await ob.init();
+    var entry = await ob.get(item.voiceLocalId);
+    if (!entry || !entry.blobBuffer) throw gone;
+    var file = ob.toFile(entry);
+    var patchAc = {
+      type: item.convType || entry.convType || 'direct',
+      id: item.convId || entry.conversationId || '',
+      otherUid: item.otherUid || entry.otherUid || '',
+      convReady: !!(item.convId || entry.conversationId),
+    };
+    if (patchAc.type === 'direct' && patchAc.otherUid && !patchAc.id) {
+      patchAc.id = await ensureDirectConv(patchAc.otherUid);
+      patchAc.convReady = true;
     }
-    if (sent) {
-      CommunicationState.statusMessage =
-        sent === 1 ? 'Sent 1 queued message' : 'Sent ' + sent + ' queued messages';
-      scheduleLoadThreads(me.uid);
+    var ac = CommunicationState.activeConversation;
+    if (ac && ac.id === patchAc.id) {
+      patchAc = ac;
+      if (!findPendingVoiceMessage(item.voiceLocalId)) {
+        hydratePendingFromQueue(ac);
+      }
+      markOptimisticSending(item.id);
+      requestRender({ threadOnly: true });
+    }
+    return runVoiceNoteUpload(item.voiceLocalId, file, patchAc, {
+      retry: true,
+      localId: item.voiceLocalId,
+      durationMs: entry.durationMs,
+      audioWaveformPeaks: entry.audioWaveformPeaks,
+      audioMime: entry.mime,
+    });
+  }
+
+  async function flushTextQueueItem(item, me) {
+    var patchAc = {
+      type: item.convType || 'direct',
+      id: item.convId,
+      otherUid: item.otherUid,
+      convReady: !!item.convId,
+    };
+    var ac = CommunicationState.activeConversation;
+    if (ac && ac.id === item.convId) patchAc = ac;
+    if (patchAc.type === 'direct' && item.otherUid && !patchAc.id) {
+      patchAc.id = await ensureDirectConv(item.otherUid);
+      patchAc.convReady = true;
+    }
+    var now = firebase.firestore.Timestamp.now();
+    var patch = Object.assign(
+      {
+        content: item.text || '',
+        classification: item.classification || 'foundation',
+        shareable: !!item.shareable,
+        senderId: me.uid,
+        createdAt: now,
+        messageType: item.messageType || 'text',
+      },
+      item.patch || {}
+    );
+    patch.senderId = me.uid;
+    patch.createdAt = now;
+    if (item.replyTo && !patch.replyTo) patch.replyTo = item.replyTo;
+    markOptimisticSending(item.id);
+    requestRender({ threadOnly: true });
+    var messageId = await commitCe2Message(patchAc, patch, me);
+    if (ac && ac.id === patchAc.id) {
+      confirmSentMessage(item.id, messageId, patch, ac);
+    } else {
+      var q = offlineQueue();
+      if (q) q.remove(item.id);
+      CommunicationState.pendingMessages = (CommunicationState.pendingMessages || []).filter(
+        function (p) {
+          return p.id !== item.id;
+        }
+      );
+    }
+    triggerCe2Push(patchAc, patch, me, messageId);
+    patchThreadPreviewLocal(patchAc, patch);
+    return messageId;
+  }
+
+  async function flushCe2OfflineQueue() {
+    var q = offlineQueue();
+    var me = CommunicationState.me;
+    if (!q || !me || CommunicationState.offline || ce2OfflineFlushInFlight) return;
+    ce2OfflineFlushInFlight = true;
+    var sent = 0;
+    try {
+      await hydrateVoiceOutboxPending().catch(function () {});
+      var items = q.list();
+      if (!items.length) return;
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (!item) continue;
+        if (item.retryable === false || item.blobMissing) continue;
+        q.update(item.id, { status: 'sending' });
+        try {
+          if (item.kind === 'voice' || item.voiceLocalId) {
+            await flushVoiceQueueItem(item, me);
+            q.remove(item.id);
+          } else {
+            await flushTextQueueItem(item, me);
+            q.remove(item.id);
+          }
+          sent++;
+        } catch (err) {
+          console.warn('flushCe2OfflineQueue', err);
+          if (err && err._blobMissing) {
+            q.update(item.id, {
+              status: 'failed',
+              retryable: false,
+              blobMissing: true,
+              failReason: 'Voice note is gone from this device. Record it again to send.',
+            });
+            if (item.voiceLocalId) {
+              updatePendingVoiceMessage(item.voiceLocalId, {
+                uploadState: 'failed',
+                _failed: true,
+                _queued: false,
+                _blobMissing: true,
+              });
+            }
+            continue;
+          }
+          if (q.isRetryableError(err)) {
+            q.update(item.id, { status: 'queued', retryable: true });
+            markOptimisticQueued(item.id);
+            break;
+          }
+          q.update(item.id, {
+            status: 'failed',
+            retryable: false,
+            failReason: (err && err.message) || 'Send failed',
+          });
+          markOptimisticFailed(item.id, err);
+        }
+      }
+      if (sent) {
+        CommunicationState.statusMessage =
+          sent === 1 ? 'Sent 1 queued message' : 'Sent ' + sent + ' queued messages';
+        scheduleLoadThreads(me.uid);
+        requestRender({ throttle: true });
+      }
+    } finally {
+      ce2OfflineFlushInFlight = false;
     }
   }
 
@@ -6901,20 +7450,19 @@
     render();
     startInboxLayer(CommunicationState.me);
 
+    hydrateVoiceOutboxPending().catch(function (e) {
+      console.warn('hydrateVoiceOutbox', e);
+    });
     if (!CommunicationState.offline) {
       flushCe2OfflineQueue().catch(function (e) {
         console.warn('flushCe2OfflineQueue', e);
       });
-      hydrateVoiceOutboxPending().catch(function (e) {
-        console.warn('hydrateVoiceOutbox', e);
-      });
     }
     window.addEventListener('online', function () {
       CommunicationState.offline = false;
-      flushCe2OfflineQueue().catch(function () {});
       hydrateVoiceOutboxPending()
         .then(function () {
-          return flushCe2AudioOutbox();
+          return flushCe2OfflineQueue();
         })
         .catch(function () {});
     });
