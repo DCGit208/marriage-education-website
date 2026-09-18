@@ -1,55 +1,76 @@
 const admin = require("firebase-admin");
 const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
+const pushHelpers = require("./ce2-push-helpers");
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const PUSH_ORIGIN = "https://sbd-network.web.app";
-const PUSH_ICON = `${PUSH_ORIGIN}/assets/icons/icon-192.png`;
-const PUSH_BADGE = `${PUSH_ORIGIN}/assets/icons/icon-72.png`;
+const PUSH_ORIGIN = "https://sbd.marriageducation.com";
+const PUSH_ICON = "https://sbd-network.web.app/assets/icons/icon-192.png";
+const PUSH_BADGE = "https://sbd-network.web.app/assets/icons/icon-72.png";
 
-async function resolveRecipientToken(recipientId, fallbackToken) {
+async function resolveRecipient(recipientId, fallbackToken) {
+  const result = { token: "", userData: null };
   if (typeof fallbackToken === "string" && fallbackToken.trim()) {
-    return fallbackToken.trim();
+    result.token = fallbackToken.trim();
   }
 
   const doc = await admin.firestore().collection("users").doc(recipientId).get();
   if (!doc.exists) {
-    return "";
+    return result;
   }
 
   const data = doc.data() || {};
-  const token = data.fcmToken || data.pushToken || data.notificationToken || "";
-  return typeof token === "string" ? token.trim() : "";
+  result.userData = data;
+  if (!result.token) {
+    const token = data.fcmToken || data.pushToken || data.notificationToken || "";
+    result.token = typeof token === "string" ? token.trim() : "";
+  }
+  return result;
 }
 
-function buildPushMessage({
-  token,
-  title,
-  body,
-  url,
-  tag,
-  data,
-}) {
+async function isThreadMuted(uid, kind, threadId) {
+  const prefId = pushHelpers.inboxPrefId(kind, threadId);
+  if (!uid || !prefId) return false;
+  try {
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .collection("ce2_inbox")
+      .doc(prefId)
+      .get();
+    return !!(snap.exists && snap.data() && snap.data().muted);
+  } catch (error) {
+    logger.warn("CE2 mute lookup failed", { uid, prefId, error: error.message });
+    return false;
+  }
+}
+
+function buildPushMessage({ token, title, body, url, tag, data }) {
   const link = url.startsWith("http") ? url : `${PUSH_ORIGIN}${url}`;
-  const relUrl = url.startsWith("http") ? new URL(url).pathname + new URL(url).search : url;
+  const relUrl = url.startsWith("http")
+    ? new URL(url).pathname + new URL(url).search
+    : url;
+  const payload = pushHelpers.stringifyData({
+    title,
+    body,
+    url: relUrl,
+    ...(data || {}),
+  });
   return {
     token,
     notification: { title, body },
-    data: {
-      title,
-      body,
-      url: relUrl,
-      ...(data || {}),
-    },
+    data: payload,
     webpush: {
       notification: {
         icon: PUSH_ICON,
         badge: PUSH_BADGE,
         tag: tag || "sbd-notification",
         renotify: true,
+        data: payload,
       },
       fcm_options: { link },
     },
@@ -149,9 +170,34 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
   }
 
   try {
-    const recipientToken = await resolveRecipientToken(recipientId, body.recipientToken);
+    const muted = await isThreadMuted(recipientId, "direct", convId || directConvId(senderId, recipientId));
+    if (muted) {
+      return res.status(200).json({
+        success: true,
+        pushed: false,
+        reason: "muted",
+      });
+    }
 
-    if (!recipientToken) {
+    const recipient = await resolveRecipient(recipientId, body.recipientToken);
+    const canRead = pushHelpers.recipientCanReadClassification(
+      recipient.userData,
+      body.classification
+    );
+    const skip = pushHelpers.shouldSkipRecipient({
+      isSender: recipientId === senderId,
+      muted: false,
+      canRead,
+    });
+    if (skip.skip) {
+      return res.status(200).json({
+        success: true,
+        pushed: false,
+        reason: skip.reason,
+      });
+    }
+
+    if (!recipient.token) {
       return res.status(200).json({
         success: true,
         pushed: false,
@@ -159,29 +205,40 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
       });
     }
 
-    const pushTitle = body.title || senderName || "New message";
-    const pushBody = (body.body || message).slice(0, 100);
+    const copy = pushHelpers.buildPushCopy({
+      kind: "direct",
+      title: body.title || senderName || "New message",
+      senderName,
+      body: body.body || message,
+      meta: {
+        content: body.body || message,
+        messageType: body.messageType,
+        boardShare: body.boardShare,
+      },
+    });
     const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
+    const resolvedConvId = convId || directConvId(senderId, recipientId);
     const url =
       typeof body.url === "string" && body.url.trim()
         ? body.url.trim()
-        : `/communication-v2/?conv=${encodeURIComponent(body.convId || "")}${
-            messageId ? `&msg=${encodeURIComponent(messageId)}` : ""
-          }`;
+        : pushHelpers.buildThreadUrl({
+            convId: resolvedConvId,
+            messageId,
+          });
     await admin.messaging().send(
       buildPushMessage({
-        token: recipientToken,
-        title: pushTitle,
-        body: pushBody,
+        token: recipient.token,
+        title: copy.title,
+        body: copy.body,
         url,
-        tag: `dm-${convId || recipientId}`,
+        tag: `dm-${resolvedConvId || recipientId}`,
         data: {
           type: "dm",
           senderId,
           recipientId,
-          message: message.slice(0, 300),
-          convId,
+          convId: resolvedConvId,
           messageId,
+          senderName,
         },
       })
     );
@@ -241,15 +298,26 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
     }
 
     const membersSnap = await groupRef.collection("members").limit(80).get();
-    const pushTitle = groupName;
-    const pushBody = `${senderName || "Someone"}: ${message.slice(0, 100)}`;
+    const copy = pushHelpers.buildPushCopy({
+      kind: "group",
+      title: groupName,
+      senderName,
+      groupName,
+      body: body.body || message,
+      meta: {
+        content: body.body || message,
+        messageType: body.messageType,
+        boardShare: body.boardShare,
+      },
+    });
     const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
     const url =
       typeof body.url === "string" && body.url.trim()
         ? body.url.trim()
-        : `/communication-v2/?group=${encodeURIComponent(groupId)}${
-            messageId ? `&msg=${encodeURIComponent(messageId)}` : ""
-          }`;
+        : pushHelpers.buildThreadUrl({
+            groupId,
+            messageId,
+          });
 
     let pushed = 0;
     let skipped = 0;
@@ -263,8 +331,28 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
           return;
         }
 
-        const recipientToken = await resolveRecipientToken(recipientId, null);
-        if (!recipientToken) {
+        const muted = await isThreadMuted(recipientId, "group", groupId);
+        if (muted) {
+          skipped += 1;
+          return;
+        }
+
+        const recipient = await resolveRecipient(recipientId, null);
+        const canRead = pushHelpers.recipientCanReadClassification(
+          recipient.userData,
+          body.classification
+        );
+        const skip = pushHelpers.shouldSkipRecipient({
+          isSender: false,
+          muted: false,
+          canRead,
+        });
+        if (skip.skip) {
+          skipped += 1;
+          return;
+        }
+
+        if (!recipient.token) {
           skipped += 1;
           return;
         }
@@ -272,18 +360,19 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
         try {
           await admin.messaging().send(
             buildPushMessage({
-              token: recipientToken,
-              title: pushTitle,
-              body: pushBody,
+              token: recipient.token,
+              title: copy.title,
+              body: copy.body,
               url,
               tag: `group-${groupId}`,
               data: {
                 type: "group_message",
                 senderId,
                 groupId,
-                message: message.slice(0, 300),
                 convId: groupId,
                 messageId,
+                senderName,
+                groupName,
               },
             })
           );
