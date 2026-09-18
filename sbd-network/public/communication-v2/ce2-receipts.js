@@ -67,12 +67,13 @@
 
   /**
    * Per-bubble send state for the author.
-   * @returns {'pending'|'sent'|'delivered'|'read'|'failed'|''}
+   * @returns {'pending'|'queued'|'sent'|'delivered'|'read'|'failed'|''}
    */
   function deliveryStatus(message, selfUid, otherLastReadTs, extras) {
     extras = extras || {};
     if (!message || message.senderId !== selfUid) return '';
     if (message._failed || message.uploadState === 'failed') return 'failed';
+    if (message._queued || message.uploadState === 'queued') return 'queued';
     if (
       message._pending ||
       message.uploadState === 'uploading' ||
@@ -93,6 +94,7 @@
 
   function statusLabel(status) {
     if (status === 'pending') return 'Sending…';
+    if (status === 'queued') return 'Queued';
     if (status === 'sent') return 'Sent';
     if (status === 'delivered') return 'Delivered';
     if (status === 'read') return 'Read';
@@ -109,6 +111,6 @@
     deliveryStatus: deliveryStatus,
     statusLabel: statusLabel,
     tsSeconds: tsSeconds,
-    VERSION: 4,
+    VERSION: 5,
   };
 })(typeof window !== 'undefined' ? window : global);

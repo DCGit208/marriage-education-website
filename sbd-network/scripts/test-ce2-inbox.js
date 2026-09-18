@@ -79,8 +79,8 @@ test('VERSION is 1 and preview/sort APIs are exported', function () {
   assert.strictEqual(typeof inbox.mergeUnreadFromMeta, 'function');
 });
 
-test('receipts VERSION is 4', function () {
-  assert.strictEqual(receipts.VERSION, 4);
+test('receipts VERSION is 5', function () {
+  assert.strictEqual(receipts.VERSION, 5);
 });
 
 test('own lastSenderId never counts as unread', function () {
