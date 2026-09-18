@@ -2797,7 +2797,7 @@ body.ce2-inbox-menu-open {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  min-height: 72px;
+  min-height: 112px;
   margin: 0;
   padding: 0;
   border: none;
@@ -2819,20 +2819,19 @@ body.ce2-inbox-menu-open {
 .ce2-link-preview-thumb-ph {
   position: absolute;
   inset: 0;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   background: linear-gradient(165deg, rgba(201, 184, 146, 0.2), rgba(8, 8, 10, 0.58));
   pointer-events: none;
 }
 
-.ce2-link-preview-thumb-ph::before {
-  content: 'Link';
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(201, 184, 146, 0.78);
+.ce2-link-preview-thumb.is-fallback .ce2-link-preview-thumb-ph {
+  display: flex;
+}
+
+.ce2-link-preview-thumb.is-fallback .ce2-link-preview-thumb-ph::before {
+  content: none;
 }
 
 .ce2-link-preview-thumb-img {
