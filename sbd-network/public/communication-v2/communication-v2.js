@@ -52,6 +52,12 @@
   var ce2UiWired = false;
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
+  /** Bounded reply/search jump: older context + after-window, then the live tail. */
+  var JUMP_BEFORE = 36;
+  var JUMP_AFTER = 16;
+  /** 0 = do not page the gap between jump window and live tail (avoids 1000-node paints). */
+  var JUMP_FORWARD_MAX_PAGES = 0;
+  var JUMP_PAINT_CAP = MESSAGE_PAGE + JUMP_BEFORE + JUMP_AFTER;
   /** In-thread typing cue (header + above composer). Pulses typing.{uid} on the conv/group doc. */
   var CE2_TYPING_INDICATOR_ENABLED = true;
   var MAX_COMPOSER_ATTACHMENTS = 6;
@@ -1555,12 +1561,12 @@
     var beforeSnap = await col
       .orderBy('createdAt', 'asc')
       .endAt(ts)
-      .limitToLast(36)
+      .limitToLast(JUMP_BEFORE)
       .get();
     var afterSnap = await col
       .orderBy('createdAt', 'asc')
       .startAfter(ts)
-      .limit(16)
+      .limit(JUMP_AFTER)
       .get();
     var msgs = beforeSnap.docs
       .concat(afterSnap.docs)
@@ -1588,7 +1594,7 @@
     msgs = await fillForwardToLive(col, afterSnap, msgs, live);
     CommunicationState.searchJumpMessages = connectRenderedJumpList(msgs, live);
     CommunicationState.searchJumpOldestDoc = beforeSnap.docs[0] || null;
-    CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= 36;
+    CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= JUMP_BEFORE;
     return true;
   }
 
@@ -1610,11 +1616,11 @@
       afterSnap && afterSnap.docs && afterSnap.docs.length
         ? afterSnap.docs[afterSnap.docs.length - 1]
         : null;
-    if (!cursorDoc) {
+    if (!cursorDoc || JUMP_FORWARD_MAX_PAGES <= 0) {
       return connectRenderedJumpList(msgs, live);
     }
     var pages = 0;
-    while (pages < 20 && !overlapsLive()) {
+    while (pages < JUMP_FORWARD_MAX_PAGES && !overlapsLive()) {
       pages += 1;
       var snap = await col
         .orderBy('createdAt', 'asc')
@@ -1628,6 +1634,9 @@
       });
       cursorDoc = snap.docs[snap.docs.length - 1];
       if (snap.docs.length < MESSAGE_PAGE) break;
+      if ((msgs || []).length + extra.length + (live || []).length >= JUMP_PAINT_CAP) {
+        break;
+      }
     }
     return connectRenderedJumpList((msgs || []).concat(extra), live);
   }
@@ -1642,27 +1651,24 @@
         return m.id === hit.id;
       });
     }
-    if (inList(CommunicationState.messages)) {
-      CommunicationState.searchJumpMessages = null;
-      CommunicationState.searchJumpOldestDoc = null;
-      CommunicationState.searchJumpHasMore = false;
+    var scroll = el('ce2MessageScroll');
+    var alreadyPainted = false;
+    if (scroll) {
+      try {
+        alreadyPainted = !!scroll.querySelector('[data-message-id="' + hit.id + '"]');
+      } catch (_) {
+        alreadyPainted = false;
+      }
+    }
+    if (alreadyPainted || inList(CommunicationState.searchJumpMessages)) {
       requestRender({ threadOnly: true });
       scheduleScrollToHighlightedMessage();
       return;
     }
-    var pages = 0;
-    while (CommunicationState.hasMoreMessages && pages < 8) {
-      await loadOlderMessages({ quiet: true, skipRender: true });
-      pages += 1;
-      if (inList(CommunicationState.messages)) {
-        CommunicationState.searchJumpMessages = connectRenderedJumpList(
-          CommunicationState.messages,
-          CommunicationState.lastServerMessages
-        );
-        requestRender({ threadOnly: true });
-        scheduleScrollToHighlightedMessage();
-        return;
-      }
+    if (inList(CommunicationState.messages)) {
+      requestRender({ threadOnly: true });
+      scheduleScrollToHighlightedMessage();
+      return;
     }
     var loaded = await loadSearchJumpWindow(hit);
     requestRender({ threadOnly: true });
@@ -3582,16 +3588,124 @@
     return row;
   }
 
+  function renderedIdsAreAppend(prev, next) {
+    if (!prev || !next || next.length <= prev.length) return false;
+    for (var i = 0; i < prev.length; i++) {
+      if (prev[i] !== next[i]) return false;
+    }
+    return true;
+  }
+
+  function renderedIdsArePrepend(prev, next) {
+    if (!prev || !next || next.length <= prev.length) return false;
+    var offset = next.length - prev.length;
+    for (var i = 0; i < prev.length; i++) {
+      if (prev[i] !== next[offset + i]) return false;
+    }
+    return true;
+  }
+
+  function syncRowSearchAndHighlight(rowEl, msg) {
+    if (!rowEl || !msg) return;
+    var searchQ = CommunicationState.threadSearchQuery || '';
+    var ma = msgActions();
+    var searchHit = !!(searchQ && ma && ma.messageMatchesSearch(msg, searchQ));
+    rowEl.classList.toggle('is-search-hit', searchHit);
+    var isHighlight = !!(
+      CommunicationState.highlightMessageId && msg.id === CommunicationState.highlightMessageId
+    );
+    rowEl.classList.toggle('is-highlighted', isHighlight);
+  }
+
+  function insertBeforeFirstMessageRow(scroll, node) {
+    if (!scroll || !node) return;
+    var firstRow = scroll.querySelector('.ce2-row');
+    if (firstRow) scroll.insertBefore(node, firstRow);
+    else scroll.appendChild(node);
+  }
+
+  function syncMessageHistoryChrome(scroll) {
+    if (!scroll) return;
+    var jumping = !!(
+      CommunicationState.searchJumpMessages &&
+      CommunicationState.searchJumpMessages.length
+    );
+    var hasMore = jumping
+      ? CommunicationState.searchJumpHasMore
+      : CommunicationState.hasMoreMessages;
+    var firstRow = scroll.querySelector('.ce2-row');
+
+    var backBtn = el('ce2SearchJumpBack');
+    if (jumping) {
+      if (!backBtn) {
+        backBtn = document.createElement('button');
+        backBtn.type = 'button';
+        backBtn.className = 'ce2-btn ce2-btn-ghost ce2-search-jump-back';
+        backBtn.id = 'ce2SearchJumpBack';
+        backBtn.textContent = 'Back to latest messages';
+        var olderExisting = el('ce2LoadOlder');
+        if (olderExisting && olderExisting.parentNode === scroll) {
+          scroll.insertBefore(backBtn, olderExisting);
+        } else if (firstRow) {
+          scroll.insertBefore(backBtn, firstRow);
+        } else if (scroll.firstChild) {
+          scroll.insertBefore(backBtn, scroll.firstChild);
+        } else {
+          scroll.appendChild(backBtn);
+        }
+      }
+    } else if (backBtn) {
+      backBtn.remove();
+    }
+
+    var olderBtn = el('ce2LoadOlder');
+    if (hasMore) {
+      if (!olderBtn) {
+        olderBtn = document.createElement('button');
+        olderBtn.type = 'button';
+        olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
+        olderBtn.id = 'ce2LoadOlder';
+        var backNow = el('ce2SearchJumpBack');
+        firstRow = scroll.querySelector('.ce2-row');
+        if (backNow && backNow.parentNode === scroll) {
+          if (backNow.nextSibling) scroll.insertBefore(olderBtn, backNow.nextSibling);
+          else scroll.appendChild(olderBtn);
+        } else if (firstRow) {
+          scroll.insertBefore(olderBtn, firstRow);
+        } else {
+          scroll.appendChild(olderBtn);
+        }
+      }
+      olderBtn.textContent = CommunicationState.loadingOlder
+        ? 'Loading…'
+        : 'Load older messages';
+      olderBtn.disabled = !!CommunicationState.loadingOlder;
+    } else if (olderBtn) {
+      olderBtn.remove();
+    }
+  }
+
+  function afterIncrementalMessagePaint(scroll, opts) {
+    opts = opts || {};
+    updateTypingLineOnly();
+    if (opts.stickBottom) {
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+    if (opts.syncAudio && root.Ce2AudioPlayback) {
+      root.Ce2AudioPlayback.syncAll();
+    }
+    if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
+      root.Ce2MediaView.afterMessagePanelRender(scroll);
+    }
+    syncMessageHistoryChrome(scroll);
+    syncJumpLatestControl();
+    if (CommunicationState.highlightMessageId) {
+      window.requestAnimationFrame(scrollToHighlightedMessage);
+    }
+  }
+
   function tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom) {
-    if (
-      !scroll ||
-      !ac ||
-      CommunicationState.loadingOlder ||
-      CommunicationState.threadSearchQuery ||
-      CommunicationState.highlightMessageId ||
-      (CommunicationState.searchJumpMessages &&
-        CommunicationState.searchJumpMessages.length)
-    ) {
+    if (!scroll || !ac) {
       return false;
     }
     var prev = CommunicationState._renderedMsgIds;
@@ -3622,40 +3736,33 @@
         if (oldRow) oldRow.remove();
         scroll.appendChild(buildMessageRow(visibleMsgs[visibleMsgs.length - 1], ac));
         CommunicationState._renderedMsgIds = nextIds;
-        if (stickBottom) {
-          scroll.scrollTop = scroll.scrollHeight;
-        }
-        updateTypingLineOnly();
-        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-          root.Ce2MediaView.afterMessagePanelRender(scroll);
-        }
+        afterIncrementalMessagePaint(scroll, { stickBottom: stickBottom });
         return true;
       }
     }
 
-    if (nextIds.length > prev.length) {
-      var samePrefix = true;
-      for (var i = 0; i < prev.length; i++) {
-        if (prev[i] !== nextIds[i]) {
-          samePrefix = false;
-          break;
-        }
+    if (renderedIdsAreAppend(prev, nextIds)) {
+      for (var j = prev.length; j < visibleMsgs.length; j++) {
+        scroll.appendChild(buildMessageRow(visibleMsgs[j], ac));
       }
-      if (samePrefix) {
-        for (var j = prev.length; j < visibleMsgs.length; j++) {
-          scroll.appendChild(buildMessageRow(visibleMsgs[j], ac));
-        }
-        CommunicationState._renderedMsgIds = nextIds;
-        if (stickBottom) {
-          scroll.scrollTop = scroll.scrollHeight;
-        }
-        updateTypingLineOnly();
-        if (root.Ce2AudioPlayback) root.Ce2AudioPlayback.syncAll();
-        if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-          root.Ce2MediaView.afterMessagePanelRender(scroll);
-        }
-        return true;
+      CommunicationState._renderedMsgIds = nextIds;
+      afterIncrementalMessagePaint(scroll, { stickBottom: stickBottom, syncAudio: true });
+      return true;
+    }
+
+    if (renderedIdsArePrepend(prev, nextIds)) {
+      var prevHeight = scroll.scrollHeight;
+      var prevTop = scroll.scrollTop;
+      var offset = nextIds.length - prev.length;
+      var frag = document.createDocumentFragment();
+      for (var pre = 0; pre < offset; pre++) {
+        frag.appendChild(buildMessageRow(visibleMsgs[pre], ac));
       }
+      insertBeforeFirstMessageRow(scroll, frag);
+      CommunicationState._renderedMsgIds = nextIds;
+      scroll.scrollTop = prevTop + (scroll.scrollHeight - prevHeight);
+      afterIncrementalMessagePaint(scroll, { stickBottom: false, syncAudio: true });
+      return true;
     }
 
     if (nextIds.length === prev.length) {
@@ -3677,8 +3784,9 @@
             continue;
           }
           if (ma && ma.syncReactionsRow) ma.syncReactionsRow(rowEl, msg, ac);
+          syncRowSearchAndHighlight(rowEl, msg);
         }
-        updateTypingLineOnly();
+        afterIncrementalMessagePaint(scroll, { stickBottom: false });
         return true;
       }
     }
@@ -3723,42 +3831,13 @@
     var visibleMsgs = getVisibleMessages(ac);
     var prevScrollTop = scroll.scrollTop;
     if (tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom)) {
-      if (root.Ce2MediaView && root.Ce2MediaView.afterMessagePanelRender) {
-        root.Ce2MediaView.afterMessagePanelRender(scroll);
-      }
-      syncJumpLatestControl();
       return;
     }
 
     invalidateMessageRenderCache();
     closeMessageMenu();
     scroll.innerHTML = '';
-    var jumping = !!(
-      CommunicationState.searchJumpMessages &&
-      CommunicationState.searchJumpMessages.length
-    );
-    var hasMore = jumping
-      ? CommunicationState.searchJumpHasMore
-      : CommunicationState.hasMoreMessages;
-    if (jumping) {
-      var backBtn = document.createElement('button');
-      backBtn.type = 'button';
-      backBtn.className = 'ce2-btn ce2-btn-ghost ce2-search-jump-back';
-      backBtn.id = 'ce2SearchJumpBack';
-      backBtn.textContent = 'Back to latest messages';
-      scroll.appendChild(backBtn);
-    }
-    if (hasMore) {
-      var olderBtn = document.createElement('button');
-      olderBtn.type = 'button';
-      olderBtn.className = 'ce2-btn ce2-btn-ghost ce2-load-older';
-      olderBtn.id = 'ce2LoadOlder';
-      olderBtn.textContent = CommunicationState.loadingOlder
-        ? 'Loading…'
-        : 'Load older messages';
-      olderBtn.disabled = CommunicationState.loadingOlder;
-      scroll.appendChild(olderBtn);
-    }
+    syncMessageHistoryChrome(scroll);
     var ma = msgActions();
     if (ma) ma.renderPinnedBanner(scroll, ac);
     visibleMsgs.forEach(function (m) {
@@ -4347,7 +4426,7 @@
       : CommunicationState.oldestMessageDoc;
     if (!oldest) return;
     CommunicationState.loadingOlder = true;
-    if (!opts.quiet) render();
+    if (!opts.quiet) syncMessageHistoryChrome(el('ce2MessageScroll'));
     try {
       var col = messagesCollection(ac);
       if (!col) return;
@@ -4384,7 +4463,8 @@
       handleCe2Error(err);
     } finally {
       CommunicationState.loadingOlder = false;
-      if (!opts.skipRender) requestRender();
+      if (!opts.skipRender) requestRender({ threadOnly: true });
+      else syncMessageHistoryChrome(el('ce2MessageScroll'));
     }
   }
 
