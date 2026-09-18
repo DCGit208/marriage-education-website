@@ -65,6 +65,7 @@ function evalFns(names) {
 console.log('\nCE2 history paint\n');
 
 const ids = evalFns(['renderedIdsAreAppend', 'renderedIdsArePrepend']);
+const jumpHelpers = evalFns(['jumpListsOverlap', 'appendUniqueById']);
 
 test('prepend / append id helpers distinguish load-older from live append', function () {
   const live = ['m40', 'm41', 'm42'];
@@ -142,6 +143,86 @@ test('reply jump does not page an unbounded combined list', function () {
   assert.ok(ensureHit.indexOf('pages < 8') === -1);
   assert.ok(ensureHit.indexOf('loadOlderMessages') === -1);
   assert.ok(ensureHit.indexOf('loadSearchJumpWindow(hit)') !== -1);
+});
+
+test('sorted union of a non-overlapping jump window and live tail omits the gap', function () {
+  const jump = [];
+  for (var i = 0; i < 36 + 16; i++) jump.push({ id: 'j' + i, t: i });
+  const live = [];
+  for (var k = 950; k < 1000; k++) live.push({ id: 'm' + k, t: k });
+  const gapIds = ['g100', 'g400', 'g800'];
+  const byId = {};
+  const idsUnion = [];
+  function add(list) {
+    list.forEach(function (m) {
+      if (!m || !m.id) return;
+      if (!byId[m.id]) idsUnion.push(m.id);
+      byId[m.id] = m;
+    });
+  }
+  add(jump);
+  add(live);
+  idsUnion.sort(function (a, b) {
+    return byId[a].t - byId[b].t;
+  });
+  const have = {};
+  idsUnion.forEach(function (id) {
+    have[id] = true;
+  });
+  const omitsGap = gapIds.some(function (id) {
+    return !have[id];
+  });
+  assert.ok(omitsGap, 'fixture: sorting jump+live drops ids that sit between them');
+  assert.strictEqual(idsUnion.length, jump.length + live.length);
+  assert.strictEqual(have['j0'], true);
+  assert.strictEqual(have['m950'], true);
+  assert.strictEqual(have['g100'], undefined);
+  assert.strictEqual(jumpHelpers.jumpListsOverlap(jump, live), false);
+  const appended = jumpHelpers.appendUniqueById(jump, [{ id: 'g100', t: 100 }]);
+  assert.strictEqual(appended[appended.length - 1].id, 'g100');
+  assert.strictEqual(appended.length, jump.length + 1);
+});
+
+test('non-overlapping jump is not rendered as that omitted-gap list; page forward instead', function () {
+  const loadNewer = sliceFn(v2, 'loadNewerMessages');
+  const visible = sliceFn(v2, 'getVisibleMessages');
+  const loadWin = sliceFn(v2, 'loadSearchJumpWindow');
+  const bind = sliceFn(v2, 'bindJumpLatestControl');
+  const maybeNewer = sliceFn(v2, 'maybeLoadNewerOnScroll');
+
+  const capIdx = fillForward.indexOf('JUMP_FORWARD_MAX_PAGES <= 0');
+  assert.ok(capIdx !== -1);
+  const noOverlapReturn = fillForward.slice(capIdx, capIdx + 180);
+  assert.ok(
+    noOverlapReturn.indexOf('connectRenderedJumpList') === -1,
+    'fillForwardToLive must not union jump+live when JUMP_FORWARD_MAX_PAGES is 0'
+  );
+  assert.ok(
+    /return msgs/.test(noOverlapReturn),
+    'no-overlap path must return the bounded window only'
+  );
+
+  assert.ok(
+    visible.indexOf('searchJumpHasNewer') !== -1,
+    'getVisibleMessages must keep live off the pane while a gap remains'
+  );
+  assert.ok(loadWin.indexOf('searchJumpHasNewer') !== -1);
+  assert.ok(loadWin.indexOf('searchJumpNewestDoc') !== -1);
+
+  assert.ok(
+    v2.indexOf('function loadNewerMessages') !== -1,
+    'omitting the gap is the pre-PR #22 bug unless there is a page-forward path'
+  );
+  assert.ok(loadNewer.indexOf('startAfter') !== -1);
+  assert.ok(loadNewer.indexOf('.limit(MESSAGE_PAGE)') !== -1);
+  assert.ok(loadNewer.indexOf('innerHTML') === -1);
+  assert.ok(!/\brender\(\)/.test(loadNewer));
+  assert.ok(loadNewer.indexOf('appendUniqueById') !== -1);
+  assert.ok(loadNewer.indexOf('while') === -1, 'one page per scroll, not a preload loop');
+  assert.ok(loadNewer.indexOf('_preserveScrollOnPaint') !== -1);
+  assert.ok(maybeNewer.indexOf('JUMP_NEWER_SCROLL_PX') !== -1);
+  assert.ok(maybeNewer.indexOf('loadNewerMessages') !== -1);
+  assert.ok(bind.indexOf('maybeLoadNewerOnScroll') !== -1);
 });
 
 test('live window stays MESSAGE_PAGE 50; jump uses bounded before/after', function () {

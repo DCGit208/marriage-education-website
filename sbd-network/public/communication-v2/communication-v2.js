@@ -52,12 +52,14 @@
   var ce2UiWired = false;
   var renderRaf = 0;
   var MESSAGE_PAGE = 50;
-  /** Bounded reply/search jump: older context + after-window, then the live tail. */
+  /** Bounded reply/search jump: older context + after-window. Gap pages in on scroll. */
   var JUMP_BEFORE = 36;
   var JUMP_AFTER = 16;
-  /** 0 = do not page the gap between jump window and live tail (avoids 1000-node paints). */
+  /** 0 = do not preload the gap; page forward ~50 at a time on scroll instead. */
   var JUMP_FORWARD_MAX_PAGES = 0;
   var JUMP_PAINT_CAP = MESSAGE_PAGE + JUMP_BEFORE + JUMP_AFTER;
+  /** Near-end slack that starts the next newer page after a jump (px). */
+  var JUMP_NEWER_SCROLL_PX = 140;
   /** In-thread typing cue (header + above composer). Pulses typing.{uid} on the conv/group doc. */
   var CE2_TYPING_INDICATOR_ENABLED = true;
   var MAX_COMPOSER_ATTACHMENTS = 6;
@@ -113,7 +115,10 @@
     highlightMessageId: null,
     searchJumpMessages: null,
     searchJumpOldestDoc: null,
+    searchJumpNewestDoc: null,
     searchJumpHasMore: false,
+    searchJumpHasNewer: false,
+    loadingNewer: false,
     offline: false,
     discoveryLoaded: false,
     shareDraft: null,
@@ -1497,10 +1502,52 @@
     return (jumpMsgs || []).concat(liveMsgs || []);
   }
 
-  function clearSearchJump() {
+  function jumpListsOverlap(a, b) {
+    var have = {};
+    (a || []).forEach(function (m) {
+      if (m && m.id) have[m.id] = true;
+    });
+    return (b || []).some(function (m) {
+      return m && m.id && have[m.id];
+    });
+  }
+
+  function appendUniqueById(base, extra) {
+    var have = {};
+    var out = [];
+    function add(m) {
+      if (!m || !m.id || have[m.id]) return;
+      have[m.id] = true;
+      out.push(m);
+    }
+    (base || []).forEach(add);
+    (extra || []).forEach(add);
+    return out;
+  }
+
+  function liveMessagesForJump() {
+    return CommunicationState.lastServerMessages && CommunicationState.lastServerMessages.length
+      ? CommunicationState.lastServerMessages
+      : CommunicationState.messages || [];
+  }
+
+  function resetSearchJumpState() {
     CommunicationState.searchJumpMessages = null;
     CommunicationState.searchJumpOldestDoc = null;
+    CommunicationState.searchJumpNewestDoc = null;
     CommunicationState.searchJumpHasMore = false;
+    CommunicationState.searchJumpHasNewer = false;
+    CommunicationState.loadingNewer = false;
+  }
+
+  function consumePreserveJumpScroll() {
+    if (!CommunicationState._preserveScrollOnPaint) return false;
+    CommunicationState._preserveScrollOnPaint = false;
+    return true;
+  }
+
+  function clearSearchJump() {
+    resetSearchJumpState();
     if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.syncLatestButton) {
       root.Ce2ThreadSearch.syncLatestButton();
     }
@@ -1587,14 +1634,21 @@
       } catch (_) {}
     }
     if (!msgs.length) return false;
-    var live =
-      CommunicationState.lastServerMessages && CommunicationState.lastServerMessages.length
-        ? CommunicationState.lastServerMessages
-        : CommunicationState.messages || [];
+    var live = liveMessagesForJump();
     msgs = await fillForwardToLive(col, afterSnap, msgs, live);
-    CommunicationState.searchJumpMessages = connectRenderedJumpList(msgs, live);
+    var overlaps = jumpListsOverlap(msgs, live);
+    CommunicationState.searchJumpMessages = connectRenderedJumpList(
+      msgs,
+      overlaps ? live : []
+    );
     CommunicationState.searchJumpOldestDoc = beforeSnap.docs[0] || null;
     CommunicationState.searchJumpHasMore = beforeSnap.docs.length >= JUMP_BEFORE;
+    var newestDoc =
+      afterSnap.docs.length
+        ? afterSnap.docs[afterSnap.docs.length - 1]
+        : beforeSnap.docs[beforeSnap.docs.length - 1] || null;
+    CommunicationState.searchJumpNewestDoc = overlaps ? null : newestDoc;
+    CommunicationState.searchJumpHasNewer = !overlaps && !!newestDoc;
     return true;
   }
 
@@ -1617,7 +1671,7 @@
         ? afterSnap.docs[afterSnap.docs.length - 1]
         : null;
     if (!cursorDoc || JUMP_FORWARD_MAX_PAGES <= 0) {
-      return connectRenderedJumpList(msgs, live);
+      return msgs || [];
     }
     var pages = 0;
     while (pages < JUMP_FORWARD_MAX_PAGES && !overlapsLive()) {
@@ -1638,7 +1692,11 @@
         break;
       }
     }
-    return connectRenderedJumpList((msgs || []).concat(extra), live);
+    var combined = (msgs || []).concat(extra);
+    if (overlapsLive()) {
+      return connectRenderedJumpList(combined, live);
+    }
+    return combined;
   }
 
   async function ensureSearchHitVisible(hit) {
@@ -3002,9 +3060,7 @@
         CommunicationState.threadSearchSenderId = '';
         CommunicationState.threadSearchStartMs = 0;
         CommunicationState.threadSearchEndMs = 0;
-        CommunicationState.searchJumpMessages = null;
-        CommunicationState.searchJumpOldestDoc = null;
-        CommunicationState.searchJumpHasMore = false;
+        resetSearchJumpState();
         if (root.Ce2ThreadSearch && root.Ce2ThreadSearch.resetUi) {
           root.Ce2ThreadSearch.resetUi();
         }
@@ -3198,6 +3254,9 @@
     if (isMessageAlreadyRendered(msg.id)) return true;
 
     mergeMessageIntoState(msg);
+    if (CommunicationState.searchJumpHasNewer) {
+      return true;
+    }
 
     var stickBottom =
       scrollToEnd !== false &&
@@ -3376,7 +3435,8 @@
       CommunicationState.searchJumpMessages &&
       CommunicationState.searchJumpMessages.length
     ) {
-      list = connectRenderedJumpList(CommunicationState.searchJumpMessages, list);
+      var liveForJump = CommunicationState.searchJumpHasNewer ? [] : list;
+      list = connectRenderedJumpList(CommunicationState.searchJumpMessages, liveForJump);
     }
     return list.filter(function (m) {
       if (
@@ -3687,8 +3747,9 @@
 
   function afterIncrementalMessagePaint(scroll, opts) {
     opts = opts || {};
+    var preserve = consumePreserveJumpScroll();
     updateTypingLineOnly();
-    if (opts.stickBottom) {
+    if (opts.stickBottom && !preserve) {
       scroll.scrollTop = scroll.scrollHeight;
     }
     if (opts.syncAudio && root.Ce2AudioPlayback) {
@@ -3699,9 +3760,10 @@
     }
     syncMessageHistoryChrome(scroll);
     syncJumpLatestControl();
-    if (CommunicationState.highlightMessageId) {
+    if (CommunicationState.highlightMessageId && !preserve) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
     }
+    maybeLoadNewerOnScroll();
   }
 
   function tryIncrementalMessageRender(scroll, ac, visibleMsgs, stickBottom) {
@@ -3799,7 +3861,9 @@
     const scroll = el('ce2MessageScroll');
     if (!scroll) return;
 
+    var preserve = !!CommunicationState._preserveScrollOnPaint;
     var stickBottom =
+      !preserve &&
       scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 56;
 
     if (!ac) {
@@ -3834,6 +3898,7 @@
       return;
     }
 
+    var skipHighlight = consumePreserveJumpScroll();
     invalidateMessageRenderCache();
     closeMessageMenu();
     scroll.innerHTML = '';
@@ -3849,10 +3914,10 @@
     updateTypingLineOnly();
     if (stickBottom && !CommunicationState.highlightMessageId) {
       scroll.scrollTop = scroll.scrollHeight;
-    } else if (!CommunicationState.highlightMessageId) {
+    } else if (!CommunicationState.highlightMessageId || skipHighlight) {
       scroll.scrollTop = prevScrollTop;
     }
-    if (CommunicationState.highlightMessageId) {
+    if (CommunicationState.highlightMessageId && !skipHighlight) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
     }
     if (root.Ce2AudioPlayback) {
@@ -3862,6 +3927,7 @@
       root.Ce2MediaView.afterMessagePanelRender(scroll);
     }
     syncJumpLatestControl();
+    maybeLoadNewerOnScroll();
   }
 
   function render(opts) {
@@ -4344,9 +4410,7 @@
     CommunicationState.oldestMessageDoc = null;
     CommunicationState._renderedMsgIds = null;
     CommunicationState._metaLastMessageId = null;
-    CommunicationState.searchJumpMessages = null;
-    CommunicationState.searchJumpOldestDoc = null;
-    CommunicationState.searchJumpHasMore = false;
+    resetSearchJumpState();
     clearReply();
   }
 
@@ -4415,7 +4479,7 @@
       CommunicationState.searchJumpMessages &&
       CommunicationState.searchJumpMessages.length
     );
-    if (!ac || !me || CommunicationState.loadingOlder) {
+    if (!ac || !me || CommunicationState.loadingOlder || CommunicationState.loadingNewer) {
       return;
     }
     if (!jumping && !CommunicationState.messages.length) {
@@ -4465,6 +4529,75 @@
       CommunicationState.loadingOlder = false;
       if (!opts.skipRender) requestRender({ threadOnly: true });
       else syncMessageHistoryChrome(el('ce2MessageScroll'));
+    }
+  }
+
+  async function loadNewerMessages() {
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    if (!ac || !me) return;
+    if (!CommunicationState.searchJumpHasNewer) return;
+    if (CommunicationState.loadingNewer || CommunicationState.loadingOlder) return;
+    var cursor = CommunicationState.searchJumpNewestDoc;
+    if (!cursor) {
+      CommunicationState.searchJumpHasNewer = false;
+      return;
+    }
+    var token = CommunicationState._openToken;
+    CommunicationState.loadingNewer = true;
+    try {
+      var col = messagesCollection(ac);
+      if (!col) return;
+      var snap = await col
+        .orderBy('createdAt', 'asc')
+        .startAfter(cursor)
+        .limit(MESSAGE_PAGE)
+        .get();
+      if (token !== CommunicationState._openToken) return;
+      var live = liveMessagesForJump();
+      if (!snap.docs.length) {
+        CommunicationState.searchJumpMessages = connectRenderedJumpList(
+          CommunicationState.searchJumpMessages,
+          live
+        );
+        CommunicationState.searchJumpHasNewer = false;
+        CommunicationState.searchJumpNewestDoc = null;
+        return;
+      }
+      var newer = snap.docs.map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+      var combined = appendUniqueById(CommunicationState.searchJumpMessages, newer);
+      var reachedEnd = snap.docs.length < MESSAGE_PAGE;
+      var overlaps = jumpListsOverlap(combined, live);
+      CommunicationState.searchJumpNewestDoc = snap.docs[snap.docs.length - 1];
+      if (overlaps || reachedEnd) {
+        CommunicationState.searchJumpMessages = connectRenderedJumpList(combined, live);
+        CommunicationState.searchJumpHasNewer = false;
+        CommunicationState.searchJumpNewestDoc = null;
+      } else {
+        CommunicationState.searchJumpMessages = combined;
+        CommunicationState.searchJumpHasNewer = true;
+      }
+    } catch (err) {
+      handleCe2Error(err);
+    } finally {
+      CommunicationState.loadingNewer = false;
+      if (token === CommunicationState._openToken) {
+        CommunicationState._preserveScrollOnPaint = true;
+        requestRender({ threadOnly: true });
+      }
+    }
+  }
+
+  function maybeLoadNewerOnScroll() {
+    if (!CommunicationState.searchJumpHasNewer) return;
+    if (CommunicationState.loadingNewer || CommunicationState.loadingOlder) return;
+    var scroll = el('ce2MessageScroll');
+    if (!scroll) return;
+    var room = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+    if (room < JUMP_NEWER_SCROLL_PX) {
+      loadNewerMessages().catch(handleCe2Error);
     }
   }
 
@@ -6226,6 +6359,7 @@
         'scroll',
         function () {
           syncJumpLatestControl();
+          maybeLoadNewerOnScroll();
         },
         { passive: true }
       );
