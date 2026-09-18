@@ -3438,6 +3438,11 @@ body.ce2-inbox-menu-open {
   cursor: pointer;
 }
 
+.ce2-row.is-highlighted {
+  scroll-margin-top: 12px;
+  scroll-margin-bottom: 96px;
+}
+
 .ce2-row.is-highlighted .ce2-bubble {
   outline: 2px solid rgba(200, 170, 120, 0.85);
   outline-offset: 2px;
