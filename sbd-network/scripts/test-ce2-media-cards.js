@@ -412,9 +412,15 @@ const interactiveSrc = fs.readFileSync(
 
 test('thumb reply + media tap stay excluded from interactive-target skip', function () {
   assert.ok(
-    interactiveSrc.indexOf("node.closest('.ce2-media-tap, .ce2-board-share-thumb')") !== -1
+    interactiveSrc.indexOf(
+      "node.closest('.ce2-media-tap, .ce2-board-share-thumb, .ce2-link-preview-thumb')"
+    ) !== -1
   );
-  assert.ok(interactiveSrc.indexOf("e.target.closest('.ce2-board-share-thumb')") !== -1);
+  assert.ok(
+    interactiveSrc.indexOf(
+      "e.target.closest('.ce2-board-share-thumb, .ce2-link-preview-thumb')"
+    ) !== -1
+  );
   assert.ok(interactiveSrc.indexOf('setReply(shareMsg)') !== -1);
 });
 

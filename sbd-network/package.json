@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "node build.js",
-    "validate": "node scripts/validate-public-js.js && node scripts/verify-guest-ux.js && node scripts/test-ce2-board-return.js && node scripts/test-bottom-nav-viewport.js && node scripts/test-ce2-presence.js && node scripts/test-ce2-messenger-fixes.js && node scripts/test-ce2-elite-delivery.js && node scripts/test-ce2-message-actions.js && node scripts/test-ce2-media-cards.js && node scripts/test-ce2-typing.js && node scripts/test-ce2-inbox.js && node scripts/test-ce2-thread-search.js && node scripts/test-ce2-push.js && node scripts/test-ce2-offline-queue.js && node scripts/test-ce2-reply-jump.js",
+    "validate": "node scripts/validate-public-js.js && node scripts/verify-guest-ux.js && node scripts/test-ce2-board-return.js && node scripts/test-bottom-nav-viewport.js && node scripts/test-ce2-presence.js && node scripts/test-ce2-messenger-fixes.js && node scripts/test-ce2-elite-delivery.js && node scripts/test-ce2-message-actions.js && node scripts/test-ce2-media-cards.js && node scripts/test-ce2-typing.js && node scripts/test-ce2-inbox.js && node scripts/test-ce2-thread-search.js && node scripts/test-ce2-push.js && node scripts/test-ce2-offline-queue.js && node scripts/test-ce2-reply-jump.js && node scripts/test-ce2-link-previews.js",
     "test:bottom-nav": "node scripts/test-bottom-nav-viewport.js",
     "test:ce2-messenger": "node scripts/test-ce2-messenger-fixes.js",
     "test:ce2-elite-delivery": "node scripts/test-ce2-elite-delivery.js",
@@ -19,6 +19,7 @@
     "test:ce2-reply-jump": "node scripts/test-ce2-reply-jump.js",
     "test:ce2-board-return": "node scripts/test-ce2-board-return.js",
     "test:ce2-media-cards": "node scripts/test-ce2-media-cards.js",
+    "test:ce2-link-previews": "node scripts/test-ce2-link-previews.js",
     "test:guest-ux": "node scripts/verify-guest-ux.js",
     "test:guest-ux:browser": "playwright test --config=playwright.guest.config.js",
     "test:smoke": "playwright test browser-tests/00-auth-smoke.spec.js",

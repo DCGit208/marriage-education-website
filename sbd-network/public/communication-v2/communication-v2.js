@@ -1412,10 +1412,10 @@
       },
       isInteractiveMsgTarget: function (node) {
         if (!node || !node.closest) return false;
-        // Photo thumbs and OG/board-share thumbs must still long-press to Reply.
-        if (node.closest('.ce2-media-tap, .ce2-board-share-thumb')) return false;
+        // Photo thumbs and OG/board-share/link-preview thumbs must still long-press to Reply.
+        if (node.closest('.ce2-media-tap, .ce2-board-share-thumb, .ce2-link-preview-thumb')) return false;
         return !!node.closest(
-          'a, button:not(.ce2-media-tap):not(.ce2-board-share-thumb), audio, video, input, textarea, select, label'
+          'a, button:not(.ce2-media-tap):not(.ce2-board-share-thumb):not(.ce2-link-preview-thumb), audio, video, input, textarea, select, label'
         );
       },
     });
@@ -3943,17 +3943,29 @@
       bubble.appendChild(audioWrap);
     }
     var text = m.content || '';
+    var skipVoicePlaceholder =
+      m.messageType === 'voice' &&
+      text === 'Voice message' &&
+      (m.audioUrl || m._localAudioUrl);
+    var previewHtml = '';
+    var previewUrl = '';
     if (
-      text &&
-      !(
-        m.messageType === 'voice' &&
-        text === 'Voice message' &&
-        (m.audioUrl || m._localAudioUrl)
-      )
+      !skipVoicePlaceholder &&
+      m.messageType !== 'board_share' &&
+      lk &&
+      lk.renderPreviewHtmlForMessage
     ) {
+      previewUrl = lk.firstPreviewableUrl ? lk.firstPreviewableUrl(text) : '';
+      previewHtml = lk.renderPreviewHtmlForMessage(text, escapeHtml);
+    }
+    var displayText = text;
+    if (previewHtml && lk.stripPreviewedUrls) {
+      displayText = lk.stripPreviewedUrls(text, previewUrl);
+    }
+    if (displayText && !skipVoicePlaceholder) {
       var para = document.createElement('div');
       para.className = 'ce2-msg-text';
-      var html = escapeHtml(text);
+      var html = escapeHtml(displayText);
       if (root.Ce2Format && root.Ce2Format.formatMessageHtml) {
         html = root.Ce2Format.formatMessageHtml(html);
       }
@@ -3963,6 +3975,9 @@
         para.innerHTML = html;
       }
       bubble.appendChild(para);
+    }
+    if (previewHtml) {
+      bubble.insertAdjacentHTML('beforeend', previewHtml);
     }
   }
 
@@ -6157,7 +6172,7 @@
         scrollToReplyMessage(quoteBtn.getAttribute('data-reply-to-id'));
         return;
       }
-      var shareThumb = e.target.closest('.ce2-board-share-thumb');
+      var shareThumb = e.target.closest('.ce2-board-share-thumb, .ce2-link-preview-thumb');
       if (shareThumb) {
         e.preventDefault();
         e.stopPropagation();

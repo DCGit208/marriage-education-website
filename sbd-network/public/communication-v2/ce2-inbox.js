@@ -7,7 +7,7 @@
 
   var PREVIEW_MAX = 72;
   var QUOTE_MAX = 36;
-  var VERSION = 1;
+  var VERSION = 2;
 
   function clip(text, max) {
     var s = String(text || '').replace(/\s+/g, ' ').trim();
@@ -44,6 +44,18 @@
     if (s.indexOf('g__') === 0) return { kind: 'group', threadId: s.slice(3) };
     if (s.indexOf('d__') === 0) return { kind: 'direct', threadId: s.slice(3) };
     return null;
+  }
+
+  function looksLikeBareLink(text) {
+    var s = String(text || '').trim();
+    if (!s) return false;
+    var urls = s.match(/https?:\/\/[^\s<>"']+/gi);
+    if (!urls || !urls.length) return false;
+    var rest = s;
+    urls.forEach(function (u) {
+      rest = rest.split(u).join(' ');
+    });
+    return rest.replace(/\s+/g, ' ').trim() === '';
   }
 
   function looksLikePayloadDump(text) {
@@ -118,7 +130,8 @@
     if (meta.deleted) return 'Message removed';
 
     var stripFn = opts.strip;
-    var body = stripText(meta.content != null ? meta.content : meta.lastPreview, stripFn);
+    var raw = meta.content != null ? meta.content : meta.lastPreview;
+    var body = stripText(raw, stripFn);
     var labeled = normalizeMediaLabel(body);
     var kind = mediaKind(meta) || labeled.kind;
     body = labeled.body;
@@ -128,6 +141,7 @@
     else if (kind === 'photo') label = 'Photo';
     else if (kind === 'video') label = 'Video';
     else if (kind === 'board') label = boardTitle(meta, body, stripFn);
+    else if (looksLikeBareLink(raw) || looksLikeBareLink(body)) label = 'Link';
     else label = clip(body, opts.max || PREVIEW_MAX);
 
     var reply = meta.replyTo;
