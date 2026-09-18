@@ -3,18 +3,47 @@
  *
  * Routes:
  *   POST /upload        — Upload file directly to R2 via binding
+ *   POST /sign-get      — Auth + conversation membership → short-lived signed GET URL
+ *   GET  /media         — Stream a CE2 object (HMAC query, issued only after membership check)
  *   POST /register-push — Subscribe FCM token to topic sbd-all (FCM V1 + service account)
  *   POST /notify        — Send FCM V1 push to topic sbd-all
  *
- * All routes require a valid Firebase ID token in Authorization header.
+ * POST routes require a valid Firebase ID token in Authorization header.
+ * GET /media is capability-based: HMAC from /sign-get, not a world-readable CDN URL.
  *
  * Required Worker secrets (set with: npx wrangler secret put <NAME>):
  *   SA_CLIENT_EMAIL  — service_account.client_email from the downloaded JSON
  *   SA_PRIVATE_KEY   — service_account.private_key from the downloaded JSON
+ *   MEDIA_SIGNING_SECRET — optional; HMAC for /media (falls back to SA_PRIVATE_KEY)
  */
 
 import { parseFirestoreMap, userCanReceiveBoardNotification } from './notification-access.js';
-import { stripContentTypeParams, isTrustedUploadOrigin, isAllowedUploadFolder } from './upload-policy.js';
+import {
+  stripContentTypeParams,
+  isTrustedUploadOrigin,
+  isAllowedUploadFolder,
+  isCe2PrivateUploadFolder,
+  ce2PrivateObjectKey,
+  parseCe2PrivateObjectKey,
+  isCe2PrivateObjectKey,
+  workerOriginFromRequestUrl,
+  objectKeyFromMediaUrl,
+  buildUploadResponse,
+} from './upload-policy.js';
+import {
+  uidCanAccessCe2ScopeCached,
+  decodeJwtPayload,
+  parseByteRange,
+} from './ce2-media-access.js';
+import {
+  getMediaSigningSecret,
+  signMediaKey,
+  verifyMediaSig,
+  mediaExpiryUnix,
+  isMediaExpiryValid,
+  signedMediaPath,
+  CE2_MEDIA_TTL_SEC,
+} from './ce2-media-sign.js';
 
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'image/bmp',
@@ -94,8 +123,9 @@ export default {
     const corsOrigin = trustedOrigin && origin ? origin : (allowedOrigins[0] || '*');
     const corsHeaders = {
       'Access-Control-Allow-Origin':  corsOrigin,
-      'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Folder, X-Filename',
+      'Access-Control-Allow-Methods': 'GET, HEAD, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Folder, X-Filename, Range',
+      'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length, Content-Type',
       'Access-Control-Max-Age':       '86400',
       'Vary': 'Origin',
     };
@@ -106,6 +136,13 @@ export default {
       });
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+
+    const { pathname, searchParams } = new URL(request.url);
+
+    if ((request.method === 'GET' || request.method === 'HEAD') && pathname === '/media') {
+      return serveSignedMedia(request, env, corsHeaders, searchParams);
+    }
+
     if (request.method !== 'POST')    return respond({ error: 'Method not allowed' }, 405);
 
     // ── Verify Firebase ID token ─────────────────────────────────
@@ -120,7 +157,43 @@ export default {
     const verifyData = await verifyRes.json().catch(() => ({}));
     if (!verifyRes.ok || !verifyData.users?.[0]) return respond({ error: 'Unauthorized' }, 401);
 
-    const { pathname } = new URL(request.url);
+    const callerUid = verifyData.users[0].localId;
+    const tokenClaims = decodeJwtPayload(idToken);
+
+    // ── POST /sign-get ───────────────────────────────────────────
+    // Body: { key } or { url }. Returns a short-lived HMAC GET URL after
+    // Firebase Auth + DM/group membership check. Never a public CDN URL.
+    if (pathname === '/sign-get') {
+      const body = await request.json().catch(() => ({}));
+      const objectKey = parseCe2PrivateObjectKey(
+        body.objectKey || body.key || objectKeyFromMediaUrl(body.url, env.R2_PUBLIC_URL)
+      );
+      if (!objectKey) return respond({ error: 'Invalid media key' }, 400);
+
+      const secret = getMediaSigningSecret(env);
+      if (!secret) return respond({ error: 'Media signing not configured' }, 503);
+
+      const accessToken = await getAccessToken(env);
+      if (!accessToken) return respond({ error: 'Private media not configured' }, 503);
+
+      const allowed = await uidCanAccessCe2ScopeCached(callerUid, objectKey.scopeId, {
+        fetchImpl: fetch,
+        accessToken,
+        tokenClaims,
+      });
+      if (!allowed) return respond({ error: 'Forbidden' }, 403);
+
+      const exp = mediaExpiryUnix(Date.now(), CE2_MEDIA_TTL_SEC);
+      const sig = await signMediaKey(secret, objectKey.key, exp);
+      const origin = workerOriginFromRequestUrl(request.url);
+      const signedUrl = `${origin}${signedMediaPath(objectKey.key, exp, sig)}`;
+      return respond({
+        objectKey: objectKey.key,
+        signedUrl,
+        expiresAt: exp,
+        expiresIn: CE2_MEDIA_TTL_SEC,
+      });
+    }
 
     // ── POST /register-push ──────────────────────────────────────
     // Token is already saved to Firestore by the client (_initPush).
@@ -559,15 +632,28 @@ export default {
     }
 
     // ── POST /delete ─────────────────────────────────────────────
-    // Body: { url: 'https://pub-.../dm_videos/...' }
-    // Deletes the R2 object identified by the public URL.
+    // Body: { url } (public CDN or Worker locator) or { objectKey }.
     if (pathname === '/delete') {
-      const { url } = await request.json().catch(() => ({}));
-      if (!url || typeof url !== 'string') return respond({ error: 'Missing url' }, 400);
+      const body = await request.json().catch(() => ({}));
+      const key = resolveDeleteKey(body, env);
+      if (!key) return respond({ error: 'Missing url' }, 400);
+      const parsedPrivate = parseCe2PrivateObjectKey(key);
+      if (parsedPrivate) {
+        const accessToken = await getAccessToken(env);
+        if (!accessToken) return respond({ error: 'Private media not configured' }, 503);
+        const allowed = await uidCanAccessCe2ScopeCached(callerUid, parsedPrivate.scopeId, {
+          fetchImpl: fetch,
+          accessToken,
+          tokenClaims,
+        });
+        if (!allowed) return respond({ error: 'Forbidden' }, 403);
+        await ce2Bucket(env).delete(parsedPrivate.key);
+        return respond({ ok: true });
+      }
       const R2_BASE = (env.R2_PUBLIC_URL || '').replace(/\/$/, '');
-      if (!url.startsWith(R2_BASE + '/')) return respond({ error: 'URL not in this bucket' }, 400);
-      const key = url.slice(R2_BASE.length + 1); // strip base + leading slash
-      // Only allow deletion within permitted folders
+      if (!String(body.url || '').startsWith(R2_BASE + '/')) {
+        return respond({ error: 'URL not in this bucket' }, 400);
+      }
       const topFolder = key.split('/')[0];
       if (!ALLOWED_FOLDERS.has(topFolder)) return respond({ error: 'Forbidden folder' }, 403);
       await env.BUCKET.delete(key);
@@ -587,11 +673,118 @@ export default {
     }
 
     const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 100);
-    const key          = `${folder}/${safeFilename}`;
+    const privateUpload = isCe2PrivateUploadFolder(folder);
+    const key = privateUpload
+      ? ce2PrivateObjectKey(folder, safeFilename)
+      : `${folder}/${safeFilename}`;
+    if (!key) return respond({ error: 'Invalid folder' }, 400);
+
+    if (privateUpload) {
+      const accessToken = await getAccessToken(env);
+      if (!accessToken) return respond({ error: 'Private media not configured' }, 503);
+      const parsed = parseCe2PrivateObjectKey(key);
+      const allowed = await uidCanAccessCe2ScopeCached(callerUid, parsed.scopeId, {
+        fetchImpl: fetch,
+        accessToken,
+        tokenClaims,
+      });
+      if (!allowed) return respond({ error: 'Forbidden' }, 403);
+      await ce2Bucket(env).put(key, request.body, { httpMetadata: { contentType } });
+      return respond(buildUploadResponse(folder, key, {
+        workerOrigin: workerOriginFromRequestUrl(request.url),
+      }));
+    }
 
     await env.BUCKET.put(key, request.body, { httpMetadata: { contentType } });
-
-    return respond({ publicUrl: `${env.R2_PUBLIC_URL}/${key}` });
+    return respond(buildUploadResponse(folder, key, {
+      publicBase: env.R2_PUBLIC_URL,
+      workerOrigin: workerOriginFromRequestUrl(request.url),
+    }));
   },
 };
+
+function ce2Bucket(env) {
+  return env.CE2_BUCKET || env.BUCKET;
+}
+
+function resolveDeleteKey(body, env) {
+  if (!body || typeof body !== 'object') return '';
+  if (body.objectKey && isCe2PrivateObjectKey(body.objectKey)) {
+    return parseCe2PrivateObjectKey(body.objectKey).key;
+  }
+  if (body.key && isCe2PrivateObjectKey(body.key)) {
+    return parseCe2PrivateObjectKey(body.key).key;
+  }
+  const fromUrl = objectKeyFromMediaUrl(body.url, env.R2_PUBLIC_URL);
+  if (fromUrl) return fromUrl;
+  return '';
+}
+
+async function serveSignedMedia(request, env, corsHeaders, searchParams) {
+  const parsed = parseCe2PrivateObjectKey(searchParams.get('key') || '');
+  if (!parsed) {
+    return new Response(JSON.stringify({ error: 'Invalid media key' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const exp = searchParams.get('exp');
+  const sig = searchParams.get('sig');
+  const secret = getMediaSigningSecret(env);
+  if (!secret || !isMediaExpiryValid(exp) || !(await verifyMediaSig(secret, parsed.key, exp, sig))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const bucket = ce2Bucket(env);
+  const head = await bucket.head(parsed.key);
+  if (!head) {
+    return new Response(JSON.stringify({ error: 'Not found' }), {
+      status: 404,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const contentType = (head.httpMetadata && head.httpMetadata.contentType) || 'application/octet-stream';
+  const headers = {
+    ...corsHeaders,
+    'Content-Type': contentType,
+    'Cache-Control': 'private, max-age=60',
+    'Accept-Ranges': 'bytes',
+    'X-Content-Type-Options': 'nosniff',
+  };
+
+  if (request.method === 'HEAD') {
+    headers['Content-Length'] = String(head.size || 0);
+    return new Response(null, { status: 200, headers });
+  }
+
+  const range = parseByteRange(request.headers.get('Range'), head.size);
+  if (range) {
+    const sliced = await bucket.get(parsed.key, {
+      range: { offset: range.offset, length: range.length },
+    });
+    if (!sliced) {
+      return new Response(JSON.stringify({ error: 'Not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    headers['Content-Range'] = `bytes ${range.start}-${range.end}/${head.size}`;
+    headers['Content-Length'] = String(range.length);
+    return new Response(sliced.body, { status: 206, headers });
+  }
+
+  const obj = await bucket.get(parsed.key);
+  if (!obj) {
+    return new Response(JSON.stringify({ error: 'Not found' }), {
+      status: 404,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  headers['Content-Length'] = String(head.size || 0);
+  return new Response(obj.body, { status: 200, headers });
+}
 

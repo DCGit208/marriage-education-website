@@ -137,8 +137,9 @@ test('CE2 send path is not the legacy {userId}/{fileId} layout', function () {
   const r2Key = uploadSandbox.r2ObjectKey('dm_audio', 'voice.webm', {
     conversationId: 'd_a_b',
   });
-  assert.strictEqual(r2Key, 'dm_audio/d_a_b/voice.webm');
+  assert.strictEqual(r2Key, 'ce2/dm_audio/d_a_b/voice.webm');
   assert.ok(r2Key.indexOf('dm_audio/voice.webm') < 0);
+  assert.ok(r2Key.indexOf('ce2/') === 0);
 });
 
 test('legacy callers without conversationId still get the two-segment path', function () {
@@ -257,9 +258,9 @@ test('cache-bust moved forward for changed CE2 upload clients', function () {
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
   const attVer = html.match(/ce2-attachments\.js\?v=(\d+)/);
   const upVer = html.match(/upload\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) >= 120, 'communication-v2.js cache-bust');
+  assert.ok(jsVer && Number(jsVer[1]) >= 121, 'communication-v2.js cache-bust');
   assert.ok(attVer && Number(attVer[1]) >= 16, 'ce2-attachments.js cache-bust');
-  assert.ok(upVer && Number(upVer[1]) >= 10, 'upload.js cache-bust');
+  assert.ok(upVer && Number(upVer[1]) >= 11, 'upload.js cache-bust');
   assert.ok(html.indexOf('ce2-keyboard-stable-v60') >= 0);
 });
 
@@ -268,6 +269,7 @@ test('SBD GH Actions still omit storage; validate includes this test', function 
   assert.ok(workflow.indexOf('ONLY="${ONLY},firestore:rules,firestore:indexes"') >= 0);
   assert.ok(!/ONLY=.*storage/.test(workflow));
   assert.ok(pkg.scripts.validate.indexOf('test-ce2-storage-paths.js') >= 0);
+  assert.ok(pkg.scripts.validate.indexOf('test-ce2-r2-signed-media.js') >= 0);
 });
 
 async function runAsync() {
@@ -292,6 +294,13 @@ async function runAsync() {
       assert.strictEqual(policy.isAllowedUploadFolder('dm_attachments/a/b'), false);
       const worker = read('workers/upload-signer/src/index.js');
       assert.ok(worker.indexOf('isAllowedUploadFolder(folder)') >= 0);
+      assert.ok(worker.indexOf('buildUploadResponse(folder, key') >= 0);
+      assert.ok(worker.indexOf("pathname === '/sign-get'") >= 0);
+      assert.ok(worker.indexOf("pathname === '/media'") >= 0);
+      assert.ok(
+        worker.indexOf('return respond({ publicUrl: `${env.R2_PUBLIC_URL}/${key}` })') < 0,
+        'Worker still returns a public CDN URL for every upload, including CE2'
+      );
     });
   } catch (err) {
     failed += 1;

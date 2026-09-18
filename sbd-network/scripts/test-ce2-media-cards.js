@@ -292,7 +292,7 @@ test('messenger cache-bust is above live for changed card/media assets', functio
   const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
   assert.ok(cssVer && Number(cssVer[1]) >= 80, 'css cache-bust must be above live v=79');
   assert.ok(shareVer && Number(shareVer[1]) >= 10, 'ce2-share cache-bust must be above live v=9');
-  assert.ok(mediaVer && Number(mediaVer[1]) >= 3, 'ce2-media-view cache-bust must be above live v=2');
+  assert.ok(mediaVer && Number(mediaVer[1]) >= 4, 'ce2-media-view cache-bust must be above live v=3');
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
   assert.ok(jsVer && Number(jsVer[1]) >= 110, 'communication-v2.js cache-bust must be above live v=109');
   const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
@@ -306,8 +306,8 @@ const mediaSandbox = loadIife('public/communication-v2/ce2-media-view.js', {
 const media = mediaSandbox.Ce2MediaView;
 assert.ok(media, 'Ce2MediaView did not load');
 
-test('Ce2MediaView VERSION is 3', function () {
-  assert.strictEqual(media.VERSION, 3);
+test('Ce2MediaView VERSION is 4', function () {
+  assert.strictEqual(media.VERSION, 4);
 });
 
 test('image bubble keeps a fallback frame when thumb is missing', function () {

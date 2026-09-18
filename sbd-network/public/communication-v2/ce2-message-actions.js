@@ -451,14 +451,22 @@
             'download',
             'Save image',
             function () {
-              var a = document.createElement('a');
-              a.href = m.imageUrl;
-              a.download = 'ce2-image.jpg';
-              a.target = '_blank';
-              a.rel = 'noopener';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
+              var href = m.imageUrl;
+              var go = function (src) {
+                var a = document.createElement('a');
+                a.href = src;
+                a.download = 'ce2-image.jpg';
+                a.target = '_blank';
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              };
+              if (typeof resolveR2MediaUrl === 'function') {
+                resolveR2MediaUrl(href).then(go).catch(function () { go(href); });
+              } else {
+                go(href);
+              }
             },
             { section: SEC }
           )
