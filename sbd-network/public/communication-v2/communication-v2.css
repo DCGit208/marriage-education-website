@@ -656,6 +656,37 @@ body.ce2-body-root.ce2-kb-active {
   padding: 10px var(--ce2-chrome-pad-x) 12px;
 }
 
+.ce2-jump-latest-slot {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.ce2-jump-latest {
+  pointer-events: auto;
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  transform: translateY(-100%);
+  border: 1px solid rgba(201, 184, 146, 0.38);
+  border-radius: 999px;
+  background: rgba(20, 20, 24, 0.94);
+  color: #e8dcc4;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  padding: 8px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.ce2-jump-latest[hidden] {
+  display: none !important;
+}
+
 .ce2-row {
   margin-bottom: var(--ce2-row-gap);
   max-width: min(100%, 22rem);
