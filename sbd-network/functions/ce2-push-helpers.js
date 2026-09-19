@@ -129,6 +129,130 @@ function recipientCanReadClassification(userData, classification) {
   return perms.tierLevel(user.tier) >= perms.tierLevel(cls);
 }
 
+function pickPreferredPushToken({
+  ce2PushToken,
+  fcmToken,
+  pushToken,
+  notificationToken,
+} = {}) {
+  const candidates = [ce2PushToken, fcmToken, pushToken, notificationToken];
+  for (let i = 0; i < candidates.length; i += 1) {
+    const token = candidates[i];
+    if (typeof token === "string" && token.trim()) return token.trim();
+  }
+  return "";
+}
+
+function userDisplayName(userData, fallback) {
+  const d = userData || {};
+  const name = String(d.name || d.displayName || d.email || "").trim();
+  return name || fallback || "Someone";
+}
+
+function groupDisplayName(groupData, fallback) {
+  const d = groupData || {};
+  const name = String(d.name || d.title || "").trim();
+  return name || fallback || "Group";
+}
+
+function directConvId(a, b) {
+  const sorted = [String(a || ""), String(b || "")].sort();
+  return `d_${sorted[0]}_${sorted[1]}`;
+}
+
+function resolveDirectRecipientIds({ senderId, receiverId, participantIds } = {}) {
+  const sender = String(senderId || "").trim();
+  const ids = [];
+  const seen = {};
+  function add(uid) {
+    const id = String(uid || "").trim();
+    if (!id || id === sender || seen[id]) return;
+    seen[id] = true;
+    ids.push(id);
+  }
+  add(receiverId);
+  (Array.isArray(participantIds) ? participantIds : []).forEach(add);
+  return ids;
+}
+
+function shouldNotifyCreatedMessage(message) {
+  const data = message || {};
+  const senderId = String(data.senderId || "").trim();
+  if (!senderId) return { ok: false, reason: "missing_sender" };
+  if (data.deleted) return { ok: false, reason: "deleted" };
+  return { ok: true, reason: "" };
+}
+
+function pushClaimId({ kind, threadId, messageId, recipientId } = {}) {
+  const k = kind === "group" ? "g" : "d";
+  const parts = [k, threadId, messageId, recipientId].map((part) =>
+    String(part || "")
+      .trim()
+      .replace(/\//g, "_")
+  );
+  if (parts.some((part) => !part)) return "";
+  return parts.join("__").slice(0, 1400);
+}
+
+function buildCreatedPushPayload({
+  kind,
+  threadId,
+  messageId,
+  senderId,
+  recipientId,
+  senderName,
+  groupName,
+  message,
+} = {}) {
+  const isGroup = kind === "group";
+  const msg = message || {};
+  const copy = buildPushCopy({
+    kind: isGroup ? "group" : "direct",
+    title: isGroup ? groupName : senderName,
+    senderName,
+    groupName,
+    body: msg.content,
+    meta: {
+      content: msg.content,
+      messageType: msg.messageType,
+      boardShare: msg.boardShare,
+      imageUrl: msg.imageUrl,
+      videoUrl: msg.videoUrl,
+      audioUrl: msg.audioUrl,
+    },
+  });
+  const url = buildThreadUrl({
+    convId: isGroup ? "" : threadId,
+    groupId: isGroup ? threadId : "",
+    messageId,
+  });
+  const data = isGroup
+    ? {
+        type: "group_message",
+        senderId: senderId || "",
+        groupId: threadId || "",
+        convId: threadId || "",
+        messageId: messageId || "",
+        senderName: senderName || "",
+        groupName: groupName || "",
+      }
+    : {
+        type: "dm",
+        senderId: senderId || "",
+        recipientId: recipientId || "",
+        convId: threadId || "",
+        messageId: messageId || "",
+        senderName: senderName || "",
+      };
+  return {
+    title: copy.title,
+    body: copy.body,
+    url,
+    tag: isGroup ? `group-${threadId}` : `dm-${threadId || recipientId}`,
+    data,
+  };
+}
+
 module.exports = {
   BODY_MAX,
   inboxPrefId,
@@ -140,4 +264,12 @@ module.exports = {
   stringifyData,
   shouldSkipRecipient,
   recipientCanReadClassification,
+  pickPreferredPushToken,
+  userDisplayName,
+  groupDisplayName,
+  directConvId,
+  resolveDirectRecipientIds,
+  shouldNotifyCreatedMessage,
+  pushClaimId,
+  buildCreatedPushPayload,
 };
