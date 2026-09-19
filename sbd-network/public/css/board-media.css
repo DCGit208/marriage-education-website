@@ -23,6 +23,23 @@
   line-height: 1.4;
 }
 
+.board-cohort-chat {
+  display: inline-block;
+  margin: 10px 0 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(198,169,107,0.35);
+  background: rgba(198,169,107,0.12);
+  color: #C6A96B;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.board-cohort-chat[hidden] {
+  display: none;
+}
+
 /* ── Return to messenger (CE2 board-share origin) ─────────────── */
 /*
   position:fixed — not sticky. html/body set overflow-x:hidden in styles.css,

@@ -287,6 +287,20 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
+        .cohort-chat-btn {
+            display: block;
+            margin: 12px 20px 4px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(198,169,107,0.35);
+            background: rgba(198,169,107,0.12);
+            color: var(--gold, #C6A96B);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+        }
+        .cohort-chat-btn[hidden] { display: none; }
         .sheet-loading {
             padding: 40px 20px;
             text-align: center;
@@ -432,6 +446,7 @@
             <h2 class="course-sheet-title" id="sheetCourseTitle">Loading…</h2>
             <button class="sheet-close-btn" onclick="closeCourseSheet()">✕</button>
         </div>
+        <a id="sheetCohortChatBtn" class="cohort-chat-btn" hidden href="/communication-v2/">Open cohort chat</a>
         <div id="sheetWeekList">
             <div class="sheet-loading">Loading weeks…</div>
         </div>
@@ -452,7 +467,8 @@
     <script defer src="/js/sw-update-checker.js?v=98"></script>
     <script defer src="/js/notifications.js?v=53"></script>
     <script defer src="/js/transitions.js?v=52"></script>
-    <script defer src="/js/courses.js?v=107"></script>
+    <script defer src="/communication-v2/ce2-cohort.js?v=1"></script>
+    <script defer src="/js/courses.js?v=108"></script>
     
 
     <!-- NAV_INJECT -->

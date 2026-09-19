@@ -100,6 +100,7 @@
     myGroupRole: 'member',
     groupRoles: {},
     groupCreatedBy: '',
+    cohortContext: null,
     hasMoreMessages: false,
     loadingOlder: false,
     oldestMessageDoc: null,
@@ -187,9 +188,17 @@
       if (ac.type === 'direct' && ac.id) {
         url.searchParams.set('conv', ac.id);
         url.searchParams.delete('group');
+        url.searchParams.delete('cohort');
+        url.searchParams.delete('course');
+        url.searchParams.delete('board');
+        url.searchParams.delete('key');
       } else if (ac.type === 'group' && ac.id) {
         url.searchParams.set('group', ac.id);
         url.searchParams.delete('conv');
+        url.searchParams.delete('cohort');
+        url.searchParams.delete('course');
+        url.searchParams.delete('board');
+        url.searchParams.delete('key');
       }
       history.replaceState(null, '', url.pathname + url.search + url.hash);
     } catch (_) {}
@@ -1480,6 +1489,42 @@
     CommunicationState.myGroupRole = 'member';
     CommunicationState.groupRoles = {};
     CommunicationState.groupCreatedBy = '';
+    CommunicationState.cohortContext = null;
+  }
+
+  function cohortApi() {
+    return root.Ce2Cohort || null;
+  }
+
+  function applyCohortContextFromGroup(data) {
+    var api = cohortApi();
+    if (!api || !data || !api.contextHeader) {
+      CommunicationState.cohortContext = null;
+      return null;
+    }
+    var header = api.contextHeader(data);
+    CommunicationState.cohortContext = header;
+    return header;
+  }
+
+  function paintCohortContext() {
+    var bar = el('ce2CohortContext');
+    var kicker = el('ce2CohortKicker');
+    var title = el('ce2CohortTitle');
+    var link = el('ce2CohortContextLink');
+    var header = CommunicationState.cohortContext;
+    if (!bar) return;
+    if (!header) {
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    if (kicker) kicker.textContent = header.kicker || 'Formation cohort';
+    if (title) title.textContent = header.title || '';
+    if (link) {
+      link.href = header.url || '/learn.html';
+      link.textContent = header.cta || 'Back';
+    }
   }
 
   function applyGroupRoleToActive(role) {
@@ -3422,6 +3467,8 @@
       settingsBtn.hidden = !(ac && ac.type === 'group' && !ac.needsJoin);
     }
     if (title) title.textContent = ac ? ac.title : 'Select a conversation';
+    if (!ac) CommunicationState.cohortContext = null;
+    paintCohortContext();
     if (meta) {
       meta.textContent = ac
         ? formatThreadMeta(ac)
@@ -5295,6 +5342,18 @@
     CommunicationState.sending = false;
     CommunicationState.groupCreatedBy = '';
     CommunicationState.groupRoles = {};
+    CommunicationState.cohortContext = null;
+
+    var groupDocData = null;
+    try {
+      var gsnap = await db.collection('communicationGroups').doc(groupId).get();
+      if (gsnap.exists) groupDocData = gsnap.data() || {};
+    } catch (_) {}
+    if (groupDocData) {
+      if (groupDocData.createdBy) CommunicationState.groupCreatedBy = groupDocData.createdBy;
+      applyCohortContextFromGroup(groupDocData);
+      if (!name || name === 'Group') name = groupDocData.name || groupDocData.contextTitle || name;
+    }
 
     var joined = await isGroupMember(groupId);
     if (!joined) {
@@ -5651,6 +5710,22 @@
     syncJumpLatestControl();
   }
 
+  async function openCohortFromSpec(spec) {
+    var api = cohortApi();
+    var me = CommunicationState.me;
+    if (!api || !api.openOrCreateCohortGroup) {
+      throw new Error('Cohort chat is not available.');
+    }
+    if (!me) throw new Error('Not signed in.');
+    var result = await api.openOrCreateCohortGroup(db, me, spec, {});
+    var title =
+      (result.group && (result.group.contextTitle || result.group.name)) ||
+      spec.title ||
+      'Formation cohort';
+    applyCohortContextFromGroup(result.group || {});
+    await openGroupThread(result.groupId, title);
+  }
+
   async function applyCe2EntryParams(uid) {
     var q;
     try {
@@ -5691,6 +5766,13 @@
         syncCe2ComposerInputHeight(shareInput);
       }
       CommunicationState.statusMessage = 'Shared content ready — pick a thread and send.';
+      return;
+    }
+    var cohortEntry = cohortApi() && cohortApi().parseEntryParams
+      ? cohortApi().parseEntryParams(q)
+      : null;
+    if (cohortEntry && cohortEntry.kind === 'cohort') {
+      await openCohortFromSpec(cohortEntry.spec);
       return;
     }
     var groupId = q.get('group');
@@ -7630,10 +7712,35 @@
       .doc(me.uid);
     var memberSnap = await memberRef.get();
     if (!memberSnap.exists) {
-      await memberRef.set({
-        joinedAt: firebase.firestore.Timestamp.now(),
-        role: 'member',
-      });
+      var joinRole = 'member';
+      var gdata = {};
+      try {
+        var gdoc = await db.collection('communicationGroups').doc(gid).get();
+        gdata = gdoc.exists ? gdoc.data() || {} : {};
+      } catch (_) {}
+      var api = cohortApi();
+      if (api && gdata.cohortType) {
+        if (!api.canJoinCohort(me, gdata, {})) {
+          throw new Error(
+            gdata.cohortType === 'board'
+              ? 'This board cohort is for assigned members.'
+              : 'This course cohort is for enrolled members.'
+          );
+        }
+        if (gdata.createdBy === me.uid) joinRole = 'host';
+      }
+      if (joinRole === 'host') {
+        await memberRef.set({
+          joinedAt: firebase.firestore.Timestamp.now(),
+          addedBy: me.uid,
+          role: 'host',
+        });
+      } else {
+        await memberRef.set({
+          joinedAt: firebase.firestore.Timestamp.now(),
+          role: 'member',
+        });
+      }
     }
     // Admin-added members already have a doc — skip joinedAt update (rules tier gate).
     CommunicationState.selectedGroupId = gid;

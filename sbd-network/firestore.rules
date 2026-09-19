@@ -166,6 +166,133 @@ service cloud.firestore {
       return !('role' in request.resource.data) ||
         request.resource.data.role == 'member';
     }
+    function ce2IsCohortGroup(gdata) {
+      return gdata != null && gdata.cohortType in ['course', 'board'];
+    }
+    function ce2CourseDoc(courseId) {
+      return courseId is string &&
+        exists(/databases/$(database)/documents/courses/$(courseId))
+        ? get(/databases/$(database)/documents/courses/$(courseId)).data
+        : null;
+    }
+    function ce2BoardDoc(boardId) {
+      return boardId is string &&
+        exists(/databases/$(database)/documents/boards/$(boardId))
+        ? get(/databases/$(database)/documents/boards/$(boardId)).data
+        : null;
+    }
+    function ce2UserOwnsOrEnrolledCourse(ud, courseId) {
+      return ud != null && courseId is string && (
+        (ud.ownedCourses is list && ud.ownedCourses.hasAny([courseId])) ||
+        (ud.enrolledCourses is list && ud.enrolledCourses.hasAny([courseId]))
+      );
+    }
+    function ce2CoursePurchaseOnly(courseId, cdata) {
+      return courseId == 'the-woman-the-wife-the-mother' ||
+        (cdata != null && cdata.purchaseOnly == true);
+    }
+    function ce2CanJoinCourseCohort(ud, gdata) {
+      let cid = gdata.courseId;
+      let cdata = ce2CourseDoc(cid);
+      let courseTier = cdata != null && cdata.accessLevel is string
+        ? cdata.accessLevel
+        : (cdata != null && cdata.requiredTier is string ? cdata.requiredTier : gdata.requiredTier);
+      return cid is string && (
+        ce2IsAdmin(ud) ||
+        isLmsContentDesigner(ud) ||
+        ce2UserOwnsOrEnrolledCourse(ud, cid) ||
+        (
+          ce2UserMeetsGroupTier(ud, gdata) &&
+          !ce2CoursePurchaseOnly(cid, cdata) &&
+          ce2PolicyTierRank(ud) >= ce2RequiredTierRank(courseTier)
+        )
+      );
+    }
+    function ce2CanJoinBoardCohort(ud, gdata) {
+      let bid = gdata.boardId;
+      let bdata = ce2BoardDoc(bid);
+      return bid is string && bdata != null && (
+        ce2IsAdmin(ud) ||
+        (
+          ce2UserMeetsGroupTier(ud, gdata) &&
+          (
+            (bdata.members is list && bdata.members.hasAny([request.auth.uid])) ||
+            (
+              bdata.groupId is string &&
+              bdata.groupId.size() > 0 &&
+              ud.groups is list &&
+              ud.groups.hasAny([bdata.groupId])
+            ) ||
+            (
+              !(bdata.groupId is string && bdata.groupId.size() > 0) &&
+              ce2PolicyTierRank(ud) >= ce2RequiredTierRank(
+                bdata.requiredTier is string ? bdata.requiredTier : gdata.requiredTier
+              )
+            )
+          )
+        )
+      );
+    }
+    function ce2CanJoinCohortGroup(ud, gdata) {
+      return ce2IsCohortGroup(gdata) && (
+        (gdata.cohortType == 'course' && ce2CanJoinCourseCohort(ud, gdata)) ||
+        (gdata.cohortType == 'board' && ce2CanJoinBoardCohort(ud, gdata))
+      );
+    }
+    function ce2CanSelfJoinGroup(groupId) {
+      let gdata = get(/databases/$(database)/documents/communicationGroups/$(groupId)).data;
+      return ce2IsCohortGroup(gdata)
+        ? ce2CanJoinCohortGroup(ce2UserDataOrNull(request.auth.uid), gdata)
+        : ce2UserMeetsGroupTier(
+            ce2UserDataOrNull(request.auth.uid),
+            gdata
+          );
+    }
+    function ce2CohortCreatorHostJoinValid(groupId) {
+      let gdata = get(/databases/$(database)/documents/communicationGroups/$(groupId)).data;
+      return request.resource.data.role == 'host' &&
+        ce2IsCohortGroup(gdata) &&
+        gdata.createdBy == request.auth.uid &&
+        ce2CanJoinCohortGroup(ce2UserDataOrNull(request.auth.uid), gdata);
+    }
+    function ce2CohortContextUrlValid(d) {
+      return d.contextUrl is string && (
+        (d.cohortType == 'course' &&
+          d.contextUrl.matches('^/courses\\.html\\?course=[A-Za-z0-9._%-]{1,120}$')) ||
+        (d.cohortType == 'board' &&
+          d.contextUrl.matches('^/board\\.html\\?boardId=[A-Za-z0-9._%-]{1,120}$'))
+      );
+    }
+    function ce2CohortGroupCreateValid() {
+      let d = request.resource.data;
+      let ud = ce2UserDataOrNull(request.auth.uid);
+      return d.createdBy == request.auth.uid &&
+        d.keys().hasAll([
+          'name', 'requiredTier', 'mentorLed', 'allowCrossTier', 'createdBy',
+          'cohortType', 'cohortKey', 'cohortId', 'contextTitle', 'contextUrl'
+        ]) &&
+        d.cohortId == groupId &&
+        groupId.matches('^cohort_(course|board)_[a-z0-9._-]{1,64}_[a-z0-9._-]{1,32}$') &&
+        d.cohortType in ['course', 'board'] &&
+        d.cohortKey is string &&
+        d.cohortKey.size() > 0 &&
+        d.cohortKey.size() <= 32 &&
+        d.name is string &&
+        d.name.size() > 0 &&
+        d.name.size() <= 120 &&
+        d.requiredTier is string &&
+        d.mentorLed is bool &&
+        d.allowCrossTier == false &&
+        d.contextTitle is string &&
+        d.contextTitle.size() > 0 &&
+        d.contextTitle.size() <= 160 &&
+        ce2CohortContextUrlValid(d) &&
+        (
+          (d.cohortType == 'course' && d.courseId is string && d.courseId.size() > 0 && d.courseId.size() <= 80) ||
+          (d.cohortType == 'board' && d.boardId is string && d.boardId.size() > 0 && d.boardId.size() <= 80)
+        ) &&
+        ce2CanJoinCohortGroup(ud, d);
+    }
     function ce2MemberStoredRoleValid() {
       return !('role' in request.resource.data) ||
         request.resource.data.role in ['host', 'facilitator', 'member', 'creator'];
@@ -1200,14 +1327,18 @@ service cloud.firestore {
         ce2IsGroupMember(groupId, request.auth.uid) ||
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
       );
-      allow create: if request.auth != null &&
-        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
-        request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.keys().hasAll([
-          'name', 'requiredTier', 'mentorLed', 'allowCrossTier', 'createdBy'
-        ]) &&
-        request.resource.data.name is string &&
-        request.resource.data.requiredTier is string;
+      allow create: if request.auth != null && (
+        (
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.keys().hasAll([
+            'name', 'requiredTier', 'mentorLed', 'allowCrossTier', 'createdBy'
+          ]) &&
+          request.resource.data.name is string &&
+          request.resource.data.requiredTier is string
+        ) ||
+        ce2CohortGroupCreateValid()
+      );
       allow update: if request.auth != null && (
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
         (
@@ -1230,7 +1361,8 @@ service cloud.firestore {
           ce2IsGroupMember(groupId, request.auth.uid) ||
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
         );
-        // Self-join if tier allows (member only — no self-escalation).
+        // Self-join if tier/cohort gates allow (member only — no self-escalation).
+        // Cohort first opener may write host when they created the group.
         // Admins may add any user with a valid hallway role.
         allow create: if request.auth != null && (
           (
@@ -1240,10 +1372,11 @@ service cloud.firestore {
           (
             request.auth.uid == memberId &&
             ce2MemberSelfJoinRoleValid() &&
-            ce2UserMeetsGroupTier(
-              ce2UserDataOrNull(request.auth.uid),
-              get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
-            )
+            ce2CanSelfJoinGroup(groupId)
+          ) ||
+          (
+            request.auth.uid == memberId &&
+            ce2CohortCreatorHostJoinValid(groupId)
           )
         );
         // Self-update: joinedAt refresh only — role cannot change.
