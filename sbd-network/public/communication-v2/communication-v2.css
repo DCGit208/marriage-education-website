@@ -3963,6 +3963,8 @@ body.ce2-inbox-menu-open {
 }
 
 .ce2-coach-act {
+  width: auto !important;
+  margin-top: 0 !important;
   padding: 5px 8px !important;
   font-size: 0.68rem !important;
 }
