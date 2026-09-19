@@ -1,140 +1,22 @@
 const admin = require("firebase-admin");
 const { onRequest } = require("firebase-functions/v2/https");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const logger = require("firebase-functions/logger");
-const pushHelpers = require("./ce2-push-helpers");
+const { createDelivery } = require("./ce2-push-delivery");
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-const PUSH_ORIGIN = "https://sbd.marriageducation.com";
-const PUSH_ICON = "https://sbd-network.web.app/assets/icons/icon-192.png";
-const PUSH_BADGE = "https://sbd-network.web.app/assets/icons/icon-72.png";
+const delivery = createDelivery({
+  getDb: () => admin.firestore(),
+  getMessaging: () => admin.messaging(),
+  FieldValue: admin.firestore.FieldValue,
+  logger,
+});
 
-async function lookupPushToken(recipientId) {
-  const db = admin.firestore();
-  try {
-    const priv = await db
-      .collection("users")
-      .doc(recipientId)
-      .collection("ce2_push")
-      .doc("token")
-      .get();
-    if (priv.exists) {
-      const token = (priv.data() || {}).fcmToken;
-      if (typeof token === "string" && token.trim()) {
-        return token.trim();
-      }
-    }
-  } catch (error) {
-    logger.warn("CE2 push token private lookup failed", {
-      recipientId,
-      error: error.message,
-    });
-  }
-
-  const doc = await db.collection("users").doc(recipientId).get();
-  if (!doc.exists) return "";
-  const data = doc.data() || {};
-  const token = data.fcmToken || data.pushToken || data.notificationToken || "";
-  return typeof token === "string" ? token.trim() : "";
-}
-
-async function resolveRecipient(recipientId) {
-  const result = { token: "", userData: null };
-  const doc = await admin.firestore().collection("users").doc(recipientId).get();
-  if (!doc.exists) {
-    return result;
-  }
-
-  result.userData = doc.data() || {};
-  result.token = await lookupPushToken(recipientId);
-  return result;
-}
-
-async function isThreadMuted(uid, kind, threadId) {
-  const prefId = pushHelpers.inboxPrefId(kind, threadId);
-  if (!uid || !prefId) return false;
-  try {
-    const snap = await admin
-      .firestore()
-      .collection("users")
-      .doc(uid)
-      .collection("ce2_inbox")
-      .doc(prefId)
-      .get();
-    return !!(snap.exists && snap.data() && snap.data().muted);
-  } catch (error) {
-    logger.warn("CE2 mute lookup failed", { uid, prefId, error: error.message });
-    return false;
-  }
-}
-
-function buildPushMessage({ token, title, body, url, tag, data }) {
-  const link = url.startsWith("http") ? url : `${PUSH_ORIGIN}${url}`;
-  const relUrl = url.startsWith("http")
-    ? new URL(url).pathname + new URL(url).search
-    : url;
-  const payload = pushHelpers.stringifyData({
-    title,
-    body,
-    url: relUrl,
-    ...(data || {}),
-  });
-  return {
-    token,
-    notification: { title, body },
-    data: payload,
-    webpush: {
-      notification: {
-        icon: PUSH_ICON,
-        badge: PUSH_BADGE,
-        tag: tag || "sbd-notification",
-        renotify: true,
-        data: payload,
-      },
-      fcm_options: { link },
-    },
-    android: { priority: "high" },
-  };
-}
-
-function directConvId(a, b) {
-  const sorted = [a, b].sort();
-  return `d_${sorted[0]}_${sorted[1]}`;
-}
-
-async function verifyDirectDmParticipants(senderId, recipientId, convId) {
-  if (!senderId || !recipientId || senderId === recipientId) {
-    return false;
-  }
-
-  const expectedConvId = directConvId(senderId, recipientId);
-  const resolvedConvId =
-    typeof convId === "string" && convId.trim() ? convId.trim() : expectedConvId;
-
-  if (resolvedConvId !== expectedConvId) {
-    return false;
-  }
-
-  const convDoc = await admin
-    .firestore()
-    .collection("ce2_conversations")
-    .doc(resolvedConvId)
-    .get();
-
-  if (!convDoc.exists) {
-    return true;
-  }
-
-  const data = convDoc.data() || {};
-  if (data.type && data.type !== "direct") {
-    return false;
-  }
-
-  const participants = Array.isArray(data.participantIds) ? data.participantIds : [];
-  return participants.includes(senderId) && participants.includes(recipientId);
-}
+// Client-supplied FCM tokens are ignored. Token lookup uses owner-only
+// users/{uid}/ce2_push/token, then legacy users.fcmToken / pushToken fields.
 
 async function verifyBearer(req) {
   const authHeader = req.headers.authorization || "";
@@ -146,6 +28,10 @@ async function verifyBearer(req) {
   } catch (error) {
     return null;
   }
+}
+
+function readString(body, key) {
+  return typeof body[key] === "string" ? body[key].trim() : "";
 }
 
 exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
@@ -167,10 +53,12 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
     return res.status(400).json({ error: "Invalid JSON payload" });
   }
 
-  const senderId = typeof body.senderId === "string" ? body.senderId.trim() : "";
-  const recipientId = typeof body.recipientId === "string" ? body.recipientId.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
-  const senderName = typeof body.senderName === "string" ? body.senderName.trim() : "";
+  const senderId = readString(body, "senderId");
+  const recipientId = readString(body, "recipientId");
+  const message = readString(body, "message") || readString(body, "body");
+  const senderName = readString(body, "senderName");
+  const convId = readString(body, "convId");
+  const messageId = readString(body, "messageId");
 
   if (!senderId || !recipientId || !message) {
     return res.status(400).json({ error: "senderId, recipientId and message are required" });
@@ -184,89 +72,33 @@ exports.notifyDmV2 = onRequest({ region: "us-central1", cors: true }, async (req
     return res.status(400).json({ error: "Cannot notify yourself" });
   }
 
-  const convId = typeof body.convId === "string" ? body.convId : "";
-  const isDirectDm = await verifyDirectDmParticipants(senderId, recipientId, convId);
+  const isDirectDm = await delivery.verifyDirectDmParticipants(senderId, recipientId, convId);
   if (!isDirectDm) {
     return res.status(403).json({ error: "Not a direct message recipient" });
   }
 
   try {
-    const muted = await isThreadMuted(recipientId, "direct", convId || directConvId(senderId, recipientId));
-    if (muted) {
-      return res.status(200).json({
-        success: true,
-        pushed: false,
-        reason: "muted",
-      });
-    }
-
-    const recipient = await resolveRecipient(recipientId);
-    const canRead = pushHelpers.recipientCanReadClassification(
-      recipient.userData,
-      body.classification
-    );
-    const skip = pushHelpers.shouldSkipRecipient({
-      isSender: recipientId === senderId,
-      muted: false,
-      canRead,
-    });
-    if (skip.skip) {
-      return res.status(200).json({
-        success: true,
-        pushed: false,
-        reason: skip.reason,
-      });
-    }
-
-    if (!recipient.token) {
-      return res.status(200).json({
-        success: true,
-        pushed: false,
-        reason: "recipient_token_missing",
-      });
-    }
-
-    const copy = pushHelpers.buildPushCopy({
-      kind: "direct",
-      title: body.title || senderName || "New message",
+    const result = await delivery.notifyDirectFromHttp({
+      senderId,
+      recipientId,
+      convId,
+      messageId,
       senderName,
-      body: body.body || message,
-      meta: {
-        content: body.body || message,
-        messageType: body.messageType,
-        boardShare: body.boardShare,
-      },
+      title: readString(body, "title"),
+      bodyText: readString(body, "body") || message,
+      url: readString(body, "url"),
+      classification: body.classification,
+      messageType: body.messageType,
+      boardShare: body.boardShare,
+      source: "http",
     });
-    const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
-    const resolvedConvId = convId || directConvId(senderId, recipientId);
-    const url =
-      typeof body.url === "string" && body.url.trim()
-        ? body.url.trim()
-        : pushHelpers.buildThreadUrl({
-            convId: resolvedConvId,
-            messageId,
-          });
-    await admin.messaging().send(
-      buildPushMessage({
-        token: recipient.token,
-        title: copy.title,
-        body: copy.body,
-        url,
-        tag: `dm-${resolvedConvId || recipientId}`,
-        data: {
-          type: "dm",
-          senderId,
-          recipientId,
-          convId: resolvedConvId,
-          messageId,
-          senderName,
-        },
-      })
-    );
-
+    if (result.forbidden) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     return res.status(200).json({
       success: true,
-      pushed: true,
+      pushed: result.pushed > 0,
+      reason: result.reason || undefined,
     });
   } catch (error) {
     logger.error("DM PUSH ERROR", error);
@@ -297,11 +129,12 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
     return res.status(400).json({ error: "Invalid JSON payload" });
   }
 
-  const senderId = typeof body.senderId === "string" ? body.senderId.trim() : "";
-  const groupId = typeof body.groupId === "string" ? body.groupId.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
-  const senderName = typeof body.senderName === "string" ? body.senderName.trim() : "";
-  const groupName = typeof body.groupName === "string" ? body.groupName.trim() : "Group";
+  const senderId = readString(body, "senderId");
+  const groupId = readString(body, "groupId");
+  const message = readString(body, "message") || readString(body, "body");
+  const senderName = readString(body, "senderName");
+  const groupName = readString(body, "groupName") || "Group";
+  const messageId = readString(body, "messageId");
 
   if (!senderId || !groupId || !message) {
     return res.status(400).json({ error: "senderId, groupId and message are required" });
@@ -312,105 +145,33 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
   }
 
   try {
-    const groupRef = admin.firestore().collection("communicationGroups").doc(groupId);
-    const senderMember = await groupRef.collection("members").doc(senderId).get();
-    if (!senderMember.exists) {
+    const senderOk = await delivery.verifyGroupSender(groupId, senderId);
+    if (!senderOk) {
       return res.status(403).json({ error: "Not a group member" });
     }
 
-    const membersSnap = await groupRef.collection("members").limit(80).get();
-    const copy = pushHelpers.buildPushCopy({
-      kind: "group",
-      title: groupName,
+    const result = await delivery.notifyGroupFromHttp({
+      senderId,
+      groupId,
+      messageId,
       senderName,
       groupName,
-      body: body.body || message,
-      meta: {
-        content: body.body || message,
-        messageType: body.messageType,
-        boardShare: body.boardShare,
-      },
+      bodyText: readString(body, "body") || message,
+      url: readString(body, "url"),
+      classification: body.classification,
+      messageType: body.messageType,
+      boardShare: body.boardShare,
+      source: "http",
     });
-    const messageId = typeof body.messageId === "string" ? body.messageId.trim() : "";
-    const url =
-      typeof body.url === "string" && body.url.trim()
-        ? body.url.trim()
-        : pushHelpers.buildThreadUrl({
-            groupId,
-            messageId,
-          });
-
-    let pushed = 0;
-    let skipped = 0;
-    let failed = 0;
-
-    await Promise.all(
-      membersSnap.docs.map(async (memberDoc) => {
-        const recipientId = memberDoc.id;
-        if (recipientId === senderId) {
-          skipped += 1;
-          return;
-        }
-
-        const muted = await isThreadMuted(recipientId, "group", groupId);
-        if (muted) {
-          skipped += 1;
-          return;
-        }
-
-        const recipient = await resolveRecipient(recipientId);
-        const canRead = pushHelpers.recipientCanReadClassification(
-          recipient.userData,
-          body.classification
-        );
-        const skip = pushHelpers.shouldSkipRecipient({
-          isSender: false,
-          muted: false,
-          canRead,
-        });
-        if (skip.skip) {
-          skipped += 1;
-          return;
-        }
-
-        if (!recipient.token) {
-          skipped += 1;
-          return;
-        }
-
-        try {
-          await admin.messaging().send(
-            buildPushMessage({
-              token: recipient.token,
-              title: copy.title,
-              body: copy.body,
-              url,
-              tag: `group-${groupId}`,
-              data: {
-                type: "group_message",
-                senderId,
-                groupId,
-                convId: groupId,
-                messageId,
-                senderName,
-                groupName,
-              },
-            })
-          );
-          pushed += 1;
-        } catch (error) {
-          failed += 1;
-          logger.warn("GROUP PUSH member failed", { recipientId, groupId, error: error.message });
-        }
-      })
-    );
-
+    if (result.forbidden) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     return res.status(200).json({
       success: true,
-      pushed,
-      skipped,
-      failed,
-      members: membersSnap.size,
+      pushed: result.pushed,
+      skipped: result.skipped,
+      failed: result.failed,
+      members: result.members,
     });
   } catch (error) {
     logger.error("GROUP PUSH ERROR", error);
@@ -421,3 +182,47 @@ exports.notifyGroupV2 = onRequest({ region: "us-central1", cors: true }, async (
     });
   }
 });
+
+exports.onCe2DirectMessageCreated = onDocumentCreated(
+  {
+    document: "ce2_conversations/{convId}/ce2_messages/{messageId}",
+    region: "us-central1",
+    retry: false,
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    try {
+      await delivery.notifyDirectMessageCreated({
+        convId: event.params.convId,
+        messageId: event.params.messageId,
+        message: snap.data() || {},
+        source: "trigger",
+      });
+    } catch (error) {
+      logger.error("CE2 DM onCreate push failed", error);
+    }
+  }
+);
+
+exports.onCe2GroupMessageCreated = onDocumentCreated(
+  {
+    document: "communicationGroups/{groupId}/ce2_messages/{messageId}",
+    region: "us-central1",
+    retry: false,
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    try {
+      await delivery.notifyGroupMessageCreated({
+        groupId: event.params.groupId,
+        messageId: event.params.messageId,
+        message: snap.data() || {},
+        source: "trigger",
+      });
+    } catch (error) {
+      logger.error("CE2 group onCreate push failed", error);
+    }
+  }
+);

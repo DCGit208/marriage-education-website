@@ -86,6 +86,8 @@ const searchSrc = read('public/communication-v2/ce2-thread-search.js');
 const rules = read('firestore.rules');
 const indexes = read('firestore.indexes.json');
 const fnSrc = read('functions/index.js');
+const deliverySrc = read('functions/ce2-push-delivery.js');
+const pushFnSrc = fnSrc + '\n' + deliverySrc;
 const dmSrc = read('public/js/dm.js');
 const boardSrc = read('public/js/board.js');
 const notifSrc = read('public/js/notifications.js');
@@ -193,10 +195,15 @@ test('fcmToken is owner-only; notify functions look the token up with admin', fu
   assert.ok(v2.indexOf("recipDoc.data().fcmToken") < 0);
   assert.ok(dmSrc.indexOf('recipientToken') < 0);
   assert.ok(boardSrc.indexOf('recipientToken') < 0);
-  assert.ok(/async function lookupPushToken\(recipientId\)/.test(fnSrc));
-  assert.ok(/collection\("ce2_push"\)/.test(fnSrc));
-  assert.ok(fnSrc.indexOf('body.recipientToken') < 0);
-  assert.ok(/async function resolveRecipient\(recipientId\)/.test(fnSrc));
+  assert.ok(/async function lookupPushToken\(recipientId/.test(pushFnSrc));
+  assert.ok(/collection\("ce2_push"\)/.test(pushFnSrc));
+  assert.ok(pushFnSrc.indexOf('body.recipientToken') < 0);
+  assert.ok(/async function resolveRecipient\(recipientId\)/.test(pushFnSrc));
+  assert.ok(pushFnSrc.indexOf('onDocumentCreated') >= 0);
+  assert.ok(pushFnSrc.indexOf('ce2_conversations/{convId}/ce2_messages/{messageId}') >= 0);
+  assert.ok(
+    pushFnSrc.indexOf('communicationGroups/{groupId}/ce2_messages/{messageId}') >= 0
+  );
 });
 
 test('ce2_share_tokens list is no longer any-auth; get-by-id still works', function () {
