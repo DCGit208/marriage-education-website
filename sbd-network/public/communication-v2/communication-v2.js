@@ -83,8 +83,14 @@
     loading: true,
     error: null,
     statusMessage: null,
-    /** @type {'groups'|'direct'|'discover'} Mobile hub tab when no thread open */
+    /** @type {'groups'|'direct'|'discover'|'saved'|'coach'} Mobile hub tab when no thread open */
     mobileHubPanel: 'groups',
+    /** @type {Array<{id:string,name:string,role:string,createdBy:string}>} */
+    staffedGroups: [],
+    coachRows: [],
+    coachLoaded: false,
+    coachPending: false,
+    coachFilterGroupId: '',
     pendingMessages: [],
     lastServerMessages: [],
     sending: false,
@@ -1496,6 +1502,10 @@
     return root.Ce2Cohort || null;
   }
 
+  function coachApi() {
+    return root.Ce2CoachInbox || null;
+  }
+
   function applyCohortContextFromGroup(data) {
     var api = cohortApi();
     if (!api || !data || !api.contextHeader) {
@@ -1505,6 +1515,277 @@
     var header = api.contextHeader(data);
     CommunicationState.cohortContext = header;
     return header;
+  }
+
+  function showCoachChrome(visible) {
+    var tab = document.querySelector('.ce2-hub-tab[data-hub="coach"]');
+    var panel = document.querySelector('.ce2-section[data-hub-panel="coach"]');
+    var btn = el('ce2CoachInboxBtn');
+    if (tab) tab.hidden = !visible;
+    if (panel) panel.hidden = !visible;
+    if (btn) btn.hidden = !visible;
+    if (!visible && CommunicationState.mobileHubPanel === 'coach') {
+      CommunicationState.mobileHubPanel = 'groups';
+    }
+  }
+
+  function paintCoachInboxList() {
+    var list = el('ce2CoachInboxList');
+    var hint = el('ce2CoachInboxHint');
+    var api = coachApi();
+    if (!list) return;
+    var me = CommunicationState.me;
+    var canSee = api
+      ? api.canSeeCoachInbox(me, (CommunicationState.staffedGroups || []).length)
+      : !!(me && me.isAdmin);
+    if (!canSee) {
+      list.innerHTML = '';
+      return;
+    }
+    if (CommunicationState.coachPending && !CommunicationState.coachLoaded) {
+      list.innerHTML = sidebarListLoadingHtml('Looking for people who need a nudge…');
+      return;
+    }
+    var rows = CommunicationState.coachRows || [];
+    var filterId = CommunicationState.coachFilterGroupId || '';
+    if (filterId) {
+      rows = rows.filter(function (r) {
+        return r.groupId === filterId;
+      });
+    }
+    if (hint) {
+      hint.textContent = filterId
+        ? 'Needs a nudge in this group. Open DM or mention them in the thread — you still send it.'
+        : 'People in groups you host who look quiet or need a nudge. Reply in-network — no mass blast.';
+    }
+    if (!rows.length) {
+      list.innerHTML =
+        '<li class="ce2-placeholder">' +
+        escapeHtml(
+          filterId
+            ? 'No one in this group looks quiet right now.'
+            : 'No one in your groups looks quiet right now. Check back after a few quiet days.'
+        ) +
+        '</li>';
+      return;
+    }
+    list.innerHTML = '';
+    rows.forEach(function (row) {
+      var li = document.createElement('li');
+      li.className = 'ce2-li';
+      li.dataset.action = 'coach-person';
+      li.dataset.uid = row.uid;
+      li.dataset.name = row.name;
+      li.dataset.groupId = row.groupId;
+      li.dataset.groupName = row.groupName;
+      li.innerHTML = api && api.rowHtml ? api.rowHtml(row, escapeHtml) : escapeHtml(row.name);
+      list.appendChild(li);
+    });
+  }
+
+  async function resolveStaffedGroups() {
+    var me = CommunicationState.me;
+    var api = coachApi();
+    var moderation = mod();
+    if (!me) {
+      CommunicationState.staffedGroups = [];
+      showCoachChrome(false);
+      return [];
+    }
+    var groups = CommunicationState.visibleGroups || [];
+    var staffed = [];
+    if (me.isAdmin) {
+      staffed = groups.map(function (g) {
+        return {
+          id: g.id,
+          name: g.name || 'Group',
+          role: 'host',
+          createdBy: g.createdBy || '',
+        };
+      });
+    } else {
+      var jobs = groups.map(function (g) {
+        return db
+          .collection('communicationGroups')
+          .doc(g.id)
+          .collection('members')
+          .doc(me.uid)
+          .get()
+          .then(function (snap) {
+            if (!snap.exists) return null;
+            var role = moderation
+              ? moderation.resolveMemberRole(snap.data() || {}, { createdBy: g.createdBy }, me.uid)
+              : (snap.data() || {}).role || 'member';
+            if (api ? api.isStaffRole(role, me) : role === 'host' || role === 'facilitator') {
+              return {
+                id: g.id,
+                name: g.name || 'Group',
+                role: role,
+                createdBy: g.createdBy || '',
+              };
+            }
+            return null;
+          })
+          .catch(function () {
+            return null;
+          });
+      });
+      var found = await Promise.all(jobs);
+      staffed = found.filter(Boolean);
+    }
+    CommunicationState.staffedGroups = staffed;
+    showCoachChrome(api ? api.canSeeCoachInbox(me, staffed.length) : !!(me && me.isAdmin));
+    return staffed;
+  }
+
+  async function loadCoachInbox(filterGroupId) {
+    var me = CommunicationState.me;
+    var api = coachApi();
+    if (!me || !api) {
+      CommunicationState.coachRows = [];
+      CommunicationState.coachLoaded = true;
+      CommunicationState.coachPending = false;
+      return [];
+    }
+    if (filterGroupId != null) CommunicationState.coachFilterGroupId = filterGroupId || '';
+    var staffed = CommunicationState.staffedGroups || [];
+    if (CommunicationState.coachFilterGroupId) {
+      staffed = staffed.filter(function (g) {
+        return g.id === CommunicationState.coachFilterGroupId;
+      });
+    }
+    if (!api.canSeeCoachInbox(me, (CommunicationState.staffedGroups || []).length)) {
+      CommunicationState.coachRows = [];
+      CommunicationState.coachLoaded = true;
+      CommunicationState.coachPending = false;
+      showCoachChrome(false);
+      return [];
+    }
+    CommunicationState.coachPending = true;
+    var memberships = [];
+    var users = {};
+    var groupMeta = {};
+    var memberCap = api.MAX_MEMBERS_PER_GROUP || 40;
+    await Promise.all(
+      staffed.map(function (g) {
+        return db
+          .collection('communicationGroups')
+          .doc(g.id)
+          .get()
+          .then(function (gsnap) {
+            groupMeta[g.id] = gsnap.exists ? gsnap.data() || {} : {};
+            return db
+              .collection('communicationGroups')
+              .doc(g.id)
+              .collection('members')
+              .limit(memberCap)
+              .get();
+          })
+          .then(function (msnap) {
+            var jobs = [];
+            msnap.forEach(function (doc) {
+              var data = doc.data() || {};
+              var role = api.resolveRole(data, { createdBy: g.createdBy }, doc.id);
+              memberships.push({
+                groupId: g.id,
+                groupName: g.name,
+                uid: doc.id,
+                role: role,
+                joinedAt: data.joinedAt || null,
+              });
+              if (!users[doc.id]) {
+                jobs.push(
+                  db
+                    .collection('users')
+                    .doc(doc.id)
+                    .get()
+                    .then(function (udoc) {
+                      users[doc.id] = udoc.exists ? udoc.data() || {} : {};
+                    })
+                    .catch(function () {
+                      users[doc.id] = {};
+                    })
+                );
+              }
+            });
+            return Promise.all(jobs);
+          })
+          .catch(function () {});
+      })
+    );
+    CommunicationState.coachRows = api.buildInboxRows(
+      {
+        viewer: me,
+        staffedGroups: CommunicationState.staffedGroups,
+        memberships: memberships,
+        users: users,
+        groupMeta: groupMeta,
+        threads: CommunicationState.threads || [],
+      },
+      Date.now()
+    );
+    CommunicationState.coachLoaded = true;
+    CommunicationState.coachPending = false;
+    return CommunicationState.coachRows;
+  }
+
+  function openCoachHub(filterGroupId) {
+    var api = coachApi();
+    var me = CommunicationState.me;
+    if (!api || !me || !api.canSeeCoachInbox(me, (CommunicationState.staffedGroups || []).length)) {
+      CommunicationState.error = 'Coach inbox is for hosts and facilitators of your groups.';
+      render();
+      return;
+    }
+    persistActiveComposerDraft();
+    bumpThreadOpenToken();
+    stopMessagesWatch();
+    CommunicationState.activeConversation = null;
+    CommunicationState.messages = [];
+    CommunicationState.error = null;
+    CommunicationState.statusMessage = null;
+    CommunicationState.sending = false;
+    resetGroupRoleState();
+    if (filterGroupId != null) CommunicationState.coachFilterGroupId = filterGroupId || '';
+    switchHubPanel('coach');
+  }
+
+  function applyCoachComposerDraft(text) {
+    if (!text) return;
+    CommunicationState.shareDraft = String(text).slice(0, 4000);
+    var input = el('ce2Input');
+    if (input) {
+      input.value = CommunicationState.shareDraft;
+      syncCe2ComposerInputHeight(input);
+      if (root.Ce2Format) root.Ce2Format.syncInputMirror();
+    }
+  }
+
+  function openCoachAction(act, row) {
+    var api = coachApi();
+    if (!row || !row.uid) return;
+    var me = CommunicationState.me;
+    if (!me) return;
+    if (act === 'group') {
+      CommunicationState.shareDraft = (api && api.mentionDraft(row.name)) || '';
+      openGroupThread(row.groupId, row.groupName || 'Group').catch(handleCe2Error);
+      return;
+    }
+    var peer = normalizeCe2User(row.uid, { name: row.name });
+    if (!canCommunicate(me, peer)) {
+      CommunicationState.error =
+        'Policy: you cannot open a direct thread with this member from here.';
+      render();
+      return;
+    }
+    if (act === 'nudge') {
+      CommunicationState.shareDraft =
+        (api && api.nudgeDraft(row.name, row.groupName)) ||
+        'Hey — checking in. How are you doing this week?';
+    }
+    openDirectThread(directConvId(me.uid, row.uid), row.uid, row.name || 'Member').catch(
+      handleCe2Error
+    );
   }
 
   function paintCohortContext() {
@@ -1610,8 +1891,13 @@
     }
     document.querySelectorAll('.ce2-hub-tab').forEach(function (btn) {
       var hub = btn.getAttribute('data-hub');
-      if (hub !== 'groups' && hub !== 'direct') return;
-      var n = hub === 'groups' ? counts.groups : counts.direct;
+      if (hub !== 'groups' && hub !== 'direct' && hub !== 'coach') return;
+      var n =
+        hub === 'groups'
+          ? counts.groups
+          : hub === 'direct'
+            ? counts.direct
+            : (CommunicationState.coachRows || []).length;
       var badge = btn.querySelector('.ce2-hub-tab-badge');
       if (!badge) {
         badge = document.createElement('span');
@@ -2591,6 +2877,29 @@
           render();
         });
     }
+
+    if (hub === 'coach') {
+      var inboxApi = coachApi();
+      if (
+        !inboxApi ||
+        !inboxApi.canSeeCoachInbox(me, (CommunicationState.staffedGroups || []).length)
+      ) {
+        CommunicationState.mobileHubPanel = 'groups';
+        CommunicationState.error = 'Coach inbox is for hosts and facilitators of your groups.';
+        render();
+        return;
+      }
+      loadCoachInbox(CommunicationState.coachFilterGroupId)
+        .then(function () {
+          render();
+        })
+        .catch(function (err) {
+          console.warn('switchHubPanel coach', err);
+          CommunicationState.coachPending = false;
+          CommunicationState.coachLoaded = true;
+          render();
+        });
+    }
   }
 
   var lastHubTapMs = 0;
@@ -2602,6 +2911,7 @@
     var now = Date.now();
     if (now - lastHubTapMs < 350) return;
     lastHubTapMs = now;
+    if (hub === 'coach') CommunicationState.coachFilterGroupId = '';
     switchHubPanel(hub);
   }
 
@@ -3336,6 +3646,8 @@
       }
     }
 
+    paintCoachInboxList();
+
     if (sList) {
       sList.innerHTML = '';
       var saved = CommunicationState.savedItems || [];
@@ -3416,7 +3728,8 @@
         'ce2-hub-groups',
         'ce2-hub-direct',
         'ce2-hub-discover',
-        'ce2-hub-saved'
+        'ce2-hub-saved',
+        'ce2-hub-coach'
       );
       sidebar.classList.add('ce2-hub-' + hub);
     }
@@ -5486,6 +5799,14 @@
       }
     }
     CommunicationState._groupsPending = false;
+    return resolveStaffedGroups().then(function () {
+      if (CommunicationState.mobileHubPanel === 'coach' || CommunicationState.coachLoaded) {
+        return loadCoachInbox(CommunicationState.coachFilterGroupId).then(function () {
+          requestRender({ inboxOnly: true });
+        });
+      }
+      requestRender({ inboxOnly: true });
+    });
   }
 
   function paintThreadRowsFromSnap(snap, uid) {
@@ -5741,10 +6062,22 @@
     var shareText = q.get('text') || '';
     var shareUrl = q.get('url') || '';
     var sharePrefill = [shareTitle, shareText, shareUrl].filter(Boolean).join('\n').trim();
+    var coachEntry = coachApi() && coachApi().parseCoachParams
+      ? coachApi().parseCoachParams(q)
+      : null;
 
     if (peerUid) {
       if (sharePrefill) {
         CommunicationState.shareDraft = sharePrefill;
+      } else if (coachEntry && coachEntry.kind === 'nudge') {
+        var nudgePeer = await db.collection('users').doc(peerUid).get().catch(function () {
+          return null;
+        });
+        var nudgeName =
+          nudgePeer && nudgePeer.exists
+            ? nudgePeer.data().displayName || nudgePeer.data().name || 'there'
+            : 'there';
+        CommunicationState.shareDraft = coachApi().nudgeDraft(nudgeName, 'the group');
       }
       var peerDoc = await db.collection('users').doc(peerUid).get();
       var peer = normalizeCe2User(
@@ -5775,11 +6108,25 @@
       await openCohortFromSpec(cohortEntry.spec);
       return;
     }
+    if (coachEntry && coachEntry.kind === 'inbox') {
+      openCoachHub(coachEntry.groupId || '');
+      return;
+    }
     var groupId = q.get('group');
     if (groupId) {
       var gmeta = (CommunicationState.visibleGroups || []).find(function (g) {
         return g.id === groupId;
       });
+      if (coachEntry && coachEntry.kind === 'mention') {
+        var mentionDoc = await db.collection('users').doc(coachEntry.uid).get().catch(function () {
+          return null;
+        });
+        var mentionName =
+          mentionDoc && mentionDoc.exists
+            ? mentionDoc.data().displayName || mentionDoc.data().name || ''
+            : '';
+        CommunicationState.shareDraft = coachApi().mentionDraft(mentionName || coachEntry.uid);
+      }
       await openGroupThread(groupId, gmeta ? gmeta.name : 'Group');
       return;
     }
@@ -7784,6 +8131,15 @@
     paintGroupSettingsSheet().catch(handleCe2Error);
   }
 
+  function bindCoachInbox() {
+    var btn = el('ce2CoachInboxBtn');
+    if (!btn || btn._ce2CoachWired) return;
+    btn._ce2CoachWired = true;
+    btn.addEventListener('click', function () {
+      openCoachHub('');
+    });
+  }
+
   function bindGroupSettings() {
     var btn = el('ce2GroupSettingsBtn');
     var closeBtn = el('ce2GroupSettingsClose');
@@ -7875,10 +8231,23 @@
     var moderation = mod();
     if (!body || !ac || ac.type !== 'group' || !me) return;
     var myRole = CommunicationState.myGroupRole || 'member';
+    var staffNote =
+      moderation && moderation.isGroupStaff(myRole, me)
+        ? '<p class="ce2-group-settings-coach"><button type="button" class="ce2-btn ce2-btn-ghost" id="ce2GroupCoachInboxBtn">Who needs a nudge</button></p>'
+        : '';
     body.innerHTML =
       '<p class="ce2-group-settings-role">Your role: <strong>' +
       escapeHtml(moderation ? moderation.roleLabel(myRole) : 'Member') +
-      '</strong></p><ul class="ce2-group-settings-list"><li class="ce2-placeholder">Loading members…</li></ul>';
+      '</strong></p>' +
+      staffNote +
+      '<ul class="ce2-group-settings-list"><li class="ce2-placeholder">Loading members…</li></ul>';
+    var coachFromGroup = el('ce2GroupCoachInboxBtn');
+    if (coachFromGroup) {
+      coachFromGroup.addEventListener('click', function () {
+        closeGroupSettingsSheet();
+        openCoachHub(ac.id);
+      });
+    }
     var snap = await db
       .collection('communicationGroups')
       .doc(ac.id)
@@ -8015,6 +8384,17 @@
             thread ? thread.label : 'Conversation'
           ).catch(handleCe2Error);
         }
+        return;
+      }
+      if (action === 'coach-person') {
+        var actBtn = e.target.closest('[data-coach-act]');
+        if (!actBtn) return;
+        openCoachAction(actBtn.getAttribute('data-coach-act'), {
+          uid: li.dataset.uid,
+          name: li.dataset.name,
+          groupId: li.dataset.groupId,
+          groupName: li.dataset.groupName,
+        });
         return;
       }
       if (action === 'open-discovery') {
@@ -8421,6 +8801,7 @@
     bindInboxGestures();
     bindNotifyPrefs();
     bindGroupSettings();
+    bindCoachInbox();
     bindHubNav();
     bindPushThreadOpen();
     bindJumpLatestControl();

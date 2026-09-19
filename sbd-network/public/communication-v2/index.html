@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=94">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=96">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -23,6 +23,7 @@
   <script defer src="/js/upload.js?v=12"></script>
   <script defer src="/communication-v2/ce2-governance.js?v=7"></script>
   <script defer src="/communication-v2/ce2-moderation.js?v=4"></script>
+  <script defer src="/communication-v2/ce2-coach-inbox.js?v=1"></script>
   <script defer src="/communication-v2/ce2-links.js?v=4"></script>
   <script defer src="/communication-v2/ce2-attachments.js?v=16"></script>
   <script defer src="/communication-v2/ce2-share.js?v=12"></script>
@@ -44,7 +45,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=5"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=128"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=129"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -62,6 +63,7 @@
         <p class="ce2-sub">Formation-gated · covenant-safe</p>
       </div>
       <span class="ce2-pill" id="ce2TierPill">…</span>
+      <button type="button" class="ce2-coach-inbox-toggle" id="ce2CoachInboxBtn" hidden aria-label="Coach inbox" title="Coach inbox">Coach</button>
       <button type="button" class="ce2-notify-prefs-toggle" id="ce2NotifyPrefsBtn" aria-label="Notification settings" title="Notification settings">🔔</button>
     </header>
 
@@ -74,6 +76,7 @@
           <button type="button" class="ce2-hub-tab" role="tab" data-hub="direct" aria-selected="false">Direct</button>
           <button type="button" class="ce2-hub-tab" role="tab" data-hub="discover" aria-selected="false">Discover</button>
           <button type="button" class="ce2-hub-tab" role="tab" data-hub="saved" aria-selected="false">Starred</button>
+          <button type="button" class="ce2-hub-tab" role="tab" data-hub="coach" hidden aria-selected="false">Coach</button>
         </nav>
         <div class="ce2-sidebar-scroll">
           <section class="ce2-section" data-hub-panel="groups">
@@ -90,6 +93,11 @@
             <h2 class="ce2-section-title">Starred messages</h2>
             <p class="ce2-hint">Saved from any thread — tap to open.</p>
             <ul class="ce2-list ce2-panel-scroll" id="ce2SavedList"></ul>
+          </section>
+          <section class="ce2-section" data-hub-panel="coach" hidden>
+            <h2 class="ce2-section-title">Coach inbox</h2>
+            <p class="ce2-hint" id="ce2CoachInboxHint">People in groups you host who look quiet or need a nudge. Reply in-network — no mass blast.</p>
+            <ul class="ce2-list ce2-panel-scroll" id="ce2CoachInboxList"></ul>
           </section>
           <section class="ce2-section" data-hub-panel="discover">
             <h2 class="ce2-section-title">Discovery</h2>

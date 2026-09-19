@@ -1318,6 +1318,11 @@ service cloud.firestore {
     }
 
     // ── Communication Engine V2 (isolated; legacy /conversations untouched) ──
+    // Coach inbox (facilitator "needs a nudge" list) is assembled on the
+    // client from members + users.lastActive + group lastRead/unreadCount
+    // + the coach's existing DM threads. Do not add a /coachInbox aggregate
+    // — any list path must stay ce2IsGroupStaff / admin only, and must not
+    // expose other users' private prefs or push tokens.
     match /communicationGroups/{groupId} {
       // list is query-safe: admin or requiredTier the caller already meets.
       // Membership-without-tier stays get-by-id (open from a link), not directory list.
