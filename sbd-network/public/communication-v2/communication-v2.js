@@ -127,6 +127,11 @@
     presenceByUid: {},
     /** @type {Record<string, {muted:boolean, pinned:boolean, sortAt:number}>} */
     inboxPrefs: {},
+    notifyPrefs: {
+      quietHours: { enabled: false, startHour: 22, endHour: 7, timezone: 'Africa/Douala' },
+      dmPolicy: 'all',
+      groupPolicy: 'all',
+    },
   };
 
   function threadComposerKey(ac) {
@@ -691,6 +696,197 @@
       });
   }
 
+  function deviceTimeZone() {
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && String(tz).trim()) return String(tz).trim().slice(0, 79);
+    } catch (_) {}
+    return 'Africa/Douala';
+  }
+
+  function defaultNotifyPrefs() {
+    return {
+      quietHours: {
+        enabled: false,
+        startHour: 22,
+        endHour: 7,
+        timezone: deviceTimeZone(),
+      },
+      dmPolicy: 'all',
+      groupPolicy: 'all',
+    };
+  }
+
+  function normalizeNotifyPrefs(raw) {
+    var d = raw || {};
+    var qh = d.quietHours && typeof d.quietHours === 'object' ? d.quietHours : {};
+    function hour(v, fb) {
+      var n = Number(v);
+      if (!isFinite(n)) return fb;
+      return Math.min(23, Math.max(0, Math.floor(n)));
+    }
+    function policy(v, allowed) {
+      var s = String(v || '').trim().toLowerCase();
+      return allowed.indexOf(s) >= 0 ? s : 'all';
+    }
+    var tz = String(qh.timezone || '').trim().slice(0, 79);
+    return {
+      quietHours: {
+        enabled: !!qh.enabled,
+        startHour: hour(qh.startHour, 22),
+        endHour: hour(qh.endHour, 7),
+        timezone: tz || deviceTimeZone(),
+      },
+      dmPolicy: policy(d.dmPolicy, ['all', 'elite_only', 'off']),
+      groupPolicy: policy(d.groupPolicy, ['all', 'mentions_only', 'elite_only', 'off']),
+    };
+  }
+
+  function notifyPrefsRef(uid) {
+    return db.collection('users').doc(uid).collection('ce2_push').doc('prefs');
+  }
+
+  function persistNotifyPrefs(patch) {
+    var me = CommunicationState.me;
+    if (!me) return Promise.resolve();
+    var prev = normalizeNotifyPrefs(CommunicationState.notifyPrefs);
+    var next = normalizeNotifyPrefs(
+      Object.assign({}, prev, patch || {}, {
+        quietHours: Object.assign({}, prev.quietHours, (patch && patch.quietHours) || {}),
+      })
+    );
+    next.quietHours.timezone = deviceTimeZone();
+    CommunicationState.notifyPrefs = next;
+    var payload = {
+      quietHours: {
+        enabled: !!next.quietHours.enabled,
+        startHour: next.quietHours.startHour,
+        endHour: next.quietHours.endHour,
+        timezone: next.quietHours.timezone,
+      },
+      dmPolicy: next.dmPolicy,
+      groupPolicy: next.groupPolicy,
+      updatedAt: firebase.firestore.Timestamp.now(),
+    };
+    return notifyPrefsRef(me.uid)
+      .set(payload)
+      .catch(function (err) {
+        console.warn('[CE2 notify prefs]', err);
+      });
+  }
+
+  function fillNotifyHourSelect(select, selected) {
+    if (!select) return;
+    if (!select.options.length) {
+      var i;
+      for (i = 0; i < 24; i += 1) {
+        var opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = (i < 10 ? '0' : '') + i + ':00';
+        select.appendChild(opt);
+      }
+    }
+    select.value = String(selected);
+  }
+
+  function paintNotifyPrefsSheet() {
+    var prefs = normalizeNotifyPrefs(CommunicationState.notifyPrefs || defaultNotifyPrefs());
+    var enabled = el('ce2NotifyQuietEnabled');
+    var start = el('ce2NotifyQuietStart');
+    var endSel = el('ce2NotifyQuietEnd');
+    var fields = el('ce2NotifyQuietFields');
+    var tz = el('ce2NotifyQuietTz');
+    var dm = el('ce2NotifyDmPolicy');
+    var group = el('ce2NotifyGroupPolicy');
+    fillNotifyHourSelect(start, prefs.quietHours.startHour);
+    fillNotifyHourSelect(endSel, prefs.quietHours.endHour);
+    if (enabled) enabled.checked = !!prefs.quietHours.enabled;
+    if (fields) fields.hidden = !prefs.quietHours.enabled;
+    if (tz) tz.textContent = 'Time zone: ' + (prefs.quietHours.timezone || deviceTimeZone());
+    if (dm) dm.value = prefs.dmPolicy;
+    if (group) group.value = prefs.groupPolicy;
+  }
+
+  function closeNotifyPrefsSheet() {
+    var sheet = el('ce2NotifyPrefsSheet');
+    var btn = el('ce2NotifyPrefsBtn');
+    if (sheet) sheet.hidden = true;
+    if (btn) btn.classList.remove('is-open');
+  }
+
+  function openNotifyPrefsSheet() {
+    paintNotifyPrefsSheet();
+    var sheet = el('ce2NotifyPrefsSheet');
+    var btn = el('ce2NotifyPrefsBtn');
+    if (sheet) sheet.hidden = false;
+    if (btn) btn.classList.add('is-open');
+  }
+
+  function readNotifyPrefsFromSheet() {
+    var enabled = el('ce2NotifyQuietEnabled');
+    var start = el('ce2NotifyQuietStart');
+    var endSel = el('ce2NotifyQuietEnd');
+    var dm = el('ce2NotifyDmPolicy');
+    var group = el('ce2NotifyGroupPolicy');
+    return {
+      quietHours: {
+        enabled: !!(enabled && enabled.checked),
+        startHour: start ? Number(start.value) : 22,
+        endHour: endSel ? Number(endSel.value) : 7,
+        timezone: deviceTimeZone(),
+      },
+      dmPolicy: dm ? dm.value : 'all',
+      groupPolicy: group ? group.value : 'all',
+    };
+  }
+
+  function bindNotifyPrefs() {
+    var btn = el('ce2NotifyPrefsBtn');
+    var closeBtn = el('ce2NotifyPrefsClose');
+    var backdrop = el('ce2NotifyPrefsBackdrop');
+    var sheet = el('ce2NotifyPrefsSheet');
+    if (!sheet || sheet._ce2NotifyWired) return;
+    sheet._ce2NotifyWired = true;
+    fillNotifyHourSelect(el('ce2NotifyQuietStart'), 22);
+    fillNotifyHourSelect(el('ce2NotifyQuietEnd'), 7);
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var s = el('ce2NotifyPrefsSheet');
+        if (s && !s.hidden) closeNotifyPrefsSheet();
+        else openNotifyPrefsSheet();
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeNotifyPrefsSheet);
+    if (backdrop) backdrop.addEventListener('click', closeNotifyPrefsSheet);
+    function onChange() {
+      var fields = el('ce2NotifyQuietFields');
+      var enabled = el('ce2NotifyQuietEnabled');
+      if (fields) fields.hidden = !(enabled && enabled.checked);
+      persistNotifyPrefs(readNotifyPrefsFromSheet());
+    }
+    ['ce2NotifyQuietEnabled', 'ce2NotifyQuietStart', 'ce2NotifyQuietEnd', 'ce2NotifyDmPolicy', 'ce2NotifyGroupPolicy'].forEach(
+      function (id) {
+        var node = el(id);
+        if (node) node.addEventListener('change', onChange);
+      }
+    );
+  }
+
+  function loadNotifyPrefs(uid) {
+    if (!uid) return Promise.resolve();
+    CommunicationState.notifyPrefs = CommunicationState.notifyPrefs || defaultNotifyPrefs();
+    return notifyPrefsRef(uid)
+      .get()
+      .then(function (snap) {
+        CommunicationState.notifyPrefs = normalizeNotifyPrefs(snap.exists ? snap.data() || {} : {});
+        var sheet = el('ce2NotifyPrefsSheet');
+        if (sheet && !sheet.hidden) paintNotifyPrefsSheet();
+      })
+      .catch(function () {
+        CommunicationState.notifyPrefs = defaultNotifyPrefs();
+      });
+  }
+
   function ingestInboxPrefDoc(doc) {
     var ib = inbox();
     if (!ib || !doc) return;
@@ -852,6 +1048,7 @@
     watchInboxPrefs(u.uid);
     watchDirectInbox(u.uid);
     watchGroupInbox(u);
+    loadNotifyPrefs(u.uid);
   }
 
   function closeInboxMenu() {
@@ -883,6 +1080,7 @@
         '<p class="ce2-inbox-menu-title" id="ce2InboxMenuTitle"></p>' +
         '<button type="button" class="ce2-inbox-menu-item" data-inbox-act="pin"></button>' +
         '<button type="button" class="ce2-inbox-menu-item" data-inbox-act="mute"></button>' +
+        '<button type="button" class="ce2-inbox-menu-item" data-inbox-act="notify-prefs">Notification settings</button>' +
         '</div>';
       document.body.appendChild(menu);
       menu.addEventListener('click', function (e) {
@@ -898,6 +1096,11 @@
         if (!kind || !id) return;
         if (act === 'pin') toggleInboxPin(kind, id);
         if (act === 'mute') toggleInboxMute(kind, id);
+        if (act === 'notify-prefs') {
+          closeInboxMenu();
+          openNotifyPrefsSheet();
+          return;
+        }
         closeInboxMenu();
       });
     }
@@ -7498,6 +7701,7 @@
     initCe2ThreadSearch();
     wireCe2DelegatedClick();
     bindInboxGestures();
+    bindNotifyPrefs();
     bindHubNav();
     bindPushThreadOpen();
     bindJumpLatestControl();

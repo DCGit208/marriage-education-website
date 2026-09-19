@@ -171,11 +171,64 @@ test('sender, muted, and unread-for-other-person skip rules', function () {
   assert.strictEqual(helpers.shouldSkipRecipient({ muted: true }).reason, 'muted');
   assert.strictEqual(helpers.shouldSkipRecipient({ canRead: false }).reason, 'visibility');
   assert.strictEqual(helpers.shouldSkipRecipient({ isSender: false, muted: false }).skip, false);
+  assert.strictEqual(
+    helpers.shouldSkipRecipient({ muted: true, policyReason: 'mentions_only', quietHours: true }).reason,
+    'muted'
+  );
+  assert.strictEqual(
+    helpers.shouldSkipRecipient({ policyReason: 'elite_only', quietHours: true }).reason,
+    'elite_only'
+  );
+  assert.strictEqual(helpers.shouldSkipRecipient({ quietHours: true }).reason, 'quiet_hours');
   assert.ok(
     !helpers.recipientCanReadClassification({ tier: 'foundation' }, 'elite')
   );
   assert.ok(helpers.recipientCanReadClassification({ tier: 'elite' }, 'elite'));
   assert.ok(helpers.recipientCanReadClassification({ role: 'admin' }, 'elite'));
+});
+
+test('quiet hours wrap overnight in Africa/Douala and mentions match @FirstName or @uid', function () {
+  const qh = { enabled: true, startHour: 22, endHour: 7, timezone: 'Africa/Douala' };
+  assert.strictEqual(helpers.isInQuietHours(qh, Date.parse('2026-06-15T21:30:00Z')), true);
+  assert.strictEqual(helpers.isInQuietHours(qh, Date.parse('2026-06-15T05:30:00Z')), true);
+  assert.strictEqual(helpers.isInQuietHours(qh, Date.parse('2026-06-15T06:00:00Z')), false);
+  assert.strictEqual(helpers.isInQuietHours(qh, Date.parse('2026-06-15T20:30:00Z')), false);
+  assert.strictEqual(
+    helpers.isInQuietHours({ enabled: false, startHour: 22, endHour: 7, timezone: 'Africa/Douala' }, Date.parse('2026-06-15T21:30:00Z')),
+    false
+  );
+  const bob = { name: 'Bob Mensah', username: 'bobby' };
+  assert.ok(helpers.messageMentionsUser('See you @Bob tonight', bob, 'bob-uid'));
+  assert.ok(helpers.messageMentionsUser('ping @bob-uid', bob, 'bob-uid'));
+  assert.ok(helpers.messageMentionsUser('hey @bobby!', bob, 'bob-uid'));
+  assert.ok(!helpers.messageMentionsUser('See you tonight', bob, 'bob-uid'));
+  assert.strictEqual(
+    helpers.evaluateNotifyPolicy({
+      kind: 'group',
+      prefs: { groupPolicy: 'mentions_only' },
+      mentioned: false,
+    }).reason,
+    'mentions_only'
+  );
+  assert.strictEqual(
+    helpers.evaluateNotifyPolicy({
+      kind: 'group',
+      prefs: { groupPolicy: 'mentions_only' },
+      mentioned: true,
+    }).skip,
+    false
+  );
+  assert.ok(helpers.senderSatisfiesElite({ tier: 'elite' }));
+  assert.ok(helpers.senderSatisfiesElite({ role: 'admin' }));
+  assert.ok(!helpers.senderSatisfiesElite({ tier: 'foundation' }));
+  assert.strictEqual(
+    helpers.evaluateNotifyPolicy({
+      kind: 'direct',
+      prefs: { dmPolicy: 'elite_only' },
+      senderIsElite: false,
+    }).reason,
+    'elite_only'
+  );
 });
 
 test('foreground suppress only when that thread is open and visible', function () {
@@ -370,8 +423,8 @@ test('direct recipients skip the sender; deleted messages do not notify', functi
 
 test('service worker imports helpers, bumps cache, and uses notification data', function () {
   assert.ok(swSrc.indexOf("importScripts('/communication-v2/ce2-push.js')") >= 0);
-  assert.ok(swSrc.indexOf("CACHE_VERSION = 'sbd-network-v1789692000001'") >= 0);
-  assert.ok(swSrc.indexOf("sbd-network-v1789610000001") < 0);
+  assert.ok(swSrc.indexOf("CACHE_VERSION = 'sbd-network-v1789809678000'") >= 0);
+  assert.ok(swSrc.indexOf("sbd-network-v1789692000001") < 0);
   assert.ok(swSrc.indexOf('handleNotificationClick') >= 0);
   assert.ok(swSrc.indexOf('CE2_OPEN_THREAD') >= 0 || swSrc.indexOf('notificationClickPlan') >= 0);
   assert.ok(swSrc.indexOf('webpush.notification') < 0);
@@ -380,6 +433,7 @@ test('service worker imports helpers, bumps cache, and uses notification data', 
 test('functions check mute, skip sender, onCreate trigger, and do not put raw message in data', function () {
   assert.ok(fnSrc.indexOf('isThreadMuted') >= 0);
   assert.ok(fnSrc.indexOf('ce2_inbox') >= 0);
+  assert.ok(fnSrc.indexOf('loadNotifyPrefs') >= 0);
   assert.ok(fnSrc.indexOf('shouldSkipRecipient') >= 0);
   assert.ok(fnSrc.indexOf('webpush:') >= 0);
   assert.ok(fnSrc.indexOf('fcm_options') >= 0);
@@ -414,14 +468,20 @@ test('cache-bust sits strictly above live 112 / 82 / 1 / 5', function () {
   const pushVer = html.match(/ce2-push\.js\?v=(\d+)/);
   const searchVer = html.match(/ce2-thread-search\.js\?v=(\d+)/);
   const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) > 112);
-  assert.ok(cssVer && Number(cssVer[1]) >= 82);
+  assert.ok(jsVer && Number(jsVer[1]) > 121);
+  assert.ok(cssVer && Number(cssVer[1]) >= 88);
   assert.ok(pwaVer && Number(pwaVer[1]) > 5);
   assert.ok(pushVer && Number(pushVer[1]) >= 1);
   assert.ok(searchVer && Number(searchVer[1]) >= 1);
   assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
   assert.ok(html.indexOf('communication-v2.js?v=112') < 0);
   assert.ok(html.indexOf('ce2-pwa.js?v=5') < 0);
+  assert.ok(html.indexOf('ce2NotifyPrefsSheet') >= 0);
+  assert.ok(html.indexOf('ce2NotifyDmPolicy') >= 0);
+  assert.ok(html.indexOf('mentions_only') >= 0);
+  assert.ok(html.indexOf('elite_only') >= 0);
+  assert.ok(appSrc.indexOf("collection('ce2_push').doc('prefs')") >= 0);
+  assert.ok(appSrc.indexOf('function persistNotifyPrefs') >= 0);
 });
 
 test('validate script includes the push test', function () {
@@ -556,9 +616,13 @@ function seedCe2Direct(dbDocs, opts) {
     messageType: opts.messageType || 'text',
     classification: opts.classification || 'foundation',
   };
-  dbDocs['users/' + senderId] = { name: opts.senderName || 'Ada', tier: 'elite' };
+  dbDocs['users/' + senderId] = {
+    name: opts.senderName || 'Ada',
+    tier: opts.senderTier || 'elite',
+    role: opts.senderRole || 'member',
+  };
   dbDocs['users/' + recipientId] = Object.assign(
-    { name: 'Bob', tier: opts.recipientTier || 'foundation' },
+    { name: opts.recipientName || 'Bob', tier: opts.recipientTier || 'foundation' },
     opts.recipientUser || {}
   );
   if (opts.ce2PushToken) {
@@ -568,6 +632,9 @@ function seedCe2Direct(dbDocs, opts) {
     dbDocs['users/' + recipientId + '/ce2_inbox/' + helpers.inboxPrefId('direct', convId)] = {
       muted: true,
     };
+  }
+  if (opts.notifyPrefs) {
+    dbDocs['users/' + recipientId + '/ce2_push/prefs'] = opts.notifyPrefs;
   }
 }
 
@@ -811,6 +878,234 @@ test('group onCreate notifies members except sender and muted, with group deep-l
   assert.strictEqual(harness.sent[0].data.groupId, 'circle');
   assert.ok(String(harness.sent[0].data.url).indexOf('group=circle') >= 0);
   assert.strictEqual(harness.sent[0].notification.title, 'Formation circle');
+});
+
+function quietHoursPrefs(enabled) {
+  return {
+    quietHours: {
+      enabled: !!enabled,
+      startHour: 22,
+      endHour: 7,
+      timezone: 'Africa/Douala',
+    },
+    dmPolicy: 'all',
+    groupPolicy: 'all',
+  };
+}
+
+function seedGroupCircle(dbDocs, opts) {
+  opts = opts || {};
+  dbDocs['communicationGroups/circle'] = { name: 'Formation circle' };
+  dbDocs['communicationGroups/circle/members/ada'] = { role: 'creator' };
+  dbDocs['communicationGroups/circle/members/bob'] = { role: 'member' };
+  dbDocs['communicationGroups/circle/ce2_messages/' + (opts.messageId || 'm9')] = {
+    senderId: opts.senderId || 'ada',
+    conversationId: 'circle',
+    content: opts.content || 'See you tonight',
+    classification: opts.classification || 'foundation',
+    messageType: 'text',
+  };
+  dbDocs['users/ada'] = {
+    name: 'Ada',
+    tier: opts.senderTier || 'elite',
+    role: opts.senderRole || 'member',
+  };
+  dbDocs['users/bob'] = Object.assign(
+    { name: 'Bob Mensah', username: 'bobby', tier: 'foundation' },
+    opts.recipientUser || {}
+  );
+  dbDocs['users/bob/ce2_push/token'] = { fcmToken: 'bob-priv' };
+  if (opts.muted) {
+    dbDocs['users/bob/ce2_inbox/' + helpers.inboxPrefId('group', 'circle')] = { muted: true };
+  }
+  if (opts.notifyPrefs) {
+    dbDocs['users/bob/ce2_push/prefs'] = opts.notifyPrefs;
+  }
+}
+
+test('quiet hours skip closed-app push and allow outside the window', async function () {
+  const dbDocs = {};
+  seedCe2Direct(dbDocs, {
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    senderId: 'ada',
+    recipientId: 'bob',
+    ce2PushToken: 'priv-token',
+    notifyPrefs: quietHoursPrefs(true),
+  });
+  const inside = createTestDelivery(dbDocs);
+  const skipped = await inside.delivery.notifyDirectMessageCreated({
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    message: dbDocs['ce2_conversations/d_ada_bob/ce2_messages/m1'],
+    source: 'trigger',
+    nowMs: Date.parse('2026-06-15T21:30:00Z'),
+  });
+  assert.strictEqual(skipped.pushed, 0);
+  assert.strictEqual(inside.sent.length, 0);
+
+  const outsideDocs = {};
+  seedCe2Direct(outsideDocs, {
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    senderId: 'ada',
+    recipientId: 'bob',
+    ce2PushToken: 'priv-token',
+    notifyPrefs: quietHoursPrefs(true),
+  });
+  const outside = createTestDelivery(outsideDocs);
+  const allowed = await outside.delivery.notifyDirectMessageCreated({
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    message: outsideDocs['ce2_conversations/d_ada_bob/ce2_messages/m1'],
+    source: 'trigger',
+    nowMs: Date.parse('2026-06-15T10:00:00Z'),
+  });
+  assert.strictEqual(allowed.pushed, 1);
+  assert.strictEqual(outside.sent.length, 1);
+});
+
+test('mentions-only allows @FirstName or @uid and denies other group messages', async function () {
+  const denyDocs = {};
+  seedGroupCircle(denyDocs, {
+    content: 'See you tonight',
+    notifyPrefs: { groupPolicy: 'mentions_only', dmPolicy: 'all' },
+  });
+  const deny = createTestDelivery(denyDocs);
+  const denied = await deny.delivery.notifyGroupMessageCreated({
+    groupId: 'circle',
+    messageId: 'm9',
+    message: denyDocs['communicationGroups/circle/ce2_messages/m9'],
+    source: 'trigger',
+  });
+  assert.strictEqual(denied.pushed, 0);
+  assert.strictEqual(deny.sent.length, 0);
+
+  const allowDocs = {};
+  seedGroupCircle(allowDocs, {
+    messageId: 'm10',
+    content: 'Please see this @Bob',
+    notifyPrefs: { groupPolicy: 'mentions_only', dmPolicy: 'all' },
+  });
+  const allow = createTestDelivery(allowDocs);
+  const allowed = await allow.delivery.notifyGroupMessageCreated({
+    groupId: 'circle',
+    messageId: 'm10',
+    message: allowDocs['communicationGroups/circle/ce2_messages/m10'],
+    source: 'trigger',
+  });
+  assert.strictEqual(allowed.pushed, 1);
+  assert.strictEqual(allow.sent.length, 1);
+
+  const uidDocs = {};
+  seedGroupCircle(uidDocs, {
+    messageId: 'm11',
+    content: 'ping @bob',
+    notifyPrefs: { groupPolicy: 'mentions_only', dmPolicy: 'all' },
+  });
+  const uidHarness = createTestDelivery(uidDocs);
+  const uidResult = await uidHarness.delivery.notifyGroupMessageCreated({
+    groupId: 'circle',
+    messageId: 'm11',
+    message: uidDocs['communicationGroups/circle/ce2_messages/m11'],
+    source: 'trigger',
+  });
+  assert.strictEqual(uidResult.pushed, 1);
+});
+
+test('elite-only allows Elite senders and denies foundation senders', async function () {
+  const denyDocs = {};
+  seedCe2Direct(denyDocs, {
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    senderId: 'ada',
+    recipientId: 'bob',
+    senderTier: 'foundation',
+    ce2PushToken: 'priv-token',
+    notifyPrefs: { dmPolicy: 'elite_only', groupPolicy: 'all' },
+  });
+  const deny = createTestDelivery(denyDocs);
+  const denied = await deny.delivery.notifyDirectMessageCreated({
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    message: denyDocs['ce2_conversations/d_ada_bob/ce2_messages/m1'],
+    source: 'trigger',
+  });
+  assert.strictEqual(denied.pushed, 0);
+  assert.strictEqual(deny.sent.length, 0);
+
+  const allowDocs = {};
+  seedCe2Direct(allowDocs, {
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    senderId: 'ada',
+    recipientId: 'bob',
+    senderTier: 'elite',
+    ce2PushToken: 'priv-token',
+    notifyPrefs: { dmPolicy: 'elite_only', groupPolicy: 'all' },
+  });
+  const allow = createTestDelivery(allowDocs);
+  const allowed = await allow.delivery.notifyDirectMessageCreated({
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    message: allowDocs['ce2_conversations/d_ada_bob/ce2_messages/m1'],
+    source: 'trigger',
+  });
+  assert.strictEqual(allowed.pushed, 1);
+  assert.strictEqual(allow.sent.length, 1);
+});
+
+test('mute still wins over mentions-only and sender is never notified', async function () {
+  const dbDocs = {};
+  seedGroupCircle(dbDocs, {
+    content: 'Hey @Bob please read',
+    muted: true,
+    notifyPrefs: { groupPolicy: 'mentions_only', dmPolicy: 'all' },
+  });
+  const harness = createTestDelivery(dbDocs);
+  const result = await harness.delivery.notifyGroupMessageCreated({
+    groupId: 'circle',
+    messageId: 'm9',
+    message: dbDocs['communicationGroups/circle/ce2_messages/m9'],
+    source: 'trigger',
+  });
+  assert.strictEqual(result.pushed, 0);
+  assert.strictEqual(harness.sent.length, 0);
+
+  const selfDocs = {};
+  seedCe2Direct(selfDocs, {
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    senderId: 'ada',
+    recipientId: 'ada',
+    ce2PushToken: 'ada-token',
+    notifyPrefs: { dmPolicy: 'all', groupPolicy: 'all' },
+  });
+  selfDocs['ce2_conversations/d_ada_bob'] = {
+    type: 'direct',
+    participantIds: ['ada', 'ada'],
+  };
+  const selfHarness = createTestDelivery(selfDocs);
+  const selfResult = await selfHarness.delivery.notifyDirectMessageCreated({
+    convId: 'd_ada_bob',
+    messageId: 'm1',
+    message: selfDocs['ce2_conversations/d_ada_bob/ce2_messages/m1'],
+    source: 'trigger',
+  });
+  assert.strictEqual(selfResult.pushed, 0);
+  assert.strictEqual(selfHarness.sent.length, 0);
+});
+
+test('owner-only prefs rules stay next to the token doc', function () {
+  const rules = fs.readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8');
+  const start = rules.indexOf('match /users/{userId}/ce2_push/{docId} {');
+  assert.ok(start >= 0);
+  const block = rules.slice(start, start + 900);
+  assert.ok(/request\.auth\.uid == userId/.test(block));
+  assert.ok(/docId == 'token'/.test(block));
+  assert.ok(/docId == 'prefs'/.test(block));
+  assert.ok(/ce2PushPrefsValid\(\)/.test(block));
+  assert.ok(!/allow read:\s*if request\.auth != null;/.test(block.split('match /ce2_share_tokens')[0]));
 });
 
 run().catch(function (err) {

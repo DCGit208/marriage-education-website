@@ -184,6 +184,8 @@ test('Elite / classification is enforced on ce2_messages read, not UI-only', fun
 test('fcmToken is owner-only; notify functions look the token up with admin', function () {
   const pushMatch = extractMatch(rules, 'match /users/{userId}/ce2_push/{docId} {');
   assert.ok(/request\.auth\.uid == userId/.test(pushMatch));
+  assert.ok(/docId == 'token'/.test(pushMatch));
+  assert.ok(/docId == 'prefs'/.test(pushMatch));
   assert.ok(!/allow read:\s*if request\.auth != null;/.test(pushMatch.split('match /ce2_share_tokens')[0]));
   assert.ok(/function ce2UserPushSecretsUnchangedOrStripped\(\)/.test(rules));
   assert.ok(/!ce2UserPushSecretsPresent\(request\.resource\.data\)/.test(rules));

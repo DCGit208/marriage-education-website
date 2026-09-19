@@ -1,5 +1,5 @@
 /**
- * CE2 push delivery — token lookup, mute, claims, and FCM send.
+ * CE2 push delivery — token lookup, mute, notify prefs, claims, and FCM send.
  * Firestore onCreate is the primary path; HTTP notify is a fallback.
  * Injected db/messaging so unit tests do not need firebase-admin.
  */
@@ -147,6 +147,36 @@ function createDelivery(deps) {
     }
   }
 
+  async function loadNotifyPrefs(uid) {
+    if (!uid) return pushHelpers.normalizeNotifyPrefs({});
+    try {
+      const snap = await getDb()
+        .collection("users")
+        .doc(uid)
+        .collection("ce2_push")
+        .doc("prefs")
+        .get();
+      return pushHelpers.normalizeNotifyPrefs(snap.exists ? snap.data() || {} : {});
+    } catch (error) {
+      logger.warn("CE2 notify prefs lookup failed", {
+        uid,
+        error: error.message,
+      });
+      return pushHelpers.normalizeNotifyPrefs({});
+    }
+  }
+
+  async function loadUserData(uid) {
+    if (!uid) return {};
+    try {
+      const doc = await getDb().collection("users").doc(uid).get();
+      return doc.exists ? doc.data() || {} : {};
+    } catch (error) {
+      logger.warn("CE2 user lookup failed", { uid, error: error.message });
+      return {};
+    }
+  }
+
   async function claimPushDelivery(claimId, meta) {
     if (!claimId) return true;
     try {
@@ -194,16 +224,37 @@ function createDelivery(deps) {
       return { pushed: false, reason: "missing_recipient" };
     }
 
-    const muted = await isThreadMuted(recipientId, kind, threadId);
-    const recipient = await resolveRecipient(recipientId);
+    const [muted, recipient, prefs] = await Promise.all([
+      isThreadMuted(recipientId, kind, threadId),
+      resolveRecipient(recipientId),
+      loadNotifyPrefs(recipientId),
+    ]);
     const canRead = pushHelpers.recipientCanReadClassification(
       recipient.userData,
       message.classification
     );
+    const mentioned = pushHelpers.messageMentionsUser(
+      message.content,
+      recipient.userData,
+      recipientId
+    );
+    let senderUserData = opts.senderUserData;
+    if (senderUserData == null && senderId) {
+      senderUserData = await loadUserData(senderId);
+    }
+    const policy = pushHelpers.evaluateNotifyPolicy({
+      kind,
+      prefs,
+      mentioned,
+      senderIsElite: pushHelpers.senderSatisfiesElite(senderUserData),
+    });
+    const quietHours = pushHelpers.isInQuietHours(prefs.quietHours, opts.nowMs);
     const skip = pushHelpers.shouldSkipRecipient({
       isSender: recipientId === senderId,
       muted,
       canRead,
+      policyReason: policy.skip ? policy.reason : "",
+      quietHours,
     });
     if (skip.skip) {
       return { pushed: false, reason: skip.reason };
@@ -316,19 +367,13 @@ function createDelivery(deps) {
     return (snap.docs || []).map((doc) => doc.id);
   }
 
-  async function senderDisplayName(senderId, fallback) {
-    if (!senderId) return fallback || "Someone";
-    try {
-      const doc = await getDb().collection("users").doc(senderId).get();
-      if (!doc.exists) return fallback || "Someone";
-      return pushHelpers.userDisplayName(doc.data() || {}, fallback);
-    } catch (error) {
-      logger.warn("CE2 sender name lookup failed", {
-        senderId,
-        error: error.message,
-      });
-      return fallback || "Someone";
+  async function senderDisplayName(senderId, fallback, knownUserData) {
+    if (knownUserData && typeof knownUserData === "object") {
+      return pushHelpers.userDisplayName(knownUserData, fallback);
     }
+    if (!senderId) return fallback || "Someone";
+    const data = await loadUserData(senderId);
+    return pushHelpers.userDisplayName(data, fallback);
   }
 
   async function notifyDirectMessageCreated({
@@ -337,6 +382,7 @@ function createDelivery(deps) {
     message,
     source,
     senderName,
+    nowMs,
   }) {
     const msg = message || {};
     const gate = pushHelpers.shouldNotifyCreatedMessage(msg);
@@ -370,9 +416,11 @@ function createDelivery(deps) {
     }
     recipientIds = recipientIds.filter((id) => id !== senderId);
 
+    const senderUserData = await loadUserData(senderId);
     const resolvedSenderName = await senderDisplayName(
       senderId,
-      senderName || "Someone"
+      senderName || "Someone",
+      senderUserData
     );
 
     let pushed = 0;
@@ -387,8 +435,10 @@ function createDelivery(deps) {
           senderId,
           recipientId,
           senderName: resolvedSenderName,
+          senderUserData,
           message: msg,
           source: source || "trigger",
+          nowMs,
         });
         if (result.pushed) pushed += 1;
         else if (result.reason === "push_failed") failed += 1;
@@ -411,6 +461,7 @@ function createDelivery(deps) {
     source,
     senderName,
     groupName,
+    nowMs,
   }) {
     const msg = message || {};
     const gate = pushHelpers.shouldNotifyCreatedMessage(msg);
@@ -428,9 +479,11 @@ function createDelivery(deps) {
     const memberIds = await listGroupMemberIds(resolvedGroupId);
     const recipientIds = memberIds.filter((id) => id && id !== senderId);
     const resolvedGroupName = pushHelpers.groupDisplayName(group, groupName);
+    const senderUserData = await loadUserData(senderId);
     const resolvedSenderName = await senderDisplayName(
       senderId,
-      senderName || "Someone"
+      senderName || "Someone",
+      senderUserData
     );
 
     let pushed = 0;
@@ -445,9 +498,11 @@ function createDelivery(deps) {
           senderId,
           recipientId,
           senderName: resolvedSenderName,
+          senderUserData,
           groupName: resolvedGroupName,
           message: msg,
           source: source || "trigger",
+          nowMs,
         });
         if (result.pushed) pushed += 1;
         else if (result.reason === "push_failed") failed += 1;
@@ -488,6 +543,7 @@ function createDelivery(deps) {
           message: stored,
           source: opts.source || "http",
           senderName: opts.senderName,
+          nowMs: opts.nowMs,
         });
       }
     }
@@ -511,6 +567,7 @@ function createDelivery(deps) {
       message,
       url: opts.url,
       source: opts.source || "http",
+      nowMs: opts.nowMs,
     });
     return {
       pushed: result.pushed ? 1 : 0,
@@ -538,6 +595,7 @@ function createDelivery(deps) {
           source: opts.source || "http",
           senderName: opts.senderName,
           groupName: opts.groupName,
+          nowMs: opts.nowMs,
         });
       }
     }
@@ -574,6 +632,7 @@ function createDelivery(deps) {
           message,
           url: opts.url,
           source: opts.source || "http",
+          nowMs: opts.nowMs,
         });
         if (result.pushed) pushed += 1;
         else if (result.reason === "push_failed") failed += 1;
@@ -619,6 +678,7 @@ function createDelivery(deps) {
     lookupPushToken,
     resolveRecipient,
     isThreadMuted,
+    loadNotifyPrefs,
     deliverToRecipient,
     notifyDirectMessageCreated,
     notifyGroupMessageCreated,
