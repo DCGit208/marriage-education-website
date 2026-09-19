@@ -188,8 +188,8 @@ console.log('\nCE2 media cards + board-share polish\n');
 const share = loadIife('public/communication-v2/ce2-share.js').Ce2Share;
 assert.ok(share, 'Ce2Share did not load');
 
-test('Ce2Share VERSION is 4', function () {
-  assert.strictEqual(share.VERSION, 4);
+test('Ce2Share VERSION is 5', function () {
+  assert.strictEqual(share.VERSION, 5);
 });
 
 test('boardShareThumbUrl prefers thumbnailUrl then thumbUrl then imageUrl', function () {
@@ -296,11 +296,11 @@ test('messenger cache-bust is above live for changed card/media assets', functio
   const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
   const shareVer = html.match(/ce2-share\.js\?v=(\d+)/);
   const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
-  assert.ok(cssVer && Number(cssVer[1]) >= 91, 'css cache-bust must be above live v=90');
-  assert.ok(shareVer && Number(shareVer[1]) >= 11, 'ce2-share cache-bust must be above live v=10');
+  assert.ok(cssVer && Number(cssVer[1]) >= 92, 'css cache-bust must be above live v=91');
+  assert.ok(shareVer && Number(shareVer[1]) >= 12, 'ce2-share cache-bust must be above live v=11');
   assert.ok(mediaVer && Number(mediaVer[1]) >= 5, 'ce2-media-view cache-bust must be above live v=4');
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) >= 125, 'communication-v2.js cache-bust must be above live v=124');
+  assert.ok(jsVer && Number(jsVer[1]) >= 126, 'communication-v2.js cache-bust must be above live v=125');
   const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
   assert.ok(actionsVer && Number(actionsVer[1]) >= 23, 'ce2-message-actions.js cache-bust must stay at or above live v=23');
 });

@@ -3001,6 +3001,33 @@ body.ce2-inbox-menu-open {
   }
 }
 
+.ce2-drawer-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(232, 226, 210, 0.62);
+}
+
+.ce2-drawer-action {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 184, 146, 0.28);
+  background: rgba(201, 184, 146, 0.1);
+  color: #e8e2d2;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-drawer-action:active {
+  background: rgba(201, 184, 146, 0.18);
+}
+
 .ce2-input-inline {
   flex: 1 1 100%;
   min-width: 0;

@@ -196,7 +196,7 @@ test('messenger return control is position:fixed (not sticky)', function () {
 test('board cache-bust for board-media.css is above live', function () {
   const src = fs.readFileSync(path.join(ROOT, 'src/pages/board.html'), 'utf8');
   const pub = fs.readFileSync(path.join(ROOT, 'public/board.html'), 'utf8');
-  assert.ok(/board-media\.css\?v=64/.test(src));
+  assert.ok(/board-media\.css\?v=65/.test(src));
   const pubVer = pub.match(/board-media\.css\?v=(\d+)/);
   assert.ok(pubVer, 'public board.html must version board-media.css');
   assert.ok(Number(pubVer[1]) > 1789602190001, 'public CSS cache-bust must be above live v=1789602190001');

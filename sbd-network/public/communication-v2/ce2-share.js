@@ -1,12 +1,25 @@
 /**
- * CE2 Phase 3 — board post share tokens + messenger return links
+ * CE2 Phase 3 — board post share tokens + messenger return links.
+ * Also the share-into-thread payload helpers (formation / board moments).
  */
 (function (global) {
   'use strict';
 
   var FROM_MESSENGER = 'ce2';
   var MESSENGER_PATH = '/communication-v2/';
+  var BOARDS_PATH = '/boards.html';
+  var BOARD_RETURN_KEY = 'sbd.ce2.boardReturn';
+  var DEFAULT_SHARE_CONTENT = 'Shared a board post';
+  var CARD_KICKER = 'Board share';
   var ID_RE = /^[A-Za-z0-9._-]{1,200}$/;
+  var SBD_RETURN_SURFACES = [
+    '/communication-v2',
+    '/board',
+    '/boards',
+    '/dashboard',
+    '/group',
+    '/learn',
+  ];
 
   function originBase() {
     return global.location ? global.location.origin : 'https://sbd-network.web.app';
@@ -113,6 +126,150 @@
     };
   }
 
+  function storageApi() {
+    try {
+      if (global.sessionStorage) return global.sessionStorage;
+    } catch (_) {}
+    return null;
+  }
+
+  function persistMessengerReturn(info) {
+    var store = storageApi();
+    if (!store) return false;
+    try {
+      var ret = normalizeMessengerReturn(info);
+      if (ret && ret.from === FROM_MESSENGER) {
+        store.setItem(BOARD_RETURN_KEY, JSON.stringify(ret));
+        return true;
+      }
+      store.removeItem(BOARD_RETURN_KEY);
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function readStoredMessengerReturn() {
+    var store = storageApi();
+    if (!store) return null;
+    try {
+      var raw = store.getItem(BOARD_RETURN_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return normalizeMessengerReturn(parsed);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function clearStoredMessengerReturn() {
+    var store = storageApi();
+    if (!store) return;
+    try {
+      store.removeItem(BOARD_RETURN_KEY);
+    } catch (_) {}
+  }
+
+  function shouldKeepStoredReturn(pathname) {
+    var path = String(pathname || '');
+    try {
+      if (/^https?:\/\//i.test(path)) path = new URL(path).pathname || '';
+    } catch (_) {}
+    var i;
+    for (i = 0; i < SBD_RETURN_SURFACES.length; i += 1) {
+      if (path.indexOf(SBD_RETURN_SURFACES[i]) === 0) return true;
+    }
+    return false;
+  }
+
+  function shareThreadTarget(info) {
+    var ret = normalizeMessengerReturn(info);
+    if (!ret) return null;
+    if (ret.group) return { type: 'group', id: ret.group };
+    if (ret.conv) return { type: 'direct', id: ret.conv };
+    return { type: '', id: '' };
+  }
+
+  function isPreferredShareTarget(target, returnInfo) {
+    var pref = shareThreadTarget(returnInfo);
+    if (!pref || !pref.id || !target) return false;
+    return String(pref.type) === String(target.type) && String(pref.id) === String(target.id);
+  }
+
+  function sortShareTargets(targets, returnInfo) {
+    var list = Array.isArray(targets) ? targets.slice() : [];
+    list.sort(function (a, b) {
+      var ap = isPreferredShareTarget(a, returnInfo) ? 0 : 1;
+      var bp = isPreferredShareTarget(b, returnInfo) ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      var at = a && a.lastActivityAt ? Number(a.lastActivityAt) : 0;
+      var bt = b && b.lastActivityAt ? Number(b.lastActivityAt) : 0;
+      if (bt !== at) return bt - at;
+      return String((a && a.name) || '').localeCompare(String((b && b.name) || ''));
+    });
+    return list;
+  }
+
+  function boardsHrefWithReturn(info) {
+    var ret = normalizeMessengerReturn(info) || { from: FROM_MESSENGER, conv: '', group: '' };
+    var href = BOARDS_PATH + '?from=' + encodeURIComponent(FROM_MESSENGER);
+    if (ret.group) return href + '&group=' + encodeURIComponent(ret.group);
+    if (ret.conv) return href + '&conv=' + encodeURIComponent(ret.conv);
+    return href;
+  }
+
+  function clipText(value, max) {
+    var s = String(value == null ? '' : value).trim();
+    if (!s) return '';
+    max = max || 200;
+    return s.length > max ? s.slice(0, max) : s;
+  }
+
+  function shareContentFromNote(note) {
+    var s = clipText(note, 240);
+    return s || DEFAULT_SHARE_CONTENT;
+  }
+
+  /**
+   * Normalize a board-share card payload for ce2_messages.boardShare.
+   * Stored URLs stay clean (no from/conv); return params are added at render time.
+   */
+  function buildBoardSharePayload(opts) {
+    opts = opts || {};
+    var boardId = String(opts.boardId || '').trim();
+    var postId = String(opts.postId || '').trim();
+    var token = String(opts.token || '').trim();
+    var title = clipText(opts.title, 120);
+    var excerpt = clipText(opts.excerpt, 200);
+    var note = clipText(opts.note, 240);
+    var thumbnailUrl = String(opts.thumbnailUrl || opts.thumbUrl || opts.imageUrl || '').trim();
+    var mediaType = String(opts.mediaType || '').trim();
+    var mediaUrl = String(opts.mediaUrl || '').trim();
+    var url = String(opts.url || '').trim() || (boardId && postId ? shareHref(boardId, postId, token) : '');
+    return {
+      boardId: boardId,
+      postId: postId,
+      token: token,
+      url: url,
+      thumbnailUrl: thumbnailUrl,
+      mediaType: mediaType,
+      mediaUrl: mediaUrl,
+      selectedMedia: !!opts.selectedMedia,
+      note: note,
+      title: title || excerpt || note || 'Board post',
+      excerpt: excerpt,
+    };
+  }
+
+  function isValidBoardSharePayload(bs) {
+    return !!(
+      bs &&
+      String(bs.boardId || '').trim() &&
+      String(bs.postId || '').trim() &&
+      typeof bs.token === 'string'
+    );
+  }
+
   function newTokenId() {
     return 'bs_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
   }
@@ -171,7 +328,9 @@
       '<a class="ce2-board-share-body" href="' +
       href.replace(/"/g, '&quot;') +
       '">' +
-      '<span class="ce2-board-share-kicker">Board share</span>' +
+      '<span class="ce2-board-share-kicker">' +
+      CARD_KICKER +
+      '</span>' +
       '<span class="ce2-board-share-title">' +
       title +
       '</span>' +
@@ -191,9 +350,23 @@
     messengerReturnHref: messengerReturnHref,
     parseMessengerReturnFromSearch: parseMessengerReturnFromSearch,
     normalizeMessengerReturn: normalizeMessengerReturn,
+    persistMessengerReturn: persistMessengerReturn,
+    readStoredMessengerReturn: readStoredMessengerReturn,
+    clearStoredMessengerReturn: clearStoredMessengerReturn,
+    shouldKeepStoredReturn: shouldKeepStoredReturn,
+    shareThreadTarget: shareThreadTarget,
+    isPreferredShareTarget: isPreferredShareTarget,
+    sortShareTargets: sortShareTargets,
+    boardsHrefWithReturn: boardsHrefWithReturn,
+    buildBoardSharePayload: buildBoardSharePayload,
+    isValidBoardSharePayload: isValidBoardSharePayload,
+    shareContentFromNote: shareContentFromNote,
     boardShareThumbUrl: boardShareThumbUrl,
     renderBoardShareHtml: renderBoardShareHtml,
     FROM_MESSENGER: FROM_MESSENGER,
-    VERSION: 4,
+    BOARD_RETURN_KEY: BOARD_RETURN_KEY,
+    DEFAULT_SHARE_CONTENT: DEFAULT_SHARE_CONTENT,
+    CARD_KICKER: CARD_KICKER,
+    VERSION: 5,
   };
 })(typeof window !== 'undefined' ? window : global);
