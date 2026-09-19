@@ -663,6 +663,13 @@ async function loadBoardInfo() {
 
     if (boardTitle)       boardTitle.textContent       = currentBoardData.title || 'Board';
     if (boardDescription) boardDescription.textContent = currentBoardData.description || '';
+    const cohortLink = document.getElementById('boardCohortChat');
+    if (cohortLink && boardId) {
+      cohortLink.href = window.Ce2Cohort && Ce2Cohort.entryHref
+        ? Ce2Cohort.entryHref({ cohortType: 'board', boardId: boardId })
+        : '/communication-v2/?cohort=board&board=' + encodeURIComponent(boardId);
+      cohortLink.hidden = false;
+    }
     if (postCountBadge && currentBoardData.postCount) {
       postCountBadge.textContent = currentBoardData.postCount + ' posts';
     }

@@ -629,6 +629,19 @@
             opacity: 0.85;
         }
         .week-complete-discuss-link:hover { opacity: 1; text-decoration: underline; }
+        .lesson-cohort-chat {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(198,169,107,0.35);
+            background: rgba(198,169,107,0.12);
+            color: var(--gold, #C6A96B);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .lesson-cohort-chat[hidden] { display: none; }
     </style>
 </head>
 <body data-page="learn" class="bottom-nav-page formation-reader-body">
@@ -649,6 +662,7 @@
             <h1 class="formation-title" id="lessonTitle">Loading…</h1>
             <p class="formation-dek" id="lessonSubtitle"></p>
             <div class="formation-meta-row" id="lessonReadMeta" style="display:none"></div>
+            <a id="lessonCohortChat" class="lesson-cohort-chat" hidden href="/communication-v2/">Open cohort chat</a>
             <div class="formation-week-progress" id="weekProgressBlock" style="display:none">
                 <div class="formation-week-progress-label">
                     <span>Week progress</span>
@@ -687,6 +701,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="/js/firebase.js?v=1789601192648"></script>
     <script src="/js/course-access.js?v=1789601192648"></script>
+    <script src="/communication-v2/ce2-cohort.js?v=1"></script>
     <script src="/js/scripture-passages.js?v=1789601192648"></script>
     <script src="/js/lesson-renderer.js?v=1789601192648"></script>
     <script src="/js/lesson-chrome.js?v=1789601192648"></script>
@@ -852,6 +867,8 @@
                 }
             }
 
+            showLessonCohortChat(currentMod.courseId);
+
             // ── Load progress ───────────────────────────────────
             if (uData) {
                 const prog = uData.progress || {};
@@ -905,6 +922,15 @@
             }
             _partContentCache[cacheKey] = content;
             return content;
+        }
+
+        function showLessonCohortChat(courseId) {
+            const cohortLink = document.getElementById('lessonCohortChat');
+            if (!cohortLink || !courseId) return;
+            cohortLink.href = window.Ce2Cohort && Ce2Cohort.entryHref
+                ? Ce2Cohort.entryHref({ cohortType: 'course', courseId: courseId })
+                : '/communication-v2/?cohort=course&course=' + encodeURIComponent(courseId);
+            cohortLink.hidden = false;
         }
 
         function estimateReadMin(text) {

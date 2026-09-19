@@ -289,7 +289,7 @@ test('cache-bust is above live for share / messenger / board assets', function (
 
   const srcBoard = read('src/pages/board.html');
   const pubBoard = read('public/board.html');
-  assert.ok(/board-media\.css\?v=65/.test(srcBoard));
+  assert.ok(/board-media\.css\?v=66/.test(srcBoard));
   const pubCss = pubBoard.match(/board-media\.css\?v=(\d+)/);
   assert.ok(pubCss && Number(pubCss[1]) > 1789602190003);
   const pubShare = pubBoard.match(/ce2-share\.js\?v=(\d+)/);

@@ -619,6 +619,61 @@ body.ce2-body-root.ce2-kb-active {
   font-style: italic;
 }
 
+.ce2-cohort-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 12px 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 184, 146, 0.28);
+  background: rgba(201, 184, 146, 0.08);
+}
+
+.ce2-cohort-context[hidden] {
+  display: none;
+}
+
+.ce2-cohort-context-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ce2-cohort-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #c9b892;
+}
+
+.ce2-cohort-title {
+  font-size: 0.78rem;
+  color: #e8dcc4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce2-cohort-context-link {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #c9b892;
+  text-decoration: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.ce2-cohort-context-link:hover,
+.ce2-cohort-context-link:focus {
+  text-decoration: underline;
+  color: #e8dcc4;
+}
+
 .ce2-thread-search-toggle {
   flex-shrink: 0;
   width: 36px;

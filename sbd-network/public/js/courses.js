@@ -856,6 +856,14 @@ async function openCourse(courseId) {
 async function showCourseSheet(courseId, course) {
   document.getElementById('sheetCourseTitle').textContent = course?.title || 'Course';
   document.getElementById('sheetWeekList').innerHTML = '<div class="sheet-loading">Loading weeks…</div>';
+  const cohortBtn = document.getElementById('sheetCohortChatBtn');
+  if (cohortBtn) {
+    const href = window.Ce2Cohort && Ce2Cohort.entryHref
+      ? Ce2Cohort.entryHref({ cohortType: 'course', courseId: courseId })
+      : '/communication-v2/?cohort=course&course=' + encodeURIComponent(courseId);
+    cohortBtn.href = href;
+    cohortBtn.hidden = false;
+  }
 
   const backdrop = document.getElementById('courseSheetBackdrop');
   const panel    = document.getElementById('courseSheetPanel');
@@ -939,6 +947,8 @@ async function showCourseSheet(courseId, course) {
 function closeCourseSheet() {
   const backdrop = document.getElementById('courseSheetBackdrop');
   const panel    = document.getElementById('courseSheetPanel');
+  const cohortBtn = document.getElementById('sheetCohortChatBtn');
+  if (cohortBtn) cohortBtn.hidden = true;
   backdrop.classList.remove('active');
   panel.classList.remove('active');
   document.body.style.overflow = '';
