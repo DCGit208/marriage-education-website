@@ -232,7 +232,7 @@ test('OG thumbnail is a reply button outside the open-post link', function () {
     },
     escapeHtml
   );
-  assert.ok(/<button type="button" class="ce2-board-share-thumb"/.test(html));
+  assert.ok(/<button type="button" class="ce2-board-share-thumb/.test(html));
   assert.ok(/aria-label="Reply to this message"/.test(html));
   assert.ok(/<a class="ce2-board-share-body" href="[^"]*boardId=b1[^"]*post=p1/.test(html));
   assert.ok(/from=ce2/.test(html));

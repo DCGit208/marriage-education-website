@@ -158,11 +158,11 @@
     // message menu, and iOS often stole the image gesture (save/open sheet).
     var thumbHtml =
       '<button type="button" class="ce2-board-share-thumb' +
-      (thumb ? '' : ' is-fallback') +
+      (thumb ? ' is-deferred' : ' is-fallback') +
       '" aria-label="Reply to this message">' +
       '<span class="ce2-board-share-thumb-ph" aria-hidden="true"></span>' +
       (thumb
-        ? '<img class="ce2-board-share-thumb-img" src="' +
+        ? '<img class="ce2-board-share-thumb-img" data-ce2-src="' +
           safeThumb +
           '" alt="" loading="lazy" decoding="async" draggable="false">'
         : '') +
@@ -194,6 +194,6 @@
     boardShareThumbUrl: boardShareThumbUrl,
     renderBoardShareHtml: renderBoardShareHtml,
     FROM_MESSENGER: FROM_MESSENGER,
-    VERSION: 3,
+    VERSION: 4,
   };
 })(typeof window !== 'undefined' ? window : global);

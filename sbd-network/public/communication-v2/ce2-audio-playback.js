@@ -257,6 +257,8 @@
       return err;
     }
 
+    // Store the locator only. play() calls resolveR2MediaUrl when the user taps.
+
     var player = document.createElement('div');
     player.className = 'ce2-voice-player';
     player.setAttribute('data-ce2-audio-id', messageId);
@@ -337,6 +339,6 @@
         rafId = 0;
       }
     },
-    VERSION: 3,
+    VERSION: 4,
   };
 })(typeof window !== 'undefined' ? window : global);

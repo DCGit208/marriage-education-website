@@ -103,6 +103,10 @@
     _openToken: 0,
     _loadThreadsTimer: null,
     _pendingThreadOnly: false,
+    _pendingInboxOnly: false,
+    _groupsPending: false,
+    _threadsPending: false,
+    _presenceDeferTimer: null,
     voiceRecording: false,
     voiceRecordingCancel: false,
     voiceRecordingLocked: false,
@@ -571,6 +575,14 @@
     presenceWatchSet.sync(collectPresenceUids());
   }
 
+  function schedulePresenceWatches() {
+    if (CommunicationState._presenceDeferTimer) return;
+    CommunicationState._presenceDeferTimer = setTimeout(function () {
+      CommunicationState._presenceDeferTimer = null;
+      syncPresenceWatches();
+    }, 480);
+  }
+
   function startPresenceLayer(uid) {
     var pr = presence();
     if (!pr || !uid || typeof db === 'undefined') return;
@@ -588,7 +600,7 @@
       if (!pr.refreshRecords) return;
       if (pr.refreshRecords(CommunicationState.presenceByUid)) applyPresenceUi();
     }, 15000);
-    syncPresenceWatches();
+    schedulePresenceWatches();
   }
 
   function stopPresenceLayer() {
@@ -605,6 +617,10 @@
     if (presenceTickTimer) {
       clearInterval(presenceTickTimer);
       presenceTickTimer = null;
+    }
+    if (CommunicationState._presenceDeferTimer) {
+      clearTimeout(CommunicationState._presenceDeferTimer);
+      CommunicationState._presenceDeferTimer = null;
     }
     CommunicationState.presenceByUid = {};
     stopInboxWatches();
@@ -2531,21 +2547,30 @@
   function requestRender(opts) {
     opts = opts || {};
     if (opts.threadOnly) CommunicationState._pendingThreadOnly = true;
+    if (opts.inboxOnly) CommunicationState._pendingInboxOnly = true;
     if (opts.throttle && !opts.threadOnly) {
       if (CommunicationState._throttleRenderTimer) return;
       CommunicationState._throttleRenderTimer = setTimeout(function () {
         CommunicationState._throttleRenderTimer = null;
-        requestRender({ threadOnly: CommunicationState._pendingThreadOnly });
+        requestRender({
+          threadOnly: CommunicationState._pendingThreadOnly,
+          inboxOnly: CommunicationState._pendingInboxOnly,
+        });
         CommunicationState._pendingThreadOnly = false;
+        CommunicationState._pendingInboxOnly = false;
       }, 120);
       return;
     }
     if (renderRaf) return;
     var threadOnly = CommunicationState._pendingThreadOnly;
+    var inboxOnly = CommunicationState._pendingInboxOnly;
     CommunicationState._pendingThreadOnly = false;
+    CommunicationState._pendingInboxOnly = false;
     renderRaf = requestAnimationFrame(function () {
       renderRaf = 0;
-      render(threadOnly ? { threadOnly: true } : {});
+      if (threadOnly && !inboxOnly) render({ threadOnly: true });
+      else if (inboxOnly && !threadOnly) render({ inboxOnly: true });
+      else render({});
     });
   }
 
@@ -3096,6 +3121,20 @@
       return;
     }
 
+    var ib = inbox();
+    function listMode(pending, rows) {
+      if (ib && ib.listPaintMode) {
+        return ib.listPaintMode({
+          appLoading: false,
+          listPending: !!pending,
+          rowCount: (rows && rows.length) || 0,
+        });
+      }
+      if (pending) return 'loading';
+      if (!rows || !rows.length) return 'empty';
+      return 'rows';
+    }
+
     if (pill && u) {
       var tierLabel = u.isAdmin
         ? 'Admin'
@@ -3112,7 +3151,10 @@
 
     if (gList) {
       gList.innerHTML = '';
-      if (!CommunicationState.visibleGroups.length) {
+      var gMode = listMode(CommunicationState._groupsPending, CommunicationState.visibleGroups);
+      if (gMode === 'loading') {
+        gList.innerHTML = sidebarListLoadingHtml('Loading groups…');
+      } else if (gMode === 'empty') {
         gList.innerHTML =
           '<li class="ce2-placeholder">No formation groups yet. As admin: open <strong>Admin Panel → Messages V2</strong> and create a CE2 group, then refresh this page.</li>';
       } else {
@@ -3138,7 +3180,10 @@
 
     if (tList) {
       tList.innerHTML = '';
-      if (!CommunicationState.threads.length) {
+      var tMode = listMode(CommunicationState._threadsPending, CommunicationState.threads);
+      if (tMode === 'loading') {
+        tList.innerHTML = sidebarListLoadingHtml('Loading conversations…');
+      } else if (tMode === 'empty') {
         tList.innerHTML =
           '<li class="ce2-placeholder">No CE2 direct threads yet. Open someone from Discovery.</li>';
       } else {
@@ -4179,6 +4224,10 @@
     opts = opts || {};
     var shell = el('ce2App');
     if (shell) shell.classList.toggle('is-booting', !!CommunicationState.loading);
+    if (opts.inboxOnly) {
+      renderSidebarLists();
+      return;
+    }
     if (opts.threadOnly) {
       renderThreadChrome();
       renderMessagePanel();
@@ -4290,16 +4339,27 @@
         } else {
           var aud = document.createElement('audio');
           aud.className = 'ce2-msg-audio';
-          aud.preload = 'metadata';
+          aud.preload = 'none';
           aud.controls = true;
-          if (typeof resolveR2MediaUrl === 'function') {
-            resolveR2MediaUrl(playSrc)
-              .then(function (src) {
-                aud.src = src;
-              })
-              .catch(function () {});
-          } else {
+          if (playSrc && String(playSrc).indexOf('blob:') === 0) {
             aud.src = playSrc;
+          } else {
+            aud.setAttribute('data-ce2-src', playSrc);
+            var hydrateAud = function () {
+              if (aud.getAttribute('data-ce2-hydrated') === '1') return;
+              aud.setAttribute('data-ce2-hydrated', '1');
+              if (typeof resolveR2MediaUrl === 'function') {
+                resolveR2MediaUrl(playSrc)
+                  .then(function (src) {
+                    if (src) aud.src = src;
+                  })
+                  .catch(function () {});
+              } else if (playSrc) {
+                aud.src = playSrc;
+              }
+            };
+            aud.addEventListener('click', hydrateAud);
+            aud.addEventListener('play', hydrateAud);
           }
           audioWrap.appendChild(aud);
         }
@@ -5287,6 +5347,106 @@
           'Formation groups index is still building. Refresh in a minute.';
       }
     }
+    CommunicationState._groupsPending = false;
+  }
+
+  function paintThreadRowsFromSnap(snap, uid) {
+    var rows = [];
+    var otherUidSet = {};
+    for (var i = 0; i < snap.docs.length; i++) {
+      var d = snap.docs[i];
+      var data = d.data();
+      var other = (data.participantIds || []).filter(function (p) {
+        return p !== uid;
+      })[0];
+      if (other && isUserBlockedUid(other)) continue;
+      if (other) otherUidSet[other] = true;
+      rows.push({ doc: d, data: data, other: other });
+    }
+
+    var rc = receipts();
+    var ib = inbox();
+    var existingById = {};
+    (CommunicationState.threads || []).forEach(function (t) {
+      existingById[t.id] = t;
+    });
+    var nextThreads = [];
+    for (var j = 0; j < rows.length; j++) {
+      var row = rows[j];
+      var otherUid = row.other;
+      var prev = existingById[row.doc.id];
+      var peerUser = (prev && prev.peerUser) || null;
+      var label = otherUid
+        ? ib && ib.peerLabelFromList
+          ? ib.peerLabelFromList(otherUid, {
+              name: peerUser && peerUser.name,
+              label: prev && prev.label,
+            })
+          : (peerUser && peerUser.name) || otherUid.slice(0, 8) + '…'
+        : 'Direct';
+      var preview = formatInboxPreview({
+        lastPreview: row.data.lastPreview,
+        lastMessageType: row.data.lastMessageType,
+        content: row.data.lastPreview,
+        lastSenderId: row.data.lastSenderId,
+      });
+      var thread = {
+        id: row.doc.id,
+        convId: row.doc.id,
+        otherUid: otherUid,
+        label: label,
+        tier: peerUser ? peerUser.tier : 'foundation',
+        peerUser: peerUser,
+        sub: preview || fmtTime(row.data.lastMessageAt) || '',
+        unread: rc ? rc.unreadCount(row.data, uid) : 0,
+        lastActivityAt: ib ? ib.tsMs(row.data.lastMessageAt) : 0,
+        lastSenderId: row.data.lastSenderId || '',
+        _localReadAt: prev && prev._localReadAt ? prev._localReadAt : 0,
+      };
+      applyInboxPrefToRow(thread, 'direct', row.data.lastSenderId);
+      if (ib && rc) ib.mergeUnreadFromMeta(thread, row.data, uid, rc.unreadCount);
+      nextThreads.push(thread);
+    }
+    CommunicationState.threads = nextThreads;
+    CommunicationState._threadsPending = false;
+    sortVisibleInboxLists();
+    return Object.keys(otherUidSet);
+  }
+
+  function hydrateThreadPeerNames(uid, otherUids) {
+    if (!otherUids || !otherUids.length) {
+      schedulePresenceWatches();
+      return Promise.resolve();
+    }
+    var userMap = {};
+    return Promise.all(
+      otherUids.map(function (other) {
+        return db
+          .collection('users')
+          .doc(other)
+          .get()
+          .then(function (udoc) {
+            if (udoc.exists) userMap[other] = normalizeCe2User(other, udoc.data());
+            ingestPresenceFromUser(other, udoc.exists ? udoc.data() : {});
+          })
+          .catch(function () {});
+      })
+    ).then(function () {
+      var changed = false;
+      (CommunicationState.threads || []).forEach(function (t) {
+        var peer = t.otherUid ? userMap[t.otherUid] : null;
+        if (!peer) return;
+        if (t.label !== peer.name) changed = true;
+        t.label = peer.name;
+        t.peerUser = peer;
+        t.tier = peer.tier;
+      });
+      if (changed) {
+        sortVisibleInboxLists();
+        requestRender({ inboxOnly: true, throttle: true });
+      }
+      schedulePresenceWatches();
+    });
   }
 
   async function loadThreads(uid) {
@@ -5315,83 +5475,20 @@
 
     if (!snap) {
       CommunicationState.threads = [];
+      CommunicationState._threadsPending = false;
       if (!CommunicationState.error) {
         CommunicationState.error =
           'Could not load conversations. Check connection or refresh the page.';
       }
+      requestRender({ inboxOnly: true });
       return;
     }
 
-    var rows = [];
-    var otherUidSet = {};
-    for (var i = 0; i < snap.docs.length; i++) {
-      var d = snap.docs[i];
-      var data = d.data();
-      var other = (data.participantIds || []).filter(function (p) {
-        return p !== uid;
-      })[0];
-      if (other && isUserBlockedUid(other)) continue;
-      if (other) otherUidSet[other] = true;
-      rows.push({ doc: d, data: data, other: other });
-    }
-
-    var otherUids = Object.keys(otherUidSet);
-    var userMap = {};
-    await Promise.all(
-      otherUids.map(function (other) {
-        return db
-          .collection('users')
-          .doc(other)
-          .get()
-          .then(function (udoc) {
-            if (udoc.exists) userMap[other] = normalizeCe2User(other, udoc.data());
-            ingestPresenceFromUser(other, udoc.exists ? udoc.data() : {});
-          })
-          .catch(function () {});
-      })
-    );
-
-    var rc = receipts();
-    var ib = inbox();
-    var existingById = {};
-    (CommunicationState.threads || []).forEach(function (t) {
-      existingById[t.id] = t;
+    var otherUids = paintThreadRowsFromSnap(snap, uid);
+    requestRender({ inboxOnly: true });
+    hydrateThreadPeerNames(uid, otherUids).catch(function () {
+      schedulePresenceWatches();
     });
-    var nextThreads = [];
-    for (var j = 0; j < rows.length; j++) {
-      var row = rows[j];
-      var otherUid = row.other;
-      var peerUser = otherUid ? userMap[otherUid] : null;
-      var label = otherUid
-        ? (peerUser && peerUser.name) || otherUid.slice(0, 8) + '…'
-        : 'Direct';
-      var preview = formatInboxPreview({
-        lastPreview: row.data.lastPreview,
-        lastMessageType: row.data.lastMessageType,
-        content: row.data.lastPreview,
-        lastSenderId: row.data.lastSenderId,
-      });
-      var prev = existingById[row.doc.id];
-      var thread = {
-        id: row.doc.id,
-        convId: row.doc.id,
-        otherUid: otherUid,
-        label: label,
-        tier: peerUser ? peerUser.tier : 'foundation',
-        peerUser: peerUser,
-        sub: preview || fmtTime(row.data.lastMessageAt) || '',
-        unread: rc ? rc.unreadCount(row.data, uid) : 0,
-        lastActivityAt: ib ? ib.tsMs(row.data.lastMessageAt) : 0,
-        lastSenderId: row.data.lastSenderId || '',
-        _localReadAt: prev && prev._localReadAt ? prev._localReadAt : 0,
-      };
-      applyInboxPrefToRow(thread, 'direct', row.data.lastSenderId);
-      if (ib && rc) ib.mergeUnreadFromMeta(thread, row.data, uid, rc.unreadCount);
-      nextThreads.push(thread);
-    }
-    CommunicationState.threads = nextThreads;
-    sortVisibleInboxLists();
-    syncPresenceWatches();
   }
 
   async function loadSavedItems(uid) {
@@ -5441,6 +5538,9 @@
         });
       }
       return;
+    }
+    if (root.Ce2MediaView && root.Ce2MediaView.hydrateMessageRow) {
+      root.Ce2MediaView.hydrateMessageRow(row, { force: true, visible: true });
     }
     var focus = rm && rm.findReplyJumpFocus ? rm.findReplyJumpFocus(row) : row;
     var next =
@@ -8212,6 +8312,8 @@
     CommunicationState.visibleGroups = [];
     CommunicationState.threads = [];
     CommunicationState.visibleUsers = [];
+    CommunicationState._groupsPending = true;
+    CommunicationState._threadsPending = true;
     render();
 
     var uref = db.collection('users').doc(user.uid);
@@ -8245,20 +8347,24 @@
         ? window.Ce2MessageActions.loadUserPrefs(user.uid, { lite: true })
         : Promise.resolve();
 
+    var groupsP = loadGroupsForUser(CommunicationState.me).then(function () {
+      CommunicationState._groupsPending = false;
+      requestRender({ inboxOnly: true });
+    });
+    var threadsP = loadThreads(user.uid);
+    var inboxPrefsP = loadInboxPrefs(user.uid).then(function () {
+      applyInboxPrefsToLists();
+      requestRender({ inboxOnly: true, throttle: true });
+    });
+
     var listsPromise = promiseWithTimeout(
-      Promise.all([
-        loadInboxPrefs(user.uid).then(function () {
-          return Promise.all([
-            loadGroupsForUser(CommunicationState.me),
-            loadThreads(user.uid),
-          ]);
-        }),
-        prefs,
-      ]),
+      Promise.all([groupsP, threadsP]),
       15000,
       'CE2 boot'
     ).catch(function (bootErr) {
       console.warn('CE2 boot partial failure', bootErr);
+      CommunicationState._groupsPending = false;
+      CommunicationState._threadsPending = false;
       CommunicationState.statusMessage =
         'Some lists loaded slowly — pull to refresh or switch tabs again.';
     });
@@ -8281,15 +8387,16 @@
     }
 
     try {
-      await Promise.all([
-        listsPromise,
-        applyCe2EntryParams(user.uid).catch(function (linkErr) {
-          console.warn('applyCe2EntryParams', linkErr);
-        }),
-      ]);
+      await listsPromise;
     } catch (_) {}
+    CommunicationState._groupsPending = false;
+    CommunicationState._threadsPending = false;
     render();
     startInboxLayer(CommunicationState.me);
+    applyCe2EntryParams(user.uid).catch(function (linkErr) {
+      console.warn('applyCe2EntryParams', linkErr);
+    });
+    Promise.all([inboxPrefsP, prefs]).catch(function () {});
 
     hydrateVoiceOutboxPending().catch(function (e) {
       console.warn('hydrateVoiceOutbox', e);
