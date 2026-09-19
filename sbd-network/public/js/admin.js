@@ -2038,6 +2038,7 @@ async function loadCe2GroupMemberRows(groupId) {
   }
   for (const doc of snap.docs) {
     const uid = doc.id;
+    const hallwayRole = doc.data().role || (doc.data().addedBy === uid ? 'host' : 'member');
     let label = uid;
     try {
       const ud = await db.collection('users').doc(uid).get();
@@ -2047,7 +2048,9 @@ async function loadCe2GroupMemberRows(groupId) {
           (d.name || d.displayName || d.email || 'Member') +
           ' · ' +
           (d.tier || 'foundation') +
-          (d.role === 'admin' ? ' · admin' : '');
+          (d.role === 'admin' ? ' · admin' : '') +
+          ' · ' +
+          hallwayRole;
       }
     } catch (e) {
       /* keep uid */
@@ -2139,18 +2142,18 @@ async function addCe2GroupMember(groupId, userInput) {
   }
   if (!uid) uid = await resolveCe2UserId(raw);
   if (!uid) throw new Error('No user found for that ID or email.');
-  await db
+  const memberRef = db
     .collection('communicationGroups')
     .doc(groupId)
     .collection('members')
-    .doc(uid)
-    .set(
-      {
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        addedBy: auth.currentUser ? auth.currentUser.uid : '',
-      },
-      { merge: true }
-    );
+    .doc(uid);
+  const existing = await memberRef.get();
+  const patch = {
+    joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    addedBy: auth.currentUser ? auth.currentUser.uid : '',
+  };
+  if (!existing.exists || !existing.data().role) patch.role = 'member';
+  await memberRef.set(patch, { merge: true });
   return uid;
 }
 
@@ -2269,7 +2272,7 @@ document.getElementById('createCe2GroupForm')?.addEventListener('submit', async 
       await groupRef.collection('members').doc(uid).set({
         joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
         addedBy: uid,
-        role: 'creator',
+        role: 'host',
       });
     }
     document.getElementById('createCe2GroupForm').reset();
@@ -2322,6 +2325,7 @@ async function runCe2QuickTestSetup() {
     );
     await groupRef.collection('members').doc(uid).set({
       joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      role: 'host',
     });
     closeAllModals();
     await loadCe2Groups();
