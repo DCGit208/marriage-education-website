@@ -3704,3 +3704,87 @@ body.ce2-inbox-menu-open {
   font-size: 1.1rem;
   cursor: pointer;
 }
+
+.ce2-notify-prefs-toggle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 184, 146, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a89f8c;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce2-notify-prefs-toggle:focus-visible,
+.ce2-notify-prefs-toggle.is-open {
+  border-color: rgba(201, 184, 146, 0.45);
+  background: rgba(201, 184, 146, 0.12);
+  color: #c9b892;
+}
+
+.ce2-notify-prefs-hint {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: rgba(232, 220, 196, 0.62);
+}
+
+.ce2-notify-prefs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #f2f0ec;
+}
+
+.ce2-notify-prefs-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: #c9b892;
+}
+
+.ce2-notify-prefs-hours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.ce2-notify-prefs-hour {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #bdb6a8;
+}
+
+.ce2-notify-prefs-hours[hidden] {
+  display: none !important;
+}
+
+.ce2-notify-prefs-tz {
+  margin: 0 0 14px;
+  font-size: 0.72rem;
+  color: rgba(232, 220, 196, 0.55);
+}
+
+.ce2-notify-prefs-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  color: #bdb6a8;
+}
+
+#ce2NotifyPrefsSheet .ce2-select {
+  margin-bottom: 12px;
+}

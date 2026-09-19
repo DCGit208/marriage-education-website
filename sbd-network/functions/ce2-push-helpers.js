@@ -111,10 +111,186 @@ function stringifyData(data) {
   return out;
 }
 
-function shouldSkipRecipient({ isSender, muted, canRead } = {}) {
+function shouldSkipRecipient({
+  isSender,
+  muted,
+  canRead,
+  policyReason,
+  quietHours,
+} = {}) {
   if (isSender) return { skip: true, reason: "sender" };
   if (muted) return { skip: true, reason: "muted" };
   if (canRead === false) return { skip: true, reason: "visibility" };
+  if (policyReason) return { skip: true, reason: String(policyReason) };
+  if (quietHours) return { skip: true, reason: "quiet_hours" };
+  return { skip: false, reason: "" };
+}
+
+const DEFAULT_TZ = "Africa/Douala";
+const DM_POLICIES = ["all", "elite_only", "off"];
+const GROUP_POLICIES = ["all", "mentions_only", "elite_only", "off"];
+
+function clampHour(value, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(23, Math.max(0, Math.floor(n)));
+}
+
+function normalizePolicy(value, allowed) {
+  const s = String(value || "")
+    .trim()
+    .toLowerCase();
+  return allowed.indexOf(s) >= 0 ? s : "all";
+}
+
+/**
+ * Owner-only notify prefs at users/{uid}/ce2_push/prefs.
+ * Missing / partial docs mean “all messages, quiet hours off”.
+ */
+function normalizeNotifyPrefs(raw) {
+  const data = raw || {};
+  const qh = data.quietHours && typeof data.quietHours === "object" ? data.quietHours : {};
+  const timezone = String(qh.timezone || data.quietHoursTimezone || "")
+    .trim()
+    .slice(0, 79);
+  return {
+    quietHours: {
+      enabled: !!(qh.enabled || data.quietHoursEnabled),
+      startHour: clampHour(qh.startHour != null ? qh.startHour : qh.start, 22),
+      endHour: clampHour(qh.endHour != null ? qh.endHour : qh.end, 7),
+      timezone: timezone || DEFAULT_TZ,
+    },
+    dmPolicy: normalizePolicy(data.dmPolicy, DM_POLICIES),
+    groupPolicy: normalizePolicy(data.groupPolicy, GROUP_POLICIES),
+  };
+}
+
+function notifyPrefsWritePayload(prefs, timezoneFallback) {
+  const n = normalizeNotifyPrefs(prefs);
+  const tz = String(timezoneFallback || "")
+    .trim()
+    .slice(0, 79);
+  if (tz) n.quietHours.timezone = tz;
+  return {
+    quietHours: {
+      enabled: !!n.quietHours.enabled,
+      startHour: n.quietHours.startHour,
+      endHour: n.quietHours.endHour,
+      timezone: n.quietHours.timezone || DEFAULT_TZ,
+    },
+    dmPolicy: n.dmPolicy,
+    groupPolicy: n.groupPolicy,
+  };
+}
+
+function hourInTimeZone(date, timeZone) {
+  const when = date instanceof Date ? date : new Date(date);
+  const tz = String(timeZone || DEFAULT_TZ).trim() || DEFAULT_TZ;
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour: "numeric",
+      hourCycle: "h23",
+    }).formatToParts(when);
+    const raw = parts.find((part) => part.type === "hour");
+    let hour = Number(raw && raw.value);
+    if (hour === 24) hour = 0;
+    if (!Number.isFinite(hour)) {
+      if (tz !== DEFAULT_TZ) return hourInTimeZone(when, DEFAULT_TZ);
+      return when.getUTCHours();
+    }
+    return Math.min(23, Math.max(0, hour));
+  } catch (_) {
+    if (tz !== DEFAULT_TZ) return hourInTimeZone(when, DEFAULT_TZ);
+    return when.getUTCHours();
+  }
+}
+
+function isInQuietHours(quietHours, nowMs) {
+  const qh = quietHours || {};
+  if (!qh.enabled) return false;
+  const start = clampHour(qh.startHour, 22);
+  const end = clampHour(qh.endHour, 7);
+  if (start === end) return false;
+  const hour = hourInTimeZone(
+    typeof nowMs === "number" ? nowMs : Date.now(),
+    qh.timezone || DEFAULT_TZ
+  );
+  if (start < end) return hour >= start && hour < end;
+  return hour >= start || hour < end;
+}
+
+/**
+ * Group @mentions. The composer “@Mention” sheet inserts `@FirstName `
+ * (first word of displayName/name). Also accept `@uid` and `@username`.
+ * Tokens run until whitespace; trailing punctuation is stripped.
+ */
+function extractMentionTokens(content) {
+  const text = String(content || "");
+  const tokens = [];
+  const re = /@([^\s@]+)/g;
+  let match;
+  while ((match = re.exec(text))) {
+    const tok = String(match[1] || "").replace(/[.,!?;:]+$/g, "");
+    if (tok) tokens.push(tok);
+  }
+  return tokens;
+}
+
+function mentionAliases(userData, uid) {
+  const aliases = [];
+  const seen = {};
+  function add(value) {
+    const s = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (!s || seen[s]) return;
+    seen[s] = true;
+    aliases.push(s);
+  }
+  add(uid);
+  const d = userData || {};
+  add(d.username);
+  add(d.handle);
+  const name = String(d.name || d.displayName || "").trim();
+  add(name);
+  add(name.replace(/\s+/g, ""));
+  if (name) add(name.split(/\s+/)[0]);
+  return aliases;
+}
+
+function messageMentionsUser(content, userData, uid) {
+  const aliases = mentionAliases(userData, uid);
+  if (!aliases.length) return false;
+  const tokens = extractMentionTokens(content);
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (aliases.indexOf(String(tokens[i]).toLowerCase()) >= 0) return true;
+  }
+  return false;
+}
+
+function senderSatisfiesElite(userData) {
+  const user = perms.userFromDoc("sender", userData || {});
+  if (user.role === "admin") return true;
+  return perms.tierLevel(user.tier) >= perms.tierLevel("elite");
+}
+
+function evaluateNotifyPolicy({ kind, prefs, mentioned, senderIsElite } = {}) {
+  const n = normalizeNotifyPrefs(prefs);
+  const isGroup = kind === "group";
+  const policy = isGroup ? n.groupPolicy : n.dmPolicy;
+  if (policy === "off") return { skip: true, reason: "policy_off" };
+  if (policy === "mentions_only") {
+    if (!isGroup) return { skip: false, reason: "" };
+    return mentioned
+      ? { skip: false, reason: "" }
+      : { skip: true, reason: "mentions_only" };
+  }
+  if (policy === "elite_only") {
+    return senderIsElite
+      ? { skip: false, reason: "" }
+      : { skip: true, reason: "elite_only" };
+  }
   return { skip: false, reason: "" };
 }
 
@@ -336,6 +512,9 @@ function buildCreatedPushPayload({
 
 module.exports = {
   BODY_MAX,
+  DEFAULT_TZ,
+  DM_POLICIES,
+  GROUP_POLICIES,
   inboxPrefId,
   looksLikePayloadDump,
   clip,
@@ -344,6 +523,15 @@ module.exports = {
   buildPushCopy,
   stringifyData,
   shouldSkipRecipient,
+  normalizeNotifyPrefs,
+  notifyPrefsWritePayload,
+  hourInTimeZone,
+  isInQuietHours,
+  extractMentionTokens,
+  mentionAliases,
+  messageMentionsUser,
+  senderSatisfiesElite,
+  evaluateNotifyPolicy,
   recipientCanReadClassification,
   LEGACY_PUSH_FIELD_NAMES,
   readPushTokenValue,

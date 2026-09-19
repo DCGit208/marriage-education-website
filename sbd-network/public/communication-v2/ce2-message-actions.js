@@ -1233,7 +1233,7 @@
   }
 
   function closeAllSheets() {
-    ['ce2MsgInfo', 'ce2ForwardSheet', 'ce2EditSheet', 'ce2ReactSheet', 'ce2TemplateSheet', 'ce2MentionSheet'].forEach(
+    ['ce2MsgInfo', 'ce2ForwardSheet', 'ce2EditSheet', 'ce2ReactSheet', 'ce2TemplateSheet', 'ce2MentionSheet', 'ce2NotifyPrefsSheet'].forEach(
       function (id) {
         var s = el(id);
         if (s) s.hidden = true;

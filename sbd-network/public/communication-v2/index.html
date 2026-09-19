@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=87">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=89">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -30,7 +30,7 @@
   <script defer src="/communication-v2/ce2-receipts.js?v=5"></script>
   <script defer src="/communication-v2/ce2-inbox.js?v=2"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=4"></script>
-  <script defer src="/communication-v2/ce2-message-actions.js?v=25"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=26"></script>
   <script defer src="/communication-v2/ce2-thread-search.js?v=2"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=2"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
@@ -43,7 +43,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=4"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=121"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=123"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -61,6 +61,7 @@
         <p class="ce2-sub">Formation-gated · covenant-safe</p>
       </div>
       <span class="ce2-pill" id="ce2TierPill">…</span>
+      <button type="button" class="ce2-notify-prefs-toggle" id="ce2NotifyPrefsBtn" aria-label="Notification settings" title="Notification settings">🔔</button>
     </header>
 
     <div id="ce2Alert" class="ce2-alert ce2-alert-hidden" role="alert"></div>
@@ -296,6 +297,42 @@
       <h3 class="ce2-sheet-title">@Mention</h3>
       <ul id="ce2MentionList" class="ce2-list ce2-sheet-list"></ul>
       <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2MentionClose">Cancel</button>
+    </div>
+  </div>
+
+  <div id="ce2NotifyPrefsSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" id="ce2NotifyPrefsBackdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">Notifications</h3>
+      <p class="ce2-notify-prefs-hint">Push when Messages is closed. Mute one chat from its options menu.</p>
+      <label class="ce2-notify-prefs-row" for="ce2NotifyQuietEnabled">
+        <span>Quiet hours</span>
+        <input type="checkbox" id="ce2NotifyQuietEnabled">
+      </label>
+      <div class="ce2-notify-prefs-hours" id="ce2NotifyQuietFields">
+        <label class="ce2-notify-prefs-hour" for="ce2NotifyQuietStart">From
+          <select id="ce2NotifyQuietStart" class="ce2-select" aria-label="Quiet hours start"></select>
+        </label>
+        <label class="ce2-notify-prefs-hour" for="ce2NotifyQuietEnd">To
+          <select id="ce2NotifyQuietEnd" class="ce2-select" aria-label="Quiet hours end"></select>
+        </label>
+      </div>
+      <p class="ce2-notify-prefs-tz" id="ce2NotifyQuietTz"></p>
+      <label class="ce2-notify-prefs-label" for="ce2NotifyDmPolicy">Direct messages</label>
+      <select id="ce2NotifyDmPolicy" class="ce2-select" aria-label="Direct message notifications">
+        <option value="all">All</option>
+        <option value="elite_only">Elite only</option>
+        <option value="off">Off</option>
+      </select>
+      <label class="ce2-notify-prefs-label" for="ce2NotifyGroupPolicy">Groups</label>
+      <select id="ce2NotifyGroupPolicy" class="ce2-select" aria-label="Group notifications">
+        <option value="all">All</option>
+        <option value="mentions_only">Mentions only</option>
+        <option value="elite_only">Elite only</option>
+        <option value="off">Off</option>
+      </select>
+      <p class="ce2-notify-prefs-hint">Mentions are @FirstName (from @Mention) or @uid.</p>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2NotifyPrefsClose">Done</button>
     </div>
   </div>
 
