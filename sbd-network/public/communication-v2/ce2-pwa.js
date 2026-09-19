@@ -28,6 +28,77 @@
     bar.hidden = !on;
   }
 
+  function pushTokenRef(userId) {
+    return db.collection('users').doc(userId).collection('ce2_push').doc('token');
+  }
+
+  async function clearOwnLegacyPushFields(userId) {
+    if (!userId || typeof db === 'undefined') return;
+    try {
+      await db.collection('users').doc(userId).update({
+        fcmToken: firebase.firestore.FieldValue.delete(),
+        pushToken: firebase.firestore.FieldValue.delete(),
+        notificationToken: firebase.firestore.FieldValue.delete(),
+      });
+    } catch (_) {}
+  }
+
+  async function persistCe2PushToken(userId, token) {
+    if (!userId || !token || typeof db === 'undefined') return;
+    await pushTokenRef(userId).set(
+      {
+        fcmToken: token,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    await clearOwnLegacyPushFields(userId);
+  }
+
+  /**
+   * Signed-in user only: copy leftover public token fields onto ce2_push,
+   * then delete them. Never overwrites an existing private token.
+   */
+  async function migrateOwnLegacyPushToken(userId) {
+    if (!userId || typeof db === 'undefined' || typeof firebase === 'undefined') return;
+    var me = firebase.auth && firebase.auth().currentUser;
+    if (!me || me.uid !== userId) return;
+    try {
+      var userRef = db.collection('users').doc(userId);
+      var userSnap = await userRef.get();
+      var privSnap = await pushTokenRef(userId).get();
+      var userData = userSnap.exists ? userSnap.data() || {} : {};
+      var existing = privSnap.exists
+        ? String((privSnap.data() || {}).fcmToken || '').trim()
+        : '';
+      var legacy = String(
+        userData.fcmToken || userData.pushToken || userData.notificationToken || ''
+      ).trim();
+      var leftover =
+        Object.prototype.hasOwnProperty.call(userData, 'fcmToken') ||
+        Object.prototype.hasOwnProperty.call(userData, 'pushToken') ||
+        Object.prototype.hasOwnProperty.call(userData, 'notificationToken');
+      if (!existing && legacy) {
+        await persistCe2PushToken(userId, legacy);
+        return;
+      }
+      if (leftover) await clearOwnLegacyPushFields(userId);
+    } catch (_) {}
+  }
+
+  function bindTokenRefresh(userId) {
+    if (root.__ce2TokenRefreshBound || !userId) return;
+    if (typeof firebase === 'undefined' || typeof firebase.messaging !== 'function') return;
+    try {
+      var messaging = firebase.messaging();
+      if (typeof messaging.onTokenRefresh !== 'function') return;
+      root.__ce2TokenRefreshBound = true;
+      messaging.onTokenRefresh(function () {
+        initPush(userId);
+      });
+    } catch (_) {}
+  }
+
   async function initPush(userId) {
     if (
       !hasNotificationApi() ||
@@ -45,31 +116,14 @@
       await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
       var reg = await navigator.serviceWorker.ready;
       var messaging = firebase.messaging();
+      bindTokenRefresh(userId);
       var token = await messaging.getToken({
         vapidKey: FCM_VAPID_KEY,
         serviceWorkerRegistration: reg,
       });
       if (!token || typeof db === 'undefined') return;
 
-      await db
-        .collection('users')
-        .doc(userId)
-        .collection('ce2_push')
-        .doc('token')
-        .set(
-          {
-            fcmToken: token,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-      try {
-        await db.collection('users').doc(userId).update({
-          fcmToken: firebase.firestore.FieldValue.delete(),
-          pushToken: firebase.firestore.FieldValue.delete(),
-          notificationToken: firebase.firestore.FieldValue.delete(),
-        });
-      } catch (_) {}
+      await persistCe2PushToken(userId, token);
 
       var user = firebase.auth().currentUser;
       if (user) {
@@ -256,16 +310,27 @@
       bindOffline();
       bindInstallPrompt();
       bindForegroundPushSuppress();
-      if (hasNotificationApi()) {
-        maybePushNudge(userId);
-        if (NotifApi.permission === 'granted') initPush(userId);
+      migrateOwnLegacyPushToken(userId)
+        .catch(function () {})
+        .then(function () {
+          if (!hasNotificationApi()) return;
+          maybePushNudge(userId);
+          if (NotifApi.permission === 'granted') initPush(userId);
+        });
+      if (hasNotificationApi() && NotifApi.permission === 'granted') {
+        bindTokenRefresh(userId);
       }
     } catch (err) {
       console.warn('[CE2 PWA]', err);
     }
   }
 
-  root.Ce2Pwa = { init: init, initPush: initPush };
+  root.Ce2Pwa = {
+    init: init,
+    initPush: initPush,
+    persistCe2PushToken: persistCe2PushToken,
+    migrateOwnLegacyPushToken: migrateOwnLegacyPushToken,
+  };
 })(
   typeof globalThis !== 'undefined'
     ? globalThis

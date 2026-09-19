@@ -129,6 +129,12 @@ function recipientCanReadClassification(userData, classification) {
   return perms.tierLevel(user.tier) >= perms.tierLevel(cls);
 }
 
+const LEGACY_PUSH_FIELD_NAMES = ["fcmToken", "pushToken", "notificationToken"];
+
+function readPushTokenValue(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
 function pickPreferredPushToken({
   ce2PushToken,
   fcmToken,
@@ -137,10 +143,85 @@ function pickPreferredPushToken({
 } = {}) {
   const candidates = [ce2PushToken, fcmToken, pushToken, notificationToken];
   for (let i = 0; i < candidates.length; i += 1) {
-    const token = candidates[i];
-    if (typeof token === "string" && token.trim()) return token.trim();
+    const token = readPushTokenValue(candidates[i]);
+    if (token) return token;
   }
   return "";
+}
+
+function legacyPushFieldsPresent(userData) {
+  const data = userData || {};
+  return LEGACY_PUSH_FIELD_NAMES.some((key) =>
+    Object.prototype.hasOwnProperty.call(data, key)
+  );
+}
+
+function pickLegacyUserDocPushToken(userData) {
+  const data = userData || {};
+  return pickPreferredPushToken({
+    fcmToken: data.fcmToken,
+    pushToken: data.pushToken,
+    notificationToken: data.notificationToken,
+  });
+}
+
+/**
+ * Copy leftover public user-doc tokens onto owner-only ce2_push, then strip
+ * the public fields. Never overwrites an existing ce2_push token with a
+ * possibly-stale legacy value.
+ *
+ * Keep lookupPushToken's legacy fallback until a production sweep reports
+ * zero leftover fcmToken/pushToken/notificationToken fields.
+ */
+function planLegacyPushMigration({ userData, ce2PushToken } = {}) {
+  const existing = readPushTokenValue(ce2PushToken);
+  const leftover = legacyPushFieldsPresent(userData);
+  const legacyToken = pickLegacyUserDocPushToken(userData);
+  if (existing) {
+    return {
+      action: leftover ? "clear_legacy" : "noop",
+      tokenToWrite: "",
+      clearLegacy: leftover,
+    };
+  }
+  if (legacyToken) {
+    return {
+      action: "migrate",
+      tokenToWrite: legacyToken,
+      clearLegacy: true,
+    };
+  }
+  if (leftover) {
+    return {
+      action: "clear_legacy",
+      tokenToWrite: "",
+      clearLegacy: true,
+    };
+  }
+  return { action: "noop", tokenToWrite: "", clearLegacy: false };
+}
+
+function isAdminUserData(userData, authToken) {
+  if (authToken && authToken.admin === true) return true;
+  const data = userData || {};
+  if (String(data.role || "").toLowerCase() === "admin") return true;
+  const roles = Array.isArray(data.roles) ? data.roles : [];
+  return roles.some((role) => String(role || "").toLowerCase() === "admin");
+}
+
+function resolveMigrateTarget({ callerUid, targetUid, sweep, isAdmin } = {}) {
+  const caller = String(callerUid || "").trim();
+  if (!caller) return { ok: false, reason: "unauthenticated" };
+  if (sweep) {
+    return isAdmin
+      ? { ok: true, reason: "", sweep: true, targetUid: "" }
+      : { ok: false, reason: "admin_required" };
+  }
+  const target = String(targetUid || caller).trim();
+  if (!target) return { ok: false, reason: "missing_uid" };
+  if (target === caller) return { ok: true, reason: "", targetUid: target };
+  if (!isAdmin) return { ok: false, reason: "cross_user_denied" };
+  return { ok: true, reason: "", targetUid: target };
 }
 
 function userDisplayName(userData, fallback) {
@@ -264,7 +345,14 @@ module.exports = {
   stringifyData,
   shouldSkipRecipient,
   recipientCanReadClassification,
+  LEGACY_PUSH_FIELD_NAMES,
+  readPushTokenValue,
   pickPreferredPushToken,
+  legacyPushFieldsPresent,
+  pickLegacyUserDocPushToken,
+  planLegacyPushMigration,
+  isAdminUserData,
+  resolveMigrateTarget,
   userDisplayName,
   groupDisplayName,
   directConvId,

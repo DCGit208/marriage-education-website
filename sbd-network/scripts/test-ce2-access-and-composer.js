@@ -189,6 +189,7 @@ test('fcmToken is owner-only; notify functions look the token up with admin', fu
   assert.ok(/!ce2UserPushSecretsPresent\(request\.resource\.data\)/.test(rules));
   assert.ok(pwa.indexOf("collection('ce2_push')") >= 0);
   assert.ok(pwa.indexOf("doc('token')") >= 0);
+  assert.ok(pwa.indexOf('migrateOwnLegacyPushToken') >= 0);
   assert.ok(pwa.indexOf("update({ fcmToken: token })") < 0);
   assert.ok(notifSrc.indexOf("collection('ce2_push')") >= 0);
   assert.ok(v2.indexOf('recipientToken') < 0);

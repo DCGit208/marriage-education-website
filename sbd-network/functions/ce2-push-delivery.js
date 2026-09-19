@@ -6,6 +6,7 @@
 "use strict";
 
 const pushHelpers = require("./ce2-push-helpers");
+const { createMigrator } = require("./ce2-push-migrate");
 
 const PUSH_ORIGIN = "https://sbd.marriageducation.com";
 const PUSH_ICON = "https://sbd-network.web.app/assets/icons/icon-192.png";
@@ -61,6 +62,7 @@ function createDelivery(deps) {
     },
   };
   const logger = deps.logger || { warn() {}, error() {} };
+  const migrator = deps.migrator || createMigrator(deps);
 
   async function lookupPushToken(recipientId, knownUserData) {
     const db = getDb();
@@ -96,12 +98,24 @@ function createDelivery(deps) {
       }
     }
 
-    return pushHelpers.pickPreferredPushToken({
+    const token = pushHelpers.pickPreferredPushToken({
       ce2PushToken,
       fcmToken: userData.fcmToken,
       pushToken: userData.pushToken,
       notificationToken: userData.notificationToken,
     });
+    try {
+      await migrator.migrateUser(recipientId, {
+        userData,
+        ce2PushToken,
+      });
+    } catch (error) {
+      logger.warn("CE2 push token migrate failed", {
+        recipientId,
+        error: error.message,
+      });
+    }
+    return token;
   }
 
   async function resolveRecipient(recipientId) {
@@ -613,6 +627,8 @@ function createDelivery(deps) {
     verifyDirectDmParticipants,
     verifyGroupSender,
     buildPushMessage,
+    migrateUser: migrator.migrateUser,
+    sweepLegacyPushTokens: migrator.sweepLegacyPushTokens,
   };
 }
 
