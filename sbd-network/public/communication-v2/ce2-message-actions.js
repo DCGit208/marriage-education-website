@@ -409,6 +409,14 @@
     var pinnedId =
       st.convMeta && st.convMeta.pinnedMessageId ? st.convMeta.pinnedMessageId : '';
     var blockUid = blockTargetUid(ac, m, self);
+    var groupRole = (ac && ac.groupRole) || st.myGroupRole || 'member';
+    var roleMod = global.Ce2Moderation;
+    var isGroupThread = !!(ac && ac.type === 'group');
+    var canPinGroup =
+      !isGroupThread ||
+      (roleMod && roleMod.canPinAnnouncement(groupRole, st.me, 'group'));
+    var canModGroup =
+      isGroupThread && roleMod && roleMod.canModerateMessage(groupRole, st.me, 'group');
 
     items.push(item('reply', 'Reply', function () { deps.setReply(m); }, { section: SEC }));
 
@@ -424,7 +432,9 @@
     if (canDelete) {
       var stMe = st && st.me;
       var deleteLabel =
-        stMe && stMe.isAdmin && !self ? 'Delete for everyone' : 'Delete';
+        (stMe && stMe.isAdmin && !self) || (canModGroup && !self)
+          ? 'Delete for group'
+          : 'Delete';
       items.push(
         item(
           'delete',
@@ -531,11 +541,45 @@
     items.push(
       item('info', 'Message info', function () { showMessageInfo(m, ac, self); }, { section: SEC_MORE })
     );
-    items.push(
-      item('pin', pinnedId === m.id ? 'Unpin' : 'Pin', function () {
-        togglePin(m, ac, pinnedId === m.id);
-      }, { section: SEC_MORE })
-    );
+    if (canPinGroup) {
+      items.push(
+        item(
+          'pin',
+          pinnedId === m.id
+            ? isGroupThread
+              ? 'Unpin announcement'
+              : 'Unpin'
+            : isGroupThread
+              ? 'Pin announcement'
+              : 'Pin',
+          function () {
+            togglePin(m, ac, pinnedId === m.id);
+          },
+          { section: SEC_MORE }
+        )
+      );
+    }
+    if (canModGroup && !self && m.senderId && roleMod && roleMod.canRemoveMember) {
+      var canKick = roleMod.canRemoveMember(
+        groupRole,
+        st.me,
+        (st.groupRoles && st.groupRoles[m.senderId]) || 'member',
+        st.me && st.me.uid,
+        m.senderId
+      );
+      if (canKick && deps.removeGroupMember) {
+        items.push(
+          item(
+            'remove_member',
+            'Remove from group',
+            function () {
+              deps.removeGroupMember(ac, m.senderId).catch(deps.handleCe2Error);
+            },
+            { section: SEC_SAFE, danger: true }
+          )
+        );
+      }
+    }
     items.push(
       item('star', isMessageSaved(m) ? 'Unstar' : 'Star', function () { toggleStar(m, ac); }, {
         section: SEC_MORE,
@@ -1249,7 +1293,7 @@
   }
 
   function closeAllSheets() {
-    ['ce2MsgInfo', 'ce2ForwardSheet', 'ce2EditSheet', 'ce2ReactSheet', 'ce2TemplateSheet', 'ce2MentionSheet', 'ce2NotifyPrefsSheet'].forEach(
+    ['ce2MsgInfo', 'ce2ForwardSheet', 'ce2EditSheet', 'ce2ReactSheet', 'ce2TemplateSheet', 'ce2MentionSheet', 'ce2NotifyPrefsSheet', 'ce2GroupSettingsSheet'].forEach(
       function (id) {
         var s = el(id);
         if (s) s.hidden = true;
@@ -1805,24 +1849,50 @@
     return loadUserPrefs(uid, { lite: false });
   }
 
+  function findPinnedMessage(st, pinId) {
+    if (!st || !pinId) return null;
+    function from(list) {
+      if (!list || !list.length) return null;
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === pinId) return list[i];
+      }
+      return null;
+    }
+    return from(st.messages) || from(st.lastServerMessages) || from(st.searchJumpMessages);
+  }
+
   function renderPinnedBanner(scroll, ac) {
     if (!scroll || !ac) return;
+    var existing = scroll.querySelector('.ce2-pinned-banner');
+    if (existing) existing.remove();
     var st = state();
     var pinId = st.convMeta && st.convMeta.pinnedMessageId;
     if (!pinId) return;
-    var pinned = (st.messages || []).find(function (m) {
-      return m.id === pinId;
-    });
-    if (!pinned) return;
+    var pinned = findPinnedMessage(st, pinId);
+    var preview = pinned && !pinned.deleted ? messageCopyText(pinned) : '';
     var bar = document.createElement('button');
     bar.type = 'button';
     bar.className = 'ce2-pinned-banner';
-    bar.textContent = '📌 ' + (messageCopyText(pinned) || 'Pinned message').slice(0, 80);
+    bar.setAttribute('aria-label', 'Jump to pinned announcement');
+    var kicker = document.createElement('span');
+    kicker.className = 'ce2-pinned-banner-kicker';
+    kicker.textContent = 'Pinned';
+    var text = document.createElement('span');
+    text.className = 'ce2-pinned-banner-text';
+    text.textContent = (preview || 'Announcement').slice(0, 80);
+    bar.appendChild(kicker);
+    bar.appendChild(text);
     bar.addEventListener('click', function () {
+      if (deps.jumpToMessage) {
+        deps.jumpToMessage(pinId);
+        return;
+      }
       var row = scroll.querySelector('[data-message-id="' + pinId + '"]');
       if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
-    scroll.appendChild(bar);
+    var firstRow = scroll.querySelector('.ce2-row');
+    if (firstRow) scroll.insertBefore(bar, firstRow);
+    else scroll.appendChild(bar);
   }
 
   function reactionsHostBubble(host) {

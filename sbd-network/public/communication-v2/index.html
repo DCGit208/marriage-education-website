@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="build-version" content="1779301200000">
+  <meta name="build-version" content="1779842000000">
   <meta name="ce2-keyboard-stable" content="ce2-keyboard-stable-v60">
   <meta name="ce2-audio-stable" content="ce2-audio-stable-1d">
   <meta name="ce2-delivery-stable" content="ce2-delivery-stable-v90">
@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Messages — SBD Network</title>
-  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=92">
+  <link rel="stylesheet" href="/communication-v2/communication-v2.css?v=93">
   <script defer src="/js/sw-update-checker.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -22,7 +22,7 @@
   <script defer src="/js/firebase.js?v=rt2"></script>
   <script defer src="/js/upload.js?v=12"></script>
   <script defer src="/communication-v2/ce2-governance.js?v=7"></script>
-  <script defer src="/communication-v2/ce2-moderation.js?v=3"></script>
+  <script defer src="/communication-v2/ce2-moderation.js?v=4"></script>
   <script defer src="/communication-v2/ce2-links.js?v=4"></script>
   <script defer src="/communication-v2/ce2-attachments.js?v=16"></script>
   <script defer src="/communication-v2/ce2-share.js?v=12"></script>
@@ -30,7 +30,7 @@
   <script defer src="/communication-v2/ce2-receipts.js?v=5"></script>
   <script defer src="/communication-v2/ce2-inbox.js?v=3"></script>
   <script defer src="/communication-v2/ce2-reply.js?v=4"></script>
-  <script defer src="/communication-v2/ce2-message-actions.js?v=27"></script>
+  <script defer src="/communication-v2/ce2-message-actions.js?v=28"></script>
   <script defer src="/communication-v2/ce2-thread-search.js?v=2"></script>
   <script defer src="/communication-v2/ce2-offline-queue.js?v=2"></script>
   <script defer src="/communication-v2/ce2-nudges.js?v=1"></script>
@@ -43,7 +43,7 @@
   <script defer src="/communication-v2/ce2-drafts.js?v=2"></script>
   <script defer src="/communication-v2/ce2-format.js?v=4"></script>
   <script defer src="/communication-v2/ce2-media-view.js?v=5"></script>
-  <script defer src="/communication-v2/communication-v2.js?v=126"></script>
+  <script defer src="/communication-v2/communication-v2.js?v=127"></script>
 </head>
 <body class="ce2-body-root">
   <script>
@@ -111,10 +111,12 @@
             <div class="ce2-thread-title-row">
               <h2 class="ce2-thread-title" id="ce2ThreadTitle">Select a conversation</h2>
               <span id="ce2ThreadPresenceDot" class="ce2-presence-dot ce2-presence-dot--header" hidden aria-hidden="true"></span>
+              <span id="ce2ThreadRoleBadge" class="ce2-thread-role-badge" hidden></span>
             </div>
             <p class="ce2-thread-meta" id="ce2ThreadMeta"></p>
           </div>
           <button type="button" class="ce2-thread-search-toggle" id="ce2ThreadSearchToggle" hidden aria-label="Find in chat" aria-expanded="false" title="Find in chat">⌕</button>
+          <button type="button" class="ce2-group-settings-toggle" id="ce2GroupSettingsBtn" hidden aria-label="Group settings" title="Group settings">⚙</button>
         </div>
         <div id="ce2ThreadSearch" class="ce2-thread-search" hidden>
           <div class="ce2-thread-search-row">
@@ -335,6 +337,15 @@
       </select>
       <p class="ce2-notify-prefs-hint">Mentions are @FirstName (from @Mention) or @uid.</p>
       <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2NotifyPrefsClose">Done</button>
+    </div>
+  </div>
+
+  <div id="ce2GroupSettingsSheet" class="ce2-sheet" hidden>
+    <button type="button" class="ce2-sheet-backdrop" id="ce2GroupSettingsBackdrop" aria-label="Close"></button>
+    <div class="ce2-sheet-panel">
+      <h3 class="ce2-sheet-title">Group</h3>
+      <div id="ce2GroupSettingsBody" class="ce2-sheet-body ce2-group-settings-body"></div>
+      <button type="button" class="ce2-btn ce2-btn-ghost" id="ce2GroupSettingsClose">Done</button>
     </div>
   </div>
 

@@ -97,6 +97,9 @@
     typingLabel: null,
     typingUids: [],
     memberIds: [],
+    myGroupRole: 'member',
+    groupRoles: {},
+    groupCreatedBy: '',
     hasMoreMessages: false,
     loadingOlder: false,
     oldestMessageDoc: null,
@@ -1451,6 +1454,7 @@
 
   async function loadGroupMemberIds(groupId) {
     var ids = [];
+    var roles = {};
     try {
       var snap = await db
         .collection('communicationGroups')
@@ -1458,11 +1462,50 @@
         .collection('members')
         .limit(80)
         .get();
+      var createdBy = CommunicationState.groupCreatedBy || '';
+      var groupMeta = { createdBy: createdBy };
+      var moderation = mod();
       snap.forEach(function (d) {
         ids.push(d.id);
+        roles[d.id] = moderation
+          ? moderation.resolveMemberRole(d.data() || {}, groupMeta, d.id)
+          : 'member';
       });
     } catch (_) {}
+    CommunicationState.groupRoles = roles;
     return ids;
+  }
+
+  function resetGroupRoleState() {
+    CommunicationState.myGroupRole = 'member';
+    CommunicationState.groupRoles = {};
+    CommunicationState.groupCreatedBy = '';
+  }
+
+  function applyGroupRoleToActive(role) {
+    CommunicationState.myGroupRole = role || 'member';
+    var ac = CommunicationState.activeConversation;
+    if (ac && ac.type === 'group') {
+      CommunicationState.activeConversation = Object.assign({}, ac, {
+        groupRole: CommunicationState.myGroupRole,
+      });
+    }
+  }
+
+  async function loadMyGroupRole(groupId, memberSnap) {
+    var me = CommunicationState.me;
+    var moderation = mod();
+    if (!me || !groupId || !moderation) return 'member';
+    var data = memberSnap && memberSnap.exists ? memberSnap.data() || {} : {};
+    var createdBy = CommunicationState.groupCreatedBy || '';
+    if (!createdBy) {
+      try {
+        var gdoc = await db.collection('communicationGroups').doc(groupId).get();
+        if (gdoc.exists) createdBy = gdoc.data().createdBy || '';
+      } catch (_) {}
+      CommunicationState.groupCreatedBy = createdBy;
+    }
+    return moderation.resolveMemberRole(data, { createdBy: createdBy }, me.uid);
   }
 
   function syncReplyBanner() {
@@ -1637,6 +1680,8 @@
       gov: gov,
       governanceEnabled: governanceEnabled,
       scheduleLoadThreads: scheduleLoadThreads,
+      jumpToMessage: scrollToReplyMessage,
+      removeGroupMember: removeGroupMember,
       migrateLegacyMedia: function (m, ac) {
         return migrateLegacyMessageMedia(m && m.id, ac);
       },
@@ -3363,6 +3408,19 @@
 
     const title = el('ce2ThreadTitle');
     const meta = el('ce2ThreadMeta');
+    var roleBadge = el('ce2ThreadRoleBadge');
+    var settingsBtn = el('ce2GroupSettingsBtn');
+    var moderation = mod();
+    var groupRole = ac && ac.type === 'group' ? ac.groupRole || CommunicationState.myGroupRole : '';
+    var showBadge =
+      !!(ac && ac.type === 'group' && !ac.needsJoin && (groupRole === 'host' || groupRole === 'facilitator'));
+    if (roleBadge) {
+      roleBadge.hidden = !showBadge;
+      roleBadge.textContent = showBadge && moderation ? moderation.roleLabel(groupRole) : '';
+    }
+    if (settingsBtn) {
+      settingsBtn.hidden = !(ac && ac.type === 'group' && !ac.needsJoin);
+    }
     if (title) title.textContent = ac ? ac.title : 'Select a conversation';
     if (meta) {
       meta.textContent = ac
@@ -4049,6 +4107,10 @@
       root.Ce2MediaView.afterMessagePanelRender(scroll);
     }
     syncMessageHistoryChrome(scroll);
+    var maInc = msgActions();
+    if (maInc && maInc.renderPinnedBanner) {
+      maInc.renderPinnedBanner(scroll, CommunicationState.activeConversation);
+    }
     syncJumpLatestControl();
     if (CommunicationState.highlightMessageId && !preserve) {
       window.requestAnimationFrame(scrollToHighlightedMessage);
@@ -4177,6 +4239,8 @@
       invalidateMessageRenderCache();
       closeMessageMenu();
       scroll.innerHTML = '<div class="ce2-placeholder">No messages yet.</div>';
+      var maEmpty = msgActions();
+      if (maEmpty && maEmpty.renderPinnedBanner) maEmpty.renderPinnedBanner(scroll, ac);
       updateTypingLineOnly();
       syncJumpLatestControl();
       return;
@@ -5090,6 +5154,11 @@
       .collection('members')
       .doc(me.uid)
       .get();
+    if (snap.exists) {
+      applyGroupRoleToActive(await loadMyGroupRole(groupId, snap));
+    } else {
+      resetGroupRoleState();
+    }
     return snap.exists;
   }
 
@@ -5097,6 +5166,7 @@
     persistActiveComposerDraft();
     stopMessagesWatch();
     CommunicationState.messages = [];
+    resetGroupRoleState();
     CommunicationState.activeGroup = groupId;
     CommunicationState.activeConversation = {
       type: 'group',
@@ -5188,6 +5258,7 @@
     }
     if (openToken !== CommunicationState._openToken) return;
 
+    resetGroupRoleState();
     CommunicationState.activeConversation = {
       type: 'direct',
       id: readyId,
@@ -5222,10 +5293,13 @@
     stopMessagesWatch();
     CommunicationState.activeGroup = groupId;
     CommunicationState.sending = false;
+    CommunicationState.groupCreatedBy = '';
+    CommunicationState.groupRoles = {};
 
     var joined = await isGroupMember(groupId);
     if (!joined) {
       CommunicationState.messages = [];
+      resetGroupRoleState();
       CommunicationState.activeConversation = {
         type: 'group',
         id: groupId,
@@ -5240,12 +5314,16 @@
     var groupMeta = CommunicationState.visibleGroups.find(function (g) {
       return g.id === groupId;
     });
+    if (groupMeta && groupMeta.createdBy) {
+      CommunicationState.groupCreatedBy = groupMeta.createdBy;
+    }
     CommunicationState.activeConversation = {
       type: 'group',
       id: groupId,
       title: name || 'Group',
       sub: '',
       needsJoin: false,
+      groupRole: CommunicationState.myGroupRole || 'member',
     };
     var gSec = null;
     var g = gov();
@@ -5327,6 +5405,7 @@
             id: d.id,
             name: x.name || 'Group',
             requiredTier: normalizeTier(x.requiredTier),
+            createdBy: x.createdBy || '',
             mentorLed: !!x.mentorLed,
             allowCrossTier: !!x.allowCrossTier,
             unread: rc ? rc.unreadCount(x, uid) : 0,
@@ -6112,7 +6191,16 @@
     if (!m.id || String(m.id).indexOf('pending-') === 0) return false;
     var me = CommunicationState.me;
     if (me.isAdmin) return true;
-    if (m.senderId !== me.uid) return false;
+    if (m.senderId !== me.uid) {
+      var ac = CommunicationState.activeConversation;
+      var moderation = mod();
+      return !!(
+        ac &&
+        ac.type === 'group' &&
+        moderation &&
+        moderation.canModerateMessage(CommunicationState.myGroupRole, me, 'group')
+      );
+    }
     var ms = messageTimeMs(m);
     if (!ms) return false;
     return Date.now() - ms <= UNSEND_WINDOW_MS;
@@ -6232,7 +6320,7 @@
     if (!m || !ac) return;
     if (!canDeleteMessage(m)) {
       CommunicationState.error =
-        'You can delete your own messages within 1 hour of sending. Admins can delete any message.';
+        'You can delete your own messages within 1 hour of sending. Hosts and facilitators can remove group messages.';
       render();
       return;
     }
@@ -7542,7 +7630,10 @@
       .doc(me.uid);
     var memberSnap = await memberRef.get();
     if (!memberSnap.exists) {
-      await memberRef.set({ joinedAt: firebase.firestore.Timestamp.now() });
+      await memberRef.set({
+        joinedAt: firebase.firestore.Timestamp.now(),
+        role: 'member',
+      });
     }
     // Admin-added members already have a doc — skip joinedAt update (rules tier gate).
     CommunicationState.selectedGroupId = gid;
@@ -7569,6 +7660,205 @@
       handleCe2Error(err, 'join');
     }
     render();
+  }
+
+  function closeGroupSettingsSheet() {
+    var sheet = el('ce2GroupSettingsSheet');
+    var btn = el('ce2GroupSettingsBtn');
+    if (sheet) sheet.hidden = true;
+    if (btn) btn.classList.remove('is-open');
+  }
+
+  function openGroupSettingsSheet() {
+    var sheet = el('ce2GroupSettingsSheet');
+    var btn = el('ce2GroupSettingsBtn');
+    if (sheet) sheet.hidden = false;
+    if (btn) btn.classList.add('is-open');
+    paintGroupSettingsSheet().catch(handleCe2Error);
+  }
+
+  function bindGroupSettings() {
+    var btn = el('ce2GroupSettingsBtn');
+    var closeBtn = el('ce2GroupSettingsClose');
+    var backdrop = el('ce2GroupSettingsBackdrop');
+    var sheet = el('ce2GroupSettingsSheet');
+    if (!sheet || sheet._ce2GroupSettingsWired) return;
+    sheet._ce2GroupSettingsWired = true;
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var s = el('ce2GroupSettingsSheet');
+        if (s && !s.hidden) closeGroupSettingsSheet();
+        else openGroupSettingsSheet();
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeGroupSettingsSheet);
+    if (backdrop) backdrop.addEventListener('click', closeGroupSettingsSheet);
+  }
+
+  async function removeGroupMember(ac, uid) {
+    var me = CommunicationState.me;
+    var moderation = mod();
+    if (!ac || ac.type !== 'group' || !me || !uid) return;
+    var targetRole = (CommunicationState.groupRoles || {})[uid] || 'member';
+    if (
+      !moderation ||
+      !moderation.canRemoveMember(
+        CommunicationState.myGroupRole,
+        me,
+        targetRole,
+        me.uid,
+        uid
+      )
+    ) {
+      CommunicationState.error = 'Only the host or a facilitator can remove this member.';
+      render();
+      return;
+    }
+    await db
+      .collection('communicationGroups')
+      .doc(ac.id)
+      .collection('members')
+      .doc(uid)
+      .delete();
+    delete CommunicationState.groupRoles[uid];
+    CommunicationState.memberIds = (CommunicationState.memberIds || []).filter(function (id) {
+      return id !== uid;
+    });
+    CommunicationState.statusMessage = 'Member removed from the group';
+    requestRender({ threadOnly: true });
+    var sheet = el('ce2GroupSettingsSheet');
+    if (sheet && !sheet.hidden) {
+      paintGroupSettingsSheet().catch(handleCe2Error);
+    }
+  }
+
+  async function setGroupMemberRole(groupId, uid, nextRole) {
+    var me = CommunicationState.me;
+    var moderation = mod();
+    var targetRole = (CommunicationState.groupRoles || {})[uid] || 'member';
+    if (
+      !me ||
+      !moderation ||
+      !moderation.canChangeMemberRole(CommunicationState.myGroupRole, me, targetRole, nextRole)
+    ) {
+      CommunicationState.error = 'Only the host can change facilitator roles.';
+      render();
+      return;
+    }
+    await db
+      .collection('communicationGroups')
+      .doc(groupId)
+      .collection('members')
+      .doc(uid)
+      .update({ role: nextRole });
+    CommunicationState.groupRoles[uid] = nextRole;
+    CommunicationState.statusMessage =
+      nextRole === 'facilitator' ? 'Promoted to facilitator' : 'Moved back to member';
+    requestRender({ threadOnly: true });
+    var sheet = el('ce2GroupSettingsSheet');
+    if (sheet && !sheet.hidden) {
+      paintGroupSettingsSheet().catch(handleCe2Error);
+    }
+  }
+
+  async function paintGroupSettingsSheet() {
+    var body = el('ce2GroupSettingsBody');
+    var ac = CommunicationState.activeConversation;
+    var me = CommunicationState.me;
+    var moderation = mod();
+    if (!body || !ac || ac.type !== 'group' || !me) return;
+    var myRole = CommunicationState.myGroupRole || 'member';
+    body.innerHTML =
+      '<p class="ce2-group-settings-role">Your role: <strong>' +
+      escapeHtml(moderation ? moderation.roleLabel(myRole) : 'Member') +
+      '</strong></p><ul class="ce2-group-settings-list"><li class="ce2-placeholder">Loading members…</li></ul>';
+    var snap = await db
+      .collection('communicationGroups')
+      .doc(ac.id)
+      .collection('members')
+      .limit(40)
+      .get();
+    var createdBy = CommunicationState.groupCreatedBy || '';
+    var list = body.querySelector('.ce2-group-settings-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (snap.empty) {
+      list.innerHTML = '<li class="ce2-placeholder">No members found</li>';
+      return;
+    }
+    var jobs = [];
+    snap.forEach(function (doc) {
+      jobs.push(
+        db
+          .collection('users')
+          .doc(doc.id)
+          .get()
+          .then(function (ud) {
+            var name = ud.exists
+              ? ud.data().displayName || ud.data().name || 'Member'
+              : 'Member';
+            var role = moderation
+              ? moderation.resolveMemberRole(doc.data() || {}, { createdBy: createdBy }, doc.id)
+              : 'member';
+            CommunicationState.groupRoles[doc.id] = role;
+            var li = document.createElement('li');
+            li.className = 'ce2-group-settings-row';
+            var label = document.createElement('div');
+            label.className = 'ce2-group-settings-who';
+            var who = document.createElement('span');
+            who.textContent = name + (doc.id === me.uid ? ' (you)' : '');
+            var badge = document.createElement('span');
+            badge.className = 'ce2-group-settings-badge';
+            badge.textContent = moderation ? moderation.roleLabel(role) : 'Member';
+            label.appendChild(who);
+            label.appendChild(badge);
+            li.appendChild(label);
+            var actions = document.createElement('div');
+            actions.className = 'ce2-group-settings-actions';
+            if (
+              moderation &&
+              moderation.canChangeMemberRole(myRole, me, role, 'facilitator') &&
+              role === 'member'
+            ) {
+              var promote = document.createElement('button');
+              promote.type = 'button';
+              promote.className = 'ce2-btn ce2-btn-ghost ce2-group-settings-act';
+              promote.textContent = 'Make facilitator';
+              promote.addEventListener('click', function () {
+                setGroupMemberRole(ac.id, doc.id, 'facilitator').catch(handleCe2Error);
+              });
+              actions.appendChild(promote);
+            }
+            if (
+              moderation &&
+              moderation.canChangeMemberRole(myRole, me, role, 'member') &&
+              role === 'facilitator'
+            ) {
+              var demote = document.createElement('button');
+              demote.type = 'button';
+              demote.className = 'ce2-btn ce2-btn-ghost ce2-group-settings-act';
+              demote.textContent = 'Make member';
+              demote.addEventListener('click', function () {
+                setGroupMemberRole(ac.id, doc.id, 'member').catch(handleCe2Error);
+              });
+              actions.appendChild(demote);
+            }
+            if (moderation && moderation.canRemoveMember(myRole, me, role, me.uid, doc.id)) {
+              var kick = document.createElement('button');
+              kick.type = 'button';
+              kick.className = 'ce2-btn ce2-btn-ghost ce2-group-settings-act is-danger';
+              kick.textContent = 'Remove';
+              kick.addEventListener('click', function () {
+                removeGroupMember(ac, doc.id).catch(handleCe2Error);
+              });
+              actions.appendChild(kick);
+            }
+            if (actions.childNodes.length) li.appendChild(actions);
+            list.appendChild(li);
+          })
+      );
+    });
+    await Promise.all(jobs);
   }
 
   function wireCe2DelegatedClick() {
@@ -8023,6 +8313,7 @@
     wireCe2DelegatedClick();
     bindInboxGestures();
     bindNotifyPrefs();
+    bindGroupSettings();
     bindHubNav();
     bindPushThreadOpen();
     bindJumpLatestControl();
@@ -8132,6 +8423,7 @@
         CommunicationState.error = null;
         CommunicationState.statusMessage = null;
         CommunicationState.sending = false;
+        resetGroupRoleState();
         render();
       });
     }

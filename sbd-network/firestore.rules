@@ -122,6 +122,75 @@ service cloud.firestore {
     function ce2IsGroupMember(groupId, uid) {
       return exists(/databases/$(database)/documents/communicationGroups/$(groupId)/members/$(uid));
     }
+    // Hallway roles on members/{uid}.role. Legacy `creator` and a missing
+    // role on the group createdBy user both resolve to host.
+    function ce2ResolvedGroupRole(groupId, uid) {
+      let memberPath = /databases/$(database)/documents/communicationGroups/$(groupId)/members/$(uid);
+      let groupPath = /databases/$(database)/documents/communicationGroups/$(groupId);
+      return !exists(memberPath) ? ''
+        : (!('role' in get(memberPath).data) || get(memberPath).data.role == '')
+          ? (exists(groupPath) && get(groupPath).data.createdBy == uid ? 'host' : 'member')
+          : get(memberPath).data.role == 'creator' ? 'host'
+          : get(memberPath).data.role == 'host' ? 'host'
+          : get(memberPath).data.role == 'facilitator' ? 'facilitator'
+          : 'member';
+    }
+    function ce2IsGroupHost(groupId, uid) {
+      return ce2ResolvedGroupRole(groupId, uid) == 'host';
+    }
+    function ce2IsGroupStaff(groupId, uid) {
+      return ce2IsAdmin(ce2UserDataOrNull(uid)) ||
+        ce2ResolvedGroupRole(groupId, uid) in ['host', 'facilitator'];
+    }
+    function ce2GroupPinKeysChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['pinnedMessageId', 'pinnedAt', 'pinnedBy']);
+    }
+    function ce2GroupPinWriteValid(groupId) {
+      let d = request.resource.data;
+      return !ce2GroupPinKeysChanged() || (
+        ce2IsGroupStaff(groupId, request.auth.uid) &&
+        (
+          !('pinnedMessageId' in d) ||
+          (
+            d.pinnedMessageId is string &&
+            d.pinnedMessageId.size() > 0 &&
+            d.pinnedMessageId.size() < 200 &&
+            d.pinnedAt is timestamp &&
+            d.pinnedBy == request.auth.uid
+          )
+        )
+      );
+    }
+    function ce2MemberSelfJoinRoleValid() {
+      return !('role' in request.resource.data) ||
+        request.resource.data.role == 'member';
+    }
+    function ce2MemberStoredRoleValid() {
+      return !('role' in request.resource.data) ||
+        request.resource.data.role in ['host', 'facilitator', 'member', 'creator'];
+    }
+    function ce2CanChangeGroupMemberRole(groupId, memberId) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+        request.resource.data.role in ['facilitator', 'member'] &&
+        ce2ResolvedGroupRole(groupId, memberId) != 'host' &&
+        (
+          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+          ce2IsGroupHost(groupId, request.auth.uid)
+        );
+    }
+    function ce2CanRemoveGroupMember(groupId, memberId) {
+      return request.auth.uid == memberId ||
+        ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+        (
+          ce2IsGroupHost(groupId, request.auth.uid) &&
+          ce2ResolvedGroupRole(groupId, memberId) != 'host'
+        ) ||
+        (
+          ce2ResolvedGroupRole(groupId, request.auth.uid) == 'facilitator' &&
+          ce2ResolvedGroupRole(groupId, memberId) == 'member'
+        );
+    }
     function ce2DirectOtherUid(participants, selfUid) {
       return participants[0] == selfUid ? participants[1] : participants[0];
     }
@@ -1144,7 +1213,8 @@ service cloud.firestore {
         (
           ce2IsGroupMember(groupId, request.auth.uid) &&
           ce2GroupMetaUpdateKeysOnly() &&
-          ce2TypingKeysOwnOnlyIfPresent()
+          ce2TypingKeysOwnOnlyIfPresent() &&
+          ce2GroupPinWriteValid(groupId)
         )
       );
       allow delete: if request.auth != null &&
@@ -1160,32 +1230,49 @@ service cloud.firestore {
           ce2IsGroupMember(groupId, request.auth.uid) ||
           ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
         );
-        // Self-join if tier allows; admins may add any user (staff groups, onboarding)
+        // Self-join if tier allows (member only — no self-escalation).
+        // Admins may add any user with a valid hallway role.
         allow create: if request.auth != null && (
-          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+            ce2MemberStoredRoleValid()
+          ) ||
           (
             request.auth.uid == memberId &&
+            ce2MemberSelfJoinRoleValid() &&
             ce2UserMeetsGroupTier(
               ce2UserDataOrNull(request.auth.uid),
               get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
             )
           )
         );
-        // Self-update: tier gate for first join; existing members may refresh joinedAt (admin-added users)
-        allow update: if request.auth != null &&
-          request.auth.uid == memberId &&
+        // Self-update: joinedAt refresh only — role cannot change.
+        // Host/admin may set another member to facilitator or member.
+        allow update: if request.auth != null && (
           (
-            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            ce2IsGroupMember(groupId, request.auth.uid) ||
-            ce2UserMeetsGroupTier(
-              ce2UserDataOrNull(request.auth.uid),
-              get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
+            request.auth.uid == memberId &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) &&
+            (
+              ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
+              ce2IsGroupMember(groupId, request.auth.uid) ||
+              ce2UserMeetsGroupTier(
+                ce2UserDataOrNull(request.auth.uid),
+                get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
+              )
             )
-          );
-        allow delete: if request.auth != null && (
-          request.auth.uid == memberId ||
-          ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
+          ) ||
+          (
+            request.auth.uid != memberId &&
+            ce2CanChangeGroupMemberRole(groupId, memberId)
+          ) ||
+          (
+            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']) &&
+            request.resource.data.role in ['host', 'facilitator', 'member']
+          )
         );
+        allow delete: if request.auth != null &&
+          ce2CanRemoveGroupMember(groupId, memberId);
       }
 
       match /ce2_messages/{messageId} {
@@ -1225,6 +1312,10 @@ service cloud.firestore {
             ce2CanUnsendMessage() ||
             (
               ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) &&
+              ce2MessageUnsendPurgeValid()
+            ) ||
+            (
+              ce2IsGroupStaff(groupId, request.auth.uid) &&
               ce2MessageUnsendPurgeValid()
             ) ||
             ce2MessageEditValid() ||
