@@ -92,10 +92,10 @@ test('cache-bust moved forward for changed CE2 media clients', function () {
   const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
   const audioVer = html.match(/ce2-audio-playback\.js\?v=(\d+)/);
   const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) >= 121, 'communication-v2.js cache-bust');
+  assert.ok(jsVer && Number(jsVer[1]) >= 125, 'communication-v2.js cache-bust');
   assert.ok(upVer && Number(upVer[1]) >= 11, 'upload.js cache-bust');
-  assert.ok(mediaVer && Number(mediaVer[1]) >= 4, 'ce2-media-view.js cache-bust');
-  assert.ok(audioVer && Number(audioVer[1]) >= 3, 'ce2-audio-playback.js cache-bust');
+  assert.ok(mediaVer && Number(mediaVer[1]) >= 5, 'ce2-media-view.js cache-bust');
+  assert.ok(audioVer && Number(audioVer[1]) >= 4, 'ce2-audio-playback.js cache-bust');
   assert.ok(actionsVer && Number(actionsVer[1]) >= 25, 'ce2-message-actions.js cache-bust');
   assert.ok(html.indexOf('ce2-keyboard-stable-v60') >= 0);
 });
@@ -243,7 +243,10 @@ test('media view does not set img.src to a private locator without resolving', f
   });
   assert.ok(img, 'expected thumb img');
   assert.strictEqual(img.src, '', 'must not use the unsigned Worker locator as img.src');
-  assert.ok(calls.indexOf(locator) >= 0, 'must resolve via sign-get path');
+  assert.strictEqual(img.getAttribute('data-ce2-src'), locator);
+  assert.ok(calls.indexOf(locator) < 0, 'must not resolve off-screen thumbs at paint');
+  sandbox.Ce2MediaView.hydrateMediaElement(img);
+  assert.ok(calls.indexOf(locator) >= 0, 'must resolve via sign-get path when hydrated');
 });
 
 (async function run() {

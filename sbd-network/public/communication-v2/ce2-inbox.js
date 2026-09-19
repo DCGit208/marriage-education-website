@@ -7,7 +7,7 @@
 
   var PREVIEW_MAX = 72;
   var QUOTE_MAX = 36;
-  var VERSION = 2;
+  var VERSION = 3;
 
   function clip(text, max) {
     var s = String(text || '').replace(/\s+/g, ' ').trim();
@@ -269,6 +269,49 @@
     return row;
   }
 
+  function truncatedUidLabel(uid) {
+    var s = String(uid || '').trim();
+    if (!s) return 'Direct';
+    if (s.length <= 8) return s;
+    return s.slice(0, 8) + '…';
+  }
+
+  function isPlaceholderPeerLabel(label, otherUid) {
+    var s = String(label || '').trim();
+    if (!s) return true;
+    if (s === 'Direct' || s === 'Conversation' || s === 'Member') return true;
+    return s === truncatedUidLabel(otherUid);
+  }
+
+  /**
+   * Name for a DM row from list data only. Prefer a cached real name;
+   * otherwise a short uid so the row can paint before users/{uid} returns.
+   */
+  function peerLabelFromList(otherUid, cached) {
+    cached = cached || {};
+    var name = String(cached.name || cached.label || '').trim();
+    if (name && !isPlaceholderPeerLabel(name, otherUid)) return name;
+    return truncatedUidLabel(otherUid);
+  }
+
+  /**
+   * Sidebar list mode. App boot and this list's Firestore snap may block;
+   * mute/pin prefs, presence, and peer-profile hydrates must not.
+   */
+  function listPaintMode(opts) {
+    opts = opts || {};
+    if (opts.appLoading || opts.listPending) return 'loading';
+    if (!opts.rowCount) return 'empty';
+    return 'rows';
+  }
+
+  function connectionPrefersLitePaint(conn) {
+    if (!conn) return false;
+    if (conn.saveData) return true;
+    var t = String(conn.effectiveType || '').toLowerCase();
+    return t === 'slow-2g' || t === '2g';
+  }
+
   global.Ce2Inbox = {
     VERSION: VERSION,
     PREVIEW_MAX: PREVIEW_MAX,
@@ -289,5 +332,10 @@
     mergeUnreadFromMeta: mergeUnreadFromMeta,
     applyPrefToRow: applyPrefToRow,
     looksLikePayloadDump: looksLikePayloadDump,
+    truncatedUidLabel: truncatedUidLabel,
+    isPlaceholderPeerLabel: isPlaceholderPeerLabel,
+    peerLabelFromList: peerLabelFromList,
+    listPaintMode: listPaintMode,
+    connectionPrefersLitePaint: connectionPrefersLitePaint,
   };
 })(typeof window !== 'undefined' ? window : global);

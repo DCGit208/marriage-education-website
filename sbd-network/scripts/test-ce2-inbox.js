@@ -71,12 +71,14 @@ const receipts = loadIife('public/communication-v2/ce2-receipts.js').Ce2Receipts
 assert.ok(inbox, 'Ce2Inbox did not load');
 assert.ok(receipts, 'Ce2Receipts did not load');
 
-test('VERSION is 2 and preview/sort APIs are exported', function () {
-  assert.strictEqual(inbox.VERSION, 2);
+test('VERSION is 3 and preview/sort APIs are exported', function () {
+  assert.strictEqual(inbox.VERSION, 3);
   assert.strictEqual(typeof inbox.formatLastPreview, 'function');
   assert.strictEqual(typeof inbox.sortInboxRows, 'function');
   assert.strictEqual(typeof inbox.unreadBadgeMode, 'function');
   assert.strictEqual(typeof inbox.mergeUnreadFromMeta, 'function');
+  assert.strictEqual(typeof inbox.peerLabelFromList, 'function');
+  assert.strictEqual(typeof inbox.listPaintMode, 'function');
 });
 
 test('receipts VERSION is 5', function () {
@@ -259,6 +261,27 @@ test('preview never dumps raw payloads', function () {
   assert.ok(inbox.looksLikePayloadDump('{not a message}'));
 });
 
+test('inbox first paint does not wait on presence or peer profile hydrates', function () {
+  assert.strictEqual(inbox.listPaintMode({ appLoading: true, listPending: false, rowCount: 3 }), 'loading');
+  assert.strictEqual(inbox.listPaintMode({ appLoading: false, listPending: true, rowCount: 0 }), 'loading');
+  assert.strictEqual(inbox.listPaintMode({ appLoading: false, listPending: false, rowCount: 0 }), 'empty');
+  assert.strictEqual(inbox.listPaintMode({ appLoading: false, listPending: false, rowCount: 4 }), 'rows');
+  assert.strictEqual(inbox.peerLabelFromList('abcdefghijk', {}), 'abcdefgh…');
+  assert.strictEqual(
+    inbox.peerLabelFromList('abcdefghijk', { label: 'Marie' }),
+    'Marie'
+  );
+  assert.strictEqual(
+    inbox.peerLabelFromList('abcdefghijk', { name: 'Marie' }),
+    'Marie'
+  );
+  assert.ok(inbox.isPlaceholderPeerLabel('abcdefgh…', 'abcdefghijk'));
+  assert.ok(!inbox.connectionPrefersLitePaint(null));
+  assert.ok(inbox.connectionPrefersLitePaint({ saveData: true }));
+  assert.ok(inbox.connectionPrefersLitePaint({ effectiveType: '2g' }));
+  assert.ok(!inbox.connectionPrefersLitePaint({ effectiveType: '4g' }));
+});
+
 test('cache-bust versions stay strictly above live 110/80/3/6', function () {
   const html = fs.readFileSync(
     path.join(ROOT, 'public/communication-v2/index.html'),
@@ -271,7 +294,7 @@ test('cache-bust versions stay strictly above live 110/80/3/6', function () {
   const presenceVer = html.match(/ce2-presence\.js\?v=(\d+)/);
   assert.ok(jsVer && Number(jsVer[1]) > 110);
   assert.ok(cssVer && Number(cssVer[1]) > 80);
-  assert.ok(inboxVer && Number(inboxVer[1]) >= 1);
+  assert.ok(inboxVer && Number(inboxVer[1]) >= 3);
   assert.ok(receiptsVer && Number(receiptsVer[1]) >= 4);
   assert.ok(presenceVer && Number(presenceVer[1]) >= 6);
   assert.ok(html.indexOf('communication-v2.js?v=110') < 0);

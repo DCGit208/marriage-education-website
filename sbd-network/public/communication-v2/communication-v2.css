@@ -1810,7 +1810,8 @@ body.ce2-inbox-menu-open {
 }
 
 .ce2-media-tap.is-fallback .ce2-media-ph,
-.ce2-media-tap.is-opening .ce2-media-ph {
+.ce2-media-tap.is-opening .ce2-media-ph,
+.ce2-media-tap.is-deferred .ce2-media-ph {
   display: flex;
 }
 
@@ -1837,6 +1838,13 @@ body.ce2-inbox-menu-open {
 
 .ce2-media-thumb.is-broken,
 .ce2-media-video-poster.is-broken {
+  display: none;
+}
+
+.ce2-media-thumb:not([src]),
+.ce2-media-video-poster:not([src]),
+.ce2-board-share-thumb-img:not([src]),
+.ce2-link-preview-thumb-img:not([src]) {
   display: none;
 }
 
@@ -2914,7 +2922,8 @@ body.ce2-inbox-menu-open {
   pointer-events: none;
 }
 
-.ce2-link-preview-thumb.is-fallback .ce2-link-preview-thumb-ph {
+.ce2-link-preview-thumb.is-fallback .ce2-link-preview-thumb-ph,
+.ce2-link-preview-thumb.is-deferred .ce2-link-preview-thumb-ph {
   display: flex;
 }
 

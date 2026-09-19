@@ -278,7 +278,7 @@ test('quote click still stopPropagates and reads data-reply-to-id', function () 
 });
 
 test('jump lands on existing tap-to-play, not a new player', function () {
-  assert.ok(media.indexOf("btn.className = 'ce2-media-tap ce2-media-tap--video'") !== -1);
+  assert.ok(media.indexOf("btn.className = 'ce2-media-tap ce2-media-tap--video") !== -1);
   assert.ok(media.indexOf("hint.textContent = 'Tap to play'") !== -1);
   assert.ok(media.indexOf('function activateMediaTap') !== -1);
   const jumpBlock = v2.slice(
@@ -288,6 +288,7 @@ test('jump lands on existing tap-to-play, not a new player', function () {
   assert.ok(jumpBlock.indexOf('activateMediaTap') === -1);
   assert.ok(jumpBlock.indexOf('findReplyJumpFocus') !== -1);
   assert.ok(jumpBlock.indexOf('applyThreadScrollTop') !== -1);
+  assert.ok(jumpBlock.indexOf('hydrateMessageRow') !== -1);
 });
 
 test('DM and group message collections stay on the shared jump path', function () {

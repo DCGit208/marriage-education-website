@@ -18,7 +18,7 @@
   var URL_RE = /https?:\/\/[^\s<>"']+/gi;
   var ORIGIN_FALLBACK = 'https://sbd-network.web.app';
   var EXCERPT_MAX = 96;
-  var VERSION = 3;
+  var VERSION = 4;
 
   /**
    * Same-origin stills already used on the live site (heroes, covers, board art).
@@ -270,9 +270,9 @@
     // Keep the thumbnail outside the <a>. Wrapping it in the link made
     // tap/long-press-to-reply a no-op (PR #8). Card body opens the URL.
     var thumbHtml =
-      '<button type="button" class="ce2-link-preview-thumb" aria-label="Reply to this message">' +
+      '<button type="button" class="ce2-link-preview-thumb is-deferred" aria-label="Reply to this message">' +
       '<span class="ce2-link-preview-thumb-ph" aria-hidden="true"></span>' +
-      '<img class="ce2-link-preview-thumb-img" src="' +
+      '<img class="ce2-link-preview-thumb-img" data-ce2-src="' +
       safeThumb +
       '" alt="" loading="lazy" decoding="async" draggable="false"' +
       errAttr +

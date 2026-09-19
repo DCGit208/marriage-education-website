@@ -117,6 +117,10 @@ function createDom() {
           ? this.attributes[k]
           : null;
       },
+      removeAttribute: function (k) {
+        delete this.attributes[k];
+        if (k === 'src') this.src = '';
+      },
       appendChild: function (c) {
         c.parentNode = this;
         this.childNodes.push(c);
@@ -184,8 +188,8 @@ console.log('\nCE2 media cards + board-share polish\n');
 const share = loadIife('public/communication-v2/ce2-share.js').Ce2Share;
 assert.ok(share, 'Ce2Share did not load');
 
-test('Ce2Share VERSION is 3', function () {
-  assert.strictEqual(share.VERSION, 3);
+test('Ce2Share VERSION is 4', function () {
+  assert.strictEqual(share.VERSION, 4);
 });
 
 test('boardShareThumbUrl prefers thumbnailUrl then thumbUrl then imageUrl', function () {
@@ -254,7 +258,9 @@ test('legacy thumbUrl still paints the card image', function () {
     },
     escapeHtml
   );
-  assert.ok(/src="https:\/\/cdn\.example\/legacy\.jpg"/.test(html));
+  assert.ok(/data-ce2-src="https:\/\/cdn\.example\/legacy\.jpg"/.test(html));
+  assert.ok(!/\ssrc="https:\/\/cdn\.example\/legacy\.jpg"/.test(html));
+  assert.ok(/ce2-board-share-thumb is-deferred/.test(html));
   assert.ok(!/is-fallback/.test(html));
 });
 
@@ -290,11 +296,11 @@ test('messenger cache-bust is above live for changed card/media assets', functio
   const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
   const shareVer = html.match(/ce2-share\.js\?v=(\d+)/);
   const mediaVer = html.match(/ce2-media-view\.js\?v=(\d+)/);
-  assert.ok(cssVer && Number(cssVer[1]) >= 80, 'css cache-bust must be above live v=79');
-  assert.ok(shareVer && Number(shareVer[1]) >= 10, 'ce2-share cache-bust must be above live v=9');
-  assert.ok(mediaVer && Number(mediaVer[1]) >= 4, 'ce2-media-view cache-bust must be above live v=3');
+  assert.ok(cssVer && Number(cssVer[1]) >= 91, 'css cache-bust must be above live v=90');
+  assert.ok(shareVer && Number(shareVer[1]) >= 11, 'ce2-share cache-bust must be above live v=10');
+  assert.ok(mediaVer && Number(mediaVer[1]) >= 5, 'ce2-media-view cache-bust must be above live v=4');
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) >= 110, 'communication-v2.js cache-bust must be above live v=109');
+  assert.ok(jsVer && Number(jsVer[1]) >= 125, 'communication-v2.js cache-bust must be above live v=124');
   const actionsVer = html.match(/ce2-message-actions\.js\?v=(\d+)/);
   assert.ok(actionsVer && Number(actionsVer[1]) >= 23, 'ce2-message-actions.js cache-bust must stay at or above live v=23');
 });
@@ -306,8 +312,8 @@ const mediaSandbox = loadIife('public/communication-v2/ce2-media-view.js', {
 const media = mediaSandbox.Ce2MediaView;
 assert.ok(media, 'Ce2MediaView did not load');
 
-test('Ce2MediaView VERSION is 4', function () {
-  assert.strictEqual(media.VERSION, 4);
+test('Ce2MediaView VERSION is 5', function () {
+  assert.strictEqual(media.VERSION, 5);
 });
 
 test('image bubble keeps a fallback frame when thumb is missing', function () {
@@ -325,17 +331,19 @@ test('image bubble keeps a fallback frame when thumb is missing', function () {
   assert.strictEqual(hint.textContent, 'Tap to load');
 });
 
-test('image bubble uses cover thumb and keeps tap-to-open', function () {
+test('image bubble uses a deferred cover thumb until hydrate', function () {
   const bubble = document.createElement('div');
   media.appendChatImage(bubble, {
     imageUrl: 'https://cdn.example/full.jpg',
     imageThumbUrl: 'https://cdn.example/thumb.jpg',
   });
   const btn = bubble.childNodes[0];
+  assert.ok(btn.classList.contains('is-deferred'));
   assert.ok(!btn.classList.contains('is-fallback'));
   const img = btn.querySelector('.ce2-media-thumb');
-  assert.strictEqual(img.src, 'https://cdn.example/thumb.jpg');
-  assert.strictEqual(btn.querySelector('.ce2-media-tap-hint').textContent, 'Tap to open');
+  assert.strictEqual(img.getAttribute('data-ce2-src'), 'https://cdn.example/thumb.jpg');
+  assert.ok(!img.src, 'thumb src must not be assigned at paint');
+  assert.strictEqual(btn.querySelector('.ce2-media-tap-hint').textContent, 'Tap to load');
 });
 
 test('broken thumb marks the media frame as fallback', function () {

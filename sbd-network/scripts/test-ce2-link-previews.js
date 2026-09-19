@@ -83,17 +83,18 @@ function thumbIsInsideOpenLink(html) {
 function assertRealThumb(html, label) {
   const prefix = label ? label + ': ' : '';
   assert.ok(html.indexOf('ce2-link-preview-thumb-img') >= 0, prefix + 'missing thumb <img>');
-  const src = html.match(/class="ce2-link-preview-thumb-img"[^>]*src="([^"]+)"/);
-  const srcAlt = html.match(/src="([^"]+)"[^>]*class="ce2-link-preview-thumb-img"/);
+  const src = html.match(/class="ce2-link-preview-thumb-img"[^>]*data-ce2-src="([^"]+)"/);
+  const srcAlt = html.match(/data-ce2-src="([^"]+)"[^>]*class="ce2-link-preview-thumb-img"/);
   const url = (src && src[1]) || (srcAlt && srcAlt[1]) || '';
-  assert.ok(url, prefix + 'thumb has no src');
+  assert.ok(url, prefix + 'thumb has no deferred src');
   assert.ok(
     url.indexOf('/assets/') === 0 || url.indexOf('/images/') === 0,
     prefix + 'thumb src must be a same-origin site asset, got ' + url
   );
   assert.ok(!/ce2-link-preview-thumb is-fallback/.test(html), prefix + 'empty fallback thumb');
-  assert.ok(!/src=""/.test(html), prefix + 'empty src');
-  const thumbBtn = html.match(/<button type="button" class="ce2-link-preview-thumb"[^>]*>[\s\S]*?<\/button>/);
+  assert.ok(/ce2-link-preview-thumb is-deferred/.test(html), prefix + 'thumb should start deferred');
+  assert.ok(!/\ssrc="/.test(html.match(/<img class="ce2-link-preview-thumb-img"[^>]*>/)[0] || ''), prefix + 'eager src');
+  const thumbBtn = html.match(/<button type="button" class="ce2-link-preview-thumb[^"]*"[^>]*>[\s\S]*?<\/button>/);
   assert.ok(thumbBtn, prefix + 'missing thumb button');
   assert.ok(
     !/>\s*LINK\s*</i.test(thumbBtn[0]) && thumbBtn[0].indexOf('>Link<') < 0,
@@ -108,8 +109,8 @@ const share = loadIife('public/communication-v2/ce2-share.js').Ce2Share;
 assert.ok(links, 'Ce2Links did not load');
 assert.ok(share, 'Ce2Share did not load');
 
-test('Ce2Links VERSION is 3', function () {
-  assert.strictEqual(links.VERSION, 3);
+test('Ce2Links VERSION is 4', function () {
+  assert.strictEqual(links.VERSION, 4);
 });
 
 test('allowlist is unchanged and does not add open-web hosts', function () {
@@ -245,7 +246,7 @@ test('Formation, courses, shop, home, and messages cards all have a real picture
     assert.strictEqual(preview.thumbnailUrl, pair[1]);
     const html = links.renderLinkPreviewHtml(pair[0], escapeHtml);
     assertRealThumb(html, pair[0]);
-    assert.ok(html.indexOf('src="' + pair[1] + '"') >= 0, pair[0] + ' should paint ' + pair[1]);
+    assert.ok(html.indexOf('data-ce2-src="' + pair[1] + '"') >= 0, pair[0] + ' should paint ' + pair[1]);
   });
   assert.strictEqual(links.DEFAULT_THUMB, '/assets/background/dashboard-main.jpg');
 });
@@ -290,11 +291,11 @@ test('cache-bust versions stay strictly above live 117/85/4/2', function () {
   const offlineVer = html.match(/ce2-offline-queue\.js\?v=(\d+)/);
   const receiptsVer = html.match(/ce2-receipts\.js\?v=(\d+)/);
   const searchVer = html.match(/ce2-thread-search\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) >= 117, 'communication-v2.js must not go backwards from live v=117');
+  assert.ok(jsVer && Number(jsVer[1]) >= 125, 'communication-v2.js must not go backwards from live v=124');
   assert.ok(cssVer && Number(cssVer[1]) > 85, 'communication-v2.css must be newer than live v=85');
   assert.ok(replyVer && Number(replyVer[1]) >= 4, 'ce2-reply.js must not go backwards from live v=4');
-  assert.ok(linksVer && Number(linksVer[1]) > 2, 'ce2-links.js must be newer than live v=2');
-  assert.ok(inboxVer && Number(inboxVer[1]) >= 2, 'ce2-inbox.js must not go backwards from live v=2');
+  assert.ok(linksVer && Number(linksVer[1]) >= 4, 'ce2-links.js must be newer than live v=3');
+  assert.ok(inboxVer && Number(inboxVer[1]) >= 3, 'ce2-inbox.js must not go backwards from live v=2');
   assert.ok(shareVer && Number(shareVer[1]) >= 10);
   assert.ok(mediaVer && Number(mediaVer[1]) >= 3);
   assert.ok(actionsVer && Number(actionsVer[1]) >= 24);
