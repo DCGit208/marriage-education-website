@@ -7150,17 +7150,17 @@
 
     var thumb = ce2BoardShareThumbnail(postData);
     var excerpt = postData && postData.content ? String(postData.content).slice(0, 200) : '';
-    return {
+    var raw = {
       boardId: boardParsed.boardId,
       postId: boardParsed.postId,
       token: token,
-      url: sh.shareHref(boardParsed.boardId, boardParsed.postId, token),
       thumbnailUrl: thumb.thumbnailUrl || '',
       mediaType: thumb.mediaType || '',
       note: titleText || '',
       title: excerpt || titleText || 'Board post',
       excerpt: excerpt || '',
     };
+    return sh.buildBoardSharePayload ? sh.buildBoardSharePayload(raw) : raw;
   }
 
   function clearComposerAfterQueue(ac) {
@@ -7206,6 +7206,29 @@
     CommunicationState.error = null;
     CommunicationState.statusMessage = 'Queued — will send when you reconnect.';
     render();
+  }
+
+  function openBoardPickerFromComposer() {
+    var sh = share();
+    var ac = CommunicationState.activeConversation;
+    var info = { from: 'ce2', conv: '', group: '' };
+    if (ac && ac.type === 'group' && ac.id) {
+      info.group = ac.id;
+    } else if (ac && ac.type === 'direct' && ac.id) {
+      info.conv = ac.id;
+    }
+    if (sh && sh.persistMessengerReturn) sh.persistMessengerReturn(info);
+    var href = sh && sh.boardsHrefWithReturn
+      ? sh.boardsHrefWithReturn(info)
+      : '/boards.html?from=ce2';
+    if (!ac) {
+      CommunicationState.statusMessage =
+        'Pick a board post, then share it into a conversation.';
+    } else {
+      CommunicationState.statusMessage =
+        'Choose a board post to share as a card in this thread.';
+    }
+    window.location.href = href;
   }
 
   async function sendMessage() {
@@ -7376,7 +7399,11 @@
     var boardShare = null;
     if (boardParsed && sh) {
       boardShare = await buildBoardShareFromParsed(boardParsed, text, sh);
-      if (!text) text = 'Shared a board post';
+      if (!text) {
+        text = sh && sh.shareContentFromNote
+          ? sh.shareContentFromNote(boardShare.note)
+          : 'Shared a board post';
+      }
     }
 
     function mediaLabel(item) {
@@ -7806,7 +7833,7 @@
     }
     var drawer = el('ce2ComposerDrawer');
     var drawerOff = !drawer || drawer.hidden;
-    ['ce2BoardShareUrl', 'ce2ClassSelect'].forEach(function (id) {
+    ['ce2BoardShareUrl', 'ce2ClassSelect', 'ce2ShareFromBoard'].forEach(function (id) {
       var node = el(id);
       if (!node) return;
       node.disabled = drawerOff;
@@ -8038,6 +8065,13 @@
         moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
         moreBtn.classList.toggle('is-open', open);
         syncCe2FocusableInputs();
+      });
+    }
+
+    var shareFromBoard = el('ce2ShareFromBoard');
+    if (shareFromBoard) {
+      shareFromBoard.addEventListener('click', function () {
+        openBoardPickerFromComposer();
       });
     }
 

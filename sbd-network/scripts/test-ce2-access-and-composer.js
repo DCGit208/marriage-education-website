@@ -110,6 +110,7 @@ test('closed composer bar is attach, mic, field, quieter +, and send', function 
   assert.ok(closed.indexOf('ce2Shareable') < 0, 'shareable still on the closed bar');
   assert.ok(closed.indexOf('ce2FmtBold') < 0, 'format chrome still on the closed bar');
   assert.ok(closed.indexOf('ce2BoardShareUrl') < 0, 'board URL still on the closed bar');
+  assert.ok(closed.indexOf('ce2ShareFromBoard') < 0, 'choose-from-board still on the closed bar');
   assert.ok(closed.indexOf('ce2-color-swatch') < 0, 'gold/blue/green still on the closed bar');
 });
 
@@ -122,6 +123,7 @@ test('classification, share, format, and board paste live only in the + drawer',
   assert.ok(drawer[0].indexOf('id="ce2Shareable"') >= 0);
   assert.ok(drawer[0].indexOf('id="ce2FmtBold"') >= 0);
   assert.ok(drawer[0].indexOf('id="ce2BoardShareUrl"') >= 0);
+  assert.ok(drawer[0].indexOf('id="ce2ShareFromBoard"') >= 0);
   assert.ok(drawer[0].indexOf('ce2-color-swatch--gold') >= 0);
 });
 

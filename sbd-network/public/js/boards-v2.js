@@ -235,14 +235,38 @@ function createFormationLockedGroupCard(group, access) {
   return el;
 }
 
+function persistMessengerReturnFromBoards() {
+  const share = window.Ce2Share;
+  if (!share || !share.parseMessengerReturnFromSearch) return;
+  const fromUrl = share.parseMessengerReturnFromSearch(window.location.search);
+  if (fromUrl && share.persistMessengerReturn) share.persistMessengerReturn(fromUrl);
+}
+
+function messengerReturnBoardHref(boardId) {
+  const href = '/board.html?boardId=' + encodeURIComponent(boardId);
+  const share = window.Ce2Share;
+  if (!share) return href;
+  const fromUrl = share.parseMessengerReturnFromSearch
+    ? share.parseMessengerReturnFromSearch(window.location.search)
+    : null;
+  const stored = !fromUrl && share.readStoredMessengerReturn
+    ? share.readStoredMessengerReturn()
+    : null;
+  const info = fromUrl || stored;
+  if (info && share.withMessengerReturn) return share.withMessengerReturn(href, info);
+  return href;
+}
+
 function openBoard(boardId) {
   if (userTier === 'free' && userCommentCount >= FREE_TIER_COMMENT_LIMIT) {
     document.getElementById('participationLimit').style.display = 'block';
     document.getElementById('participationLimit').scrollIntoView({ behavior: 'smooth' });
   } else {
-    window.location.href = `/board.html?boardId=${boardId}`;
+    window.location.href = messengerReturnBoardHref(boardId);
   }
 }
+
+persistMessengerReturnFromBoards();
 
 function showUpgradeModal(tier) {
   window.location.href = `/payment?tier=${tier}`;

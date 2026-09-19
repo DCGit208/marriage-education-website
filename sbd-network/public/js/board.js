@@ -240,6 +240,10 @@ function sameOriginReferrerPath() {
 }
 
 function readStoredMessengerReturn() {
+  const share = window.Ce2Share;
+  if (share && share.readStoredMessengerReturn) {
+    return share.readStoredMessengerReturn();
+  }
   try {
     const raw = sessionStorage.getItem(CE2_BOARD_RETURN_KEY);
     if (!raw) return null;
@@ -252,6 +256,12 @@ function readStoredMessengerReturn() {
 }
 
 function persistMessengerReturn(info) {
+  const share = window.Ce2Share;
+  if (share && share.persistMessengerReturn) {
+    if (info && info.from === 'ce2') share.persistMessengerReturn(info);
+    else if (share.clearStoredMessengerReturn) share.clearStoredMessengerReturn();
+    return;
+  }
   try {
     if (info && info.from === 'ce2') {
       sessionStorage.setItem(CE2_BOARD_RETURN_KEY, JSON.stringify(info));
@@ -273,16 +283,29 @@ function resolveMessengerReturn() {
     return fromUrl;
   }
 
+  const stored = readStoredMessengerReturn();
   const refPath = sameOriginReferrerPath();
+  const keepStored = share && share.shouldKeepStoredReturn
+    ? share.shouldKeepStoredReturn(refPath)
+    : (refPath.indexOf('/communication-v2') === 0 ||
+      /\/board(?:s)?(?:\.html)?$/.test(refPath) ||
+      /\/dashboard(?:\.html)?$/.test(refPath) ||
+      /\/group(?:\.html)?$/.test(refPath));
+
+  // Prefer a stored thread-specific return over a bare messenger-hub referrer.
+  if (stored && (stored.conv || stored.group) && keepStored) {
+    return stored;
+  }
+
   if (refPath.indexOf('/communication-v2') === 0) {
-    const fromRef = { from: 'ce2', conv: '', group: '' };
+    const fromRef = stored && stored.from === 'ce2'
+      ? stored
+      : { from: 'ce2', conv: '', group: '' };
     persistMessengerReturn(fromRef);
     return fromRef;
   }
 
-  const stored = readStoredMessengerReturn();
-  const fromBoard = /\/board(?:\.html)?$/.test(refPath);
-  if (stored && fromBoard) return stored;
+  if (stored && keepStored) return stored;
 
   persistMessengerReturn(null);
   return null;
@@ -293,7 +316,12 @@ function boardHrefWithMessengerReturn(href) {
   return Ce2Share.withMessengerReturn(href, messengerReturnInfo);
 }
 
-function initMessengerReturnChrome() {
+function messengerReturnLabel(justShared) {
+  return justShared ? 'Open in messenger' : 'Back to messenger';
+}
+
+function initMessengerReturnChrome(opts) {
+  const justShared = !!(opts && opts.justShared);
   messengerReturnInfo = resolveMessengerReturn();
   messengerReturnHref = window.Ce2Share && Ce2Share.messengerReturnHref
     ? Ce2Share.messengerReturnHref(messengerReturnInfo)
@@ -308,14 +336,19 @@ function initMessengerReturnChrome() {
     return;
   }
 
+  const label = messengerReturnLabel(justShared);
   document.body.classList.add('from-messenger');
   if (messengerReturnBar) {
     messengerReturnBar.hidden = false;
     messengerReturnBar.href = messengerReturnHref;
+    messengerReturnBar.setAttribute('aria-label', label);
+    messengerReturnBar.title = label;
+    const labelEl = messengerReturnBar.querySelector('.messenger-return-label');
+    if (labelEl) labelEl.textContent = label;
   }
   if (backBtn) {
-    backBtn.setAttribute('aria-label', 'Back to messenger');
-    backBtn.title = 'Back to messenger';
+    backBtn.setAttribute('aria-label', label);
+    backBtn.title = label;
   }
 }
 
@@ -3250,13 +3283,38 @@ function refreshBoardRankScoreNonBlocking(boardId) {
   })();
 }
 
-// ── Share via DM ──────────────────────────────────────────────────
+// ── Share into messenger (DM or formation group) ─────────────────
 document.getElementById('ctxShareDm').addEventListener('click', async () => {
   const post = ctxPost;
   const selectedMedia = ctxMediaSelection;
   closeContextMenu();
   if (post) await openShareDmModal(post, selectedMedia);
 });
+
+function shareTargetKindLabel(target) {
+  if (!target) return '';
+  if (target.preferred) return 'This conversation';
+  if (target.type === 'group') return 'Formation group';
+  if (target.kind === 'member') return 'Member';
+  return 'Direct message';
+}
+
+function renderShareThreadRow(target) {
+  const initial = String(target.name || '?').charAt(0).toUpperCase();
+  const photo = target.photoUrl
+    ? `<img src="${esc(target.photoUrl)}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+    : esc(initial);
+  const kind = shareTargetKindLabel(target);
+  return `
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,188,212,0.15);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-primary);font-size:0.95rem;flex-shrink:0;">
+          ${photo}
+        </div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:0.9rem;color:var(--text-primary);">${esc(target.name)}</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px;">${esc(kind)}</div>
+        </div>
+      `;
+}
 
 async function openShareDmModal(post, selectedMedia = null) {
   const modal    = document.getElementById('shareDmModal');
@@ -3265,7 +3323,7 @@ async function openShareDmModal(post, selectedMedia = null) {
   const commentEl = document.getElementById('shareDmComment');
   const closeBtn = document.getElementById('shareDmClose');
 
-  list.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);">Loading members\u2026</div>';
+  list.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);">Loading conversations\u2026</div>';
   searchEl.value = '';
   if (commentEl) commentEl.value = '';
   modal.style.display = 'flex';
@@ -3275,11 +3333,9 @@ async function openShareDmModal(post, selectedMedia = null) {
   closeBtn.onclick = close;
   modal.onclick = e => { if (e.target === modal) close(); };
 
-  let peers = [];
+  let targets = [];
   try {
-    peers = await fetchDmPeers();
-    const blockedIds = await loadCe2BlockedPeerIds();
-    peers = peers.filter(u => !blockedIds.has(u.id));
+    targets = await fetchShareTargets();
   } catch (err) {
     list.innerHTML = `<div style="padding:16px;color:#f55;">${err.message}</div>`;
     return;
@@ -3287,30 +3343,25 @@ async function openShareDmModal(post, selectedMedia = null) {
 
   const preview = post.content ? post.content.slice(0, 80) : '📎 Shared post';
 
-  function renderPeers(filtered) {
+  function renderTargets(filtered) {
     if (!filtered.length) {
-      list.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);">No members found.</div>';
+      list.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);">No conversations found.</div>';
       return;
     }
     list.innerHTML = '';
-    filtered.forEach(u => {
+    filtered.forEach(target => {
       const row = document.createElement('div');
       row.className = 'dm-peer-row';
-      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);';
-      row.innerHTML = `
-        <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,188,212,0.15);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-primary);font-size:0.95rem;flex-shrink:0;">
-          ${u.photoUrl ? `<img src="${u.photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : u.name.charAt(0).toUpperCase()}
-        </div>
-        <span style="font-size:0.9rem;color:var(--text-primary);">${esc(u.name)}</span>
-      `;
+      row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);min-height:56px;touch-action:manipulation;';
+      row.innerHTML = renderShareThreadRow(target);
       row.addEventListener('click', async () => {
         row.style.opacity = '0.5';
         row.style.pointerEvents = 'none';
         try {
           const comment = commentEl ? commentEl.value.trim() : '';
-          await sendPostAsDm(u, boardId, post, preview, comment, selectedMedia);
+          const shared = await sendPostToThread(target, boardId, post, preview, comment, selectedMedia);
           close();
-          showToast('Post shared via Messages V2 to ' + u.name);
+          afterBoardShareIntoThread(shared);
         } catch (err) {
           showToast('Could not share: ' + err.message);
           row.style.opacity = '';
@@ -3321,11 +3372,28 @@ async function openShareDmModal(post, selectedMedia = null) {
     });
   }
 
-  renderPeers(peers);
+  renderTargets(targets);
   searchEl.oninput = () => {
     const q = searchEl.value.toLowerCase();
-    renderPeers(peers.filter(u => u.name.toLowerCase().includes(q)));
+    renderTargets(targets.filter(t => String(t.name || '').toLowerCase().includes(q)));
   };
+}
+
+function afterBoardShareIntoThread(shared) {
+  const returnInfo = shared && shared.returnInfo
+    ? shared.returnInfo
+    : { from: 'ce2', conv: '', group: '' };
+  persistMessengerReturn(returnInfo);
+  initMessengerReturnChrome({ justShared: true });
+  const href = window.Ce2Share && Ce2Share.messengerReturnHref
+    ? Ce2Share.messengerReturnHref(returnInfo)
+    : '/communication-v2/';
+  const name = (shared && shared.name) || 'messenger';
+  showActionToast(
+    'Board post shared into ' + name,
+    'Open in messenger',
+    () => { window.location.href = href; }
+  );
 }
 
 async function fetchDmPeers() {
@@ -3346,6 +3414,169 @@ async function fetchDmPeers() {
   return Array.from(seen.values())
     .map(doc => ({ id: doc.id, name: doc.data().name || doc.data().email || 'Member', photoUrl: doc.data().photoUrl || null }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function boardCe2AllowedTiers() {
+  const g = typeof window !== 'undefined' ? window.Ce2Governance : null;
+  const rank = boardCe2TierRank(currentUserData.tier || 'foundation');
+  const allowed = g && g.tiersAtOrBelowRank
+    ? g.tiersAtOrBelowRank(rank).slice()
+    : ['foundation', 'free'];
+  if (allowed.indexOf('free') < 0 && allowed.indexOf('foundation') >= 0) allowed.push('free');
+  if (!allowed.length) allowed.push('foundation');
+  return allowed;
+}
+
+function lastActivityMs(value) {
+  try {
+    if (!value && value !== 0) return 0;
+    if (typeof value === 'number' && isFinite(value)) return value > 1e12 ? value : value * 1000;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    if (typeof value.seconds === 'number') return value.seconds * 1000;
+  } catch (_) {}
+  return 0;
+}
+
+async function fetchRecentDirectThreads() {
+  if (!currentUserId) return [];
+  let snap = await db
+    .collection('ce2_conversations')
+    .where('participantIds', 'array-contains', currentUserId)
+    .orderBy('lastMessageAt', 'desc')
+    .limit(20)
+    .get()
+    .catch(() => null);
+  if (!snap) {
+    snap = await db
+      .collection('ce2_conversations')
+      .where('participantIds', 'array-contains', currentUserId)
+      .limit(20)
+      .get()
+      .catch(() => null);
+  }
+  if (!snap) return [];
+  const blocked = await loadCe2BlockedPeerIds();
+  const rows = [];
+  const otherUids = [];
+  snap.forEach((doc) => {
+    const data = doc.data() || {};
+    const other = (data.participantIds || []).filter((id) => id !== currentUserId)[0];
+    if (!other || blocked.has(other)) return;
+    otherUids.push(other);
+    rows.push({
+      type: 'direct',
+      id: doc.id,
+      otherUid: other,
+      name: 'Direct message',
+      lastActivityAt: lastActivityMs(data.lastMessageAt),
+      kind: 'thread',
+    });
+  });
+  if (otherUids.length) {
+    const unique = Array.from(new Set(otherUids)).slice(0, 20);
+    const docs = await Promise.all(unique.map((uid) => db.collection('users').doc(uid).get().catch(() => null)));
+    const names = {};
+    docs.forEach((doc, i) => {
+      if (doc && doc.exists) {
+        const d = doc.data() || {};
+        names[unique[i]] = d.name || d.email || 'Member';
+      }
+    });
+    rows.forEach((row) => {
+      if (names[row.otherUid]) row.name = names[row.otherUid];
+    });
+  }
+  return rows;
+}
+
+async function fetchFormationShareGroups() {
+  const allowedTiers = boardCe2AllowedTiers();
+  let snap;
+  try {
+    if (currentIsAdmin) {
+      snap = await db.collection('communicationGroups').limit(40).get();
+    } else {
+      snap = await db
+        .collection('communicationGroups')
+        .where('requiredTier', 'in', allowedTiers)
+        .limit(40)
+        .get();
+    }
+  } catch (_) {
+    return [];
+  }
+  return snap.docs.map((doc) => {
+    const data = doc.data() || {};
+    return {
+      type: 'group',
+      id: doc.id,
+      name: data.name || 'Formation group',
+      lastActivityAt: lastActivityMs(data.lastMessageAt),
+      kind: 'thread',
+    };
+  });
+}
+
+async function fetchShareTargets() {
+  const share = window.Ce2Share;
+  const returnInfo = messengerReturnInfo || readStoredMessengerReturn();
+  const [threads, groups, peers, blockedIds] = await Promise.all([
+    fetchRecentDirectThreads(),
+    fetchFormationShareGroups(),
+    fetchDmPeers().catch(() => []),
+    loadCe2BlockedPeerIds(),
+  ]);
+  const seen = new Set();
+  let targets = [];
+  [].concat(threads, groups).forEach((row) => {
+    const key = row.type + ':' + row.id;
+    if (seen.has(key)) return;
+    seen.add(key);
+    targets.push(row);
+  });
+  peers
+    .filter((u) => !blockedIds.has(u.id))
+    .forEach((u) => {
+      const convId = ce2DirectConvId(currentUserId, u.id);
+      const key = 'direct:' + convId;
+      if (seen.has(key)) return;
+      seen.add(key);
+      targets.push({
+        type: 'direct',
+        id: convId,
+        otherUid: u.id,
+        name: u.name,
+        photoUrl: u.photoUrl || null,
+        lastActivityAt: 0,
+        kind: 'member',
+      });
+    });
+  if (share && share.shareThreadTarget) {
+    const pref = share.shareThreadTarget(returnInfo);
+    if (pref && pref.id) {
+      const key = pref.type + ':' + pref.id;
+      if (!seen.has(key)) {
+        seen.add(key);
+        targets.unshift({
+          type: pref.type || 'direct',
+          id: pref.id,
+          otherUid: '',
+          name: 'This conversation',
+          lastActivityAt: Date.now(),
+          kind: 'thread',
+        });
+      }
+    }
+  }
+  if (share && share.sortShareTargets) {
+    targets = share.sortShareTargets(targets, returnInfo);
+  }
+  targets.forEach((row) => {
+    row.preferred = !!(share && share.isPreferredShareTarget && share.isPreferredShareTarget(row, returnInfo));
+    if (row.preferred && row.name === 'Direct message') row.name = 'This conversation';
+  });
+  return targets;
 }
 
 function ce2DirectConvId(a, b) {
@@ -3409,6 +3640,120 @@ async function ensureCe2DirectConv(otherUid) {
   return convId;
 }
 
+function boardShareReturnInfo(target) {
+  if (!target) return { from: 'ce2', conv: '', group: '' };
+  if (target.type === 'group') return { from: 'ce2', conv: '', group: target.id };
+  return { from: 'ce2', conv: target.id || '', group: '' };
+}
+
+async function sendPostToThread(target, boardId, postOrPostId, preview, comment = '', selectedMedia = null) {
+  if (!target || !target.type) {
+    throw new Error('Pick a conversation first.');
+  }
+  if (target.type === 'group') {
+    return sendPostAsGroup(target, boardId, postOrPostId, preview, comment, selectedMedia);
+  }
+  let otherUid = target.otherUid || '';
+  if (!otherUid && target.id) {
+    const convSnap = await db.collection('ce2_conversations').doc(target.id).get();
+    if (convSnap.exists) {
+      otherUid = ((convSnap.data() || {}).participantIds || []).filter((id) => id !== currentUserId)[0] || '';
+    }
+  }
+  const otherUser = {
+    id: otherUid,
+    name: target.name || 'Member',
+  };
+  if (!otherUser.id) {
+    throw new Error('Could not resolve this conversation.');
+  }
+  const result = await sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment, selectedMedia);
+  return result;
+}
+
+async function ensureBoardCe2GroupMember(groupId) {
+  if (!currentUserId || !groupId) return;
+  const memberRef = db.collection('communicationGroups').doc(groupId).collection('members').doc(currentUserId);
+  const snap = await memberRef.get();
+  if (!snap.exists) {
+    await memberRef.set({ joinedAt: firebase.firestore.Timestamp.now() });
+  }
+}
+
+async function sendPostAsGroup(target, boardId, postOrPostId, preview, comment = '', selectedMedia = null) {
+  const groupId = target && target.id;
+  if (!groupId) throw new Error('Missing formation group.');
+  await ensureBoardCe2GroupMember(groupId);
+  const payload = await buildBoardShareMessage(boardId, postOrPostId, preview, comment, selectedMedia);
+  payload.conversationId = groupId;
+  delete payload.receiverId;
+  const msgRef = await db.collection('communicationGroups').doc(groupId).collection('ce2_messages').add(payload);
+  const now = payload.createdAt;
+  db.collection('communicationGroups').doc(groupId).set(
+    {
+      lastMessageAt: now,
+      lastPreview: payload.content.slice(0, 140),
+      lastSenderId: currentUserId,
+      lastMessageId: msgRef.id,
+      lastMessageType: 'board_share',
+      [`lastRead.${currentUserId}`]: now,
+    },
+    { merge: true }
+  ).catch((err) => console.warn('[Board Share] group metadata update skipped:', err));
+  return {
+    name: target.name || 'formation group',
+    returnInfo: boardShareReturnInfo(target),
+    messageId: msgRef.id,
+  };
+}
+
+async function buildBoardShareMessage(boardId, postOrPostId, preview, comment = '', selectedMedia = null) {
+  const postId = typeof postOrPostId === 'string' ? postOrPostId : postOrPostId?.id;
+  if (!boardId || !postId) {
+    throw new Error('Missing board post reference.');
+  }
+  const title = preview ? String(preview).slice(0, 120) : 'Board post';
+  const shareThumb = getBoardShareThumbnail(postOrPostId, selectedMedia);
+  const note = (comment || '').trim().slice(0, 240);
+  let token = '';
+  if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
+    try {
+      token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
+    } catch (err) {
+      console.warn('[Board Share] token mint skipped:', err);
+    }
+  }
+  const raw = {
+    boardId,
+    postId,
+    token,
+    thumbnailUrl: shareThumb.thumbnailUrl || '',
+    mediaType: shareThumb.mediaType || '',
+    mediaUrl: selectedMedia?.url || '',
+    selectedMedia: !!(selectedMedia && selectedMedia.url),
+    note,
+    title,
+    excerpt: preview ? String(preview).slice(0, 200) : '',
+  };
+  const boardShare = window.Ce2Share && Ce2Share.buildBoardSharePayload
+    ? Ce2Share.buildBoardSharePayload(raw)
+    : raw;
+  const content = window.Ce2Share && Ce2Share.shareContentFromNote
+    ? Ce2Share.shareContentFromNote(note)
+    : (note || 'Shared a board post');
+  const now = firebase.firestore.Timestamp.now();
+  return {
+    senderId: currentUserId,
+    tier: currentIsAdmin ? 'elite' : (currentUserData.tier || 'foundation'),
+    classification: 'public',
+    shareable: true,
+    content,
+    messageType: 'board_share',
+    boardShare,
+    createdAt: now,
+  };
+}
+
 /** Share board post via Messages V2 (ce2_conversations / board_share). */
 function getBoardShareThumbnail(post, selectedMedia = null) {
   if (selectedMedia && selectedMedia.url) {
@@ -3432,11 +3777,6 @@ function getBoardShareThumbnail(post, selectedMedia = null) {
 }
 
 async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment = '', selectedMedia = null) {
-  const postId = typeof postOrPostId === 'string' ? postOrPostId : postOrPostId?.id;
-  if (!boardId || !postId) {
-    throw new Error('Missing board post reference.');
-  }
-
   const otherDoc = await db.collection('users').doc(otherUser.id).get();
   const otherData = otherDoc.exists ? otherDoc.data() : {};
   const sender = {
@@ -3459,49 +3799,10 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
   }
 
   const convId = await ensureCe2DirectConv(otherUser.id);
-  const now = firebase.firestore.Timestamp.now();
-  const title = preview ? String(preview).slice(0, 120) : 'Board post';
-  const postUrl = window.Ce2Share && Ce2Share.shareHref
-    ? Ce2Share.shareHref(boardId, postId, '')
-    : `${location.origin}/board.html?boardId=${encodeURIComponent(boardId)}&post=${encodeURIComponent(postId)}`;
-  const shareThumb = getBoardShareThumbnail(postOrPostId, selectedMedia);
-  const note = (comment || '').trim().slice(0, 240);
-  let token = '';
-  if (window.Ce2Share && Ce2Share.mintBoardShareToken) {
-    try {
-      token = await Ce2Share.mintBoardShareToken(db, currentUserId, boardId, postId, title);
-    } catch (err) {
-      console.warn('[Board Share] token mint skipped:', err);
-    }
-  }
-  const boardShare = {
-    boardId,
-    postId,
-    token,
-    url: token
-      ? `${postUrl}&ce2token=${encodeURIComponent(token)}`
-      : postUrl,
-    thumbnailUrl: shareThumb.thumbnailUrl || '',
-    mediaType: shareThumb.mediaType || '',
-    mediaUrl: selectedMedia?.url || '',
-    selectedMedia: !!(selectedMedia && selectedMedia.url),
-    note,
-    title,
-    excerpt: preview ? String(preview).slice(0, 200) : '',
-  };
-  const content = note || 'Shared a board post';
-  const patch = {
-    conversationId: convId,
-    senderId: currentUserId,
-    receiverId: otherUser.id,
-    tier: currentIsAdmin ? 'elite' : (currentUserData.tier || 'foundation'),
-    classification: 'public',
-    shareable: true,
-    content,
-    messageType: 'board_share',
-    boardShare,
-    createdAt: now,
-  };
+  const patch = await buildBoardShareMessage(boardId, postOrPostId, preview, comment, selectedMedia);
+  patch.conversationId = convId;
+  patch.receiverId = otherUser.id;
+  const now = patch.createdAt;
 
   const msgRef = await db.collection('ce2_conversations').doc(convId).collection('ce2_messages').add(patch);
   const convRef = db.collection('ce2_conversations').doc(convId);
@@ -3515,7 +3816,7 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
   convRef.set(
     {
       lastMessageAt: now,
-      lastPreview: content.slice(0, 140),
+      lastPreview: patch.content.slice(0, 140),
       lastSenderId: currentUserId,
       lastMessageId: msgRef.id,
       lastMessageType: 'board_share',
@@ -3524,7 +3825,12 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
     },
     { merge: true }
   ).catch((err) => console.warn('[Board Share] metadata update skipped:', err));
-  notifyBoardShareRecipient(otherUser, otherData, convId, msgRef.id, content).catch(() => {});
+  notifyBoardShareRecipient(otherUser, otherData, convId, msgRef.id, patch.content).catch(() => {});
+  return {
+    name: otherUser.name || 'messenger',
+    returnInfo: { from: 'ce2', conv: convId, group: '' },
+    messageId: msgRef.id,
+  };
 }
 
 async function notifyBoardShareRecipient(otherUser, otherData, convId, messageId, content) {
