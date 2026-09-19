@@ -673,8 +673,10 @@ service cloud.firestore {
     }
 
     // Users (sbd-network profiles). Presence (lastActive / lastSeen) stays
-    // readable for peers. Push tokens live at users/{uid}/ce2_push/token
-    // (owner-only). Writes may not add fcmToken to this public document.
+    // readable for any signed-in peer, so leftover fcmToken/pushToken/
+    // notificationToken on this doc cannot be hidden by rules during
+    // rollout — they must be copied to ce2_push then deleted. Writes may
+    // not add those fields. Functions use the Admin SDK (bypass).
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId &&
@@ -1344,6 +1346,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Owner-only FCM token. Do not broaden reads — Cloud Functions read
+    // this path with the Admin SDK. Clients may only touch their own doc.
     match /users/{userId}/ce2_push/{docId} {
       allow read, write: if request.auth != null &&
         request.auth.uid == userId &&

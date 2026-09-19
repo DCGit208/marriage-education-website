@@ -1,8 +1,11 @@
 const admin = require("firebase-admin");
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 const { createDelivery } = require("./ce2-push-delivery");
+const { createMigrator } = require("./ce2-push-migrate");
+const pushHelpers = require("./ce2-push-helpers");
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -12,11 +15,21 @@ const delivery = createDelivery({
   getDb: () => admin.firestore(),
   getMessaging: () => admin.messaging(),
   FieldValue: admin.firestore.FieldValue,
+  FieldPath: admin.firestore.FieldPath,
+  logger,
+});
+
+const migrator = createMigrator({
+  getDb: () => admin.firestore(),
+  FieldValue: admin.firestore.FieldValue,
+  FieldPath: admin.firestore.FieldPath,
   logger,
 });
 
 // Client-supplied FCM tokens are ignored. Token lookup uses owner-only
-// users/{uid}/ce2_push/token, then legacy users.fcmToken / pushToken fields.
+// users/{uid}/ce2_push/token, then legacy users.fcmToken / pushToken /
+// notificationToken. Remove that user-doc fallback after a production sweep
+// reports zero leftover public token fields (see migrateCe2PushTokens).
 
 async function verifyBearer(req) {
   const authHeader = req.headers.authorization || "";
@@ -223,6 +236,77 @@ exports.onCe2GroupMessageCreated = onDocumentCreated(
       });
     } catch (error) {
       logger.error("CE2 group onCreate push failed", error);
+    }
+  }
+);
+
+async function loadCallerUserData(uid) {
+  if (!uid) return {};
+  try {
+    const snap = await admin.firestore().collection("users").doc(uid).get();
+    return snap.exists ? snap.data() || {} : {};
+  } catch (error) {
+    logger.warn("CE2 push migrate caller lookup failed", {
+      uid,
+      error: error.message,
+    });
+    return {};
+  }
+}
+
+/**
+ * Signed-in users may migrate only their own leftover public token.
+ * Admins may pass `{ uid }` for another user or `{ sweep: true }` for a page.
+ * Response never includes the raw FCM token.
+ */
+exports.migrateCe2PushTokens = onCall(
+  { region: "us-central1", cors: true },
+  async (request) => {
+    if (!request.auth || !request.auth.uid) {
+      throw new HttpsError("unauthenticated", "Sign in required");
+    }
+    const callerUid = request.auth.uid;
+    const data = request.data && typeof request.data === "object" ? request.data : {};
+    const callerUserData = await loadCallerUserData(callerUid);
+    const gate = pushHelpers.resolveMigrateTarget({
+      callerUid,
+      targetUid: typeof data.uid === "string" ? data.uid : "",
+      sweep: !!data.sweep,
+      isAdmin: pushHelpers.isAdminUserData(callerUserData, request.auth.token),
+    });
+    if (!gate.ok) {
+      throw new HttpsError("permission-denied", "Cannot migrate another user's token");
+    }
+    if (gate.sweep) {
+      const result = await migrator.sweepLegacyPushTokens({
+        maxUsers: 400,
+        pageSize: 100,
+      });
+      return {
+        ok: true,
+        sweep: true,
+        scanned: result.scanned,
+        migrated: result.migrated,
+        cleared: result.cleared,
+      };
+    }
+    const result = await migrator.migrateUser(gate.targetUid);
+    return { ok: true, action: result.action, reason: result.reason || undefined };
+  }
+);
+
+exports.sweepLegacyCe2PushTokens = onSchedule(
+  {
+    schedule: "every 6 hours",
+    region: "us-central1",
+    timeoutSeconds: 120,
+    retryCount: 0,
+  },
+  async () => {
+    try {
+      await migrator.sweepLegacyPushTokens({ maxUsers: 400, pageSize: 100 });
+    } catch (error) {
+      logger.error("CE2 push token sweep failed", error);
     }
   }
 );

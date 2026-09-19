@@ -82,7 +82,9 @@ const appSrc = fs.readFileSync(
 const fnSrc =
   fs.readFileSync(path.join(ROOT, 'functions/index.js'), 'utf8') +
   '\n' +
-  fs.readFileSync(path.join(ROOT, 'functions/ce2-push-delivery.js'), 'utf8');
+  fs.readFileSync(path.join(ROOT, 'functions/ce2-push-delivery.js'), 'utf8') +
+  '\n' +
+  fs.readFileSync(path.join(ROOT, 'functions/ce2-push-migrate.js'), 'utf8');
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 
 test('VERSION is 1 and click/copy APIs are exported', function () {
@@ -437,6 +439,13 @@ function createMemoryFirestore(initial) {
         this._limit = n;
         return this;
       },
+      orderBy: function () {
+        return this;
+      },
+      startAfter: function (doc) {
+        this._after = doc && doc.id;
+        return this;
+      },
       get: async function () {
         const prefix = segments.join('/') + '/';
         const ids = Object.keys(docs)
@@ -446,8 +455,14 @@ function createMemoryFirestore(initial) {
           })
           .map(function (p) {
             return p.slice(prefix.length);
-          });
-        const limited = ids.slice(0, this._limit || ids.length);
+          })
+          .sort();
+        let start = 0;
+        if (this._after) {
+          const idx = ids.indexOf(this._after);
+          start = idx >= 0 ? idx + 1 : 0;
+        }
+        const limited = ids.slice(start, start + (this._limit || ids.length));
         const found = limited.map(function (id) {
           return {
             id: id,
@@ -477,6 +492,31 @@ function createMemoryFirestore(initial) {
             return data;
           },
         };
+      },
+      set: async function (data, opts) {
+        const merge = !!(opts && opts.merge);
+        const next = merge && docs[pathKey] ? Object.assign({}, docs[pathKey]) : {};
+        Object.keys(data || {}).forEach(function (key) {
+          next[key] = data[key];
+        });
+        docs[pathKey] = next;
+      },
+      update: async function (data) {
+        if (docs[pathKey] == null) {
+          const err = new Error('NOT_FOUND');
+          err.code = 5;
+          throw err;
+        }
+        const next = Object.assign({}, docs[pathKey]);
+        Object.keys(data || {}).forEach(function (key) {
+          const value = data[key];
+          if (value && typeof value === 'object' && value.__ce2Delete) {
+            delete next[key];
+          } else {
+            next[key] = value;
+          }
+        });
+        docs[pathKey] = next;
       },
       create: async function (data) {
         if (docs[pathKey] != null) {
@@ -550,6 +590,9 @@ function createTestDelivery(dbDocs) {
       serverTimestamp: function () {
         return 'ts';
       },
+      delete: function () {
+        return { __ce2Delete: true };
+      },
     },
     logger: { warn: function () {}, error: function () {} },
   });
@@ -581,6 +624,13 @@ test('onCreate DM looks up ce2_push first and includes conv deep-link data', asy
   assert.strictEqual(harness.sent[0].data.messageId, 'm1');
   assert.ok(String(harness.sent[0].data.url).indexOf('conv=d_ada_bob') >= 0);
   assert.strictEqual(harness.sent[0].notification.title, 'Ada');
+  assert.strictEqual(
+    harness.db._docs['users/bob/ce2_push/token'].fcmToken,
+    'priv-token'
+  );
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(harness.db._docs['users/bob'], 'fcmToken')
+  );
 });
 
 test('onCreate DM falls back to legacy fcmToken when ce2_push is empty', async function () {
@@ -601,6 +651,11 @@ test('onCreate DM falls back to legacy fcmToken when ce2_push is empty', async f
   });
   assert.strictEqual(harness.sent.length, 1);
   assert.strictEqual(harness.sent[0].token, 'legacy-fcm');
+  assert.strictEqual(
+    harness.db._docs['users/bob/ce2_push/token'].fcmToken,
+    'legacy-fcm'
+  );
+  assert.ok(!Object.prototype.hasOwnProperty.call(harness.db._docs['users/bob'], 'fcmToken'));
 });
 
 test('muted inbox pref skips FCM for that recipient only', async function () {

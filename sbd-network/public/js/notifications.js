@@ -25,6 +25,7 @@ let _unsubNotif     = null;  // unread badge listener
 let _unsubPanel     = null;  // live panel list listener
 let _latestNotifId  = null;  // track newest seen doc to detect truly new arrivals
 let _notifPurging   = false; // prevent delete → snapshot → delete loops on iOS
+let _pushTokenRefreshBound = false;
 
 // ── Init ─────────────────────────────────────────────────────────
 async function initNotifications(userId) {
@@ -43,7 +44,9 @@ async function initNotifications(userId) {
   setTimeout(() => _purgeStaleNotifications(userId).catch(() => {}), 4000);
   // Show a nudge banner if the user hasn't enabled push yet
   _maybeShowPushNudge(userId);
-  // Silently refresh the FCM token on every login (fixes stale tokens after SW updates)
+  // Move leftover public tokens onto owner-only ce2_push even if FCM getToken
+  // is skipped on this page, then refresh the live token when permission is on.
+  _migrateOwnLegacyPushToken(userId).catch(() => {});
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     _initPush(userId);
   }
@@ -567,6 +570,56 @@ function _esc(str) {
     .replace(/"/g, '&quot;');
 }
 
+async function _clearOwnLegacyPushFields(userId) {
+  if (!userId || typeof db === 'undefined') return;
+  try {
+    await db.collection('users').doc(userId).update({
+      fcmToken: firebase.firestore.FieldValue.delete(),
+      pushToken: firebase.firestore.FieldValue.delete(),
+      notificationToken: firebase.firestore.FieldValue.delete(),
+    });
+  } catch (_) {}
+}
+
+async function _persistCe2PushToken(userId, token) {
+  if (!userId || !token || typeof db === 'undefined') return;
+  await db.collection('users').doc(userId).collection('ce2_push').doc('token').set({
+    fcmToken: token,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+  await _clearOwnLegacyPushFields(userId);
+}
+
+/** Signed-in user only — never accepts another uid from the URL. */
+async function _migrateOwnLegacyPushToken(userId) {
+  if (!userId || typeof db === 'undefined' || typeof firebase === 'undefined') return;
+  const me = firebase.auth && firebase.auth().currentUser;
+  if (!me || me.uid !== userId) return;
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const [userSnap, privSnap] = await Promise.all([
+      userRef.get(),
+      userRef.collection('ce2_push').doc('token').get(),
+    ]);
+    const userData = userSnap.exists ? userSnap.data() || {} : {};
+    const existing = privSnap.exists
+      ? String((privSnap.data() || {}).fcmToken || '').trim()
+      : '';
+    const legacy = String(
+      userData.fcmToken || userData.pushToken || userData.notificationToken || ''
+    ).trim();
+    const leftover =
+      Object.prototype.hasOwnProperty.call(userData, 'fcmToken') ||
+      Object.prototype.hasOwnProperty.call(userData, 'pushToken') ||
+      Object.prototype.hasOwnProperty.call(userData, 'notificationToken');
+    if (!existing && legacy) {
+      await _persistCe2PushToken(userId, legacy);
+      return;
+    }
+    if (leftover) await _clearOwnLegacyPushFields(userId);
+  } catch (_) {}
+}
+
 // ── FCM Web Push — device registration ───────────────────────────
 async function _initPush(userId) {
   // Check full browser support (iOS < 16.4 PWA, Firefox Private, etc.)
@@ -592,21 +645,14 @@ async function _initPush(userId) {
     await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
     const reg       = await navigator.serviceWorker.ready;
     const messaging = firebase.messaging();
+    if (!_pushTokenRefreshBound && typeof messaging.onTokenRefresh === 'function') {
+      _pushTokenRefreshBound = true;
+      messaging.onTokenRefresh(() => { _initPush(userId); });
+    }
     const token     = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
     if (!token) { console.warn('[Push] No token returned'); return; }
 
-    // Persist token on owner-only private doc (not the world-readable profile)
-    await db.collection('users').doc(userId).collection('ce2_push').doc('token').set({
-      fcmToken: token,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-    try {
-      await db.collection('users').doc(userId).update({
-        fcmToken: firebase.firestore.FieldValue.delete(),
-        pushToken: firebase.firestore.FieldValue.delete(),
-        notificationToken: firebase.firestore.FieldValue.delete(),
-      });
-    } catch (_) {}
+    await _persistCe2PushToken(userId, token);
 
     // Subscribe to /topics/sbd-all via Worker
     const idToken = await firebase.auth().currentUser.getIdToken();

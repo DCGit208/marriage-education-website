@@ -55,6 +55,30 @@ const ALLOWED_FOLDERS = new Set(['ugc-photos', 'ugc-videos', 'dm_attachments', '
 const FIREBASE_PROJECT_ID = 'marriage-education';
 const PUBLIC_APP_ORIGIN = 'https://sbd-network.web.app';
 
+function userIdFromDocumentName(name) {
+  const parts = String(name || '').split('/');
+  const idx = parts.lastIndexOf('users');
+  if (idx < 0 || idx + 1 >= parts.length) return '';
+  return parts[idx + 1] || '';
+}
+
+async function lookupOwnerCe2PushToken(accessToken, uid) {
+  const id = String(uid || '').trim();
+  if (!id) return '';
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${id}/ce2_push/token?mask.fieldPaths=fcmToken`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const data = await res.json().catch(() => ({}));
+  return data.fields?.fcmToken?.stringValue || '';
+}
+
+async function preferCe2PushThenLegacy(accessToken, uid, legacyToken) {
+  const privateToken = await lookupOwnerCe2PushToken(accessToken, uid);
+  if (privateToken) return privateToken;
+  return typeof legacyToken === 'string' ? legacyToken.trim() : '';
+}
+
 // ── Service-account JWT → Google OAuth2 access token ─────────────
 async function getAccessToken(env) {
   const email = env.SA_CLIENT_EMAIL;
@@ -258,15 +282,16 @@ export default {
           }
         );
         const queryData = await queryRes.json().catch(() => []);
-        tokens = (Array.isArray(queryData) ? queryData : [])
-          .map(row => {
-            const userData = parseFirestoreMap(row.document?.fields || {});
-            const token = userData.fcmToken;
-            if (!token || token.length <= 10) return null;
-            if (!userCanReceiveBoardNotification(userData, boardId, boardMeta)) return null;
-            return token;
-          })
-          .filter(Boolean);
+        const rows = Array.isArray(queryData) ? queryData : [];
+        const resolved = await Promise.all(rows.map(async (row) => {
+          const userData = parseFirestoreMap(row.document?.fields || {});
+          if (!userCanReceiveBoardNotification(userData, boardId, boardMeta)) return null;
+          const uid = userIdFromDocumentName(row.document?.name);
+          const token = await preferCe2PushThenLegacy(accessToken, uid, userData.fcmToken);
+          if (!token || token.length <= 10) return null;
+          return token;
+        }));
+        tokens = resolved.filter(Boolean);
       }
 
       if (tokens.length === 0) return respond({ ok: true, sent: 0 });
@@ -348,12 +373,7 @@ export default {
 
         let token = null;
         const headers = { 'Authorization': `Bearer ${accessToken}` };
-        const privRes = await fetch(
-          `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${recipientId}/ce2_push/token?mask.fieldPaths=fcmToken`,
-          { headers }
-        );
-        const privData = await privRes.json().catch(() => ({}));
-        token = privData.fields?.fcmToken?.stringValue || null;
+        token = await lookupOwnerCe2PushToken(accessToken, recipientId);
         if (!token) {
           const userRes = await fetch(
             `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${recipientId}?mask.fieldPaths=fcmToken`,
