@@ -1621,6 +1621,9 @@
       gov: gov,
       governanceEnabled: governanceEnabled,
       scheduleLoadThreads: scheduleLoadThreads,
+      migrateLegacyMedia: function (m, ac) {
+        return migrateLegacyMessageMedia(m && m.id, ac);
+      },
       syncViewport: function () {
         syncCe2VisualViewport();
       },
@@ -4374,6 +4377,173 @@
     if (previewHtml) {
       bubble.insertAdjacentHTML('beforeend', previewHtml);
     }
+    appendLegacyMediaNotice(bubble, m);
+  }
+
+  function legacyMediaLabel(m) {
+    var kind =
+      typeof legacyCe2MediaKind === 'function' ? legacyCe2MediaKind(m) : '';
+    if (kind === 'voice') return 'voice note';
+    if (kind === 'video') return 'video';
+    if (kind === 'image') return 'photo';
+    return 'attachment';
+  }
+
+  function messageNeedsLegacyMediaMove(m) {
+    if (!m || m.deleted || m._pending) return false;
+    if (m._legacyReplaceNeeded) return true;
+    return typeof messageHasLegacyPublicCe2Media === 'function' &&
+      messageHasLegacyPublicCe2Media(m);
+  }
+
+  function appendLegacyMediaNotice(bubble, m) {
+    if (!bubble || !messageNeedsLegacyMediaMove(m)) return;
+    var box = document.createElement('div');
+    box.className = 'ce2-media-privacy';
+    var copy = document.createElement('p');
+    copy.className = 'ce2-media-privacy-copy';
+    if (m._legacyReplaceNeeded) {
+      copy.textContent =
+        'The original file is no longer on public storage. Upload it again to keep a private copy in this conversation.';
+    } else {
+      copy.textContent =
+        'This ' +
+        legacyMediaLabel(m) +
+        ' is on older public storage. Anyone with the link can open it. Move it to private storage for this conversation.';
+    }
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = m._legacyReplaceNeeded ? 'ce2-media-replace' : 'ce2-media-migrate';
+    btn.setAttribute('data-ce2-migrate-id', m.id || '');
+    btn.textContent = m._mediaMigrating
+      ? 'Moving…'
+      : m._legacyReplaceNeeded
+        ? 'Upload again'
+        : 'Move to private';
+    if (m._mediaMigrating) btn.disabled = true;
+    box.appendChild(copy);
+    box.appendChild(btn);
+    bubble.appendChild(box);
+  }
+
+  function applyMigratedMediaLocally(msgId, locators, extra) {
+    var patch = Object.assign({}, extra || {}, locators || {});
+    function mapList(list) {
+      if (!list || !list.length) return list;
+      var changed = false;
+      var next = list.map(function (m) {
+        if (m.id !== msgId) return m;
+        changed = true;
+        return Object.assign({}, m, patch);
+      });
+      return changed ? next : list;
+    }
+    CommunicationState.messages = mapList(CommunicationState.messages) || CommunicationState.messages;
+    CommunicationState.lastServerMessages =
+      mapList(CommunicationState.lastServerMessages) || CommunicationState.lastServerMessages;
+  }
+
+  function findMessageById(msgId) {
+    function from(list) {
+      return (list || []).find(function (x) {
+        return x.id === msgId;
+      });
+    }
+    return from(CommunicationState.messages) || from(CommunicationState.lastServerMessages);
+  }
+
+  function pickLegacyReplaceFile(m, ac) {
+    var kind = typeof legacyCe2MediaKind === 'function' ? legacyCe2MediaKind(m) : 'image';
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept =
+      kind === 'voice'
+        ? 'audio/*,video/webm,.webm,.m4a,.mp3'
+        : kind === 'video'
+          ? 'video/*'
+          : 'image/*';
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      replaceLegacyMessageMedia(m.id, ac, file, kind);
+    });
+    input.click();
+  }
+
+  async function replaceLegacyMessageMedia(msgId, ac, file, kind) {
+    ac = ac || CommunicationState.activeConversation;
+    if (!ac || !ac.id || !file) return;
+    if (typeof uploadToR2 !== 'function') {
+      handleCe2Error(new Error('Upload is not available.'));
+      return;
+    }
+    applyMigratedMediaLocally(msgId, null, { _mediaMigrating: true });
+    requestRender({ threadOnly: true });
+    var folder =
+      kind === 'voice' ? 'dm_audio' : kind === 'video' ? 'dm_videos' : 'dm_attachments';
+    try {
+      var locator = await uploadToR2(file, folder, { conversationId: ac.id });
+      if (!locator) throw new Error('Upload did not return a private media locator');
+      var replacements = {};
+      if (kind === 'voice') replacements.audioUrl = locator;
+      else if (kind === 'video') replacements.videoUrl = locator;
+      else {
+        replacements.imageUrl = locator;
+        replacements.imageThumbUrl = locator;
+      }
+      await migrateLegacyMessageMedia(msgId, ac, replacements);
+    } catch (err) {
+      applyMigratedMediaLocally(msgId, null, { _mediaMigrating: false });
+      handleCe2Error(err);
+      requestRender({ threadOnly: true });
+    }
+  }
+
+  async function migrateLegacyMessageMedia(msgId, ac, replacements) {
+    ac = ac || CommunicationState.activeConversation;
+    var m = findMessageById(msgId);
+    if (!ac || !ac.id || !m || !m.id) return;
+    if (typeof migrateCe2MessageMedia !== 'function') {
+      handleCe2Error(new Error('Media migrate is not available.'));
+      return;
+    }
+    applyMigratedMediaLocally(m.id, null, { _mediaMigrating: true });
+    requestRender({ threadOnly: true });
+    try {
+      var result = await migrateCe2MessageMedia({
+        conversationId: ac.id,
+        conversationType: ac.type,
+        messageId: m.id,
+        replacements: replacements,
+      });
+      if (result && result.ok) {
+        applyMigratedMediaLocally(m.id, result.locators || {}, {
+          _mediaMigrating: false,
+          _legacyReplaceNeeded: false,
+          mediaPrivacy: 'private',
+        });
+        CommunicationState.statusMessage = replacements
+          ? 'Replaced with a private copy'
+          : 'Moved to private storage';
+        requestRender({ threadOnly: true });
+        return;
+      }
+      if (result && result.code === 'source_missing') {
+        applyMigratedMediaLocally(m.id, null, {
+          _mediaMigrating: false,
+          _legacyReplaceNeeded: true,
+        });
+        CommunicationState.statusMessage =
+          'Original file is gone — upload it again to keep a private copy.';
+        requestRender({ threadOnly: true });
+        return;
+      }
+      throw new Error((result && result.error) || 'Could not move media');
+    } catch (err) {
+      applyMigratedMediaLocally(m.id, null, { _mediaMigrating: false });
+      handleCe2Error(err);
+      requestRender({ threadOnly: true });
+    }
   }
 
   function clearComposerPending() {
@@ -6663,6 +6833,25 @@
         e.preventDefault();
         var pid = sendRetryBtn.getAttribute('data-pending-id');
         if (pid) retryFailedMessage(pid);
+        return;
+      }
+      var migrateBtn = e.target.closest('.ce2-media-migrate');
+      if (migrateBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var mid = migrateBtn.getAttribute('data-ce2-migrate-id');
+        if (mid) migrateLegacyMessageMedia(mid, CommunicationState.activeConversation);
+        return;
+      }
+      var replaceBtn = e.target.closest('.ce2-media-replace');
+      if (replaceBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var replaceId = replaceBtn.getAttribute('data-ce2-migrate-id');
+        var replaceMsg = replaceId ? findMessageById(replaceId) : null;
+        if (replaceMsg) {
+          pickLegacyReplaceFile(replaceMsg, CommunicationState.activeConversation);
+        }
         return;
       }
       var discardBtn = e.target.closest('.ce2-voice-discard');
