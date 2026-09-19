@@ -128,6 +128,104 @@ function ce2UploadLocator(data, folder, options) {
   return '';
 }
 
+var R2_PUBLIC_URL = 'https://pub-6524d7976da94b11bb645c445abecb63.r2.dev';
+
+var CE2_MEDIA_URL_FIELDS = [
+  'imageUrl',
+  'imageThumbUrl',
+  'videoUrl',
+  'videoPosterUrl',
+  'audioUrl',
+];
+
+function r2PublicPathParts(url) {
+  try {
+    var u = new URL(String(url || ''));
+    if (!/\.r2\.dev$/i.test(u.hostname)) return [];
+    return u.pathname.replace(/^\/+/, '').split('/').filter(Boolean);
+  } catch (_) {
+    return [];
+  }
+}
+
+/**
+ * Leftover world-readable CE2 conversation media on the public r2.dev bucket.
+ * Private ce2/ Worker locators, Firebase Storage, and UGC/board folders return false.
+ */
+function isLegacyPublicCe2MediaUrl(url) {
+  if (!url || isCe2PrivateMediaLocator(url) || isCe2PrivateObjectKey(url)) return false;
+  var parts = r2PublicPathParts(url);
+  if (!parts.length) return false;
+  if (parts[0] === 'ugc-photos' || parts[0] === 'ugc-videos' || parts[0] === 'course-covers') {
+    return false;
+  }
+  if (parts[0] === 'ce2' && CE2_DM_UPLOAD_FOLDERS.indexOf(parts[1]) >= 0) return true;
+  return CE2_DM_UPLOAD_FOLDERS.indexOf(parts[0]) >= 0;
+}
+
+function collectLegacyCe2MediaFields(message) {
+  var out = [];
+  var msg = message || {};
+  CE2_MEDIA_URL_FIELDS.forEach(function (field) {
+    if (isLegacyPublicCe2MediaUrl(msg[field])) out.push(field);
+  });
+  return out;
+}
+
+function messageHasLegacyPublicCe2Media(message) {
+  return collectLegacyCe2MediaFields(message).length > 0;
+}
+
+function legacyCe2MediaKind(message) {
+  var m = message || {};
+  if (isLegacyPublicCe2MediaUrl(m.audioUrl)) return 'voice';
+  if (isLegacyPublicCe2MediaUrl(m.videoUrl)) return 'video';
+  if (isLegacyPublicCe2MediaUrl(m.imageUrl) || isLegacyPublicCe2MediaUrl(m.imageThumbUrl)) {
+    return 'image';
+  }
+  return 'file';
+}
+
+/**
+ * Ask the Worker to copy leftover public CE2 objects into sbd-media-ce2
+ * and rewrite this message's media pointer. Membership is checked server-side.
+ * replacements: optional { field: privateLocatorOrKey } from a fresh re-upload.
+ */
+function migrateCe2MessageMedia(opts) {
+  opts = opts || {};
+  var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if (!user || typeof user.getIdToken !== 'function') {
+    return Promise.reject(new Error('Not authenticated'));
+  }
+  if (!opts.conversationId || !opts.messageId) {
+    return Promise.reject(new Error('Missing conversation or message'));
+  }
+  return user.getIdToken().then(function (idToken) {
+    return fetch(UPLOAD_WORKER_URL + '/migrate-ce2-media', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + idToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversationId: opts.conversationId,
+        conversationType: opts.conversationType || 'direct',
+        messageId: opts.messageId,
+        replacements: opts.replacements || undefined,
+      }),
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        data = data || {};
+        data.status = res.status;
+        if (!res.ok && !data.error) data.error = 'Could not move media';
+        return data;
+      }).catch(function () {
+        return { error: 'Could not move media', status: res.status };
+      });
+    });
+  });
+}
+
 var _ce2SignedUrlCache = Object.create(null);
 
 /**

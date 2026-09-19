@@ -4,6 +4,7 @@
  * Routes:
  *   POST /upload        — Upload file directly to R2 via binding
  *   POST /sign-get      — Auth + conversation membership → short-lived signed GET URL
+ *   POST /migrate-ce2-media — Member copies leftover public CE2 objects into sbd-media-ce2
  *   GET  /media         — Stream a CE2 object (HMAC query, issued only after membership check)
  *   POST /register-push — Subscribe FCM token to topic sbd-all (FCM V1 + service account)
  *   POST /notify        — Send FCM V1 push to topic sbd-all
@@ -44,6 +45,13 @@ import {
   signedMediaPath,
   CE2_MEDIA_TTL_SEC,
 } from './ce2-media-sign.js';
+import {
+  executeCe2MediaMigrate,
+  MAX_MIGRATE_BYTES,
+  toFirestoreFields,
+  firestoreUpdateMask,
+  CE2_MEDIA_URL_FIELDS,
+} from './ce2-media-migrate.js';
 
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/gif', 'image/bmp',
@@ -217,6 +225,66 @@ export default {
         expiresAt: exp,
         expiresIn: CE2_MEDIA_TTL_SEC,
       });
+    }
+
+    // ── POST /migrate-ce2-media ──────────────────────────────────
+    // Body: { conversationId, conversationType, messageId, replacements?, deletePublic? }
+    // Copies leftover public CE2 objects into sbd-media-ce2 and rewrites the
+    // message pointer. Membership required. Does not log signed URLs.
+    if (pathname === '/migrate-ce2-media') {
+      const body = await request.json().catch(() => ({}));
+      const accessToken = await getAccessToken(env);
+      if (!accessToken) return respond({ error: 'Private media not configured' }, 503);
+      const publicBase = String(env.R2_PUBLIC_URL || '').replace(/\/$/, '');
+      const origin = workerOriginFromRequestUrl(request.url);
+      if (!publicBase || !origin) return respond({ error: 'Media migrate not configured' }, 503);
+
+      let result;
+      try {
+        result = await executeCe2MediaMigrate({
+          callerUid,
+          conversationId: body.conversationId,
+          conversationType: body.conversationType,
+          messageId: body.messageId,
+          replacements: body.replacements || {},
+          deletePublic: body.deletePublic === true,
+          publicBase,
+          workerOrigin: origin,
+          uidCanAccess: function (uid, scopeId) {
+            return uidCanAccessCe2ScopeCached(uid, scopeId, {
+              fetchImpl: fetch,
+              accessToken,
+              tokenClaims,
+            });
+          },
+          readMessage: function (docPath) {
+            return readCe2MessageDoc(accessToken, docPath);
+          },
+          writeMessageFields: function (docPath, fields) {
+            return patchCe2MessageDoc(accessToken, docPath, fields);
+          },
+          copyObject: function (copy) {
+            return copyPublicCe2Object(env, copy.sourceKey, copy.destKey);
+          },
+          deletePublicObject: function (sourceKey) {
+            return env.BUCKET.delete(sourceKey);
+          },
+        });
+      } catch (_) {
+        return respond({ error: 'Migrate failed' }, 502);
+      }
+
+      if (result && result.error) {
+        return respond(
+          {
+            error: result.error,
+            code: result.code || undefined,
+            missing: result.missing,
+          },
+          result.status || 400
+        );
+      }
+      return respond(result);
     }
 
     // ── POST /register-push ──────────────────────────────────────
@@ -725,6 +793,75 @@ export default {
 
 function ce2Bucket(env) {
   return env.CE2_BUCKET || env.BUCKET;
+}
+
+function firestoreDocGetUrl(docPath, fieldPaths) {
+  const encoded = String(docPath || '')
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/');
+  let url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${encoded}`;
+  const fields = (fieldPaths || []).filter(Boolean);
+  if (fields.length) {
+    url += '?' + fields.map((f) => 'mask.fieldPaths=' + encodeURIComponent(f)).join('&');
+  }
+  return url;
+}
+
+async function readCe2MessageDoc(accessToken, docPath) {
+  const fields = CE2_MEDIA_URL_FIELDS.concat([
+    'conversationId',
+    'deleted',
+    'senderId',
+    'messageType',
+  ]);
+  const res = await fetch(firestoreDocGetUrl(docPath, fields), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) return null;
+  return parseFirestoreMap(data.fields || {});
+}
+
+async function patchCe2MessageDoc(accessToken, docPath, fields) {
+  const encoded = String(docPath || '')
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/');
+  const names = Object.keys(fields || {});
+  if (!names.length) return;
+  const qs = firestoreUpdateMask(names) + '&currentDocument.exists=true';
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${encoded}?${qs}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(toFirestoreFields(fields)),
+    }
+  );
+  if (!res.ok) {
+    throw new Error('Could not update message');
+  }
+}
+
+async function copyPublicCe2Object(env, sourceKey, destKey) {
+  if (!sourceKey || !destKey) return { ok: false, reason: 'invalid_key' };
+  if (!env.CE2_BUCKET) return { ok: false, reason: 'not_configured' };
+  const srcHead = await env.BUCKET.head(sourceKey);
+  if (!srcHead) return { ok: false, reason: 'not_found' };
+  if (srcHead.size > MAX_MIGRATE_BYTES) return { ok: false, reason: 'too_large' };
+  const dest = env.CE2_BUCKET;
+  const destHead = await dest.head(destKey);
+  if (destHead) return { ok: true, skipped: true, bytes: destHead.size || 0 };
+  const src = await env.BUCKET.get(sourceKey);
+  if (!src) return { ok: false, reason: 'not_found' };
+  await dest.put(destKey, src.body, {
+    httpMetadata: src.httpMetadata || { contentType: 'application/octet-stream' },
+  });
+  return { ok: true, bytes: srcHead.size || 0 };
 }
 
 function resolveDeleteKey(body, env) {

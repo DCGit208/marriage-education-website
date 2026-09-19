@@ -441,6 +441,22 @@
     if (copyT) {
       items.push(item('copy', 'Copy', function () { copyText(copyT); }, { section: SEC }));
     }
+    if (
+      typeof messageHasLegacyPublicCe2Media === 'function' &&
+      messageHasLegacyPublicCe2Media(m)
+    ) {
+      items.push(
+        item(
+          'migrate_media',
+          'Move to private storage',
+          function () {
+            if (deps.migrateLegacyMedia) deps.migrateLegacyMedia(m, ac);
+          },
+          { section: SEC_MORE }
+        )
+      );
+    }
+
     if (media) {
       items.push(
         item('copy_link', 'Copy link', function () { copyText(media, 'Link copied'); }, { section: SEC })
