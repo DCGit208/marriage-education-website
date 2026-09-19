@@ -3747,8 +3747,9 @@ body.ce2-inbox-menu-open {
 }
 
 .ce2-notify-prefs-row input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
   accent-color: #c9b892;
 }
 

@@ -757,6 +757,9 @@
     );
     next.quietHours.timezone = deviceTimeZone();
     CommunicationState.notifyPrefs = next;
+    if (typeof firebase === 'undefined' || !firebase.firestore || typeof db === 'undefined') {
+      return Promise.resolve();
+    }
     var payload = {
       quietHours: {
         enabled: !!next.quietHours.enabled,
@@ -867,7 +870,9 @@
     ['ce2NotifyQuietEnabled', 'ce2NotifyQuietStart', 'ce2NotifyQuietEnd', 'ce2NotifyDmPolicy', 'ce2NotifyGroupPolicy'].forEach(
       function (id) {
         var node = el(id);
-        if (node) node.addEventListener('change', onChange);
+        if (!node) return;
+        node.addEventListener('change', onChange);
+        if (id === 'ce2NotifyQuietEnabled') node.addEventListener('input', onChange);
       }
     );
   }

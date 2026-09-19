@@ -468,8 +468,8 @@ test('cache-bust sits strictly above live 112 / 82 / 1 / 5', function () {
   const pushVer = html.match(/ce2-push\.js\?v=(\d+)/);
   const searchVer = html.match(/ce2-thread-search\.js\?v=(\d+)/);
   const inboxVer = html.match(/ce2-inbox\.js\?v=(\d+)/);
-  assert.ok(jsVer && Number(jsVer[1]) > 121);
-  assert.ok(cssVer && Number(cssVer[1]) >= 88);
+  assert.ok(jsVer && Number(jsVer[1]) > 122);
+  assert.ok(cssVer && Number(cssVer[1]) >= 89);
   assert.ok(pwaVer && Number(pwaVer[1]) > 5);
   assert.ok(pushVer && Number(pushVer[1]) >= 1);
   assert.ok(searchVer && Number(searchVer[1]) >= 1);
