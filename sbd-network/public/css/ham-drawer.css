@@ -56,6 +56,8 @@ body.ham-drawer-open .menu-overlay {
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
   transform: translateX(-105%);
+  visibility: hidden;
+  pointer-events: none;
   transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
@@ -63,6 +65,8 @@ body.ham-drawer-open .menu-overlay {
 
 .side-menu.ham-drawer.open {
   transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Legacy left:-300px pages — ham-drawer uses transform only */
