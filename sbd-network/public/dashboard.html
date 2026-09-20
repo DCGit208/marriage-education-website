@@ -25,7 +25,26 @@
     <link rel="stylesheet" href="/css/bottom-nav.css?v=1789610000001">
     <link rel="stylesheet" href="/css/dashboard.css?v=1789601192648">
     <link rel="stylesheet" href="/css/slider.css?v=1789601192648">
-<link rel="stylesheet" href="/css/ham-drawer.css?v=1789601192648">
+<style id="ham-drawer-first-paint-guard">
+  #sideMenu.side-menu.ham-drawer:not(.open) {
+    transform: translate3d(-105%, 0, 0) !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #sideMenu.side-menu.ham-drawer.open {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  #menuOverlay.menu-overlay {
+    display: none;
+    opacity: 0;
+  }
+  body.ham-drawer-open #menuOverlay.menu-overlay {
+    display: block;
+    opacity: 1;
+  }
+</style>
+<link rel="stylesheet" href="/css/ham-drawer.css?v=1789601192649">
 <link rel="stylesheet" href="/css/onboarding-ui.css?v=1789601192648">
     <link rel="stylesheet" href="/css/dashboard-preview-slides.css?v=1789601192648">
     
