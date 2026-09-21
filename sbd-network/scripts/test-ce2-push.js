@@ -423,7 +423,9 @@ test('direct recipients skip the sender; deleted messages do not notify', functi
 
 test('service worker imports helpers, bumps cache, and uses notification data', function () {
   assert.ok(swSrc.indexOf("importScripts('/communication-v2/ce2-push.js')") >= 0);
-  assert.ok(swSrc.indexOf("CACHE_VERSION = 'sbd-network-v1789809678000'") >= 0);
+  const cacheVersion = swSrc.match(/CACHE_VERSION = 'sbd-network-v(\d+)'/);
+  assert.ok(cacheVersion, 'service worker should expose a stamped cache version');
+  assert.ok(Number(cacheVersion[1]) >= 1789809678000, 'service worker cache version should stay above push baseline');
   assert.ok(swSrc.indexOf("sbd-network-v1789692000001") < 0);
   assert.ok(swSrc.indexOf('handleNotificationClick') >= 0);
   assert.ok(swSrc.indexOf('CE2_OPEN_THREAD') >= 0 || swSrc.indexOf('notificationClickPlan') >= 0);
