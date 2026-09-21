@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 15;
+  var VERSION = 16;
 
   var QUESTIONS = [
     {
@@ -251,9 +251,9 @@
         'For personal development, start with the Teleios foundation path in Learn. It is the best first course direction because it focuses on identity, discipline, self-understanding, and covenant-ready formation.',
       nextStep: 'Open Learn first for the course path; use Shop only if you want a companion resource to practice what you are learning.',
       catalog: [
-        { label: 'Best course', title: 'Personal Development MasterClass', meta: '$697', href: '/checkout.html?product=personal-development-masterclass', reviewHref: '/shop.html?section=academy&category=courses_school1&q=Personal%20Development%20MasterClass' },
-        { label: 'Bundle path', title: 'Teleios Development Bundle', meta: '$299', href: '/checkout.html?product=teleios-development-bundle', reviewHref: '/shop.html?section=academy&category=course_bundles&q=Teleios%20Development%20Bundle' },
-        { label: 'Starter course', title: 'The Teleios Blueprint (Mini)', meta: '$39', href: '/checkout.html?product=teleios-blueprint-mini', reviewHref: '/shop.html?section=academy&category=courses_entry&q=Teleios%20Blueprint%20Mini' },
+        { label: 'Best course', title: 'Personal Development MasterClass', meta: '$697', why: 'Best if you want structured identity, discipline, and formation work.', href: '/checkout.html?product=personal-development-masterclass', reviewHref: '/shop.html?section=academy&category=courses_school1&q=Personal%20Development%20MasterClass' },
+        { label: 'Bundle path', title: 'Teleios Development Bundle', meta: '$299', why: 'Good if you want several formation pieces together.', href: '/checkout.html?product=teleios-development-bundle', reviewHref: '/shop.html?section=academy&category=course_bundles&q=Teleios%20Development%20Bundle' },
+        { label: 'Starter course', title: 'The Teleios Blueprint (Mini)', meta: '$39', why: 'Good if you want a lighter first step.', href: '/checkout.html?product=teleios-blueprint-mini', reviewHref: '/shop.html?section=academy&category=courses_entry&q=Teleios%20Blueprint%20Mini' },
       ],
       details:
         'If your question is broad personal growth, begin with Teleios. If your growth question is specifically about intimacy, marriage communication, or sexual understanding, move next toward Sexual Literacy or a communication resource.',
@@ -280,9 +280,9 @@
         'For a book or resource, start with the need: identity and preparation, marriage communication, intimacy literacy, or reflection. If the need is broad personal growth, choose a formation resource and pair it with Learn.',
       nextStep: 'Open Shop and choose one resource that solves the question you can practice this week.',
       catalog: [
-        { label: 'Entry book', title: 'SBD for Dummies', meta: '$27', href: '/checkout.html?product=sbd-dummies', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies' },
-        { label: 'Identity book', title: 'Teleios Blueprint (Book)', meta: '$247', href: '/checkout.html?product=teleios-blueprint', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Teleios%20Blueprint' },
-        { label: 'Library option', title: 'Complete SBD Library', meta: '$5000', href: '/checkout.html?product=complete-sbd-library', reviewHref: '/shop.html?section=bundles_diplomas&category=book_bundles&q=Complete%20SBD%20Library' },
+        { label: 'Entry book', title: 'SBD for Dummies', meta: '$27', why: 'Best if you want the simplest starting resource.', href: '/checkout.html?product=sbd-dummies', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies' },
+        { label: 'Identity book', title: 'Teleios Blueprint (Book)', meta: '$247', why: 'Good if your question is personal formation.', href: '/checkout.html?product=teleios-blueprint', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Teleios%20Blueprint' },
+        { label: 'Library option', title: 'Complete SBD Library', meta: '$5000', why: 'Good if you want the full SBD reference library.', href: '/checkout.html?product=complete-sbd-library', reviewHref: '/shop.html?section=bundles_diplomas&category=book_bundles&q=Complete%20SBD%20Library' },
       ],
       details:
         'Do not start by collecting many resources. Start with one honest problem, choose the resource that addresses it, then use Boards or Learn to turn the insight into practice.',
@@ -330,9 +330,9 @@
       body:
         'For communication, look for resources that help you name patterns, prepare a better conversation, and reflect afterward. Pair the resource with Learn when you want a fuller formation path.',
       catalog: [
-        { label: 'Course', title: 'Communication for Covenant Couples', meta: '$199', href: '/checkout.html?product=communication-covenant-couples', reviewHref: '/shop.html?section=academy&category=courses_school3&q=Communication%20for%20Covenant%20Couples' },
-        { label: 'Practice course', title: 'Conflict Mastery & Marital Peacekeeping', meta: '$179', href: '/checkout.html?product=conflict-mastery', reviewHref: '/shop.html?section=academy&category=courses_school3&q=Conflict%20Mastery' },
-        { label: 'Book', title: 'SBD The Heart of Relationship', meta: '$24.99', href: '/checkout.html?product=sbd-the-heart-of-relationship', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Heart%20of%20Relationship' },
+        { label: 'Course', title: 'Communication for Covenant Couples', meta: '$199', why: 'Best if you want guided practice for better conversations.', href: '/checkout.html?product=communication-covenant-couples', reviewHref: '/shop.html?section=academy&category=courses_school3&q=Communication%20for%20Covenant%20Couples' },
+        { label: 'Practice course', title: 'Conflict Mastery & Marital Peacekeeping', meta: '$179', why: 'Good if conflict repair is the urgent issue.', href: '/checkout.html?product=conflict-mastery', reviewHref: '/shop.html?section=academy&category=courses_school3&q=Conflict%20Mastery' },
+        { label: 'Book', title: 'SBD The Heart of Relationship', meta: '$24.99', why: 'Good if you want a lower-cost reflection resource.', href: '/checkout.html?product=sbd-the-heart-of-relationship', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Heart%20of%20Relationship' },
       ],
       details:
         'Do not look for a quick script only. The stronger move is to understand the pattern, change the posture, and practice one conversation differently.',
@@ -405,9 +405,9 @@
         'If you want structure instead of guessing course by course, the 1-year formation pack is the stronger direction to consider. It fits someone who wants a guided formation rhythm, not just a single answer.',
       nextStep: 'Start in Learn, then compare membership access so the pack or course path matches the level of structure you want.',
       catalog: [
-        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$118/yr', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
-        { label: 'Deeper access', title: 'Premium Tier', meta: '$20/mo', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
-        { label: 'Diploma path', title: 'Diploma in Teleios Personal Development', meta: '$2000', href: '/checkout.html?product=diploma-teleios-personal-development', reviewHref: '/shop.html?section=bundles_diplomas&category=diplomas_certifications&q=Diploma%20Teleios%20Personal%20Development' },
+        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$118/yr', why: 'Best if you want an affordable year rhythm.', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
+        { label: 'Deeper access', title: 'Premium Tier', meta: '$20/mo', why: 'Good if you want more course access monthly.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
+        { label: 'Diploma path', title: 'Diploma in Teleios Personal Development', meta: '$2000', why: 'Good if you want a serious credential path.', href: '/checkout.html?product=diploma-teleios-personal-development', reviewHref: '/shop.html?section=bundles_diplomas&category=diplomas_certifications&q=Diploma%20Teleios%20Personal%20Development' },
       ],
       details:
         'Treat this as a tentative recommendation: choose the pack if you want consistency, sequence, and accountability. Choose a single course first if you only need help with one focused question.',
@@ -435,9 +435,9 @@
         'Start free if you are only exploring. Choose Foundation for entry formation, Premium for deeper course access and progress, and Elite when you want the full ecosystem: advanced training, MV House, and deeper guided access.',
       nextStep: 'Compare plans, then choose the lowest level that genuinely opens the next step you need.',
       catalog: [
-        { label: 'Start', title: 'Foundation Tier', meta: '$9.77/mo', href: '/checkout.html?product=foundation-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
-        { label: 'Deeper learning', title: 'Premium Tier', meta: '$20/mo', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
-        { label: 'Full ecosystem', title: 'Elite Tier', meta: '$50/mo', href: '/checkout.html?product=elite-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Elite%20Tier' },
+        { label: 'Start', title: 'Foundation Tier', meta: '$9.77/mo', why: 'Best if you are starting and want low-risk structure.', href: '/checkout.html?product=foundation-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
+        { label: 'Deeper learning', title: 'Premium Tier', meta: '$20/mo', why: 'Good if courses are the main reason you are joining.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
+        { label: 'Full ecosystem', title: 'Elite Tier', meta: '$50/mo', why: 'Good if you want the widest SBD access.', href: '/checkout.html?product=elite-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Elite%20Tier' },
       ],
       details:
         'The best subscription is not always the highest one. It is the level that gives enough structure for the question you are carrying now, with room to upgrade when your next step becomes clearer.',
@@ -1249,31 +1249,47 @@
 
   function catalogHtml(items) {
     if (!items || !items.length) return '';
+    var primary = items[0];
+    var alternatives = items.slice(1);
     return (
       '<div class="ask-sbd-catalog" aria-label="Recommended items">' +
-      '<p>Recommended options</p>' +
+      '<p>Advisor recommendation</p>' +
       '<div class="ask-sbd-catalog-list">' +
-      items
-        .map(function (item) {
-          return (
-            '<a class="ask-sbd-catalog-card" href="' +
-            escapeHtml(item.reviewHref || item.href) +
-            '">' +
-            '<span>' +
-            escapeHtml(item.label) +
-            '</span>' +
-            '<strong>' +
-            escapeHtml(item.title) +
-            '</strong>' +
-            '<em>' +
-            escapeHtml(item.meta) +
-            '</em>' +
-            '</a>'
-          );
-        })
-        .join('') +
+      recommendationCardHtml(primary, true) +
+      (alternatives.length
+        ? '<div class="ask-sbd-catalog-alternatives"><p>Also consider</p>' +
+          alternatives.map(function (item) { return recommendationCardHtml(item, false); }).join('') +
+          '</div>'
+        : '') +
       '</div>' +
       '</div>'
+    );
+  }
+
+  function recommendationCardHtml(item, isPrimary) {
+    if (!item) return '';
+    var href = item.reviewHref || item.href;
+    var why = item.why || 'A strong fit for the next step you described.';
+    return (
+      '<a class="ask-sbd-catalog-card' +
+      (isPrimary ? ' ask-sbd-catalog-card--primary' : '') +
+      '" href="' +
+      escapeHtml(href) +
+      '">' +
+      '<span>' +
+      escapeHtml(isPrimary ? 'Recommended for you' : item.label) +
+      '</span>' +
+      '<strong>' +
+      escapeHtml(item.title) +
+      '</strong>' +
+      '<em>' +
+      escapeHtml(item.meta) +
+      '</em>' +
+      '<small>' +
+      escapeHtml(why) +
+      '</small>' +
+      '<b><i>Review first</i><i>Buy next</i></b>' +
+      '</a>'
     );
   }
 
