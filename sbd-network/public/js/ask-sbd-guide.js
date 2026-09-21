@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 4;
+  var VERSION = 5;
 
   var QUESTIONS = [
     {
@@ -217,6 +217,390 @@
         { label: 'Compare Plans', href: '/pricing.html' },
       ],
     },
+    {
+      id: 'shop-first-buy',
+      label: 'Shop first buy',
+      prompt: 'What should I buy first?',
+      keywords: ['buy first', 'first buy', 'purchase first', 'what should i buy', 'shop first'],
+      title: 'Start with the resource that matches your current need',
+      body:
+        'If you need structure, begin with Learn first. If you need practical support, choose a resource that matches the issue in front of you: communication, identity, expression, or preparation.',
+      details:
+        'A resource is most useful when it supports a real next step. Choose something you can apply this week, then return to Learn or Boards when you want structure and reflection around it.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'shop-season-resource',
+      label: 'Shop by season',
+      prompt: 'What resource fits my season?',
+      keywords: ['resource fits', 'my season', 'single resource', 'married resource', 'dating resource'],
+      title: 'Choose resources by the season you are in',
+      body:
+        'If you are preparing, choose resources that build identity and clarity. If you are married, choose resources that support communication, formation, and consistent practice.',
+      details:
+        'Your season matters because the right resource should meet the question you are already carrying. Start with the most present need, not the biggest catalog item.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Find Courses', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'shop-course-tie',
+      label: 'Shop and courses',
+      prompt: 'Are these tied to courses?',
+      keywords: ['tied to courses', 'course resource', 'resources with courses', 'shop learn'],
+      title: 'Shop resources support the course journey',
+      body:
+        'Some resources stand on their own, while others work best alongside Learn. Use courses for sequence, then use Shop resources to apply, reinforce, or deepen the work.',
+      details:
+        'If you want a complete path, start in Learn. If you want a practical tool for one area, start in Shop and connect it back to the course or Board that matches that topic.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Browse Shop', href: '/shop.html' },
+      ],
+    },
+    {
+      id: 'shop-marriage-communication',
+      label: 'Shop communication',
+      prompt: 'What helps with communication?',
+      keywords: ['communication resource', 'marriage communication resource', 'argue', 'conflict resource'],
+      title: 'Choose a resource that helps you practice better conversations',
+      body:
+        'For communication, look for resources that help you name patterns, prepare a better conversation, and reflect afterward. Pair the resource with Learn when you want a fuller formation path.',
+      details:
+        'Do not look for a quick script only. The stronger move is to understand the pattern, change the posture, and practice one conversation differently.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Messages', href: '/communication-v2/' },
+      ],
+    },
+    {
+      id: 'shop-expression',
+      label: 'Shop expression',
+      prompt: 'What supports identity or expression?',
+      keywords: ['identity resource', 'expression resource', 'fashion resource', 'mv resource'],
+      title: 'Use expression resources when formation needs to become visible',
+      body:
+        'If your focus is image, presence, or expression, start with MV House and use Shop resources that support how identity becomes embodied and presented.',
+      details:
+        'Expression resources should help connect what is happening internally with how you show up outwardly: presence, image, speech, styling, and confidence.',
+      ctas: [
+        { label: 'Visit MV House', href: '/mv-house.html' },
+        { label: 'Browse Shop', href: '/shop.html' },
+      ],
+    },
+    {
+      id: 'shop-use-resources',
+      label: 'Use resources',
+      prompt: 'How should I use these resources?',
+      keywords: ['use resources', 'how use resource', 'apply resource', 'practice resource'],
+      title: 'Use each resource with one clear action',
+      body:
+        'Pick one resource, decide what it should help you practice, and apply it before collecting more. SBD works best when learning becomes practice.',
+      details:
+        'A simple rhythm is: read or use the resource, write one reflection, practice one action, then return to Learn or Boards to keep the formation moving.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Boards', href: '/boards.html' },
+      ],
+    },
+    {
+      id: 'learn-course-start',
+      label: 'Course start',
+      prompt: 'Which course should I start with?',
+      keywords: ['which course', 'start course', 'course start', 'study first'],
+      title: 'Start with the course closest to your present question',
+      body:
+        'Choose the course that matches what you are actively trying to understand or repair. If you need clarity first, begin with the foundational path before jumping ahead.',
+      details:
+        'The best course is not always the most advanced one. Start where you can practice immediately, then move deeper as the framework becomes clear.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Compare Plans', href: '/pricing.html' },
+      ],
+    },
+    {
+      id: 'learn-school-fit',
+      label: 'School fit',
+      prompt: 'What school fits my season?',
+      keywords: ['which school', 'school fits', 'school start', 'my season school'],
+      title: 'Choose a school by your formation focus',
+      body:
+        'If your focus is relationship clarity, start with the relationship path. If your focus is expression and identity, MV House may be the better doorway.',
+      details:
+        'Let the question choose the school: communication, preparation, identity, expression, sexuality, marriage, or leadership. Then follow the sequence instead of sampling randomly.',
+      ctas: [{ label: 'Open Learn', href: '/learn.html' }],
+    },
+    {
+      id: 'learn-certificates',
+      label: 'Certificates',
+      prompt: 'How do certificates work?',
+      keywords: ['certificate', 'certificates', 'certification', 'completion'],
+      title: 'Certificates mark completed formation work',
+      body:
+        'Certificates help you see and show completed progress. They matter most when they represent real attention, practice, and completion inside a course path.',
+      details:
+        'Treat certificates as evidence of completed work, not just badges. Use them to track what you have finished and what formation area may need attention next.',
+      ctas: [
+        { label: 'View Certificates', href: '/certificates.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'learn-next',
+      label: 'Next study',
+      prompt: 'What should I study after this?',
+      keywords: ['after this', 'next lesson', 'next course', 'what next study'],
+      title: 'Move to the next course that deepens the same work',
+      body:
+        'After finishing a lesson or course, choose the next step that continues the same formation thread. Do not jump topics unless your current question has changed.',
+      details:
+        'If the work was communication, continue into relationship practice. If it was identity, continue into expression. If it was preparation, move toward marriage and commitment formation.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Open Boards', href: '/boards.html' },
+      ],
+    },
+    {
+      id: 'learn-boards-link',
+      label: 'Learn and Boards',
+      prompt: 'How do courses connect to Boards?',
+      keywords: ['courses connect boards', 'learn boards', 'course board', 'reflection board'],
+      title: 'Courses teach; Boards help you process',
+      body:
+        'Use Learn for structure and Boards for reflection. When a lesson raises a question, Boards help you process it through prompts, stories, and community context.',
+      details:
+        'This keeps formation from staying theoretical. Learn gives the framework; Boards help you notice what it means in real life.',
+      ctas: [
+        { label: 'Open Boards', href: '/boards.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'boards-what-post',
+      label: 'Board posts',
+      prompt: 'What should I post?',
+      keywords: ['what post', 'what should i post', 'board post', 'post boards'],
+      title: 'Post what helps you reflect, not what performs',
+      body:
+        'A good Board post names what you are noticing, learning, or practicing. It can be a question, reflection, story, or response to a prompt.',
+      details:
+        'Keep it honest and useful. You do not need to sound finished. Boards work best when the post helps formation become visible and discussable.',
+      ctas: [{ label: 'Open Boards', href: '/boards.html' }],
+    },
+    {
+      id: 'boards-how-work',
+      label: 'How Boards work',
+      prompt: 'How do Boards work?',
+      keywords: ['how boards work', 'boards work', 'what are boards'],
+      title: 'Boards are for reflection and applied formation',
+      body:
+        'Boards give you a place to process lessons, stories, prompts, and conversations. They help the course work move into practice.',
+      details:
+        'Use Boards when you need context, examples, reflection, or community around what you are learning. Use Learn when you need sequence.',
+      ctas: [
+        { label: 'Open Boards', href: '/boards.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'boards-join-conversation',
+      label: 'Join conversation',
+      prompt: 'How do I join a conversation?',
+      keywords: ['join conversation', 'reply board', 'comment board', 'conversation'],
+      title: 'Join by responding to the prompt or the formation question',
+      body:
+        'Read the prompt, notice the formation question underneath it, then respond with a reflection, story, or clarifying question.',
+      details:
+        'You do not need a perfect answer. A useful response shows what you are noticing and invites better reflection.',
+      ctas: [{ label: 'Open Boards', href: '/boards.html' }],
+    },
+    {
+      id: 'boards-course-link',
+      label: 'Boards and courses',
+      prompt: 'Are Boards connected to courses?',
+      keywords: ['boards connected courses', 'boards courses', 'course boards'],
+      title: 'Boards extend the course work into conversation',
+      body:
+        'Courses give the structured teaching. Boards help you reflect on it, compare stories, and practice the ideas in community.',
+      details:
+        'If a lesson feels important, bring the question to Boards. If a Board conversation exposes confusion, return to Learn for structure.',
+      ctas: [
+        { label: 'Open Boards', href: '/boards.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'boards-reflection',
+      label: 'Reflection',
+      prompt: 'What is a good reflection?',
+      keywords: ['good reflection', 'reflect', 'reflection', 'journal'],
+      title: 'A good reflection names what changed or became clear',
+      body:
+        'Start with what you noticed, what challenged you, and what you want to practice next. Keep it grounded in your real life.',
+      details:
+        'A strong reflection does not need to be long. It should help you see yourself more clearly and choose one next action.',
+      ctas: [{ label: 'Open Boards', href: '/boards.html' }],
+    },
+    {
+      id: 'boards-groups',
+      label: 'Groups',
+      prompt: 'How do I find my group?',
+      keywords: ['find group', 'my group', 'cohort', 'group boards'],
+      title: 'Your groups appear through your SBD access and memberships',
+      body:
+        'If you belong to a group or cohort, open Boards or Messages to find the conversations tied to your access.',
+      details:
+        'If you expected a group and do not see it, check your account access or open Messages. Group visibility depends on your current membership and role.',
+      ctas: [
+        { label: 'Open Boards', href: '/boards.html' },
+        { label: 'Open Messages', href: '/communication-v2/' },
+      ],
+    },
+    {
+      id: 'pricing-plan-fit',
+      label: 'Plan fit',
+      prompt: 'Which plan fits me?',
+      keywords: ['which plan', 'plan fits', 'membership fit', 'choose plan'],
+      title: 'Choose the plan by how much structure and access you need',
+      body:
+        'Start free if you are exploring. Choose Foundation for structured entry, Premium for deeper course access and certificates, and Elite for the fullest SBD and MV experience.',
+      details:
+        'If the decision feels unclear, name what you want to unlock first: courses, certificates, MV House, support, or the full ecosystem.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Start Free', href: '/auth?next=/learn&src=ask-sbd-pricing' },
+      ],
+    },
+    {
+      id: 'pricing-premium',
+      label: 'Premium',
+      prompt: 'What do I get in Premium?',
+      keywords: ['premium', 'premium get', 'what premium', 'premium includes'],
+      title: 'Premium is for deeper learning and progress',
+      body:
+        'Premium is the better fit when you want fuller course access, certificates, progress boards, and stronger support around the formation journey.',
+      details:
+        'Choose Premium when you are ready to move beyond previewing and want a more serious path through SBD learning.',
+      ctas: [{ label: 'Compare Plans', href: '/pricing.html' }],
+    },
+    {
+      id: 'pricing-elite',
+      label: 'Elite',
+      prompt: 'Why choose Elite?',
+      keywords: ['elite', 'why elite', 'elite includes', 'full access'],
+      title: 'Elite is for the fullest SBD ecosystem',
+      body:
+        'Elite is for users who want the deepest access across schools, advanced formation, MV House, and the broader SBD experience.',
+      details:
+        'Choose Elite when you do not want to keep deciding what to unlock next and you want the broadest path available.',
+      ctas: [{ label: 'Compare Plans', href: '/pricing.html' }],
+    },
+    {
+      id: 'pricing-start-free',
+      label: 'Start free',
+      prompt: 'Can I start free?',
+      keywords: ['start free', 'free', 'try free', 'free plan'],
+      title: 'Yes, start free if you want to explore first',
+      body:
+        'The free entry lets you preview SBD before choosing a deeper membership. Start there if you want clarity before committing.',
+      details:
+        'Use the free path to understand the platform, then upgrade when you know which formation path matters most right now.',
+      ctas: [{ label: 'Start Free', href: '/auth?next=/learn&src=ask-sbd-start-free' }],
+    },
+    {
+      id: 'pricing-mv-unlock',
+      label: 'MV access',
+      prompt: 'What unlocks MV House?',
+      keywords: ['unlock mv', 'mv access', 'mv house access', 'fashion access'],
+      title: 'MV House access depends on your membership level',
+      body:
+        'If MV House or advanced expression content is locked, compare plans to choose the access level that includes the expression path you want.',
+      details:
+        'MV House is part of the broader formation ecosystem, so the right plan depends on whether you only want to browse or want deeper access.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Visit MV House', href: '/mv-house.html' },
+      ],
+    },
+    {
+      id: 'mv-what',
+      label: 'MV House meaning',
+      prompt: 'What is MV House?',
+      keywords: ['what mv house', 'mv house', 'what is mv'],
+      title: 'MV House is where formation meets expression',
+      body:
+        'MV House connects identity, presence, image, fashion, and embodied expression. It helps what is forming inside become visible outside.',
+      details:
+        'Use MV House when your question is not only what to learn, but how to show up with clearer presence, style, posture, and expression.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
+    {
+      id: 'mv-fashion-formation',
+      label: 'Fashion and formation',
+      prompt: 'Is this fashion or formation?',
+      keywords: ['fashion formation', 'just fashion', 'appearance', 'style formation'],
+      title: 'It is fashion serving formation',
+      body:
+        'MV House is not appearance for its own sake. The goal is expression that agrees with identity, presence, and formation.',
+      details:
+        'Style becomes meaningful when it reveals what is being formed: confidence, softness, structure, authority, grace, or clarity.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
+    {
+      id: 'mv-start',
+      label: 'MV start',
+      prompt: 'Where should I start in MV House?',
+      keywords: ['start mv', 'mv start', 'start expression', 'where mv'],
+      title: 'Start with the expression question you feel most',
+      body:
+        'If you want presence, begin with masculine or feminine expression. If you want outward alignment, begin with image, style, and identity cues.',
+      details:
+        'Do not begin with everything. Pick one expression area and let that reveal the next step.',
+      ctas: [
+        { label: 'Visit MV House', href: '/mv-house.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'mv-masculine-presence',
+      label: 'Masculine presence',
+      prompt: 'What is masculine presence?',
+      keywords: ['masculine presence', 'masculinity', 'presence', 'authority'],
+      title: 'Masculine presence is structured, calm, and clear',
+      body:
+        'Masculine presence is not noise or force. It is clarity, steadiness, structure, restraint, and the ability to carry responsibility with calm.',
+      details:
+        'In MV House, masculine expression should feel embodied: posture, speech, grooming, styling, and emotional steadiness all communicate presence.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
+    {
+      id: 'mv-feminine-expression',
+      label: 'Feminine expression',
+      prompt: 'What is feminine expression?',
+      keywords: ['feminine expression', 'femininity', 'softness', 'grace'],
+      title: 'Feminine expression is grace with intelligence and depth',
+      body:
+        'Feminine expression is not performance. It is softness, discernment, beauty, receptivity, emotional intelligence, and embodied confidence.',
+      details:
+        'In MV House, feminine expression can show through styling, movement, speech, posture, and the atmosphere a woman carries.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
+    {
+      id: 'mv-image-identity',
+      label: 'Image and identity',
+      prompt: 'How does image connect to identity?',
+      keywords: ['image identity', 'identity image', 'presentation', 'appearance identity'],
+      title: 'Image should reveal identity, not replace it',
+      body:
+        'Your image becomes stronger when it reflects what is true, formed, and intentional. MV House helps connect inner identity to outward presentation.',
+      details:
+        'The goal is not to copy a look. The goal is to become more precise about what your presence communicates.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
   ];
 
   var PAGE_CONTEXTS = {
@@ -228,27 +612,27 @@
     pricing: {
       match: ['/pricing.html'],
       intro: 'Quick help choosing the right membership and understanding access.',
-      promptIds: ['membership-fit', 'locked-content', 'where-start', 'courses-certificates', 'relationship-season', 'shop-resources'],
+      promptIds: ['pricing-plan-fit', 'pricing-premium', 'pricing-elite', 'pricing-start-free', 'locked-content', 'pricing-mv-unlock'],
     },
     learn: {
       match: ['/learn.html', '/courses.html', '/schools.html'],
       intro: 'Quick help finding the right course, certificate, or next lesson.',
-      promptIds: ['courses-certificates', 'where-start', 'locked-content', 'relationship-season', 'marriage-communication', 'membership-fit'],
+      promptIds: ['learn-course-start', 'learn-school-fit', 'locked-content', 'learn-certificates', 'learn-next', 'learn-boards-link'],
     },
     boards: {
       match: ['/boards.html', '/board.html'],
       intro: 'Quick help understanding community, reflection, and group conversations.',
-      promptIds: ['boards-community', 'marriage-communication', 'where-start', 'facilitator-help', 'relationship-season', 'membership-fit'],
+      promptIds: ['boards-what-post', 'boards-how-work', 'boards-join-conversation', 'boards-course-link', 'boards-reflection', 'boards-groups'],
     },
     mvHouse: {
       match: ['/mv-house.html'],
       intro: 'Quick help with expression, presence, image, and identity.',
-      promptIds: ['mv-house-expression', 'relationship-season', 'membership-fit', 'where-start', 'courses-certificates', 'shop-resources'],
+      promptIds: ['mv-what', 'mv-fashion-formation', 'mv-start', 'mv-masculine-presence', 'mv-feminine-expression', 'mv-image-identity'],
     },
     shop: {
       match: ['/shop.html', '/resources.html'],
       intro: 'Quick help choosing resources, products, and practical next steps.',
-      promptIds: ['shop-resources', 'courses-certificates', 'membership-fit', 'where-start', 'locked-content', 'mv-house-expression'],
+      promptIds: ['shop-first-buy', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-expression', 'shop-use-resources'],
     },
   };
 

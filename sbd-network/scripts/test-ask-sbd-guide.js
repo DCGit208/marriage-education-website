@@ -146,30 +146,46 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
   assert.ok(js.includes('moreHtml'), 'missing collapsed detail renderer');
   assert.strictEqual(js.includes("answerAdvanced('where should I start')"), false, 'advanced mode must not auto-render an answer');
   assert.ok(js.includes("els.advancedOutput.innerHTML = ''"), 'advanced output should start empty');
-  ['marriage-communication', 'membership-fit', 'where-start', 'boards-community', 'mv-house-expression', 'courses-certificates', 'shop-resources', 'facilitator-help', 'locked-content', 'relationship-season'].forEach(function (id) {
+  [
+    'marriage-communication',
+    'membership-fit',
+    'where-start',
+    'boards-community',
+    'mv-house-expression',
+    'courses-certificates',
+    'shop-resources',
+    'facilitator-help',
+    'locked-content',
+    'relationship-season',
+    'shop-first-buy',
+    'learn-course-start',
+    'boards-what-post',
+    'pricing-plan-fit',
+    'mv-what',
+  ].forEach(function (id) {
     assert.ok(js.includes("id: '" + id + "'"), 'missing advanced topic ' + id);
   });
 });
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 4);
+  assert.strictEqual(api.VERSION, 5);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
-  assert.strictEqual(pricing[0].id, 'membership-fit');
-  assert.strictEqual(pricing[1].id, 'locked-content');
+  assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
+  assert.strictEqual(pricing[1].id, 'pricing-premium');
 
   const learn = api.advancedTopicsForContext(api.detectPageContext('/learn.html'));
-  assert.strictEqual(learn[0].id, 'courses-certificates');
+  assert.strictEqual(learn[0].id, 'learn-course-start');
 
   const boards = api.advancedTopicsForContext(api.detectPageContext('/boards.html'));
-  assert.strictEqual(boards[0].id, 'boards-community');
+  assert.strictEqual(boards[0].id, 'boards-what-post');
 
   const mvHouse = api.advancedTopicsForContext(api.detectPageContext('/mv-house.html'));
-  assert.strictEqual(mvHouse[0].id, 'mv-house-expression');
+  assert.strictEqual(mvHouse[0].id, 'mv-what');
 
   const shop = api.advancedTopicsForContext(api.detectPageContext('/shop.html'));
-  assert.strictEqual(shop[0].id, 'shop-resources');
+  assert.strictEqual(shop[0].id, 'shop-first-buy');
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -178,18 +194,23 @@ test('first ASK SBD panel is page-aware from open', function () {
   const pricingContext = api.detectPageContext('/pricing.html');
   const pricingQuick = api.quickItemsForContext(pricingContext);
   assert.ok(pricingContext.intro.includes('membership'));
-  assert.strictEqual(pricingQuick[0].id, 'membership-fit');
-  assert.strictEqual(pricingQuick[1].id, 'locked-content');
+  assert.strictEqual(pricingQuick[0].id, 'pricing-plan-fit');
+  assert.strictEqual(pricingQuick[1].id, 'pricing-premium');
 
   const learnContext = api.detectPageContext('/learn.html');
   const learnQuick = api.quickItemsForContext(learnContext);
   assert.ok(learnContext.intro.includes('course'));
-  assert.strictEqual(learnQuick[0].id, 'courses-certificates');
+  assert.strictEqual(learnQuick[0].id, 'learn-course-start');
 
   const boardsContext = api.detectPageContext('/boards.html');
   const boardsQuick = api.quickItemsForContext(boardsContext);
   assert.ok(boardsContext.intro.includes('community'));
-  assert.strictEqual(boardsQuick[0].id, 'boards-community');
+  assert.strictEqual(boardsQuick[0].id, 'boards-what-post');
+
+  const shopContext = api.detectPageContext('/shop.html');
+  const shopQuick = api.quickItemsForContext(shopContext);
+  assert.ok(shopContext.intro.includes('resources'));
+  assert.strictEqual(shopQuick[0].id, 'shop-first-buy');
 
   const dashboardQuick = api.quickItemsForContext(api.detectPageContext('/dashboard.html'));
   assert.strictEqual(dashboardQuick[0].id, 'what-is');
@@ -224,7 +245,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 4);
+  assert.strictEqual(api.VERSION, 5);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');
