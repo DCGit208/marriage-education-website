@@ -86,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=8'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=8'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=9'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=9'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -187,7 +187,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 10);
+  assert.strictEqual(api.VERSION, 11);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -279,6 +279,14 @@ test('typed advanced answers use current page or section context when the questi
 
   const pricingContext = api.detectPageContext('/pricing.html');
   assert.strictEqual(api.findAdvancedAnswer('which level should I subscribe to?', pricingContext).id, 'advisor-subscription-level');
+});
+
+test('recommendation chip labels stay concise for mobile rows', function () {
+  const api = loadGuideApi();
+  assert.strictEqual(api.findAdvancedTopic('shop-course-personal-development').prompt, 'Personal development');
+  assert.strictEqual(api.findAdvancedTopic('shop-book-recommendation').prompt, 'Book or resource');
+  assert.ok(api.findAdvancedTopic('shop-course-personal-development').prompt.length <= 24);
+  assert.ok(api.findAdvancedTopic('shop-book-recommendation').prompt.length <= 24);
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -391,7 +399,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 10);
+  assert.strictEqual(api.VERSION, 11);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

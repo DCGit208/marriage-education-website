@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 10;
+  var VERSION = 11;
 
   var QUESTIONS = [
     {
@@ -236,7 +236,7 @@
     {
       id: 'shop-course-personal-development',
       label: 'Personal development course',
-      prompt: 'Recommend a course for personal development',
+      prompt: 'Personal development',
       keywords: [
         'recommend course',
         'suggest course',
@@ -260,7 +260,7 @@
     {
       id: 'shop-book-recommendation',
       label: 'Book recommendation',
-      prompt: 'Recommend a book or resource',
+      prompt: 'Book or resource',
       keywords: [
         'recommend book',
         'suggest book',
