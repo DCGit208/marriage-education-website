@@ -86,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=9'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=9'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=10'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=10'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -187,7 +187,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 11);
+  assert.strictEqual(api.VERSION, 12);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -279,6 +279,27 @@ test('typed advanced answers use current page or section context when the questi
 
   const pricingContext = api.detectPageContext('/pricing.html');
   assert.strictEqual(api.findAdvancedAnswer('which level should I subscribe to?', pricingContext).id, 'advisor-subscription-level');
+});
+
+test('catalog-aware recommendations render real item cards', function () {
+  const api = loadGuideApi();
+  const personal = api.findAdvancedTopic('shop-course-personal-development');
+  assert.strictEqual(personal.catalog[0].title, 'Personal Development MasterClass');
+  assert.strictEqual(personal.catalog[0].href, '/checkout.html?product=personal-development-masterclass');
+  assert.ok(personal.catalog.some(function (item) { return item.title === 'Teleios Development Bundle'; }));
+
+  const book = api.findAdvancedTopic('shop-book-recommendation');
+  assert.strictEqual(book.catalog[0].title, 'SBD for Dummies');
+  assert.strictEqual(book.catalog[0].href, '/checkout.html?product=sbd-dummies');
+
+  const communication = api.findAdvancedTopic('shop-marriage-communication');
+  assert.ok(communication.catalog.some(function (item) { return item.href === '/checkout.html?product=communication-covenant-couples'; }));
+
+  const html = api.advancedAnswerHtml(personal, null, []);
+  assert.ok(html.includes('ask-sbd-catalog-card'));
+  assert.ok(html.includes('Personal Development MasterClass'));
+  assert.ok(html.includes('/checkout.html?product=personal-development-masterclass'));
+  assert.strictEqual(html.includes('<script>'), false);
 });
 
 test('recommendation chip labels stay concise for mobile rows', function () {
@@ -399,7 +420,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 11);
+  assert.strictEqual(api.VERSION, 12);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');
@@ -426,6 +447,7 @@ test('assistant uses unique classes and does not target frozen navigation surfac
   assert.ok(css.includes('.ask-sbd-more'));
   assert.ok(css.includes('.ask-sbd-next-step'));
   assert.ok(css.includes('.ask-sbd-related-chip'));
+  assert.ok(css.includes('.ask-sbd-catalog-card'));
   assert.ok(js.includes('root.SbdAskGuide'));
 });
 
