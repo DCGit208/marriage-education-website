@@ -170,6 +170,8 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
     'locked-content',
     'relationship-season',
     'shop-first-buy',
+    'advisor-sex-book-recommendation',
+    'advisor-sex-course-recommendation',
     'shop-course-personal-development',
     'shop-book-recommendation',
     'learn-one-year-formation-pack',
@@ -190,7 +192,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 16);
+  assert.strictEqual(api.VERSION, 17);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -198,7 +200,7 @@ test('page-aware contexts prioritize relevant prompts', function () {
 
   const learn = api.advancedTopicsForContext(api.detectPageContext('/learn.html'));
   assert.strictEqual(learn[0].id, 'learn-course-start');
-  assert.strictEqual(learn[1].id, 'learn-one-year-formation-pack');
+  assert.strictEqual(learn[1].id, 'advisor-sex-course-recommendation');
 
   const boards = api.advancedTopicsForContext(api.detectPageContext('/boards.html'));
   assert.strictEqual(boards[0].id, 'boards-what-post');
@@ -208,6 +210,8 @@ test('page-aware contexts prioritize relevant prompts', function () {
 
   const shop = api.advancedTopicsForContext(api.detectPageContext('/shop.html'));
   assert.strictEqual(shop[0].id, 'shop-first-buy');
+  assert.strictEqual(shop[1].id, 'advisor-sex-book-recommendation');
+  assert.strictEqual(shop[2].id, 'advisor-sex-course-recommendation');
 
   const dating = api.advancedTopicsForContext(api.detectPageContext('/dating.html'));
   assert.strictEqual(dating[0].id, 'dating-what');
@@ -274,11 +278,14 @@ test('typed advanced answers use current page or section context when the questi
   const shopContext = api.detectPageContext('/shop.html');
   assert.strictEqual(api.findAdvancedAnswer('recommend a course for personal development in shop', shopContext).id, 'shop-course-personal-development');
   assert.strictEqual(api.findAdvancedAnswer('recommend a book for reflection', shopContext).id, 'shop-book-recommendation');
+  assert.strictEqual(api.findAdvancedAnswer('books about sex', shopContext).id, 'advisor-sex-book-recommendation');
+  assert.strictEqual(api.findAdvancedAnswer('course about sex', shopContext).id, 'advisor-sex-course-recommendation');
   assert.strictEqual(api.findAdvancedAnswer('I need help with marriage communication', shopContext).id, 'shop-marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication', shopContext).id, 'marriage-communication');
 
   const learnContext = api.detectPageContext('/learn.html');
   assert.strictEqual(api.findAdvancedAnswer('should I choose the one year formation pack?', learnContext).id, 'learn-one-year-formation-pack');
+  assert.strictEqual(api.findAdvancedAnswer('what course should I study about sexuality?', learnContext).id, 'advisor-sex-course-recommendation');
 
   const pricingContext = api.detectPageContext('/pricing.html');
   assert.strictEqual(api.findAdvancedAnswer('which level should I subscribe to?', pricingContext).id, 'advisor-subscription-level');
@@ -302,6 +309,16 @@ test('catalog-aware recommendations render advisor-style item cards', function (
 
   const communication = api.findAdvancedTopic('shop-marriage-communication');
   assert.ok(communication.catalog.some(function (item) { return item.href === '/checkout.html?product=communication-covenant-couples'; }));
+
+  const sexBook = api.findAdvancedTopic('advisor-sex-book-recommendation');
+  assert.strictEqual(sexBook.catalog[0].title, 'SBD for Dummies');
+  assert.strictEqual(sexBook.catalog[1].title, 'The Art of Sexuality');
+  assert.ok(sexBook.body.includes('book is the right companion'));
+
+  const sexCourse = api.findAdvancedTopic('advisor-sex-course-recommendation');
+  assert.strictEqual(sexCourse.catalog[0].title, 'Sexual Literacy 101');
+  assert.strictEqual(sexCourse.catalog[0].href, '/checkout.html?product=sexual-literacy-101');
+  assert.strictEqual(sexCourse.catalog[2].href, '/checkout.html?product=course-art-of-sexuality');
 
   const html = api.advancedAnswerHtml(personal, null, []);
   assert.ok(html.includes('ask-sbd-catalog-card'));
@@ -347,20 +364,28 @@ test('broad questions show clarifying choice flows', function () {
   const answer = api.clarifyingAnswerForContext(shopContext);
   assert.strictEqual(answer.id, 'clarify-next-step');
   const choiceIds = answer.choices.map(function (choice) { return choice.topicId; }).join('|');
-  assert.strictEqual(choiceIds, 'shop-course-personal-development|shop-book-recommendation|advisor-subscription-level|shop-marriage-communication');
+  assert.strictEqual(choiceIds, 'advisor-sex-book-recommendation|advisor-sex-course-recommendation|shop-course-personal-development|advisor-subscription-level');
 
   const html = api.advancedAnswerHtml(answer, null, []);
   assert.ok(html.includes('ask-sbd-choices'));
-  assert.ok(html.includes('data-ask-sbd-related-id="shop-book-recommendation"'));
+  assert.ok(html.includes('data-ask-sbd-related-id="advisor-sex-book-recommendation"'));
   assert.strictEqual(html.includes('<script>'), false);
+
+  const learnAnswer = api.clarifyingAnswerForContext(api.detectPageContext('/learn.html'));
+  const learnChoiceIds = learnAnswer.choices.map(function (choice) { return choice.topicId; }).join('|');
+  assert.strictEqual(learnChoiceIds, 'learn-course-start|advisor-sex-course-recommendation|learn-one-year-formation-pack|advisor-subscription-level');
 });
 
 test('recommendation chip labels stay concise for mobile rows', function () {
   const api = loadGuideApi();
   assert.strictEqual(api.findAdvancedTopic('shop-course-personal-development').prompt, 'Personal development');
   assert.strictEqual(api.findAdvancedTopic('shop-book-recommendation').prompt, 'Book or resource');
+  assert.strictEqual(api.findAdvancedTopic('advisor-sex-book-recommendation').prompt, 'Books about sex');
+  assert.strictEqual(api.findAdvancedTopic('advisor-sex-course-recommendation').prompt, 'Course about sex');
   assert.ok(api.findAdvancedTopic('shop-course-personal-development').prompt.length <= 24);
   assert.ok(api.findAdvancedTopic('shop-book-recommendation').prompt.length <= 24);
+  assert.ok(api.findAdvancedTopic('advisor-sex-book-recommendation').prompt.length <= 24);
+  assert.ok(api.findAdvancedTopic('advisor-sex-course-recommendation').prompt.length <= 24);
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -376,7 +401,7 @@ test('first ASK SBD panel is page-aware from open', function () {
   const learnQuick = api.quickItemsForContext(learnContext);
   assert.ok(learnContext.intro.includes('course'));
   assert.strictEqual(learnQuick[0].id, 'learn-course-start');
-  assert.strictEqual(learnQuick[1].id, 'learn-one-year-formation-pack');
+  assert.strictEqual(learnQuick[1].id, 'advisor-sex-course-recommendation');
 
   const boardsContext = api.detectPageContext('/boards.html');
   const boardsQuick = api.quickItemsForContext(boardsContext);
@@ -419,10 +444,10 @@ test('answer cards include page-aware related follow-up chips', function () {
   const answer = api.findAdvancedTopic('shop-first-buy');
   const related = api.relatedTopicsForResult(answer, shopContext);
   const relatedIds = related.map(function (topic) { return topic.id; }).join('|');
-  assert.strictEqual(relatedIds, 'shop-course-personal-development|shop-book-recommendation|shop-season-resource');
+  assert.strictEqual(relatedIds, 'advisor-sex-book-recommendation|advisor-sex-course-recommendation|shop-course-personal-development');
   const html = api.advancedAnswerHtml(answer, null, related);
   assert.ok(html.includes('Related questions'));
-  assert.ok(html.includes('data-ask-sbd-related-id="shop-course-personal-development"'));
+  assert.ok(html.includes('data-ask-sbd-related-id="advisor-sex-book-recommendation"'));
   assert.strictEqual(html.includes('<script>'), false);
 
   const relatedBlock = css.match(/\.ask-sbd-related-row\s*\{[\s\S]*?\n\}/);
@@ -473,7 +498,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 16);
+  assert.strictEqual(api.VERSION, 17);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

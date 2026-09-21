@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 16;
+  var VERSION = 17;
 
   var QUESTIONS = [
     {
@@ -288,6 +288,71 @@
         'Do not start by collecting many resources. Start with one honest problem, choose the resource that addresses it, then use Boards or Learn to turn the insight into practice.',
       ctas: [
         { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'advisor-sex-book-recommendation',
+      label: 'Sex and intimacy books',
+      prompt: 'Books about sex',
+      keywords: [
+        'books about sex',
+        'book about sex',
+        'sex book',
+        'sexuality book',
+        'intimacy book',
+        'book about intimacy',
+        'book about sexuality',
+        'sexual design book',
+      ],
+      title: 'Use a Shop book as the companion for sex and intimacy questions',
+      body:
+        'If you ask for books about sex, start with an SBD resource that gives language, doctrine, and practice. A book is the right companion when you want to read, reflect, and then bring the question into Learn or Boards.',
+      nextStep: 'Review the book in Shop first, then use Learn if you want a guided course path around the same topic.',
+      catalog: [
+        { label: 'Best first book', title: 'SBD for Dummies', meta: '$27', why: 'Best if you want the simplest SBD entry point for sex and design.', href: '/checkout.html?product=sbd-dummies', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies' },
+        { label: 'Sexuality focus', title: 'The Art of Sexuality', meta: '$24.99', why: 'Good if your question is about sexuality as covenant lifestyle.', href: '/checkout.html?product=the-art-of-sexuality', reviewHref: '/shop.html?section=books_magazine&category=books_arts_of_marriage&q=Art%20of%20Sexuality' },
+        { label: 'Marriage frame', title: 'Marriage = Sexuality', meta: '$24.99', why: 'Good if you want the marriage-and-sexuality connection.', href: '/checkout.html?product=marriage-equals-sexuality', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Marriage%20Sexuality' },
+      ],
+      details:
+        'Treat the book as a companion, not the whole path. Read one resource, practice one reflection, then move to a course if you need sequence and accountability.',
+      ctas: [
+        { label: 'Review Books in Shop', href: '/shop.html?section=books_magazine&category=books_sbd_series&q=Sex' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'advisor-sex-course-recommendation',
+      label: 'Sexual literacy course',
+      prompt: 'Course about sex',
+      keywords: [
+        'course about sex',
+        'courses about sex',
+        'course on sex',
+        'course about sexuality',
+        'course on sexuality',
+        'sex course',
+        'sexuality course',
+        'sexual literacy course',
+        'course about intimacy',
+        'intimacy course',
+        'course should i study',
+        'study about sexuality',
+        'study about sex',
+      ],
+      title: 'Choose a sexual literacy course when you want a guided path',
+      body:
+        'If you ask for a course about sex, the stronger move is a guided sexual literacy path. Use Shop to review the program, then continue in Learn when you want structure, progress, and practice.',
+      nextStep: 'Start with Sexual Literacy 101 if you want the fastest doorway; choose a deeper School 2 course when the need is more specific.',
+      catalog: [
+        { label: 'Best start', title: 'Sexual Literacy 101', meta: '$25', why: 'Best if you want a clear first course before going deeper.', href: '/checkout.html?product=sexual-literacy-101', reviewHref: '/shop.html?section=academy&category=courses_entry&q=Sexual%20Literacy%20101' },
+        { label: 'Marriage course', title: 'Sex = Marriage: The Only Equation', meta: '$350', why: 'Good if your question is about sex inside covenant marriage.', href: '/checkout.html?product=sex-equals-marriage', reviewHref: '/shop.html?section=academy&category=courses_school2&q=Sex%20Marriage' },
+        { label: 'Atmosphere course', title: 'The Art of Sexuality — Course', meta: '$397', why: 'Good if you want sexuality as lifestyle, allure, and covenant atmosphere.', href: '/checkout.html?product=course-art-of-sexuality', reviewHref: '/shop.html?section=academy&category=courses_school2&q=Art%20of%20Sexuality' },
+      ],
+      details:
+        'A course is best when you need sequence, assignments, and practice. If you only need language first, choose a companion book and come back to Learn when ready.',
+      ctas: [
+        { label: 'Review Courses in Shop', href: '/shop.html?section=academy&category=courses_school2&q=Sexual' },
         { label: 'Open Learn', href: '/learn.html' },
       ],
     },
@@ -834,7 +899,7 @@
     learn: {
       match: ['/learn.html', '/courses.html', '/schools.html'],
       intro: 'Quick help finding the right course, certificate, or next lesson.',
-      promptIds: ['learn-course-start', 'learn-one-year-formation-pack', 'learn-school-fit', 'locked-content', 'learn-certificates', 'learn-next'],
+      promptIds: ['learn-course-start', 'advisor-sex-course-recommendation', 'learn-one-year-formation-pack', 'learn-school-fit', 'locked-content', 'learn-certificates'],
     },
     boards: {
       match: ['/boards.html', '/board.html'],
@@ -849,7 +914,7 @@
     shop: {
       match: ['/shop.html', '/resources.html'],
       intro: 'Quick help choosing resources, products, and practical next steps.',
-      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-book-recommendation', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication'],
+      promptIds: ['shop-first-buy', 'advisor-sex-book-recommendation', 'advisor-sex-course-recommendation', 'shop-course-personal-development', 'shop-book-recommendation', 'shop-marriage-communication'],
     },
     dating: {
       match: ['/dating.html'],
@@ -1017,18 +1082,18 @@
   function clarifyingChoicesForContext(context) {
     if (context && context.promptIds && context.promptIds.indexOf('shop-first-buy') !== -1) {
       return [
-        { label: 'Course path', topicId: 'shop-course-personal-development' },
-        { label: 'Book/resource', topicId: 'shop-book-recommendation' },
+        { label: 'Book companion', topicId: 'advisor-sex-book-recommendation' },
+        { label: 'Course path', topicId: 'advisor-sex-course-recommendation' },
+        { label: 'Personal growth', topicId: 'shop-course-personal-development' },
         { label: 'Membership level', topicId: 'advisor-subscription-level' },
-        { label: 'Marriage help', topicId: 'shop-marriage-communication' },
       ];
     }
     if (context && context.promptIds && context.promptIds.indexOf('learn-course-start') !== -1) {
       return [
         { label: 'Course path', topicId: 'learn-course-start' },
+        { label: 'Sexual literacy', topicId: 'advisor-sex-course-recommendation' },
         { label: 'Full formation pack', topicId: 'learn-one-year-formation-pack' },
         { label: 'Membership level', topicId: 'advisor-subscription-level' },
-        { label: 'Marriage help', topicId: 'marriage-communication' },
       ];
     }
     if (context && context.promptIds && context.promptIds.indexOf('pricing-plan-fit') !== -1) {
