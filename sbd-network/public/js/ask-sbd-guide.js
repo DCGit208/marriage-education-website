@@ -225,6 +225,7 @@
       title: 'Start with the resource that matches your current need',
       body:
         'If you need structure, begin with Learn first. If you need practical support, choose a resource that matches the issue in front of you: communication, identity, expression, or preparation.',
+      nextStep: 'Choose one resource that matches the need you can practice this week.',
       details:
         'A resource is most useful when it supports a real next step. Choose something you can apply this week, then return to Learn or Boards when you want structure and reflection around it.',
       ctas: [
@@ -315,6 +316,7 @@
       title: 'Start with the course closest to your present question',
       body:
         'Choose the course that matches what you are actively trying to understand or repair. If you need clarity first, begin with the foundational path before jumping ahead.',
+      nextStep: 'Open Learn and choose the course closest to the question you are carrying right now.',
       details:
         'The best course is not always the most advanced one. Start where you can practice immediately, then move deeper as the framework becomes clear.',
       ctas: [
@@ -387,6 +389,7 @@
       title: 'Post what helps you reflect, not what performs',
       body:
         'A good Board post names what you are noticing, learning, or practicing. It can be a question, reflection, story, or response to a prompt.',
+      nextStep: 'Post one honest reflection or question connected to what you are learning.',
       details:
         'Keep it honest and useful. You do not need to sound finished. Boards work best when the post helps formation become visible and discussable.',
       ctas: [{ label: 'Open Boards', href: '/boards.html' }],
@@ -468,6 +471,7 @@
       title: 'Choose the plan by how much structure and access you need',
       body:
         'Start free if you are exploring. Choose Foundation for structured entry, Premium for deeper course access and certificates, and Elite for the fullest SBD and MV experience.',
+      nextStep: 'Compare the plans, then start free if you still need clarity before upgrading.',
       details:
         'If the decision feels unclear, name what you want to unlock first: courses, certificates, MV House, support, or the full ecosystem.',
       ctas: [
@@ -534,6 +538,7 @@
       title: 'MV House is where formation meets expression',
       body:
         'MV House connects identity, presence, image, fashion, and embodied expression. It helps what is forming inside become visible outside.',
+      nextStep: 'Start with the expression area that feels most connected to your present identity work.',
       details:
         'Use MV House when your question is not only what to learn, but how to show up with clearer presence, style, posture, and expression.',
       ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
@@ -800,6 +805,23 @@
     );
   }
 
+  function nextStepHtml(result) {
+    if (!result) return '';
+    var nextStep = result.nextStep;
+    if (!nextStep && result.ctas && result.ctas[0]) {
+      nextStep = 'Use the next step below: ' + result.ctas[0].label + '.';
+    }
+    if (!nextStep) return '';
+    return (
+      '<div class="ask-sbd-next-step">' +
+      '<p>Best next step</p>' +
+      '<strong>' +
+      escapeHtml(nextStep) +
+      '</strong>' +
+      '</div>'
+    );
+  }
+
   function answerHtml(question) {
     question = question || QUESTIONS[0];
     return (
@@ -829,6 +851,7 @@
       '<p>' +
       escapeHtml(result.body) +
       '</p>' +
+      nextStepHtml(result) +
       '<div class="ask-sbd-ctas">' +
       ctaHtml(result.ctas) +
       '</div>' +
@@ -1048,6 +1071,7 @@
     answerHtml: answerHtml,
     advancedAnswerHtml: advancedAnswerHtml,
     ctaHtml: ctaHtml,
+    nextStepHtml: nextStepHtml,
     findQuestion: findQuestion,
     findAdvancedAnswer: findAdvancedAnswer,
     findAdvancedTopic: findAdvancedTopic,

@@ -248,6 +248,24 @@ test('answer cards include page-aware related follow-up chips', function () {
   assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'related chips should stay in one row');
 });
 
+test('answer cards include a compact best next step', function () {
+  const api = loadGuideApi();
+  const answer = api.findAdvancedTopic('shop-first-buy');
+  assert.ok(answer.nextStep, 'page-native answer should include curated next step');
+  const html = api.advancedAnswerHtml(answer, null, []);
+  assert.ok(html.includes('ask-sbd-next-step'));
+  assert.ok(html.includes('Best next step'));
+  assert.ok(html.includes('Choose one resource that matches the need you can practice this week.'));
+  assert.strictEqual(html.includes('<script>'), false);
+
+  const fallback = api.nextStepHtml({ ctas: [{ label: 'Open Learn', href: '/learn.html' }] });
+  assert.ok(fallback.includes('Use the next step below: Open Learn.'));
+
+  const nextStepBlock = css.match(/\.ask-sbd-next-step\s*\{[\s\S]*?\n\}/);
+  assert.ok(nextStepBlock, 'missing next-step style block');
+  assert.ok(nextStepBlock[0].includes('border-radius'), 'next-step callout should be card-like');
+});
+
 test('advanced answers expose deeper guidance only when expanded', function () {
   const api = loadGuideApi();
   const answer = api.findAdvancedAnswer('which membership plan fits me');
@@ -292,6 +310,7 @@ test('assistant uses unique classes and does not target frozen navigation surfac
   assert.ok(css.includes('.ask-sbd-launcher'));
   assert.ok(css.includes('.ask-sbd-advanced-open'));
   assert.ok(css.includes('.ask-sbd-more'));
+  assert.ok(css.includes('.ask-sbd-next-step'));
   assert.ok(css.includes('.ask-sbd-related-chip'));
   assert.ok(js.includes('root.SbdAskGuide'));
 });

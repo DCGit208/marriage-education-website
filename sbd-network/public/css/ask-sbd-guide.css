@@ -343,6 +343,30 @@
   padding-top: 10px;
 }
 
+.ask-sbd-next-step {
+  margin-top: 12px;
+  border: 1px solid rgba(240, 208, 168, 0.2);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(240, 208, 168, 0.08);
+}
+
+.ask-sbd-next-step p {
+  margin: 0 0 6px !important;
+  color: #c6a384 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ask-sbd-next-step strong {
+  display: block;
+  color: rgba(247, 239, 230, 0.9);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .ask-sbd-more summary {
   display: inline-flex;
   align-items: center;
