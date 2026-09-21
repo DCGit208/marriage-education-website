@@ -272,7 +272,7 @@
       '<div class="ask-sbd-ctas">' +
       ctaHtml(result.ctas) +
       '</div>' +
-      '<p class="ask-sbd-answer-note">This first full-bot phase uses curated SBD guidance, not live AI. It will say when a question needs a clearer path.</p>' +
+      '<p class="ask-sbd-answer-note">Answers are based on approved SBD guidance. If a question needs more detail, start with the closest recommended path.</p>' +
       '</article>'
     );
   }
@@ -294,7 +294,7 @@
       '</div>' +
       '<button type="button" class="ask-sbd-close" id="askSbdClose" aria-label="Close ASK SBD">×</button>' +
       '</header>' +
-      '<p class="ask-sbd-intro">Quick answers for understanding the platform. This guide is scripted, not AI.</p>' +
+      '<p class="ask-sbd-intro">Quick answers for understanding the platform. Choose a topic, or ask something more specific.</p>' +
       '<div class="ask-sbd-quick" id="askSbdQuick">' +
       '<div class="ask-sbd-questions" id="askSbdQuestions" role="list"></div>' +
       '<div class="ask-sbd-answer-slot" id="askSbdAnswerSlot"></div>' +
@@ -305,7 +305,7 @@
       '</div>' +
       '<div class="ask-sbd-advanced" id="askSbdAdvanced" hidden>' +
       '<button type="button" class="ask-sbd-back-to-quick" id="askSbdBackToQuick">← Quick guide</button>' +
-      '<p class="ask-sbd-advanced-copy">Type a question or choose a prompt. This phase answers from curated SBD guidance and routes you to the right next step.</p>' +
+      '<p class="ask-sbd-advanced-copy">Type a question or choose a prompt. ASK SBD will route you to the clearest next step.</p>' +
       '<div class="ask-sbd-prompts" id="askSbdPrompts" role="list"></div>' +
       '<form class="ask-sbd-form" id="askSbdForm">' +
       '<label class="ask-sbd-input-label" for="askSbdInput">Ask SBD a question</label>' +

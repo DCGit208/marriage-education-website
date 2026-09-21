@@ -57,11 +57,17 @@ test('dashboard includes the additive ASK SBD assets', function () {
 test('assistant is scripted and does not introduce AI or network dependencies', function () {
   assert.ok(js.includes('This MVP is intentionally not AI'));
   assert.ok(js.includes('QUESTIONS'));
-  assert.ok(js.includes('scripted, not AI'));
-  assert.ok(js.includes('curated SBD guidance'));
+  assert.ok(js.includes('approved SBD guidance'));
   assert.strictEqual(/fetch\s*\(/.test(js), false, 'must not call fetch');
   assert.strictEqual(/XMLHttpRequest/.test(js), false, 'must not call XMLHttpRequest');
   assert.strictEqual(/firebase|firestore|openai|gemini|anthropic/i.test(js), false, 'must not depend on backend/AI SDKs');
+});
+
+test('front-facing copy avoids technical implementation language', function () {
+  assert.strictEqual(js.includes('This guide is scripted, not AI.'), false);
+  assert.strictEqual(js.includes('not live AI'), false);
+  assert.ok(js.includes('Quick answers for understanding the platform. Choose a topic, or ask something more specific.'));
+  assert.ok(js.includes('ASK SBD will route you to the clearest next step.'));
 });
 
 test('assistant covers the core landing-page clarity questions', function () {
