@@ -191,10 +191,11 @@ test('page-aware contexts prioritize relevant prompts', function () {
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
-  assert.strictEqual(pricing[1].id, 'pricing-premium');
+  assert.strictEqual(pricing[1].id, 'advisor-subscription-level');
 
   const learn = api.advancedTopicsForContext(api.detectPageContext('/learn.html'));
   assert.strictEqual(learn[0].id, 'learn-course-start');
+  assert.strictEqual(learn[1].id, 'learn-one-year-formation-pack');
 
   const boards = api.advancedTopicsForContext(api.detectPageContext('/boards.html'));
   assert.strictEqual(boards[0].id, 'boards-what-post');
@@ -287,12 +288,13 @@ test('first ASK SBD panel is page-aware from open', function () {
   const pricingQuick = api.quickItemsForContext(pricingContext);
   assert.ok(pricingContext.intro.includes('membership'));
   assert.strictEqual(pricingQuick[0].id, 'pricing-plan-fit');
-  assert.strictEqual(pricingQuick[1].id, 'pricing-premium');
+  assert.strictEqual(pricingQuick[1].id, 'advisor-subscription-level');
 
   const learnContext = api.detectPageContext('/learn.html');
   const learnQuick = api.quickItemsForContext(learnContext);
   assert.ok(learnContext.intro.includes('course'));
   assert.strictEqual(learnQuick[0].id, 'learn-course-start');
+  assert.strictEqual(learnQuick[1].id, 'learn-one-year-formation-pack');
 
   const boardsContext = api.detectPageContext('/boards.html');
   const boardsQuick = api.quickItemsForContext(boardsContext);
