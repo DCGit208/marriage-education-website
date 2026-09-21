@@ -336,6 +336,9 @@
         'sexual literacy course',
         'course about intimacy',
         'intimacy course',
+        'course should i study',
+        'study about sexuality',
+        'study about sex',
       ],
       title: 'Choose a sexual literacy course when you want a guided path',
       body:

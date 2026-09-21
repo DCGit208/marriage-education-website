@@ -313,7 +313,7 @@ test('catalog-aware recommendations render advisor-style item cards', function (
   const sexBook = api.findAdvancedTopic('advisor-sex-book-recommendation');
   assert.strictEqual(sexBook.catalog[0].title, 'SBD for Dummies');
   assert.strictEqual(sexBook.catalog[1].title, 'The Art of Sexuality');
-  assert.ok(sexBook.body.includes('Shop book as the companion'));
+  assert.ok(sexBook.body.includes('book is the right companion'));
 
   const sexCourse = api.findAdvancedTopic('advisor-sex-course-recommendation');
   assert.strictEqual(sexCourse.catalog[0].title, 'Sexual Literacy 101');
