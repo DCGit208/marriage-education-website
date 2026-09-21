@@ -167,7 +167,24 @@ async function loadShopCatalog() {
     PRODUCT_CATALOG[p.id] = normalizeCatalogProduct(p);
   });
   await mergeStudioShopProducts();
+  applyShopUrlParams();
   console.log('[Shop] Catalog loaded: phase', SHOP_ACTIVE_PHASE, '→', SHOP_PRODUCTS.length, 'visible products');
+}
+
+function applyShopUrlParams() {
+  var params = new URLSearchParams(window.location.search || '');
+  var section = params.get('section');
+  var category = params.get('category');
+  var q = params.get('q') || params.get('search');
+  if (section && SHOP_SECTIONS.some(function (item) { return item.id === section; })) {
+    activeSection = section;
+  }
+  if (category && SHOP_CATEGORIES.some(function (item) { return item.id === category; })) {
+    activeCategory = category;
+  }
+  if (q) {
+    shopSearchQuery = q;
+  }
 }
 
 /** Merge Course Studio–published books from Firestore into the static catalog. */
@@ -342,6 +359,10 @@ function getGridLayoutClass() {
 }
 
 function renderShopPage() {
+  var searchInput = document.getElementById('shopSearchInput');
+  if (searchInput && searchInput.value !== shopSearchQuery) {
+    searchInput.value = shopSearchQuery;
+  }
   renderHeroContent();
   renderPhaseBanner();
   renderSectionFilters();
