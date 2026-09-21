@@ -144,6 +144,8 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
   assert.ok(js.includes('findAdvancedAnswer'), 'missing curated matcher');
   assert.ok(js.includes('details:'), 'advanced topics should include deeper curated guidance');
   assert.ok(js.includes('moreHtml'), 'missing collapsed detail renderer');
+  assert.ok(js.includes('relatedTopicsForResult'), 'missing related follow-up selector');
+  assert.ok(js.includes('data-ask-sbd-related-id'), 'missing related follow-up chips');
   assert.strictEqual(js.includes("answerAdvanced('where should I start')"), false, 'advanced mode must not auto-render an answer');
   assert.ok(js.includes("els.advancedOutput.innerHTML = ''"), 'advanced output should start empty');
   [
@@ -226,6 +228,28 @@ test('advanced prompt chips stay in a horizontal swipe row', function () {
   assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'prompt chips should stay in one row');
 });
 
+test('answer cards include page-aware related follow-up chips', function () {
+  const api = loadGuideApi();
+  const shopContext = api.detectPageContext('/shop.html');
+  const answer = api.findAdvancedTopic('shop-first-buy');
+  const related = api.relatedTopicsForResult(answer, shopContext);
+  assert.deepStrictEqual(
+    related.map(function (topic) { return topic.id; }),
+    ['shop-season-resource', 'shop-course-tie', 'shop-marriage-communication']
+  );
+  const html = api.advancedAnswerHtml(answer, null, related);
+  assert.ok(html.includes('Related questions'));
+  assert.ok(html.includes('data-ask-sbd-related-id="shop-season-resource"'));
+  assert.strictEqual(html.includes('<script>'), false);
+
+  const relatedBlock = css.match(/\.ask-sbd-related-row\s*\{[\s\S]*?\n\}/);
+  const chipBlock = css.match(/\.ask-sbd-related-chip\s*\{[\s\S]*?\n\}/);
+  assert.ok(relatedBlock, 'missing related row style block');
+  assert.ok(chipBlock, 'missing related chip style block');
+  assert.ok(relatedBlock[0].includes('overflow-x: auto'), 'related chips should swipe horizontally');
+  assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'related chips should stay in one row');
+});
+
 test('advanced answers expose deeper guidance only when expanded', function () {
   const api = loadGuideApi();
   const answer = api.findAdvancedAnswer('which membership plan fits me');
@@ -270,6 +294,7 @@ test('assistant uses unique classes and does not target frozen navigation surfac
   assert.ok(css.includes('.ask-sbd-launcher'));
   assert.ok(css.includes('.ask-sbd-advanced-open'));
   assert.ok(css.includes('.ask-sbd-more'));
+  assert.ok(css.includes('.ask-sbd-related-chip'));
   assert.ok(js.includes('root.SbdAskGuide'));
 });
 

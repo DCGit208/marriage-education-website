@@ -379,6 +379,45 @@
   margin-top: 10px !important;
 }
 
+.ask-sbd-related {
+  margin-top: 14px;
+}
+
+.ask-sbd-related > p {
+  margin: 0 0 8px !important;
+  color: rgba(247, 239, 230, 0.58) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ask-sbd-related-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ask-sbd-related-row::-webkit-scrollbar {
+  display: none;
+}
+
+.ask-sbd-related-chip {
+  flex: 0 0 auto;
+  max-width: 240px;
+  border: 1px solid rgba(198, 163, 132, 0.24);
+  border-radius: 999px;
+  padding: 9px 11px;
+  color: rgba(247, 239, 230, 0.86);
+  background: rgba(255, 255, 255, 0.055);
+  font: 800 12px/1.2 Inter, system-ui, sans-serif;
+  white-space: nowrap;
+}
+
 .ask-sbd-answer-note,
 .ask-sbd-empty {
   margin-top: 12px !important;

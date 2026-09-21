@@ -738,8 +738,39 @@
     return advancedTopicsForContext(context).slice(0, 6);
   }
 
-  function quickItemHtml(item) {
-    if (item && item.details) return advancedAnswerHtml(item);
+  function relatedTopicsForResult(result, context) {
+    if (!result || !context) return [];
+    return advancedTopicsForContext(context)
+      .filter(function (topic) {
+        return topic.id !== result.id;
+      })
+      .slice(0, 3);
+  }
+
+  function relatedHtml(topics) {
+    if (!topics || !topics.length) return '';
+    return (
+      '<div class="ask-sbd-related" aria-label="Related questions">' +
+      '<p>Related questions</p>' +
+      '<div class="ask-sbd-related-row">' +
+      topics
+        .map(function (topic) {
+          return (
+            '<button type="button" class="ask-sbd-related-chip" data-ask-sbd-related-id="' +
+            escapeHtml(topic.id) +
+            '">' +
+            escapeHtml(topic.prompt || topic.label) +
+            '</button>'
+          );
+        })
+        .join('') +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function quickItemHtml(item, context) {
+    if (item && item.details) return advancedAnswerHtml(item, null, relatedTopicsForResult(item, context));
     return answerHtml(item || QUESTIONS[0]);
   }
 
@@ -787,7 +818,7 @@
     );
   }
 
-  function advancedAnswerHtml(result, query) {
+  function advancedAnswerHtml(result, query, relatedTopics) {
     result = result || findAdvancedAnswer(query);
     return (
       '<article class="ask-sbd-answer ask-sbd-advanced-answer" aria-live="polite">' +
@@ -802,6 +833,7 @@
       ctaHtml(result.ctas) +
       '</div>' +
       moreHtml(result.details) +
+      relatedHtml(relatedTopics) +
       '</article>'
     );
   }
@@ -931,10 +963,22 @@
       var q = quickItems.filter(function (item) {
         return item.id === id;
       })[0] || quickItems[0] || QUESTIONS[0];
-      els.answer.innerHTML = quickItemHtml(q);
+      els.answer.innerHTML = quickItemHtml(q, pageContext);
       els.questions.querySelectorAll('.ask-sbd-question').forEach(function (btn) {
         btn.classList.toggle('is-active', btn.dataset.askSbdQuick === q.id);
       });
+    }
+
+    function paintRelated(id, target) {
+      var topic = findAdvancedTopic(id);
+      if (!topic) return;
+      var html = advancedAnswerHtml(topic, null, relatedTopicsForResult(topic, pageContext));
+      if (target === 'advanced') {
+        els.advancedOutput.innerHTML = html;
+        els.input.value = topic.prompt || topic.label;
+      } else {
+        els.answer.innerHTML = html;
+      }
     }
 
     function answerAdvanced(query) {
@@ -944,7 +988,8 @@
           '<p class="ask-sbd-empty">Ask about membership, where to start, courses, Boards, MV House, shop, or facilitator support.</p>';
         return;
       }
-      els.advancedOutput.innerHTML = advancedAnswerHtml(findAdvancedAnswer(cleanQuery), cleanQuery);
+      var result = findAdvancedAnswer(cleanQuery);
+      els.advancedOutput.innerHTML = advancedAnswerHtml(result, cleanQuery, relatedTopicsForResult(result, pageContext));
     }
 
     select((opts.initialQuestion || (quickItems[0] && quickItems[0].id) || QUESTIONS[0].id));
@@ -982,6 +1027,11 @@
       event.preventDefault();
       answerAdvanced(els.input.value);
     });
+    els.panel.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-ask-sbd-related-id]');
+      if (!btn) return;
+      paintRelated(btn.dataset.askSbdRelatedId, els.advanced.hidden ? 'quick' : 'advanced');
+    });
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && !els.sheet.hidden) {
         setOpen(false, els);
@@ -1004,6 +1054,8 @@
     detectPageContext: detectPageContext,
     advancedTopicsForContext: advancedTopicsForContext,
     quickItemsForContext: quickItemsForContext,
+    relatedTopicsForResult: relatedTopicsForResult,
+    relatedHtml: relatedHtml,
     init: init,
   };
 
