@@ -153,7 +153,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 3);
+  assert.strictEqual(api.VERSION, 4);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'membership-fit');
@@ -170,6 +170,29 @@ test('page-aware contexts prioritize relevant prompts', function () {
 
   const shop = api.advancedTopicsForContext(api.detectPageContext('/shop.html'));
   assert.strictEqual(shop[0].id, 'shop-resources');
+});
+
+test('first ASK SBD panel is page-aware from open', function () {
+  const api = loadGuideApi();
+
+  const pricingContext = api.detectPageContext('/pricing.html');
+  const pricingQuick = api.quickItemsForContext(pricingContext);
+  assert.ok(pricingContext.intro.includes('membership'));
+  assert.strictEqual(pricingQuick[0].id, 'membership-fit');
+  assert.strictEqual(pricingQuick[1].id, 'locked-content');
+
+  const learnContext = api.detectPageContext('/learn.html');
+  const learnQuick = api.quickItemsForContext(learnContext);
+  assert.ok(learnContext.intro.includes('course'));
+  assert.strictEqual(learnQuick[0].id, 'courses-certificates');
+
+  const boardsContext = api.detectPageContext('/boards.html');
+  const boardsQuick = api.quickItemsForContext(boardsContext);
+  assert.ok(boardsContext.intro.includes('community'));
+  assert.strictEqual(boardsQuick[0].id, 'boards-community');
+
+  const dashboardQuick = api.quickItemsForContext(api.detectPageContext('/dashboard.html'));
+  assert.strictEqual(dashboardQuick[0].id, 'what-is');
 });
 
 test('advanced prompt chips stay in a horizontal swipe row', function () {
@@ -201,7 +224,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 3);
+  assert.strictEqual(api.VERSION, 4);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

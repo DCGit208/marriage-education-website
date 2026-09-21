@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 3;
+  var VERSION = 4;
 
   var QUESTIONS = [
     {
@@ -222,26 +222,32 @@
   var PAGE_CONTEXTS = {
     dashboard: {
       match: ['/', '/dashboard.html'],
+      intro: 'Quick answers for understanding the platform. Choose a topic, or ask something more specific.',
       promptIds: ['where-start', 'membership-fit', 'marriage-communication', 'boards-community', 'mv-house-expression', 'courses-certificates'],
     },
     pricing: {
       match: ['/pricing.html'],
+      intro: 'Quick help choosing the right membership and understanding access.',
       promptIds: ['membership-fit', 'locked-content', 'where-start', 'courses-certificates', 'relationship-season', 'shop-resources'],
     },
     learn: {
       match: ['/learn.html', '/courses.html', '/schools.html'],
+      intro: 'Quick help finding the right course, certificate, or next lesson.',
       promptIds: ['courses-certificates', 'where-start', 'locked-content', 'relationship-season', 'marriage-communication', 'membership-fit'],
     },
     boards: {
       match: ['/boards.html', '/board.html'],
+      intro: 'Quick help understanding community, reflection, and group conversations.',
       promptIds: ['boards-community', 'marriage-communication', 'where-start', 'facilitator-help', 'relationship-season', 'membership-fit'],
     },
     mvHouse: {
       match: ['/mv-house.html'],
+      intro: 'Quick help with expression, presence, image, and identity.',
       promptIds: ['mv-house-expression', 'relationship-season', 'membership-fit', 'where-start', 'courses-certificates', 'shop-resources'],
     },
     shop: {
       match: ['/shop.html', '/resources.html'],
+      intro: 'Quick help choosing resources, products, and practical next steps.',
       promptIds: ['shop-resources', 'courses-certificates', 'membership-fit', 'where-start', 'locked-content', 'mv-house-expression'],
     },
   };
@@ -339,6 +345,20 @@
     return ordered;
   }
 
+  function isDashboardContext(context) {
+    return context === PAGE_CONTEXTS.dashboard;
+  }
+
+  function quickItemsForContext(context) {
+    if (isDashboardContext(context)) return QUESTIONS;
+    return advancedTopicsForContext(context).slice(0, 6);
+  }
+
+  function quickItemHtml(item) {
+    if (item && item.details) return advancedAnswerHtml(item);
+    return answerHtml(item || QUESTIONS[0]);
+  }
+
   function ctaHtml(ctas) {
     return (ctas || [])
       .map(function (cta) {
@@ -419,7 +439,7 @@
       '</div>' +
       '<button type="button" class="ask-sbd-close" id="askSbdClose" aria-label="Close ASK SBD">×</button>' +
       '</header>' +
-      '<p class="ask-sbd-intro">Quick answers for understanding the platform. Choose a topic, or ask something more specific.</p>' +
+      '<p class="ask-sbd-intro" id="askSbdIntro">Quick answers for understanding the platform. Choose a topic, or ask something more specific.</p>' +
       '<div class="ask-sbd-quick" id="askSbdQuick">' +
       '<div class="ask-sbd-questions" id="askSbdQuestions" role="list"></div>' +
       '<div class="ask-sbd-answer-slot" id="askSbdAnswerSlot"></div>' +
@@ -487,6 +507,7 @@
       panel: host.querySelector('.ask-sbd-panel'),
       backdrop: document.getElementById('askSbdBackdrop'),
       close: document.getElementById('askSbdClose'),
+      intro: document.getElementById('askSbdIntro'),
       quick: document.getElementById('askSbdQuick'),
       questions: document.getElementById('askSbdQuestions'),
       answer: document.getElementById('askSbdAnswerSlot'),
@@ -499,12 +520,15 @@
       advancedOutput: document.getElementById('askSbdAdvancedOutput'),
     };
 
-    QUESTIONS.forEach(function (q, index) {
+    var quickItems = quickItemsForContext(pageContext);
+    els.intro.textContent = pageContext.intro || PAGE_CONTEXTS.dashboard.intro;
+
+    quickItems.forEach(function (q, index) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ask-sbd-question' + (index === 0 ? ' is-active' : '');
-      btn.textContent = q.label;
-      btn.dataset.askSbdQuestion = q.id;
+      btn.textContent = q.prompt || q.label;
+      btn.dataset.askSbdQuick = q.id;
       btn.setAttribute('role', 'listitem');
       els.questions.appendChild(btn);
     });
@@ -520,10 +544,12 @@
     });
 
     function select(id) {
-      var q = findQuestion(id);
-      els.answer.innerHTML = answerHtml(q);
+      var q = quickItems.filter(function (item) {
+        return item.id === id;
+      })[0] || quickItems[0] || QUESTIONS[0];
+      els.answer.innerHTML = quickItemHtml(q);
       els.questions.querySelectorAll('.ask-sbd-question').forEach(function (btn) {
-        btn.classList.toggle('is-active', btn.dataset.askSbdQuestion === q.id);
+        btn.classList.toggle('is-active', btn.dataset.askSbdQuick === q.id);
       });
     }
 
@@ -537,7 +563,7 @@
       els.advancedOutput.innerHTML = advancedAnswerHtml(findAdvancedAnswer(cleanQuery), cleanQuery);
     }
 
-    select((opts.initialQuestion || QUESTIONS[0].id));
+    select((opts.initialQuestion || (quickItems[0] && quickItems[0].id) || QUESTIONS[0].id));
 
     els.launcher.addEventListener('click', function () {
       setOpen(true, els);
@@ -551,9 +577,9 @@
       setMode('quick', els);
     });
     els.questions.addEventListener('click', function (event) {
-      var btn = event.target.closest('[data-ask-sbd-question]');
+      var btn = event.target.closest('[data-ask-sbd-quick]');
       if (!btn) return;
-      select(btn.dataset.askSbdQuestion);
+      select(btn.dataset.askSbdQuick);
     });
     els.advancedOpen.addEventListener('click', function () {
       setMode('advanced', els);
@@ -593,6 +619,7 @@
     findAdvancedTopic: findAdvancedTopic,
     detectPageContext: detectPageContext,
     advancedTopicsForContext: advancedTopicsForContext,
+    quickItemsForContext: quickItemsForContext,
     init: init,
   };
 
