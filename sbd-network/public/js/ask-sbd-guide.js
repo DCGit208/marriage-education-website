@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 14;
+  var VERSION = 15;
 
   var QUESTIONS = [
     {
@@ -282,7 +282,7 @@
       catalog: [
         { label: 'Entry book', title: 'SBD for Dummies', meta: '$27', href: '/checkout.html?product=sbd-dummies', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies' },
         { label: 'Identity book', title: 'Teleios Blueprint (Book)', meta: '$247', href: '/checkout.html?product=teleios-blueprint', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Teleios%20Blueprint' },
-        { label: 'Library option', title: 'Complete SBD Library', meta: '$189.99', href: '/checkout.html?product=complete-sbd-library', reviewHref: '/shop.html?section=bundles_diplomas&category=book_bundles&q=Complete%20SBD%20Library' },
+        { label: 'Library option', title: 'Complete SBD Library', meta: '$5000', href: '/checkout.html?product=complete-sbd-library', reviewHref: '/shop.html?section=bundles_diplomas&category=book_bundles&q=Complete%20SBD%20Library' },
       ],
       details:
         'Do not start by collecting many resources. Start with one honest problem, choose the resource that addresses it, then use Boards or Learn to turn the insight into practice.',

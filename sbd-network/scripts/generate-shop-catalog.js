@@ -381,7 +381,7 @@ const PRODUCTS = [
   p('sbd-digital-archive-access', 'SBD Digital Archive Access', 'magazine', 30, { phase: 2, sortOrder: 42, description: 'Lifetime access to all past magazine issues.' }),
 
   // ── Phase 3 — Book bundles (shop.html) ──────────────────────────
-  p('complete-sbd-library', 'Complete SBD Library', 'book_bundles', 189.99, { phase: 3, type: 'bundle', originalPriceUsd: 254.91, icon: '📚', sortOrder: 50, description: 'All 10 core SBD series books plus bonuses.' }),
+  p('complete-sbd-library', 'Complete SBD Library', 'book_bundles', 5000, { phase: 3, type: 'bundle', originalPriceUsd: 5000, icon: '📚', sortOrder: 50, description: 'All 10 core SBD series books plus bonuses.' }),
   p('sbd-complete-package', 'SBD for Dummies Complete Package', 'book_bundles', 417, { phase: 3, type: 'bundle', originalPriceUsd: 450, sortOrder: 51, description: '13-module course + digital and print Dummies book.' }),
   p('arts-of-marriage-collection', 'Arts of Marriage Complete Collection', 'book_bundles', 59.99, { phase: 3, type: 'bundle', originalPriceUsd: 74.97, sortOrder: 52, description: 'Art of Sexuality, Seduction, and Fucking trilogy.' }),
   p('marriage-foundation-bundle', 'Marriage Foundation Bundle', 'book_bundles', 54.99, { phase: 3, type: 'bundle', originalPriceUsd: 69.97, sortOrder: 53, description: 'Dummies, Standard, and Naked & Not Ashamed.' }),
@@ -466,7 +466,7 @@ const PRODUCTS = [
   p('marriage-labs-weekend', 'SBD Marriage Labs — Weekend Intensive', 'coaching_live', 899, { phase: 6, type: 'event', priceSuffix: '/couple', sortOrder: 151, description: '48-hour breakthrough intensive with follow-up calls.' }),
 
   // ── Phase 6 — Lifetime ──────────────────────────────────────────
-  p('sbd-academy-lifetime-pass', 'SBD Academy Lifetime Access Pass', 'lifetime_pass', 1997, { phase: 6, type: 'lifetime', sortOrder: 160, description: 'All current and future courses, books, and community — one payment.' }),
+  p('sbd-academy-lifetime-pass', 'SBD Academy Lifetime Access Pass', 'lifetime_pass', 5000, { phase: 6, type: 'lifetime', sortOrder: 160, description: 'All current and future courses, books, and community — one payment.' }),
 ];
 
 const PRODUCTS_ENRICHED = PRODUCTS.map(enrichProductWithProgramDetails);

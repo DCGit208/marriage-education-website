@@ -46,6 +46,8 @@ const sourcePages = {
 const js = read('public/js/ask-sbd-guide.js');
 const css = read('public/css/ask-sbd-guide.css');
 const shopJs = read('public/js/shop.js');
+const shopCatalog = JSON.parse(read('public/data/shop-catalog.json'));
+const functionsIndex = read('../functions/index.js');
 const pkg = JSON.parse(read('package.json'));
 
 function includesVersionedAsset(html, assetPath) {
@@ -188,7 +190,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 14);
+  assert.strictEqual(api.VERSION, 15);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -294,6 +296,8 @@ test('catalog-aware recommendations render real item cards', function () {
   assert.strictEqual(book.catalog[0].title, 'SBD for Dummies');
   assert.strictEqual(book.catalog[0].href, '/checkout.html?product=sbd-dummies');
   assert.strictEqual(book.catalog[0].reviewHref, '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies');
+  assert.strictEqual(book.catalog[2].title, 'Complete SBD Library');
+  assert.strictEqual(book.catalog[2].meta, '$5000');
 
   const communication = api.findAdvancedTopic('shop-marriage-communication');
   assert.ok(communication.catalog.some(function (item) { return item.href === '/checkout.html?product=communication-covenant-couples'; }));
@@ -311,6 +315,19 @@ test('shop accepts review-first recommendation deep links', function () {
   assert.ok(shopJs.includes("params.get('category')"));
   assert.ok(shopJs.includes("params.get('q') || params.get('search')"));
   assert.ok(shopJs.includes('searchInput.value = shopSearchQuery'));
+});
+
+test('high-ticket catalog prices stay aligned across client and checkout', function () {
+  const byId = {};
+  shopCatalog.products.forEach(function (product) {
+    byId[product.id] = product;
+  });
+  assert.strictEqual(byId['complete-sbd-library'].priceUsd, 5000);
+  assert.strictEqual(byId['complete-sbd-library'].priceDisplay, '$5000');
+  assert.strictEqual(byId['sbd-academy-lifetime-pass'].priceUsd, 5000);
+  assert.strictEqual(byId['sbd-academy-lifetime-pass'].priceDisplay, '$5000');
+  assert.ok(functionsIndex.includes("'complete-sbd-library': { name: 'Complete SBD Library', amount: 500000"));
+  assert.ok(functionsIndex.includes("'sbd-academy-lifetime-pass': { name: 'SBD Academy Lifetime Access Pass', amount: 500000"));
 });
 
 test('broad questions show clarifying choice flows', function () {
@@ -448,7 +465,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 14);
+  assert.strictEqual(api.VERSION, 15);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

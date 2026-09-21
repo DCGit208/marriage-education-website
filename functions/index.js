@@ -4125,7 +4125,7 @@ const SBD_CATALOG_SERVER = {
   'sbd-magazine-annual-subscription': { name: 'SBD Magazine — Annual Subscription', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-magazine-annual-subscription'] },
   'sbd-magazine-single-issue': { name: 'SBD Magazine — Single Issue', amount: 2000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-magazine-single-issue'] },
   'sbd-digital-archive-access': { name: 'SBD Digital Archive Access', amount: 3000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-digital-archive-access'] },
-  'complete-sbd-library': { name: 'Complete SBD Library', amount: 18999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['complete-sbd-library'] },
+  'complete-sbd-library': { name: 'Complete SBD Library', amount: 500000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['complete-sbd-library'] },
   'sbd-complete-package': { name: 'SBD for Dummies Complete Package', amount: 41700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-complete-package'] },
   'arts-of-marriage-collection': { name: 'Arts of Marriage Complete Collection', amount: 5999, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['arts-of-marriage-collection'] },
   'marriage-foundation-bundle': { name: 'Marriage Foundation Bundle', amount: 5499, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-foundation-bundle'] },
@@ -4192,7 +4192,7 @@ const SBD_CATALOG_SERVER = {
   'sbd-certified-facilitator': { name: 'SBD Certified Facilitator Training', amount: 149700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-certified-facilitator'] },
   'private-coaching-hourly': { name: 'SBD Private Coaching (Dr. Coach)', amount: 15000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['private-coaching-hourly'] },
   'marriage-labs-weekend': { name: 'SBD Marriage Labs — Weekend Intensive', amount: 89900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-labs-weekend'] },
-  'sbd-academy-lifetime-pass': { name: 'SBD Academy Lifetime Access Pass', amount: 199700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-academy-lifetime-pass'] },
+  'sbd-academy-lifetime-pass': { name: 'SBD Academy Lifetime Access Pass', amount: 500000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-academy-lifetime-pass'] },
 };
 
 const SBD_UNLOCK_RULES = {
@@ -5491,7 +5491,7 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
       },
       'complete-sbd-library': {
         name: 'Complete SBD Library Bundle',
-        price: 9900,
+        price: 500000,
         currency: 'usd'
       }
       // Add more products as needed
