@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 6;
+  var VERSION = 7;
 
   var QUESTIONS = [
     {
@@ -740,32 +740,65 @@
     {
       match: '/pricing.html',
       hashes: ['#premium'],
+      sections: ['pricing-premium'],
       intro: 'Quick help deciding whether Premium fits your next step.',
       promptIds: ['pricing-premium', 'pricing-plan-fit', 'locked-content', 'learn-certificates', 'pricing-start-free', 'pricing-elite'],
     },
     {
       match: '/pricing.html',
       hashes: ['#elite'],
+      sections: ['pricing-elite'],
       intro: 'Quick help understanding Elite and the fullest SBD access.',
       promptIds: ['pricing-elite', 'pricing-mv-unlock', 'pricing-plan-fit', 'dating-elite', 'mv-what', 'pricing-premium'],
     },
     {
       match: '/learn.html',
       hashes: ['#certificates', '#certificate'],
+      sections: ['learn-certificates'],
       intro: 'Quick help understanding certificates and course completion.',
       promptIds: ['learn-certificates', 'learn-course-start', 'learn-next', 'locked-content', 'pricing-plan-fit', 'learn-boards-link'],
     },
     {
       match: '/dating.html',
       hashes: ['#locked', '#stateLocked'],
+      sections: ['dating-locked'],
       intro: 'Quick help unlocking Covenant Matching through formation readiness.',
       promptIds: ['dating-locked', 'dating-score', 'learn-course-start', 'boards-how-work', 'pricing-premium', 'dating-what'],
     },
     {
       match: '/dating.html',
+      hashes: ['#premium', '#statePremium'],
+      sections: ['dating-premium'],
+      intro: 'Quick help understanding Premium Covenant Matching and the path toward Elite.',
+      promptIds: ['dating-premium', 'dating-elite', 'dating-score', 'pricing-elite', 'dating-locked', 'dating-what'],
+    },
+    {
+      match: '/dating.html',
       hashes: ['#elite', '#stateElite'],
+      sections: ['dating-elite'],
       intro: 'Quick help with Elite matching, tokens, boosts, and marriage-track next steps.',
       promptIds: ['dating-elite', 'dating-marriage-track', 'dating-score', 'pricing-elite', 'dating-what', 'boards-groups'],
+    },
+    {
+      match: '/dating.html',
+      hashes: ['#marriage-track'],
+      sections: ['dating-marriage-track'],
+      intro: 'Quick help understanding the Marriage Track and covenant preparation.',
+      promptIds: ['dating-marriage-track', 'dating-elite', 'dating-score', 'pricing-elite', 'dating-what', 'learn-course-start'],
+    },
+    {
+      match: '/boards.html',
+      hashes: ['#groups'],
+      sections: ['boards-groups'],
+      intro: 'Quick help joining groups and participating well in the community.',
+      promptIds: ['boards-groups', 'boards-join-conversation', 'boards-what-post', 'boards-how-work', 'boards-reflection', 'boards-course-link'],
+    },
+    {
+      match: '/shop.html',
+      hashes: ['#resources'],
+      sections: ['shop-resources'],
+      intro: 'Quick help choosing the right resource from the shop.',
+      promptIds: ['shop-first-buy', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-expression', 'shop-use-resources'],
     },
   ];
 
@@ -831,12 +864,35 @@
     return null;
   }
 
+  function normalizePath(pathname) {
+    return String(pathname || '/').replace(/\/index\.html$/, '/');
+  }
+
+  function contextMatchesPath(context, path) {
+    if (!context) return false;
+    if (typeof context.match === 'string') return path === context.match;
+    return (context.match || []).indexOf(path) !== -1;
+  }
+
+  function detectSectionContext(pathname, sectionKey) {
+    var path = normalizePath(pathname);
+    var key = String(sectionKey || '').replace(/^#/, '');
+    if (!key) return null;
+    for (var sectionIndex = 0; sectionIndex < SECTION_CONTEXTS.length; sectionIndex += 1) {
+      var section = SECTION_CONTEXTS[sectionIndex];
+      if (!contextMatchesPath(section, path)) continue;
+      if ((section.sections || []).indexOf(key) !== -1) return section;
+      if ((section.hashes || []).indexOf('#' + key) !== -1) return section;
+    }
+    return null;
+  }
+
   function detectPageContext(pathname, hash) {
-    var path = String(pathname || '/').replace(/\/index\.html$/, '/');
+    var path = normalizePath(pathname);
     var hashValue = String(hash || '');
     for (var sectionIndex = 0; sectionIndex < SECTION_CONTEXTS.length; sectionIndex += 1) {
       var section = SECTION_CONTEXTS[sectionIndex];
-      if (path === section.match && section.hashes.indexOf(hashValue) !== -1) return section;
+      if (contextMatchesPath(section, path) && section.hashes.indexOf(hashValue) !== -1) return section;
     }
     var keys = Object.keys(PAGE_CONTEXTS);
     for (var i = 0; i < keys.length; i += 1) {
@@ -846,6 +902,34 @@
       }
     }
     return PAGE_CONTEXTS.dashboard;
+  }
+
+  function detectMarkedSectionContext(pathname, doc) {
+    doc = doc || (typeof document !== 'undefined' ? document : null);
+    if (!doc || !doc.querySelectorAll) return null;
+    var path = normalizePath(pathname);
+    var nodes = Array.prototype.slice.call(doc.querySelectorAll('[data-ask-sbd-section]'));
+    var viewportHeight =
+      (root.innerHeight || (doc.documentElement && doc.documentElement.clientHeight) || 0);
+    var best = null;
+    var bestScore = 0;
+    nodes.forEach(function (node) {
+      if (!node || !node.getBoundingClientRect) return;
+      var rect = node.getBoundingClientRect();
+      if (!rect || rect.height <= 0 || rect.width <= 0) return;
+      var visible = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+      if (visible <= 0) return;
+      var key = node.getAttribute('data-ask-sbd-section');
+      var context = detectSectionContext(path, key);
+      if (!context) return;
+      var centerBias = rect.top <= viewportHeight * 0.62 && rect.bottom >= viewportHeight * 0.22 ? 1.25 : 1;
+      var score = visible * centerBias;
+      if (score > bestScore) {
+        best = context;
+        bestScore = score;
+      }
+    });
+    return best;
   }
 
   function advancedTopicsForContext(context) {
@@ -874,6 +958,12 @@
   function quickItemsForContext(context) {
     if (isDashboardContext(context)) return QUESTIONS;
     return advancedTopicsForContext(context).slice(0, 6);
+  }
+
+  function sameContext(a, b) {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    return String(a.intro || '') === String(b.intro || '') && (a.promptIds || []).join('|') === (b.promptIds || []).join('|');
   }
 
   function relatedTopicsForResult(result, context) {
@@ -1066,9 +1156,10 @@
   function init(opts) {
     opts = opts || {};
     if (document.getElementById('askSbdLauncher')) return;
-    var pageContext =
+    var baseContext =
       opts.pageContext ||
       detectPageContext(root.location && root.location.pathname, root.location && root.location.hash);
+    var pageContext = baseContext;
     var host = document.createElement('div');
     host.className = 'ask-sbd-root';
     host.innerHTML = mountHtml();
@@ -1094,28 +1185,48 @@
       advancedOutput: document.getElementById('askSbdAdvancedOutput'),
     };
 
-    var quickItems = quickItemsForContext(pageContext);
-    els.intro.textContent = pageContext.intro || PAGE_CONTEXTS.dashboard.intro;
+    var quickItems = [];
 
-    quickItems.forEach(function (q, index) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'ask-sbd-question' + (index === 0 ? ' is-active' : '');
-      btn.textContent = q.prompt || q.label;
-      btn.dataset.askSbdQuick = q.id;
-      btn.setAttribute('role', 'listitem');
-      els.questions.appendChild(btn);
-    });
+    function renderContext(context, preferredId) {
+      pageContext = context || baseContext || PAGE_CONTEXTS.dashboard;
+      quickItems = quickItemsForContext(pageContext);
+      els.intro.textContent = pageContext.intro || PAGE_CONTEXTS.dashboard.intro;
+      els.questions.innerHTML = '';
+      quickItems.forEach(function (q, index) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ask-sbd-question' + (index === 0 ? ' is-active' : '');
+        btn.textContent = q.prompt || q.label;
+        btn.dataset.askSbdQuick = q.id;
+        btn.setAttribute('role', 'listitem');
+        els.questions.appendChild(btn);
+      });
+      els.prompts.innerHTML = '';
+      advancedTopicsForContext(pageContext).slice(0, 6).forEach(function (topic) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ask-sbd-prompt';
+        btn.textContent = topic.prompt || topic.label;
+        btn.dataset.askSbdPrompt = topic.prompt || topic.label;
+        btn.setAttribute('role', 'listitem');
+        els.prompts.appendChild(btn);
+      });
+      select(preferredId || (quickItems[0] && quickItems[0].id) || QUESTIONS[0].id);
+    }
 
-    advancedTopicsForContext(pageContext).slice(0, 6).forEach(function (topic) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'ask-sbd-prompt';
-      btn.textContent = topic.prompt || topic.label;
-      btn.dataset.askSbdPrompt = topic.prompt || topic.label;
-      btn.setAttribute('role', 'listitem');
-      els.prompts.appendChild(btn);
-    });
+    function currentContextFromPage() {
+      if (opts.pageContext) return opts.pageContext;
+      return (
+        detectMarkedSectionContext(root.location && root.location.pathname, document) ||
+        detectPageContext(root.location && root.location.pathname, root.location && root.location.hash)
+      );
+    }
+
+    function refreshContext(force) {
+      var nextContext = currentContextFromPage();
+      if (!force && sameContext(nextContext, pageContext)) return;
+      renderContext(nextContext);
+    }
 
     function select(id) {
       var q = quickItems.filter(function (item) {
@@ -1150,9 +1261,10 @@
       els.advancedOutput.innerHTML = advancedAnswerHtml(result, cleanQuery, relatedTopicsForResult(result, pageContext));
     }
 
-    select((opts.initialQuestion || (quickItems[0] && quickItems[0].id) || QUESTIONS[0].id));
+    renderContext(pageContext, opts.initialQuestion);
 
     els.launcher.addEventListener('click', function () {
+      refreshContext(true);
       setOpen(true, els);
     });
     els.close.addEventListener('click', function () {
@@ -1196,6 +1308,16 @@
         setMode('quick', els);
       }
     });
+    window.addEventListener('hashchange', function () {
+      if (els.sheet.hidden) refreshContext(true);
+    });
+    window.addEventListener(
+      'scroll',
+      function () {
+        if (els.sheet.hidden) refreshContext(false);
+      },
+      { passive: true }
+    );
   }
 
   root.SbdAskGuide = {
@@ -1203,6 +1325,7 @@
     QUESTIONS: QUESTIONS,
     ADVANCED_TOPICS: ADVANCED_TOPICS,
     PAGE_CONTEXTS: PAGE_CONTEXTS,
+    SECTION_CONTEXTS: SECTION_CONTEXTS,
     answerHtml: answerHtml,
     advancedAnswerHtml: advancedAnswerHtml,
     ctaHtml: ctaHtml,
@@ -1211,6 +1334,8 @@
     findAdvancedAnswer: findAdvancedAnswer,
     findAdvancedTopic: findAdvancedTopic,
     detectPageContext: detectPageContext,
+    detectSectionContext: detectSectionContext,
+    detectMarkedSectionContext: detectMarkedSectionContext,
     advancedTopicsForContext: advancedTopicsForContext,
     quickItemsForContext: quickItemsForContext,
     relatedTopicsForResult: relatedTopicsForResult,

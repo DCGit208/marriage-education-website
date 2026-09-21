@@ -86,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=3'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=3'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=4'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=4'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -183,7 +183,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 6);
+  assert.strictEqual(api.VERSION, 7);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -208,6 +208,48 @@ test('page-aware contexts prioritize relevant prompts', function () {
   const datingElite = api.advancedTopicsForContext(api.detectPageContext('/dating.html', '#elite'));
   assert.strictEqual(datingElite[0].id, 'dating-elite');
   assert.strictEqual(datingElite[1].id, 'dating-marriage-track');
+
+  const pricingPremiumSection = api.advancedTopicsForContext(api.detectSectionContext('/pricing.html', 'pricing-premium'));
+  assert.strictEqual(pricingPremiumSection[0].id, 'pricing-premium');
+
+  const datingMarriageSection = api.advancedTopicsForContext(api.detectSectionContext('/dating.html', 'dating-marriage-track'));
+  assert.strictEqual(datingMarriageSection[0].id, 'dating-marriage-track');
+});
+
+test('page markup exposes live section markers for ASK SBD', function () {
+  assert.ok(publicPages.pricing.includes('data-ask-sbd-section="pricing-premium"'));
+  assert.ok(publicPages.pricing.includes('data-ask-sbd-section="pricing-elite"'));
+  assert.ok(sourcePages.dating.includes('data-ask-sbd-section="dating-locked"'));
+  assert.ok(sourcePages.dating.includes('data-ask-sbd-section="dating-premium"'));
+  assert.ok(sourcePages.dating.includes('data-ask-sbd-section="dating-elite"'));
+  assert.ok(sourcePages.dating.includes('data-ask-sbd-section="dating-marriage-track"'));
+  assert.ok(sourcePages.boards.includes('data-ask-sbd-section="boards-groups"'));
+  assert.ok(sourcePages.shop.includes('data-ask-sbd-section="shop-resources"'));
+});
+
+test('live visible section detection selects the strongest visible marker', function () {
+  const api = loadGuideApi();
+  const doc = {
+    documentElement: { clientHeight: 800 },
+    querySelectorAll: function () {
+      return [
+        {
+          getAttribute: function () { return 'pricing-premium'; },
+          getBoundingClientRect: function () {
+            return { top: -300, bottom: 100, height: 400, width: 320 };
+          },
+        },
+        {
+          getAttribute: function () { return 'pricing-elite'; },
+          getBoundingClientRect: function () {
+            return { top: 180, bottom: 620, height: 440, width: 320 };
+          },
+        },
+      ];
+    },
+  };
+  const context = api.detectMarkedSectionContext('/pricing.html', doc);
+  assert.strictEqual(api.advancedTopicsForContext(context)[0].id, 'pricing-elite');
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -310,7 +352,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 6);
+  assert.strictEqual(api.VERSION, 7);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');
