@@ -64,13 +64,24 @@ test('assistant is scripted and does not introduce AI or network dependencies', 
 });
 
 test('front-facing copy avoids technical implementation language', function () {
-  assert.strictEqual(js.includes('This guide is scripted, not AI.'), false);
-  assert.strictEqual(js.includes('not live AI'), false);
-  assert.strictEqual(js.includes('ASK SBD answered'), false);
-  assert.strictEqual(js.includes('The goal is not to explain'), false);
-  assert.strictEqual(js.includes('The best onboarding answer'), false);
-  assert.strictEqual(js.includes('If the user'), false);
-  assert.strictEqual(js.includes('The bot should'), false);
+  [
+    'This guide is scripted, not AI.',
+    'not live AI',
+    'ASK SBD answered',
+    'The goal is not to explain',
+    'The best onboarding answer',
+    'If the user',
+    'the user needs',
+    'The bot should',
+    'The recommendation should',
+    'should be explained',
+    'This phase uses',
+    'implementation phase',
+    'how the assistant generated',
+    'internal guardrails',
+  ].forEach(function (phrase) {
+    assert.strictEqual(js.includes(phrase), false, 'public copy must not include internal phrase: ' + phrase);
+  });
   assert.ok(js.includes('Quick answers for understanding the platform. Choose a topic, or ask something more specific.'));
   assert.ok(js.includes('Recommended guidance'));
   assert.ok(js.includes('Ask directly, or swipe the prompts for ideas.'));

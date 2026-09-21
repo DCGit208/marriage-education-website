@@ -518,7 +518,40 @@ If AI is used:
 - Respect safe-area insets and bottom nav spacing.
 - Preserve accessibility: focus, escape key, labels, contrast, reduced motion where needed.
 
-### 7.6 Release guardrails
+### 7.6 Client-facing copy guardrails
+
+All ASK SBD public copy must read as guidance for the visitor or member, not as implementation notes.
+
+Allowed:
+
+- direct user-facing guidance
+- topic-specific next steps
+- short, practical explanations
+- clear CTAs
+- optional deeper detail when the user expands **Show more**
+
+Not allowed in public UI:
+
+- product-planning language
+- implementation commentary
+- "the bot should..." phrasing
+- "the user..." phrasing when speaking to the actual user
+- explanations of how the assistant generated the answer
+- statements about phases, MVPs, prompts, models, retrieval, or internal guardrails
+- labels that describe the UI mechanic instead of the user's topic
+
+Examples:
+
+| Avoid | Use instead |
+|-------|-------------|
+| "The best onboarding answer gives one next click." | "Start with Learn if you want structure." |
+| "The bot should route the user to Boards." | "Open Boards when you want community reflection." |
+| "Answers are based on approved SBD guidance." | Remove it, or give the next useful step. |
+| "This phase uses curated guidance." | Do not mention implementation phase in the UI. |
+
+Regression tests should protect against known internal phrases returning to public strings.
+
+### 7.7 Release guardrails
 
 Each phase requires:
 
