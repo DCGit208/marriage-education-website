@@ -66,7 +66,9 @@ test('assistant is scripted and does not introduce AI or network dependencies', 
 test('front-facing copy avoids technical implementation language', function () {
   assert.strictEqual(js.includes('This guide is scripted, not AI.'), false);
   assert.strictEqual(js.includes('not live AI'), false);
+  assert.strictEqual(js.includes('ASK SBD answered'), false);
   assert.ok(js.includes('Quick answers for understanding the platform. Choose a topic, or ask something more specific.'));
+  assert.ok(js.includes('Recommended guidance'));
   assert.ok(js.includes('ASK SBD will route you to the clearest next step.'));
 });
 

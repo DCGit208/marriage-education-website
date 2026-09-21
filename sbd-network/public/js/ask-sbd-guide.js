@@ -262,7 +262,7 @@
     result = result || findAdvancedAnswer(query);
     return (
       '<article class="ask-sbd-answer ask-sbd-advanced-answer" aria-live="polite">' +
-      '<p class="ask-sbd-answer-kicker">ASK SBD answered</p>' +
+      '<p class="ask-sbd-answer-kicker">Recommended guidance</p>' +
       '<h3>' +
       escapeHtml(result.title) +
       '</h3>' +
