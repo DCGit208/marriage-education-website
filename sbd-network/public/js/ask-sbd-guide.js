@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 8;
+  var VERSION = 9;
 
   var QUESTIONS = [
     {
@@ -231,6 +231,30 @@
       ctas: [
         { label: 'Browse Shop', href: '/shop.html' },
         { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'shop-course-personal-development',
+      label: 'Personal development course',
+      prompt: 'Recommend a course for personal development',
+      keywords: [
+        'recommend course',
+        'suggest course',
+        'personal development',
+        'self development',
+        'personal growth',
+        'formation course',
+        'course for growth',
+      ],
+      title: 'Start personal development with Teleios formation',
+      body:
+        'For personal development, start with the Teleios foundation path in Learn. It is the best first course direction because it focuses on identity, discipline, self-understanding, and covenant-ready formation.',
+      nextStep: 'Open Learn first for the course path; use Shop only if you want a companion resource to practice what you are learning.',
+      details:
+        'If your question is broad personal growth, begin with Teleios. If your growth question is specifically about intimacy, marriage communication, or sexual understanding, move next toward Sexual Literacy or a communication resource.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'View Shop Resources', href: '/shop.html' },
       ],
     },
     {
@@ -727,7 +751,7 @@
     shop: {
       match: ['/shop.html', '/resources.html'],
       intro: 'Quick help choosing resources, products, and practical next steps.',
-      promptIds: ['shop-first-buy', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-expression', 'shop-use-resources'],
+      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-use-resources'],
     },
     dating: {
       match: ['/dating.html'],
@@ -798,7 +822,7 @@
       hashes: ['#resources'],
       sections: ['shop-resources'],
       intro: 'Quick help choosing the right resource from the shop.',
-      promptIds: ['shop-first-buy', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-expression', 'shop-use-resources'],
+      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-use-resources'],
     },
   ];
 
