@@ -320,17 +320,176 @@ function getVisualStyle(product) {
   return defaults[key] || defaults.default;
 }
 
+const SHOP_SEARCH_STOPWORDS = [
+  'a', 'an', 'and', 'about', 'around', 'for', 'from', 'me', 'my', 'of', 'on', 'or', 'the', 'to', 'with',
+  'book', 'books', 'course', 'courses', 'resource', 'resources', 'recommend', 'recommendation', 'suggest',
+  'show', 'find', 'give', 'need', 'want',
+];
+
+const SHOP_TOPIC_ALIASES = [
+  { id: 'sexuality', terms: ['sex', 'sexual', 'sexuality', 'intimacy', 'intimate', 'conjugal', 'arousal', 'desire', 'erotic', 'bedroom', 'nakedness'] },
+  { id: 'communication', terms: ['communication', 'communicate', 'conversation', 'conflict', 'argue', 'argument', 'peacekeeping', 'relationship', 'relatedness'] },
+  { id: 'identity', terms: ['identity', 'personal', 'development', 'growth', 'maturity', 'formation', 'teleios', 'self', 'wholeness'] },
+  { id: 'leadership', terms: ['leadership', 'civilization', 'nation', 'governance', 'family', 'parenting', 'culture', 'political', 'human rights'] },
+  { id: 'membership', terms: ['membership', 'subscription', 'tier', 'foundation', 'premium', 'elite', 'access', 'unlock'] },
+  { id: 'expression', terms: ['expression', 'fashion', 'image', 'presence', 'masculine', 'feminine', 'muliebrity', 'virility', 'mv house'] },
+  { id: 'marriage', terms: ['marriage', 'covenant', 'spouse', 'couple', 'husband', 'wife', 'home'] },
+];
+
+const SHOP_PRODUCT_TOPIC_HINTS = {
+  'sbd-the-heart-of-relationship': ['communication', 'marriage', 'relationship'],
+  'communication-covenant-couples': ['communication', 'marriage'],
+  'conflict-mastery': ['communication', 'conflict', 'marriage'],
+  'sbd-dummies': ['sexuality', 'marriage', 'covenant'],
+  'the-art-of-sexuality': ['sexuality', 'intimacy'],
+  'marriage-equals-sexuality': ['sexuality', 'marriage'],
+  'sexual-literacy-101': ['sexuality', 'course'],
+  'sex-equals-marriage': ['sexuality', 'marriage'],
+  'course-art-of-sexuality': ['sexuality', 'expression'],
+  'teleios-blueprint': ['identity', 'formation'],
+  'personal-development-masterclass': ['identity', 'formation'],
+  'identity-mastery': ['identity', 'formation'],
+  'civilizational-intelligence-masterclass': ['leadership', 'civilization'],
+  'marriage-builds-nations': ['leadership', 'civilization', 'marriage'],
+};
+
+function normalizeShopSearchText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function parseShopSearchIntent(query) {
+  var normalized = normalizeShopSearchText(query);
+  var words = normalized.split(/\s+/).filter(Boolean);
+  var type = '';
+  if (/\b(books?|read|library)\b/.test(normalized)) type = 'book';
+  if (/\b(courses?|classes?|study|learn|programs?)\b/.test(normalized)) type = 'course';
+  if (/\b(membership|subscription|tier|plan|premium|elite|foundation)\b/.test(normalized)) type = 'membership';
+  if (/\b(bundle|bundles|diploma|certification|certified|lifetime|coaching)\b/.test(normalized)) type = 'bundle';
+
+  var topics = SHOP_TOPIC_ALIASES.filter(function (topic) {
+    return topic.terms.some(function (term) { return normalized.indexOf(term) !== -1; });
+  }).map(function (topic) { return topic.id; });
+
+  var tokens = words.filter(function (word) {
+    return word.length > 2 && SHOP_SEARCH_STOPWORDS.indexOf(word) === -1;
+  });
+
+  return { raw: normalized, type: type, topics: topics, tokens: tokens };
+}
+
+function productTypeForSearch(product) {
+  var section = product.section || inferSectionFromCategory(product.category);
+  if (section === 'membership' || product.category === 'network_subscription') return 'membership';
+  if (section === 'academy' || product.category === 'course_bundles') return 'course';
+  if (section === 'books_magazine' || product.category === 'book_bundles') return 'book';
+  if (section === 'bundles_diplomas') return 'bundle';
+  return product.type || '';
+}
+
+function productTopicsForSearch(product) {
+  var topics = [];
+  function add(topic) {
+    if (topic && topics.indexOf(topic) === -1) topics.push(topic);
+  }
+  (SHOP_PRODUCT_TOPIC_HINTS[product.id] || []).forEach(add);
+  if (product.schoolId === 'school1') add('identity');
+  if (product.schoolId === 'school2') add('sexuality');
+  if (product.schoolId === 'school3') {
+    add('marriage');
+    add('communication');
+  }
+  if (product.schoolId === 'school4') add('leadership');
+  if (product.category === 'network_subscription') add('membership');
+  if (product.category === 'books_arts_of_marriage') {
+    add('sexuality');
+    add('marriage');
+  }
+  var searchable = buildShopSearchText(product);
+  SHOP_TOPIC_ALIASES.forEach(function (topic) {
+    if (topic.terms.some(function (term) { return searchable.indexOf(term) !== -1; })) add(topic.id);
+  });
+  return topics;
+}
+
+function buildShopSearchText(product) {
+  var category = SHOP_CATEGORIES.find(function (c) { return c.id === product.category; });
+  var sectionId = product.section || inferSectionFromCategory(product.category);
+  var section = SHOP_SECTIONS.find(function (s) { return s.id === sectionId; });
+  var program = product.program || {};
+  var features = Array.isArray(program.features) ? program.features.join(' ') : '';
+  return normalizeShopSearchText([
+    product.id,
+    product.name,
+    product.description,
+    product.type,
+    product.visualKey,
+    product.category,
+    category && category.label,
+    section && section.label,
+    product.schoolId,
+    product.requiredTier,
+    program.tagline,
+    program.pitch,
+    program.featureLabel,
+    features,
+    program.duration,
+    program.format,
+    program.badge,
+    program.ctaLabel,
+    productTopicsForSearchShallow(product).join(' '),
+  ].filter(Boolean).join(' '));
+}
+
+function productTopicsForSearchShallow(product) {
+  var topics = [];
+  function add(topic) {
+    if (topic && topics.indexOf(topic) === -1) topics.push(topic);
+  }
+  (SHOP_PRODUCT_TOPIC_HINTS[product.id] || []).forEach(add);
+  if (product.schoolId === 'school1') add('identity');
+  if (product.schoolId === 'school2') add('sexuality');
+  if (product.schoolId === 'school3') add('communication');
+  if (product.schoolId === 'school4') add('leadership');
+  if (product.category === 'network_subscription') add('membership');
+  return topics;
+}
+
+function shopSearchScore(product, intent) {
+  if (!intent.raw) return 1;
+  var productType = productTypeForSearch(product);
+  if (intent.type && productType !== intent.type) return 0;
+
+  var text = buildShopSearchText(product);
+  var topics = productTopicsForSearch(product);
+  var score = intent.type ? 12 : 0;
+
+  if (text.indexOf(intent.raw) !== -1) score += 30;
+  intent.topics.forEach(function (topic) {
+    if (topics.indexOf(topic) !== -1) score += 18;
+  });
+  intent.tokens.forEach(function (token) {
+    if ((product.name || '').toLowerCase().indexOf(token) !== -1) score += 12;
+    else if (text.indexOf(token) !== -1) score += 5;
+  });
+
+  if (!intent.tokens.length && !intent.topics.length && intent.type) score += 5;
+  return score;
+}
+
 function getFilteredProducts() {
-  var q = shopSearchQuery.trim().toLowerCase();
-  return SHOP_PRODUCTS.filter(function (p) {
+  var intent = parseShopSearchIntent(shopSearchQuery);
+  var scored = SHOP_PRODUCTS.map(function (p) {
+    return { product: p, score: intent.raw ? shopSearchScore(p, intent) : 1 };
+  }).filter(function (entry) {
+    var p = entry.product;
     if (activeSection !== 'all' && inferSectionFromCategory(p.category) !== activeSection) return false;
     if (activeCategory !== 'all' && p.category !== activeCategory) return false;
-    if (!q) return true;
-    return (p.name || '').toLowerCase().indexOf(q) >= 0 ||
-      (p.description || '').toLowerCase().indexOf(q) >= 0;
+    return !intent.raw || entry.score > 0;
   }).sort(function (a, b) {
-    return (a.sortOrder || 999) - (b.sortOrder || 999);
+    if (intent.raw && b.score !== a.score) return b.score - a.score;
+    return (a.product.sortOrder || 999) - (b.product.sortOrder || 999);
   });
+  return scored.map(function (entry) { return entry.product; });
 }
 
 function shouldShowMembershipGrid() {
@@ -1182,6 +1341,18 @@ async function buyProduct(productId) {
 async function subscribeToTier(tierId) {
   buyProduct(tierId);
 }
+
+(function exposeShopSearchHelpers(root) {
+  if (!root) return;
+  root.SBDShopSearch = {
+    normalize: normalizeShopSearchText,
+    parseIntent: parseShopSearchIntent,
+    productTypeForSearch: productTypeForSearch,
+    productTopicsForSearch: productTopicsForSearch,
+    buildSearchText: buildShopSearchText,
+    score: shopSearchScore,
+  };
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : null));
 
 async function createOrder(orderData) {
   try {
