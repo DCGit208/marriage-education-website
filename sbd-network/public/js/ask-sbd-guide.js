@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 2;
+  var VERSION = 3;
 
   var QUESTIONS = [
     {
@@ -187,7 +187,64 @@
         'If you are a host or facilitator, open Messages and use the staff tools available to your role. If you do not see those tools, your account may not have facilitator access.',
       ctas: [{ label: 'Open Messages', href: '/communication-v2/?hub=coach' }],
     },
+    {
+      id: 'locked-content',
+      label: 'Locked content',
+      prompt: 'Why is something locked?',
+      keywords: ['locked', 'unlock', 'access', 'upgrade', 'paywall', 'open', 'blocked', 'subscription'],
+      title: 'Locked content usually means a higher access level is needed',
+      body:
+        'If a course, certificate, or feature is locked, compare the membership plans to see which level opens the path you want.',
+      details:
+        'Start by naming what you want to access: courses, certificates, Boards, MV House, or support. Then choose the plan that unlocks that part of the journey instead of upgrading blindly.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'relationship-season',
+      label: 'Relationship season',
+      prompt: 'Is this for my season?',
+      keywords: ['single', 'dating', 'engaged', 'married', 'marriage', 'relationship', 'season', 'preparing'],
+      title: 'SBD can meet you at your current relationship season',
+      body:
+        'SBD is useful whether you are single, dating, engaged, married, or rebuilding clarity. The best starting point depends on the question you are carrying right now.',
+      details:
+        'If you are single or dating, start with identity and preparation. If you are married, start with communication and formation. If you are unsure, begin in Learn and choose the path closest to your present season.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Compare Plans', href: '/pricing.html' },
+      ],
+    },
   ];
+
+  var PAGE_CONTEXTS = {
+    dashboard: {
+      match: ['/', '/dashboard.html'],
+      promptIds: ['where-start', 'membership-fit', 'marriage-communication', 'boards-community', 'mv-house-expression', 'courses-certificates'],
+    },
+    pricing: {
+      match: ['/pricing.html'],
+      promptIds: ['membership-fit', 'locked-content', 'where-start', 'courses-certificates', 'relationship-season', 'shop-resources'],
+    },
+    learn: {
+      match: ['/learn.html', '/courses.html', '/schools.html'],
+      promptIds: ['courses-certificates', 'where-start', 'locked-content', 'relationship-season', 'marriage-communication', 'membership-fit'],
+    },
+    boards: {
+      match: ['/boards.html', '/board.html'],
+      promptIds: ['boards-community', 'marriage-communication', 'where-start', 'facilitator-help', 'relationship-season', 'membership-fit'],
+    },
+    mvHouse: {
+      match: ['/mv-house.html'],
+      promptIds: ['mv-house-expression', 'relationship-season', 'membership-fit', 'where-start', 'courses-certificates', 'shop-resources'],
+    },
+    shop: {
+      match: ['/shop.html', '/resources.html'],
+      promptIds: ['shop-resources', 'courses-certificates', 'membership-fit', 'where-start', 'locked-content', 'mv-house-expression'],
+    },
+  };
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -242,6 +299,44 @@
       }
     });
     return best || fallback;
+  }
+
+  function findAdvancedTopic(id) {
+    for (var i = 0; i < ADVANCED_TOPICS.length; i += 1) {
+      if (ADVANCED_TOPICS[i].id === id) return ADVANCED_TOPICS[i];
+    }
+    return null;
+  }
+
+  function detectPageContext(pathname) {
+    var path = String(pathname || '/').replace(/\/index\.html$/, '/');
+    var keys = Object.keys(PAGE_CONTEXTS);
+    for (var i = 0; i < keys.length; i += 1) {
+      var context = PAGE_CONTEXTS[keys[i]];
+      for (var j = 0; j < context.match.length; j += 1) {
+        if (path === context.match[j]) return context;
+      }
+    }
+    return PAGE_CONTEXTS.dashboard;
+  }
+
+  function advancedTopicsForContext(context) {
+    var seen = {};
+    var ordered = [];
+    (context && context.promptIds ? context.promptIds : []).forEach(function (id) {
+      var topic = findAdvancedTopic(id);
+      if (topic && !seen[topic.id]) {
+        seen[topic.id] = true;
+        ordered.push(topic);
+      }
+    });
+    ADVANCED_TOPICS.forEach(function (topic) {
+      if (!seen[topic.id]) {
+        seen[topic.id] = true;
+        ordered.push(topic);
+      }
+    });
+    return ordered;
   }
 
   function ctaHtml(ctas) {
@@ -379,6 +474,7 @@
   function init(opts) {
     opts = opts || {};
     if (document.getElementById('askSbdLauncher')) return;
+    var pageContext = opts.pageContext || detectPageContext(root.location && root.location.pathname);
     var host = document.createElement('div');
     host.className = 'ask-sbd-root';
     host.innerHTML = mountHtml();
@@ -413,7 +509,7 @@
       els.questions.appendChild(btn);
     });
 
-    ADVANCED_TOPICS.slice(0, 6).forEach(function (topic) {
+    advancedTopicsForContext(pageContext).slice(0, 6).forEach(function (topic) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ask-sbd-prompt';
@@ -488,11 +584,15 @@
     VERSION: VERSION,
     QUESTIONS: QUESTIONS,
     ADVANCED_TOPICS: ADVANCED_TOPICS,
+    PAGE_CONTEXTS: PAGE_CONTEXTS,
     answerHtml: answerHtml,
     advancedAnswerHtml: advancedAnswerHtml,
     ctaHtml: ctaHtml,
     findQuestion: findQuestion,
     findAdvancedAnswer: findAdvancedAnswer,
+    findAdvancedTopic: findAdvancedTopic,
+    detectPageContext: detectPageContext,
+    advancedTopicsForContext: advancedTopicsForContext,
     init: init,
   };
 

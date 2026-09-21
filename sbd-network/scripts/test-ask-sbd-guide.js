@@ -28,6 +28,13 @@ function test(name, fn) {
 }
 
 const dash = read('public/dashboard.html');
+const publicPages = {
+  pricing: read('public/pricing.html'),
+  learn: read('public/learn.html'),
+  boards: read('public/boards.html'),
+  mvHouse: read('public/mv-house.html'),
+  shop: read('public/shop.html'),
+};
 const js = read('public/js/ask-sbd-guide.js');
 const css = read('public/css/ask-sbd-guide.css');
 const pkg = JSON.parse(read('package.json'));
@@ -52,6 +59,15 @@ test('dashboard includes the additive ASK SBD assets', function () {
   );
   assert.ok(dash.indexOf('ask-sbd-guide.css') < dash.indexOf('</head>'));
   assert.ok(dash.indexOf('ask-sbd-guide.js') < dash.indexOf('</head>'));
+});
+
+test('key public pages include ASK SBD assets', function () {
+  Object.keys(publicPages).forEach(function (page) {
+    const html = publicPages[page];
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=2'), page + ' missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=2'), page + ' missing ASK SBD JS');
+    assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' CSS must be in head');
+  });
 });
 
 test('assistant is scripted and does not introduce AI or network dependencies', function () {
@@ -109,14 +125,36 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
   assert.ok(js.includes('askSbdAdvancedOpen'), 'missing Ask Anything open control');
   assert.ok(js.includes('askSbdForm'), 'missing typed assistant form');
   assert.ok(js.includes('ADVANCED_TOPICS'), 'missing curated advanced topics');
+  assert.ok(js.includes('PAGE_CONTEXTS'), 'missing page-aware prompt contexts');
   assert.ok(js.includes('findAdvancedAnswer'), 'missing curated matcher');
   assert.ok(js.includes('details:'), 'advanced topics should include deeper curated guidance');
   assert.ok(js.includes('moreHtml'), 'missing collapsed detail renderer');
   assert.strictEqual(js.includes("answerAdvanced('where should I start')"), false, 'advanced mode must not auto-render an answer');
   assert.ok(js.includes("els.advancedOutput.innerHTML = ''"), 'advanced output should start empty');
-  ['marriage-communication', 'membership-fit', 'where-start', 'boards-community', 'mv-house-expression', 'courses-certificates', 'shop-resources', 'facilitator-help'].forEach(function (id) {
+  ['marriage-communication', 'membership-fit', 'where-start', 'boards-community', 'mv-house-expression', 'courses-certificates', 'shop-resources', 'facilitator-help', 'locked-content', 'relationship-season'].forEach(function (id) {
     assert.ok(js.includes("id: '" + id + "'"), 'missing advanced topic ' + id);
   });
+});
+
+test('page-aware contexts prioritize relevant prompts', function () {
+  const api = loadGuideApi();
+  assert.strictEqual(api.VERSION, 3);
+
+  const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
+  assert.strictEqual(pricing[0].id, 'membership-fit');
+  assert.strictEqual(pricing[1].id, 'locked-content');
+
+  const learn = api.advancedTopicsForContext(api.detectPageContext('/learn.html'));
+  assert.strictEqual(learn[0].id, 'courses-certificates');
+
+  const boards = api.advancedTopicsForContext(api.detectPageContext('/boards.html'));
+  assert.strictEqual(boards[0].id, 'boards-community');
+
+  const mvHouse = api.advancedTopicsForContext(api.detectPageContext('/mv-house.html'));
+  assert.strictEqual(mvHouse[0].id, 'mv-house-expression');
+
+  const shop = api.advancedTopicsForContext(api.detectPageContext('/shop.html'));
+  assert.strictEqual(shop[0].id, 'shop-resources');
 });
 
 test('advanced prompt chips stay in a horizontal swipe row', function () {
@@ -148,7 +186,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 2);
+  assert.strictEqual(api.VERSION, 3);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');
