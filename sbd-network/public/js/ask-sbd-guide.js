@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 1;
+  var VERSION = 2;
 
   var QUESTIONS = [
     {
@@ -72,6 +72,107 @@
     },
   ];
 
+  var ADVANCED_TOPICS = [
+    {
+      id: 'marriage-communication',
+      label: 'Marriage communication',
+      prompt: 'Help with marriage communication',
+      keywords: ['marriage', 'married', 'spouse', 'wife', 'husband', 'communication', 'conflict', 'argue', 'argument'],
+      title: 'Start with communication formation',
+      body:
+        'If the pain point is marriage communication, begin with Learn and choose the communication or relationship formation path. Use Boards for reflection and CE2/messages when you need in-context support from a group or facilitator.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Open Messages', href: '/communication-v2/' },
+      ],
+    },
+    {
+      id: 'membership-fit',
+      label: 'Membership fit',
+      prompt: 'Which plan fits me?',
+      keywords: ['plan', 'price', 'pricing', 'membership', 'tier', 'premium', 'elite', 'foundation', 'free', 'pay'],
+      title: 'Choose the tier by the level of structure you need',
+      body:
+        'Explore is best for a free preview. Foundation is best for starting structured formation. Premium fits users who want deeper access, certificates, progress boards, and support. Elite is for the fullest SBD and MV ecosystem.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Start Free', href: '/auth?next=/learn&src=ask-sbd-advanced' },
+      ],
+    },
+    {
+      id: 'where-start',
+      label: 'Where to start',
+      prompt: 'Where should I start?',
+      keywords: ['start', 'begin', 'new', 'first', 'lost', 'confused', 'onboarding'],
+      title: 'Start with one clear next step',
+      body:
+        'If you are new, go to Learn first. Choose the path closest to your current season, then use Boards to reflect and ASK SBD when you need help deciding what to open next.',
+      ctas: [
+        { label: 'Begin in Learn', href: '/learn.html' },
+        { label: 'Create Account', href: '/auth?next=/learn&src=ask-sbd-start' },
+      ],
+    },
+    {
+      id: 'boards-community',
+      label: 'Boards and community',
+      prompt: 'Explain Boards',
+      keywords: ['board', 'boards', 'community', 'conversation', 'story', 'stories', 'prompt', 'prompts'],
+      title: 'Boards move the learning into practice',
+      body:
+        'Boards are the community and reflection layer of SBD. Courses teach structure; Boards help users process, discuss, and practice formation through conversations, stories, and prompts.',
+      ctas: [
+        { label: 'Open Boards', href: '/boards.html' },
+        { label: 'Open Messages', href: '/communication-v2/' },
+      ],
+    },
+    {
+      id: 'mv-house-expression',
+      label: 'MV House',
+      prompt: 'Explain MV House',
+      keywords: ['mv', 'house', 'fashion', 'expression', 'masculine', 'feminine', 'presence', 'muliebrity', 'virility'],
+      title: 'MV House is the expression layer',
+      body:
+        'MV House connects inner formation to outward presentation: masculine presence, feminine expression, image, fashion, and embodied identity. It is not just appearance; it is formation made visible.',
+      ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
+    },
+    {
+      id: 'courses-certificates',
+      label: 'Courses and certificates',
+      prompt: 'Courses and certificates',
+      keywords: ['course', 'courses', 'school', 'lesson', 'certificate', 'certificates', 'learn', 'training'],
+      title: 'Courses give the structured path',
+      body:
+        'Use Learn when you want the organized path: schools, courses, lessons, and certificates. If a course is locked, compare membership tiers to see which access level fits your goal.',
+      ctas: [
+        { label: 'Open Courses', href: '/learn.html' },
+        { label: 'View Certificates', href: '/certificates.html' },
+      ],
+    },
+    {
+      id: 'shop-resources',
+      label: 'Shop and resources',
+      prompt: 'Shop and resources',
+      keywords: ['shop', 'buy', 'book', 'books', 'resource', 'resources', 'materials', 'product'],
+      title: 'Use Shop and Resources for practical tools',
+      body:
+        'The Shop and resource library support the formation journey with books, products, and practical materials. Courses give the path; resources help you apply it.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Resources', href: '/resources.html' },
+      ],
+    },
+    {
+      id: 'facilitator-help',
+      label: 'Facilitator support',
+      prompt: 'Help for facilitators',
+      keywords: ['coach', 'facilitator', 'host', 'cohort', 'group', 'nudge', 'quiet', 'member'],
+      title: 'Facilitators should use CE2 staff tools',
+      body:
+        'If you host or facilitate a group, use CE2 and the coach inbox to see who may need a nudge, then reply inside the SBD Network. Staff tools stay behind the existing role checks.',
+      ctas: [{ label: 'Open Messages', href: '/communication-v2/?hub=coach' }],
+    },
+  ];
+
   function escapeHtml(value) {
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -85,6 +186,44 @@
       if (QUESTIONS[i].id === id) return QUESTIONS[i];
     }
     return QUESTIONS[0];
+  }
+
+  function normalize(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ');
+  }
+
+  function topicScore(topic, query) {
+    var haystack = normalize(query);
+    var score = 0;
+    (topic.keywords || []).forEach(function (keyword) {
+      if (haystack.indexOf(keyword) !== -1) score += keyword.length > 5 ? 2 : 1;
+    });
+    return score;
+  }
+
+  function findAdvancedAnswer(query) {
+    var fallback = {
+      id: 'fallback',
+      label: 'General guidance',
+      title: 'Start with the closest SBD path',
+      body:
+        'I can help best when you name the area: membership, marriage communication, Boards, MV House, courses, certificates, shop, or facilitator support. For now, start with Learn if you want structure, Pricing if you need access clarity, or Boards if you want community context.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Open Boards', href: '/boards.html' },
+      ],
+    };
+    var best = null;
+    var bestScore = 0;
+    ADVANCED_TOPICS.forEach(function (topic) {
+      var score = topicScore(topic, query);
+      if (score > bestScore) {
+        best = topic;
+        bestScore = score;
+      }
+    });
+    return best || fallback;
   }
 
   function ctaHtml(ctas) {
@@ -119,6 +258,25 @@
     );
   }
 
+  function advancedAnswerHtml(result, query) {
+    result = result || findAdvancedAnswer(query);
+    return (
+      '<article class="ask-sbd-answer ask-sbd-advanced-answer" aria-live="polite">' +
+      '<p class="ask-sbd-answer-kicker">ASK SBD answered</p>' +
+      '<h3>' +
+      escapeHtml(result.title) +
+      '</h3>' +
+      '<p>' +
+      escapeHtml(result.body) +
+      '</p>' +
+      '<div class="ask-sbd-ctas">' +
+      ctaHtml(result.ctas) +
+      '</div>' +
+      '<p class="ask-sbd-answer-note">This first full-bot phase uses curated SBD guidance, not live AI. It will say when a question needs a clearer path.</p>' +
+      '</article>'
+    );
+  }
+
   function mountHtml() {
     return (
       '<button type="button" class="ask-sbd-launcher" id="askSbdLauncher" aria-haspopup="dialog" aria-controls="askSbdSheet" aria-expanded="false">' +
@@ -137,11 +295,42 @@
       '<button type="button" class="ask-sbd-close" id="askSbdClose" aria-label="Close ASK SBD">×</button>' +
       '</header>' +
       '<p class="ask-sbd-intro">Quick answers for understanding the platform. This guide is scripted, not AI.</p>' +
+      '<div class="ask-sbd-quick" id="askSbdQuick">' +
       '<div class="ask-sbd-questions" id="askSbdQuestions" role="list"></div>' +
       '<div class="ask-sbd-answer-slot" id="askSbdAnswerSlot"></div>' +
+      '<div class="ask-sbd-deeper">' +
+      '<p>Need something more specific?</p>' +
+      '<button type="button" class="ask-sbd-advanced-open" id="askSbdAdvancedOpen">Ask Anything</button>' +
+      '</div>' +
+      '</div>' +
+      '<div class="ask-sbd-advanced" id="askSbdAdvanced" hidden>' +
+      '<button type="button" class="ask-sbd-back-to-quick" id="askSbdBackToQuick">← Quick guide</button>' +
+      '<p class="ask-sbd-advanced-copy">Type a question or choose a prompt. This phase answers from curated SBD guidance and routes you to the right next step.</p>' +
+      '<div class="ask-sbd-prompts" id="askSbdPrompts" role="list"></div>' +
+      '<form class="ask-sbd-form" id="askSbdForm">' +
+      '<label class="ask-sbd-input-label" for="askSbdInput">Ask SBD a question</label>' +
+      '<div class="ask-sbd-input-row">' +
+      '<input id="askSbdInput" class="ask-sbd-input" type="text" autocomplete="off" placeholder="Example: Which plan fits me?">' +
+      '<button type="submit" class="ask-sbd-submit">Ask</button>' +
+      '</div>' +
+      '</form>' +
+      '<div class="ask-sbd-advanced-output" id="askSbdAdvancedOutput"></div>' +
+      '</div>' +
       '</section>' +
       '</div>'
     );
+  }
+
+  function setMode(mode, els) {
+    var advanced = mode === 'advanced';
+    els.panel.classList.toggle('is-advanced', advanced);
+    els.quick.hidden = advanced;
+    els.advanced.hidden = !advanced;
+    if (advanced) {
+      window.setTimeout(function () {
+        els.input.focus();
+      }, 0);
+    }
   }
 
   function setOpen(open, els) {
@@ -169,10 +358,19 @@
       root: host,
       launcher: document.getElementById('askSbdLauncher'),
       sheet: document.getElementById('askSbdSheet'),
+      panel: host.querySelector('.ask-sbd-panel'),
       backdrop: document.getElementById('askSbdBackdrop'),
       close: document.getElementById('askSbdClose'),
+      quick: document.getElementById('askSbdQuick'),
       questions: document.getElementById('askSbdQuestions'),
       answer: document.getElementById('askSbdAnswerSlot'),
+      advancedOpen: document.getElementById('askSbdAdvancedOpen'),
+      advanced: document.getElementById('askSbdAdvanced'),
+      backToQuick: document.getElementById('askSbdBackToQuick'),
+      prompts: document.getElementById('askSbdPrompts'),
+      form: document.getElementById('askSbdForm'),
+      input: document.getElementById('askSbdInput'),
+      advancedOutput: document.getElementById('askSbdAdvancedOutput'),
     };
 
     QUESTIONS.forEach(function (q, index) {
@@ -185,12 +383,32 @@
       els.questions.appendChild(btn);
     });
 
+    ADVANCED_TOPICS.slice(0, 6).forEach(function (topic) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ask-sbd-prompt';
+      btn.textContent = topic.prompt || topic.label;
+      btn.dataset.askSbdPrompt = topic.prompt || topic.label;
+      btn.setAttribute('role', 'listitem');
+      els.prompts.appendChild(btn);
+    });
+
     function select(id) {
       var q = findQuestion(id);
       els.answer.innerHTML = answerHtml(q);
       els.questions.querySelectorAll('.ask-sbd-question').forEach(function (btn) {
         btn.classList.toggle('is-active', btn.dataset.askSbdQuestion === q.id);
       });
+    }
+
+    function answerAdvanced(query) {
+      var cleanQuery = String(query || '').trim();
+      if (!cleanQuery) {
+        els.advancedOutput.innerHTML =
+          '<p class="ask-sbd-empty">Ask about membership, where to start, courses, Boards, MV House, shop, or facilitator support.</p>';
+        return;
+      }
+      els.advancedOutput.innerHTML = advancedAnswerHtml(findAdvancedAnswer(cleanQuery), cleanQuery);
     }
 
     select((opts.initialQuestion || QUESTIONS[0].id));
@@ -200,26 +418,51 @@
     });
     els.close.addEventListener('click', function () {
       setOpen(false, els);
+      setMode('quick', els);
     });
     els.backdrop.addEventListener('click', function () {
       setOpen(false, els);
+      setMode('quick', els);
     });
     els.questions.addEventListener('click', function (event) {
       var btn = event.target.closest('[data-ask-sbd-question]');
       if (!btn) return;
       select(btn.dataset.askSbdQuestion);
     });
+    els.advancedOpen.addEventListener('click', function () {
+      setMode('advanced', els);
+      answerAdvanced('where should I start');
+    });
+    els.backToQuick.addEventListener('click', function () {
+      setMode('quick', els);
+    });
+    els.prompts.addEventListener('click', function (event) {
+      var btn = event.target.closest('[data-ask-sbd-prompt]');
+      if (!btn) return;
+      els.input.value = btn.dataset.askSbdPrompt || '';
+      answerAdvanced(els.input.value);
+    });
+    els.form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      answerAdvanced(els.input.value);
+    });
     document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape' && !els.sheet.hidden) setOpen(false, els);
+      if (event.key === 'Escape' && !els.sheet.hidden) {
+        setOpen(false, els);
+        setMode('quick', els);
+      }
     });
   }
 
   root.SbdAskGuide = {
     VERSION: VERSION,
     QUESTIONS: QUESTIONS,
+    ADVANCED_TOPICS: ADVANCED_TOPICS,
     answerHtml: answerHtml,
+    advancedAnswerHtml: advancedAnswerHtml,
     ctaHtml: ctaHtml,
     findQuestion: findQuestion,
+    findAdvancedAnswer: findAdvancedAnswer,
     init: init,
   };
 
