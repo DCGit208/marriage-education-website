@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 17;
+  var VERSION = 18;
 
   var QUESTIONS = [
     {
@@ -353,6 +353,67 @@
         'A course is best when you need sequence, assignments, and practice. If you only need language first, choose a companion book and come back to Learn when ready.',
       ctas: [
         { label: 'Review Courses in Shop', href: '/shop.html?section=academy&category=courses_school2&q=Sexual' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'advisor-book-topic-recommendation',
+      label: 'Book by topic',
+      prompt: 'Book by topic',
+      keywords: [
+        'book about',
+        'books about',
+        'book on',
+        'books on',
+        'book for',
+        'books for',
+        'recommend a book about',
+        'recommend books about',
+      ],
+      title: 'Choose a Shop book as the companion for the topic',
+      body:
+        'If you ask for a book about a topic, ASK SBD should treat the book as a Shop companion: one resource that gives language, reflection, and a next practice step before you move deeper into Learn.',
+      nextStep: 'Review the closest book in Shop first, then use Learn or Boards if you need sequence, discussion, or accountability.',
+      catalog: [
+        { label: 'Relationship help', title: 'SBD The Heart of Relationship', meta: '$24.99', why: 'Best if the topic is relationship, communication, or connection.', href: '/checkout.html?product=sbd-the-heart-of-relationship', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Heart%20of%20Relationship' },
+        { label: 'SBD foundation', title: 'SBD for Dummies', meta: '$27', why: 'Good if you want the broadest first SBD explanation.', href: '/checkout.html?product=sbd-dummies', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=SBD%20for%20Dummies' },
+        { label: 'Formation focus', title: 'Teleios Blueprint (Book)', meta: '$247', why: 'Good if the topic is identity, growth, or personal formation.', href: '/checkout.html?product=teleios-blueprint', reviewHref: '/shop.html?section=books_magazine&category=books_sbd_series&q=Teleios%20Blueprint' },
+      ],
+      details:
+        'The recommendation is topic-first. If the topic is sexual literacy, communication, identity, or marriage, choose the closest book and then pair it with a course when you need a guided path.',
+      ctas: [
+        { label: 'Review Books in Shop', href: '/shop.html?section=books_magazine' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
+      id: 'advisor-course-topic-recommendation',
+      label: 'Course by topic',
+      prompt: 'Course by topic',
+      keywords: [
+        'course about',
+        'courses about',
+        'course on',
+        'courses on',
+        'course for',
+        'courses for',
+        'recommend a course about',
+        'recommend courses about',
+        'study about',
+      ],
+      title: 'Choose a course by the topic you want to practice',
+      body:
+        'If you ask for a course about a topic, ASK SBD should recommend a guided path, not just a product. Review the course in Shop, then use Learn when you want sequence and progress.',
+      nextStep: 'Choose the course closest to the topic, review it in Shop, then continue in Learn when you are ready for structure.',
+      catalog: [
+        { label: 'Sexual literacy', title: 'Sexual Literacy 101', meta: '$25', why: 'Best if the topic is sex, intimacy, or sexual design.', href: '/checkout.html?product=sexual-literacy-101', reviewHref: '/shop.html?section=academy&category=courses_entry&q=Sexual%20Literacy%20101' },
+        { label: 'Personal growth', title: 'Personal Development MasterClass', meta: '$697', why: 'Good if the topic is identity, maturity, or growth.', href: '/checkout.html?product=personal-development-masterclass', reviewHref: '/shop.html?section=academy&category=courses_school1&q=Personal%20Development%20MasterClass' },
+        { label: 'Communication', title: 'Communication for Covenant Couples', meta: '$199', why: 'Good if the topic is communication, conflict, or marriage conversation.', href: '/checkout.html?product=communication-covenant-couples', reviewHref: '/shop.html?section=academy&category=courses_school3&q=Communication%20for%20Covenant%20Couples' },
+      ],
+      details:
+        'The point is to move from topic to path: review the relevant course, then use Learn to follow the course sequence instead of browsing randomly.',
+      ctas: [
+        { label: 'Review Courses in Shop', href: '/shop.html?section=academy' },
         { label: 'Open Learn', href: '/learn.html' },
       ],
     },
@@ -899,7 +960,7 @@
     learn: {
       match: ['/learn.html', '/courses.html', '/schools.html'],
       intro: 'Quick help finding the right course, certificate, or next lesson.',
-      promptIds: ['learn-course-start', 'advisor-sex-course-recommendation', 'learn-one-year-formation-pack', 'learn-school-fit', 'locked-content', 'learn-certificates'],
+      promptIds: ['learn-course-start', 'advisor-course-topic-recommendation', 'advisor-sex-course-recommendation', 'learn-one-year-formation-pack', 'learn-school-fit', 'locked-content'],
     },
     boards: {
       match: ['/boards.html', '/board.html'],
@@ -914,7 +975,7 @@
     shop: {
       match: ['/shop.html', '/resources.html'],
       intro: 'Quick help choosing resources, products, and practical next steps.',
-      promptIds: ['shop-first-buy', 'advisor-sex-book-recommendation', 'advisor-sex-course-recommendation', 'shop-course-personal-development', 'shop-book-recommendation', 'shop-marriage-communication'],
+      promptIds: ['shop-first-buy', 'advisor-book-topic-recommendation', 'advisor-course-topic-recommendation', 'advisor-sex-book-recommendation', 'advisor-sex-course-recommendation', 'shop-course-personal-development'],
     },
     dating: {
       match: ['/dating.html'],
@@ -1022,6 +1083,28 @@
     return /\b(this|here|now|next|start|locked|unlock|why|how)\b/.test(value);
   }
 
+  function topicIntentAnswer(query, context) {
+    var value = normalize(query);
+    var asksBook = /\bbooks?\s+(about|on|for)\b/.test(value) || /\brecommend\s+(a\s+)?books?\b/.test(value);
+    var asksCourse =
+      /\bcourses?\s+(about|on|for)\b/.test(value) ||
+      /\b(course|study)\s+about\b/.test(value) ||
+      /\brecommend\s+(a\s+)?courses?\b/.test(value);
+    var isSexual = /\b(sex|sexual|sexuality|intimacy|intimate|conjugal)\b/.test(value);
+    var isGrowth = /\b(personal development|self development|personal growth|identity|formation|maturity)\b/.test(value);
+    var isCommunication = /\b(communication|communicate|conflict|argument|argue|conversation)\b/.test(value);
+    var isShopContext = !!(context && context.promptIds && context.promptIds.indexOf('shop-first-buy') !== -1);
+
+    if (asksBook && isSexual) return findAdvancedTopic('advisor-sex-book-recommendation');
+    if (asksCourse && isSexual) return findAdvancedTopic('advisor-sex-course-recommendation');
+    if (asksCourse && isGrowth) return findAdvancedTopic('shop-course-personal-development');
+    if (asksCourse && isCommunication) return findAdvancedTopic('shop-marriage-communication');
+    if (isShopContext && /\bmarriage communication\b/.test(value)) return findAdvancedTopic('shop-marriage-communication');
+    if (asksBook) return findAdvancedTopic('advisor-book-topic-recommendation');
+    if (asksCourse) return findAdvancedTopic('advisor-course-topic-recommendation');
+    return null;
+  }
+
   function findAdvancedAnswer(query, context) {
     var fallback = {
       id: 'fallback',
@@ -1043,6 +1126,8 @@
     (context && context.promptIds ? context.promptIds : []).forEach(function (id, index) {
       contextIds[id] = Math.max(2, 8 - index);
     });
+    var intentAnswer = topicIntentAnswer(query, context);
+    if (intentAnswer) return intentAnswer;
     if (context && isContextualQuery(query)) {
       var contextualTopics = advancedTopicsForContext(context);
       if (contextualTopics[0]) return contextualTopics[0];
@@ -1082,8 +1167,8 @@
   function clarifyingChoicesForContext(context) {
     if (context && context.promptIds && context.promptIds.indexOf('shop-first-buy') !== -1) {
       return [
-        { label: 'Book companion', topicId: 'advisor-sex-book-recommendation' },
-        { label: 'Course path', topicId: 'advisor-sex-course-recommendation' },
+        { label: 'Book by topic', topicId: 'advisor-book-topic-recommendation' },
+        { label: 'Course by topic', topicId: 'advisor-course-topic-recommendation' },
         { label: 'Personal growth', topicId: 'shop-course-personal-development' },
         { label: 'Membership level', topicId: 'advisor-subscription-level' },
       ];
@@ -1091,7 +1176,7 @@
     if (context && context.promptIds && context.promptIds.indexOf('learn-course-start') !== -1) {
       return [
         { label: 'Course path', topicId: 'learn-course-start' },
-        { label: 'Sexual literacy', topicId: 'advisor-sex-course-recommendation' },
+        { label: 'Course by topic', topicId: 'advisor-course-topic-recommendation' },
         { label: 'Full formation pack', topicId: 'learn-one-year-formation-pack' },
         { label: 'Membership level', topicId: 'advisor-subscription-level' },
       ];
