@@ -145,12 +145,17 @@
 
 .ask-sbd-question {
   flex: 0 0 auto;
+  box-sizing: border-box;
+  max-width: min(72vw, 260px);
+  overflow: hidden;
   border: 1px solid rgba(198, 163, 132, 0.22);
   border-radius: 999px;
   padding: 9px 12px;
   color: rgba(247, 239, 230, 0.86);
   background: rgba(255, 255, 255, 0.06);
   font: 700 12px/1.2 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ask-sbd-question.is-active {
@@ -288,12 +293,17 @@
 
 .ask-sbd-prompt {
   flex: 0 0 auto;
+  box-sizing: border-box;
+  max-width: min(72vw, 260px);
+  overflow: hidden;
   border: 1px solid rgba(198, 163, 132, 0.24);
   border-radius: 999px;
   padding: 9px 11px;
   color: rgba(247, 239, 230, 0.86);
   background: rgba(255, 255, 255, 0.06);
   font: 700 12px/1.2 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ask-sbd-form {
@@ -419,6 +429,7 @@
 .ask-sbd-related-row {
   display: flex;
   gap: 8px;
+  min-width: 0;
   overflow-x: auto;
   margin: 0 -16px;
   padding: 0 16px 2px;
@@ -432,13 +443,16 @@
 
 .ask-sbd-related-chip {
   flex: 0 0 auto;
-  max-width: 240px;
+  box-sizing: border-box;
+  max-width: min(72vw, 240px);
+  overflow: hidden;
   border: 1px solid rgba(198, 163, 132, 0.24);
   border-radius: 999px;
   padding: 9px 11px;
   color: rgba(247, 239, 230, 0.86);
   background: rgba(255, 255, 255, 0.055);
   font: 800 12px/1.2 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

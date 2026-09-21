@@ -86,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=7'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=7'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=8'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=8'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -316,13 +316,19 @@ test('first ASK SBD panel is page-aware from open', function () {
 });
 
 test('advanced prompt chips stay in a horizontal swipe row', function () {
+  const questionBlock = css.match(/\.ask-sbd-question\s*\{[\s\S]*?\n\}/);
   const promptBlock = css.match(/\.ask-sbd-prompts\s*\{[\s\S]*?\n\}/);
   const chipBlock = css.match(/\.ask-sbd-prompt\s*\{[\s\S]*?\n\}/);
+  assert.ok(questionBlock, 'missing quick question style block');
   assert.ok(promptBlock, 'missing advanced prompts style block');
   assert.ok(chipBlock, 'missing advanced prompt chip style block');
   assert.ok(promptBlock[0].includes('overflow-x: auto'), 'prompts should swipe horizontally');
   assert.strictEqual(promptBlock[0].includes('flex-wrap: wrap'), false, 'prompts must not stack into rows');
   assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'prompt chips should stay in one row');
+  assert.ok(questionBlock[0].includes('text-overflow: ellipsis'), 'quick chips should not bleed into neighbors');
+  assert.ok(questionBlock[0].includes('overflow: hidden'), 'quick chips should contain long text');
+  assert.ok(chipBlock[0].includes('text-overflow: ellipsis'), 'advanced prompt chips should not bleed into neighbors');
+  assert.ok(chipBlock[0].includes('overflow: hidden'), 'advanced prompt chips should contain long text');
 });
 
 test('answer cards include page-aware related follow-up chips', function () {
@@ -343,6 +349,9 @@ test('answer cards include page-aware related follow-up chips', function () {
   assert.ok(chipBlock, 'missing related chip style block');
   assert.ok(relatedBlock[0].includes('overflow-x: auto'), 'related chips should swipe horizontally');
   assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'related chips should stay in one row');
+  assert.ok(chipBlock[0].includes('text-overflow: ellipsis'), 'related chips should not bleed into neighbors');
+  assert.ok(chipBlock[0].includes('overflow: hidden'), 'related chips should contain long text');
+  assert.ok(chipBlock[0].includes('max-width: min(72vw, 240px)'), 'related chips should fit small mobile screens');
 });
 
 test('answer cards include a compact best next step', function () {
