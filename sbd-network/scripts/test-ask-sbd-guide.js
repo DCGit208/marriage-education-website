@@ -34,16 +34,23 @@ const publicPages = {
   boards: read('public/boards.html'),
   mvHouse: read('public/mv-house.html'),
   shop: read('public/shop.html'),
+  dating: read('public/dating.html'),
 };
 const sourcePages = {
   learn: read('src/pages/learn.html'),
   boards: read('src/pages/boards.html'),
   mvHouse: read('src/pages/mv-house.html'),
   shop: read('src/pages/shop.html'),
+  dating: read('src/pages/dating.html'),
 };
 const js = read('public/js/ask-sbd-guide.js');
 const css = read('public/css/ask-sbd-guide.css');
 const pkg = JSON.parse(read('package.json'));
+
+function includesVersionedAsset(html, assetPath) {
+  const escaped = assetPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escaped + '\\?v=\\d+').test(html);
+}
 
 function loadGuideApi() {
   const sandbox = {};
@@ -56,11 +63,11 @@ console.log('\nASK SBD guided assistant\n');
 
 test('dashboard includes the additive ASK SBD assets', function () {
   assert.ok(
-    dash.includes('/css/ask-sbd-guide.css?v=2'),
+    includesVersionedAsset(dash, '/css/ask-sbd-guide.css'),
     'dashboard must load ASK SBD CSS with a cache-bust'
   );
   assert.ok(
-    dash.includes('/js/ask-sbd-guide.js?v=2'),
+    includesVersionedAsset(dash, '/js/ask-sbd-guide.js'),
     'dashboard must load ASK SBD JS with a cache-bust'
   );
   assert.ok(dash.indexOf('ask-sbd-guide.css') < dash.indexOf('</head>'));
@@ -70,8 +77,8 @@ test('dashboard includes the additive ASK SBD assets', function () {
 test('key public pages include ASK SBD assets', function () {
   Object.keys(publicPages).forEach(function (page) {
     const html = publicPages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=2'), page + ' missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=2'), page + ' missing ASK SBD JS');
+    assert.ok(includesVersionedAsset(html, '/css/ask-sbd-guide.css'), page + ' missing ASK SBD CSS');
+    assert.ok(includesVersionedAsset(html, '/js/ask-sbd-guide.js'), page + ' missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' CSS must be in head');
   });
 });
@@ -79,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=2'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=2'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=3'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=3'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -164,6 +171,11 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
     'boards-what-post',
     'pricing-plan-fit',
     'mv-what',
+    'dating-what',
+    'dating-locked',
+    'dating-score',
+    'dating-elite',
+    'dating-marriage-track',
   ].forEach(function (id) {
     assert.ok(js.includes("id: '" + id + "'"), 'missing advanced topic ' + id);
   });
@@ -171,7 +183,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 5);
+  assert.strictEqual(api.VERSION, 6);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -188,6 +200,14 @@ test('page-aware contexts prioritize relevant prompts', function () {
 
   const shop = api.advancedTopicsForContext(api.detectPageContext('/shop.html'));
   assert.strictEqual(shop[0].id, 'shop-first-buy');
+
+  const dating = api.advancedTopicsForContext(api.detectPageContext('/dating.html'));
+  assert.strictEqual(dating[0].id, 'dating-what');
+  assert.strictEqual(dating[1].id, 'dating-locked');
+
+  const datingElite = api.advancedTopicsForContext(api.detectPageContext('/dating.html', '#elite'));
+  assert.strictEqual(datingElite[0].id, 'dating-elite');
+  assert.strictEqual(datingElite[1].id, 'dating-marriage-track');
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -216,6 +236,11 @@ test('first ASK SBD panel is page-aware from open', function () {
 
   const dashboardQuick = api.quickItemsForContext(api.detectPageContext('/dashboard.html'));
   assert.strictEqual(dashboardQuick[0].id, 'what-is');
+
+  const datingContext = api.detectPageContext('/dating.html');
+  const datingQuick = api.quickItemsForContext(datingContext);
+  assert.ok(datingContext.intro.includes('Covenant Matching'));
+  assert.strictEqual(datingQuick[0].id, 'dating-what');
 });
 
 test('advanced prompt chips stay in a horizontal swipe row', function () {
@@ -285,7 +310,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 5);
+  assert.strictEqual(api.VERSION, 6);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

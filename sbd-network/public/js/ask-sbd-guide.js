@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 5;
+  var VERSION = 6;
 
   var QUESTIONS = [
     {
@@ -606,6 +606,96 @@
         'The goal is not to copy a look. The goal is to become more precise about what your presence communicates.',
       ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
     },
+    {
+      id: 'dating-what',
+      label: 'Covenant Matching',
+      prompt: 'What is Covenant Matching?',
+      keywords: ['covenant matching', 'dating', 'matching', 'match', 'courtship'],
+      title: 'Covenant Matching is formation before union',
+      body:
+        'Covenant Matching is the SBD pathway for serious, formation-aware connection. It is built around readiness, character, and covenant direction rather than casual browsing.',
+      nextStep: 'Review your formation readiness first, then follow the access path that matches your current level.',
+      details:
+        'The point is not to rush people into connection. The point is to make sure desire, discipline, character, and preparation are moving together before covenant becomes the next step.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Compare Plans', href: '/pricing.html' },
+      ],
+    },
+    {
+      id: 'dating-locked',
+      label: 'Matching locked',
+      prompt: 'Why is matching locked?',
+      keywords: ['matching locked', 'dating locked', 'why locked', 'formation gate'],
+      title: 'Matching opens through formation readiness',
+      body:
+        'If Covenant Matching is locked, SBD is asking you to build formation first: learning, participation, and a stronger formation score.',
+      nextStep: 'Start with the formation requirements shown on the page and complete the next visible gap.',
+      details:
+        'The lock is not there to block you randomly. It protects the seriousness of the space by asking for preparation before access.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Open Boards', href: '/boards.html' },
+      ],
+    },
+    {
+      id: 'dating-score',
+      label: 'Formation score',
+      prompt: 'How do I raise my formation score?',
+      keywords: ['formation score', 'raise score', 'score', 'requirements'],
+      title: 'Raise your score by building the formation requirements',
+      body:
+        'Your formation score reflects the preparation path: learning progress, Board participation, and the readiness signals SBD uses before matching.',
+      nextStep: 'Focus on the lowest requirement shown first, then return to Covenant Matching to check progress.',
+      details:
+        'Do not try to game the score. Use it as a mirror: where the score is low, your preparation likely needs more attention.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Open Boards', href: '/boards.html' },
+      ],
+    },
+    {
+      id: 'dating-premium',
+      label: 'Premium matching',
+      prompt: 'What does Premium show here?',
+      keywords: ['premium matching', 'premium profiles', 'premium dating'],
+      title: 'Premium gives a limited view into qualified matching',
+      body:
+        'Premium helps you see curated matching potential while still keeping the deeper matching flow protected for stronger readiness.',
+      nextStep: 'Use Premium to understand the standard, then keep strengthening formation before moving deeper.',
+      details:
+        'The limited view is meant to create direction, not pressure. It shows what is possible when formation is taken seriously.',
+      ctas: [{ label: 'Compare Plans', href: '/pricing.html' }],
+    },
+    {
+      id: 'dating-elite',
+      label: 'Elite matching',
+      prompt: 'What does Elite unlock?',
+      keywords: ['elite matching', 'elite unlock', 'active matches', 'tokens'],
+      title: 'Elite unlocks the deeper matching experience',
+      body:
+        'Elite is for the fullest Covenant Matching experience: active matches, suggested matches, tokens, boosts, and the strongest pathway toward structured courtship.',
+      nextStep: 'Use Elite only when you are ready to treat matching as serious covenant preparation.',
+      details:
+        'Elite is not simply more visibility. It is a deeper responsibility inside a more intentional matching environment.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Open Covenant Matching', href: '/dating.html' },
+      ],
+    },
+    {
+      id: 'dating-marriage-track',
+      label: 'Marriage Track',
+      prompt: 'What is the Marriage Track?',
+      keywords: ['marriage track', 'premarital', 'covenant preparation', 'coach'],
+      title: 'Marriage Track is the path from matching toward covenant preparation',
+      body:
+        'Marriage Track is for serious movement beyond matching: coaching, premarital structure, and preparation toward covenant.',
+      nextStep: 'Consider Marriage Track when a connection is serious enough to need structure, coaching, and accountability.',
+      details:
+        'This is not casual dating support. It is a higher-commitment path for people preparing to move responsibly toward marriage.',
+      ctas: [{ label: 'Open Covenant Matching', href: '/dating.html' }],
+    },
   ];
 
   var PAGE_CONTEXTS = {
@@ -639,7 +729,45 @@
       intro: 'Quick help choosing resources, products, and practical next steps.',
       promptIds: ['shop-first-buy', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-expression', 'shop-use-resources'],
     },
+    dating: {
+      match: ['/dating.html'],
+      intro: 'Quick help understanding Covenant Matching, formation readiness, and next steps.',
+      promptIds: ['dating-what', 'dating-locked', 'dating-score', 'dating-premium', 'dating-elite', 'dating-marriage-track'],
+    },
   };
+
+  var SECTION_CONTEXTS = [
+    {
+      match: '/pricing.html',
+      hashes: ['#premium'],
+      intro: 'Quick help deciding whether Premium fits your next step.',
+      promptIds: ['pricing-premium', 'pricing-plan-fit', 'locked-content', 'learn-certificates', 'pricing-start-free', 'pricing-elite'],
+    },
+    {
+      match: '/pricing.html',
+      hashes: ['#elite'],
+      intro: 'Quick help understanding Elite and the fullest SBD access.',
+      promptIds: ['pricing-elite', 'pricing-mv-unlock', 'pricing-plan-fit', 'dating-elite', 'mv-what', 'pricing-premium'],
+    },
+    {
+      match: '/learn.html',
+      hashes: ['#certificates', '#certificate'],
+      intro: 'Quick help understanding certificates and course completion.',
+      promptIds: ['learn-certificates', 'learn-course-start', 'learn-next', 'locked-content', 'pricing-plan-fit', 'learn-boards-link'],
+    },
+    {
+      match: '/dating.html',
+      hashes: ['#locked', '#stateLocked'],
+      intro: 'Quick help unlocking Covenant Matching through formation readiness.',
+      promptIds: ['dating-locked', 'dating-score', 'learn-course-start', 'boards-how-work', 'pricing-premium', 'dating-what'],
+    },
+    {
+      match: '/dating.html',
+      hashes: ['#elite', '#stateElite'],
+      intro: 'Quick help with Elite matching, tokens, boosts, and marriage-track next steps.',
+      promptIds: ['dating-elite', 'dating-marriage-track', 'dating-score', 'pricing-elite', 'dating-what', 'boards-groups'],
+    },
+  ];
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -703,8 +831,13 @@
     return null;
   }
 
-  function detectPageContext(pathname) {
+  function detectPageContext(pathname, hash) {
     var path = String(pathname || '/').replace(/\/index\.html$/, '/');
+    var hashValue = String(hash || '');
+    for (var sectionIndex = 0; sectionIndex < SECTION_CONTEXTS.length; sectionIndex += 1) {
+      var section = SECTION_CONTEXTS[sectionIndex];
+      if (path === section.match && section.hashes.indexOf(hashValue) !== -1) return section;
+    }
     var keys = Object.keys(PAGE_CONTEXTS);
     for (var i = 0; i < keys.length; i += 1) {
       var context = PAGE_CONTEXTS[keys[i]];
@@ -933,7 +1066,9 @@
   function init(opts) {
     opts = opts || {};
     if (document.getElementById('askSbdLauncher')) return;
-    var pageContext = opts.pageContext || detectPageContext(root.location && root.location.pathname);
+    var pageContext =
+      opts.pageContext ||
+      detectPageContext(root.location && root.location.pathname, root.location && root.location.hash);
     var host = document.createElement('div');
     host.className = 'ask-sbd-root';
     host.innerHTML = mountHtml();
