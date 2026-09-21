@@ -233,10 +233,8 @@ test('answer cards include page-aware related follow-up chips', function () {
   const shopContext = api.detectPageContext('/shop.html');
   const answer = api.findAdvancedTopic('shop-first-buy');
   const related = api.relatedTopicsForResult(answer, shopContext);
-  assert.deepStrictEqual(
-    related.map(function (topic) { return topic.id; }),
-    ['shop-season-resource', 'shop-course-tie', 'shop-marriage-communication']
-  );
+  const relatedIds = related.map(function (topic) { return topic.id; }).join('|');
+  assert.strictEqual(relatedIds, 'shop-season-resource|shop-course-tie|shop-marriage-communication');
   const html = api.advancedAnswerHtml(answer, null, related);
   assert.ok(html.includes('Related questions'));
   assert.ok(html.includes('data-ask-sbd-related-id="shop-season-resource"'));
