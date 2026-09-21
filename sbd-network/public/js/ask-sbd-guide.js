@@ -81,6 +81,8 @@
       title: 'Start with communication formation',
       body:
         'If the pain point is marriage communication, begin with Learn and choose the communication or relationship formation path. Use Boards for reflection and CE2/messages when you need in-context support from a group or facilitator.',
+      details:
+        'A good path is: learn the framework, reflect on the pattern, then practice the next conversation. If the user belongs to a group, CE2 keeps that support inside the SBD Network instead of scattering it across outside apps.',
       ctas: [
         { label: 'Open Learn', href: '/learn.html' },
         { label: 'Open Messages', href: '/communication-v2/' },
@@ -94,6 +96,8 @@
       title: 'Choose the tier by the level of structure you need',
       body:
         'Explore is best for a free preview. Foundation is best for starting structured formation. Premium fits users who want deeper access, certificates, progress boards, and support. Elite is for the fullest SBD and MV ecosystem.',
+      details:
+        'The recommendation should stay simple: free preview first if they are unsure, Foundation for structured entry, Premium for serious guided learning, and Elite when they want the full schools, certificates, MV ecosystem, and deepest access.',
       ctas: [
         { label: 'Compare Plans', href: '/pricing.html' },
         { label: 'Start Free', href: '/auth?next=/learn&src=ask-sbd-advanced' },
@@ -107,6 +111,8 @@
       title: 'Start with one clear next step',
       body:
         'If you are new, go to Learn first. Choose the path closest to your current season, then use Boards to reflect and ASK SBD when you need help deciding what to open next.',
+      details:
+        'The goal is not to explain the entire platform at once. The best onboarding answer gives one next click, one reason, and a secondary path if the user needs community or membership clarity.',
       ctas: [
         { label: 'Begin in Learn', href: '/learn.html' },
         { label: 'Create Account', href: '/auth?next=/learn&src=ask-sbd-start' },
@@ -120,6 +126,8 @@
       title: 'Boards move the learning into practice',
       body:
         'Boards are the community and reflection layer of SBD. Courses teach structure; Boards help users process, discuss, and practice formation through conversations, stories, and prompts.',
+      details:
+        'Boards should be explained as applied formation. They are not a replacement for courses; they help the user process what they are learning in a more social and expressive environment.',
       ctas: [
         { label: 'Open Boards', href: '/boards.html' },
         { label: 'Open Messages', href: '/communication-v2/' },
@@ -133,6 +141,8 @@
       title: 'MV House is the expression layer',
       body:
         'MV House connects inner formation to outward presentation: masculine presence, feminine expression, image, fashion, and embodied identity. It is not just appearance; it is formation made visible.',
+      details:
+        'When users ask about MV House, connect it back to identity. The point is not fashion alone; it is the way presence, image, and expression reveal what has been formed internally.',
       ctas: [{ label: 'Visit MV House', href: '/mv-house.html' }],
     },
     {
@@ -143,6 +153,8 @@
       title: 'Courses give the structured path',
       body:
         'Use Learn when you want the organized path: schools, courses, lessons, and certificates. If a course is locked, compare membership tiers to see which access level fits your goal.',
+      details:
+        'Courses are the clearest path when a user wants sequence, progress, or proof of completion. Certificates should be framed as evidence of completed formation work, not just decorative badges.',
       ctas: [
         { label: 'Open Courses', href: '/learn.html' },
         { label: 'View Certificates', href: '/certificates.html' },
@@ -156,6 +168,8 @@
       title: 'Use Shop and Resources for practical tools',
       body:
         'The Shop and resource library support the formation journey with books, products, and practical materials. Courses give the path; resources help you apply it.',
+      details:
+        'If a user is not ready for a full course path, resources can provide a practical entry point. The bot should still route them back to Learn when they need a structured journey.',
       ctas: [
         { label: 'Browse Shop', href: '/shop.html' },
         { label: 'Open Resources', href: '/resources.html' },
@@ -169,6 +183,8 @@
       title: 'Facilitators should use CE2 staff tools',
       body:
         'If you host or facilitate a group, use CE2 and the coach inbox to see who may need a nudge, then reply inside the SBD Network. Staff tools stay behind the existing role checks.',
+      details:
+        'Facilitator guidance must never expose staff workflows to ordinary members. The bot can explain the pathway, but CE2 permissions remain the authority for what a user can actually open.',
       ctas: [{ label: 'Open Messages', href: '/communication-v2/?hub=coach' }],
     },
   ];
@@ -208,6 +224,8 @@
       title: 'Start with the closest SBD path',
       body:
         'I can help best when you name the area: membership, marriage communication, Boards, MV House, courses, certificates, shop, or facilitator support. For now, start with Learn if you want structure, Pricing if you need access clarity, or Boards if you want community context.',
+      details:
+        'When a question is broad, the safest answer is to offer a few clear paths rather than pretending to know exactly what the user means. This keeps guidance useful without becoming noisy.',
       ctas: [
         { label: 'Open Learn', href: '/learn.html' },
         { label: 'Compare Plans', href: '/pricing.html' },
@@ -238,6 +256,18 @@
         );
       })
       .join('');
+  }
+
+  function moreHtml(details) {
+    if (!details) return '';
+    return (
+      '<details class="ask-sbd-more">' +
+      '<summary>Show more</summary>' +
+      '<p>' +
+      escapeHtml(details) +
+      '</p>' +
+      '</details>'
+    );
   }
 
   function answerHtml(question) {
@@ -272,6 +302,7 @@
       '<div class="ask-sbd-ctas">' +
       ctaHtml(result.ctas) +
       '</div>' +
+      moreHtml(result.details) +
       '<p class="ask-sbd-answer-note">Answers are based on approved SBD guidance. If a question needs more detail, start with the closest recommended path.</p>' +
       '</article>'
     );

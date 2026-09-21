@@ -95,6 +95,8 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
   assert.ok(js.includes('askSbdForm'), 'missing typed assistant form');
   assert.ok(js.includes('ADVANCED_TOPICS'), 'missing curated advanced topics');
   assert.ok(js.includes('findAdvancedAnswer'), 'missing curated matcher');
+  assert.ok(js.includes('details:'), 'advanced topics should include deeper curated guidance');
+  assert.ok(js.includes('moreHtml'), 'missing collapsed detail renderer');
   assert.strictEqual(js.includes("answerAdvanced('where should I start')"), false, 'advanced mode must not auto-render an answer');
   assert.ok(js.includes("els.advancedOutput.innerHTML = ''"), 'advanced output should start empty');
   ['marriage-communication', 'membership-fit', 'where-start', 'boards-community', 'mv-house-expression', 'courses-certificates', 'shop-resources', 'facilitator-help'].forEach(function (id) {
@@ -110,6 +112,21 @@ test('advanced prompt chips stay in a horizontal swipe row', function () {
   assert.ok(promptBlock[0].includes('overflow-x: auto'), 'prompts should swipe horizontally');
   assert.strictEqual(promptBlock[0].includes('flex-wrap: wrap'), false, 'prompts must not stack into rows');
   assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'prompt chips should stay in one row');
+});
+
+test('advanced answers expose deeper guidance only when expanded', function () {
+  const api = loadGuideApi();
+  const answer = api.findAdvancedAnswer('which membership plan fits me');
+  assert.ok(answer.details, 'matched answer should include collapsed detail text');
+  const html = api.advancedAnswerHtml(answer, 'which membership plan fits me');
+  assert.ok(html.includes('<details class="ask-sbd-more">'));
+  assert.ok(html.includes('<summary>Show more</summary>'));
+  assert.ok(html.includes('approved SBD guidance'));
+  assert.strictEqual(html.includes('<script>'), false);
+
+  const moreBlock = css.match(/\.ask-sbd-more\s*\{[\s\S]*?\n\}/);
+  assert.ok(moreBlock, 'missing collapsed detail style block');
+  assert.ok(moreBlock[0].includes('border-top'), 'collapsed detail should be visually separated');
 });
 
 test('advanced answer matching and rendering are safe', function () {
@@ -139,6 +156,7 @@ test('assistant uses unique classes and does not target frozen navigation surfac
   assert.strictEqual(/sideMenu|menuOverlay|ham-drawer|keyboard|ce2-keyboard/i.test(css), false);
   assert.ok(css.includes('.ask-sbd-launcher'));
   assert.ok(css.includes('.ask-sbd-advanced-open'));
+  assert.ok(css.includes('.ask-sbd-more'));
   assert.ok(js.includes('root.SbdAskGuide'));
 });
 
