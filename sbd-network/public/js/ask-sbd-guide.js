@@ -878,7 +878,7 @@
     var bestScore = 0;
     var contextIds = {};
     (context && context.promptIds ? context.promptIds : []).forEach(function (id, index) {
-      contextIds[id] = Math.max(1, 6 - index);
+      contextIds[id] = Math.max(2, 8 - index);
     });
     if (context && isContextualQuery(query)) {
       var contextualTopics = advancedTopicsForContext(context);
