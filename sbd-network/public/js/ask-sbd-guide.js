@@ -1083,7 +1083,7 @@
     return /\b(this|here|now|next|start|locked|unlock|why|how)\b/.test(value);
   }
 
-  function topicIntentAnswer(query) {
+  function topicIntentAnswer(query, context) {
     var value = normalize(query);
     var asksBook = /\bbooks?\s+(about|on|for)\b/.test(value) || /\brecommend\s+(a\s+)?books?\b/.test(value);
     var asksCourse =
@@ -1093,11 +1093,13 @@
     var isSexual = /\b(sex|sexual|sexuality|intimacy|intimate|conjugal)\b/.test(value);
     var isGrowth = /\b(personal development|self development|personal growth|identity|formation|maturity)\b/.test(value);
     var isCommunication = /\b(communication|communicate|conflict|argument|argue|conversation)\b/.test(value);
+    var isShopContext = !!(context && context.promptIds && context.promptIds.indexOf('shop-first-buy') !== -1);
 
     if (asksBook && isSexual) return findAdvancedTopic('advisor-sex-book-recommendation');
     if (asksCourse && isSexual) return findAdvancedTopic('advisor-sex-course-recommendation');
     if (asksCourse && isGrowth) return findAdvancedTopic('shop-course-personal-development');
     if (asksCourse && isCommunication) return findAdvancedTopic('shop-marriage-communication');
+    if (isShopContext && /\bmarriage communication\b/.test(value)) return findAdvancedTopic('shop-marriage-communication');
     if (asksBook) return findAdvancedTopic('advisor-book-topic-recommendation');
     if (asksCourse) return findAdvancedTopic('advisor-course-topic-recommendation');
     return null;
@@ -1124,7 +1126,7 @@
     (context && context.promptIds ? context.promptIds : []).forEach(function (id, index) {
       contextIds[id] = Math.max(2, 8 - index);
     });
-    var intentAnswer = topicIntentAnswer(query);
+    var intentAnswer = topicIntentAnswer(query, context);
     if (intentAnswer) return intentAnswer;
     if (context && isContextualQuery(query)) {
       var contextualTopics = advancedTopicsForContext(context);

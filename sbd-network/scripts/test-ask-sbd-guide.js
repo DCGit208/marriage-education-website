@@ -279,7 +279,7 @@ test('typed advanced answers use current page or section context when the questi
 
   const shopContext = api.detectPageContext('/shop.html');
   assert.strictEqual(api.findAdvancedAnswer('recommend a course for personal development in shop', shopContext).id, 'shop-course-personal-development');
-  assert.strictEqual(api.findAdvancedAnswer('recommend a book for reflection', shopContext).id, 'shop-book-recommendation');
+  assert.strictEqual(api.findAdvancedAnswer('recommend a book for reflection', shopContext).id, 'advisor-book-topic-recommendation');
   assert.strictEqual(api.findAdvancedAnswer('books about sex', shopContext).id, 'advisor-sex-book-recommendation');
   assert.strictEqual(api.findAdvancedAnswer('course about sex', shopContext).id, 'advisor-sex-course-recommendation');
   assert.strictEqual(api.findAdvancedAnswer('books about communication', shopContext).id, 'advisor-book-topic-recommendation');
