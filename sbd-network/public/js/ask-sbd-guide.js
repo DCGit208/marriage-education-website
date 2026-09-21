@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 9;
+  var VERSION = 10;
 
   var QUESTIONS = [
     {
@@ -258,6 +258,30 @@
       ],
     },
     {
+      id: 'shop-book-recommendation',
+      label: 'Book recommendation',
+      prompt: 'Recommend a book or resource',
+      keywords: [
+        'recommend book',
+        'suggest book',
+        'which book',
+        'book for',
+        'resource recommendation',
+        'recommend resource',
+        'which resource',
+      ],
+      title: 'Choose the book by the problem you want to practice',
+      body:
+        'For a book or resource, start with the need: identity and preparation, marriage communication, intimacy literacy, or reflection. If the need is broad personal growth, choose a formation resource and pair it with Learn.',
+      nextStep: 'Open Shop and choose one resource that solves the question you can practice this week.',
+      details:
+        'Do not start by collecting many resources. Start with one honest problem, choose the resource that addresses it, then use Boards or Learn to turn the insight into practice.',
+      ctas: [
+        { label: 'Browse Shop', href: '/shop.html' },
+        { label: 'Open Learn', href: '/learn.html' },
+      ],
+    },
+    {
       id: 'shop-season-resource',
       label: 'Shop by season',
       prompt: 'What resource fits my season?',
@@ -346,6 +370,55 @@
       ctas: [
         { label: 'Open Learn', href: '/learn.html' },
         { label: 'Compare Plans', href: '/pricing.html' },
+      ],
+    },
+    {
+      id: 'learn-one-year-formation-pack',
+      label: '1-year formation pack',
+      prompt: 'Should I choose the 1-year formation pack?',
+      keywords: [
+        '1 year formation pack',
+        'one year formation pack',
+        'year formation',
+        'formation pack',
+        'full formation',
+        'serious formation',
+        'long term formation',
+      ],
+      title: 'Consider the 1-year formation pack when you want a complete path',
+      body:
+        'If you want structure instead of guessing course by course, the 1-year formation pack is the stronger direction to consider. It fits someone who wants a guided formation rhythm, not just a single answer.',
+      nextStep: 'Start in Learn, then compare membership access so the pack or course path matches the level of structure you want.',
+      details:
+        'Treat this as a tentative recommendation: choose the pack if you want consistency, sequence, and accountability. Choose a single course first if you only need help with one focused question.',
+      ctas: [
+        { label: 'Open Learn', href: '/learn.html' },
+        { label: 'Compare Plans', href: '/pricing.html' },
+      ],
+    },
+    {
+      id: 'advisor-subscription-level',
+      label: 'Subscription guidance',
+      prompt: 'Which level should I subscribe to?',
+      keywords: [
+        'subscribe',
+        'subscription',
+        'which level',
+        'which membership',
+        'which tier',
+        'sell me',
+        'best plan',
+        'upgrade recommendation',
+      ],
+      title: 'Choose the level by the depth of help you need',
+      body:
+        'Start free if you are only exploring. Choose Foundation for entry formation, Premium for deeper course access and progress, and Elite when you want the full ecosystem: advanced training, MV House, and deeper guided access.',
+      nextStep: 'Compare plans, then choose the lowest level that genuinely opens the next step you need.',
+      details:
+        'The best subscription is not always the highest one. It is the level that gives enough structure for the question you are carrying now, with room to upgrade when your next step becomes clearer.',
+      ctas: [
+        { label: 'Compare Plans', href: '/pricing.html' },
+        { label: 'Open Learn', href: '/learn.html' },
       ],
     },
     {
@@ -731,12 +804,12 @@
     pricing: {
       match: ['/pricing.html'],
       intro: 'Quick help choosing the right membership and understanding access.',
-      promptIds: ['pricing-plan-fit', 'pricing-premium', 'pricing-elite', 'pricing-start-free', 'locked-content', 'pricing-mv-unlock'],
+      promptIds: ['pricing-plan-fit', 'advisor-subscription-level', 'pricing-premium', 'pricing-elite', 'pricing-start-free', 'locked-content'],
     },
     learn: {
       match: ['/learn.html', '/courses.html', '/schools.html'],
       intro: 'Quick help finding the right course, certificate, or next lesson.',
-      promptIds: ['learn-course-start', 'learn-school-fit', 'locked-content', 'learn-certificates', 'learn-next', 'learn-boards-link'],
+      promptIds: ['learn-course-start', 'learn-one-year-formation-pack', 'learn-school-fit', 'locked-content', 'learn-certificates', 'learn-next'],
     },
     boards: {
       match: ['/boards.html', '/board.html'],
@@ -751,7 +824,7 @@
     shop: {
       match: ['/shop.html', '/resources.html'],
       intro: 'Quick help choosing resources, products, and practical next steps.',
-      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-use-resources'],
+      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-book-recommendation', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication'],
     },
     dating: {
       match: ['/dating.html'],
@@ -766,21 +839,21 @@
       hashes: ['#premium'],
       sections: ['pricing-premium'],
       intro: 'Quick help deciding whether Premium fits your next step.',
-      promptIds: ['pricing-premium', 'pricing-plan-fit', 'locked-content', 'learn-certificates', 'pricing-start-free', 'pricing-elite'],
+      promptIds: ['pricing-premium', 'pricing-plan-fit', 'advisor-subscription-level', 'locked-content', 'learn-certificates', 'pricing-elite'],
     },
     {
       match: '/pricing.html',
       hashes: ['#elite'],
       sections: ['pricing-elite'],
       intro: 'Quick help understanding Elite and the fullest SBD access.',
-      promptIds: ['pricing-elite', 'pricing-mv-unlock', 'pricing-plan-fit', 'dating-elite', 'mv-what', 'pricing-premium'],
+      promptIds: ['pricing-elite', 'advisor-subscription-level', 'pricing-mv-unlock', 'pricing-plan-fit', 'dating-elite', 'mv-what'],
     },
     {
       match: '/learn.html',
       hashes: ['#certificates', '#certificate'],
       sections: ['learn-certificates'],
       intro: 'Quick help understanding certificates and course completion.',
-      promptIds: ['learn-certificates', 'learn-course-start', 'learn-next', 'locked-content', 'pricing-plan-fit', 'learn-boards-link'],
+      promptIds: ['learn-certificates', 'learn-course-start', 'learn-one-year-formation-pack', 'learn-next', 'locked-content', 'pricing-plan-fit'],
     },
     {
       match: '/dating.html',
@@ -822,7 +895,7 @@
       hashes: ['#resources'],
       sections: ['shop-resources'],
       intro: 'Quick help choosing the right resource from the shop.',
-      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication', 'shop-use-resources'],
+      promptIds: ['shop-first-buy', 'shop-course-personal-development', 'shop-book-recommendation', 'shop-season-resource', 'shop-course-tie', 'shop-marriage-communication'],
     },
   ];
 
