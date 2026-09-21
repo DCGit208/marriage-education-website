@@ -86,8 +86,8 @@ test('key public pages include ASK SBD assets', function () {
 test('generated source pages include ASK SBD assets before build', function () {
   Object.keys(sourcePages).forEach(function (page) {
     const html = sourcePages[page];
-    assert.ok(html.includes('/css/ask-sbd-guide.css?v=4'), page + ' source missing ASK SBD CSS');
-    assert.ok(html.includes('/js/ask-sbd-guide.js?v=4'), page + ' source missing ASK SBD JS');
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=5'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=5'), page + ' source missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
@@ -183,7 +183,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 7);
+  assert.strictEqual(api.VERSION, 8);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -250,6 +250,22 @@ test('live visible section detection selects the strongest visible marker', func
   };
   const context = api.detectMarkedSectionContext('/pricing.html', doc);
   assert.strictEqual(api.advancedTopicsForContext(context)[0].id, 'pricing-elite');
+});
+
+test('typed advanced answers use current page or section context when the question is vague', function () {
+  const api = loadGuideApi();
+  const datingLocked = api.detectSectionContext('/dating.html', 'dating-locked');
+  assert.strictEqual(api.findAdvancedAnswer('what should I do next here?', datingLocked).id, 'dating-locked');
+
+  const datingElite = api.detectSectionContext('/dating.html', 'dating-elite');
+  assert.strictEqual(api.findAdvancedAnswer('what should I do next here?', datingElite).id, 'dating-elite');
+
+  const pricingElite = api.detectSectionContext('/pricing.html', 'pricing-elite');
+  assert.strictEqual(api.findAdvancedAnswer('what does elite unlock?', pricingElite).id, 'pricing-elite');
+
+  const shopContext = api.detectPageContext('/shop.html');
+  assert.strictEqual(api.findAdvancedAnswer('I need help with marriage communication', shopContext).id, 'shop-marriage-communication');
+  assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication', shopContext).id, 'marriage-communication');
 });
 
 test('first ASK SBD panel is page-aware from open', function () {
@@ -352,7 +368,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 7);
+  assert.strictEqual(api.VERSION, 8);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');

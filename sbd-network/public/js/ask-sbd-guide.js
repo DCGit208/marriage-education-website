@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 7;
+  var VERSION = 8;
 
   var QUESTIONS = [
     {
@@ -267,7 +267,7 @@
       id: 'shop-marriage-communication',
       label: 'Shop communication',
       prompt: 'What helps with communication?',
-      keywords: ['communication resource', 'marriage communication resource', 'argue', 'conflict resource'],
+      keywords: ['communication resource', 'marriage communication', 'marriage communication resource', 'argue', 'conflict resource'],
       title: 'Choose a resource that helps you practice better conversations',
       body:
         'For communication, look for resources that help you name patterns, prepare a better conversation, and reflect afterward. Pair the resource with Learn when you want a fuller formation path.',
@@ -830,7 +830,12 @@
     return score;
   }
 
-  function findAdvancedAnswer(query) {
+  function isContextualQuery(query) {
+    var value = normalize(query);
+    return /\b(this|here|now|next|start|locked|unlock|why|how)\b/.test(value);
+  }
+
+  function findAdvancedAnswer(query, context) {
     var fallback = {
       id: 'fallback',
       label: 'General guidance',
@@ -847,8 +852,18 @@
     };
     var best = null;
     var bestScore = 0;
+    var contextIds = {};
+    (context && context.promptIds ? context.promptIds : []).forEach(function (id, index) {
+      contextIds[id] = Math.max(1, 6 - index);
+    });
+    if (context && isContextualQuery(query)) {
+      var contextualTopics = advancedTopicsForContext(context);
+      if (contextualTopics[0]) return contextualTopics[0];
+    }
     ADVANCED_TOPICS.forEach(function (topic) {
-      var score = topicScore(topic, query);
+      var baseScore = topicScore(topic, query);
+      var score = baseScore;
+      if (baseScore > 0 && contextIds[topic.id]) score += contextIds[topic.id];
       if (score > bestScore) {
         best = topic;
         bestScore = score;
@@ -1257,7 +1272,7 @@
           '<p class="ask-sbd-empty">Ask about membership, where to start, courses, Boards, MV House, shop, or facilitator support.</p>';
         return;
       }
-      var result = findAdvancedAnswer(cleanQuery);
+      var result = findAdvancedAnswer(cleanQuery, pageContext);
       els.advancedOutput.innerHTML = advancedAnswerHtml(result, cleanQuery, relatedTopicsForResult(result, pageContext));
     }
 
