@@ -35,6 +35,12 @@ const publicPages = {
   mvHouse: read('public/mv-house.html'),
   shop: read('public/shop.html'),
 };
+const sourcePages = {
+  learn: read('src/pages/learn.html'),
+  boards: read('src/pages/boards.html'),
+  mvHouse: read('src/pages/mv-house.html'),
+  shop: read('src/pages/shop.html'),
+};
 const js = read('public/js/ask-sbd-guide.js');
 const css = read('public/css/ask-sbd-guide.css');
 const pkg = JSON.parse(read('package.json'));
@@ -67,6 +73,15 @@ test('key public pages include ASK SBD assets', function () {
     assert.ok(html.includes('/css/ask-sbd-guide.css?v=2'), page + ' missing ASK SBD CSS');
     assert.ok(html.includes('/js/ask-sbd-guide.js?v=2'), page + ' missing ASK SBD JS');
     assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' CSS must be in head');
+  });
+});
+
+test('generated source pages include ASK SBD assets before build', function () {
+  Object.keys(sourcePages).forEach(function (page) {
+    const html = sourcePages[page];
+    assert.ok(html.includes('/css/ask-sbd-guide.css?v=2'), page + ' source missing ASK SBD CSS');
+    assert.ok(html.includes('/js/ask-sbd-guide.js?v=2'), page + ' source missing ASK SBD JS');
+    assert.ok(html.indexOf('ask-sbd-guide.css') < html.indexOf('</head>'), page + ' source CSS must be in head');
   });
 });
 
