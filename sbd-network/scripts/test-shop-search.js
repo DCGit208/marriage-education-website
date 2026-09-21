@@ -22,8 +22,13 @@ const sandbox = {
   console,
   URLSearchParams,
   localStorage: { getItem: function () { return null; } },
-  document: { getElementById: function () { return null; }, createElement: function () { return { textContent: '', innerHTML: '' }; } },
+  document: {
+    getElementById: function () { return null; },
+    querySelector: function () { return null; },
+    createElement: function () { return { textContent: '', innerHTML: '' }; },
+  },
   firebase: { auth: function () { return { onAuthStateChanged: function () {} }; } },
+  history: { back: function () {} },
 };
 sandbox.window = sandbox;
 sandbox.global = sandbox;
