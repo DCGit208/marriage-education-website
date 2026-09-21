@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
 
-  var VERSION = 12;
+  var VERSION = 13;
 
   var QUESTIONS = [
     {
@@ -1001,6 +1001,71 @@
     return null;
   }
 
+  function shouldClarifyQuery(query) {
+    var value = normalize(query);
+    return (
+      /\bwhat should i (do|buy|take|study)\b/.test(value) ||
+      /\bhelp me\b/.test(value) ||
+      /\bi need help\b/.test(value) ||
+      /\bmarriage help\b/.test(value) ||
+      /\brelationship help\b/.test(value) ||
+      /\bhelp me grow\b/.test(value) ||
+      /\bi want to grow\b/.test(value)
+    );
+  }
+
+  function clarifyingChoicesForContext(context) {
+    if (context && context.promptIds && context.promptIds.indexOf('shop-first-buy') !== -1) {
+      return [
+        { label: 'Course path', topicId: 'shop-course-personal-development' },
+        { label: 'Book/resource', topicId: 'shop-book-recommendation' },
+        { label: 'Membership level', topicId: 'advisor-subscription-level' },
+        { label: 'Marriage help', topicId: 'shop-marriage-communication' },
+      ];
+    }
+    if (context && context.promptIds && context.promptIds.indexOf('learn-course-start') !== -1) {
+      return [
+        { label: 'Course path', topicId: 'learn-course-start' },
+        { label: 'Full formation pack', topicId: 'learn-one-year-formation-pack' },
+        { label: 'Membership level', topicId: 'advisor-subscription-level' },
+        { label: 'Marriage help', topicId: 'marriage-communication' },
+      ];
+    }
+    if (context && context.promptIds && context.promptIds.indexOf('pricing-plan-fit') !== -1) {
+      return [
+        { label: 'Best level', topicId: 'advisor-subscription-level' },
+        { label: 'Premium', topicId: 'pricing-premium' },
+        { label: 'Elite', topicId: 'pricing-elite' },
+        { label: 'Start free', topicId: 'pricing-start-free' },
+      ];
+    }
+    if (context && context.promptIds && context.promptIds.indexOf('dating-what') !== -1) {
+      return [
+        { label: 'Unlock matching', topicId: 'dating-locked' },
+        { label: 'Raise score', topicId: 'dating-score' },
+        { label: 'Elite matching', topicId: 'dating-elite' },
+        { label: 'Marriage Track', topicId: 'dating-marriage-track' },
+      ];
+    }
+    return [
+      { label: 'Course path', topicId: 'learn-course-start' },
+      { label: 'Book/resource', topicId: 'shop-book-recommendation' },
+      { label: 'Membership level', topicId: 'advisor-subscription-level' },
+      { label: 'Marriage help', topicId: 'marriage-communication' },
+    ];
+  }
+
+  function clarifyingAnswerForContext(context) {
+    return {
+      id: 'clarify-next-step',
+      label: 'Choose a direction',
+      title: 'What kind of help do you need?',
+      body:
+        'I can guide you better if you choose the kind of next step you mean. Pick one direction and I will narrow the recommendation.',
+      choices: clarifyingChoicesForContext(context),
+    };
+  }
+
   function normalizePath(pathname) {
     return String(pathname || '/').replace(/\/index\.html$/, '/');
   }
@@ -1212,6 +1277,25 @@
     );
   }
 
+  function choicesHtml(choices) {
+    if (!choices || !choices.length) return '';
+    return (
+      '<div class="ask-sbd-choices" aria-label="Choose a direction">' +
+      choices
+        .map(function (choice) {
+          return (
+            '<button type="button" class="ask-sbd-choice" data-ask-sbd-related-id="' +
+            escapeHtml(choice.topicId) +
+            '">' +
+            escapeHtml(choice.label) +
+            '</button>'
+          );
+        })
+        .join('') +
+      '</div>'
+    );
+  }
+
   function answerHtml(question) {
     question = question || QUESTIONS[0];
     return (
@@ -1243,6 +1327,7 @@
       '</p>' +
       nextStepHtml(result) +
       catalogHtml(result.catalog) +
+      choicesHtml(result.choices) +
       '<div class="ask-sbd-ctas">' +
       ctaHtml(result.ctas) +
       '</div>' +
@@ -1425,8 +1510,14 @@
           '<p class="ask-sbd-empty">Ask about membership, where to start, courses, Boards, MV House, shop, or facilitator support.</p>';
         return;
       }
-      var result = findAdvancedAnswer(cleanQuery, pageContext);
-      els.advancedOutput.innerHTML = advancedAnswerHtml(result, cleanQuery, relatedTopicsForResult(result, pageContext));
+      var result = shouldClarifyQuery(cleanQuery)
+        ? clarifyingAnswerForContext(pageContext)
+        : findAdvancedAnswer(cleanQuery, pageContext);
+      els.advancedOutput.innerHTML = advancedAnswerHtml(
+        result,
+        cleanQuery,
+        result.choices ? [] : relatedTopicsForResult(result, pageContext)
+      );
     }
 
     renderContext(pageContext, opts.initialQuestion);
@@ -1502,6 +1593,8 @@
     findQuestion: findQuestion,
     findAdvancedAnswer: findAdvancedAnswer,
     findAdvancedTopic: findAdvancedTopic,
+    shouldClarifyQuery: shouldClarifyQuery,
+    clarifyingAnswerForContext: clarifyingAnswerForContext,
     detectPageContext: detectPageContext,
     detectSectionContext: detectSectionContext,
     detectMarkedSectionContext: detectMarkedSectionContext,
