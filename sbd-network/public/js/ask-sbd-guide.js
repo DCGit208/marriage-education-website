@@ -305,7 +305,7 @@
       '</div>' +
       '<div class="ask-sbd-advanced" id="askSbdAdvanced" hidden>' +
       '<button type="button" class="ask-sbd-back-to-quick" id="askSbdBackToQuick">← Quick guide</button>' +
-      '<p class="ask-sbd-advanced-copy">Type a question or choose a prompt. ASK SBD will route you to the clearest next step.</p>' +
+      '<p class="ask-sbd-advanced-copy">Ask directly, or swipe the prompts for ideas.</p>' +
       '<div class="ask-sbd-prompts" id="askSbdPrompts" role="list"></div>' +
       '<form class="ask-sbd-form" id="askSbdForm">' +
       '<label class="ask-sbd-input-label" for="askSbdInput">Ask SBD a question</label>' +
@@ -431,7 +431,7 @@
     });
     els.advancedOpen.addEventListener('click', function () {
       setMode('advanced', els);
-      answerAdvanced('where should I start');
+      els.advancedOutput.innerHTML = '';
     });
     els.backToQuick.addEventListener('click', function () {
       setMode('quick', els);

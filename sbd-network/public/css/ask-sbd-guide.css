@@ -274,12 +274,20 @@
 
 .ask-sbd-prompts {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+  overflow-x: auto;
+  margin: 0 -18px 14px;
+  padding: 0 18px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ask-sbd-prompts::-webkit-scrollbar {
+  display: none;
 }
 
 .ask-sbd-prompt {
+  flex: 0 0 auto;
   border: 1px solid rgba(198, 163, 132, 0.24);
   border-radius: 999px;
   padding: 9px 11px;

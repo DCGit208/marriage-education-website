@@ -69,7 +69,7 @@ test('front-facing copy avoids technical implementation language', function () {
   assert.strictEqual(js.includes('ASK SBD answered'), false);
   assert.ok(js.includes('Quick answers for understanding the platform. Choose a topic, or ask something more specific.'));
   assert.ok(js.includes('Recommended guidance'));
-  assert.ok(js.includes('ASK SBD will route you to the clearest next step.'));
+  assert.ok(js.includes('Ask directly, or swipe the prompts for ideas.'));
 });
 
 test('assistant covers the core landing-page clarity questions', function () {
@@ -95,9 +95,21 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
   assert.ok(js.includes('askSbdForm'), 'missing typed assistant form');
   assert.ok(js.includes('ADVANCED_TOPICS'), 'missing curated advanced topics');
   assert.ok(js.includes('findAdvancedAnswer'), 'missing curated matcher');
+  assert.strictEqual(js.includes("answerAdvanced('where should I start')"), false, 'advanced mode must not auto-render an answer');
+  assert.ok(js.includes("els.advancedOutput.innerHTML = ''"), 'advanced output should start empty');
   ['marriage-communication', 'membership-fit', 'where-start', 'boards-community', 'mv-house-expression', 'courses-certificates', 'shop-resources', 'facilitator-help'].forEach(function (id) {
     assert.ok(js.includes("id: '" + id + "'"), 'missing advanced topic ' + id);
   });
+});
+
+test('advanced prompt chips stay in a horizontal swipe row', function () {
+  const promptBlock = css.match(/\.ask-sbd-prompts\s*\{[\s\S]*?\n\}/);
+  const chipBlock = css.match(/\.ask-sbd-prompt\s*\{[\s\S]*?\n\}/);
+  assert.ok(promptBlock, 'missing advanced prompts style block');
+  assert.ok(chipBlock, 'missing advanced prompt chip style block');
+  assert.ok(promptBlock[0].includes('overflow-x: auto'), 'prompts should swipe horizontally');
+  assert.strictEqual(promptBlock[0].includes('flex-wrap: wrap'), false, 'prompts must not stack into rows');
+  assert.ok(chipBlock[0].includes('flex: 0 0 auto'), 'prompt chips should stay in one row');
 });
 
 test('advanced answer matching and rendering are safe', function () {
