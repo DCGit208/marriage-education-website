@@ -57,7 +57,7 @@ test('dashboard includes the additive ASK SBD assets', function () {
 test('assistant is scripted and does not introduce AI or network dependencies', function () {
   assert.ok(js.includes('This MVP is intentionally not AI'));
   assert.ok(js.includes('QUESTIONS'));
-  assert.ok(js.includes('approved SBD guidance'));
+  assert.ok(js.includes('ADVANCED_TOPICS'));
   assert.strictEqual(/fetch\s*\(/.test(js), false, 'must not call fetch');
   assert.strictEqual(/XMLHttpRequest/.test(js), false, 'must not call XMLHttpRequest');
   assert.strictEqual(/firebase|firestore|openai|gemini|anthropic/i.test(js), false, 'must not depend on backend/AI SDKs');
@@ -67,6 +67,10 @@ test('front-facing copy avoids technical implementation language', function () {
   assert.strictEqual(js.includes('This guide is scripted, not AI.'), false);
   assert.strictEqual(js.includes('not live AI'), false);
   assert.strictEqual(js.includes('ASK SBD answered'), false);
+  assert.strictEqual(js.includes('The goal is not to explain'), false);
+  assert.strictEqual(js.includes('The best onboarding answer'), false);
+  assert.strictEqual(js.includes('If the user'), false);
+  assert.strictEqual(js.includes('The bot should'), false);
   assert.ok(js.includes('Quick answers for understanding the platform. Choose a topic, or ask something more specific.'));
   assert.ok(js.includes('Recommended guidance'));
   assert.ok(js.includes('Ask directly, or swipe the prompts for ideas.'));
@@ -121,7 +125,8 @@ test('advanced answers expose deeper guidance only when expanded', function () {
   const html = api.advancedAnswerHtml(answer, 'which membership plan fits me');
   assert.ok(html.includes('<details class="ask-sbd-more">'));
   assert.ok(html.includes('<summary>Show more</summary>'));
-  assert.ok(html.includes('approved SBD guidance'));
+  assert.ok(html.includes('If you are unsure, start with the free preview.'));
+  assert.strictEqual(html.includes('Answers are based on approved SBD guidance'), false);
   assert.strictEqual(html.includes('<script>'), false);
 
   const moreBlock = css.match(/\.ask-sbd-more\s*\{[\s\S]*?\n\}/);
