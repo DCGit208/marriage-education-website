@@ -190,7 +190,7 @@ test('advanced Ask Anything mode is opt-in and curated', function () {
 
 test('page-aware contexts prioritize relevant prompts', function () {
   const api = loadGuideApi();
-  assert.strictEqual(api.VERSION, 15);
+  assert.strictEqual(api.VERSION, 16);
 
   const pricing = api.advancedTopicsForContext(api.detectPageContext('/pricing.html'));
   assert.strictEqual(pricing[0].id, 'pricing-plan-fit');
@@ -284,12 +284,13 @@ test('typed advanced answers use current page or section context when the questi
   assert.strictEqual(api.findAdvancedAnswer('which level should I subscribe to?', pricingContext).id, 'advisor-subscription-level');
 });
 
-test('catalog-aware recommendations render real item cards', function () {
+test('catalog-aware recommendations render advisor-style item cards', function () {
   const api = loadGuideApi();
   const personal = api.findAdvancedTopic('shop-course-personal-development');
   assert.strictEqual(personal.catalog[0].title, 'Personal Development MasterClass');
   assert.strictEqual(personal.catalog[0].href, '/checkout.html?product=personal-development-masterclass');
   assert.strictEqual(personal.catalog[0].reviewHref, '/shop.html?section=academy&category=courses_school1&q=Personal%20Development%20MasterClass');
+  assert.ok(personal.catalog[0].why.includes('structured identity'));
   assert.ok(personal.catalog.some(function (item) { return item.title === 'Teleios Development Bundle'; }));
 
   const book = api.findAdvancedTopic('shop-book-recommendation');
@@ -304,6 +305,13 @@ test('catalog-aware recommendations render real item cards', function () {
 
   const html = api.advancedAnswerHtml(personal, null, []);
   assert.ok(html.includes('ask-sbd-catalog-card'));
+  assert.ok(html.includes('ask-sbd-catalog-card--primary'));
+  assert.ok(html.includes('Advisor recommendation'));
+  assert.ok(html.includes('Recommended for you'));
+  assert.ok(html.includes('Also consider'));
+  assert.ok(html.includes('Review first'));
+  assert.ok(html.includes('Buy next'));
+  assert.ok(html.includes('Best if you want structured identity'));
   assert.ok(html.includes('Personal Development MasterClass'));
   assert.ok(html.includes('/shop.html?section=academy&amp;category=courses_school1&amp;q=Personal%20Development%20MasterClass'));
   assert.strictEqual(html.includes('<script>'), false);
@@ -465,7 +473,7 @@ test('advanced answers expose deeper guidance only when expanded', function () {
 test('advanced answer matching and rendering are safe', function () {
   const api = loadGuideApi();
   assert.ok(api, 'missing SbdAskGuide API');
-  assert.strictEqual(api.VERSION, 15);
+  assert.strictEqual(api.VERSION, 16);
   assert.strictEqual(api.findAdvancedAnswer('I need help with my spouse communication').id, 'marriage-communication');
   assert.strictEqual(api.findAdvancedAnswer('which pricing tier should I use').id, 'membership-fit');
   assert.strictEqual(api.findAdvancedAnswer('tell me about fashion and feminine expression').id, 'mv-house-expression');
@@ -493,6 +501,9 @@ test('assistant uses unique classes and does not target frozen navigation surfac
   assert.ok(css.includes('.ask-sbd-next-step'));
   assert.ok(css.includes('.ask-sbd-related-chip'));
   assert.ok(css.includes('.ask-sbd-catalog-card'));
+  assert.ok(css.includes('.ask-sbd-catalog-card--primary'));
+  assert.ok(css.includes('.ask-sbd-catalog-alternatives'));
+  assert.ok(css.includes('.ask-sbd-catalog-card b i'));
   assert.ok(css.includes('.ask-sbd-choice'));
   assert.ok(js.includes('root.SbdAskGuide'));
 });
