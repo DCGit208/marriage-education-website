@@ -77,8 +77,8 @@ const share = loadShare();
 
 console.log('\nCE2 formation / board moment → thread\n');
 
-test('Ce2Share VERSION is 5', function () {
-  assert.strictEqual(share.VERSION, 5);
+test('Ce2Share VERSION is 6', function () {
+  assert.strictEqual(share.VERSION, 6);
 });
 
 test('buildBoardSharePayload is a card payload, not a raw URL dump', function () {
@@ -200,12 +200,12 @@ test('persist / read messenger return survives the board hop', function () {
   assert.strictEqual(local.readStoredMessengerReturn(), null);
 });
 
-test('shouldKeepStoredReturn covers SBD surfaces, not random sites', function () {
+test('shouldKeepStoredReturn covers messenger and board only', function () {
   assert.ok(share.shouldKeepStoredReturn('/communication-v2/'));
   assert.ok(share.shouldKeepStoredReturn('/board.html'));
-  assert.ok(share.shouldKeepStoredReturn('/boards.html'));
-  assert.ok(share.shouldKeepStoredReturn('/dashboard.html'));
-  assert.ok(share.shouldKeepStoredReturn('/group.html'));
+  assert.ok(!share.shouldKeepStoredReturn('/boards.html'));
+  assert.ok(!share.shouldKeepStoredReturn('/dashboard.html'));
+  assert.ok(!share.shouldKeepStoredReturn('/group.html'));
   assert.ok(!share.shouldKeepStoredReturn('/shop.html'));
   assert.ok(!share.shouldKeepStoredReturn('https://evil.example/phish'));
 });
@@ -253,7 +253,9 @@ test('board page share action lists conversations and returns to messenger', fun
   assert.ok(boardJs.indexOf('function afterBoardShareIntoThread') !== -1);
   assert.ok(boardJs.indexOf('Open in messenger') !== -1);
   assert.ok(boardJs.indexOf('buildBoardSharePayload') !== -1);
-  assert.ok(boardJs.indexOf('shouldKeepStoredReturn') !== -1);
+  assert.ok(boardJs.indexOf('fromMessenger') !== -1);
+  assert.ok(boardJs.indexOf('fromBoardSurface') !== -1);
+  assert.ok(boardJs.indexOf('shouldKeepStoredReturn') === -1);
 });
 
 test('community boards preserve from=ce2 when opening a board', function () {
@@ -262,8 +264,19 @@ test('community boards preserve from=ce2 when opening a board', function () {
   const pub = read('public/boards.html');
   assert.ok(boardsJs.indexOf('function messengerReturnBoardHref') !== -1);
   assert.ok(boardsJs.indexOf('withMessengerReturn') !== -1);
+  assert.ok(boardsJs.indexOf('clearStoredMessengerReturn') !== -1);
+  assert.ok(boardsJs.indexOf('readStoredMessengerReturn') === -1);
   assert.ok(src.indexOf('ce2-share.js') !== -1);
   assert.ok(pub.indexOf('ce2-share.js') !== -1);
+});
+
+test('bottom-nav boards visits clear a leftover messenger return hop', function () {
+  const boardsJs = read('public/js/boards-v2.js');
+  const boardJs = read('public/js/board.js');
+  assert.ok(boardsJs.indexOf('Bottom-nav / independent boards visits') !== -1);
+  assert.ok(boardsJs.indexOf('clearStoredMessengerReturn') !== -1);
+  assert.ok(boardJs.indexOf('Do NOT revive a leftover session return') !== -1);
+  assert.ok(boardJs.indexOf('justShared: true, returnInfo: returnInfo') !== -1);
 });
 
 test('drawer action is a 44px mobile target', function () {
@@ -283,7 +296,7 @@ test('cache-bust is above live for share / messenger / board assets', function (
   const shareVer = html.match(/ce2-share\.js\?v=(\d+)/);
   const jsVer = html.match(/communication-v2\.js\?v=(\d+)/);
   const cssVer = html.match(/communication-v2\.css\?v=(\d+)/);
-  assert.ok(shareVer && Number(shareVer[1]) >= 12, 'ce2-share cache-bust must be at or above 12');
+  assert.ok(shareVer && Number(shareVer[1]) >= 13, 'ce2-share cache-bust must be at or above 13');
   assert.ok(jsVer && Number(jsVer[1]) >= 126, 'communication-v2.js cache-bust must be at or above 126');
   assert.ok(cssVer && Number(cssVer[1]) >= 92, 'communication-v2.css cache-bust must be at or above 92');
 

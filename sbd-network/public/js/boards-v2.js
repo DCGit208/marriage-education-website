@@ -239,21 +239,24 @@ function persistMessengerReturnFromBoards() {
   const share = window.Ce2Share;
   if (!share || !share.parseMessengerReturnFromSearch) return;
   const fromUrl = share.parseMessengerReturnFromSearch(window.location.search);
-  if (fromUrl && share.persistMessengerReturn) share.persistMessengerReturn(fromUrl);
+  // Bottom-nav / independent boards visits must not keep a prior messenger hop.
+  if (fromUrl && share.persistMessengerReturn) {
+    share.persistMessengerReturn(fromUrl);
+    return;
+  }
+  if (share.clearStoredMessengerReturn) share.clearStoredMessengerReturn();
 }
 
 function messengerReturnBoardHref(boardId) {
   const href = '/board.html?boardId=' + encodeURIComponent(boardId);
   const share = window.Ce2Share;
   if (!share) return href;
+  // Only tag a board open when THIS boards visit came from messenger (from=ce2).
+  // Do not revive a leftover session return after a normal Boards tab open.
   const fromUrl = share.parseMessengerReturnFromSearch
     ? share.parseMessengerReturnFromSearch(window.location.search)
     : null;
-  const stored = !fromUrl && share.readStoredMessengerReturn
-    ? share.readStoredMessengerReturn()
-    : null;
-  const info = fromUrl || stored;
-  if (info && share.withMessengerReturn) return share.withMessengerReturn(href, info);
+  if (fromUrl && share.withMessengerReturn) return share.withMessengerReturn(href, fromUrl);
   return href;
 }
 
