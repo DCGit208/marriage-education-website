@@ -275,7 +275,9 @@ test('open-thread composer and header are wired to typing helpers', function () 
 test('own typing is filtered and cleared on send', function () {
   assert.ok(v2.indexOf('pr.activeTypingUids') >= 0);
   assert.ok(v2.indexOf('function clearComposerTyping') >= 0);
-  assert.ok(/metaPatch\['typing\.' \+ me\.uid\]/.test(v2));
+  assert.ok(v2.indexOf('pr.clearTyping(ref, me.uid)') >= 0);
+  assert.ok(v2.indexOf('clearComposerTyping(ac)') >= 0);
+  assert.ok(!/metaPatch\['typing\.' \+ me\.uid\]/.test(v2));
   assert.ok(v2.indexOf('uid !== selfUid') >= 0 || v2.indexOf('uid !== me.uid') >= 0);
 });
 
