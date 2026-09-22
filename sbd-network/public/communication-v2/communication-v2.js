@@ -450,6 +450,30 @@
     return typeof window !== 'undefined' ? window.Ce2Moderation : null;
   }
 
+  function modHas(name) {
+    var m = mod();
+    return !!(m && typeof m[name] === 'function');
+  }
+
+  function resolveMemberRole(memberData, groupData, uid) {
+    if (modHas('resolveMemberRole')) {
+      return mod().resolveMemberRole(memberData, groupData, uid);
+    }
+    var raw = memberData && memberData.role != null ? String(memberData.role) : '';
+    raw = raw.toLowerCase();
+    if (raw === 'host' || raw === 'creator') return 'host';
+    if (raw === 'facilitator') return 'facilitator';
+    if (!raw && uid && groupData && groupData.createdBy === uid) return 'host';
+    return 'member';
+  }
+
+  function memberRoleLabel(role) {
+    if (modHas('roleLabel')) return mod().roleLabel(role);
+    if (role === 'host') return 'Host';
+    if (role === 'facilitator') return 'Facilitator';
+    return 'Member';
+  }
+
   function links() {
     return typeof window !== 'undefined' ? window.Ce2Links : null;
   }
@@ -1479,12 +1503,9 @@
         .get();
       var createdBy = CommunicationState.groupCreatedBy || '';
       var groupMeta = { createdBy: createdBy };
-      var moderation = mod();
       snap.forEach(function (d) {
         ids.push(d.id);
-        roles[d.id] = moderation
-          ? moderation.resolveMemberRole(d.data() || {}, groupMeta, d.id)
-          : 'member';
+        roles[d.id] = resolveMemberRole(d.data() || {}, groupMeta, d.id);
       });
     } catch (_) {}
     CommunicationState.groupRoles = roles;
@@ -1586,7 +1607,6 @@
   async function resolveStaffedGroups() {
     var me = CommunicationState.me;
     var api = coachApi();
-    var moderation = mod();
     if (!me) {
       CommunicationState.staffedGroups = [];
       showCoachChrome(false);
@@ -1613,9 +1633,11 @@
           .get()
           .then(function (snap) {
             if (!snap.exists) return null;
-            var role = moderation
-              ? moderation.resolveMemberRole(snap.data() || {}, { createdBy: g.createdBy }, me.uid)
-              : (snap.data() || {}).role || 'member';
+            var role = resolveMemberRole(
+              snap.data() || {},
+              { createdBy: g.createdBy },
+              me.uid
+            );
             if (api ? api.isStaffRole(role, me) : role === 'host' || role === 'facilitator') {
               return {
                 id: g.id,
@@ -1820,8 +1842,7 @@
 
   async function loadMyGroupRole(groupId, memberSnap) {
     var me = CommunicationState.me;
-    var moderation = mod();
-    if (!me || !groupId || !moderation) return 'member';
+    if (!me || !groupId) return 'member';
     var data = memberSnap && memberSnap.exists ? memberSnap.data() || {} : {};
     var createdBy = CommunicationState.groupCreatedBy || '';
     if (!createdBy) {
@@ -1831,7 +1852,7 @@
       } catch (_) {}
       CommunicationState.groupCreatedBy = createdBy;
     }
-    return moderation.resolveMemberRole(data, { createdBy: createdBy }, me.uid);
+    return resolveMemberRole(data, { createdBy: createdBy }, me.uid);
   }
 
   function syncReplyBanner() {
@@ -3773,13 +3794,12 @@
     const meta = el('ce2ThreadMeta');
     var roleBadge = el('ce2ThreadRoleBadge');
     var settingsBtn = el('ce2GroupSettingsBtn');
-    var moderation = mod();
     var groupRole = ac && ac.type === 'group' ? ac.groupRole || CommunicationState.myGroupRole : '';
     var showBadge =
       !!(ac && ac.type === 'group' && !ac.needsJoin && (groupRole === 'host' || groupRole === 'facilitator'));
     if (roleBadge) {
       roleBadge.hidden = !showBadge;
-      roleBadge.textContent = showBadge && moderation ? moderation.roleLabel(groupRole) : '';
+      roleBadge.textContent = showBadge ? memberRoleLabel(groupRole) : '';
     }
     if (settingsBtn) {
       settingsBtn.hidden = !(ac && ac.type === 'group' && !ac.needsJoin);
@@ -6626,12 +6646,11 @@
     if (me.isAdmin) return true;
     if (m.senderId !== me.uid) {
       var ac = CommunicationState.activeConversation;
-      var moderation = mod();
       return !!(
         ac &&
         ac.type === 'group' &&
-        moderation &&
-        moderation.canModerateMessage(CommunicationState.myGroupRole, me, 'group')
+        modHas('canModerateMessage') &&
+        mod().canModerateMessage(CommunicationState.myGroupRole, me, 'group')
       );
     }
     var ms = messageTimeMs(m);
@@ -8164,12 +8183,11 @@
 
   async function removeGroupMember(ac, uid) {
     var me = CommunicationState.me;
-    var moderation = mod();
     if (!ac || ac.type !== 'group' || !me || !uid) return;
     var targetRole = (CommunicationState.groupRoles || {})[uid] || 'member';
     if (
-      !moderation ||
-      !moderation.canRemoveMember(
+      !modHas('canRemoveMember') ||
+      !mod().canRemoveMember(
         CommunicationState.myGroupRole,
         me,
         targetRole,
@@ -8201,12 +8219,11 @@
 
   async function setGroupMemberRole(groupId, uid, nextRole) {
     var me = CommunicationState.me;
-    var moderation = mod();
     var targetRole = (CommunicationState.groupRoles || {})[uid] || 'member';
     if (
       !me ||
-      !moderation ||
-      !moderation.canChangeMemberRole(CommunicationState.myGroupRole, me, targetRole, nextRole)
+      !modHas('canChangeMemberRole') ||
+      !mod().canChangeMemberRole(CommunicationState.myGroupRole, me, targetRole, nextRole)
     ) {
       CommunicationState.error = 'Only the host can change facilitator roles.';
       render();
@@ -8232,16 +8249,15 @@
     var body = el('ce2GroupSettingsBody');
     var ac = CommunicationState.activeConversation;
     var me = CommunicationState.me;
-    var moderation = mod();
     if (!body || !ac || ac.type !== 'group' || !me) return;
     var myRole = CommunicationState.myGroupRole || 'member';
     var staffNote =
-      moderation && moderation.isGroupStaff(myRole, me)
+      modHas('isGroupStaff') && mod().isGroupStaff(myRole, me)
         ? '<p class="ce2-group-settings-coach"><button type="button" class="ce2-btn ce2-btn-ghost" id="ce2GroupCoachInboxBtn">Who needs a nudge</button></p>'
         : '';
     body.innerHTML =
       '<p class="ce2-group-settings-role">Your role: <strong>' +
-      escapeHtml(moderation ? moderation.roleLabel(myRole) : 'Member') +
+      escapeHtml(memberRoleLabel(myRole)) +
       '</strong></p>' +
       staffNote +
       '<ul class="ce2-group-settings-list"><li class="ce2-placeholder">Loading members…</li></ul>';
@@ -8277,9 +8293,7 @@
             var name = ud.exists
               ? ud.data().displayName || ud.data().name || 'Member'
               : 'Member';
-            var role = moderation
-              ? moderation.resolveMemberRole(doc.data() || {}, { createdBy: createdBy }, doc.id)
-              : 'member';
+            var role = resolveMemberRole(doc.data() || {}, { createdBy: createdBy }, doc.id);
             CommunicationState.groupRoles[doc.id] = role;
             var li = document.createElement('li');
             li.className = 'ce2-group-settings-row';
@@ -8289,15 +8303,15 @@
             who.textContent = name + (doc.id === me.uid ? ' (you)' : '');
             var badge = document.createElement('span');
             badge.className = 'ce2-group-settings-badge';
-            badge.textContent = moderation ? moderation.roleLabel(role) : 'Member';
+            badge.textContent = memberRoleLabel(role);
             label.appendChild(who);
             label.appendChild(badge);
             li.appendChild(label);
             var actions = document.createElement('div');
             actions.className = 'ce2-group-settings-actions';
             if (
-              moderation &&
-              moderation.canChangeMemberRole(myRole, me, role, 'facilitator') &&
+              modHas('canChangeMemberRole') &&
+              mod().canChangeMemberRole(myRole, me, role, 'facilitator') &&
               role === 'member'
             ) {
               var promote = document.createElement('button');
@@ -8310,8 +8324,8 @@
               actions.appendChild(promote);
             }
             if (
-              moderation &&
-              moderation.canChangeMemberRole(myRole, me, role, 'member') &&
+              modHas('canChangeMemberRole') &&
+              mod().canChangeMemberRole(myRole, me, role, 'member') &&
               role === 'facilitator'
             ) {
               var demote = document.createElement('button');
@@ -8323,7 +8337,7 @@
               });
               actions.appendChild(demote);
             }
-            if (moderation && moderation.canRemoveMember(myRole, me, role, me.uid, doc.id)) {
+            if (modHas('canRemoveMember') && mod().canRemoveMember(myRole, me, role, me.uid, doc.id)) {
               var kick = document.createElement('button');
               kick.type = 'button';
               kick.className = 'ce2-btn ce2-btn-ghost ce2-group-settings-act is-danger';
