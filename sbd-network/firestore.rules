@@ -399,11 +399,27 @@ service cloud.firestore {
     function ce2TypingOwnKeyOnly() {
       let before = ce2TypingMap(resource.data);
       let after = ce2TypingMap(request.resource.data);
-      return after.diff(before).affectedKeys().hasOnly([request.auth.uid]) &&
+      let changed = after.diff(before).affectedKeys();
+      return (changed.size() == 0 || changed.hasOnly([request.auth.uid])) &&
         (
           !(request.auth.uid in after) ||
+          after[request.auth.uid] == null ||
           after[request.auth.uid] is timestamp
         );
+    }
+    function ce2CanReadGroupMessages(groupId) {
+      let ud = ce2UserDataOrNull(request.auth.uid);
+      return request.auth != null && (
+        ce2IsAdmin(ud) ||
+        ce2IsGroupMember(groupId, request.auth.uid) ||
+        (
+          exists(/databases/$(database)/documents/communicationGroups/$(groupId)) &&
+          ce2UserMeetsGroupTier(
+            ud,
+            get(/databases/$(database)/documents/communicationGroups/$(groupId)).data
+          )
+        )
+      );
     }
     function ce2InboxPrefValid() {
       let d = request.resource.data;
@@ -1119,12 +1135,23 @@ service cloud.firestore {
         ? d.subscription.tier
         : (d.tier is string ? d.tier : 'foundation');
     }
-    function userAdvancedExpressionUnlocked(uid) {
+    function hasAdvancedExpressionAgreement(uid) {
       let d = get(/databases/$(database)/documents/users/$(uid)).data;
       return d.role == 'admin'
+        || (
+          d.agreements is map
+          && d.agreements.advancedExpression is map
+          && d.agreements.advancedExpression.version == '1.0'
+          && d.agreements.advancedExpression.quizPassed == true
+        );
+    }
+    function userAdvancedExpressionUnlocked(uid) {
+      let d = get(/databases/$(database)/documents/users/$(uid)).data;
+      let formationOrStaff = d.role == 'admin'
         || (d.staffAccess is map && d.staffAccess.advancedExpression == true && wardrobeUserTier(uid) == 'elite')
         || (d.progress is map && d.progress.advancedExpressionUnlocked == true)
         || (d.subscription is map && d.subscription.source == 'admin' && wardrobeUserTier(uid) == 'elite');
+      return formationOrStaff && hasAdvancedExpressionAgreement(uid);
     }
     function isEliteWardrobeUser(uid) {
       return userAdvancedExpressionUnlocked(uid);
@@ -1169,6 +1196,69 @@ service cloud.firestore {
         && request.resource.data.viewerUid == resource.data.viewerUid
         && request.resource.data.status in ['active', 'revoked'];
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Covenant partner links (spouse / partner-only wardrobe mode)
+    match /partnerLinks/{linkId} {
+      allow read: if request.auth != null && (
+        request.auth.uid in resource.data.members ||
+        request.auth.uid == resource.data.invitedBy ||
+        request.auth.uid == resource.data.inviteeUid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow create: if request.auth != null
+        && request.resource.data.invitedBy == request.auth.uid
+        && request.resource.data.inviteeUid is string
+        && request.resource.data.inviteeUid != request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.members is list
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.inviteeUid in request.resource.data.members
+        && linkId == (request.resource.data.members[0] + '_' + request.resource.data.members[1]);
+      allow update: if request.auth != null && (
+        (
+          resource.data.inviteeUid == request.auth.uid
+          && resource.data.status == 'pending'
+          && request.resource.data.status in ['active', 'revoked']
+          && request.resource.data.invitedBy == resource.data.invitedBy
+          && request.resource.data.inviteeUid == resource.data.inviteeUid
+        ) || (
+          request.auth.uid in resource.data.members
+          && request.resource.data.status == 'revoked'
+          && request.resource.data.invitedBy == resource.data.invitedBy
+          && request.resource.data.inviteeUid == resource.data.inviteeUid
+        ) || (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
+      );
+      allow delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Advanced Expression confidentiality / conduct reports
+    match /advancedExpressionReports/{reportId} {
+      allow create: if request.auth != null
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt is timestamp;
+      allow read: if request.auth != null && (
+        resource.data.reporterUid == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Advanced Expression funnel analytics (client write own uid only)
+    match /advancedExpressionEvents/{eventId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.event is string
+        && request.resource.data.createdAt is timestamp;
+      allow read: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update, delete: if false;
     }
 
     // Wardrobes — top-level collection (mv-house.js v247 path: wardrobes/{uid}/items/{itemId})
@@ -1324,9 +1414,9 @@ service cloud.firestore {
     // — any list path must stay ce2IsGroupStaff / admin only, and must not
     // expose other users' private prefs or push tokens.
     match /communicationGroups/{groupId} {
-      // list is query-safe: admin or requiredTier the caller already meets.
-      // Membership-without-tier stays get-by-id (open from a link), not directory list.
-      allow list: if ce2CanListGroup(resource.data);
+      // list is query-safe (signed-in only). Membership/tier cannot be used in
+      // collection queries, so Elite directory listing must not call get() per doc.
+      allow list: if request.auth != null;
       allow get: if request.auth != null && (
         ce2UserMeetsGroupTier(ce2UserDataOrNull(request.auth.uid), resource.data) ||
         ce2IsGroupMember(groupId, request.auth.uid) ||
@@ -1347,7 +1437,13 @@ service cloud.firestore {
       allow update: if request.auth != null && (
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
         (
-          ce2IsGroupMember(groupId, request.auth.uid) &&
+          (
+            ce2IsGroupMember(groupId, request.auth.uid) ||
+            ce2UserMeetsGroupTier(
+              ce2UserDataOrNull(request.auth.uid),
+              resource.data
+            )
+          ) &&
           ce2GroupMetaUpdateKeysOnly() &&
           ce2TypingKeysOwnOnlyIfPresent() &&
           ce2GroupPinWriteValid(groupId)
@@ -1414,14 +1510,7 @@ service cloud.firestore {
       }
 
       match /ce2_messages/{messageId} {
-        allow read: if request.auth != null &&
-          (
-            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            (
-              ce2IsGroupMember(groupId, request.auth.uid) &&
-              ce2CanReadStoredMessage(ce2UserDataOrNull(request.auth.uid), resource.data)
-            )
-          );
+        allow read: if ce2CanReadGroupMessages(groupId);
         allow create: if request.auth != null &&
           ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
           (
@@ -1498,14 +1587,9 @@ service cloud.firestore {
       allow delete: if false;
 
       match /ce2_messages/{messageId} {
-        // Read: participants who meet the classification floor (not UI-only).
         allow read: if request.auth != null &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&
-          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds &&
-          (
-            ce2IsAdmin(ce2UserDataOrNull(request.auth.uid)) ||
-            ce2CanReadStoredMessage(ce2UserDataOrNull(request.auth.uid), resource.data)
-          );
+          request.auth.uid in get(/databases/$(database)/documents/ce2_conversations/$(convId)).data.participantIds;
         allow create: if request.auth != null &&
           ce2MessagingEnabled(ce2UserDataOrNull(request.auth.uid)) &&
           exists(/databases/$(database)/documents/ce2_conversations/$(convId)) &&

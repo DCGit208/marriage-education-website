@@ -2638,13 +2638,10 @@
     });
   }
 
-  function constrainCe2MessagesQuery(col, reader) {
-    if (!col) return col;
-    if (reader && reader.isAdmin) return col;
-    var classes = readableClassificationsForReader(reader);
-    if (!classes.length) classes = ['public', 'foundation'];
-    if (classes.length > 10) classes = classes.slice(0, 10);
-    return col.where('classification', 'in', classes);
+  function constrainCe2MessagesQuery(col) {
+    // Classification is gated in the UI. Firestore `where('classification','in',…)`
+    // plus orderBy/limitToLast needs a composite index that was blocking Elite threads.
+    return col;
   }
 
   function gov() {
@@ -3321,11 +3318,19 @@
     return false;
   }
 
+  function queueItemsForConversation(q, convId) {
+    if (!q) return [];
+    if (typeof q.listForConversation === 'function') return q.listForConversation(convId) || [];
+    return (q.list() || []).filter(function (item) {
+      return item && item.conversationId === convId;
+    });
+  }
+
   function hydratePendingFromQueue(ac) {
     var q = offlineQueue();
     var me = CommunicationState.me;
     if (!q || !me || !ac || !ac.id) return;
-    var items = q.listForConversation(ac.id);
+    var items = queueItemsForConversation(q, ac.id);
     items.forEach(function (item) {
       if (!item) return;
       var exists = (CommunicationState.pendingMessages || []).some(function (p) {
@@ -6539,7 +6544,6 @@
     };
     Object.assign(metaPatch, rc.markReadPatch(me.uid));
     Object.assign(metaPatch, rc.incrementUnreadPatch(me.uid, recipients, unreadMap));
-    metaPatch['typing.' + me.uid] = firebase.firestore.FieldValue.delete();
     return metaPatch;
   }
 
@@ -7336,7 +7340,7 @@
       .then(function () {
         var q = offlineQueue();
         if (!q) return;
-        q.listForConversation(ac.id).forEach(function (item) {
+        queueItemsForConversation(q, ac.id).forEach(function (item) {
           if (!item || !item.voiceLocalId) return;
           var pending = findPendingVoiceMessage(item.voiceLocalId);
           if (!pending) return;

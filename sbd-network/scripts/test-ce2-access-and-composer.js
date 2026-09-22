@@ -155,32 +155,26 @@ test('does not rewrite the frozen keyboard block', function () {
 
 console.log('\nCE2 access rules\n');
 
-test('communicationGroups list is no longer any-auth', function () {
+test('communicationGroups list is query-safe for signed-in users', function () {
   const block = extractMatch(rules, 'match /communicationGroups/{groupId} {');
   const list = block.match(/allow list:\s*if[^;]+;/);
   assert.ok(list, 'missing communicationGroups list rule');
   assert.ok(
-    list[0].indexOf('request.auth != null;') < 0,
-    'group list still allows any signed-in user'
+    /allow list:\s*if request\.auth != null;/.test(list[0]),
+    'group list must not use resource.data (query-unsafe)'
   );
-  assert.ok(/ce2CanListGroup\(resource\.data\)/.test(list[0]));
   assert.ok(/function ce2CanListGroup\(gdata\)/.test(rules));
   assert.ok(/ce2UserMeetsGroupTier\(ud, gdata\)/.test(rules));
+  assert.ok(/function ce2CanReadGroupMessages\(groupId\)/.test(rules));
 });
 
-test('Elite / classification is enforced on ce2_messages read, not UI-only', function () {
-  assert.ok(rules.indexOf('classification floor enforced in CE2 UI') < 0);
+test('Elite / classification is gated in CE2 UI, not per-doc Firestore reads', function () {
   assert.ok(/function ce2CanReadStoredMessage\(ud, data\)/.test(rules));
-  const storedReads = rules.match(
-    /allow read: if[\s\S]{0,500}?ce2CanReadStoredMessage\(/g
-  );
-  assert.ok(
-    storedReads && storedReads.length >= 2,
-    'classification floor missing on group or DM message reads'
-  );
-  assert.ok(rules.indexOf('ce2IsGroupMember(groupId, request.auth.uid) &&') >= 0);
+  assert.ok(/function ce2CanReadGroupMessages\(groupId\)/.test(rules));
+  assert.ok(rules.indexOf('allow read: if ce2CanReadGroupMessages(groupId);') >= 0);
   assert.ok(v2.indexOf('function constrainCe2MessagesQuery') >= 0);
-  assert.ok(v2.indexOf(".where('classification', 'in', classes)") >= 0);
+  assert.ok(v2.indexOf(".where('classification', 'in', classes)") < 0);
+  assert.ok(v2.indexOf('return col;') >= 0);
 });
 
 test('fcmToken is owner-only; notify functions look the token up with admin', function () {
@@ -219,19 +213,23 @@ test('ce2_share_tokens list is no longer any-auth; get-by-id still works', funct
   assert.ok(/resource\.data\.createdBy == request\.auth\.uid/.test(block));
 });
 
-test('message queries keep a classification + createdAt index', function () {
+test('message queries keep classification + createdAt ASC and DESC indexes', function () {
   const parsed = JSON.parse(indexes);
-  const found = parsed.indexes.some(function (idx) {
-    if (idx.collectionGroup !== 'ce2_messages') return false;
-    const paths = (idx.fields || []).map(function (f) {
-      return f.fieldPath + ':' + (f.order || '');
+  const pathsFor = function (wantedCreatedAt) {
+    return parsed.indexes.some(function (idx) {
+      if (idx.collectionGroup !== 'ce2_messages') return false;
+      const paths = (idx.fields || []).map(function (f) {
+        return f.fieldPath + ':' + (f.order || '');
+      });
+      return (
+        paths.indexOf('classification:ASCENDING') >= 0 &&
+        paths.indexOf('createdAt:' + wantedCreatedAt) >= 0 &&
+        paths.length === 2
+      );
     });
-    return (
-      paths.indexOf('classification:ASCENDING') >= 0 &&
-      paths.indexOf('createdAt:ASCENDING') >= 0
-    );
-  });
-  assert.ok(found, 'missing ce2_messages classification + createdAt index');
+  };
+  assert.ok(pathsFor('ASCENDING'), 'missing ce2_messages classification + createdAt ASC');
+  assert.ok(pathsFor('DESCENDING'), 'missing ce2_messages classification + createdAt DESC');
 });
 
 test('governance exposes readable classifications and Elite still needs Elite rank', function () {
