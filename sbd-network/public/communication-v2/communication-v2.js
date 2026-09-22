@@ -6567,12 +6567,22 @@
     return metaPatch;
   }
 
+  function writeConversationMeta(metaRef, metaPatch) {
+    if (!metaRef || !metaPatch) return Promise.resolve();
+    var rc = receipts();
+    if (rc && typeof rc.applyNestedPatch === 'function') {
+      return rc.applyNestedPatch(metaRef, metaPatch);
+    }
+    // Dot-path patches require update(); set(merge) writes literal "lastRead.uid" keys.
+    return metaRef.update(metaPatch);
+  }
+
   function pushConversationMetaAsync(ac, patch, me, messageId) {
     var metaRef = getMetaDocRef(ac);
     if (!metaRef) return;
     var metaPatch = buildConversationMetaPatch(ac, patch, me, messageId);
     if (!metaPatch) return;
-    metaRef.set(metaPatch, { merge: true }).catch(function () {});
+    writeConversationMeta(metaRef, metaPatch).catch(function () {});
   }
 
   function firestoreWriteTimeout(promise, ms) {
@@ -6612,7 +6622,7 @@
       var dMetaRef = getMetaDocRef(ac);
       var dMetaPatch = buildConversationMetaPatch(ac, patch, me, dRef.id, now);
       if (dMetaRef && dMetaPatch) {
-        dMetaRef.set(dMetaPatch, { merge: true }).catch(function (metaErr) {
+        writeConversationMeta(dMetaRef, dMetaPatch).catch(function (metaErr) {
           console.warn('[CE2] conversation meta update failed', metaErr);
         });
       }
@@ -6631,7 +6641,7 @@
     var gMetaRef = getMetaDocRef(ac);
     var gMetaPatch = buildConversationMetaPatch(ac, patch, me, gRef.id, now);
     if (gMetaRef && gMetaPatch) {
-      gMetaRef.set(gMetaPatch, { merge: true }).catch(function (metaErr) {
+      writeConversationMeta(gMetaRef, gMetaPatch).catch(function (metaErr) {
         console.warn('[CE2] group meta update failed', metaErr);
       });
     }

@@ -64,18 +64,47 @@
     return Date.now() < typingMutedUntil;
   }
 
+  /** update() so "typing.uid" is a nested path; set(merge) would write a literal dotted key. */
+  function expandDottedPatch(patch) {
+    var out = {};
+    Object.keys(patch || {}).forEach(function (key) {
+      var parts = String(key).split('.');
+      if (parts.length === 1) {
+        out[key] = patch[key];
+        return;
+      }
+      var cur = out;
+      for (var i = 0; i < parts.length - 1; i++) {
+        if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+        cur = cur[parts[i]];
+      }
+      cur[parts[parts.length - 1]] = patch[key];
+    });
+    return out;
+  }
+
+  function applyTypingPatch(docRef, patch) {
+    if (!docRef || !patch) return Promise.resolve();
+    return docRef.update(patch).catch(function (err) {
+      if (err && err.code === 'not-found') {
+        return docRef.set(expandDottedPatch(patch), { merge: true });
+      }
+      return Promise.reject(err);
+    });
+  }
+
   function pulseTyping(docRef, uid) {
     if (!docRef || !uid || isTypingMuted()) return Promise.resolve();
     var patch = {};
     patch['typing.' + uid] = firebase.firestore.FieldValue.serverTimestamp();
-    return docRef.set(patch, { merge: true }).catch(function () {});
+    return applyTypingPatch(docRef, patch).catch(function () {});
   }
 
   function clearTyping(docRef, uid) {
     if (!docRef || !uid) return Promise.resolve();
     var patch = {};
     patch['typing.' + uid] = firebase.firestore.FieldValue.delete();
-    return docRef.set(patch, { merge: true }).catch(function () {});
+    return applyTypingPatch(docRef, patch).catch(function () {});
   }
 
   function watchTyping(docRef, selfUid, onActive) {
@@ -398,6 +427,6 @@
     HEARTBEAT_MS: HEARTBEAT_MS,
     TYPING_TTL_SEC: TYPING_TTL_SEC,
     PULSE_GAP_MS: PULSE_GAP_MS,
-    VERSION: 6,
+    VERSION: 7,
   };
 })(typeof window !== 'undefined' ? window : global);
