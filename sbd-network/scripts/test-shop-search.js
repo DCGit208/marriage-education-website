@@ -16,6 +16,8 @@ function read(rel) {
 }
 
 const shopJs = read('public/js/shop.js');
+const shopCss = read('public/css/shop.css');
+const sourceShopHtml = read('src/pages/shop.html');
 const catalog = JSON.parse(read('public/data/shop-catalog.json'));
 
 const sandbox = {
@@ -112,6 +114,32 @@ test('search helper is exposed for regression coverage only', function () {
   assert.ok(shopJs.includes('root.SBDShopSearch'));
   assert.ok(shopJs.includes('parseShopSearchIntent'));
   assert.ok(shopJs.includes('shopSearchScore'));
+});
+
+test('search UX exposes detected intent chips and empty-state actions', function () {
+  assert.ok(sourceShopHtml.includes('id="shopSearchInsights"'));
+  assert.ok(shopJs.includes('function renderSearchInsights()'));
+  assert.ok(shopJs.includes('data-shop-empty-ask'));
+  assert.ok(shopJs.includes('askSbdLauncher'));
+
+  const intent = api.parseIntent('books about communication');
+  const chips = api.chips(intent).map(function (chip) { return chip.label; }).join('|');
+  assert.strictEqual(chips, 'Books|Communication');
+
+  const links = api.links(intent).map(function (link) { return link.ask ? 'Ask SBD' : link.label; }).join('|');
+  assert.ok(links.includes('Courses'));
+  assert.ok(links.includes('Ask SBD'));
+
+  const empty = api.emptyHtmlForQuery('unknown topic');
+  assert.ok(empty.includes('No strong match yet'));
+  assert.ok(empty.includes('data-shop-empty-ask'));
+});
+
+test('search UX styles are present', function () {
+  assert.ok(shopCss.includes('.shop-search-insights'));
+  assert.ok(shopCss.includes('.shop-search-chip'));
+  assert.ok(shopCss.includes('.shop-empty--rich'));
+  assert.ok(shopCss.includes('.shop-empty-action'));
 });
 
 if (failed) {
