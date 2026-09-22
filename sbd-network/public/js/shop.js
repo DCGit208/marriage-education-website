@@ -533,6 +533,75 @@ function renderShopPage() {
   renderProductGrid();
   var countEl = document.getElementById('shopProductCount');
   if (countEl) countEl.textContent = getFilteredProducts().length + ' items';
+  renderSearchInsights();
+}
+
+function labelForSearchType(type) {
+  if (type === 'book') return 'Books';
+  if (type === 'course') return 'Courses';
+  if (type === 'membership') return 'Membership';
+  if (type === 'bundle') return 'Bundles & high-ticket';
+  return '';
+}
+
+function labelForSearchTopic(topic) {
+  var labels = {
+    sexuality: 'Sexuality',
+    communication: 'Communication',
+    identity: 'Identity & growth',
+    leadership: 'Leadership',
+    membership: 'Membership',
+    expression: 'Expression',
+    marriage: 'Marriage',
+  };
+  return labels[topic] || topic;
+}
+
+function searchSuggestionChips(intent) {
+  var chips = [];
+  if (intent.type) chips.push({ label: labelForSearchType(intent.type), kind: 'type' });
+  intent.topics.forEach(function (topic) {
+    chips.push({ label: labelForSearchTopic(topic), kind: 'topic' });
+  });
+  intent.tokens.slice(0, 3).forEach(function (token) {
+    var label = token.charAt(0).toUpperCase() + token.slice(1);
+    if (!chips.some(function (chip) { return chip.label.toLowerCase() === label.toLowerCase(); })) {
+      chips.push({ label: label, kind: 'term' });
+    }
+  });
+  return chips;
+}
+
+function searchSuggestionLinks(intent) {
+  var links = [];
+  if (intent.type !== 'book') links.push({ label: 'Books', section: 'books_magazine', q: intent.tokens.join(' ') || '' });
+  if (intent.type !== 'course') links.push({ label: 'Courses', section: 'academy', q: intent.tokens.join(' ') || '' });
+  if (intent.type !== 'membership') links.push({ label: 'Membership', section: 'membership', q: '' });
+  links.push({ label: 'Ask SBD', ask: true });
+  return links.slice(0, 4);
+}
+
+function renderSearchInsights() {
+  var panel = document.getElementById('shopSearchInsights');
+  if (!panel) return;
+  var intent = parseShopSearchIntent(shopSearchQuery);
+  if (!intent.raw) {
+    panel.hidden = true;
+    panel.innerHTML = '';
+    return;
+  }
+  var products = getFilteredProducts();
+  var chips = searchSuggestionChips(intent);
+  var chipHtml = chips.map(function (chip) {
+    return '<span class="shop-search-chip shop-search-chip--' + escapeShopHtml(chip.kind) + '">' + escapeShopHtml(chip.label) + '</span>';
+  }).join('');
+  panel.hidden = false;
+  panel.innerHTML =
+    '<div class="shop-search-insights__copy">' +
+    '<strong>' + escapeShopHtml(products.length + ' result' + (products.length === 1 ? '' : 's')) + '</strong>' +
+    '<span>for “' + escapeShopHtml(intent.raw) + '”</span>' +
+    '</div>' +
+    (chipHtml ? '<div class="shop-search-insights__chips" aria-label="Detected search intent">' + chipHtml + '</div>' : '');
 }
 
 function renderHeroContent() {
@@ -1035,7 +1104,7 @@ function renderProductGrid() {
   }
 
   if (products.length === 0) {
-    grid.innerHTML = '<p class="shop-empty">No products match your filter.</p>';
+    grid.innerHTML = emptyShopSearchHtml();
     return;
   }
   var useProgramCards = shouldUseCourseProgramLayout();
@@ -1046,6 +1115,31 @@ function renderProductGrid() {
       grid.appendChild(buildProductCard(p));
     }
   });
+}
+
+function emptyShopSearchHtml() {
+  var intent = parseShopSearchIntent(shopSearchQuery);
+  if (!intent.raw) return '<p class="shop-empty">No products match your filter.</p>';
+  var links = searchSuggestionLinks(intent).map(function (link) {
+    if (link.ask) {
+      return '<button type="button" class="shop-empty-action" data-shop-empty-ask>Ask SBD</button>';
+    }
+    var q = link.q ? '&q=' + encodeURIComponent(link.q) : '';
+    return '<button type="button" class="shop-empty-action" data-shop-empty-section="' +
+      escapeShopHtml(link.section) +
+      '" data-shop-empty-q="' +
+      escapeShopHtml(link.q || '') +
+      '">' +
+      escapeShopHtml(link.label) +
+      '</button>';
+  }).join('');
+  return (
+    '<div class="shop-empty shop-empty--rich">' +
+    '<strong>No strong match yet</strong>' +
+    '<span>Try a broader area, or ask ASK SBD to recommend a path.</span>' +
+    '<div class="shop-empty-actions">' + links + '</div>' +
+    '</div>'
+  );
 }
 
 function buildCourseProgramCard(p, idx) {
@@ -1320,6 +1414,21 @@ document.getElementById('shopSearchInput')?.addEventListener('input', function (
   renderShopPage();
 });
 
+document.getElementById('shopProductGrid')?.addEventListener('click', function (event) {
+  var sectionBtn = event.target.closest('[data-shop-empty-section]');
+  if (sectionBtn) {
+    activeSection = sectionBtn.dataset.shopEmptySection || 'all';
+    activeCategory = 'all';
+    shopSearchQuery = sectionBtn.dataset.shopEmptyQ || '';
+    renderShopPage();
+    return;
+  }
+  if (event.target.closest('[data-shop-empty-ask]')) {
+    var askButton = document.getElementById('askSbdLauncher');
+    if (askButton) askButton.click();
+  }
+});
+
 async function buyProduct(productId) {
   var canonicalProductId = resolveShopProductId(productId);
   var product = PRODUCT_CATALOG[canonicalProductId];
@@ -1351,6 +1460,16 @@ async function subscribeToTier(tierId) {
     productTopicsForSearch: productTopicsForSearch,
     buildSearchText: buildShopSearchText,
     score: shopSearchScore,
+    chips: searchSuggestionChips,
+    links: searchSuggestionLinks,
+    emptyHtml: emptyShopSearchHtml,
+    emptyHtmlForQuery: function (query) {
+      var previous = shopSearchQuery;
+      shopSearchQuery = query || '';
+      var html = emptyShopSearchHtml();
+      shopSearchQuery = previous;
+      return html;
+    },
   };
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : null));
 

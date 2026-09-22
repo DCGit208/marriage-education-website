@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-  <meta name="build-version" content="1790031833556">
+  <meta name="build-version" content="1790041895839">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Shop - SBD Network">
     <meta name="theme-color" content="#000000">
@@ -11,10 +11,10 @@
     
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-    <link rel="stylesheet" href="/css/styles.css?v=1790031833556">
-    <link rel="stylesheet" href="/css/bottom-nav.css?v=1790031833556">
-    <link rel="stylesheet" href="/css/shop.css?v=1790031833556">
-    <link rel="stylesheet" href="/css/ask-sbd-guide.css?v=1790031833556">
+    <link rel="stylesheet" href="/css/styles.css?v=1790041895839">
+    <link rel="stylesheet" href="/css/bottom-nav.css?v=1790041895839">
+    <link rel="stylesheet" href="/css/shop.css?v=1790041895839">
+    <link rel="stylesheet" href="/css/ask-sbd-guide.css?v=1790041895839">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 </head>
 <body data-page="shop" class="shop-page bottom-nav-page has-header">
@@ -41,6 +41,7 @@
             <input type="search" id="shopSearchInput" class="shop-search" placeholder="Search books, courses, membership…" autocomplete="off">
         </div>
         <p class="shop-meta"><span id="shopProductCount">Loading…</span></p>
+        <div id="shopSearchInsights" class="shop-search-insights" hidden></div>
         <div id="shopCategoryBar" class="shop-cat-bar" aria-label="Product categories"></div>
 
         <div id="shopBundleBanner" class="shop-bundle-banner" hidden></div>
@@ -60,14 +61,14 @@
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
     
-    <script defer src="/js/firebase.js?v=1790031833556"></script>
-    <script defer src="/js/formation-access.js?v=1790031833556"></script>
-    <script defer src="/js/sw-update-checker.js?v=1790031833556"></script>
-    <script defer src="/js/notifications.js?v=1790031833556"></script>
-    <script defer src="/js/transitions.js?v=1790031833556"></script>
-    <script defer src="/js/shop-product-ids.js?v=1790031833556"></script>
-    <script defer src="/js/shop.js?v=1790031833556"></script>
-    <script defer src="/js/ask-sbd-guide.js?v=1790031833556"></script>
+    <script defer src="/js/firebase.js?v=1790041895839"></script>
+    <script defer src="/js/formation-access.js?v=1790041895839"></script>
+    <script defer src="/js/sw-update-checker.js?v=1790041895839"></script>
+    <script defer src="/js/notifications.js?v=1790041895839"></script>
+    <script defer src="/js/transitions.js?v=1790041895839"></script>
+    <script defer src="/js/shop-product-ids.js?v=1790041895839"></script>
+    <script defer src="/js/shop.js?v=1790041895839"></script>
+    <script defer src="/js/ask-sbd-guide.js?v=1790041895839"></script>
 
         <!-- HAMBURGER -->
     <div id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sideMenu">☰</div>
@@ -136,9 +137,9 @@
             <span class="bn-label">You</span>
         </a>
     </nav>
-    <link rel="stylesheet" href="/css/ham-drawer.css?v=1790031833556">
-    <script defer src="/js/bottom-nav-viewport.js?v=1790031833556"></script>
-    <script defer src="/js/ham-nav.js?v=1790031833556"></script>
+    <link rel="stylesheet" href="/css/ham-drawer.css?v=1790041895839">
+    <script defer src="/js/bottom-nav-viewport.js?v=1790041895839"></script>
+    <script defer src="/js/ham-nav.js?v=1790041895839"></script>
 
 </body>
 </html>
