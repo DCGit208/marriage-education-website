@@ -74,8 +74,8 @@ test('keeps typing APIs for existing CE2 wiring', function () {
   assert.strictEqual(typeof pr.setTypingMuted, 'function');
 });
 
-test('VERSION is 6', function () {
-  assert.strictEqual(pr.VERSION, 6);
+test('VERSION is 7', function () {
+  assert.strictEqual(pr.VERSION, 7);
 });
 
 test('recent lastActive is online', function () {
@@ -196,7 +196,7 @@ test('hub and header presence hooks are wired', function () {
   assert.ok(v2.indexOf('function applyPresenceUi') >= 0);
   assert.ok(v2.indexOf('avatarWithPresence') >= 0);
   assert.ok(html.indexOf('ce2ThreadPresenceDot') >= 0);
-  assert.ok(html.indexOf('ce2-presence.js?v=6') >= 0);
+  assert.ok(html.indexOf('ce2-presence.js?v=7') >= 0);
   assert.ok(/communication-v2\.js\?v=\d+/.test(html));
   assert.ok(/communication-v2\.css\?v=\d+/.test(html));
 });
