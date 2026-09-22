@@ -278,6 +278,7 @@ function resolveMessengerReturn() {
     : (urlParams.get('from') === 'ce2'
       ? { from: 'ce2', conv: urlParams.get('conv') || '', group: urlParams.get('group') || '' }
       : null);
+  // Explicit messenger hop (Open post / Choose from a board → board).
   if (fromUrl) {
     persistMessengerReturn(fromUrl);
     return fromUrl;
@@ -285,19 +286,13 @@ function resolveMessengerReturn() {
 
   const stored = readStoredMessengerReturn();
   const refPath = sameOriginReferrerPath();
-  const keepStored = share && share.shouldKeepStoredReturn
-    ? share.shouldKeepStoredReturn(refPath)
-    : (refPath.indexOf('/communication-v2') === 0 ||
-      /\/board(?:s)?(?:\.html)?$/.test(refPath) ||
-      /\/dashboard(?:\.html)?$/.test(refPath) ||
-      /\/group(?:\.html)?$/.test(refPath));
+  const fromMessenger =
+    refPath.indexOf('/communication-v2') === 0;
+  // Stay in the hop only while moving board → board after arriving from messenger.
+  // Do NOT revive a leftover session return after bottom-nav Boards / dashboard.
+  const fromBoardSurface = /^\/board(?:\.html)?$/.test(refPath);
 
-  // Prefer a stored thread-specific return over a bare messenger-hub referrer.
-  if (stored && (stored.conv || stored.group) && keepStored) {
-    return stored;
-  }
-
-  if (refPath.indexOf('/communication-v2') === 0) {
+  if (fromMessenger) {
     const fromRef = stored && stored.from === 'ce2'
       ? stored
       : { from: 'ce2', conv: '', group: '' };
@@ -305,7 +300,9 @@ function resolveMessengerReturn() {
     return fromRef;
   }
 
-  if (stored && keepStored) return stored;
+  if (fromBoardSurface && stored && stored.from === 'ce2') {
+    return stored;
+  }
 
   persistMessengerReturn(null);
   return null;
@@ -322,7 +319,14 @@ function messengerReturnLabel(justShared) {
 
 function initMessengerReturnChrome(opts) {
   const justShared = !!(opts && opts.justShared);
-  messengerReturnInfo = resolveMessengerReturn();
+  // After Share into messenger, keep the explicit return even if this board
+  // was opened from bottom nav (no from=ce2 in the URL).
+  if (justShared && opts && opts.returnInfo && opts.returnInfo.from === 'ce2') {
+    persistMessengerReturn(opts.returnInfo);
+    messengerReturnInfo = opts.returnInfo;
+  } else {
+    messengerReturnInfo = resolveMessengerReturn();
+  }
   messengerReturnHref = window.Ce2Share && Ce2Share.messengerReturnHref
     ? Ce2Share.messengerReturnHref(messengerReturnInfo)
     : '/communication-v2/';
@@ -3391,7 +3395,7 @@ function afterBoardShareIntoThread(shared) {
     ? shared.returnInfo
     : { from: 'ce2', conv: '', group: '' };
   persistMessengerReturn(returnInfo);
-  initMessengerReturnChrome({ justShared: true });
+  initMessengerReturnChrome({ justShared: true, returnInfo: returnInfo });
   const href = window.Ce2Share && Ce2Share.messengerReturnHref
     ? Ce2Share.messengerReturnHref(returnInfo)
     : '/communication-v2/';

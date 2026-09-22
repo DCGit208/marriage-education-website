@@ -12,14 +12,6 @@
   var DEFAULT_SHARE_CONTENT = 'Shared a board post';
   var CARD_KICKER = 'Board share';
   var ID_RE = /^[A-Za-z0-9._-]{1,200}$/;
-  var SBD_RETURN_SURFACES = [
-    '/communication-v2',
-    '/board',
-    '/boards',
-    '/dashboard',
-    '/group',
-    '/learn',
-  ];
 
   function originBase() {
     return global.location ? global.location.origin : 'https://sbd-network.web.app';
@@ -175,10 +167,9 @@
     try {
       if (/^https?:\/\//i.test(path)) path = new URL(path).pathname || '';
     } catch (_) {}
-    var i;
-    for (i = 0; i < SBD_RETURN_SURFACES.length; i += 1) {
-      if (path.indexOf(SBD_RETURN_SURFACES[i]) === 0) return true;
-    }
+    if (path.indexOf('/communication-v2') === 0) return true;
+    // Single board page only — not /boards.html (bottom-nav community list).
+    if (/^\/board(?:\.html)?(?:\/|$|\?)/.test(path)) return true;
     return false;
   }
 
@@ -367,6 +358,6 @@
     BOARD_RETURN_KEY: BOARD_RETURN_KEY,
     DEFAULT_SHARE_CONTENT: DEFAULT_SHARE_CONTENT,
     CARD_KICKER: CARD_KICKER,
-    VERSION: 5,
+    VERSION: 6,
   };
 })(typeof window !== 'undefined' ? window : global);

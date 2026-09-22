@@ -188,8 +188,8 @@ console.log('\nCE2 media cards + board-share polish\n');
 const share = loadIife('public/communication-v2/ce2-share.js').Ce2Share;
 assert.ok(share, 'Ce2Share did not load');
 
-test('Ce2Share VERSION is 5', function () {
-  assert.strictEqual(share.VERSION, 5);
+test('Ce2Share VERSION is 6', function () {
+  assert.strictEqual(share.VERSION, 6);
 });
 
 test('boardShareThumbUrl prefers thumbnailUrl then thumbUrl then imageUrl', function () {
