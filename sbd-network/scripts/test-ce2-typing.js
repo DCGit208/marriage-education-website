@@ -53,7 +53,11 @@ function mockDocRef() {
   return {
     writes: writes,
     set: function (patch, opts) {
-      writes.push({ patch: patch, opts: opts });
+      writes.push({ method: 'set', patch: patch, opts: opts });
+      return Promise.resolve();
+    },
+    update: function (patch) {
+      writes.push({ method: 'update', patch: patch });
       return Promise.resolve();
     },
   };
@@ -90,8 +94,8 @@ const sandbox = loadIife('public/communication-v2/ce2-presence.js');
 const pr = sandbox.Ce2Presence;
 assert.ok(pr, 'Ce2Presence did not load');
 
-test('VERSION is 6 and typing APIs are exported', function () {
-  assert.strictEqual(pr.VERSION, 6);
+test('VERSION is 7 and typing APIs are exported', function () {
+  assert.strictEqual(pr.VERSION, 7);
   assert.strictEqual(typeof pr.pulseTyping, 'function');
   assert.strictEqual(typeof pr.clearTyping, 'function');
   assert.strictEqual(typeof pr.watchTyping, 'function');
@@ -151,16 +155,16 @@ test('activeTypingUids drops self and expired stamps', function () {
   assert.deepStrictEqual(pr.activeTypingUids(typing, 'me', now), ['ada']);
 });
 
-test('pulseTyping / clearTyping write only typing.{uid} with merge', function () {
+test('pulseTyping / clearTyping write only typing.{uid} via update()', function () {
   const ref = mockDocRef();
   pr.pulseTyping(ref, 'u1');
   pr.clearTyping(ref, 'u1');
   assert.strictEqual(ref.writes.length, 2);
+  assert.strictEqual(ref.writes[0].method, 'update');
   assert.ok(ref.writes[0].patch['typing.u1']);
   assert.strictEqual(ref.writes[0].patch['typing.u1']._server, true);
-  assert.strictEqual(ref.writes[0].opts && ref.writes[0].opts.merge, true);
+  assert.strictEqual(ref.writes[1].method, 'update');
   assert.strictEqual(ref.writes[1].patch['typing.u1']._delete, true);
-  assert.strictEqual(ref.writes[1].opts && ref.writes[1].opts.merge, true);
 });
 
 test('watchTyping omits self and expired peers', function () {
@@ -279,6 +283,14 @@ test('own typing is filtered and cleared on send', function () {
   assert.ok(v2.indexOf('clearComposerTyping(ac)') >= 0);
   assert.ok(!/metaPatch\['typing\.' \+ me\.uid\]/.test(v2));
   assert.ok(v2.indexOf('uid !== selfUid') >= 0 || v2.indexOf('uid !== me.uid') >= 0);
+});
+
+test('conversation meta writes use update/applyNestedPatch not set(merge) for dotted paths', function () {
+  assert.ok(v2.indexOf('function writeConversationMeta') >= 0);
+  assert.ok(v2.indexOf('writeConversationMeta(dMetaRef, dMetaPatch)') >= 0);
+  assert.ok(v2.indexOf('rc.applyNestedPatch') >= 0);
+  assert.ok(!/dMetaRef\.set\(dMetaPatch,\s*\{\s*merge:\s*true\s*\}\)/.test(v2));
+  assert.ok(!/gMetaRef\.set\(gMetaPatch,\s*\{\s*merge:\s*true\s*\}\)/.test(v2));
 });
 
 test('typing line CSS is visible when not hidden', function () {

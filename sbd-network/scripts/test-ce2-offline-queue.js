@@ -199,7 +199,7 @@ test('missing voice blob is not retryable', function () {
 });
 
 test('receipts expose Queued without treating it as Failed', function () {
-  assert.strictEqual(receipts.VERSION, 5);
+  assert.strictEqual(receipts.VERSION, 6);
   assert.strictEqual(receipts.statusLabel('queued'), 'Queued');
   assert.strictEqual(
     receipts.deliveryStatus(

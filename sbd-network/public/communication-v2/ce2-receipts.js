@@ -1,5 +1,9 @@
 /**
  * CE2 Phase 6 — unread counts and read receipts
+ *
+ * Nested map writes MUST use update() or FieldPath. Firestore set({merge:true})
+ * treats string keys like "lastRead.uid" as literal field names (with a dot),
+ * which fails ce2ConvMetaUpdateKeysOnly and leaves inbox lastPreview stuck.
  */
 (function (global) {
   'use strict';
@@ -32,6 +36,7 @@
     return unreadCount(meta, uid) > 0;
   }
 
+  /** Dot-path patch for update() — never pass these keys to set({merge:true}). */
   function markReadPatch(uid) {
     var patch = {};
     patch['lastRead.' + uid] = firebase.firestore.Timestamp.now();
@@ -39,14 +44,47 @@
     return patch;
   }
 
+  /**
+   * Apply a nested-field patch. Prefer update() so "map.uid" is a field path.
+   * On missing docs, expand dots into nested maps then set(merge).
+   */
+  function expandDottedPatch(patch) {
+    var out = {};
+    Object.keys(patch || {}).forEach(function (key) {
+      var parts = String(key).split('.');
+      if (parts.length === 1) {
+        out[key] = patch[key];
+        return;
+      }
+      var cur = out;
+      for (var i = 0; i < parts.length - 1; i++) {
+        if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+        cur = cur[parts[i]];
+      }
+      cur[parts[parts.length - 1]] = patch[key];
+    });
+    return out;
+  }
+
+  function applyNestedPatch(docRef, patch) {
+    if (!docRef || !patch) return Promise.resolve();
+    return docRef.update(patch).catch(function (err) {
+      if (err && err.code === 'not-found') {
+        return docRef.set(expandDottedPatch(patch), { merge: true });
+      }
+      return Promise.reject(err);
+    });
+  }
+
   function markRead(docRef, uid) {
     if (!docRef || !uid) return Promise.resolve();
-    return docRef.set(markReadPatch(uid), { merge: true }).catch(function () {});
+    return applyNestedPatch(docRef, markReadPatch(uid)).catch(function () {});
   }
 
   /**
    * Build merge patch to bump unread for recipients (not sender).
    * Uses plain integers (not FieldValue.increment) so Firestore rules can evaluate the write.
+   * Dot-path keys are for update() only.
    * @param {string} senderUid
    * @param {string[]} recipientUids
    * @param {Object<string, number>} [existingUnread]
@@ -108,9 +146,10 @@
     markRead: markRead,
     markReadPatch: markReadPatch,
     incrementUnreadPatch: incrementUnreadPatch,
+    applyNestedPatch: applyNestedPatch,
     deliveryStatus: deliveryStatus,
     statusLabel: statusLabel,
     tsSeconds: tsSeconds,
-    VERSION: 5,
+    VERSION: 6,
   };
 })(typeof window !== 'undefined' ? window : global);

@@ -81,8 +81,8 @@ test('VERSION is 3 and preview/sort APIs are exported', function () {
   assert.strictEqual(typeof inbox.listPaintMode, 'function');
 });
 
-test('receipts VERSION is 5', function () {
-  assert.strictEqual(receipts.VERSION, 5);
+test('receipts VERSION is 6', function () {
+  assert.strictEqual(receipts.VERSION, 6);
 });
 
 test('own lastSenderId never counts as unread', function () {
@@ -295,8 +295,8 @@ test('cache-bust versions stay strictly above live 110/80/3/6', function () {
   assert.ok(jsVer && Number(jsVer[1]) > 110);
   assert.ok(cssVer && Number(cssVer[1]) > 80);
   assert.ok(inboxVer && Number(inboxVer[1]) >= 3);
-  assert.ok(receiptsVer && Number(receiptsVer[1]) >= 4);
-  assert.ok(presenceVer && Number(presenceVer[1]) >= 6);
+  assert.ok(receiptsVer && Number(receiptsVer[1]) >= 6);
+  assert.ok(presenceVer && Number(presenceVer[1]) >= 7);
   assert.ok(html.indexOf('communication-v2.js?v=110') < 0);
   assert.ok(html.indexOf('communication-v2.css?v=80') < 0);
 });

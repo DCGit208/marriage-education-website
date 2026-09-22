@@ -3700,7 +3700,7 @@ async function sendPostAsGroup(target, boardId, postOrPostId, preview, comment =
   delete payload.receiverId;
   const msgRef = await db.collection('communicationGroups').doc(groupId).collection('ce2_messages').add(payload);
   const now = payload.createdAt;
-  db.collection('communicationGroups').doc(groupId).set(
+  db.collection('communicationGroups').doc(groupId).update(
     {
       lastMessageAt: now,
       lastPreview: payload.content.slice(0, 140),
@@ -3708,8 +3708,7 @@ async function sendPostAsGroup(target, boardId, postOrPostId, preview, comment =
       lastMessageId: msgRef.id,
       lastMessageType: 'board_share',
       [`lastRead.${currentUserId}`]: now,
-    },
-    { merge: true }
+    }
   ).catch((err) => console.warn('[Board Share] group metadata update skipped:', err));
   return {
     name: target.name || 'formation group',
@@ -3824,7 +3823,7 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
     ? unreadMap[otherUser.id]
     : 0;
 
-  convRef.set(
+  convRef.update(
     {
       lastMessageAt: now,
       lastPreview: patch.content.slice(0, 140),
@@ -3833,8 +3832,7 @@ async function sendPostAsDm(otherUser, boardId, postOrPostId, preview, comment =
       lastMessageType: 'board_share',
       [`lastRead.${currentUserId}`]: now,
       [`unreadCount.${otherUser.id}`]: currentUnread + 1,
-    },
-    { merge: true }
+    }
   ).catch((err) => console.warn('[Board Share] metadata update skipped:', err));
   notifyBoardShareRecipient(otherUser, otherData, convId, msgRef.id, patch.content).catch(() => {});
   return {
