@@ -140,6 +140,6 @@
     canRemoveMember: canRemoveMember,
     selfJoinRoleValid: selfJoinRoleValid,
     ROLES: ROLES,
-    VERSION: 4,
+    VERSION: 5,
   };
 })(typeof window !== 'undefined' ? window : global);
