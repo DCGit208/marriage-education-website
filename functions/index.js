@@ -3200,7 +3200,7 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
- * Welcome email for DTC Foundation Yearly (and other guest) buyers.
+ * Welcome email for DTC 12-Month Foundation Access (and other guest) buyers.
  */
 async function sendSbdBuyerAccessEmail(opts) {
   const email = String(opts.email || '').trim().toLowerCase();
@@ -3208,7 +3208,7 @@ async function sendSbdBuyerAccessEmail(opts) {
     throw new Error('Missing buyer email for welcome message');
   }
   const name = String(opts.name || '').trim() || 'Student';
-  const productName = opts.productName || 'Foundation Tier — Yearly';
+  const productName = opts.productName || 'Foundation Access — 12 Months';
   const learnUrl = 'https://sbd-network.web.app/learn?tier=foundation';
   const loginUrl = 'https://sbd-network.web.app/auth';
   const resetLink = await admin.auth().generatePasswordResetLink(email, {
@@ -5094,7 +5094,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo guest checkout is for Foundation Tier — Yearly only.'
+      'Manual MoMo guest checkout is for Foundation Access — 12 Months only.'
     );
   }
   if (referredBy) {
@@ -5259,7 +5259,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
 });
 
 /**
- * Authenticated SBD Network checkout — Manual MoMo for Foundation Yearly only.
+ * Authenticated SBD Network checkout — Manual MoMo for 12-Month Foundation Access only.
  * Monthly tiers stay Stripe-only (recurring billing).
  */
 exports.createSbdManualPayment = functions.https.onCall(async (data, context) => {
@@ -5275,7 +5275,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo is only available for Foundation Tier — Yearly ($144.17). Monthly plans use Stripe.'
+      'Manual MoMo is only available for Foundation Access — 12 Months ($144.17). Monthly plans use Stripe.'
     );
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
