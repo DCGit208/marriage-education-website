@@ -562,7 +562,7 @@
     var yearlyUrl = 'https://marriageducation.com/foundation-access.html?ref=' + encodeURIComponent(sbdCode) + '#enroll';
     var refs = stats.sbdReferrals || {};
     body.innerHTML =
-      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($118)</strong> link below for the official deployment program. <strong>Only coded links credit you</strong> — always include <code>?ref=' + sbdCode + '</code>.</p>' +
+      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($144.17)</strong> link below for the official deployment program. <strong>Only coded links credit you</strong> — always include <code>?ref=' + sbdCode + '</code>.</p>' +
       '<div class="dos-sbd-panel">' +
       '<div class="dos-link-row">' +
       '<div class="dos-link-box" id="dosYearlyLink">' + yearlyUrl + '</div>' +
@@ -577,7 +577,7 @@
       kpi('Signups', String(refs.signups || 0), '') +
       kpi('Subscribers', String(refs.subscribers || 0), '') +
       kpi('Foundation', String(refs.foundation || 0), '') +
-      kpi('Yearly ($118)', String(refs.foundationYearly || 0), 'Deployment challenge units') +
+      kpi('Yearly ($144.17)', String(refs.foundationYearly || 0), 'Deployment challenge units') +
       kpi('Premium', String(refs.premium || 0), '') +
       kpi('Elite', String(refs.elite || 0), '') +
       '</div>';
