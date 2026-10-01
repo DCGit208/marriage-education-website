@@ -1,6 +1,6 @@
 /**
  * CHECKOUT PAGE — Stripe Hosted Checkout (phased catalog)
- * Foundation Yearly also supports Manual MoMo (one-year term).
+ * Foundation Access is a one-time 12-month purchase and also supports Manual MoMo.
  * Monthly tiers remain Stripe-only.
  */
 
@@ -97,7 +97,7 @@ function syncPayMethodUi() {
   if (stripeCopy) {
     stripeCopy.style.display = isMomo ? 'none' : 'block';
     stripeCopy.textContent = yearly
-      ? 'Card checkout via Stripe, or Manual MoMo for a one-year term (86,502 FCFA). Monthly plans stay on Stripe only.'
+      ? 'Card checkout via Stripe, or Manual MoMo for a one-time 12-month purchase (86,502 FCFA). Monthly plans stay on Stripe only.'
       : 'You\'ll be taken to Stripe\'s secure checkout page to enter your card details. Your payment is processed by Stripe — we never see your card number.';
   }
   if (virtualHint) virtualHint.style.display = isMomo ? 'none' : '';
@@ -223,7 +223,7 @@ async function startMomoCheckout(productId) {
 
   if (!productId || !currentUserId) return;
   if (productId !== 'foundation-yearly') {
-    if (errEl) errEl.textContent = 'Manual MoMo is only for Foundation Yearly.';
+    if (errEl) errEl.textContent = 'Manual MoMo is only for 12-Month Foundation Access.';
     return;
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
