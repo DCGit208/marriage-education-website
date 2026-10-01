@@ -4541,7 +4541,9 @@ async function unlockSbdContent(uid, productId, session) {
     // Stripe recurring: endDate = 2099 (Stripe webhooks manage cancel / period end).
     // Manual MoMo yearly: fixed term (months) — no auto-renewal.
     // One-time bundles: endDate = now + N months from unlock rule.
-    const isRecurring = ['foundation-monthly', 'foundation-yearly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
+    // Foundation Access is a one-time payment for 12 months. Monthly Foundation,
+    // Premium, and Elite remain recurring subscriptions.
+    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     let endDate;
     if (session?.manualAccessMonths) {
       endDate = new Date();
@@ -4550,11 +4552,12 @@ async function unlockSbdContent(uid, productId, session) {
       endDate = new Date('2099-12-31');
     } else {
       endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + rule.months);
+      endDate.setMonth(endDate.getMonth() + Number(rule.months || 12));
     }
 
-    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice or manual pending ref ──
+    // ── SBD commissions — idempotent per Stripe invoice, one-time Stripe session, or manual payment ref ──
     try {
+      let commissionResult = null;
       let invoiceId = session?.invoice || null;
       if (!invoiceId && session?.id && session?.mode === 'subscription') {
         const fullSession = await stripe.checkout.sessions.retrieve(session.id);
@@ -4564,20 +4567,9 @@ async function unlockSbdContent(uid, productId, session) {
         const invoice = await stripe.invoices.retrieve(
           typeof invoiceId === 'string' ? invoiceId : invoiceId.id
         );
-        const commissionResult = await handleSbdStripeInvoice(invoice);
-        Object.assign(tgMeta, {
-          referralCredited: !!commissionResult.credited,
-          referralSkipReason: commissionResult.referralSkipReason || null,
-          referrerAmbassadorCode: commissionResult.referrerAmbassadorCode || null,
-          referrerFullName: commissionResult.referrerFullName || null,
-          seniorAmbassadorCode: commissionResult.seniorAmbassadorCode || null,
-          ambassadorCommissionFCFA: commissionResult.ambassadorCommissionFCFA,
-          seniorCommissionFCFA: commissionResult.seniorCommissionFCFA,
-          rdCode: commissionResult.rdCode || null,
-          rdCommissionFCFA: commissionResult.rdCommissionFCFA
-        });
+        commissionResult = await handleSbdStripeInvoice(invoice);
       } else if (session?.manualCommissionKey) {
-        const commissionResult = await creditSbdSubscriptionCommissions({
+        commissionResult = await creditSbdSubscriptionCommissions({
           db,
           findSellerByReferralCode: findSellerBySbdReferralCode,
           uid,
@@ -4587,6 +4579,20 @@ async function unlockSbdContent(uid, productId, session) {
           idempotencyKey: session.manualCommissionKey,
           chargeKind: session.manualChargeKind || 'initial'
         });
+      } else if (canonicalProductId === 'foundation-yearly' && session?.id) {
+        commissionResult = await creditSbdSubscriptionCommissions({
+          db,
+          findSellerByReferralCode: findSellerBySbdReferralCode,
+          uid,
+          referralCode: userData.referredBy,
+          productId: canonicalProductId,
+          tierKey: rule.tier,
+          idempotencyKey: `checkout_${session.id}`,
+          chargeKind: 'initial'
+        });
+      }
+
+      if (commissionResult) {
         Object.assign(tgMeta, {
           referralCredited: !!commissionResult.credited,
           referralSkipReason: commissionResult.referralSkipReason || null,
@@ -4599,10 +4605,10 @@ async function unlockSbdContent(uid, productId, session) {
           rdCommissionFCFA: commissionResult.rdCommissionFCFA
         });
       } else {
-        tgMeta.referralSkipReason = 'no_invoice_for_commission';
+        tgMeta.referralSkipReason = 'no_charge_reference';
       }
     } catch (refErr) {
-      console.error('[SBD] Subscription commission credit failed (non-critical):', refErr.message);
+      console.error('[SBD] Commission credit failed (non-critical):', refErr.message);
       tgMeta.referralSkipReason = 'credit_error';
     }
 
