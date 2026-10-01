@@ -661,7 +661,7 @@ function createPaywallModal() {
             Start Foundation
           </button>
           <button class="btn btn-secondary" onclick="selectTier('foundation-yearly')">
-            Pay yearly — $118/yr
+            Pay yearly — $144.17/yr
           </button>
         </div>
         
