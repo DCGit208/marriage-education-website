@@ -13,9 +13,9 @@
     ambassadorRecurringPercent: 0.1,
     seniorOverridePercent: 0.05,
     rdOverridePercent: 0.05,
-    ambassadorMonthlyTargetUsd: 2360,
-    seniorMonthlyTargetUsd: 11800,
-    rdMonthlyTargetUsd: 750000,
+    ambassadorMonthlyTargetUsd: 28834,
+    seniorMonthlyTargetUsd: 14417,
+    rdMonthlyTargetUsd: 720850,
     dailyTargets: {
       newSubscribers: 10,
       foundationYearly: 10,
