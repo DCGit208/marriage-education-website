@@ -1,7 +1,7 @@
 /**
  * SBD subscription commission policy
  * - Monthly tiers: 500 + 250 + 250 FCFA on 5,000 base (2026-04-v1)
- * - Foundation Yearly ($144.17): 10% / 5% / 5% of $118 @ 600 XAF/USD (2026-07-v2)
+ * - Foundation Yearly ($144.17): 10% / 5% / 5% of $144.17 @ 600 XAF/USD (2026-07-v2)
  * See docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md
  */
 
