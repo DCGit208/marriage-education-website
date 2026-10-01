@@ -137,7 +137,7 @@ function createPendingPaymentFulfillment(deps) {
       };
     }
 
-    // Foundation Yearly (and other SBD subscription products) via Manual MoMo
+    // 12-Month Foundation Access (one-time payment) and other SBD products via Manual MoMo
     const isSbdSubscription =
       payment.product_id === 'foundation-yearly' ||
       payment.type === 'sbd_subscription' ||
@@ -162,7 +162,7 @@ function createPendingPaymentFulfillment(deps) {
         manualCurrency: (payment.currency || 'XAF').toUpperCase(),
         manualChannel: channel === 'campay' ? 'campay' : 'momo',
         manualPaymentMethod: payment.payment_method || paymentMethod || 'momo',
-        // Fixed 12-month term for Manual MoMo yearly (no Stripe auto-renew)
+        // Fixed 12-month access term for this one-time payment (no auto-renewal)
         manualAccessMonths: productId === 'foundation-yearly' ? 12 : (payment.manualAccessMonths || null)
       };
 
@@ -174,7 +174,7 @@ function createPendingPaymentFulfillment(deps) {
             email: payment.loginEmail || payment.email,
             name: payment.name || '',
             productId,
-            productName: payment.product_name || 'Foundation Tier — Yearly'
+            productName: payment.product_name || 'Foundation Access — 12 Months'
           });
         } catch (mailErr) {
           console.error('[fulfill] SBD buyer email failed:', mailErr.message);
@@ -189,7 +189,7 @@ function createPendingPaymentFulfillment(deps) {
 
       if (TELEGRAM_BOT_TOKEN) {
         let msg =
-          `✅ FOUNDATION YEARLY APPROVED (${channel})\n\n` +
+          `✅ FOUNDATION ACCESS APPROVED (${channel})\n\n` +
           `📋 Reference: ${ref}\n` +
           `📦 ${payment.product_name || productId}\n` +
           `💰 ${payment.amount} ${payment.currency || 'XAF'}\n` +
@@ -213,7 +213,7 @@ function createPendingPaymentFulfillment(deps) {
 
       return {
         success: true,
-        message: 'Foundation / SBD subscription approved',
+        message: 'Foundation / SBD access approved',
         uid,
         product_id: productId,
         channel
