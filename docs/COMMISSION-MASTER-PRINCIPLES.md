@@ -12,7 +12,7 @@
 | Event | Customer pays | Policy doc |
 |-------|---------------|------------|
 | **Ambassador onboarding** | ~15,000 FCFA signup | [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) |
-| **Foundation Yearly (official deployment)** | $118 / year | [SBD-SUBSCRIPTION-COMMISSION-POLICY.md](./SBD-SUBSCRIPTION-COMMISSION-POLICY.md) |
+| **Foundation Yearly (official deployment)** | $144.17 / year | [SBD-SUBSCRIPTION-COMMISSION-POLICY.md](./SBD-SUBSCRIPTION-COMMISSION-POLICY.md) |
 | **Foundation Monthly (alternate provision)** | 5,200 FCFA/month (5,000 commissionable + 200 OPEX) | [SBD-SUBSCRIPTION-COMMISSION-POLICY.md](./SBD-SUBSCRIPTION-COMMISSION-POLICY.md) |
 
 These never share the same payout engine as recruitment. Recruitment bonuses fire **once on admin approval**. SBD commissions fire on each qualifying subscription charge.
@@ -21,7 +21,7 @@ These never share the same payout engine as recruitment. Recruitment bonuses fir
 
 ## Three commission roles (no fourth tier)
 
-### Foundation Yearly ($118)
+### Foundation Yearly ($144.17)
 
 | Role | Rate | USD | FCFA (@ 600) |
 |------|------|-----|--------------|
