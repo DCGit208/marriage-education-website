@@ -124,7 +124,7 @@
     }
     var yearlyRef = encodeURIComponent(sbdCode || code || '');
     return [
-      { key: 'foundation-yearly', label: 'Foundation Yearly ($118)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef + '#enroll' },
+      { key: 'foundation-yearly', label: 'Foundation Yearly ($144.17)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef + '#enroll' },
       { key: 'books', label: 'Books', icon: 'fa-solid fa-book', url: 'https://marriageducation.com/sbd-campaign.html?ref=' + safe + '&category=books' },
       { key: 'schools', label: 'Schools', icon: 'fa-solid fa-school', url: 'https://marriageducation.com/schools.html?ref=' + safe + '&category=schools' },
       { key: 'courses', label: 'Courses', icon: 'fa-solid fa-book-open', url: 'https://marriageducation.com/courses.html?ref=' + safe + '&category=courses' },
@@ -307,7 +307,7 @@
       '<div class="dos-yearly-challenge-foot">' +
       '<span>All-time yearly: <strong>' + totalYearly + '</strong></span>' +
       '<a class="dos-btn dos-btn-primary" href="' + landing + '" target="_blank" rel="noopener">' +
-      '<i class="fa-solid fa-share-nodes"></i> Share $118 landing</a>' +
+      '<i class="fa-solid fa-share-nodes"></i> Share $144.17 landing</a>' +
       '</div></div>';
   }
 
