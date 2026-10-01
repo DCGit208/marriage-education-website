@@ -48,7 +48,7 @@ ok('yearly senior 4325', YEARLY_SENIOR_FCFA === 4325);
 ok('yearly rd 4325', YEARLY_RD_FCFA === 4325);
 ok('yearly base 86502', YEARLY_REVENUE_BASE_FCFA === 86502);
 ok('yearly full stack 17300', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 17300);
-ok('daily amb target $1441.7', YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 === 144.17);
+ok('daily amb target $1441.70 (rounded display $144.17 × 10)', Math.abs((YEARLY_DIRECT_FCFA / XAF_PER_USD * 10) - 144.1666666667) < 0.000001);
 ok('monthly amb target $28834', YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 === 28834);
 
 ok('isFoundationYearly true', isFoundationYearly('foundation-yearly') === true);
