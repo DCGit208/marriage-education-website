@@ -30,8 +30,8 @@
     },
     {
       id: 'close',
-      title: 'Close — Foundation Yearly ($118)',
-      body: 'Foundation Access is one payment of $118 for a full year of School 1 on the SBD Network — ideal if you want to start without monthly friction. I will send you my Foundation Yearly link now; after you enroll you receive login details by email. Here is the link: [YOUR YEARLY LINK]'
+      title: 'Close — Foundation Yearly ($144.17)',
+      body: 'Foundation Access is one payment of $144.17 for a full year of School 1 on the SBD Network — ideal if you want to start without monthly friction. I will send you my Foundation Yearly link now; after you enroll you receive login details by email. Here is the link: [YOUR YEARLY LINK]'
     },
     {
       id: 'close_monthly',
@@ -41,7 +41,7 @@
     {
       id: 'followup',
       title: 'Follow-up (24–48h)',
-      body: 'Hello — checking in on the Foundation Yearly access we discussed ($118 for 12 months). Do you have any questions before enrolling? I am here to help you activate your login.'
+      body: 'Hello — checking in on the Foundation Yearly access we discussed ($144.17 for 12 months). Do you have any questions before enrolling? I am here to help you activate your login.'
     },
     {
       id: 'recruit',
@@ -145,7 +145,7 @@
 
     container.innerHTML =
       '<div class="dos-card"><h3><i class="fa-solid fa-sun"></i> Daily targets · ' + todayKey() + '</h3>' +
-      '<p style="font-size:13px;color:#71717a;margin:0 0 16px">Official challenge: <strong>10 Foundation Yearly ($118)</strong> deployments / day. Self-log below; paid truth also updates Overview from Stripe.</p>' +
+      '<p style="font-size:13px;color:#71717a;margin:0 0 16px">Official challenge: <strong>10 Foundation Yearly ($144.17)</strong> deployments / day. Self-log below; paid truth also updates Overview from Stripe.</p>' +
       targetRow('Foundation Yearly deployments', c.subscribers || 0, targets.foundationYearly || targets.newSubscribers || 10) +
       targetRow('Conversations', c.conversations || 0, targets.conversations) +
       targetRow('Follow-ups', c.followUps || 0, targets.followUps) +
