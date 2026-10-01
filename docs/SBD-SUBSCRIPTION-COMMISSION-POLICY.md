@@ -16,7 +16,7 @@ Two Foundation billing paths exist:
 
 | Path | Product ID | Role |
 |------|------------|------|
-| **Official yearly deployment program** | `foundation-yearly` ($118/year) | Primary operator challenge (10/day × 20 days) |
+| **Official yearly deployment program** | `foundation-yearly` ($144.17/year) | Primary operator challenge (10/day × 20 days) |
 | **Monthly enrollment provision** | `foundation-monthly` (~$9.77/mo) | Alternate path — does not replace yearly |
 
 ---
@@ -26,7 +26,7 @@ Two Foundation billing paths exist:
 | Field | Value |
 |-------|-------|
 | Product ID | `foundation-yearly` |
-| Customer charge | **$118 USD / year** |
+| Customer charge | **$144.17 USD / year** |
 | FX ledger rate | **600 XAF / USD** |
 | Commissionable base | **70,800 FCFA** ($118 × 600) |
 
@@ -34,18 +34,18 @@ Two Foundation billing paths exist:
 
 | Role | % of $118 | USD | FCFA |
 |------|-----------|-----|------|
-| **Direct** (SBD referral code owner) | 10% | **$11.80** | **7,080** |
-| **Senior override** | 5% | **$5.90** | **3,540** |
-| **RD override** | 5% | **$5.90** | **3,540** |
+| **Direct** (SBD referral code owner) | 10% | **$14.417** | **8,650** |
+| **Senior override** | 5% | **$7.2085** | **4,325** |
+| **RD override** | 5% | **$7.2085** | **4,325** |
 
-**Full stack:** 20% of $118 = **$23.60** (14,160 FCFA).
+**Full stack:** 20% of $144.17 = **$28.834** (17,300 FCFA).
 
 ### Operator challenge math (planning + DOS)
 
 | Cadence | Deployments | Direct commission |
 |---------|-------------|-------------------|
-| Day | 10 × $118 | **$118 / day** |
-| Month (20 days) | 200 | **$2,360 / month** |
+| Day | 10 × $144.17 | **$144.17 / day** |
+| Month (20 days) | 200 | **$2,883.40 / month** |
 | Senior (10 ambassadors at full target) | 5% of network revenue | **$11,800 / month** |
 
 Dashboard tracks paid yearly sales via `sbdReferrals.yearlyByDay` / `yearlyByMonth` / `foundationYearly`.
@@ -147,9 +147,9 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 ## 9. Quick reference
 
 ```
-YEARLY ($118):
-  Direct  = 7,080 FCFA ($11.80)
-  Senior  = 3,540 FCFA ($5.90)
+YEARLY ($144.17):
+  Direct  = 8,650 FCFA (~$14.42)
+  Senior  = 4,325 FCFA (~$7.21)
   RD      = 3,540 FCFA ($5.90)
 
 MONTHLY (5,200 charge / 5,000 base):
