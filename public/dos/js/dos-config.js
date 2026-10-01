@@ -49,8 +49,8 @@
     dailyTarget: 10,
     activeDaysPerMonth: 20,
     monthlyTarget: 200,
-    ambassadorDailyCommissionUsd: 118,
-    ambassadorMonthlyCommissionUsd: 2360,
+    ambassadorDailyCommissionUsd: 144.17,
+    ambassadorMonthlyCommissionUsd: 28834,
     landingPath: 'https://marriageducation.com/foundation-access.html'
   };
 
