@@ -3619,6 +3619,8 @@
                 : String(rawReferral || '').trim().toUpperCase();
             const referralType = sessionStorage.getItem('referral_type') || (referralCode.startsWith('RD-') ? 'regional_director' : 'senior_ambassador');
 
+            const operatorCampaign = (window.MEOperatorCampaign && window.MEOperatorCampaign.get) ? window.MEOperatorCampaign.get() : {};
+
             const sessionPayload = window.MEAmbassadorReferralCode
                 ? window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData({
                     ...data,
@@ -3635,7 +3637,8 @@
                     regionType: intl && intl.isCameroon(countryCode) ? 'cameroon_region' : 'state_province',
                     recruitedBy: referralCode,
                     recruited_by_type: referralType,
-                    ambassador_type: 'regular'
+                    ambassador_type: 'regular',
+                    operator_campaign: operatorCampaign
                 })
                 : {
                     ...data,
@@ -3654,7 +3657,8 @@
                     recruited_by_type: referralType,
                     senior_code: referralCode.startsWith('AMB-') ? referralCode : null,
                     regional_director_code: referralCode.startsWith('RD-') ? referralCode : null,
-                    ambassador_type: 'regular'
+                    ambassador_type: 'regular',
+                    operator_campaign: operatorCampaign
                 };
 
             sessionStorage.setItem('ambassadorData', JSON.stringify(sessionPayload));
@@ -3675,5 +3679,6 @@
   
   <!-- Marriage Education Intelligent Assistant -->
   <script src="marriage-chatbot.js"></script>
+  <script src="operator-campaign.js?v=20261001"></script>
 </body>
 </html>
