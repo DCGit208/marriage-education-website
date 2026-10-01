@@ -28,11 +28,11 @@ Two Foundation billing paths exist:
 | Product ID | `foundation-yearly` |
 | Customer charge | **$144.17 USD / year** |
 | FX ledger rate | **600 XAF / USD** |
-| Commissionable base | **70,800 FCFA** ($118 × 600) |
+| Commissionable base | **86,502 FCFA** ($144.17 × 600) |
 
 ### Commission stack (each paid yearly charge)
 
-| Role | % of $118 | USD | FCFA |
+| Role | % of $144.17 | USD | FCFA |
 |------|-----------|-----|------|
 | **Direct** (SBD referral code owner) | 10% | **$14.417** | **8,650** |
 | **Senior override** | 5% | **$7.2085** | **4,325** |
