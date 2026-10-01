@@ -4095,7 +4095,7 @@ const SBD_STRIPE_PRICE_IDS = {
 
 const SBD_CATALOG_SERVER = {
   'foundation-monthly': { name: 'Foundation Tier', amount: 977, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
-  'foundation-yearly': { name: 'Foundation Tier — Yearly', amount: 11800, mode: 'subscription', interval: 'year', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
+  'foundation-yearly': { name: 'Foundation Access — 12 Months', amount: 14417, mode: 'payment', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
   'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
@@ -4885,7 +4885,7 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 });
 
 /**
- * Guest (DTC) checkout for Foundation Yearly landing — no prior auth required.
+ * Guest (DTC) checkout for 12-Month Foundation Access — one-time payment; no prior auth required.
  * Creates/finds Auth user, attributes referral, returns Stripe Checkout URL.
  */
 exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
@@ -4934,7 +4934,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'This guest checkout is for Foundation Tier — Yearly only.'
+      'This guest checkout is for 12-Month Foundation Access only.'
     );
   }
 
@@ -5009,7 +5009,6 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     currency: 'usd',
     product_data: { name: product.name },
     unit_amount: product.amount,
-    recurring: { interval: product.interval || 'year' },
   };
   const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
   const lineItem = trimmedPriceId
@@ -5033,8 +5032,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     customer_email: receiptEmail,
     client_reference_id: uid,
     metadata: meta,
-    subscription_data: { metadata: meta },
-    mode: 'subscription',
+    mode: 'payment',
     line_items: [lineItem],
     success_url:
       `https://sbd-network.web.app/checkout-success.html?product=${productId}` +
@@ -5057,7 +5055,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
 });
 
 /**
- * Guest Foundation Yearly — Manual MoMo / Orange Money path.
+ * Guest 12-Month Foundation Access — Manual MoMo / Orange Money path. One-time payment; no auto-renewal.
  * Creates Auth user + pending_payments; admin approve unlocks Foundation + commissions.
  */
 exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
@@ -5162,7 +5160,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   }
 
   const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
-  const amount = YEARLY_REVENUE_BASE_FCFA; // 86,502 FCFA ($144.17 @ 600)
+  const amount = YEARLY_REVENUE_BASE_FCFA; // 86,502 FCFA ($144.17 @ 600), one-time for 12-month access
   const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
   const payeeName = 'Achu Gustave Mokom';
   const contactEmail = isSponsored ? sponsorEmail : email;
@@ -5170,7 +5168,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email: contactEmail,
@@ -5221,7 +5219,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +
@@ -5301,7 +5299,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email,
@@ -5349,7 +5347,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING (SBD app)\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING (SBD app)\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +
