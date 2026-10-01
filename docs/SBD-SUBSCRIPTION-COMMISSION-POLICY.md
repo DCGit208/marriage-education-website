@@ -21,7 +21,7 @@ Two Foundation billing paths exist:
 
 ---
 
-## 2. Foundation Yearly — official deployment program
+## 2. Foundation Access — official deployment program
 
 | Field | Value |
 |-------|-------|
@@ -77,7 +77,7 @@ Commissions apply on **each successful monthly subscription charge**, not first 
 
 ## 4. Attribution
 
-1. Subscriber `users/{uid}.referredBy` = SBD referral code at signup/checkout (including guest Foundation Yearly landing `?ref=`).
+1. Subscriber `users/{uid}.referredBy` = SBD referral code at signup/checkout (including guest Foundation Access landing `?ref=`).
 2. Resolve seller via `sbdReferralCode` on `ambassadors/{AMB-…}` or `regional_directors/{RD-…}`.
 3. **Senior override:** walk `recruitedBy` / `senior_code` from selling ambassador — **not** `regional_director` alone.
 4. **RD override:** `rdCode` or `regional_director_code` on the selling branch.
@@ -100,7 +100,7 @@ One payee per role per charge. No walking Executive via `sponsor_code`.
 **Structure per RD network:**
 
 - 50 Senior Ambassadors × 10 Ambassadors = **500 ambassadors**
-- Planning deployment: **10 yearly subs/day × 20 days** = **200 new yearly deployments/month per ambassador**
+- Planning deployment: **10 12-month access sales/day × 20 days** = **200 new 12-month deployments/month per ambassador**
 
 Label all mature-scale figures **planning targets** — actuals depend on deployment, retention, and activation rates.
 
@@ -111,7 +111,7 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 | Collection / field | Purpose |
 |--------------------|---------|
 | `sbd_sales` | One row per commission event; includes `program`, `productId`, `challengeDayKey` |
-| Seller `sbdReferrals.foundationYearly` | Count of yearly deployments |
+| Seller `sbdReferrals.foundationYearly` | Count of 12-month deployments |
 | Seller `sbdReferrals.yearlyByDay.{YYYY-MM-DD}` | Daily challenge progress |
 | Seller `sbdReferrals.yearlyByMonth.{YYYY-MM}` | Monthly challenge progress |
 
