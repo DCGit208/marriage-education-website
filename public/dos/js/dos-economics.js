@@ -9,7 +9,7 @@
 
   var DOCTRINE = {
     subscriptionMonthlyUsd: 9,
-    foundationYearlyUsd: 118,
+    foundationYearlyUsd: 144.17,
     ambassadorRecurringPercent: 0.1,
     seniorOverridePercent: 0.05,
     rdOverridePercent: 0.05,
@@ -28,9 +28,9 @@
       dailyTarget: 10,
       activeDaysPerMonth: 20,
       monthlyTarget: 200,
-      ambassadorDailyCommissionUsd: 118,
-      ambassadorMonthlyCommissionUsd: 2360,
-      seniorMonthlyCommissionUsd: 11800
+      ambassadorDailyCommissionUsd: 144.17,
+      ambassadorMonthlyCommissionUsd: 28834,
+      seniorMonthlyCommissionUsd: 14417
     },
     promotion: {
       seniorRecruits: 10,
