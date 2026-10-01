@@ -5162,7 +5162,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   }
 
   const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
-  const amount = YEARLY_REVENUE_BASE_FCFA; // 70,800 FCFA ($118 @ 600)
+  const amount = YEARLY_REVENUE_BASE_FCFA; // 86,502 FCFA ($144.17 @ 600)
   const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
   const payeeName = 'Achu Gustave Mokom';
   const contactEmail = isSponsored ? sponsorEmail : email;
@@ -5271,7 +5271,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo is only available for Foundation Tier — Yearly ($118). Monthly plans use Stripe.'
+      'Manual MoMo is only available for Foundation Tier — Yearly ($144.17). Monthly plans use Stripe.'
     );
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
