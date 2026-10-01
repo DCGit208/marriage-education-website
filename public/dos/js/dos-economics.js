@@ -30,7 +30,11 @@
       monthlyTarget: 200,
       ambassadorDailyCommissionUsd: 144.17,
       ambassadorMonthlyCommissionUsd: 28834,
-      seniorMonthlyCommissionUsd: 14417
+      seniorMonthlyCommissionUsd: 14417,
+      ambassadorAnnualCommissionUsd: 346008,
+      seniorAnnualCommissionUsd: 173004,
+      rdMonthlyCommissionUsd: 720850,
+      rdAnnualCommissionUsd: 8650200
     },
     promotion: {
       seniorRecruits: 10,
