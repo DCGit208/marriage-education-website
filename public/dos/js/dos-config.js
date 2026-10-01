@@ -42,7 +42,7 @@
     { level: 'Platinum', threshold: 500, icon: 'fa-gem', color: '#71717a' }
   ];
 
-  /** Official Foundation Yearly deployment program (10 × $144.17 / day × 20 days). */
+  /** Official 12-Month Foundation Access deployment program (10 × $144.17 / day × 20 days). */
   var YEARLY_DEPLOYMENT_CHALLENGE = {
     productId: 'foundation-yearly',
     productUsd: 144.17,
