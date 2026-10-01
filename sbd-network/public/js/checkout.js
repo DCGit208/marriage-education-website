@@ -97,7 +97,7 @@ function syncPayMethodUi() {
   if (stripeCopy) {
     stripeCopy.style.display = isMomo ? 'none' : 'block';
     stripeCopy.textContent = yearly
-      ? 'Card checkout via Stripe, or Manual MoMo for a one-year term (70,800 FCFA). Monthly plans stay on Stripe only.'
+      ? 'Card checkout via Stripe, or Manual MoMo for a one-year term (86,502 FCFA). Monthly plans stay on Stripe only.'
       : 'You\'ll be taken to Stripe\'s secure checkout page to enter your card details. Your payment is processed by Stripe — we never see your card number.';
   }
   if (virtualHint) virtualHint.style.display = isMomo ? 'none' : '';
