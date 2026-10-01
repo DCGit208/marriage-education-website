@@ -531,7 +531,7 @@
         'If you want structure instead of guessing course by course, the 1-year formation pack is the stronger direction to consider. It fits someone who wants a guided formation rhythm, not just a single answer.',
       nextStep: 'Start in Learn, then compare membership access so the pack or course path matches the level of structure you want.',
       catalog: [
-        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$118/yr', why: 'Best if you want an affordable year rhythm.', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
+        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$144.17/yr', why: 'Best if you want an affordable year rhythm.', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
         { label: 'Deeper access', title: 'Premium Tier', meta: '$20/mo', why: 'Good if you want more course access monthly.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
         { label: 'Diploma path', title: 'Diploma in Teleios Personal Development', meta: '$2000', why: 'Good if you want a serious credential path.', href: '/checkout.html?product=diploma-teleios-personal-development', reviewHref: '/shop.html?section=bundles_diplomas&category=diplomas_certifications&q=Diploma%20Teleios%20Personal%20Development' },
       ],
