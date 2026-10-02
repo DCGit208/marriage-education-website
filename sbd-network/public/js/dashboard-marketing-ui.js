@@ -58,6 +58,38 @@
     sheet.classList.add('open');
   }
 
+  // Video sources are stored in data-src so guests can render the dashboard without
+  // requesting the large Hosting MP4s. Only the currently needed authenticated video
+  // is hydrated into a real src attribute.
+  function hydrateVideo(video) {
+    if (!video || !isAuthenticated) return false;
+    let changed = false;
+    video.querySelectorAll('source[data-src]').forEach(function (source) {
+      if (!source.getAttribute('src')) {
+        source.setAttribute('src', source.getAttribute('data-src'));
+        changed = true;
+      }
+    });
+    if (changed) {
+      try { video.load(); } catch (e) { /* ignore */ }
+    }
+    return changed || !!video.currentSrc;
+  }
+
+  function dehydrateVideo(video) {
+    if (!video) return;
+    try { video.pause(); } catch (e) { /* ignore */ }
+    video.querySelectorAll('source[src]').forEach(function (source) {
+      const dataSrc = source.getAttribute('data-src');
+      if (dataSrc) source.removeAttribute('src');
+    });
+    try { video.load(); } catch (e) { /* ignore */ }
+  }
+
+  function dehydrateAllBackgroundVideos() {
+    document.querySelectorAll('video.video-bg, video.intro-slide-video').forEach(dehydrateVideo);
+  }
+
   /**
    * Intro slides approved for video backgrounds (add one id at a time).
    * Rollback: remove card id here + matching HTML/CSS blocks for that slide.
@@ -75,12 +107,14 @@
       const video = slide.querySelector('video.intro-slide-video');
       if (!video) return;
 
-      if (reduced) {
+      if (reduced || !isAuthenticated) {
         video.pause();
+        if (!isAuthenticated) dehydrateVideo(video);
         return;
       }
 
       if (activeCard === cardId) {
+        hydrateVideo(video);
         playIntroSlideVideo(video);
       } else {
         video.pause();
@@ -94,7 +128,8 @@
   }
 
   function playIntroSlideVideo(video, opts) {
-    if (!video) return;
+    if (!video || !isAuthenticated) return;
+    hydrateVideo(video);
 
     const fromUserGesture = !!(opts && opts.fromUserGesture);
 
@@ -151,7 +186,7 @@
   }
 
   function playActiveIntroSlideVideo(opts) {
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion() || !isAuthenticated) return;
     const getSlides = window.__sbdSliderGetVisibleSlides;
     const getCurrent = window.__sbdSliderGetCurrent;
     if (typeof getSlides !== 'function' || typeof getCurrent !== 'function') return;
@@ -352,8 +387,10 @@
   }
 
   function playMvHouseVideo(slide, opts) {
+    if (!isAuthenticated) return;
     const video = slide && slide.querySelector('video.video-bg');
     if (!video) return;
+    hydrateVideo(video);
 
     const fromUserGesture = !!(opts && opts.fromUserGesture);
 
@@ -431,23 +468,8 @@
     document.body.dataset.sbdMvGlobalUnlock = '1';
 
     function unlock() {
-      /* Synchronously inside the gesture: prime ALL background videos on the page,
-         not only the MV one. Cheap and idempotent. */
-      const all = document.querySelectorAll('video.video-bg, video.intro-slide-video');
-      all.forEach(function (v) {
-        try {
-          v.muted = true;
-          v.defaultMuted = true;
-          v.playsInline = true;
-          v.setAttribute('muted', '');
-          v.setAttribute('playsinline', '');
-          v.setAttribute('webkit-playsinline', '');
-          const p = v.play();
-          if (p && typeof p.catch === 'function') p.catch(function () {});
-        } catch (e) {
-          /* ignore */
-        }
-      });
+      if (!isAuthenticated) return;
+      /* Only unlock the video the authenticated user can currently see. */
       tryPlayMvHouseSlide({ fromUserGesture: true });
       playActiveIntroSlideVideo({ fromUserGesture: true });
     }
@@ -731,7 +753,7 @@
     armMvGlobalPlaybackUnlock();
 
     function resumeMvVideoIfPaused() {
-      if (document.visibilityState !== 'visible') return;
+      if (!isAuthenticated || document.visibilityState !== 'visible') return;
       const slide = document.querySelector('.slide-card[data-card="mv-house"]');
       if (!slide || !slide.isConnected) return;
       const v = slide.querySelector('video.video-bg');
@@ -811,9 +833,17 @@
         promptSheet.classList.remove('open');
       }
 
+      if (!isAuthenticated) {
+        dehydrateAllBackgroundVideos();
+      }
+
       if (authChanged && typeof window.refreshSliderLayout === 'function') {
         window.requestAnimationFrame(function () {
           window.refreshSliderLayout(isAuthenticated ? 0 : undefined);
+          if (isAuthenticated) {
+            playActiveIntroSlideVideo();
+            tryPlayMvHouseSlide();
+          }
         });
       }
     }
