@@ -5,9 +5,6 @@
   "targets": {
     "marriage-education": {
       "hosting": {
-        "marriageducation": [
-          "marriageducation"
-        ],
         "main": [
           "marriage-education"
         ]
