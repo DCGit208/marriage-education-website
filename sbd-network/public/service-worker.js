@@ -286,14 +286,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Video/audio: always hit the network — never cache-first.
-  // Safari (especially iOS) uses byte-range requests for <video>. The Cache API match
-  // is URL-only; serving one stored 200 body for subsequent Range requests breaks
-  // decoding (black / paused / "doesn't play") in Safari and installed PWAs.
-  if (/\.(mp4|webm|m4v|ogg|ogv)(\?|#|$)/i.test(url.pathname)) {
-    event.respondWith(
-      fetch(request, { cache: 'no-store', mode: 'same-origin' }).catch(() => new Response('', { status: 503 }))
-    );
+  // Media is intentionally outside the service worker.
+  // Let the browser/CDN handle video/audio requests so native HTTP caching and
+  // byte-range requests work correctly (especially Safari/iOS). This also avoids
+  // forcing every media request through fetch(..., { cache: 'no-store' }).
+  if (/\.(mp4|webm|m4v|ogg|ogv|mp3|m4a|wav)(\?|#|$)/i.test(url.pathname)) {
     return;
   }
   

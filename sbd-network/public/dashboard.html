@@ -165,10 +165,11 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="metadata"
+                  preload="none"
+                  poster="/assets/background/dashboard-main.jpg"
                   aria-hidden="true"
                 >
-                  <source src="/assets/background/slide-1.mp4" type="video/mp4" />
+                  <source data-src="/assets/background/slide-1.mp4" type="video/mp4" />
                 </video>
               </div>
               <div class="intro-content flex-center">
@@ -195,10 +196,11 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="metadata"
+                  preload="none"
+                  poster="/assets/background/dashboard-main.jpg"
                   aria-hidden="true"
                 >
-                  <source src="/assets/background/slide-2.mp4" type="video/mp4" />
+                  <source data-src="/assets/background/slide-2.mp4" type="video/mp4" />
                 </video>
               </div>
               <div class="intro-content flex-center">
@@ -225,10 +227,11 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="metadata"
+                  preload="none"
+                  poster="/assets/background/dashboard-main.jpg"
                   aria-hidden="true"
                 >
-                  <source src="/assets/background/slide-3.mp4" type="video/mp4" />
+                  <source data-src="/assets/background/slide-3.mp4" type="video/mp4" />
                 </video>
               </div>
               <div class="intro-content flex-center">
@@ -254,12 +257,13 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
                   loop
                   playsinline
                   webkit-playsinline
-                  preload="metadata"
+                  preload="none"
+                  poster="/assets/background/dashboard-main.jpg"
                   disablepictureinpicture
                   controlslist="nodownload noplaybackrate"
                   aria-hidden="true"
                 >
-                  <source src="/assets/background/slide-4.mp4" type="video/mp4" />
+                  <source data-src="/assets/background/slide-4.mp4" type="video/mp4" />
                 </video>
               </div>
               <div class="intro-content power-content">
@@ -442,19 +446,18 @@ style="background-image:url('/assets/background/dashboard-main.jpg');">
             <div class="slide-card" data-card="mv-house">
                 <div class="card-bg video-bg-wrap">
                     <video
-                      autoplay
                       muted
                       loop
                       playsinline
                       webkit-playsinline
-                      preload="auto"
+                      preload="none"
                       class="video-bg"
                       poster="/assets/background/mv-house-video-poster.jpg"
                       aria-label="MV House motion background"
                     >
                       <!-- H.264 first: Safari / iOS / universal. WebM second: Chromium when file exists. -->
-                      <source src="/assets/background/slide-7-mv-bg.mp4" type="video/mp4" />
-                      <source src="/assets/background/slide-7-mv-bg.webm" type="video/webm" />
+                      <source data-src="/assets/background/slide-7-mv-bg.mp4" type="video/mp4" />
+                      <source data-src="/assets/background/slide-7-mv-bg.webm" type="video/webm" />
                       <!-- Optional 720p first for phones: see scripts/encode-mv-house-background.sh -->
                     </video>
                     <div class="video-overlay-dark"></div>
