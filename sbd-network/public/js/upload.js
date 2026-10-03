@@ -459,9 +459,8 @@ async function uploadToR2(file, folder, options) {
     }
     return locator;
   } catch (err) {
-    if (!canFallbackToFirebaseStorage(err)) throw err;
-    console.warn('[upload] R2 failed; falling back to Firebase Storage:', err && err.message);
-    return uploadToFirebaseStorage(file, folder, options);
+    console.error('[upload] R2 upload failed; no Firebase Storage fallback was used:', err && err.message);
+    throw err;
   }
 }
 
