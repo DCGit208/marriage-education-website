@@ -24,7 +24,6 @@ const STRIPE_READY_IDS = new Set([
   'teleios-blueprint',
   'starter-bundle',
   'teleios-bundle',
-  'teleios-blueprint-book-course',
   'elite-bundle',
   'sbd-dummies',
   'the-woman-the-wife-the-mother',
@@ -173,7 +172,6 @@ const BOOK_COVERS = {
   'the-sex-by-design-compendium': '/images/sexbydesigncompendium.jpg',
   'teleios-blueprint': '/assets/book-covers/teleios-blueprint.png',
   'teleios-blueprint-full': '/assets/book-covers/teleios-blueprint.png',
-  'teleios-blueprint-book-course': '/assets/book-covers/teleios-blueprint-book-course.png',
   'sbd-dummies': '/assets/book-covers/sbd-dummies.png',
   'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
   'sbd-canonical': '/images/sbd-canonical.jpg',
@@ -315,26 +313,16 @@ const PRODUCTS = [
     description: 'Foundation of identity, wholeness, and maturity.',
     unlocks: { type: 'course', courseIds: ['teleios-blueprint'] },
   }),
-  p('teleios-blueprint-book-course', 'The Teleios Blueprint — Book + Courseware', 'course_bundles', 300, {
-    phase: 1, type: 'bundle', icon: '📘', sortOrder: 4.2,
-    coverImage: '/assets/book-covers/teleios-blueprint-book-course.png',
-    description: 'The Teleios Blueprint book + the complete 6-week courseware.',
-    unlocks: { type: 'bundle', products: ['teleios-blueprint', 'teleios-blueprint-full'], courses: ['teleios-blueprint'] },
-  }),, 'The Teleios Blueprint — Book + Courseware', 'course_bundles', 300, {
-    phase: 1, type: 'bundle', icon: '📘', sortOrder: 4.2,
-    coverImage: '/assets/book-covers/teleios-blueprint-book-course.png',
-    originalPriceUsd: null,
-    description: 'The Teleios Blueprint book + the complete 6-week courseware.',
-    unlocks: { type: 'bundle', products: ['teleios-blueprint', 'teleios-blueprint-course'], courses: ['teleios-blueprint'] },
-  }),
   p('starter-bundle', 'Starter Bundle', 'book_bundles', 37, {
     phase: 1, type: 'bundle', originalPriceUsd: 47, icon: '🚀', sortOrder: 5,
     description: 'SBD for Dummies + 1 month Premium access.',
     unlocks: { type: 'bundle', products: ['sbd-dummies'], subscription: { tier: 'premium', months: 1 } },
   }),
-  p('teleios-bundle', 'Teleios Bundle', 'book_bundles', 297, {
-    phase: 1, type: 'bundle', originalPriceUsd: 347, icon: '🎓', sortOrder: 6,
-    description: 'Teleios Blueprint + 3 months Premium + coaching session.',
+  p('teleios-bundle', 'The Teleios Blueprint — Book + Courseware', 'course_bundles', 300, {
+    phase: 1, type: 'bundle', icon: '📘', sortOrder: 4.2,
+    coverImage: '/assets/book-covers/teleios-blueprint-bundle.png',
+    description: 'The Teleios Blueprint book + the complete 6-week courseware.',
+    unlocks: { type: 'bundle', products: ['teleios-blueprint', 'teleios-blueprint-full'], courses: ['teleios-blueprint'] },
   }),
   p('elite-bundle', 'Elite Formation Bundle', 'book_bundles', 497, {
     phase: 1, type: 'bundle', originalPriceUsd: 574, icon: '👑', sortOrder: 7,
