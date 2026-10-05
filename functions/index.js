@@ -3999,8 +3999,6 @@ const SBD_STRIPE_PRICE_IDS = {
   'teleios-blueprint': process.env.SBD_PRICE_TELEIOS_BLUEPRINT || '',
   'starter-bundle': process.env.SBD_PRICE_STARTER_BUNDLE || '',
   'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
-  // New Teleios Book + Courseware SKU uses dynamic Stripe price_data until a dedicated Stripe Price is configured.
-  'teleios-blueprint-book-course': process.env.SBD_PRICE_TELEIOS_BLUEPRINT_BOOK_COURSE || '',
   'elite-bundle': process.env.SBD_PRICE_ELITE_BUNDLE || '',
   'sbd-dummies': process.env.SBD_PRICE_SBD_DUMMIES || '',
   'the-woman-the-wife-the-mother': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BUNDLE || process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER || '',
@@ -4102,7 +4100,7 @@ const SBD_CATALOG_SERVER = {
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
   'starter-bundle': { name: 'Starter Bundle', amount: 3700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['starter-bundle'] },
-  'teleios-bundle': { name: 'Teleios Bundle', amount: 29700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-bundle'] },
+  'teleios-bundle': { name: 'The Teleios Blueprint — Book + Courseware', amount: 30000, mode: 'payment', stripePriceId: '' },
   'teleios-blueprint-book-course': { name: 'The Teleios Blueprint — Book + Courseware', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint-book-course'] },
   'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
   'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
@@ -4204,9 +4202,8 @@ const SBD_UNLOCK_RULES = {
   'premium-monthly': { tier: 'premium', months: 1 },
   'elite-monthly': { tier: 'elite', months: 1 },
   'teleios-blueprint': { courses: ['teleios-blueprint'] },
-  'teleios-blueprint-book-course': { courses: ['teleios-blueprint'], products: ['teleios-blueprint', 'teleios-blueprint-full', 'teleios-blueprint-book-course'] },
   'starter-bundle': { products: ['sbd-dummies'], tier: 'premium', months: 1 },
-  'teleios-bundle': { products: ['teleios-bundle'] },
+  'teleios-bundle': { courses: ['teleios-blueprint'], products: ['teleios-blueprint', 'teleios-blueprint-full', 'teleios-bundle'] },
   'elite-bundle': { products: ['elite-bundle'] },
   'sbd-dummies': { courses: ['sbd-dummies-course'] },
   'the-woman-the-wife-the-mother-book': {
