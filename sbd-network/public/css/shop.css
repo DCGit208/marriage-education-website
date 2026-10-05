@@ -200,6 +200,19 @@
   position: relative;
 }
 
+/* Preserve the complete supplied Teleios artwork in the featured hero rail. */
+.hero-slide-card--teleios-cover .hero-slide-card__media {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #111;
+}
+
+.hero-slide-card--teleios-bundle .hero-slide-card__media {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #111;
+}
+
 .hero-slide-card__media::after {
   content: '';
   position: absolute;
