@@ -4101,7 +4101,6 @@ const SBD_CATALOG_SERVER = {
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
   'starter-bundle': { name: 'Starter Bundle', amount: 3700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['starter-bundle'] },
   'teleios-bundle': { name: 'The Teleios Blueprint — Book + Courseware', amount: 30000, mode: 'payment', stripePriceId: '' },
-  'teleios-blueprint-book-course': { name: 'The Teleios Blueprint — Book + Courseware', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint-book-course'] },
   'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
   'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
   'the-woman-the-wife-the-mother-book': { name: 'The Woman, The Wife, The Mother — Book', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-book'] },
