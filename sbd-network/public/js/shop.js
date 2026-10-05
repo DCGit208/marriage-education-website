@@ -1111,7 +1111,16 @@ function renderProductGrid() {
     return;
   }
   var useProgramCards = shouldUseCourseProgramLayout();
+  var school1SectionRendered = null;
   products.forEach(function (p, idx) {
+    if (useProgramCards && p.schoolId === 'school1' && p.school1Section && p.school1Section !== school1SectionRendered) {
+      school1SectionRendered = p.school1Section;
+      var heading = document.createElement('div');
+      heading.className = 'school1-section-heading school1-section-heading--' + p.school1Section.toLowerCase();
+      heading.innerHTML = '<span class="school1-section-heading__eyebrow">School 1 · Section ' + escapeShopHtml(p.school1Section) + '</span>' +
+        '<h2>' + (p.school1Section === 'A' ? 'Core Personal Development Programs' : 'Relationship Psychology &amp; Self-Formation') + '</h2>';
+      grid.appendChild(heading);
+    }
     if ((useProgramCards && p.program) || shouldRenderAsProgramCard(p)) {
       grid.appendChild(buildCourseProgramCard(p, idx));
     } else {
