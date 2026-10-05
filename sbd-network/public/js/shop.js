@@ -659,7 +659,10 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     var categoryLabel = getCategoryLabel(p.category);
     var badge = (p.category === 'magazine') ? 'Magazine' : categoryLabel;
     return (
-      '<article class="hero-slide-card" data-hero-product="' + escapeShopHtml(p.id) + '">' +
+      '<article class="hero-slide-card' +
+      (p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full' ? ' hero-slide-card--teleios-cover' : '') +
+      (p.id === 'teleios-bundle' ? ' hero-slide-card--teleios-bundle' : '') +
+      '" data-hero-product="' + escapeShopHtml(p.id) + '">' +
       '<div class="hero-slide-card__media"' + (src ? ' style="background-image:url(\'' + escapeShopHtml(src) + '\')"' : '') + '>' +
       '<span class="hero-slide-card__badge">' + escapeShopHtml(badge) + '</span>' +
       '</div>' +
