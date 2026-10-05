@@ -1348,6 +1348,31 @@
   align-items: start;
 }
 
+.school1-section-heading {
+  grid-column: 1 / -1;
+  margin: 10px 0 0;
+  padding: 18px 2px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.school1-section-heading__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--accent-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.school1-section-heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+
 @media (min-width: 720px) {
   .product-grid--programs {
     grid-template-columns: repeat(2, 1fr);
