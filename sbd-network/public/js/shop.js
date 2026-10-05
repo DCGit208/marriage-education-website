@@ -1327,7 +1327,13 @@ function buildProductCard(p) {
   var canCheckout = !!p.stripeReady;
   var isBookLayout = activeSection === 'books_magazine' ||
     (activeSection === 'all' && p.section === 'books_magazine' && p.category !== 'network_subscription');
-  card.className = 'product-card' + (canCheckout ? '' : ' product-card--soon') + (isBookLayout && p.coverImage ? ' product-card--book' : '');
+  var isTeleiosCover = p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full';
+  var isTeleiosBundle = p.id === 'teleios-bundle';
+  card.className = 'product-card' +
+    (canCheckout ? '' : ' product-card--soon') +
+    (isBookLayout && p.coverImage ? ' product-card--book' : '') +
+    (isTeleiosCover && p.coverImage ? ' product-card--teleios-cover' : '') +
+    (isTeleiosBundle && p.coverImage ? ' product-card--teleios-bundle' : '');
 
   if (canCheckout) {
     card.setAttribute('role', 'button');
