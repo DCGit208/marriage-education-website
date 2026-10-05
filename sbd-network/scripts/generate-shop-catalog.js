@@ -24,6 +24,7 @@ const STRIPE_READY_IDS = new Set([
   'teleios-blueprint',
   'starter-bundle',
   'teleios-bundle',
+  'teleios-blueprint-book-course',
   'elite-bundle',
   'sbd-dummies',
   'the-woman-the-wife-the-mother',
@@ -170,7 +171,10 @@ const CATEGORY_SECTION = {
 
 const BOOK_COVERS = {
   'the-sex-by-design-compendium': '/images/sexbydesigncompendium.jpg',
-  'teleios-blueprint': '/images/sbd-deluxe.jpg',
+  'teleios-blueprint': '/assets/book-covers/teleios-blueprint.png',
+  'teleios-blueprint-full': '/assets/book-covers/teleios-blueprint.png',
+  'teleios-blueprint-course': '/assets/book-covers/teleios-blueprint.png',
+  'teleios-blueprint-book-course': '/assets/book-covers/teleios-blueprint-book-course.png',
   'sbd-dummies': '/assets/book-covers/sbd-dummies.png',
   'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
   'sbd-canonical': '/images/sbd-canonical.jpg',
@@ -306,10 +310,23 @@ const PRODUCTS = [
     description: 'All 44 courses, MV House, advanced boards, full academy access.',
     unlocks: { type: 'tier', tier: 'elite' },
   }),
-  p('teleios-blueprint', 'Teleios Blueprint (Book)', 'books_sbd_series', 247, {
+  p('teleios-blueprint', 'Teleios Blueprint (Book)', 'books_sbd_series', 247, {  p('teleios-blueprint-course', 'The Teleios Blueprint: Full Human Maturity — Course', 'courses_school1', 247, {
+    phase: 1, type: 'course', schoolId: 'school1', sortOrder: 4.1,
+    coverImage: '/assets/book-covers/teleios-blueprint.png',
+    description: 'The 6-week Teleios Blueprint course — full human maturity, identity, character, relationship, and purpose.',
+    unlocks: { type: 'course', courseIds: ['teleios-blueprint'] },
+  }),
+
     phase: 1, icon: '🎯', sortOrder: 4,
     description: 'Foundation of identity, wholeness, and maturity.',
     unlocks: { type: 'course', courseIds: ['teleios-blueprint'] },
+  }),
+  p('teleios-blueprint-book-course', 'The Teleios Blueprint — Book + Courseware', 'course_bundles', 300, {
+    phase: 1, type: 'bundle', icon: '📘', sortOrder: 4.2,
+    coverImage: '/assets/book-covers/teleios-blueprint-book-course.png',
+    originalPriceUsd: null,
+    description: 'The Teleios Blueprint book + the complete 6-week courseware.',
+    unlocks: { type: 'bundle', products: ['teleios-blueprint', 'teleios-blueprint-course'], courses: ['teleios-blueprint'] },
   }),
   p('starter-bundle', 'Starter Bundle', 'book_bundles', 37, {
     phase: 1, type: 'bundle', originalPriceUsd: 47, icon: '🚀', sortOrder: 5,
