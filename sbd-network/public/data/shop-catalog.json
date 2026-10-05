@@ -393,7 +393,7 @@
       "schoolId": null,
       "requiredTier": "free",
       "sourceUrl": "https://marriageducation.com/shop.html",
-      "coverImage": "/images/sbd-dummies.jpg",
+      "coverImage": "/assets/book-covers/sbd-dummies.png",
       "visualKey": "book",
       "legacyAliases": [
         "sbd-for-dummies"
@@ -606,7 +606,7 @@
       "schoolId": null,
       "requiredTier": "free",
       "sourceUrl": "https://marriageducation.com/shop.html",
-      "coverImage": "/images/sbd-dummies.jpg",
+      "coverImage": "/assets/book-covers/sbd-dummies.png",
       "visualKey": "book",
       "legacyAliases": [],
       "sortOrder": 12,

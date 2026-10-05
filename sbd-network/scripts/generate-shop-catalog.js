@@ -171,8 +171,8 @@ const CATEGORY_SECTION = {
 const BOOK_COVERS = {
   'the-sex-by-design-compendium': '/images/sexbydesigncompendium.jpg',
   'teleios-blueprint': '/images/sbd-deluxe.jpg',
-  'sbd-dummies': '/images/sbd-dummies.jpg',
-  'sbd-dummies-digital-print': '/images/sbd-dummies.jpg',
+  'sbd-dummies': '/assets/book-covers/sbd-dummies.png',
+  'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
   'sbd-canonical': '/images/sbd-canonical.jpg',
   'sbd-standard': '/images/sbd-standard.jpg',
   'sbd-real-couples': '/images/SBD-Real-Couples.jpg',
