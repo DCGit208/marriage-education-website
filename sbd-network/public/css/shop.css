@@ -1046,6 +1046,29 @@
   display: block;
 }
 
+/* Preserve the complete supplied Teleios artwork in product cards.
+   These selectors are intentionally scoped to the Teleios products so
+   unrelated shop artwork keeps the existing presentation. */
+.product-card--teleios-cover .product-image {
+  aspect-ratio: 2 / 3;
+  background: #111;
+}
+
+.product-card--teleios-cover .product-cover {
+  object-fit: contain;
+  padding: 8px;
+}
+
+.product-card--teleios-bundle .product-image {
+  aspect-ratio: 1312 / 1199;
+  background: #111;
+}
+
+.product-card--teleios-bundle .product-cover {
+  object-fit: contain;
+  padding: 0;
+}
+
 .product-cover-wrap {
   margin-top: 12px;
   padding-top: 12px;
