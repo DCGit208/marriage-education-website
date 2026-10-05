@@ -1332,11 +1332,17 @@ function buildProductCard(p) {
     (activeSection === 'all' && p.section === 'books_magazine' && p.category !== 'network_subscription');
   var isTeleiosCover = p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full';
   var isTeleiosBundle = p.id === 'teleios-bundle';
+  var isAnthropologyBook = p.id === 'anthropology-of-wholeness-book';
+  var isAnthropologyCourse = p.id === 'anthropology-of-wholeness';
+  var isAnthropologyBundle = p.id === 'anthropology-of-wholeness-bundle';
   card.className = 'product-card' +
     (canCheckout ? '' : ' product-card--soon') +
     (isBookLayout && p.coverImage ? ' product-card--book' : '') +
     (isTeleiosCover && p.coverImage ? ' product-card--teleios-cover' : '') +
-    (isTeleiosBundle && p.coverImage ? ' product-card--teleios-bundle' : '');
+    (isTeleiosBundle && p.coverImage ? ' product-card--teleios-bundle' : '') +
+    (isAnthropologyBook && p.coverImage ? ' product-card--anthropology-book' : '') +
+    (isAnthropologyCourse && p.coverImage ? ' product-card--anthropology-course' : '') +
+    (isAnthropologyBundle && p.coverImage ? ' product-card--anthropology-bundle' : '');
 
   if (canCheckout) {
     card.setAttribute('role', 'button');
