@@ -213,6 +213,77 @@
   background-color: #111;
 }
 
+/* Teleios uses the available hero-card space as a product composition:
+   portrait book art gets meaningful width beside its copy instead of
+   floating inside a generic fixed-height media box. */
+.hero-slide-card--teleios-cover {
+  display: grid;
+  grid-template-columns: minmax(118px, 43%) minmax(0, 57%);
+  min-height: 320px;
+}
+
+.hero-slide-card--teleios-cover .hero-slide-card__media {
+  height: auto;
+  min-height: 320px;
+  background-size: contain;
+  background-position: center;
+}
+
+.hero-slide-card--teleios-cover .hero-slide-card__body {
+  justify-content: center;
+  padding: 18px 16px;
+  gap: 10px;
+}
+
+.hero-slide-card--teleios-cover .hero-slide-card__body h3 {
+  font-size: 1.02rem;
+  line-height: 1.24;
+}
+
+.hero-slide-card--teleios-cover .hero-slide-card__body p {
+  display: block;
+  -webkit-line-clamp: initial;
+  overflow: visible;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.hero-slide-card--teleios-cover .hero-slide-card__meta {
+  margin-top: 8px;
+}
+
+.hero-slide-card--teleios-bundle {
+  min-height: 320px;
+}
+
+.hero-slide-card--teleios-bundle .hero-slide-card__media {
+  height: clamp(180px, 18vw, 220px);
+  background-position: center;
+}
+
+@media (max-width: 760px) {
+  .hero-slide-card--teleios-cover {
+    display: flex;
+    min-height: 320px;
+  }
+
+  .hero-slide-card--teleios-cover .hero-slide-card__media {
+    height: 190px;
+    min-height: 190px;
+  }
+
+  .hero-slide-card--teleios-cover .hero-slide-card__body {
+    padding: 12px;
+  }
+
+  .hero-slide-card--teleios-cover .hero-slide-card__body p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 .hero-slide-card__media::after {
   content: '';
   position: absolute;
