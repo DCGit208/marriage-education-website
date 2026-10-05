@@ -1,6 +1,6 @@
 {
   "version": 4,
-  "generatedAt": "2026-10-05T22:09:55.601Z",
+  "generatedAt": "2026-10-05T22:12:33.301Z",
   "currency": "USD",
   "activePhase": 6,
   "maxPhase": 6,
@@ -1804,52 +1804,6 @@
         "accent": "school1"
       },
       "school1Section": "A"
-    },
-    {
-      "id": "teleios-level-2",
-      "name": "Teleios Level 2: Advanced Development",
-      "category": "courses_school1",
-      "section": "academy",
-      "subcategory": null,
-      "phase": 5,
-      "stripeReady": true,
-      "type": "course",
-      "priceUsd": 397,
-      "priceDisplay": "$397",
-      "priceSuffix": "",
-      "originalPriceUsd": null,
-      "description": "Epistemology, axiology, ontology for marriage readiness.",
-      "icon": "📘",
-      "format": "digital",
-      "recurring": false,
-      "schoolId": "school1",
-      "requiredTier": "free",
-      "sourceUrl": "https://marriageducation.com/courses.html",
-      "coverImage": "",
-      "visualKey": "school1",
-      "legacyAliases": [],
-      "sortOrder": 71,
-      "status": "active",
-      "source": "marriageducation.com",
-      "unlocks": null,
-      "coverWrapImage": null,
-      "program": {
-        "tagline": "",
-        "badge": null,
-        "badgeStyle": "school1",
-        "featureLabel": "You'll master:",
-        "features": [
-          "Epistemology — how you know about love and marriage",
-          "Axiology — ranking what matters in home and nation",
-          "Ontology — marriage as divine system",
-          "Etymology — why definitions of marriage and fidelity matter"
-        ],
-        "duration": "8 weeks",
-        "format": "Live cohort + assignments",
-        "pitch": "For those who completed Level 1 or already practice strong self-command but want marriage-readiness at civilizational standard.",
-        "ctaLabel": "Enroll in Course",
-        "accent": "school1"
-      }
     },
     {
       "id": "anthropology-of-wholeness-book",
