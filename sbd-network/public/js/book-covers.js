@@ -12,6 +12,7 @@
     'teleios-blueprint': '/assets/book-covers/teleios-blueprint.png',
     'teleios-blueprint-full': '/assets/book-covers/teleios-blueprint.png',
     'teleios-blueprint-course': '/assets/book-covers/teleios-blueprint.png',
+    'anthropology-of-wholeness-book': '/assets/book-covers/anthropology-of-wholeness.webp',
     'teleios-bundle': '/assets/book-covers/teleios-blueprint-bundle.png',
     'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
     'the-woman-the-wife-the-mother-book': '/assets/book-covers/the-woman-the-wife-the-mother.png',
