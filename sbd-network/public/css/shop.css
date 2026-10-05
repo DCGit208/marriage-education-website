@@ -1138,6 +1138,26 @@
   padding: 0;
 }
 
+/* Anthropology of Wholeness — supplied School 1 artwork.
+   Each selector is product-scoped so other shop cards remain untouched. */
+.product-card--anthropology-book .product-image {
+  aspect-ratio: 1024 / 1536;
+  background: #111;
+}
+
+.product-card--anthropology-book .product-cover,
+.product-card--anthropology-course .product-cover,
+.product-card--anthropology-bundle .product-cover {
+  object-fit: contain;
+  padding: 0;
+}
+
+.product-card--anthropology-course .product-image,
+.product-card--anthropology-bundle .product-image {
+  aspect-ratio: 1198 / 1313;
+  background: #111;
+}
+
 .product-cover-wrap {
   margin-top: 12px;
   padding-top: 12px;
