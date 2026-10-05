@@ -1159,7 +1159,10 @@ function buildCourseProgramCardApple(p, idx) {
   var accent = prog.accent || 'default';
   var isFeatured = prog.badgeStyle === 'featured' || prog.badge === '⭐ BEST VALUE';
   var isHero = isFeatured || (idx === 0 && activeCategory === 'all' && activeSection === 'academy');
-  var posterClass = 'course-program-poster course-program-poster--' + accent;
+  var posterClass = 'course-program-poster course-program-poster--' + accent + (p.coverImage ? ' course-program-poster--has-art' : '');
+  var posterArtHtml = p.coverImage
+    ? '<img class="course-program-poster__art" src="' + escapeShopHtml(p.coverImage) + '" alt="" loading="lazy" decoding="async">'
+    : '';
   card.className = 'course-program-card course-program-card--apple course-program-card--' + accent +
     (isHero ? ' course-program-card--hero' : '') +
     (canCheckout ? '' : ' course-program-card--soon');
@@ -1196,6 +1199,7 @@ function buildCourseProgramCardApple(p, idx) {
 
   card.innerHTML =
     '<div class="' + posterClass + '">' +
+    posterArtHtml +
     badgeHtml +
     '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
     taglineHtml +
