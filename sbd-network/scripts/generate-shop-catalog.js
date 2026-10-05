@@ -170,9 +170,10 @@ const CATEGORY_SECTION = {
 
 const BOOK_COVERS = {
   'the-sex-by-design-compendium': '/images/sexbydesigncompendium.jpg',
-  'teleios-blueprint': '/images/sbd-deluxe.jpg',
-  'sbd-dummies': '/images/sbd-dummies.jpg',
-  'sbd-dummies-digital-print': '/images/sbd-dummies.jpg',
+  'teleios-blueprint': '/assets/book-covers/teleios-blueprint.png',
+  'teleios-blueprint-full': '/assets/book-covers/teleios-blueprint.png',
+  'sbd-dummies': '/assets/book-covers/sbd-dummies.png',
+  'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
   'sbd-canonical': '/images/sbd-canonical.jpg',
   'sbd-standard': '/images/sbd-standard.jpg',
   'sbd-real-couples': '/images/SBD-Real-Couples.jpg',
@@ -308,6 +309,7 @@ const PRODUCTS = [
   }),
   p('teleios-blueprint', 'Teleios Blueprint (Book)', 'books_sbd_series', 247, {
     phase: 1, icon: '🎯', sortOrder: 4,
+    coverImage: '/assets/book-covers/teleios-blueprint.png',
     description: 'Foundation of identity, wholeness, and maturity.',
     unlocks: { type: 'course', courseIds: ['teleios-blueprint'] },
   }),
@@ -316,9 +318,11 @@ const PRODUCTS = [
     description: 'SBD for Dummies + 1 month Premium access.',
     unlocks: { type: 'bundle', products: ['sbd-dummies'], subscription: { tier: 'premium', months: 1 } },
   }),
-  p('teleios-bundle', 'Teleios Bundle', 'book_bundles', 297, {
-    phase: 1, type: 'bundle', originalPriceUsd: 347, icon: '🎓', sortOrder: 6,
-    description: 'Teleios Blueprint + 3 months Premium + coaching session.',
+  p('teleios-bundle', 'The Teleios Blueprint — Book + Courseware', 'course_bundles', 300, {
+    phase: 1, type: 'bundle', icon: '📘', sortOrder: 4.2,
+    coverImage: '/assets/book-covers/teleios-blueprint-bundle.png',
+    description: 'The Teleios Blueprint book + the complete 6-week courseware.',
+    unlocks: { type: 'bundle', products: ['teleios-blueprint', 'teleios-blueprint-full'], courses: ['teleios-blueprint'] },
   }),
   p('elite-bundle', 'Elite Formation Bundle', 'book_bundles', 497, {
     phase: 1, type: 'bundle', originalPriceUsd: 574, icon: '👑', sortOrder: 7,
@@ -404,7 +408,7 @@ const PRODUCTS = [
   p('marriage-governance-bundle', 'Marriage Governance Bundle', 'course_bundles', 349, { phase: 4, type: 'bundle', originalPriceUsd: 894, sortOrder: 132, description: 'System Design, Covenant Governance, Liturgies, Communication.' }),
 
   // ── Phase 5 — School 1 — Teleios ────────────────────────────────
-  p('teleios-blueprint-full', 'The Teleios Blueprint: Full Human Maturity', 'courses_school1', 247, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 70, description: 'Foundational certificate — identity, maturity, human design.' }),
+  p('teleios-blueprint-full', 'The Teleios Blueprint: Full Human Maturity — Course', 'courses_school1', 247, { phase: 1, type: 'course', schoolId: 'school1', sortOrder: 4.3, coverImage: '/assets/book-covers/teleios-blueprint.png', description: 'The 6-week Teleios Blueprint course — full human maturity, identity, character, relationship, and purpose.' }),
   p('teleios-level-2', 'Teleios Level 2: Advanced Development', 'courses_school1', 397, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 71, description: 'Epistemology, axiology, ontology for marriage readiness.' }),
   p('anthropology-of-wholeness', 'The Anthropology of Wholeness', 'courses_school1', 149, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 72, description: 'Becoming fully human — image, likeness, UDHR 26:2.', coverImage: '/images/course-covers/anthropology-of-wholeness-cover.png' }),
   p('identity-mastery', 'Identity Mastery', 'courses_school1', 149, { phase: 5, type: 'course', schoolId: 'school1', sortOrder: 73, description: 'Who you are by design from Genesis 1:26-27.' }),
