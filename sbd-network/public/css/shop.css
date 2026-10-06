@@ -160,7 +160,7 @@
 .shop-hero-slider__viewport {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(280px, 31vw);
+  grid-auto-columns: minmax(300px, 360px);
   gap: 14px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -200,27 +200,27 @@
   position: relative;
 }
 
-/* School 1 hero artwork: one controlled merchandising frame for every supplied artwork.
-   The complete artwork is always visible; the artwork never dictates card/page height. */
+/* Unified School 1 merchandising frame.
+   The frame controls the shop layout; supplied artwork is contained inside it.
+   No crop, stretch, or product-specific aspect-ratio sizing. */
 .hero-slide-card--artwork .hero-slide-card__media {
   height: 210px;
   min-height: 210px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-color: #111;
+  background: #111;
+  overflow: hidden;
 }
 
-/* Teleios remains part of the same presentation system — no special native sizing. */
-.hero-slide-card--teleios-cover .hero-slide-card__media,
-.hero-slide-card--teleios-bundle .hero-slide-card__media {
-  height: 210px;
-  min-height: 210px;
-  aspect-ratio: auto;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-color: #111;
+.hero-slide-card--artwork .hero-slide-card__artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.hero-slide-card--artwork .hero-slide-card__media::after {
+  display: none;
 }
 
 .hero-slide-card__media::after {
@@ -553,8 +553,15 @@
   }
 
   .shop-hero-slider__viewport {
-    grid-auto-columns: minmax(290px, 86vw);
+    grid-auto-columns: minmax(280px, 86vw);
     padding: 10px 8px 10px;
+  }
+
+  .hero-slide-card--artwork .hero-slide-card__media,
+  .course-program-card--apple.course-program-card--school1-artwork .course-program-poster,
+  .product-card--school1-artwork .product-image {
+    height: 180px;
+    min-height: 180px;
   }
 
   .shop-hero-slider__nav {
@@ -1069,47 +1076,22 @@
   display: block;
 }
 
-/* Preserve the complete supplied Teleios artwork in product cards.
-   These selectors are intentionally scoped to the Teleios products so
-   unrelated shop artwork keeps the existing presentation. */
-.product-card--teleios-cover .product-image {
-  aspect-ratio: 2 / 3;
+/* School 1 artwork merchandising frame.
+   One controlled frame for books, courses, bundles, and other supplied artwork.
+   The artwork never determines card dimensions and is never cropped or stretched. */
+.product-card--school1-artwork .product-image {
+  height: 210px;
+  aspect-ratio: auto;
+  margin-bottom: 12px;
   background: #111;
 }
 
-.product-card--teleios-cover .product-cover {
-  object-fit: contain;
+.product-card--school1-artwork .product-cover {
+  width: 100%;
+  height: 100%;
   padding: 8px;
-}
-
-.product-card--teleios-bundle .product-image {
-  aspect-ratio: 1312 / 1199;
-  background: #111;
-}
-
-.product-card--teleios-bundle .product-cover {
   object-fit: contain;
-  padding: 0;
-}
-
-/* Anthropology of Wholeness — supplied School 1 artwork.
-   Each selector is product-scoped so other shop cards remain untouched. */
-.product-card--anthropology-book .product-image {
-  aspect-ratio: 1024 / 1536;
-  background: #111;
-}
-
-.product-card--anthropology-book .product-cover,
-.product-card--anthropology-course .product-cover,
-.product-card--anthropology-bundle .product-cover {
-  object-fit: contain;
-  padding: 0;
-}
-
-.product-card--anthropology-course .product-image,
-.product-card--anthropology-bundle .product-image {
-  aspect-ratio: 1198 / 1313;
-  background: #111;
+  object-position: center;
 }
 
 .product-cover-wrap {
@@ -1651,6 +1633,21 @@
   min-height: 0;
   aspect-ratio: 4 / 5;
   background: #08131d;
+}
+
+/* School 1 uses the same merchandising-frame principle as the slider:
+   fixed compact artwork area, complete supplied artwork visible. */
+.course-program-card--apple.course-program-card--school1-artwork .course-program-poster {
+  height: 210px;
+  min-height: 210px;
+  aspect-ratio: auto;
+  background: #08131d;
+}
+
+.course-program-card--apple.course-program-card--school1-artwork .course-program-poster__image {
+  object-fit: contain;
+  object-position: center;
+  padding: 8px;
 }
 
 .course-program-card--apple .course-program-poster__image {
