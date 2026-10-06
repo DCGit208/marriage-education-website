@@ -1397,6 +1397,7 @@ function buildProductCard(p) {
   var isAnthropologyBook = p.id === 'anthropology-of-wholeness-book';
   var isAnthropologyCourse = p.id === 'anthropology-of-wholeness';
   var isAnthropologyBundle = p.id === 'anthropology-of-wholeness-bundle';
+  var isSchool1Artwork = p.schoolId === 'school1' && !!p.coverImage;
   card.className = 'product-card' +
     (canCheckout ? '' : ' product-card--soon') +
     (isBookLayout && p.coverImage ? ' product-card--book' : '') +
@@ -1404,7 +1405,8 @@ function buildProductCard(p) {
     (isTeleiosBundle && p.coverImage ? ' product-card--teleios-bundle' : '') +
     (isAnthropologyBook && p.coverImage ? ' product-card--anthropology-book' : '') +
     (isAnthropologyCourse && p.coverImage ? ' product-card--anthropology-course' : '') +
-    (isAnthropologyBundle && p.coverImage ? ' product-card--anthropology-bundle' : '');
+    (isAnthropologyBundle && p.coverImage ? ' product-card--anthropology-bundle' : '') +
+    (isSchool1Artwork ? ' product-card--school1-artwork' : '');
 
   if (canCheckout) {
     card.setAttribute('role', 'button');
