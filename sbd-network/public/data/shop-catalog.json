@@ -1772,6 +1772,7 @@
       "format": "digital",
       "recurring": false,
       "schoolId": "school1",
+      "school1Section": "A",
       "requiredTier": "free",
       "sourceUrl": "https://marriageducation.com/courses.html",
       "coverImage": "/images/school1/series-a/teleios-blueprint.webp",
@@ -2052,13 +2053,13 @@
         "badgeStyle": "school1",
         "featureLabel": "You'll learn:",
         "features": [
-          "Study developmental stages, maturation processes, and how humans are designed to become whole over time.",
+          "Study how human capacities develop in reference to human design, maturation, and intended expression.",
           "Video lessons and structured exercises",
           "Practice drills you can repeat at home"
         ],
         "duration": "3 weeks",
         "format": "Online program",
-        "pitch": "Study developmental stages, maturation processes, and how humans are designed to become whole over time.",
+        "pitch": "Study how human capacities develop in reference to human design, maturation, and intended expression.",
         "ctaLabel": "Enroll in Course",
         "accent": "school1"
       },
