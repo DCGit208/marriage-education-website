@@ -1259,14 +1259,12 @@ function buildCourseProgramCardApple(p, idx) {
   card.innerHTML =
     '<div class="' + posterClass + '">' +
     posterImageHtml +
-    '<div class="course-program-poster__content">' +
+    '</div>' +
+    '<div class="course-program-card__body">' +
     badgeHtml +
     '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
     taglineHtml +
     schoolLine +
-    '</div>' +
-    '</div>' +
-    '<div class="course-program-card__body">' +
     '<p class="course-program-card__pitch">' + escapeShopHtml(prog.pitch || p.description) + '</p>' +
     '<div class="course-program-features">' +
     '<strong>' + escapeShopHtml(prog.featureLabel || "You'll learn:") + '</strong>' +
