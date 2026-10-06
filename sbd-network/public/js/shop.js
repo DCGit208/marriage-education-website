@@ -1117,7 +1117,7 @@ function renderSchool1CollectionHero() {
   el.hidden = false;
   el.innerHTML =
     '<div class="school1-collection-hero__art">' +
-      '<img src="/images/school1/series-a/collection-series-a.webp" alt="School 1 Series A — Core Personal Development Programs" loading="eager">' +
+      '<img src="/images/school1/series-a/collection-series-a.png" alt="School 1 Series A — Core Personal Development Programs" loading="eager">' +
     '</div>' +
     '<div class="school1-collection-hero__copy">' +
       '<span>School 1 · Series A</span>' +
