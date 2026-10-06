@@ -668,10 +668,11 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     return (
       '<article class="hero-slide-card' +
       (src ? ' hero-slide-card--artwork' : '') +
-      (p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full' ? ' hero-slide-card--teleios-cover' : '') +
-      (p.id === 'teleios-bundle' ? ' hero-slide-card--teleios-bundle' : '') +
       '" data-hero-product="' + escapeShopHtml(p.id) + '">' +
-      '<div class="hero-slide-card__media"' + (src ? ' style="background-image:url(\'' + escapeShopHtml(src) + '\')"' : '') + '>' +
+      '<div class="hero-slide-card__media">' +
+      (src
+        ? '<img class="hero-slide-card__artwork" loading="lazy" src="' + escapeShopHtml(src) + '" alt="' + escapeShopHtml(p.name) + ' artwork">'
+        : '') +
       '<span class="hero-slide-card__badge">' + escapeShopHtml(badge) + '</span>' +
       '</div>' +
       '<div class="hero-slide-card__body">' +
@@ -1222,6 +1223,7 @@ function buildCourseProgramCardApple(p, idx) {
     : '';
   card.className = 'course-program-card course-program-card--apple course-program-card--' + accent +
     (isHero ? ' course-program-card--hero' : '') +
+    (p.schoolId === 'school1' && p.coverImage ? ' course-program-card--school1-artwork' : '') +
     (canCheckout ? '' : ' course-program-card--soon');
 
   if (canCheckout) {
