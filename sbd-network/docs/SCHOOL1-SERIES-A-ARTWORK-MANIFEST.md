@@ -4,7 +4,7 @@ Approved artwork family for **The Teleios School of Personal Development — Ser
 
 ## Collection artwork
 
-- **Collection:** `/images/school1/series-a/collection-series-a.webp`
+- **Collection:** `/images/school1/series-a/collection-series-a.png`
 - Used as the visual collection hero when Shop → Academy → School 1 → **Series A — Core Personal Development** is selected.
 - The artwork is presentation/collection artwork, not a checkout SKU. Checkout prices and product metadata remain governed by the catalog.
 
@@ -12,21 +12,21 @@ Approved artwork family for **The Teleios School of Personal Development — Ser
 
 | Course | Web asset | Role |
 |---|---|---|
-| The Teleios Blueprint | `teleios-blueprint.webp` | Course card artwork |
+| The Teleios Blueprint | `teleios-blueprint.png` | Course card artwork |
 | The Anthropology of Wholeness | Existing `/assets/course-covers/anthropology-of-wholeness.webp` | Course card artwork |
-| Identity Mastery | `identity-mastery.webp` | Course card artwork |
-| The Four Faculties Training | `four-faculties-training.webp` | Course card artwork |
-| Anthropocentric Development | `anthropocentric-development.webp` | Course card artwork |
-| The Personal Development MasterClass | `personal-development-masterclass.webp` | Course card artwork |
-| The Science of Self-Command | `science-of-self-command.webp` | Course card artwork |
+| Identity Mastery | `identity-mastery.png` | Course card artwork |
+| The Four Faculties Training | `four-faculties-training.png` | Course card artwork |
+| Anthropocentric Development | `anthropocentric-development.png` | Course card artwork |
+| The Personal Development MasterClass | `personal-development-masterclass.png` | Course card artwork |
+| The Science of Self-Command | `science-of-self-command.png` | Course card artwork |
 
 ## Bundle / supporting artwork
 
-- `teleios-blueprint-bundle.webp` — Teleios Blueprint Book + Courseware
-- `anthropocentric-development-courseware.webp` — Anthropocentric Development courseware
-- `anthropocentric-development-bundle.webp` — Anthropocentric Development bundle
-- `science-of-self-command-courseware.webp` — Science of Self-Command courseware
-- `science-of-self-command-coaching.webp` — Science of Self-Command coaching creative
+- `teleios-blueprint-bundle.png` — Teleios Blueprint Book + Courseware
+- `anthropocentric-development-courseware.png` — Anthropocentric Development courseware
+- `anthropocentric-development-bundle.png` — Anthropocentric Development bundle
+- `science-of-self-command-courseware.png` — Science of Self-Command courseware
+- `science-of-self-command-coaching.png` — Science of Self-Command coaching creative
 
 ## Usage rules
 
