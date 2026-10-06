@@ -1341,6 +1341,102 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
+.shop-school1-series-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+
+.shop-school1-series-bar[hidden],
+.shop-school1-collection-hero[hidden] {
+  display: none !important;
+}
+
+.shop-series-btn {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.shop-series-btn:hover,
+.shop-series-btn.active {
+  background: rgba(0,188,212,.12);
+  border-color: rgba(0,188,212,.42);
+  color: var(--text-primary);
+}
+
+.school1-collection-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.05fr) minmax(220px, .95fr);
+  gap: 20px;
+  align-items: center;
+  margin: 12px 0 20px;
+  padding: 16px;
+  border: 1px solid rgba(212,175,55,.24);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(8,19,29,.98), rgba(20,29,38,.94));
+  box-shadow: 0 14px 36px rgba(0,0,0,.28);
+}
+
+.school1-collection-hero__art {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #08131d;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.school1-collection-hero__art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+}
+
+.school1-collection-hero__copy span {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #d4af37;
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.school1-collection-hero__copy h2 {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: clamp(1.35rem, 2.5vw, 2.1rem);
+  line-height: 1.15;
+}
+
+.school1-collection-hero__copy p {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.school1-collection-hero__copy strong {
+  color: #d4af37;
+  font-size: .86rem;
+}
+
+@media (max-width: 760px) {
+  .school1-collection-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .school1-collection-hero__art img {
+    max-height: none;
+  }
+}
+
 /* ── Academy program cards (marriageducation.com/courses.html style) ── */
 .product-grid--programs {
   grid-template-columns: 1fr;
@@ -1588,12 +1684,45 @@
 
 .course-program-card--apple .course-program-poster {
   min-height: 132px;
-  padding: 16px 16px 14px;
+  padding: 0;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  overflow: hidden;
   background: linear-gradient(155deg, #2f4253 0%, #132636 55%, #0e151c 100%);
+}
+
+.course-program-card--apple .course-program-poster--art {
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+  background: #08131d;
+}
+
+.course-program-card--apple .course-program-poster__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #08131d;
+  z-index: 0;
+}
+
+.course-program-card--apple .course-program-poster__content {
+  position: relative;
+  z-index: 2;
+  min-height: 100%;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.82) 100%);
+}
+
+.course-program-card--apple .course-program-poster--art .course-program-card__title {
+  text-shadow: 0 2px 12px rgba(0,0,0,.8);
 }
 
 .course-program-card--apple .course-program-poster::after {
