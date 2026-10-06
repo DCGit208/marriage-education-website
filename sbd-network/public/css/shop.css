@@ -200,73 +200,27 @@
   position: relative;
 }
 
-/* Preserve the complete supplied Teleios artwork in the featured hero rail. */
-.hero-slide-card--teleios-cover .hero-slide-card__media {
+/* School 1 hero artwork: one controlled merchandising frame for every supplied artwork.
+   The complete artwork is always visible; the artwork never dictates card/page height. */
+.hero-slide-card--artwork .hero-slide-card__media {
+  height: 210px;
+  min-height: 210px;
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
   background-color: #111;
 }
 
+/* Teleios remains part of the same presentation system — no special native sizing. */
+.hero-slide-card--teleios-cover .hero-slide-card__media,
 .hero-slide-card--teleios-bundle .hero-slide-card__media {
+  height: 210px;
+  min-height: 210px;
+  aspect-ratio: auto;
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
   background-color: #111;
-}
-
-/* Teleios hero cards use artwork-matched media proportions.
-   The supplied artwork fills its own media area without cropping or
-   shrinking into an unused box; product copy remains below it. */
-.hero-slide-card--teleios-cover,
-.hero-slide-card--teleios-bundle {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.hero-slide-card--teleios-cover .hero-slide-card__media {
-  height: auto;
-  aspect-ratio: 2 / 3;
-  min-height: 0;
-  background-size: contain;
-  background-position: center;
-}
-
-.hero-slide-card--teleios-bundle .hero-slide-card__media {
-  height: auto;
-  aspect-ratio: 1312 / 1199;
-  min-height: 0;
-  background-size: contain;
-  background-position: center;
-}
-
-.hero-slide-card--teleios-cover .hero-slide-card__body,
-.hero-slide-card--teleios-bundle .hero-slide-card__body {
-  flex: 1 1 auto;
-  justify-content: flex-start;
-  padding: 12px;
-  gap: 8px;
-}
-
-.hero-slide-card--teleios-cover .hero-slide-card__body p,
-.hero-slide-card--teleios-bundle .hero-slide-card__body p {
-  display: block;
-  -webkit-line-clamp: initial;
-  overflow: visible;
-}
-
-.hero-slide-card--teleios-cover .hero-slide-card__meta,
-.hero-slide-card--teleios-bundle .hero-slide-card__meta {
-  margin-top: auto;
-}
-
-@media (max-width: 760px) {
-  .hero-slide-card--teleios-cover .hero-slide-card__body p,
-  .hero-slide-card--teleios-bundle .hero-slide-card__body p {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
 }
 
 .hero-slide-card__media::after {
