@@ -1127,8 +1127,6 @@ function renderSchool1CollectionHero() {
     '</div>';
 }
 
-function renderShopPage() {
-
 function renderSectionFilters() {
   var bar = document.getElementById('shopSectionBar');
   if (!bar) return;
