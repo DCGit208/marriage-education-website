@@ -176,6 +176,7 @@ function applyShopUrlParams() {
   var params = new URLSearchParams(window.location.search || '');
   var section = params.get('section');
   var category = params.get('category');
+  var series = params.get('series');
   var q = params.get('q') || params.get('search');
   if (section && SHOP_SECTIONS.some(function (item) { return item.id === section; })) {
     activeSection = section;
