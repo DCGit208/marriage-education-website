@@ -109,6 +109,36 @@
   min-width: 150px;
 }
 
+/* Supplied artwork is a product asset, not a background to crop. */
+.hero-slide-card--artwork .hero-slide-card__media {
+  background: #08131d;
+  background-image: none !important;
+  background-size: auto;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.hero-slide-card--artwork .hero-slide-card__artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.hero-slide-card--artwork .hero-slide-card__media::after {
+  display: none;
+}
+
+.hero-slide-card--artwork .hero-slide-card__badge {
+  top: 10px;
+  bottom: auto;
+}
+
 /* Variant: Full-width slider */
 .shop-hero--fullwidth-slider {
   padding: 0;
@@ -1480,6 +1510,59 @@
   .school1-collection-hero__art img {
     max-height: none;
   }
+}
+
+/* School 1 Series A — premium course merchandising.
+   The supplied artwork stays completely intact; the shop controls the frame.
+   Courses remain course cards even when their artwork contains a 3D book. */
+.course-program-card--school1-artwork .course-program-poster--art {
+  aspect-ratio: 3 / 2;
+  min-height: 0;
+  height: auto;
+  background: #08131d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.course-program-card--school1-artwork .course-program-poster__image {
+  position: static;
+  inset: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: 8px;
+  background: transparent;
+}
+
+.course-program-card--school1-artwork .course-program-poster__content {
+  display: none;
+}
+
+.course-program-card--school1-artwork .course-program-card__body {
+  padding: 14px 14px 12px;
+}
+
+.course-program-card--school1-artwork .course-program-card__title {
+  color: var(--text-primary);
+  text-shadow: none;
+  font-size: 1.06rem;
+  margin: 0 0 4px;
+}
+
+.course-program-card--school1-artwork .course-program-card__tagline {
+  color: #d4af37;
+  margin: 0 0 5px;
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+.course-program-card--school1-artwork .course-program-card__school {
+  color: var(--text-muted);
+  margin: 0 0 8px;
 }
 
 /* ── Academy program cards (marriageducation.com/courses.html style) ── */
