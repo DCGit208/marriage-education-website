@@ -1138,6 +1138,24 @@
   padding: 0;
 }
 
+/* School 1 Series A — preserve each supplied artwork's native proportions.
+   The artwork itself determines the media height; do not force course posters
+   into the generic 4:3 product-image box. */
+.product-card--school1-artwork .product-image {
+  aspect-ratio: auto;
+  height: auto;
+  background: #111;
+  border-radius: 10px;
+}
+
+.product-card--school1-artwork .product-cover {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  padding: 0;
+}
+
 /* Anthropology of Wholeness — supplied School 1 artwork.
    Each selector is product-scoped so other shop cards remain untouched. */
 .product-card--anthropology-book .product-image {
