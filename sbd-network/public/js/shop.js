@@ -667,12 +667,10 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     var badge = (p.category === 'magazine') ? 'Magazine' : categoryLabel;
     return (
       '<article class="hero-slide-card' +
-      (src ? ' hero-slide-card--artwork' : '') +
       (p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full' ? ' hero-slide-card--teleios-cover' : '') +
       (p.id === 'teleios-bundle' ? ' hero-slide-card--teleios-bundle' : '') +
       '" data-hero-product="' + escapeShopHtml(p.id) + '">' +
-      '<div class="hero-slide-card__media">' +
-      (src ? '<img class="hero-slide-card__artwork" loading="lazy" src="' + escapeShopHtml(src) + '" alt="' + escapeShopHtml(p.name) + ' artwork">' : '') +
+      '<div class="hero-slide-card__media"' + (src ? ' style="background-image:url(\'' + escapeShopHtml(src) + '\')"' : '') + '>' +
       '<span class="hero-slide-card__badge">' + escapeShopHtml(badge) + '</span>' +
       '</div>' +
       '<div class="hero-slide-card__body">' +
@@ -1221,10 +1219,8 @@ function buildCourseProgramCardApple(p, idx) {
   var posterImageHtml = p.coverImage
     ? '<img class="course-program-poster__image" loading="lazy" src="' + escapeShopHtml(encodeCoverPath(p.coverImage)) + '" alt="' + escapeShopHtml(p.name) + ' artwork" onerror="this.style.display=\'none\';this.parentNode.classList.remove(\'course-program-poster--art\')">'
     : '';
-  var isSchool1Artwork = p.schoolId === 'school1' && !!p.coverImage;
   card.className = 'course-program-card course-program-card--apple course-program-card--' + accent +
     (isHero ? ' course-program-card--hero' : '') +
-    (isSchool1Artwork ? ' course-program-card--school1-artwork' : '') +
     (canCheckout ? '' : ' course-program-card--soon');
 
   if (canCheckout) {
@@ -1257,28 +1253,17 @@ function buildCourseProgramCardApple(p, idx) {
   ctaLabel = compactProgramCtaLabel(ctaLabel);
   var btnClass = canCheckout ? 'course-program-card__cta btn btn-primary' : 'course-program-card__cta btn btn-secondary';
 
-  var school1BodyHeaderHtml = isSchool1Artwork
-    ? badgeHtml +
-      '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
-      taglineHtml +
-      schoolLine
-    : '';
-  var posterContentHtml = isSchool1Artwork
-    ? ''
-    : '<div class="course-program-poster__content">' +
-      badgeHtml +
-      '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
-      taglineHtml +
-      schoolLine +
-      '</div>';
-
   card.innerHTML =
     '<div class="' + posterClass + '">' +
     posterImageHtml +
-    posterContentHtml +
+    '<div class="course-program-poster__content">' +
+    badgeHtml +
+    '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
+    taglineHtml +
+    schoolLine +
+    '</div>' +
     '</div>' +
     '<div class="course-program-card__body">' +
-    school1BodyHeaderHtml +
     '<p class="course-program-card__pitch">' + escapeShopHtml(prog.pitch || p.description) + '</p>' +
     '<div class="course-program-features">' +
     '<strong>' + escapeShopHtml(prog.featureLabel || "You'll learn:") + '</strong>' +
