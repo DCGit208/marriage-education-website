@@ -13,6 +13,7 @@ let SHOP_PHASES = [];
 let SHOP_SECTIONS = [];
 let activeCategory = 'all';
 let activeSection = 'all';
+let activeSchool1Series = 'all';
 let shopSearchQuery = '';
 
 const MEMBERSHIP_TIER_IDS = ['foundation-monthly', 'premium-monthly', 'elite-monthly'];
@@ -182,6 +183,7 @@ function applyShopUrlParams() {
   if (category && SHOP_CATEGORIES.some(function (item) { return item.id === category; })) {
     activeCategory = category;
   }
+  if (series === 'A' || series === 'B') activeSchool1Series = series;
   if (q) {
     shopSearchQuery = q;
   }
@@ -235,6 +237,7 @@ function normalizeCatalogProduct(p) {
     phase: p.phase || 1,
     unlocks: p.unlocks || null,
     schoolId: p.schoolId || null,
+    school1Section: p.school1Section || null,
     section: p.section || inferSectionFromCategory(p.category),
     subcategory: p.subcategory || null,
     coverImage: p.coverImage || '',
@@ -484,6 +487,7 @@ function getFilteredProducts() {
     var p = entry.product;
     if (activeSection !== 'all' && inferSectionFromCategory(p.category) !== activeSection) return false;
     if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+    if (activeCategory === 'courses_school1' && activeSchool1Series !== 'all' && p.school1Section !== activeSchool1Series) return false;
     return !intent.raw || entry.score > 0;
   }).sort(function (a, b) {
     if (intent.raw && b.score !== a.score) return b.score - a.score;
@@ -526,6 +530,8 @@ function renderShopPage() {
   renderPhaseBanner();
   renderSectionFilters();
   renderCategoryFilters();
+  renderSchool1SeriesBar();
+  renderSchool1CollectionHero();
   renderBundleBanner();
   renderSectionIntro();
   renderMembershipGrid();
@@ -1066,11 +1072,62 @@ function renderCategoryFilters() {
     btn.textContent = (cat.icon ? cat.icon + ' ' : '') + cat.label;
     btn.addEventListener('click', function () {
       activeCategory = cat.id;
+      if (cat.id !== 'courses_school1') activeSchool1Series = 'all';
       renderShopPage();
     });
     bar.appendChild(btn);
   });
 }
+
+function renderSchool1SeriesBar() {
+  var bar = document.getElementById('shopSchool1SeriesBar');
+  if (!bar) return;
+  if (activeCategory !== 'courses_school1' || shopSearchQuery.trim()) {
+    bar.hidden = true;
+    bar.innerHTML = '';
+    return;
+  }
+  bar.hidden = false;
+  bar.innerHTML = '';
+  [
+    { id: 'all', label: 'All School 1' },
+    { id: 'A', label: 'Series A — Core Personal Development' },
+    { id: 'B', label: 'Series B — Relationship Psychology & Self-Formation' }
+  ].forEach(function (series) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shop-series-btn' + (activeSchool1Series === series.id ? ' active' : '');
+    btn.textContent = series.label;
+    btn.addEventListener('click', function () {
+      activeSchool1Series = series.id;
+      renderShopPage();
+    });
+    bar.appendChild(btn);
+  });
+}
+
+function renderSchool1CollectionHero() {
+  var el = document.getElementById('shopSchool1CollectionHero');
+  if (!el) return;
+  if (activeCategory !== 'courses_school1' || activeSchool1Series !== 'A' || shopSearchQuery.trim()) {
+    el.hidden = true;
+    el.innerHTML = '';
+    return;
+  }
+  el.hidden = false;
+  el.innerHTML =
+    '<div class="school1-collection-hero__art">' +
+      '<img src="/images/school1/series-a/collection-series-a.webp" alt="School 1 Series A — Core Personal Development Programs" loading="eager">' +
+    '</div>' +
+    '<div class="school1-collection-hero__copy">' +
+      '<span>School 1 · Series A</span>' +
+      '<h2>Core Personal Development Programs</h2>' +
+      '<p>Seven programs forming the core personal-development pathway of the Teleios School.</p>' +
+      '<strong>Explore the seven programs below.</strong>' +
+    '</div>';
+}
+
+function renderShopPage() {
 
 function renderSectionFilters() {
   var bar = document.getElementById('shopSectionBar');
@@ -1159,7 +1216,10 @@ function buildCourseProgramCardApple(p, idx) {
   var accent = prog.accent || 'default';
   var isFeatured = prog.badgeStyle === 'featured' || prog.badge === '⭐ BEST VALUE';
   var isHero = isFeatured || (idx === 0 && activeCategory === 'all' && activeSection === 'academy');
-  var posterClass = 'course-program-poster course-program-poster--' + accent;
+  var posterClass = 'course-program-poster course-program-poster--' + accent + (p.coverImage ? ' course-program-poster--art' : '');
+  var posterImageHtml = p.coverImage
+    ? '<img class="course-program-poster__image" loading="lazy" src="' + escapeShopHtml(encodeCoverPath(p.coverImage)) + '" alt="' + escapeShopHtml(p.name) + ' artwork" onerror="this.style.display=\'none\';this.parentNode.classList.remove(\'course-program-poster--art\')">'
+    : '';
   card.className = 'course-program-card course-program-card--apple course-program-card--' + accent +
     (isHero ? ' course-program-card--hero' : '') +
     (canCheckout ? '' : ' course-program-card--soon');
@@ -1196,10 +1256,13 @@ function buildCourseProgramCardApple(p, idx) {
 
   card.innerHTML =
     '<div class="' + posterClass + '">' +
+    posterImageHtml +
+    '<div class="course-program-poster__content">' +
     badgeHtml +
     '<h3 class="course-program-card__title">' + escapeShopHtml(p.name) + '</h3>' +
     taglineHtml +
     schoolLine +
+    '</div>' +
     '</div>' +
     '<div class="course-program-card__body">' +
     '<p class="course-program-card__pitch">' + escapeShopHtml(prog.pitch || p.description) + '</p>' +
