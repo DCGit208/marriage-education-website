@@ -221,64 +221,46 @@
 
 .hero-slide-card--artwork /* Book artwork: compact 3D presentation for supplied book covers.
    The source cover remains complete and proportional; this only adds depth. */
-/* Book presentation model:
-   the physical 3D book is the dominant visual, like the approved
-   Teleios Blueprint reference. The supplied cover artwork remains intact. */
+/* Book artwork presentation
+   Use the supplied book artwork itself as the hero visual.
+   No synthetic 3D treatment is generated here. The approved artwork
+   already contains the intended physical-book presentation. */
 .book-artwork-3d {
   position: relative;
   display: block;
-  width: min(94%, 330px);
+  width: 100%;
   height: 100%;
   margin: 0 auto;
-  perspective: 1100px;
-  transform-style: preserve-3d;
 }
 
 .book-artwork-3d::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  left: 1%;
-  top: 3%;
-  width: 8%;
-  height: 94%;
-  border-radius: 3px 0 0 3px;
-  background: linear-gradient(90deg, #1c1c1c 0%, #6e6e6e 45%, #252525 100%);
-  box-shadow: -8px 10px 16px rgba(0,0,0,.42);
-  transform: translateZ(-12px) skewY(-2deg);
+  display: none;
 }
 
 .book-artwork-3d img {
   position: relative;
-  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
-  transform: perspective(1100px) rotateY(-8deg) rotateX(.5deg);
-  transform-origin: center center;
-  filter: drop-shadow(-14px 18px 18px rgba(0,0,0,.48));
+  transform: none;
+  filter: none;
 }
 
 .book-artwork-3d--product {
-  width: min(94%, 300px);
+  width: 100%;
 }
 
 .hero-slide-card--book-artwork .hero-slide-card__media {
-  height: 300px;
-  min-height: 300px;
+  height: 380px;
+  min-height: 380px;
   background: #111;
   overflow: hidden;
 }
 
 .hero-slide-card--book-artwork .hero-slide-card__artwork {
-  display: block;
-  width: 100%;
-  height: 100%;
-  padding: 8px;
-  object-fit: contain;
-  object-position: center;
+  display: none;
 }
 
 .product-card--book .product-image {
