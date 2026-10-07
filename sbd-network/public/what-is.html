@@ -549,7 +549,7 @@
       It is a system you enter.
     </p>
     <div class="wis-cta-group">
-      <a href="/shop.html" class="btn-primary-wis" id="finalCTA">Start Formation — $9.77/month</a>
+      <a href="/shop.html" class="btn-primary-wis" id="finalCTA">Start Formation — Foundation School — choose a plan</a>
       <a href="/learn.html" class="btn-secondary-wis">View System Structure</a>
     </div>
   </section>
@@ -594,8 +594,8 @@
     // ── Conditional upgrade bar + CTA text ───────────────────
     function onAuthReady(user) {
       if (!user) {
-        // Not signed in — show "Start at $9.77"
-        showUpgradeBar('Access begins at $9.77/month — Foundation Tier', 'Start Formation — $9.77/month', '/shop.html');
+        // Not signed in — show "Start at Foundation School — choose a plan"
+        showUpgradeBar('Access begins at Foundation School — choose a plan — Foundation Tier', 'Start Formation — Foundation School — choose a plan', '/shop.html');
         return;
       }
 
@@ -616,10 +616,10 @@
         if (data.role === 'admin') tier = 'elite';
 
         if (tier === 'free' || tier === 'foundation' && sub.status !== 'active') {
-          showUpgradeBar('Access begins at $9.77/month — Foundation Tier', 'Start Formation — $9.77/month', '/shop.html');
+          showUpgradeBar('Access begins at Foundation School — choose a plan — Foundation Tier', 'Start Formation — Foundation School — choose a plan', '/shop.html');
           // Also update final CTA
           var fc = document.getElementById('finalCTA');
-          if (fc) { fc.textContent = 'Start Formation — $9.77/month'; fc.href = '/shop.html'; }
+          if (fc) { fc.textContent = 'Start Formation — Foundation School — choose a plan'; fc.href = '/shop.html'; }
         } else if (tier === 'foundation') {
           showUpgradeBar('You are in Foundation. Unlock deeper levels.', 'Upgrade to Premium', '/shop.html?upgrade=premium');
           var fc = document.getElementById('finalCTA');
