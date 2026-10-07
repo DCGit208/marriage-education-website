@@ -561,7 +561,7 @@
         'Start free if you are only exploring. Choose Foundation for entry formation, Premium for deeper course access and progress, and Elite when you want the full ecosystem: advanced training, MV House, and deeper guided access.',
       nextStep: 'Compare plans, then choose the lowest level that genuinely opens the next step you need.',
       catalog: [
-        { label: 'Start', title: 'Foundation Tier', meta: '$9.77/mo', why: 'Best if you are starting and want low-risk structure.', href: '/checkout.html?product=foundation-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
+        { label: 'Start', title: 'Foundation School', meta: '$144.17 one-time · $15/mo 1-year · $11/mo 2-year', why: 'Choose the Foundation payment term that fits your access plan.', href: '/checkout.html?product=foundation-options', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20School' },
         { label: 'Deeper learning', title: 'Premium Tier', meta: '$20/mo', why: 'Good if courses are the main reason you are joining.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
         { label: 'Full ecosystem', title: 'Elite Tier', meta: '$50/mo', why: 'Good if you want the widest SBD access.', href: '/checkout.html?product=elite-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Elite%20Tier' },
       ],
