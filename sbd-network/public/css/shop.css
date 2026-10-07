@@ -259,10 +259,6 @@
   overflow: hidden;
 }
 
-.hero-slide-card--book-artwork .hero-slide-card__artwork {
-  display: none;
-}
-
 .product-card--book .product-image {
   height: 300px;
   min-height: 300px;
