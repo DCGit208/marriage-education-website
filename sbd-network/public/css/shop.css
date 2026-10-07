@@ -294,10 +294,29 @@
   aspect-ratio: auto;
   background: #111;
   overflow: hidden;
+  padding: 0;
+  margin: 0;
 }
 
 .product-card--book .book-artwork-3d--product {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
   height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.product-card--book .book-artwork-3d--product img {
+  display: block;
+  width: 100% !important;
+  min-width: 100%;
+  max-width: none !important;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: fill !important;
+  object-position: center;
 }
 
 /* Teleios book — first approved book-card test.
