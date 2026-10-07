@@ -665,14 +665,17 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     var src = p.coverImage ? encodeCoverPath(p.coverImage) : '';
     var categoryLabel = getCategoryLabel(p.category);
     var badge = (p.category === 'magazine') ? 'Magazine' : categoryLabel;
+    var isBook = isBookProduct(p);
+    var bookArtwork = isBook && !isApprovedTeleios3dBook(p) ? renderBookArtwork(src, p.name + ' cover') : '';
     return (
       '<article class="hero-slide-card' +
       (src ? ' hero-slide-card--artwork' : '') +
+      (isBook ? ' hero-slide-card--book-artwork' : '') +
       '" data-hero-product="' + escapeShopHtml(p.id) + '">' +
       '<div class="hero-slide-card__media">' +
-      (src
+      (bookArtwork || (src
         ? '<img class="hero-slide-card__artwork" loading="lazy" src="' + escapeShopHtml(src) + '" alt="' + escapeShopHtml(p.name) + ' artwork">'
-        : '') +
+        : '')) +
       '<span class="hero-slide-card__badge">' + escapeShopHtml(badge) + '</span>' +
       '</div>' +
       '<div class="hero-slide-card__body">' +
@@ -712,6 +715,23 @@ function getSliderProducts(filtered) {
     if (!out.some(function (x) { return x.id === fallback[i].id; })) out.push(fallback[i]);
   }
   return out.slice(0, 8);
+}
+
+function isBookProduct(p) {
+  if (!p) return false;
+  return p.type === 'book' || String(p.category || '').indexOf('books_') === 0;
+}
+
+function isApprovedTeleios3dBook(p) {
+  return !!p && (p.id === 'teleios-blueprint' || p.id === 'teleios-blueprint-full');
+}
+
+function renderBookArtwork(src, alt, extraClass) {
+  if (!src) return '';
+  var cls = 'book-artwork-3d' + (extraClass ? ' ' + extraClass : '');
+  return '<span class="' + cls + '">' +
+    '<img src="' + escapeShopHtml(src) + '" alt="' + escapeShopHtml(alt) + '" loading="lazy">' +
+    '</span>';
 }
 
 function getCategoryLabel(categoryId) {
@@ -1437,11 +1457,16 @@ function buildProductCard(p) {
     : ' style="--visual-from:' + visual.from + ';--visual-to:' + visual.to + '"';
   var imageClass = 'product-image' + (coverSrc ? '' : ' product-image--visual cover-fallback');
 
+  var book3d = isBookProduct(p) && !isApprovedTeleios3dBook(p) && coverSrc
+    ? renderBookArtwork(coverSrc, p.name + ' cover', 'book-artwork-3d--product')
+    : '';
   var imageHtml =
     '<div class="' + imageClass + '"' + imageStyle + '>' +
-    (coverSrc
-      ? '<img class="product-cover" loading="lazy" src="' + escapeShopHtml(coverSrc) + '" alt="' + escapeShopHtml(p.name) + ' cover" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'cover-fallback\',\'product-image--visual\')">'
-      : '') +
+    (book3d
+      ? book3d
+      : (coverSrc
+        ? '<img class="product-cover" loading="lazy" src="' + escapeShopHtml(coverSrc) + '" alt="' + escapeShopHtml(p.name) + ' cover" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'cover-fallback\',\'product-image--visual\')">'
+        : '')) +
     '<span class="product-icon-fallback">' + escapeShopHtml(p.icon || '📘') + '</span></div>';
 
   var bodyHtml =
