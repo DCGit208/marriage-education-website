@@ -224,141 +224,35 @@ async function loadCheckoutProduct() {
 }
 
 function renderFoundationPlanOptions(products) {
-  const box = document.getElementById('foundation-plan-options');
+  const box = document.getElementById("foundation-plan-options");
   if (!box) return;
+
   const plans = FOUNDATION_PLAN_IDS
-    .map(id => (products || []).find(p => p.id === id))
+    .map(function (id) {
+      return (products || []).find(function (p) { return p.id === id; });
+    })
     .filter(Boolean);
 
   box.innerHTML = plans.map(function (plan) {
-    const isOneTime = plan.id === 'foundation-yearly';
-    const price = '
-  const errEl = document.getElementById('checkout-error');
-  const btn = document.getElementById('pay-button');
-  if (errEl) errEl.textContent = message;
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Not available yet';
-  }
-  setTimeout(function () {
-    window.location.href = '/shop.html';
-  }, 3500);
-}
+    const isOneTime = plan.id === "foundation-yearly";
+    const price = "$" + Number(plan.priceUsd).toFixed(2).replace(/\.00$/, "");
+    let term = "12 months · one-time payment · no automatic renewal";
+    if (plan.id === "foundation-1year") term = "$15/month · 12 monthly payments · 12-month term";
+    if (plan.id === "foundation-2year") term = "$11/month · 24 monthly payments · 24-month term";
 
-async function startCheckout() {
-  if (isFoundationPlanSelector(currentProductId)) return;
-  if (isYearlyFoundation(currentProductId) && payMethod === 'momo') {
-    return startMomoCheckout(currentProductId);
-  }
-  return startStripeCheckout(currentProductId);
-}
-
-async function startMomoCheckout(productId) {
-  const btn = document.getElementById('pay-button');
-  const errEl = document.getElementById('checkout-error');
-  const phoneEl = document.getElementById('momo-phone');
-  const phone = phoneEl ? String(phoneEl.value || '').trim() : '';
-  const done = document.getElementById('momo-done');
-
-  if (!productId || !currentUserId) return;
-  if (productId !== 'foundation-yearly') {
-    if (errEl) errEl.textContent = 'Manual MoMo is only for Foundation School One-Time Access.';
-    return;
-  }
-  if (!phone || phone.replace(/\D/g, '').length < 9) {
-    if (errEl) errEl.textContent = 'Enter the MoMo phone number you are paying from (9+ digits).';
-    return;
-  }
-  if (errEl) errEl.textContent = '';
-  if (done) done.style.display = 'none';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Submitting…';
-  }
-  try {
-    const create = firebase.functions().httpsCallable('createSbdManualPayment');
-    const result = await create({
-      productId: productId,
-      phone: phone,
-      momo_network: momoNetwork
-    });
-    const data = result.data || {};
-    if (!data.success || !data.reference) {
-      throw new Error('Could not submit MoMo confirmation.');
-    }
-    const refEl = document.getElementById('momo-done-ref');
-    if (refEl) refEl.textContent = data.reference;
-    if (done) done.style.display = 'block';
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = 'Confirm MoMo transfer';
-    }
-  } catch (err) {
-    console.error('[Checkout] MoMo submit failed:', err);
-    if (errEl) errEl.textContent = err.message || 'Something went wrong. Please try again.';
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = 'Confirm MoMo transfer';
-    }
-  }
-}
-
-async function startStripeCheckout(productId) {
-  const btn = document.getElementById('pay-button');
-  const errEl = document.getElementById('checkout-error');
-  if (!productId || !currentUserId || !checkoutProduct) return;
-  if (!checkoutProduct.stripeReady) {
-    if (errEl) errEl.textContent = 'Checkout is not enabled for this product yet.';
-    return;
-  }
-  if (errEl) errEl.textContent = '';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Redirecting to Stripe...';
-  }
-  try {
-    const createSession = firebase.functions().httpsCallable('createSbdCheckoutSession');
-    const result = await createSession({ productId: productId });
-    if (result.data?.url) {
-      window.location.href = result.data.url;
-    } else {
-      throw new Error('No checkout URL returned from server.');
-    }
-  } catch (err) {
-    console.error('[Checkout] Session creation failed:', err);
-    const msg = err.message || 'Something went wrong. Please try again.';
-    if (errEl) errEl.textContent = msg;
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '💳 Pay with Card';
-    }
-  }
-}
-
-// Back-compat for any leftover onclick handlers
-window.startStripeCheckout = startStripeCheckout;
-window.startCheckout = startCheckout;
-
-console.log('[Checkout] Phased catalog checkout v4 — yearly MoMo');
- + Number(plan.priceUsd).toFixed(2).replace(/\\.00$/, '');
-    const term = isOneTime
-      ? '12 months · one-time payment · no automatic renewal'
-      : (plan.id === 'foundation-1year'
-        ? '$15/month · 12 monthly payments · 12-month term'
-        : '$11/month · 24 monthly payments · 24-month term');
-    return '<button type="button" onclick="selectFoundationPlan(\'' + plan.id + '\')" style="text-align:left;padding:16px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer">' +
-      '<strong style="display:block;font-size:1rem">' + plan.name + '</strong>' +
-      '<span style="display:block;margin-top:5px;color:#7dd3c0;font-size:1.05rem">' + price + (isOneTime ? '' : '/month') + '</span>' +
-      '<span style="display:block;margin-top:5px;color:#aaa;font-size:.82rem;line-height:1.45">' + term + '</span>' +
-      '</button>';
-  }).join('');
+    return "<button type=\"button\" onclick=\"selectFoundationPlan('" + plan.id + "')\" style=\"text-align:left;padding:16px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.03);color:#fff;cursor:pointer\">" +
+      "<strong style=\"display:block;font-size:1rem\">" + plan.name + "</strong>" +
+      "<span style=\"display:block;margin-top:5px;color:#7dd3c0;font-size:1.05rem\">" + price + (isOneTime ? "" : "/month") + "</span>" +
+      "<span style=\"display:block;margin-top:5px;color:#aaa;font-size:.82rem;line-height:1.45\">" + term + "</span>" +
+      "</button>";
+  }).join("");
 }
 
 function selectFoundationPlan(productId) {
   if (!FOUNDATION_PLAN_IDS.includes(productId)) return;
   const url = new URL(window.location.href);
-  url.searchParams.set('product', productId);
-  window.history.replaceState({}, '', url.toString());
+  url.searchParams.set("product", productId);
+  window.history.replaceState({}, "", url.toString());
   loadCheckoutProduct();
 }
 
