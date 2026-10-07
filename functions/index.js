@@ -4,6 +4,7 @@ const stripe = require('stripe')(functions.config().stripe?.secret_key);
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const axios = require('axios');
+const { PaymentOperation } = require('@hachther/mesomb');
 const { jsPDF } = require('jspdf');
 const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
 const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
@@ -52,6 +53,90 @@ const resend = {
 // Telegram Configuration
 const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
 const TELEGRAM_CHAT_ID = functions.config().telegram?.chat_id;
+
+// MeSomb server-side credentials. Never expose these values to the browser.
+const MESOMB_CONFIG = {
+  applicationKey: functions.config().mesomb?.application_key || process.env.MESOMB_APPLICATION_KEY || '',
+  accessKey: functions.config().mesomb?.access_key || process.env.MESOMB_ACCESS_KEY || '',
+  secretKey: functions.config().mesomb?.secret_key || process.env.MESOMB_SECRET_KEY || ''
+};
+
+function getMesombClient() {
+  if (!MESOMB_CONFIG.applicationKey || !MESOMB_CONFIG.accessKey || !MESOMB_CONFIG.secretKey) {
+    throw new Error('MeSomb credentials are not configured on the server.');
+  }
+  return new PaymentOperation({
+    applicationKey: MESOMB_CONFIG.applicationKey,
+    accessKey: MESOMB_CONFIG.accessKey,
+    secretKey: MESOMB_CONFIG.secretKey
+  });
+}
+
+function getSbdMesombPlan(productId) {
+  const plans = {
+    'foundation-yearly': { amountXaf: 86502, accessMonths: 12, label: 'Foundation School — One-Time Access' },
+    'foundation-1year': { amountXaf: 9000, accessMonths: 1, label: 'Foundation School — 1-Year Subscription · monthly installment' },
+    'foundation-2year': { amountXaf: 6600, accessMonths: 1, label: 'Foundation School — 2-Year Subscription · monthly installment' }
+  };
+  return plans[productId] || null;
+}
+
+function extractMesombTransaction(response) {
+  if (!response) return null;
+  if (response.transaction) return response.transaction;
+  if (Array.isArray(response.transactions) && response.transactions[0]) return response.transactions[0];
+  if (Array.isArray(response.results) && response.results[0]) return response.results[0];
+  if (Array.isArray(response) && response[0]) return response[0];
+  return null;
+}
+
+async function finalizeSbdMesombPayment(pending, transaction) {
+  const transactionId = transaction?.pk || transaction?.id || pending.transactionId;
+  const status = String(transaction?.status || '').toUpperCase();
+  if (!transactionId || status !== 'SUCCESS') {
+    return { success: false, status: status || 'PENDING', transactionId: transactionId || null };
+  }
+
+  const ref = db.collection('mesomb_payments').doc(pending.reference);
+  const snap = await ref.get();
+  if (!snap.exists) throw new Error('MeSomb payment record not found.');
+  const current = snap.data();
+  if (current.status === 'completed') {
+    return { success: true, status: 'SUCCESS', transactionId };
+  }
+
+  const session = {
+    id: 'mesomb_' + transactionId,
+    mode: 'payment',
+    amount_total: Number(pending.amountXaf),
+    currency: 'xaf',
+    customer_details: {
+      email: pending.email,
+      name: pending.name,
+      phone: pending.phone
+    },
+    manualAccessMonths: Number(pending.accessMonths || 1),
+    manualCommissionKey: 'mesomb_' + transactionId,
+    manualChargeKind: 'initial',
+    manualAmount: Number(pending.amountXaf),
+    manualCurrency: 'XAF',
+    manualChannel: 'mesomb',
+    manualPaymentMethod: pending.service === 'ORANGE' ? 'orange_money' : 'mtn_momo'
+  };
+
+  await unlockSbdContent(pending.uid, pending.productId, session);
+
+  await ref.set({
+    status: 'completed',
+    transactionId,
+    completedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return { success: true, status: 'SUCCESS', transactionId };
+}
+
+
 
 // SMTP Configuration (iPage)
 const SMTP_CONFIG = {
@@ -4900,6 +4985,160 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 
   console.log(`[SBD Checkout] uid=${uid} product=${canonicalProductId} source=${resolved.source} session=${session.id}`);
   return { url: session.url };
+});
+
+/**
+ * MeSomb Mobile Money checkout for Foundation School.
+ *
+ * One-time Foundation Access: 86,502 FCFA -> 12 months.
+ * Subscription plans: collect the current monthly installment (9,000 / 6,600 FCFA)
+ * and grant one month. MeSomb collect is a transaction API; it does not replace
+ * Stripe's 12/24-month subscription schedule.
+ */
+exports.createSbdMeSombPayment = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be signed in to pay with Mobile Money.');
+  }
+
+  const productId = resolveSbdProductId(data?.productId);
+  const plan = getSbdMesombPlan(productId);
+  const phone = String(data?.phone || '').replace(/\D/g, '');
+  const service = String(data?.service || data?.momo_network || 'MTN').toUpperCase() === 'ORANGE' ? 'ORANGE' : 'MTN';
+
+  if (!plan) {
+    throw new functions.https.HttpsError('invalid-argument', 'This MeSomb payment option is only available for Foundation School plans.');
+  }
+  if (phone.length < 9 || phone.length > 15) {
+    throw new functions.https.HttpsError('invalid-argument', 'Enter a valid MTN or Orange Money phone number.');
+  }
+
+  const uid = context.auth.uid;
+  const userSnap = await db.collection('users').doc(uid).get();
+  const user = userSnap.exists ? userSnap.data() : {};
+  const email = context.auth.token.email || user.email || '';
+  const name = user.name || context.auth.token.name || 'Student';
+  const reference = 'SBD-MESOMB-' + Date.now() + '-' + uid.slice(-6);
+
+  const pending = {
+    reference, uid, email, name, phone, service, productId,
+    productName: plan.label, amountXaf: plan.amountXaf,
+    accessMonths: plan.accessMonths, status: 'pending',
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  await db.collection('mesomb_payments').doc(reference).set(pending);
+
+  try {
+    const client = getMesombClient();
+    const response = await client.makeCollect({
+      amount: plan.amountXaf,
+      payer: phone,
+      service,
+      country: 'CM',
+      currency: 'XAF',
+      fees: true,
+      reference,
+      trxID: reference,
+      message: 'Marriage Education — ' + plan.label,
+      customer: {
+        email,
+        firstName: String(name).split(/\s+/)[0] || 'Student',
+        lastName: String(name).split(/\s+/).slice(1).join(' ') || '',
+        country: 'CM'
+      },
+      products: [{
+        id: productId,
+        name: plan.label,
+        quantity: 1,
+        amount: plan.amountXaf
+      }]
+    });
+
+    const transaction = extractMesombTransaction(response);
+    const transactionId = transaction?.pk || transaction?.id || null;
+    const status = String(transaction?.status || '').toUpperCase();
+
+    await db.collection('mesomb_payments').doc(reference).set({
+      transactionId,
+      providerMessage: response?.message || null,
+      providerSuccess: response?.success === true,
+      status: status || 'PENDING',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (status === 'SUCCESS') {
+      const completed = await finalizeSbdMesombPayment(pending, transaction);
+      return { ...completed, reference, amountXaf: plan.amountXaf, accessMonths: plan.accessMonths };
+    }
+
+    if (status === 'FAILED') {
+      return { success: false, status: 'FAILED', reference, message: response?.message || 'MeSomb payment failed.' };
+    }
+
+    return {
+      success: false, pending: true, status: status || 'PENDING',
+      reference, transactionId, amountXaf: plan.amountXaf,
+      accessMonths: plan.accessMonths,
+      message: response?.message || 'Payment is pending. Confirm the payment request on your phone.'
+    };
+  } catch (error) {
+    await db.collection('mesomb_payments').doc(reference).set({
+      status: 'failed', error: error.message,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    console.error('[SBD MeSomb] collect failed:', error);
+    throw new functions.https.HttpsError('internal', 'MeSomb could not start the Mobile Money payment. Please try again.');
+  }
+});
+
+/**
+ * Poll a pending MeSomb transaction and finalize it once SUCCESS is reported.
+ */
+exports.checkSbdMeSombPayment = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
+
+  const reference = String(data?.reference || '').trim();
+  if (!reference) throw new functions.https.HttpsError('invalid-argument', 'Payment reference is required.');
+
+  const ref = db.collection('mesomb_payments').doc(reference);
+  const snap = await ref.get();
+  if (!snap.exists) throw new functions.https.HttpsError('not-found', 'MeSomb payment record not found.');
+
+  const pending = snap.data();
+  if (pending.uid !== context.auth.uid) {
+    throw new functions.https.HttpsError('permission-denied', 'Payment does not belong to this account.');
+  }
+  if (pending.status === 'completed') {
+    return { success: true, status: 'SUCCESS', reference, transactionId: pending.transactionId || null };
+  }
+  if (!pending.transactionId) {
+    return { success: false, pending: true, status: pending.status || 'PENDING', reference };
+  }
+
+  try {
+    const client = getMesombClient();
+    const response = await client.checkTransactions([pending.transactionId]);
+    const transaction = extractMesombTransaction(response);
+    const status = String(transaction?.status || '').toUpperCase();
+
+    await ref.set({
+      status: status || pending.status || 'PENDING',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (status === 'SUCCESS') {
+      const completed = await finalizeSbdMesombPayment(pending, transaction);
+      return { ...completed, reference };
+    }
+
+    return {
+      success: false, pending: status !== 'FAILED',
+      status: status || 'PENDING', reference,
+      message: status === 'FAILED' ? 'MeSomb reports that the payment failed.' : 'Payment is still pending.'
+    };
+  } catch (error) {
+    console.error('[SBD MeSomb] status check failed:', error);
+    throw new functions.https.HttpsError('internal', 'Unable to check the MeSomb payment status.');
+  }
 });
 
 /**
