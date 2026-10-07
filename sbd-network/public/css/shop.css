@@ -295,8 +295,8 @@
 }
 
 .product-card--book .product-image {
-  height: 300px;
-  min-height: 300px;
+  height: 360px;
+  min-height: 360px;
   aspect-ratio: auto;
   background: #111;
   overflow: hidden;
@@ -700,10 +700,14 @@
   }
 
   .hero-slide-card--book-artwork .hero-slide-card__media,
-  .hero-slide-card--school1-artwork .hero-slide-card__media,
-  .product-card--book .product-image {
+  .hero-slide-card--school1-artwork .hero-slide-card__media {
     height: 250px;
     min-height: 250px;
+  }
+
+  .product-card--book .product-image {
+    height: 360px;
+    min-height: 360px;
   }
 
   .book-artwork-3d {
@@ -1233,7 +1237,8 @@
 }
 
 .product-card--book .product-image {
-  height: 210px;
+  height: 360px;
+  min-height: 360px;
   aspect-ratio: auto;
   background: #111;
 }
