@@ -282,6 +282,7 @@ function p(id, name, category, priceUsd, opts = {}) {
     icon: opts.icon || '📘',
     format: opts.format || (opts.type === 'bundle' ? 'bundle' : 'digital'),
     recurring: !!opts.recurring,
+    termMonths: opts.termMonths || null,
     schoolId: opts.schoolId || null,
     requiredTier: opts.requiredTier || 'free',
     sourceUrl: inferSourceUrl(opts.sourceUrl || opts.source, category),
