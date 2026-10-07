@@ -168,9 +168,28 @@ async function loadCheckoutProduct() {
     return;
   }
   try {
-    const res = await fetch('/data/shop-catalog.json?v=3');
+    const res = await fetch('/data/shop-catalog.json?v=4');
     const data = await res.json();
     const activePhase = Number(data.activePhase) || 1;
+
+    // foundation-options is a selector route, not a catalog product.
+    // Handle it before catalog validation so the selector is not reported as missing.
+    if (isFoundationPlanSelector(productId)) {
+      currentProductId = productId;
+      checkoutProduct = {
+        id: productId,
+        name: 'Foundation School',
+        description: 'Choose one of the three Foundation School payment options.',
+        stripeReady: true
+      };
+      renderFoundationPlanOptions(data.products || []);
+      document.getElementById('product-name').textContent = 'Foundation School';
+      document.getElementById('product-description').textContent = 'Choose one of the three Foundation School payment options.';
+      document.getElementById('order-total').textContent = 'Choose plan';
+      syncPayMethodUi();
+      return;
+    }
+
     const raw = (data.products || []).find(function (p) { return p.id === productId; });
     if (!raw || !isCheckoutAllowed(raw, activePhase)) {
       showCheckoutBlocked(raw
@@ -181,14 +200,6 @@ async function loadCheckoutProduct() {
     checkoutProduct = raw;
     currentProductId = productId;
 
-    if (isFoundationPlanSelector(productId)) {
-      renderFoundationPlanOptions(data.products || []);
-      document.getElementById('product-name').textContent = 'Foundation School';
-      document.getElementById('product-description').textContent = 'Choose one of the three Foundation School payment options.';
-      document.getElementById('order-total').textContent = 'Choose plan';
-      syncPayMethodUi();
-      return;
-    }
     const suffix = raw.priceSuffix || '';
     const priceStr = '$' + (Number(raw.priceUsd) % 1 === 0 ? raw.priceUsd : raw.priceUsd.toFixed(2)) + suffix;
     document.getElementById('product-name').textContent = raw.name;
