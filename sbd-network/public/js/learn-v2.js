@@ -12,7 +12,7 @@ const TIER_ORDER  = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
 const TIER_META = {
   free:       { label: 'Free',       price: '$0',      icon: '🌱', priceLabel: 'Free forever' },
-  foundation: { label: 'Foundation', price: '$9.77',   icon: '🏗',  priceLabel: '$9.77 / month · $144.17 one-time / 12 months' },
+  foundation: { label: 'Foundation', price: '$11+',   icon: '🏗',  priceLabel: '$11/month · $15/month for 1 year · $11/month for 2 years · $144.17 one-time' },
   premium:    { label: 'Premium',    price: '$20',     icon: '⚡',  priceLabel: '$20 / month' },
   elite:      { label: 'Elite',      price: '$50',     icon: '👑',  priceLabel: '$50 / month' },
 };
