@@ -3200,7 +3200,7 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
- * Welcome email for DTC Foundation Yearly (and other guest) buyers.
+ * Welcome email for DTC 12-Month Foundation Access (and other guest) buyers.
  */
 async function sendSbdBuyerAccessEmail(opts) {
   const email = String(opts.email || '').trim().toLowerCase();
@@ -3208,7 +3208,7 @@ async function sendSbdBuyerAccessEmail(opts) {
     throw new Error('Missing buyer email for welcome message');
   }
   const name = String(opts.name || '').trim() || 'Student';
-  const productName = opts.productName || 'Foundation Tier — Yearly';
+  const productName = opts.productName || 'Foundation Access — 12 Months';
   const learnUrl = 'https://sbd-network.web.app/learn?tier=foundation';
   const loginUrl = 'https://sbd-network.web.app/auth';
   const resetLink = await admin.auth().generatePasswordResetLink(email, {
@@ -4097,7 +4097,7 @@ const SBD_STRIPE_PRICE_IDS = {
 
 const SBD_CATALOG_SERVER = {
   'foundation-monthly': { name: 'Foundation Tier', amount: 977, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
-  'foundation-yearly': { name: 'Foundation Tier — Yearly', amount: 11800, mode: 'subscription', interval: 'year', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
+  'foundation-yearly': { name: 'Foundation Access — 12 Months', amount: 14417, mode: 'payment', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
   'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
@@ -4547,7 +4547,9 @@ async function unlockSbdContent(uid, productId, session) {
     // Stripe recurring: endDate = 2099 (Stripe webhooks manage cancel / period end).
     // Manual MoMo yearly: fixed term (months) — no auto-renewal.
     // One-time bundles: endDate = now + N months from unlock rule.
-    const isRecurring = ['foundation-monthly', 'foundation-yearly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
+    // Foundation Access is a one-time payment for 12 months. Monthly Foundation,
+    // Premium, and Elite remain recurring subscriptions.
+    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     let endDate;
     if (session?.manualAccessMonths) {
       endDate = new Date();
@@ -4556,11 +4558,12 @@ async function unlockSbdContent(uid, productId, session) {
       endDate = new Date('2099-12-31');
     } else {
       endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + rule.months);
+      endDate.setMonth(endDate.getMonth() + Number(rule.months || 12));
     }
 
-    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice or manual pending ref ──
+    // ── SBD commissions — idempotent per Stripe invoice, one-time Stripe session, or manual payment ref ──
     try {
+      let commissionResult = null;
       let invoiceId = session?.invoice || null;
       if (!invoiceId && session?.id && session?.mode === 'subscription') {
         const fullSession = await stripe.checkout.sessions.retrieve(session.id);
@@ -4570,20 +4573,9 @@ async function unlockSbdContent(uid, productId, session) {
         const invoice = await stripe.invoices.retrieve(
           typeof invoiceId === 'string' ? invoiceId : invoiceId.id
         );
-        const commissionResult = await handleSbdStripeInvoice(invoice);
-        Object.assign(tgMeta, {
-          referralCredited: !!commissionResult.credited,
-          referralSkipReason: commissionResult.referralSkipReason || null,
-          referrerAmbassadorCode: commissionResult.referrerAmbassadorCode || null,
-          referrerFullName: commissionResult.referrerFullName || null,
-          seniorAmbassadorCode: commissionResult.seniorAmbassadorCode || null,
-          ambassadorCommissionFCFA: commissionResult.ambassadorCommissionFCFA,
-          seniorCommissionFCFA: commissionResult.seniorCommissionFCFA,
-          rdCode: commissionResult.rdCode || null,
-          rdCommissionFCFA: commissionResult.rdCommissionFCFA
-        });
+        commissionResult = await handleSbdStripeInvoice(invoice);
       } else if (session?.manualCommissionKey) {
-        const commissionResult = await creditSbdSubscriptionCommissions({
+        commissionResult = await creditSbdSubscriptionCommissions({
           db,
           findSellerByReferralCode: findSellerBySbdReferralCode,
           uid,
@@ -4593,6 +4585,20 @@ async function unlockSbdContent(uid, productId, session) {
           idempotencyKey: session.manualCommissionKey,
           chargeKind: session.manualChargeKind || 'initial'
         });
+      } else if (canonicalProductId === 'foundation-yearly' && session?.id) {
+        commissionResult = await creditSbdSubscriptionCommissions({
+          db,
+          findSellerByReferralCode: findSellerBySbdReferralCode,
+          uid,
+          referralCode: userData.referredBy,
+          productId: canonicalProductId,
+          tierKey: rule.tier,
+          idempotencyKey: `checkout_${session.id}`,
+          chargeKind: 'initial'
+        });
+      }
+
+      if (commissionResult) {
         Object.assign(tgMeta, {
           referralCredited: !!commissionResult.credited,
           referralSkipReason: commissionResult.referralSkipReason || null,
@@ -4605,10 +4611,10 @@ async function unlockSbdContent(uid, productId, session) {
           rdCommissionFCFA: commissionResult.rdCommissionFCFA
         });
       } else {
-        tgMeta.referralSkipReason = 'no_invoice_for_commission';
+        tgMeta.referralSkipReason = 'no_charge_reference';
       }
     } catch (refErr) {
-      console.error('[SBD] Subscription commission credit failed (non-critical):', refErr.message);
+      console.error('[SBD] Commission credit failed (non-critical):', refErr.message);
       tgMeta.referralSkipReason = 'credit_error';
     }
 
@@ -4891,7 +4897,7 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 });
 
 /**
- * Guest (DTC) checkout for Foundation Yearly landing — no prior auth required.
+ * Guest (DTC) checkout for 12-Month Foundation Access — one-time payment; no prior auth required.
  * Creates/finds Auth user, attributes referral, returns Stripe Checkout URL.
  */
 exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
@@ -4940,7 +4946,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'This guest checkout is for Foundation Tier — Yearly only.'
+      'This guest checkout is for 12-Month Foundation Access only.'
     );
   }
 
@@ -5015,7 +5021,6 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     currency: 'usd',
     product_data: { name: product.name },
     unit_amount: product.amount,
-    recurring: { interval: product.interval || 'year' },
   };
   const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
   const lineItem = trimmedPriceId
@@ -5039,8 +5044,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     customer_email: receiptEmail,
     client_reference_id: uid,
     metadata: meta,
-    subscription_data: { metadata: meta },
-    mode: 'subscription',
+    mode: 'payment',
     line_items: [lineItem],
     success_url:
       `https://sbd-network.web.app/checkout-success.html?product=${productId}` +
@@ -5063,7 +5067,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
 });
 
 /**
- * Guest Foundation Yearly — Manual MoMo / Orange Money path.
+ * Guest 12-Month Foundation Access — Manual MoMo / Orange Money path. One-time payment; no auto-renewal.
  * Creates Auth user + pending_payments; admin approve unlocks Foundation + commissions.
  */
 exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
@@ -5096,7 +5100,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo guest checkout is for Foundation Tier — Yearly only.'
+      'Manual MoMo guest checkout is for Foundation Access — 12 Months only.'
     );
   }
   if (referredBy) {
@@ -5168,7 +5172,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   }
 
   const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
-  const amount = YEARLY_REVENUE_BASE_FCFA; // 70,800 FCFA ($118 @ 600)
+  const amount = YEARLY_REVENUE_BASE_FCFA; // 86,502 FCFA ($144.17 @ 600), one-time for 12-month access
   const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
   const payeeName = 'Achu Gustave Mokom';
   const contactEmail = isSponsored ? sponsorEmail : email;
@@ -5176,7 +5180,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email: contactEmail,
@@ -5227,7 +5231,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +
@@ -5261,7 +5265,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
 });
 
 /**
- * Authenticated SBD Network checkout — Manual MoMo for Foundation Yearly only.
+ * Authenticated SBD Network checkout — Manual MoMo for 12-Month Foundation Access only.
  * Monthly tiers stay Stripe-only (recurring billing).
  */
 exports.createSbdManualPayment = functions.https.onCall(async (data, context) => {
@@ -5277,7 +5281,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo is only available for Foundation Tier — Yearly ($118). Monthly plans use Stripe.'
+      'Manual MoMo is only available for Foundation Access — 12 Months ($144.17). Monthly plans use Stripe.'
     );
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
@@ -5307,7 +5311,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email,
@@ -5355,7 +5359,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING (SBD app)\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING (SBD app)\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +

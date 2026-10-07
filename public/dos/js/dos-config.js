@@ -42,15 +42,15 @@
     { level: 'Platinum', threshold: 500, icon: 'fa-gem', color: '#71717a' }
   ];
 
-  /** Official Foundation Yearly deployment program (10 × $118 / day × 20 days). */
+  /** Official 12-Month Foundation Access deployment program (10 × $144.17 / day × 20 days). */
   var YEARLY_DEPLOYMENT_CHALLENGE = {
     productId: 'foundation-yearly',
-    productUsd: 118,
+    productUsd: 144.17,
     dailyTarget: 10,
     activeDaysPerMonth: 20,
     monthlyTarget: 200,
-    ambassadorDailyCommissionUsd: 118,
-    ambassadorMonthlyCommissionUsd: 2360,
+    ambassadorDailyCommissionUsd: 144.17,
+    ambassadorMonthlyCommissionUsd: 28834,
     landingPath: 'https://marriageducation.com/foundation-access.html'
   };
 

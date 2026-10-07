@@ -200,7 +200,7 @@
 
   function productLabel(sale) {
     if (sale.productId === 'foundation-yearly' || sale.program === 'foundation_yearly_deployment') {
-      return 'Yearly $118';
+      return 'Yearly $144.17';
     }
     if (sale.productId) return String(sale.productId);
     if (sale.tier) return String(sale.tier);

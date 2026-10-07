@@ -9,13 +9,13 @@
 
   var DOCTRINE = {
     subscriptionMonthlyUsd: 9,
-    foundationYearlyUsd: 118,
+    foundationYearlyUsd: 144.17,
     ambassadorRecurringPercent: 0.1,
     seniorOverridePercent: 0.05,
     rdOverridePercent: 0.05,
-    ambassadorMonthlyTargetUsd: 2360,
-    seniorMonthlyTargetUsd: 11800,
-    rdMonthlyTargetUsd: 750000,
+    ambassadorMonthlyTargetUsd: 28834,
+    seniorMonthlyTargetUsd: 14417,
+    rdMonthlyTargetUsd: 720850,
     dailyTargets: {
       newSubscribers: 10,
       foundationYearly: 10,
@@ -28,9 +28,13 @@
       dailyTarget: 10,
       activeDaysPerMonth: 20,
       monthlyTarget: 200,
-      ambassadorDailyCommissionUsd: 118,
-      ambassadorMonthlyCommissionUsd: 2360,
-      seniorMonthlyCommissionUsd: 11800
+      ambassadorDailyCommissionUsd: 144.17,
+      ambassadorMonthlyCommissionUsd: 28834,
+      seniorMonthlyCommissionUsd: 14417,
+      ambassadorAnnualCommissionUsd: 346008,
+      seniorAnnualCommissionUsd: 173004,
+      rdMonthlyCommissionUsd: 720850,
+      rdAnnualCommissionUsd: 8650200
     },
     promotion: {
       seniorRecruits: 10,

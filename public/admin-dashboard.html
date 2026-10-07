@@ -2238,7 +2238,7 @@
             <div class="section" id="finance">
                 <h1 style="margin-bottom: 1rem;">Finance — SBD Commission Payouts</h1>
                 <p class="section-subtitle" style="margin-bottom: 1.5rem">
-                    Manual MoMo reimbursements for SBD Network subscription commissions (including Foundation Yearly <strong>$118</strong>).
+                    Manual MoMo reimbursements for SBD Network subscription commissions (including Foundation Yearly <strong>$144.17</strong>).
                     Send payment, then <strong>Mark paid</strong>. Automated operators (CamPay / Wise / PayUnit) are offline for now.
                 </p>
 
@@ -2252,7 +2252,7 @@
                             </h2>
                             <p class="rb-panel-subtitle">
                                 Each row is one commission share on a subscription sale — who subscribed, under which operator, and who you owe.
-                                Yearly $118 sales credit the full 10/5/5 stack at once (up to 3 rows per sale).
+                                Yearly $144.17 sales credit the full 10/5/5 stack at once (up to 3 rows per sale).
                             </p>
                             <p id="sbdPanelStatus" role="status" aria-live="polite">Open Finance to load…</p>
                         </div>
@@ -4058,7 +4058,7 @@
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleString() : 'N/A';
                     const isYearly = data.productId === 'foundation-yearly' || data.program === 'foundation_yearly_deployment';
                     const productLabel = isYearly
-                        ? '<span style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Yearly $118</span>'
+                        ? '<span style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Yearly $144.17</span>'
                         : (data.productId || data.program || '—');
                     const amountLabel = data.revenueUsd
                         ? `$${Number(data.revenueUsd).toLocaleString()}`

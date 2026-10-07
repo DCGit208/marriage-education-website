@@ -124,7 +124,7 @@
     }
     var yearlyRef = encodeURIComponent(sbdCode || code || '');
     return [
-      { key: 'foundation-yearly', label: 'Foundation Yearly ($118)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef + '#enroll' },
+      { key: 'foundation-yearly', label: 'Foundation Access ($144.17 / 12 months)', icon: 'fa-solid fa-graduation-cap', url: 'https://marriageducation.com/foundation-access.html?ref=' + yearlyRef + '#enroll' },
       { key: 'books', label: 'Books', icon: 'fa-solid fa-book', url: 'https://marriageducation.com/sbd-campaign.html?ref=' + safe + '&category=books' },
       { key: 'schools', label: 'Schools', icon: 'fa-solid fa-school', url: 'https://marriageducation.com/schools.html?ref=' + safe + '&category=schools' },
       { key: 'courses', label: 'Courses', icon: 'fa-solid fa-book-open', url: 'https://marriageducation.com/courses.html?ref=' + safe + '&category=courses' },
@@ -284,7 +284,7 @@
     mount.innerHTML =
       '<div class="dos-yearly-challenge">' +
       '<div class="dos-yearly-challenge-head">' +
-      '<div><h3><i class="fa-solid fa-flag-checkered"></i> Foundation Yearly Deployment Challenge</h3>' +
+      '<div><h3><i class="fa-solid fa-flag-checkered"></i> Foundation Access Deployment Challenge</h3>' +
       '<p>Official program: <strong>' + challenge.dailyTarget + ' × $' + challenge.productUsd +
       '</strong> / day · <strong>' + challenge.activeDaysPerMonth + ' days</strong> / month · ' + roleLabel + '</p></div>' +
       '<div class="dos-yearly-challenge-earned">' +
@@ -307,7 +307,7 @@
       '<div class="dos-yearly-challenge-foot">' +
       '<span>All-time yearly: <strong>' + totalYearly + '</strong></span>' +
       '<a class="dos-btn dos-btn-primary" href="' + landing + '" target="_blank" rel="noopener">' +
-      '<i class="fa-solid fa-share-nodes"></i> Share $118 landing</a>' +
+      '<i class="fa-solid fa-share-nodes"></i> Share $144.17 landing</a>' +
       '</div></div>';
   }
 
@@ -562,7 +562,7 @@
     var yearlyUrl = 'https://marriageducation.com/foundation-access.html?ref=' + encodeURIComponent(sbdCode) + '#enroll';
     var refs = stats.sbdReferrals || {};
     body.innerHTML =
-      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Yearly ($118)</strong> link below for the official deployment program. <strong>Only coded links credit you</strong> — always include <code>?ref=' + sbdCode + '</code>.</p>' +
+      '<p class="dos-sbd-empty" style="margin-bottom:12px">Share the <strong>Foundation Access ($144.17 / 12 months)</strong> link below for the official deployment program. <strong>Only coded links credit you</strong> — always include <code>?ref=' + sbdCode + '</code>.</p>' +
       '<div class="dos-sbd-panel">' +
       '<div class="dos-link-row">' +
       '<div class="dos-link-box" id="dosYearlyLink">' + yearlyUrl + '</div>' +
@@ -577,7 +577,7 @@
       kpi('Signups', String(refs.signups || 0), '') +
       kpi('Subscribers', String(refs.subscribers || 0), '') +
       kpi('Foundation', String(refs.foundation || 0), '') +
-      kpi('Yearly ($118)', String(refs.foundationYearly || 0), 'Deployment challenge units') +
+      kpi('Yearly ($144.17)', String(refs.foundationYearly || 0), 'Deployment challenge units') +
       kpi('Premium', String(refs.premium || 0), '') +
       kpi('Elite', String(refs.elite || 0), '') +
       '</div>';
