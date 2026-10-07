@@ -700,6 +700,7 @@
   }
 
   .hero-slide-card--book-artwork .hero-slide-card__media,
+  .hero-slide-card--school1-artwork .hero-slide-card__media,
   .product-card--book .product-image {
     height: 250px;
     min-height: 250px;
