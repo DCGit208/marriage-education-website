@@ -221,13 +221,16 @@
 
 .hero-slide-card--artwork /* Book artwork: compact 3D presentation for supplied book covers.
    The source cover remains complete and proportional; this only adds depth. */
+/* Book presentation model:
+   the physical 3D book is the dominant visual, like the approved
+   Teleios Blueprint reference. The supplied cover artwork remains intact. */
 .book-artwork-3d {
   position: relative;
   display: block;
-  width: min(82%, 230px);
+  width: min(94%, 330px);
   height: 100%;
   margin: 0 auto;
-  perspective: 900px;
+  perspective: 1100px;
   transform-style: preserve-3d;
 }
 
@@ -235,14 +238,14 @@
   content: '';
   position: absolute;
   z-index: 0;
-  left: -7px;
-  top: 5%;
-  width: 10px;
-  height: 90%;
-  border-radius: 2px 0 0 2px;
-  background: linear-gradient(90deg, #2a2a2a 0%, #777 48%, #252525 100%);
-  box-shadow: -5px 8px 12px rgba(0,0,0,.35);
-  transform: translateZ(-8px) skewY(-2deg);
+  left: 1%;
+  top: 3%;
+  width: 8%;
+  height: 94%;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, #1c1c1c 0%, #6e6e6e 45%, #252525 100%);
+  box-shadow: -8px 10px 16px rgba(0,0,0,.42);
+  transform: translateZ(-12px) skewY(-2deg);
 }
 
 .book-artwork-3d img {
@@ -253,21 +256,36 @@
   height: 100%;
   object-fit: contain;
   object-position: center;
-  transform: perspective(900px) rotateY(-10deg) rotateX(1deg);
+  transform: perspective(1100px) rotateY(-8deg) rotateX(.5deg);
   transform-origin: center center;
-  filter: drop-shadow(-10px 14px 14px rgba(0,0,0,.42));
+  filter: drop-shadow(-14px 18px 18px rgba(0,0,0,.48));
 }
 
 .book-artwork-3d--product {
-  width: min(82%, 210px);
+  width: min(94%, 300px);
 }
 
 .hero-slide-card--book-artwork .hero-slide-card__media {
+  height: 300px;
+  min-height: 300px;
   background: #111;
+  overflow: hidden;
 }
 
-.hero-slide-card--book-artwork .hero-slide-card__media::after {
+.hero-slide-card--book-artwork .hero-slide-card__artwork {
   display: none;
+}
+
+.product-card--book .product-image {
+  height: 300px;
+  min-height: 300px;
+  aspect-ratio: auto;
+  background: #111;
+  overflow: hidden;
+}
+
+.product-card--book .book-artwork-3d--product {
+  height: 100%;
 }
 
 .hero-slide-card__media::after {
@@ -616,8 +634,14 @@
     min-height: 180px;
   }
 
+  .hero-slide-card--book-artwork .hero-slide-card__media,
+  .product-card--book .product-image {
+    height: 250px;
+    min-height: 250px;
+  }
+
   .book-artwork-3d {
-    width: min(78%, 190px);
+    width: min(94%, 270px);
   }
 
   .shop-hero-slider__nav {
