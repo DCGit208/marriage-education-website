@@ -200,7 +200,7 @@
 
   function productLabel(sale) {
     if (sale.productId === 'foundation-yearly' || sale.program === 'foundation_yearly_deployment') {
-      return 'Yearly $118';
+      return 'Foundation Access $144.17';
     }
     if (sale.productId) return String(sale.productId);
     if (sale.tier) return String(sale.tier);
@@ -210,7 +210,7 @@
   function productBadge(sale) {
     var yearly = sale.productId === 'foundation-yearly' || sale.program === 'foundation_yearly_deployment';
     if (yearly) {
-      return '<span style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Yearly $118</span>';
+      return '<span style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;">Foundation Access $144.17</span>';
     }
     return '<span>' + esc(productLabel(sale)) + '</span>';
   }
@@ -570,7 +570,7 @@
       payeeCode: normCode(d.payee_code),
       amount: Number(d.amount_fcfa) || 0,
       shareKey: d.share || '',
-      productLabel: d.productId === 'foundation-yearly' ? 'Yearly $118' : (d.productId || d.program || 'SBD'),
+      productLabel: d.productId === 'foundation-yearly' ? 'Foundation Access $144.17' : (d.productId || d.program || 'SBD'),
       subscriberUid: d.subscriberUid || '',
       subscriberLabel: d.subscriberUid || '—',
       sellerCode: normCode(d.seller_code || ''),
