@@ -41,15 +41,15 @@ ok('monthly rd 250', RD_OVERRIDE_FCFA === 250);
 ok('monthly base 5000', REVENUE_BASE_FCFA === 5000);
 ok('monthly full stack 1000', DIRECT_COMMISSION_FCFA + SENIOR_OVERRIDE_FCFA + RD_OVERRIDE_FCFA === 1000);
 
-ok('yearly product $118', FOUNDATION_YEARLY_USD === 118);
+ok('Foundation Access product $144.17', FOUNDATION_YEARLY_USD === 144.17);
 ok('xaf rate 600', XAF_PER_USD === 600);
 ok('yearly direct 7080', YEARLY_DIRECT_FCFA === 7080);
 ok('yearly senior 3540', YEARLY_SENIOR_FCFA === 3540);
 ok('yearly rd 3540', YEARLY_RD_FCFA === 3540);
 ok('yearly base 70800', YEARLY_REVENUE_BASE_FCFA === 70800);
-ok('yearly full stack 14160', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 14160);
-ok('daily amb target $118', YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 === 118);
-ok('monthly amb target $2360', YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 === 2360);
+ok('yearly full stack 17300', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 17300);
+ok('daily amb target $144.17', YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 === 144.17);
+ok('monthly amb target $2883.40', YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 === 2883.4);
 
 ok('isFoundationYearly true', isFoundationYearly('foundation-yearly') === true);
 ok('isFoundationYearly false monthly', isFoundationYearly('foundation-monthly') === false);
