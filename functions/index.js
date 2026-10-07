@@ -5353,14 +5353,14 @@ exports.createSbdMeSombPayment = functions.runWith({
     }
 
     if (status === 'FAILED') {
-      return { success: false, status: 'FAILED', reference, message: response?.message || 'MeSomb payment failed.' };
+      return { success: false, status: 'FAILED', reference, message: 'Your Mobile Money payment could not be completed. Please try again.' };
     }
 
     return {
       success: false, pending: true, status: status || 'PENDING',
       reference, transactionId, amountXaf: plan.amountXaf,
       accessMonths: plan.accessMonths,
-      message: response?.message || 'Payment is pending. Confirm the payment request on your phone.'
+      message: 'Payment request sent. Approve it on your phone. We are checking the payment automatically.'
     };
   } catch (error) {
     await db.collection('mesomb_payments').doc(reference).set({
@@ -5368,7 +5368,7 @@ exports.createSbdMeSombPayment = functions.runWith({
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     console.error('[SBD MeSomb] collect failed:', error);
-    throw new functions.https.HttpsError('internal', 'MeSomb could not start the Mobile Money payment. Please try again.');
+    throw new functions.https.HttpsError('internal', 'We could not start the Mobile Money payment. Please try again or use another payment method.');
   }
 });
 
