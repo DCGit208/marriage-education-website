@@ -273,7 +273,12 @@
 }
 
 .hero-slide-card--book-artwork .hero-slide-card__artwork {
-  display: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .product-card--book .product-image {
