@@ -72,13 +72,22 @@ function getMesombClient() {
   });
 }
 
-function getSbdMesombPlan(productId) {
-  const plans = {
-    'foundation-yearly': { amountXaf: 86502, accessMonths: 12, label: 'Foundation School — One-Time Access' },
-    'foundation-1year': { amountXaf: 9000, accessMonths: 1, label: 'Foundation School — 1-Year Subscription · monthly installment' },
-    'foundation-2year': { amountXaf: 6600, accessMonths: 1, label: 'Foundation School — 2-Year Subscription · monthly installment' }
+async function getSbdMesombPlan(productId) {
+  const canonicalProductId = resolveSbdProductId(productId);
+  const resolved = await resolveSbdCatalogProduct(canonicalProductId);
+  if (!resolved || !resolved.product) return null;
+
+  // SBD catalog amounts are USD cents. Mobile Money collects in XAF.
+  // 600 XAF/USD preserves the existing Foundation amounts exactly.
+  const product = resolved.product;
+  const amountXaf = Math.round((Number(product.amount) || 0) * 6);
+  if (!amountXaf) return null;
+
+  return {
+    amountXaf,
+    accessMonths: Number(product.months) > 0 ? Number(product.months) : 1,
+    label: product.name || canonicalProductId
   };
-  return plans[productId] || null;
 }
 
 function extractMesombTransaction(response) {
@@ -5001,12 +5010,12 @@ exports.createSbdMeSombPayment = functions.https.onCall(async (data, context) =>
   }
 
   const productId = resolveSbdProductId(data?.productId);
-  const plan = getSbdMesombPlan(productId);
+  const plan = await getSbdMesombPlan(productId);
   const phone = String(data?.phone || '').replace(/\D/g, '');
   const service = String(data?.service || data?.momo_network || 'MTN').toUpperCase() === 'ORANGE' ? 'ORANGE' : 'MTN';
 
   if (!plan) {
-    throw new functions.https.HttpsError('invalid-argument', 'This MeSomb payment option is only available for Foundation School plans.');
+    throw new functions.https.HttpsError('invalid-argument', 'This Mobile Money payment option is not available for this product.');
   }
   if (phone.length < 9 || phone.length > 15) {
     throw new functions.https.HttpsError('invalid-argument', 'Enter a valid MTN or Orange Money phone number.');

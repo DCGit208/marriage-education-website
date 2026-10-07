@@ -1,7 +1,6 @@
 /**
- * CHECKOUT PAGE — Stripe Hosted Checkout (phased catalog)
- * Foundation School One-Time Access also supports Manual MoMo (12-month term).
- * Monthly tiers remain Stripe-only.
+ * CHECKOUT PAGE — Stripe + automated Mobile Money + Manual Mobile Money.
+ * Payment providers are intentionally hidden from the customer-facing method labels.
  */
 
 let currentUserId = null;
@@ -55,6 +54,7 @@ function isCheckoutAllowed(product, activePhase) {
 function bindPayMethodControls() {
   const stripeBtn = document.getElementById('method-stripe');
   const momoBtn = document.getElementById('method-momo');
+  const manualBtn = document.getElementById('method-manual');
   const netMtn = document.getElementById('net-mtn');
   const netOrange = document.getElementById('net-orange');
 
@@ -67,6 +67,12 @@ function bindPayMethodControls() {
   if (momoBtn) {
     momoBtn.addEventListener('click', function () {
       payMethod = 'momo';
+      syncPayMethodUi();
+    });
+  }
+  if (manualBtn) {
+    manualBtn.addEventListener('click', function () {
+      payMethod = 'manual';
       syncPayMethodUi();
     });
   }
@@ -85,27 +91,28 @@ function bindPayMethodControls() {
 }
 
 function syncPayMethodUi() {
-  const yearly = isYearlyFoundation(currentProductId);
-  const foundationPlan = FOUNDATION_PLAN_IDS.includes(currentProductId);
   const planSelector = isFoundationPlanSelector(currentProductId);
   const planBox = document.getElementById('foundation-plan-selector');
   const methods = document.getElementById('yearly-pay-methods');
   const momoPanel = document.getElementById('momo-panel');
+  const manualPanel = document.getElementById('manual-momo-panel');
   const stripeCopy = document.getElementById('stripe-copy');
   const virtualHint = document.getElementById('virtual-card-hint');
   const badge = document.getElementById('secure-badge-text');
   const btn = document.getElementById('pay-button');
   const stripeBtn = document.getElementById('method-stripe');
   const momoBtn = document.getElementById('method-momo');
+  const manualBtn = document.getElementById('method-manual');
 
   if (planBox) planBox.style.display = planSelector ? 'block' : 'none';
-  if (methods) methods.style.display = foundationPlan ? 'block' : 'none';
-  if (!foundationPlan) payMethod = 'stripe';
+  if (methods) methods.style.display = (checkoutProduct && !planSelector) ? 'block' : 'none';
+
   if (planSelector) {
     if (momoPanel) momoPanel.style.display = 'none';
-    if (stripeCopy) stripeCopy.textContent = 'Choose your Foundation School payment plan above. You will then be taken to the appropriate Stripe checkout.';
+    if (manualPanel) manualPanel.style.display = 'none';
+    if (stripeCopy) stripeCopy.textContent = 'Choose your Foundation School payment plan above. You will then be taken to the appropriate checkout.';
     if (virtualHint) virtualHint.style.display = 'none';
-    if (badge) badge.textContent = 'Secure checkout powered by Stripe';
+    if (badge) badge.textContent = 'Secure checkout';
     if (btn) {
       btn.disabled = true;
       btn.innerHTML = 'Choose a Foundation plan';
@@ -113,30 +120,44 @@ function syncPayMethodUi() {
     return;
   }
 
-  const isMomo = foundationPlan && payMethod === 'momo';
+  const isMomo = payMethod === 'momo';
+  const isManual = payMethod === 'manual';
+
   if (momoPanel) momoPanel.style.display = isMomo ? 'block' : 'none';
+  if (manualPanel) manualPanel.style.display = isManual ? 'block' : 'none';
+
   if (stripeCopy) {
-    stripeCopy.style.display = isMomo ? 'none' : 'block';
-    stripeCopy.textContent = yearly
-      ? 'Card checkout via Stripe, or Mobile Money through MeSomb. One-time access is 86,502 FCFA; subscription plans are charged one monthly installment at a time.'
-      : 'You\'ll be taken to Stripe\'s secure checkout page to enter your card details. Your payment is processed by Stripe — we never see your card number.';
+    stripeCopy.style.display = (!isMomo && !isManual) ? 'block' : 'none';
+    stripeCopy.textContent = 'You\'ll be taken to our secure card checkout to enter your card details. Your card details are processed securely and are not stored by Marriage Education.';
   }
-  if (virtualHint) virtualHint.style.display = isMomo ? 'none' : '';
+  if (virtualHint) virtualHint.style.display = (!isMomo && !isManual) ? '' : 'none';
+
   if (badge) {
     badge.textContent = isMomo
-      ? 'Manual MoMo · 12-month access after admin approval'
-      : 'Secure checkout powered by Stripe';
+      ? 'Secure Mobile Money payment'
+      : isManual
+        ? 'Manual Mobile Money · access after payment verification'
+        : 'Secure card checkout';
   }
   if (btn) {
-    btn.innerHTML = isMomo ? '📱 Pay with Mobile Money' : '💳 Pay with Card';
+    btn.innerHTML = isMomo
+      ? '📱 Pay with Mobile Money'
+      : isManual
+        ? '🧾 Continue to Manual Mobile Money'
+        : '💳 Pay with Card';
   }
+
   if (stripeBtn) {
-    stripeBtn.style.background = !isMomo ? 'rgba(125,211,192,0.15)' : 'transparent';
-    stripeBtn.classList.toggle('active', !isMomo);
+    stripeBtn.style.background = !isMomo && !isManual ? 'rgba(125,211,192,0.15)' : 'transparent';
+    stripeBtn.classList.toggle('active', !isMomo && !isManual);
   }
   if (momoBtn) {
     momoBtn.style.background = isMomo ? 'rgba(125,211,192,0.15)' : 'transparent';
     momoBtn.classList.toggle('active', isMomo);
+  }
+  if (manualBtn) {
+    manualBtn.style.background = isManual ? 'rgba(125,211,192,0.15)' : 'transparent';
+    manualBtn.classList.toggle('active', isManual);
   }
   syncMomoNetworkUi();
 }
@@ -147,8 +168,8 @@ function syncMomoNetworkUi() {
   const netOrange = document.getElementById('net-orange');
   if (step1) {
     step1.innerHTML = momoNetwork === 'orange'
-      ? 'Enter the Orange Money number you want MeSomb to charge.'
-      : 'Enter the MTN MoMo number you want MeSomb to charge.';
+      ? 'Enter the Orange Money number you want to pay from.'
+      : 'Enter the MTN MoMo number you want to pay from.';
   }
   if (netMtn) {
     netMtn.style.borderColor = momoNetwork === 'mtn' ? '#f59e0b' : 'rgba(255,255,255,0.2)';
@@ -281,9 +302,8 @@ function showCheckoutBlocked(message) {
 }
 
 async function startCheckout() {
-  if (isYearlyFoundation(currentProductId) && payMethod === 'momo') {
-    return startMomoCheckout(currentProductId);
-  }
+  if (payMethod === 'momo') return startMomoCheckout(currentProductId);
+  if (payMethod === 'manual') return startManualMomoCheckout(currentProductId);
   return startStripeCheckout(currentProductId);
 }
 
@@ -293,13 +313,16 @@ async function startMomoCheckout(productId) {
   const phoneEl = document.getElementById('momo-phone');
   const phone = phoneEl ? String(phoneEl.value || '').trim() : '';
 
-  if (!productId || !currentUserId || !FOUNDATION_PLAN_IDS.includes(productId)) return;
+  if (!productId || !currentUserId || !checkoutProduct) return;
   if (!phone || phone.replace(/\D/g, '').length < 9) {
-    if (errEl) errEl.textContent = 'Enter the MoMo phone number you are paying from (9+ digits).';
+    if (errEl) errEl.textContent = 'Enter the Mobile Money phone number you are paying from (9+ digits).';
     return;
   }
 
-  if (errEl) errEl.textContent = '';
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.style.color = '';
+  }
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<span class="loading-spinner"></span> Sending payment request…';
@@ -307,34 +330,30 @@ async function startMomoCheckout(productId) {
 
   try {
     const create = firebase.functions().httpsCallable('createSbdMeSombPayment');
-    const result = await create({
-      productId,
-      phone,
-      service: momoNetwork
-    });
+    const result = await create({ productId, phone, service: momoNetwork });
     const data = result.data || {};
 
     if (data.success && data.status === 'SUCCESS') {
-      window.location.href = '/checkout-success.html?product=' + encodeURIComponent(productId) + '&payment=mesomb&reference=' + encodeURIComponent(data.reference || '');
+      window.location.href = '/checkout-success.html?product=' + encodeURIComponent(productId) + '&payment=mobile-money&reference=' + encodeURIComponent(data.reference || '');
       return;
     }
 
     if (!data.pending || !data.reference) {
-      throw new Error(data.message || 'MeSomb could not start the Mobile Money payment.');
+      throw new Error(data.message || 'The Mobile Money payment could not be started.');
     }
 
     if (errEl) {
       errEl.style.color = '#a7f3d0';
-      errEl.textContent = data.message || 'Payment request sent. Approve it on your phone…';
+      errEl.textContent = data.message || 'Payment request sent. Approve it on your phone. We are checking the payment automatically.';
     }
 
     let attempts = 0;
     const poll = async function () {
       attempts += 1;
-      if (attempts > 12) {
+      if (attempts > 60) {
         if (errEl) {
           errEl.style.color = '#fbbf24';
-          errEl.textContent = 'Payment is still pending. Your access will activate when MeSomb confirms the transaction. Reference: ' + data.reference;
+          errEl.textContent = 'The payment is still being confirmed. You do not need to submit it again. If the payment succeeds, access will be activated automatically.';
         }
         if (btn) {
           btn.disabled = false;
@@ -348,21 +367,32 @@ async function startMomoCheckout(productId) {
         const checked = await check({ reference: data.reference });
         const state = checked.data || {};
         if (state.success && state.status === 'SUCCESS') {
-          window.location.href = '/checkout-success.html?product=' + encodeURIComponent(productId) + '&payment=mesomb&reference=' + encodeURIComponent(data.reference);
+          window.location.href = '/checkout-success.html?product=' + encodeURIComponent(productId) + '&payment=mobile-money&reference=' + encodeURIComponent(data.reference);
           return;
         }
         if (state.status === 'FAILED') {
-          throw new Error(state.message || 'MeSomb reports that the payment failed.');
+          throw new Error(state.message || 'The Mobile Money payment failed.');
         }
       } catch (pollErr) {
-        console.warn('[Checkout] MeSomb status check:', pollErr);
+        console.warn('[Checkout] Mobile Money status check:', pollErr);
+        if (pollErr.message && /payment failed/i.test(pollErr.message)) {
+          if (errEl) {
+            errEl.style.color = '#ff4444';
+            errEl.textContent = pollErr.message;
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '📱 Pay with Mobile Money';
+          }
+          return;
+        }
       }
       setTimeout(poll, 5000);
     };
 
     setTimeout(poll, 4000);
   } catch (err) {
-    console.error('[Checkout] MeSomb submit failed:', err);
+    console.error('[Checkout] Mobile Money submit failed:', err);
     if (errEl) {
       errEl.style.color = '#ff4444';
       errEl.textContent = err.message || 'Something went wrong. Please try again.';
@@ -372,6 +402,18 @@ async function startMomoCheckout(productId) {
       btn.innerHTML = '📱 Pay with Mobile Money';
     }
   }
+}
+
+function startManualMomoCheckout(productId) {
+  if (!productId || !checkoutProduct) return;
+  const amountXaf = Math.round(Number(checkoutProduct.priceUsd || 0) * 600);
+  const params = new URLSearchParams({
+    product: productId,
+    name: checkoutProduct.name || productId,
+    price: String(amountXaf),
+    currency: 'XAF'
+  });
+  window.location.href = '/momo-manual-payment.html?' + params.toString();
 }
 
 async function startStripeCheckout(productId) {
@@ -410,4 +452,4 @@ async function startStripeCheckout(productId) {
 window.startStripeCheckout = startStripeCheckout;
 window.startCheckout = startCheckout;
 
-console.log('[Checkout] Phased catalog checkout v5 — MeSomb Mobile Money');
+console.log('[Checkout] Stripe + Mobile Money + Manual Mobile Money checkout v6');
