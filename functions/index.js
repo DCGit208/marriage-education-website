@@ -4,6 +4,8 @@ const stripe = require('stripe')(functions.config().stripe?.secret_key);
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const axios = require('axios');
+const crypto = require('crypto');
+const { defineSecret } = require('firebase-functions/params');
 const { PaymentOperation } = require('@hachther/mesomb');
 const { jsPDF } = require('jspdf');
 const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
@@ -54,22 +56,63 @@ const resend = {
 const TELEGRAM_BOT_TOKEN = functions.config().telegram?.bot_token;
 const TELEGRAM_CHAT_ID = functions.config().telegram?.chat_id;
 
-// MeSomb server-side credentials. Never expose these values to the browser.
-const MESOMB_CONFIG = {
-  applicationKey: functions.config().mesomb?.application_key || process.env.MESOMB_APPLICATION_KEY || '',
-  accessKey: functions.config().mesomb?.access_key || process.env.MESOMB_ACCESS_KEY || '',
-  secretKey: functions.config().mesomb?.secret_key || process.env.MESOMB_SECRET_KEY || ''
-};
+// SBD-Network MeSomb credentials. These are Cloud Secret Manager secrets,
+// bound only to the functions that need them. Never expose them to the browser.
+const MESOMB_APPLICATION_KEY = defineSecret('MESOMB_APPLICATION_KEY');
+const MESOMB_ACCESS_KEY = defineSecret('MESOMB_ACCESS_KEY');
+const MESOMB_SECRET_KEY = defineSecret('MESOMB_SECRET_KEY');
+const MESOMB_WEBHOOK_SECRET = defineSecret('MESOMB_WEBHOOK_SECRET');
 
 function getMesombClient() {
-  if (!MESOMB_CONFIG.applicationKey || !MESOMB_CONFIG.accessKey || !MESOMB_CONFIG.secretKey) {
-    throw new Error('MeSomb credentials are not configured on the server.');
+  const applicationKey = MESOMB_APPLICATION_KEY.value() || process.env.MESOMB_APPLICATION_KEY || '';
+  const accessKey = MESOMB_ACCESS_KEY.value() || process.env.MESOMB_ACCESS_KEY || '';
+  const secretKey = MESOMB_SECRET_KEY.value() || process.env.MESOMB_SECRET_KEY || '';
+
+  if (!applicationKey || !accessKey || !secretKey) {
+    throw new Error('SBD-Network MeSomb credentials are not configured on the server.');
   }
+
   return new PaymentOperation({
-    applicationKey: MESOMB_CONFIG.applicationKey,
-    accessKey: MESOMB_CONFIG.accessKey,
-    secretKey: MESOMB_CONFIG.secretKey
+    applicationKey,
+    accessKey,
+    secretKey
   });
+}
+
+function verifySbdMeSombWebhook({ rawBody, signatureHeader, webhookSecret, toleranceSeconds = 300 }) {
+  if (!webhookSecret) throw new Error('SBD-Network MeSomb webhook secret is not configured.');
+  if (!signatureHeader) throw new Error('Missing X-MeSomb-Webhook-Signature header.');
+
+  const parts = String(signatureHeader).split(',');
+  const timestampPart = parts.find(part => part.trim().startsWith('t='));
+  const signaturePart = parts.find(part => part.trim().startsWith('v1='));
+  if (!timestampPart || !signaturePart) throw new Error('Invalid MeSomb webhook signature format.');
+
+  const timestamp = timestampPart.trim().slice(2);
+  const receivedSignature = signaturePart.trim().slice(3);
+  const timestampNumber = Number(timestamp);
+  if (!Number.isFinite(timestampNumber)) throw new Error('Invalid MeSomb webhook timestamp.');
+
+  const age = Math.abs(Math.floor(Date.now() / 1000) - timestampNumber);
+  if (age > toleranceSeconds) throw new Error('MeSomb webhook timestamp is outside the allowed tolerance.');
+
+  const signedPayload = timestamp + '.' + rawBody;
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(signedPayload, 'utf8')
+    .digest('hex');
+
+  const receivedBuffer = Buffer.from(receivedSignature, 'hex');
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+  if (
+    receivedBuffer.length !== expectedBuffer.length ||
+    !crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+  ) {
+    throw new Error('Invalid MeSomb webhook signature.');
+  }
+
+  return true;
 }
 
 async function getSbdMesombPlan(productId) {
@@ -4997,6 +5040,201 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 });
 
 /**
+ * SBD-Network MeSomb webhook.
+ *
+ * This is the server-to-server confirmation path for automated Mobile Money.
+ * The customer does not need to submit a screenshot or wait for an admin.
+ * MeSomb signs each webhook; we verify that signature before fulfillment.
+ */
+exports.sbdMeSombWebhook = functions.runWith({
+  secrets: [MESOMB_WEBHOOK_SECRET]
+}).https.onRequest(async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method Not Allowed');
+  }
+
+  try {
+    const rawBody = Buffer.isBuffer(req.rawBody)
+      ? req.rawBody.toString('utf8')
+      : (typeof req.rawBody === 'string' ? req.rawBody : JSON.stringify(req.body || {}));
+
+    verifySbdMeSombWebhook({
+      rawBody,
+      signatureHeader: req.get('X-MeSomb-Webhook-Signature'),
+      webhookSecret: MESOMB_WEBHOOK_SECRET.value()
+    });
+
+    const event = JSON.parse(rawBody);
+    const eventId = String(
+      req.get('X-MeSomb-Webhook-Event-Id') || event.id || ''
+    ).trim();
+
+    if (!eventId) {
+      return res.status(400).send('Missing webhook event ID');
+    }
+
+    const eventRef = db.collection('mesomb_webhook_events').doc(eventId);
+    const existingEvent = await eventRef.get();
+    if (existingEvent.exists && existingEvent.data()?.processed === true) {
+      return res.status(200).send('Already processed');
+    }
+
+    const eventType = String(event.event_type || event.type || '').toLowerCase();
+    const transaction = event.data?.object || event.data?.transaction || event.transaction || {};
+    const status = String(transaction.status || event.status || '').toUpperCase();
+
+    if (!['payment.transaction.succeeded', 'payment.transaction.success', 'payment.succeeded'].includes(eventType)) {
+      await eventRef.set({
+        processed: true,
+        ignored: true,
+        eventType,
+        livemode: event.livemode === true,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Ignored');
+    }
+
+    if (status !== 'SUCCESS' && status !== 'SUCCEEDED') {
+      await eventRef.set({
+        processed: true,
+        ignored: true,
+        eventType,
+        status,
+        livemode: event.livemode === true,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Not successful');
+    }
+
+    const reference = String(
+      transaction.reference ||
+      transaction.trxID ||
+      transaction.trx_id ||
+      transaction.external_reference ||
+      ''
+    ).trim();
+
+    const transactionId = String(
+      transaction.id ||
+      transaction.pk ||
+      transaction.transaction_id ||
+      ''
+    ).trim();
+
+    let pendingRef = reference ? db.collection('mesomb_payments').doc(reference) : null;
+    let pendingSnap = pendingRef ? await pendingRef.get() : null;
+
+    // Fallback for payloads that contain the MeSomb transaction ID but not our
+    // local reference.
+    if ((!pendingSnap || !pendingSnap.exists) && transactionId) {
+      const byTransaction = await db.collection('mesomb_payments')
+        .where('transactionId', '==', transactionId)
+        .limit(1)
+        .get();
+      if (!byTransaction.empty) {
+        pendingRef = byTransaction.docs[0].ref;
+        pendingSnap = byTransaction.docs[0];
+      }
+    }
+
+    if (!pendingSnap || !pendingSnap.exists) {
+      console.warn('[SBD MeSomb Webhook] No matching pending payment', {
+        eventId,
+        reference,
+        transactionId
+      });
+      await eventRef.set({
+        processed: true,
+        unmatched: true,
+        eventType,
+        reference,
+        transactionId,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('No matching payment');
+    }
+
+    const pending = pendingSnap.data();
+
+    // Never grant access for a webhook that does not match the amount/currency
+    // recorded when the SBD checkout was created.
+    const webhookAmount = Number(
+      transaction.amount ?? transaction.trxamount ?? transaction.amountXaf
+    );
+    if (Number.isFinite(webhookAmount) && webhookAmount !== Number(pending.amountXaf)) {
+      console.error('[SBD MeSomb Webhook] Amount mismatch', {
+        eventId,
+        reference: pending.reference,
+        expected: pending.amountXaf,
+        received: webhookAmount
+      });
+      await eventRef.set({
+        processed: true,
+        rejected: true,
+        reason: 'amount_mismatch',
+        expectedAmount: Number(pending.amountXaf),
+        receivedAmount: webhookAmount,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Amount mismatch');
+    }
+
+    const webhookCurrency = String(transaction.currency || '').toUpperCase();
+    if (webhookCurrency && webhookCurrency !== 'XAF') {
+      console.error('[SBD MeSomb Webhook] Currency mismatch', {
+        eventId,
+        reference: pending.reference,
+        received: webhookCurrency
+      });
+      await eventRef.set({
+        processed: true,
+        rejected: true,
+        reason: 'currency_mismatch',
+        receivedCurrency: webhookCurrency,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Currency mismatch');
+    }
+
+    const transactionForFulfillment = {
+      ...transaction,
+      id: transactionId || transaction.id,
+      pk: transaction.pk || transactionId,
+      status: 'SUCCESS'
+    };
+
+    const completed = await finalizeSbdMesombPayment(
+      { ...pending, reference: pending.reference || pendingSnap.id },
+      transactionForFulfillment
+    );
+
+    await eventRef.set({
+      processed: true,
+      eventType,
+      livemode: event.livemode === true,
+      reference: pending.reference || pendingSnap.id,
+      transactionId: transactionId || null,
+      status: 'SUCCESS',
+      processedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    console.log('[SBD MeSomb Webhook] Fulfilled SBD payment', {
+      eventId,
+      reference: pending.reference || pendingSnap.id,
+      transactionId: transactionId || null
+    });
+
+    return res.status(200).json({
+      received: true,
+      success: completed.success === true
+    });
+  } catch (error) {
+    console.error('[SBD MeSomb Webhook] Error:', error);
+    return res.status(400).send('Webhook rejected');
+  }
+});
+
+/**
  * MeSomb Mobile Money checkout for Foundation School.
  *
  * One-time Foundation Access: 86,502 FCFA -> 12 months.
@@ -5004,7 +5242,9 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
  * and grant one month. MeSomb collect is a transaction API; it does not replace
  * Stripe's 12/24-month subscription schedule.
  */
-exports.createSbdMeSombPayment = functions.https.onCall(async (data, context) => {
+exports.createSbdMeSombPayment = functions.runWith({
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+}).https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'You must be signed in to pay with Mobile Money.');
   }
@@ -5102,7 +5342,9 @@ exports.createSbdMeSombPayment = functions.https.onCall(async (data, context) =>
 /**
  * Poll a pending MeSomb transaction and finalize it once SUCCESS is reported.
  */
-exports.checkSbdMeSombPayment = functions.https.onCall(async (data, context) => {
+exports.checkSbdMeSombPayment = functions.runWith({
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+}).https.onCall(async (data, context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in required.');
 
   const reference = String(data?.reference || '').trim();
