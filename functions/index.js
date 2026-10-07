@@ -5083,6 +5083,19 @@ exports.sbdMeSombWebhook = functions.runWith({
     const transaction = event.data?.object || event.data?.transaction || event.transaction || {};
     const status = String(transaction.status || event.status || '').toUpperCase();
 
+    // This endpoint is the production SBD-Network endpoint. Never fulfill
+    // a development/test webhook against a production payment record.
+    if (event.livemode !== true) {
+      await eventRef.set({
+        processed: true,
+        ignored: true,
+        reason: 'non_live_event',
+        eventType,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Non-live event ignored');
+    }
+
     if (!['payment.transaction.succeeded', 'payment.transaction.success', 'payment.succeeded'].includes(eventType)) {
       await eventRef.set({
         processed: true,
@@ -5177,6 +5190,25 @@ exports.sbdMeSombWebhook = functions.runWith({
         receivedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       return res.status(200).send('Amount mismatch');
+    }
+
+    const webhookService = String(transaction.service || '').toUpperCase();
+    if (webhookService && pending.service && webhookService !== String(pending.service).toUpperCase()) {
+      console.error('[SBD MeSomb Webhook] Service mismatch', {
+        eventId,
+        reference: pending.reference,
+        expected: pending.service,
+        received: webhookService
+      });
+      await eventRef.set({
+        processed: true,
+        rejected: true,
+        reason: 'service_mismatch',
+        expectedService: String(pending.service).toUpperCase(),
+        receivedService: webhookService,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return res.status(200).send('Service mismatch');
     }
 
     const webhookCurrency = String(transaction.currency || '').toUpperCase();
