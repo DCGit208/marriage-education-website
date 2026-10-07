@@ -225,6 +225,12 @@
   object-position: center;
 }
 
+/* School 1 artwork uses the same vertical length as the approved Teleios book presentation. */
+.hero-slide-card--school1-artwork .hero-slide-card__media {
+  height: 380px;
+  min-height: 380px;
+}
+
 .hero-slide-card--artwork /* Book artwork: compact 3D presentation for supplied book covers.
    The source cover remains complete and proportional; this only adds depth. */
 /* Book artwork presentation
