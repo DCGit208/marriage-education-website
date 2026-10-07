@@ -340,10 +340,11 @@
             </p>
 
             <div id="yearly-pay-methods" style="display:none;margin:0 0 16px 0">
-              <p style="color:var(--text-secondary,#aaa);font-size:0.85rem;margin:0 0 10px">Foundation School can be paid by Card / Stripe or Mobile Money through MeSomb.</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-                <button type="button" class="pay-method-btn active" id="method-stripe" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(125,211,192,0.15);color:#fff;font-weight:600;cursor:pointer">Card / Stripe</button>
-                <button type="button" class="pay-method-btn" id="method-momo" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-weight:600;cursor:pointer">Mobile Money</button>
+              <p style="color:var(--text-secondary,#aaa);font-size:0.85rem;margin:0 0 10px">Choose how you want to pay.</p>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+                <button type="button" class="pay-method-btn active" id="method-stripe" style="padding:12px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(125,211,192,0.15);color:#fff;font-weight:600;cursor:pointer">💳 Card</button>
+                <button type="button" class="pay-method-btn" id="method-momo" style="padding:12px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-weight:600;cursor:pointer">📱 Mobile Money</button>
+                <button type="button" class="pay-method-btn" id="method-manual" style="padding:12px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;font-weight:600;cursor:pointer">🧾 Manual</button>
               </div>
             </div>
 
@@ -353,15 +354,20 @@
                 <button type="button" class="momo-net" id="net-orange" data-network="orange" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#fff;cursor:pointer">Orange Money</button>
               </div>
               <ol style="margin:0 0 12px;padding-left:18px;color:var(--text-secondary,#aaa);font-size:0.85rem;line-height:1.55">
-                <li id="momo-step1">Enter the MTN or Orange Money number you want MeSomb to charge.</li>
-                <li>MeSomb will send the payment request directly to that mobile-money account.</li>
-                <li>Approve the request on your phone. The system checks the transaction and activates the selected Foundation plan automatically.</li>
+                <li id="momo-step1">Enter the MTN or Orange Money number you want to pay from.</li>
+                <li>A payment request will be sent directly to that mobile-money account.</li>
+                <li>Approve the request on your phone. Once the payment succeeds, your access is activated automatically.</li>
               </ol>
               <label for="momo-phone" style="display:block;font-size:0.85rem;margin-bottom:6px;color:#ccc">Your MTN / Orange Money phone number</label>
               <input id="momo-phone" type="tel" inputmode="tel" placeholder="670000000" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);color:#fff;margin-bottom:8px;box-sizing:border-box">
               <div id="momo-done" style="display:none;margin-top:12px;padding:12px;border-radius:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#a7f3d0;font-size:0.9rem">
                 Payment request submitted. Approve it on your phone; your transaction status will be checked automatically.
               </div>
+            </div>
+
+            <div id="manual-momo-panel" style="display:none;margin:0 0 20px;padding:14px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.04)">
+              <strong style="display:block;color:#fff;margin-bottom:8px">Manual Mobile Money</strong>
+              <p style="margin:0;color:var(--text-secondary,#aaa);font-size:0.85rem;line-height:1.55">Send the payment yourself using the instructions on the next page, then submit the transaction details for verification. Access is granted after the payment is verified.</p>
             </div>
 
             <details id="virtual-card-hint" style="margin:0 0 20px 0;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.03)">
