@@ -697,15 +697,24 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
 }
 
 function getSliderProducts(filtered) {
-  /* Teleios presentation test: use the School 1 Teleios program itself,
-     with its supplied 3D book artwork, as the single shop rail card.
-     This is intentionally limited to one card until the presentation is approved. */
-  var teleios = (filtered || []).find(function (p) {
-    return p.id === 'teleios-blueprint-full';
+  var preferredOrder = ['courses_entry', 'magazine', 'books_sbd_series', 'course_bundles', 'diplomas_certifications', 'book_bundles'];
+  var byCategory = {};
+  (filtered || []).forEach(function (p) {
+    if (!p.stripeReady) return;
+    var normalized = PRODUCT_CATALOG[p.id] || p;
+    if (!byCategory[p.category]) byCategory[p.category] = [];
+    byCategory[p.category].push(normalized);
   });
-  if (teleios && teleios.stripeReady) return [PRODUCT_CATALOG[teleios.id] || teleios];
-
-  return [];
+  var out = [];
+  preferredOrder.forEach(function (cat) {
+    var list = byCategory[cat] || [];
+    if (list.length) out.push(list[0]);
+  });
+  var fallback = (filtered || []).filter(function (p) { return p.stripeReady; }).map(function (p) { return PRODUCT_CATALOG[p.id] || p; });
+  for (var i = 0; i < fallback.length && out.length < 8; i++) {
+    if (!out.some(function (x) { return x.id === fallback[i].id; })) out.push(fallback[i]);
+  }
+  return out.slice(0, 8);
 }
 
 function isBookProduct(p) {
