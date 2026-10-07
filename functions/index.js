@@ -997,8 +997,7 @@ exports.migrateAyinwiData = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error('Migration error:', error);
     res.status(500).json({ success: false, error: error.message });
-  }
-});
+  }});
 
 /**
  * RD Login / Get Stats
@@ -1997,8 +1996,7 @@ exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) 
     
     // Check if already has auth account
     if (existingData.auth_uid) {
-      throw new functions.https.HttpsError('already-exists', 'Dashboard already set up. Use "Forgot Password" if you need to reset.');
-    }
+      throw new functions.https.HttpsError('already-exists', 'Dashboard already set up. Use "Forgot Password" if you need to reset.');    }
     
     // Create Firebase Auth user
     let authUserId = null;
@@ -2997,8 +2995,7 @@ async function provisionSBDAccess(email, sellerCode, fullName, options) {
       name: fullName,
       email: emailLower,
       tier: 'foundation',
-      subscription,
-      role: 'member',
+      subscription,      role: 'member',
       sbdReferralCode,
       groups: [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -3200,7 +3197,7 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
- * Welcome email for DTC Foundation Yearly (and other guest) buyers.
+ * Welcome email for DTC 12-Month Foundation Access (and other guest) buyers.
  */
 async function sendSbdBuyerAccessEmail(opts) {
   const email = String(opts.email || '').trim().toLowerCase();
@@ -3208,7 +3205,7 @@ async function sendSbdBuyerAccessEmail(opts) {
     throw new Error('Missing buyer email for welcome message');
   }
   const name = String(opts.name || '').trim() || 'Student';
-  const productName = opts.productName || 'Foundation Tier — Yearly';
+  const productName = opts.productName || 'Foundation Access — 12 Months';
   const learnUrl = 'https://sbd-network.web.app/learn?tier=foundation';
   const loginUrl = 'https://sbd-network.web.app/auth';
   const resetLink = await admin.auth().generatePasswordResetLink(email, {
@@ -3997,8 +3994,7 @@ const SBD_STRIPE_PRICE_IDS = {
   'premium-monthly': process.env.SBD_PRICE_PREMIUM_MONTHLY || '',
   'elite-monthly': process.env.SBD_PRICE_ELITE_MONTHLY || '',
   'teleios-blueprint': process.env.SBD_PRICE_TELEIOS_BLUEPRINT || '',
-  'starter-bundle': process.env.SBD_PRICE_STARTER_BUNDLE || '',
-  'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
+  'starter-bundle': process.env.SBD_PRICE_STARTER_BUNDLE || '',  'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
   'elite-bundle': process.env.SBD_PRICE_ELITE_BUNDLE || '',
   'sbd-dummies': process.env.SBD_PRICE_SBD_DUMMIES || '',
   'the-woman-the-wife-the-mother': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BUNDLE || process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER || '',
@@ -4043,8 +4039,6 @@ const SBD_STRIPE_PRICE_IDS = {
   'teleios-blueprint-full': process.env.SBD_PRICE_TELEIOS_BLUEPRINT_FULL || '',
   'teleios-level-2': process.env.SBD_PRICE_TELEIOS_LEVEL_2 || '',
   'anthropology-of-wholeness': process.env.SBD_PRICE_ANTHROPOLOGY_OF_WHOLENESS || '',
-  'anthropology-of-wholeness-book': process.env.SBD_PRICE_ANTHROPOLOGY_OF_WHOLENESS_BOOK || '',
-  'anthropology-of-wholeness-bundle': process.env.SBD_PRICE_ANTHROPOLOGY_OF_WHOLENESS_BUNDLE || '',
   'identity-mastery': process.env.SBD_PRICE_IDENTITY_MASTERY || '',
   'four-faculties-training': process.env.SBD_PRICE_FOUR_FACULTIES_TRAINING || '',
   'anthropocentric-development': process.env.SBD_PRICE_ANTHROPOCENTRIC_DEVELOPMENT || '',
@@ -4097,12 +4091,12 @@ const SBD_STRIPE_PRICE_IDS = {
 
 const SBD_CATALOG_SERVER = {
   'foundation-monthly': { name: 'Foundation Tier', amount: 977, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
-  'foundation-yearly': { name: 'Foundation Tier — Yearly', amount: 11800, mode: 'subscription', interval: 'year', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
+  'foundation-yearly': { name: 'Foundation Access — 12 Months', amount: 14417, mode: 'payment', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
   'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
   'starter-bundle': { name: 'Starter Bundle', amount: 3700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['starter-bundle'] },
-  'teleios-bundle': { name: 'The Teleios Blueprint — Book + Courseware', amount: 30000, mode: 'payment', stripePriceId: '' },
+  'teleios-bundle': { name: 'Teleios Bundle', amount: 29700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-bundle'] },
   'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
   'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
   'the-woman-the-wife-the-mother-book': { name: 'The Woman, The Wife, The Mother — Book', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-book'] },
@@ -4146,18 +4140,16 @@ const SBD_CATALOG_SERVER = {
   'marriage-governance-bundle': { name: 'Marriage Governance Bundle', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['marriage-governance-bundle'] },
   'teleios-blueprint-full': { name: 'The Teleios Blueprint: Full Human Maturity', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint-full'] },
   'teleios-level-2': { name: 'Teleios Level 2: Advanced Development', amount: 39700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-level-2'] },
-  'anthropology-of-wholeness-book': { name: 'The Anthropology of Wholeness — Book', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropology-of-wholeness-book'] },
-  'anthropology-of-wholeness': { name: 'The Anthropology of Wholeness: Becoming Fully Human', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropology-of-wholeness'] },
-  'anthropology-of-wholeness-bundle': { name: 'The Anthropology of Wholeness — Book + Course', amount: 25000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropology-of-wholeness-bundle'] },
-  'identity-mastery': { name: 'Identity Mastery: Understanding Image, Likeness & Human Design', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['identity-mastery'] },
+  'anthropology-of-wholeness': { name: 'The Anthropology of Wholeness', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropology-of-wholeness'] },
+  'identity-mastery': { name: 'Identity Mastery', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['identity-mastery'] },
   'four-faculties-training': { name: 'The Four Faculties Training', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['four-faculties-training'] },
-  'anthropocentric-development': { name: 'Anthropocentric Development: How Humans Grow', amount: 12900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropocentric-development'] },
-  'personal-development-masterclass': { name: 'The Personal Development MasterClass', amount: 69700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['personal-development-masterclass'] },
+  'anthropocentric-development': { name: 'Anthropocentric Development', amount: 12900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['anthropocentric-development'] },
+  'personal-development-masterclass': { name: 'Personal Development MasterClass', amount: 69700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['personal-development-masterclass'] },
   'science-of-self-command': { name: 'The Science of Self-Command', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['science-of-self-command'] },
   'heart-of-relationship-l1': { name: 'The Heart of Relationship (Level 1)', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['heart-of-relationship-l1'] },
   'relationship-relatednesses-l2': { name: 'Relationship Relatednesses (Level 2)', amount: 19900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['relationship-relatednesses-l2'] },
   'relationship-mastery-intensive-l3': { name: 'Relationship Mastery Intensive (Level 3)', amount: 34900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['relationship-mastery-intensive-l3'] },
-  'perfect-self-program': { name: 'The Perfect Self Program: Practicing From Perfection', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['perfect-self-program'] },
+  'perfect-self-program': { name: 'The Perfect Self Program', amount: 14900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['perfect-self-program'] },
   'emotional-literacy': { name: 'Emotional Literacy for Couples & Singles', amount: 12900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['emotional-literacy'] },
   'temperament-intelligence': { name: 'Temperament Intelligence for Marriage', amount: 9900, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['temperament-intelligence'] },
   'sex-equals-marriage': { name: 'Sex = Marriage: The Only Equation', amount: 35000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sex-equals-marriage'] },
@@ -4206,7 +4198,7 @@ const SBD_UNLOCK_RULES = {
   'elite-monthly': { tier: 'elite', months: 1 },
   'teleios-blueprint': { courses: ['teleios-blueprint'] },
   'starter-bundle': { products: ['sbd-dummies'], tier: 'premium', months: 1 },
-  'teleios-bundle': { courses: ['teleios-blueprint'], products: ['teleios-blueprint', 'teleios-blueprint-full', 'teleios-bundle'] },
+  'teleios-bundle': { products: ['teleios-bundle'] },
   'elite-bundle': { products: ['elite-bundle'] },
   'sbd-dummies': { courses: ['sbd-dummies-course'] },
   'the-woman-the-wife-the-mother-book': {
@@ -4264,9 +4256,7 @@ const SBD_UNLOCK_RULES = {
   'marriage-governance-bundle': { products: ['marriage-governance-bundle'] },
   'teleios-blueprint-full': { products: ['teleios-blueprint-full'] },
   'teleios-level-2': { products: ['teleios-level-2'] },
-  'anthropology-of-wholeness-book': { products: ['anthropology-of-wholeness-book'] },
   'anthropology-of-wholeness': { products: ['anthropology-of-wholeness'] },
-  'anthropology-of-wholeness-bundle': { products: ['anthropology-of-wholeness-book', 'anthropology-of-wholeness', 'anthropology-of-wholeness-bundle'] },
   'identity-mastery': { products: ['identity-mastery'] },
   'four-faculties-training': { products: ['four-faculties-training'] },
   'anthropocentric-development': { products: ['anthropocentric-development'] },
@@ -4547,7 +4537,9 @@ async function unlockSbdContent(uid, productId, session) {
     // Stripe recurring: endDate = 2099 (Stripe webhooks manage cancel / period end).
     // Manual MoMo yearly: fixed term (months) — no auto-renewal.
     // One-time bundles: endDate = now + N months from unlock rule.
-    const isRecurring = ['foundation-monthly', 'foundation-yearly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
+    // Foundation Access is a one-time payment for 12 months. Monthly Foundation,
+    // Premium, and Elite remain recurring subscriptions.
+    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     let endDate;
     if (session?.manualAccessMonths) {
       endDate = new Date();
@@ -4556,11 +4548,12 @@ async function unlockSbdContent(uid, productId, session) {
       endDate = new Date('2099-12-31');
     } else {
       endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + rule.months);
+      endDate.setMonth(endDate.getMonth() + Number(rule.months || 12));
     }
 
-    // ── SBD subscription commissions (2026-04-v1) — idempotent per Stripe invoice or manual pending ref ──
+    // ── SBD commissions — idempotent per Stripe invoice, one-time Stripe session, or manual payment ref ──
     try {
+      let commissionResult = null;
       let invoiceId = session?.invoice || null;
       if (!invoiceId && session?.id && session?.mode === 'subscription') {
         const fullSession = await stripe.checkout.sessions.retrieve(session.id);
@@ -4570,20 +4563,9 @@ async function unlockSbdContent(uid, productId, session) {
         const invoice = await stripe.invoices.retrieve(
           typeof invoiceId === 'string' ? invoiceId : invoiceId.id
         );
-        const commissionResult = await handleSbdStripeInvoice(invoice);
-        Object.assign(tgMeta, {
-          referralCredited: !!commissionResult.credited,
-          referralSkipReason: commissionResult.referralSkipReason || null,
-          referrerAmbassadorCode: commissionResult.referrerAmbassadorCode || null,
-          referrerFullName: commissionResult.referrerFullName || null,
-          seniorAmbassadorCode: commissionResult.seniorAmbassadorCode || null,
-          ambassadorCommissionFCFA: commissionResult.ambassadorCommissionFCFA,
-          seniorCommissionFCFA: commissionResult.seniorCommissionFCFA,
-          rdCode: commissionResult.rdCode || null,
-          rdCommissionFCFA: commissionResult.rdCommissionFCFA
-        });
+        commissionResult = await handleSbdStripeInvoice(invoice);
       } else if (session?.manualCommissionKey) {
-        const commissionResult = await creditSbdSubscriptionCommissions({
+        commissionResult = await creditSbdSubscriptionCommissions({
           db,
           findSellerByReferralCode: findSellerBySbdReferralCode,
           uid,
@@ -4593,6 +4575,20 @@ async function unlockSbdContent(uid, productId, session) {
           idempotencyKey: session.manualCommissionKey,
           chargeKind: session.manualChargeKind || 'initial'
         });
+      } else if (canonicalProductId === 'foundation-yearly' && session?.id) {
+        commissionResult = await creditSbdSubscriptionCommissions({
+          db,
+          findSellerByReferralCode: findSellerBySbdReferralCode,
+          uid,
+          referralCode: userData.referredBy,
+          productId: canonicalProductId,
+          tierKey: rule.tier,
+          idempotencyKey: `checkout_${session.id}`,
+          chargeKind: 'initial'
+        });
+      }
+
+      if (commissionResult) {
         Object.assign(tgMeta, {
           referralCredited: !!commissionResult.credited,
           referralSkipReason: commissionResult.referralSkipReason || null,
@@ -4605,10 +4601,10 @@ async function unlockSbdContent(uid, productId, session) {
           rdCommissionFCFA: commissionResult.rdCommissionFCFA
         });
       } else {
-        tgMeta.referralSkipReason = 'no_invoice_for_commission';
+        tgMeta.referralSkipReason = 'no_charge_reference';
       }
     } catch (refErr) {
-      console.error('[SBD] Subscription commission credit failed (non-critical):', refErr.message);
+      console.error('[SBD] Commission credit failed (non-critical):', refErr.message);
       tgMeta.referralSkipReason = 'credit_error';
     }
 
@@ -4891,7 +4887,7 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
 });
 
 /**
- * Guest (DTC) checkout for Foundation Yearly landing — no prior auth required.
+ * Guest (DTC) checkout for 12-Month Foundation Access — one-time payment; no prior auth required.
  * Creates/finds Auth user, attributes referral, returns Stripe Checkout URL.
  */
 exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
@@ -4940,7 +4936,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'This guest checkout is for Foundation Tier — Yearly only.'
+      'This guest checkout is for 12-Month Foundation Access only.'
     );
   }
 
@@ -4997,8 +4993,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
   if (referredBy && !existingData.referredBy) {
     try {
       const seller = await findSellerBySbdReferralCode(referredBy);
-      if (seller) {
-        await seller.ref.update({
+      if (seller) {        await seller.ref.update({
           'sbdReferrals.signups': admin.firestore.FieldValue.increment(1)
         });
       }
@@ -5015,7 +5010,6 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     currency: 'usd',
     product_data: { name: product.name },
     unit_amount: product.amount,
-    recurring: { interval: product.interval || 'year' },
   };
   const trimmedPriceId = typeof product.stripePriceId === 'string' ? product.stripePriceId.trim() : '';
   const lineItem = trimmedPriceId
@@ -5039,8 +5033,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     customer_email: receiptEmail,
     client_reference_id: uid,
     metadata: meta,
-    subscription_data: { metadata: meta },
-    mode: 'subscription',
+    mode: 'payment',
     line_items: [lineItem],
     success_url:
       `https://sbd-network.web.app/checkout-success.html?product=${productId}` +
@@ -5063,7 +5056,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
 });
 
 /**
- * Guest Foundation Yearly — Manual MoMo / Orange Money path.
+ * Guest 12-Month Foundation Access — Manual MoMo / Orange Money path. One-time payment; no auto-renewal.
  * Creates Auth user + pending_payments; admin approve unlocks Foundation + commissions.
  */
 exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
@@ -5096,7 +5089,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo guest checkout is for Foundation Tier — Yearly only.'
+      'Manual MoMo guest checkout is for Foundation Access — 12 Months only.'
     );
   }
   if (referredBy) {
@@ -5168,7 +5161,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   }
 
   const reference = `FY-${Date.now().toString(36).toUpperCase()}-${uid.slice(0, 6).toUpperCase()}`;
-  const amount = YEARLY_REVENUE_BASE_FCFA; // 70,800 FCFA ($118 @ 600)
+  const amount = YEARLY_REVENUE_BASE_FCFA; // 86,502 FCFA ($144.17 @ 600), one-time for 12-month access
   const payeeNumber = momoNetwork === 'orange' ? '237 699 651 555' : '237 677 604 100';
   const payeeName = 'Achu Gustave Mokom';
   const contactEmail = isSponsored ? sponsorEmail : email;
@@ -5176,7 +5169,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email: contactEmail,
@@ -5227,7 +5220,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +
@@ -5261,7 +5254,7 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
 });
 
 /**
- * Authenticated SBD Network checkout — Manual MoMo for Foundation Yearly only.
+ * Authenticated SBD Network checkout — Manual MoMo for 12-Month Foundation Access only.
  * Monthly tiers stay Stripe-only (recurring billing).
  */
 exports.createSbdManualPayment = functions.https.onCall(async (data, context) => {
@@ -5277,7 +5270,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   if (productId !== 'foundation-yearly') {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'Manual MoMo is only available for Foundation Tier — Yearly ($118). Monthly plans use Stripe.'
+      'Manual MoMo is only available for Foundation Access — 12 Months ($144.17). Monthly plans use Stripe.'
     );
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
@@ -5307,7 +5300,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   const paymentData = {
     reference,
     product_id: productId,
-    product_name: 'Foundation Tier — Yearly',
+    product_name: 'Foundation Access — 12 Months',
     amount,
     currency: 'XAF',
     email,
@@ -5355,7 +5348,7 @@ exports.createSbdManualPayment = functions.https.onCall(async (data, context) =>
   try {
     const networkLabel = momoNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo';
     await sendTelegram(
-      `🔔 FOUNDATION YEARLY — MOMO PENDING (SBD app)\n\n` +
+      `🔔 FOUNDATION ACCESS — MOMO PENDING (SBD app)\n\n` +
       `📋 Reference: ${reference}\n` +
       `💰 Amount: ${amount.toLocaleString()} XAF ($${FOUNDATION_YEARLY_USD})\n` +
       `🏦 Network: ${networkLabel}\n` +
@@ -5999,8 +5992,7 @@ exports.generateCourseCertificate = functions.https.onCall(async (data, context)
           courseId: courseId,
           certificateNumber: certificateNumber,
           generatedAt: new Date().toISOString()
-        }
-      }
+        }      }
     });
 
     // Make the file publicly accessible
@@ -6999,8 +6991,7 @@ async function promoteToRD(ambassadorCode, ambassadorData) {
       ...fullAmbassadorData,
       code: rdCode,
       rd_code: rdCode,
-      ambassador_code: ambassadorCode,
-      ambassador_type: 'regional_director',
+      ambassador_code: ambassadorCode,      ambassador_type: 'regional_director',
       sbdReferralCode: fullAmbassadorData.sbdReferralCode || rdSbdCode,
       sbdReferrals: fullAmbassadorData.sbdReferrals || { signups: 0, subscribers: 0 },
       promotion_date: admin.firestore.FieldValue.serverTimestamp(),
@@ -7999,8 +7990,7 @@ exports.runDailyMatchingEngineV2 = functions.pubsub
 
       const historyMap = new Map(); // uid → Set of matched UIDs
       existingSnap.forEach(d => {
-        const { userA, userB } = d.data();
-        if (!historyMap.has(userA)) historyMap.set(userA, new Set());
+        const { userA, userB } = d.data();        if (!historyMap.has(userA)) historyMap.set(userA, new Set());
         if (!historyMap.has(userB)) historyMap.set(userB, new Set());
         historyMap.get(userA).add(userB);
         historyMap.get(userB).add(userA);
