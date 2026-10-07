@@ -12,7 +12,7 @@ test.describe('Guest UX (local public tree)', () => {
     expect(response && response.status()).toBe(200);
     await expect(page.locator('h1')).toContainText('Choose Your Level of Access');
     await expect(page.locator('body')).toContainText('$144.17');
-    await expect(page.locator('body')).toContainText('$9.77');
+    await expect(page.locator('body')).toContainText('$11');
     await expect(page.locator('body')).toContainText('$20');
     await expect(page.locator('body')).toContainText('$50');
     await expect(page.locator('[data-tier="premium"]')).toBeVisible();
