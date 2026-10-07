@@ -80,8 +80,11 @@ function buildSelectorCard(tier, meta, isCurrent, isOpen) {
   const highlights = TIER_HIGHLIGHTS[tier] || [];
 
   if (!isOpen) {
+    const unlockUrl = tier === 'foundation'
+      ? '/checkout.html?product=foundation-options'
+      : '/payment?tier=' + encodeURIComponent(tier);
     return `
-      <div class="ts-card ts-card--locked" onclick="window.location.href=tier === 'foundation' ? '/checkout.html?product=foundation-options' : '/payment?tier=' + tier">
+      <div class="ts-card ts-card--locked" onclick="window.location.href='${unlockUrl}'">
         <div class="ts-top">
           <span class="ts-icon">${meta.icon}</span>
           <span class="ts-lock-icon">🔒</span>
