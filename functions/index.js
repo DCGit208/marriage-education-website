@@ -5281,6 +5281,7 @@ exports.createSbdMeSombPayment = functions.runWith({
     const response = await client.makeCollect({
       amount: plan.amountXaf,
       payer: phone,
+      nonce: reference,
       service,
       country: 'CM',
       currency: 'XAF',
