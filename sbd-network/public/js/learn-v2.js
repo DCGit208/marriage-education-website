@@ -81,7 +81,7 @@ function buildSelectorCard(tier, meta, isCurrent, isOpen) {
 
   if (!isOpen) {
     return `
-      <div class="ts-card ts-card--locked" onclick="window.location.href='/payment?tier=${tier}'">
+      <div class="ts-card ts-card--locked" onclick="window.location.href=tier === 'foundation' ? '/checkout.html?product=foundation-options' : '/payment?tier=' + tier">
         <div class="ts-top">
           <span class="ts-icon">${meta.icon}</span>
           <span class="ts-lock-icon">🔒</span>
