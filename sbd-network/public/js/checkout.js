@@ -1,6 +1,6 @@
 /**
  * CHECKOUT PAGE — Stripe Hosted Checkout (phased catalog)
- * Foundation Yearly also supports Manual MoMo (one-year term).
+ * Foundation School One-Time Access also supports Manual MoMo (12-month term).
  * Monthly tiers remain Stripe-only.
  */
 
@@ -262,7 +262,7 @@ async function startMomoCheckout(productId) {
 
   if (!productId || !currentUserId) return;
   if (productId !== 'foundation-yearly') {
-    if (errEl) errEl.textContent = 'Manual MoMo is only for Foundation Yearly.';
+    if (errEl) errEl.textContent = 'Manual MoMo is only for Foundation School One-Time Access.';
     return;
   }
   if (!phone || phone.replace(/\D/g, '').length < 9) {
