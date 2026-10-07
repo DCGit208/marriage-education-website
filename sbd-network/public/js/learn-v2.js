@@ -224,7 +224,7 @@ const TIER_HUB = {
       sub: 'Teleios Blueprint (6 weeks) + SBD For Dummies (13 weeks) — dripped weekly',
       href: '/payment?tier=foundation',
       locked: true,
-      lockLabel: '$9.77/mo or $144.17 one-time / 12 months — Unlock →',
+      lockLabel: 'Foundation School — choose a plan/mo or $144.17 one-time / 12 months — Unlock →',
       pressure: true,
     },
     {
