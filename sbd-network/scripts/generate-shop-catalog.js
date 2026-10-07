@@ -19,6 +19,9 @@ const SHOP_ACTIVE_PHASE = parseInt(process.env.SHOP_ACTIVE_PHASE || '6', 10);
 /** IDs with Stripe checkout + unlock rules in functions/index.js (Phase 1). */
 const STRIPE_READY_IDS = new Set([
   'foundation-monthly',
+  'foundation-yearly',
+  'foundation-1year',
+  'foundation-2year',
   'premium-monthly',
   'elite-monthly',
   'teleios-blueprint',
@@ -297,10 +300,25 @@ function p(id, name, category, priceUsd, opts = {}) {
 
 const PRODUCTS = [
   // ── Phase 1 — Stripe-ready (functions/index.js SBD_CATALOG_SERVER) ──
-  p('foundation-monthly', 'Foundation Tier', 'network_subscription', 9, {
+  p('foundation-monthly', 'Foundation School — Monthly', 'network_subscription', 11, {
     phase: 1, type: 'subscription', priceSuffix: '/mo', recurring: true, icon: '🟢', sortOrder: 1,
-    description: 'Core courses in Schools 1 & 2, structured learning path.',
+    description: 'Foundation School access billed monthly at $11/month. This is the ongoing monthly option.',
     unlocks: { type: 'tier', tier: 'foundation' },
+  }),
+  p('foundation-yearly', 'Foundation School — One-Time Access', 'network_subscription', 144.17, {
+    phase: 1, type: 'access', priceSuffix: '', recurring: false, icon: '🎓', sortOrder: 1.1,
+    description: 'One-time payment of $144.17 for 12 months of Foundation School access. No automatic renewal.',
+    unlocks: { type: 'tier', tier: 'foundation', months: 12 },
+  }),
+  p('foundation-1year', 'Foundation School — 1-Year Subscription', 'network_subscription', 15, {
+    phase: 1, type: 'subscription', priceSuffix: '/mo', recurring: true, termMonths: 12, icon: '📅', sortOrder: 1.2,
+    description: '$15/month for 12 months. Subscription is scheduled to end after the 12-month term.',
+    unlocks: { type: 'tier', tier: 'foundation', months: 12 },
+  }),
+  p('foundation-2year', 'Foundation School — 2-Year Subscription', 'network_subscription', 11, {
+    phase: 1, type: 'subscription', priceSuffix: '/mo', recurring: true, termMonths: 24, icon: '🗓️', sortOrder: 1.3,
+    description: '$11/month for 24 months. Subscription is scheduled to end after the 24-month term.',
+    unlocks: { type: 'tier', tier: 'foundation', months: 24 },
   }),
   p('premium-monthly', 'Premium Tier', 'network_subscription', 20, {
     phase: 1, type: 'subscription', priceSuffix: '/mo', recurring: true, icon: '🔵', sortOrder: 2,
