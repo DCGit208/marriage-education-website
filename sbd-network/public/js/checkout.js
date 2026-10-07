@@ -140,6 +140,7 @@ function syncPayMethodUi() {
         : 'Secure card checkout';
   }
   if (btn) {
+    btn.disabled = false;
     btn.innerHTML = isMomo
       ? '📱 Pay with Mobile Money'
       : isManual
