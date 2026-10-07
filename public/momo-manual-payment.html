@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MTN MOMO Payment Instructions</title>
+  <title>Manual Mobile Money Payment</title>
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -274,8 +274,8 @@
   <div class="container">
     <div class="header">
       <div class="logo">📱💰</div>
-      <h1>MTN MOMO Payment</h1>
-      <p>Complete your purchase securely</p>
+      <h1>Manual Mobile Money Payment</h1>
+      <p>Send the payment yourself, then submit it for verification</p>
     </div>
 
     <div class="content">
@@ -299,8 +299,8 @@
         <div class="step">
           <div class="step-number">1</div>
           <div class="step-content">
-            <div class="step-title">Open MTN MoMo or Orange Money</div>
-            <div class="step-text">Use MTN MoMo (<strong>*126#</strong>) or Orange Money (<strong>#150#</strong>)</div>
+            <div class="step-title">Open your Mobile Money service</div>
+            <div class="step-text">Use MTN MoMo (<strong>*126#</strong>) or Orange Money (<strong>#150#</strong>) and send the payment to the account shown below.</div>
           </div>
         </div>
 
@@ -339,21 +339,21 @@
         <div class="step">
           <div class="step-number">4</div>
           <div class="step-content">
-            <div class="step-title">Confirm Payment Below</div>
-            <div class="step-text">After sending, enter your phone number below to receive your download link</div>
+            <div class="step-title">Submit Payment for Verification</div>
+            <div class="step-text">After sending the payment, submit your details below. Access is granted after the payment is verified.</div>
           </div>
         </div>
       </div>
 
       <!-- Confirmation Form -->
       <div class="form-section">
-        <h3>✅ Confirm Your Payment</h3>
+        <h3>✅ Submit Your Payment</h3>
         
         <div id="alert" class="alert"></div>
 
         <form id="confirmation-form">
           <div class="form-group">
-            <label for="phone">Your MTN MOMO Phone Number</label>
+            <label for="phone">Your Mobile Money Phone Number</label>
             <input 
               type="tel" 
               id="phone" 
@@ -376,7 +376,7 @@
           </div>
 
           <button type="submit" class="submit-btn" id="submit-btn">
-            ✓ I've Sent the Payment
+            ✓ Submit Payment for Verification
           </button>
           <p class="payment-wa-support">
             Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Manual MoMo payment">WhatsApp Support</a>
@@ -384,8 +384,8 @@
         </form>
 
         <div class="note">
-          <strong>⏱️ Processing Time:</strong>
-          Your payment will be verified within 5-15 minutes during business hours. You'll receive your download link via email once confirmed.
+          <strong>⏱️ Verification:</strong>
+          This is a manual payment route. Your payment is reviewed and access is granted after confirmation.
         </div>
       </div>
     </div>
