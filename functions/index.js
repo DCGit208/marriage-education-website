@@ -3989,8 +3989,10 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════
 
 const SBD_STRIPE_PRICE_IDS = {
-  'foundation-monthly': process.env.SBD_PRICE_FOUNDATION_MONTHLY || '',
+  'foundation-monthly': process.env.SBD_PRICE_FOUNDATION_MONTHLY_V2 || '',
   'foundation-yearly': process.env.SBD_PRICE_FOUNDATION_YEARLY || '',
+  'foundation-1year': process.env.SBD_PRICE_FOUNDATION_1YEAR || '',
+  'foundation-2year': process.env.SBD_PRICE_FOUNDATION_2YEAR || '',
   'premium-monthly': process.env.SBD_PRICE_PREMIUM_MONTHLY || '',
   'elite-monthly': process.env.SBD_PRICE_ELITE_MONTHLY || '',
   'teleios-blueprint': process.env.SBD_PRICE_TELEIOS_BLUEPRINT || '',
@@ -4090,8 +4092,10 @@ const SBD_STRIPE_PRICE_IDS = {
 };
 
 const SBD_CATALOG_SERVER = {
-  'foundation-monthly': { name: 'Foundation Tier', amount: 977, mode: 'subscription', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
-  'foundation-yearly': { name: 'Foundation Access — 12 Months', amount: 14417, mode: 'payment', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
+  'foundation-monthly': { name: 'Foundation School — Monthly', amount: 1100, mode: 'subscription', interval: 'month', tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-monthly'] },
+  'foundation-yearly': { name: 'Foundation School — One-Time Access', amount: 14417, mode: 'payment', tier: 'foundation', months: 12, revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-yearly'] },
+  'foundation-1year': { name: 'Foundation School — 1-Year Subscription', amount: 1500, mode: 'subscription', interval: 'month', termMonths: 12, tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-1year'] },
+  'foundation-2year': { name: 'Foundation School — 2-Year Subscription', amount: 1100, mode: 'subscription', interval: 'month', termMonths: 24, tier: 'foundation', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['foundation-2year'] },
   'premium-monthly': { name: 'Premium Tier', amount: 2000, mode: 'subscription', tier: 'premium', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['premium-monthly'] },
   'elite-monthly': { name: 'Elite Tier', amount: 5000, mode: 'subscription', tier: 'elite', revenueBaseFCFA: 5000, stripePriceId: SBD_STRIPE_PRICE_IDS['elite-monthly'] },
   'teleios-blueprint': { name: 'Teleios Blueprint (Book)', amount: 24700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-blueprint'] },
@@ -4194,6 +4198,8 @@ const SBD_CATALOG_SERVER = {
 const SBD_UNLOCK_RULES = {
   'foundation-monthly': { tier: 'foundation', months: 1 },
   'foundation-yearly': { tier: 'foundation', months: 12 },
+  'foundation-1year': { tier: 'foundation', months: 12, subscriptionTermMonths: 12 },
+  'foundation-2year': { tier: 'foundation', months: 24, subscriptionTermMonths: 24 },
   'premium-monthly': { tier: 'premium', months: 1 },
   'elite-monthly': { tier: 'elite', months: 1 },
   'teleios-blueprint': { courses: ['teleios-blueprint'] },
@@ -4539,7 +4545,7 @@ async function unlockSbdContent(uid, productId, session) {
     // One-time bundles: endDate = now + N months from unlock rule.
     // Foundation Access is a one-time payment for 12 months. Monthly Foundation,
     // Premium, and Elite remain recurring subscriptions.
-    const isRecurring = ['foundation-monthly', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
+    const isRecurring = ['foundation-monthly', 'foundation-1year', 'foundation-2year', 'premium-monthly', 'elite-monthly'].includes(canonicalProductId);
     let endDate;
     if (session?.manualAccessMonths) {
       endDate = new Date();
@@ -4870,12 +4876,22 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
     ? { price: trimmedPriceId, quantity: 1 }
     : { price_data: priceData, quantity: 1 };
 
+  let subscriptionData = null;
+  if (product.mode === 'subscription') {
+    subscriptionData = {
+      metadata: { app: 'sbd', uid, productId: canonicalProductId },
+    };
+    if (product.termMonths) {
+      const cancelAt = new Date();
+      cancelAt.setMonth(cancelAt.getMonth() + Number(product.termMonths));
+      subscriptionData.cancel_at = Math.floor(cancelAt.getTime() / 1000);
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     customer_email: email,
     metadata: { app: 'sbd', uid, productId: canonicalProductId },
-    ...(product.mode === 'subscription'
-      ? { subscription_data: { metadata: { app: 'sbd', uid, productId: canonicalProductId } } }
-      : {}),
+    ...(subscriptionData ? { subscription_data: subscriptionData } : {}),
     mode: product.mode,
     line_items: [lineItem],
     success_url: `${baseUrl}/checkout-success.html?product=${canonicalProductId}&session_id={CHECKOUT_SESSION_ID}`,
