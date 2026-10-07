@@ -72,7 +72,7 @@ check('pricing.html exists with live tier messaging', () => {
   const html = read('public/pricing.html');
   assert.ok(html.includes('Choose Your Level of Access'));
   assert.ok(html.includes('Explore'));
-  assert.ok(html.includes('$9.77'));
+  assert.ok(html.includes('$11'));
   assert.ok(html.includes('$20'));
   assert.ok(html.includes('$50'));
   assert.ok(html.includes('data-tier="foundation"'));
