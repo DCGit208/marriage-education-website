@@ -666,7 +666,7 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     var categoryLabel = getCategoryLabel(p.category);
     var badge = (p.category === 'magazine') ? 'Magazine' : categoryLabel;
     var isBook = isBookProduct(p);
-    var bookArtwork = isBook && !isApprovedTeleios3dBook(p) ? renderBookArtwork(src, p.name + ' cover') : '';
+    var bookArtwork = isBook ? renderBookArtwork(src, p.name + ' cover') : '';
     return (
       '<article class="hero-slide-card' +
       (src ? ' hero-slide-card--artwork' : '') +
@@ -1457,7 +1457,7 @@ function buildProductCard(p) {
     : ' style="--visual-from:' + visual.from + ';--visual-to:' + visual.to + '"';
   var imageClass = 'product-image' + (coverSrc ? '' : ' product-image--visual cover-fallback');
 
-  var book3d = isBookProduct(p) && !isApprovedTeleios3dBook(p) && coverSrc
+  var book3d = isBookProduct(p) && coverSrc
     ? renderBookArtwork(coverSrc, p.name + ' cover', 'book-artwork-3d--product')
     : '';
   var imageHtml =
