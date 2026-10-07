@@ -666,11 +666,13 @@ function buildFullwidthSliderHero(copy, filtered, ready, products) {
     var categoryLabel = getCategoryLabel(p.category);
     var badge = (p.category === 'magazine') ? 'Magazine' : categoryLabel;
     var isBook = isBookProduct(p);
+    var isSchool1Artwork = p.schoolId === 'school1' && !!src;
     var bookArtwork = isBook ? renderBookArtwork(src, p.name + ' cover') : '';
     return (
       '<article class="hero-slide-card' +
       (src ? ' hero-slide-card--artwork' : '') +
       (isBook ? ' hero-slide-card--book-artwork' : '') +
+      (isSchool1Artwork ? ' hero-slide-card--school1-artwork' : '') +
       '" data-hero-product="' + escapeShopHtml(p.id) + '">' +
       '<div class="hero-slide-card__media">' +
       (bookArtwork || (src
