@@ -1,7 +1,7 @@
 /**
  * SBD subscription commission policy
  * - Monthly tiers: 500 + 250 + 250 FCFA on 5,000 base (2026-04-v1)
- * - Foundation Yearly ($118): 10% / 5% / 5% of $118 @ 600 XAF/USD (2026-07-v2)
+ * - Foundation Access ($144.17 one-time / 12 months): 10% / 5% / 5% of $144.17 @ 600 XAF/USD (2026-07-v2)
  * See docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md
  */
 
@@ -15,11 +15,11 @@ const RD_OVERRIDE_FCFA = 250;
 
 const XAF_PER_USD = 600;
 const FOUNDATION_YEARLY_PRODUCT = 'foundation-yearly';
-const FOUNDATION_YEARLY_USD = 118;
-const YEARLY_REVENUE_BASE_FCFA = FOUNDATION_YEARLY_USD * XAF_PER_USD; // 70,800
-const YEARLY_DIRECT_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.1 * XAF_PER_USD); // 7,080
-const YEARLY_SENIOR_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 3,540
-const YEARLY_RD_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 3,540
+const FOUNDATION_YEARLY_USD = 144.17;
+const YEARLY_REVENUE_BASE_FCFA = FOUNDATION_YEARLY_USD * XAF_PER_USD; // 86,502
+const YEARLY_DIRECT_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.1 * XAF_PER_USD); // 8,650
+const YEARLY_SENIOR_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 4,325
+const YEARLY_RD_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); // 4,325
 
 const RECURRING_TIER_PRODUCTS = [
   'foundation-monthly',
