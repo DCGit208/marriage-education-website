@@ -646,22 +646,19 @@ function createPaywallModal() {
       <p class="paywall-message">Choose a subscription tier to unlock this content and continue your formation journey.</p>
       
       <div class="tier-comparison">
-        <!-- Foundation Tier -->
+        <!-- Foundation School -->
         <div class="tier-card" data-tier="foundation">
-          <h3 class="tier-name">Foundation</h3>
-          <p class="tier-price">$9.77<span>/month</span></p>
+          <h3 class="tier-name">Foundation School</h3>
+          <p class="tier-price">Choose your plan</p>
           <ul class="tier-features">
-            <li>Partial Teleios Identity (Weeks 1-4)</li>
-            <li>Partial Sexual Literacy (Intro)</li>
-            <li>5 Discussion Boards</li>
-            <li>Progress tracking</li>
-            <li>Community access</li>
+            <li>Foundation School formation access</li>
+            <li>Three payment choices at checkout</li>
+            <li>One-time: $144.17 for 12 months</li>
+            <li>1-year subscription: $15/month for 12 months</li>
+            <li>2-year subscription: $11/month for 24 months</li>
           </ul>
-          <button class="btn btn-secondary" onclick="selectTier('foundation-monthly')">
-            Start Foundation
-          </button>
-          <button class="btn btn-secondary" onclick="selectTier('foundation-yearly')">
-            Pay 12 months — $144.17 one-time
+          <button class="btn btn-secondary" onclick="selectTier('foundation-options')">
+            Choose Foundation Plan
           </button>
         </div>
         
