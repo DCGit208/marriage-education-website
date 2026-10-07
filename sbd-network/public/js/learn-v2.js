@@ -12,7 +12,7 @@ const TIER_ORDER  = { free: 0, foundation: 1, premium: 2, elite: 3 };
 
 const TIER_META = {
   free:       { label: 'Free',       price: '$0',      icon: '🌱', priceLabel: 'Free forever' },
-  foundation: { label: 'Foundation', price: '$9.77',   icon: '🏗',  priceLabel: '$9.77 / month · $118 / year' },
+  foundation: { label: 'Foundation', price: '$9.77',   icon: '🏗',  priceLabel: '$9.77 / month · $144.17 one-time / 12 months' },
   premium:    { label: 'Premium',    price: '$20',     icon: '⚡',  priceLabel: '$20 / month' },
   elite:      { label: 'Elite',      price: '$50',     icon: '👑',  priceLabel: '$50 / month' },
 };
@@ -224,7 +224,7 @@ const TIER_HUB = {
       sub: 'Teleios Blueprint (6 weeks) + SBD For Dummies (13 weeks) — dripped weekly',
       href: '/payment?tier=foundation',
       locked: true,
-      lockLabel: '$9.77/mo or $118/yr — Unlock →',
+      lockLabel: '$9.77/mo or $144.17 one-time / 12 months — Unlock →',
       pressure: true,
     },
     {
