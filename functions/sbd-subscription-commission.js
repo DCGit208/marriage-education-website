@@ -23,7 +23,8 @@ const YEARLY_RD_FCFA = Math.round(FOUNDATION_YEARLY_USD * 0.05 * XAF_PER_USD); /
 
 const RECURRING_TIER_PRODUCTS = [
   'foundation-monthly',
-  'foundation-yearly',
+  'foundation-1year',
+  'foundation-2year',
   'premium-monthly',
   'elite-monthly'
 ];
