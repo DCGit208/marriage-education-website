@@ -142,15 +142,14 @@ function syncPayMethodUi() {
 }
 
 function syncMomoNetworkUi() {
-  const p = MOMO_PAYEES[momoNetwork] || MOMO_PAYEES.mtn;
-  const num = document.getElementById('momo-payee-number');
-  const name = document.getElementById('momo-payee-name');
   const step1 = document.getElementById('momo-step1');
   const netMtn = document.getElementById('net-mtn');
   const netOrange = document.getElementById('net-orange');
-  if (num) num.textContent = p.number;
-  if (name) name.textContent = p.name;
-  if (step1) step1.innerHTML = p.step1;
+  if (step1) {
+    step1.innerHTML = momoNetwork === 'orange'
+      ? 'Enter the Orange Money number you want MeSomb to charge.'
+      : 'Enter the MTN MoMo number you want MeSomb to charge.';
+  }
   if (netMtn) {
     netMtn.style.borderColor = momoNetwork === 'mtn' ? '#f59e0b' : 'rgba(255,255,255,0.2)';
     netMtn.style.background = momoNetwork === 'mtn' ? 'rgba(245,158,11,0.15)' : 'transparent';
