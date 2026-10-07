@@ -16,8 +16,8 @@ Two Foundation billing paths exist:
 
 | Path | Product ID | Role |
 |------|------------|------|
-| **Official yearly deployment program** | `foundation-yearly` ($118/year) | Primary operator challenge (10/day × 20 days) |
-| **Monthly enrollment provision** | `foundation-monthly` (~$9.77/mo) | Alternate path — does not replace yearly |
+| **Official yearly deployment program** | `foundation-yearly` ($144.17 one-time / 12 months) | Primary operator challenge (10/day × 20 days) |
+| **Monthly enrollment provision** | `foundation-monthly` ($9.77/mo) | Alternate path — does not replace yearly |
 
 ---
 
@@ -26,25 +26,25 @@ Two Foundation billing paths exist:
 | Field | Value |
 |-------|-------|
 | Product ID | `foundation-yearly` |
-| Customer charge | **$118 USD / year** |
+| Customer charge | **$144.17 USD one-time / 12 months** |
 | FX ledger rate | **600 XAF / USD** |
-| Commissionable base | **70,800 FCFA** ($118 × 600) |
+| Commissionable base | **86,502 FCFA** ($144.17 × 600) |
 
 ### Commission stack (each paid yearly charge)
 
-| Role | % of $118 | USD | FCFA |
+| Role | % of $144.17 | USD | FCFA |
 |------|-----------|-----|------|
 | **Direct** (SBD referral code owner) | 10% | **$11.80** | **7,080** |
 | **Senior override** | 5% | **$5.90** | **3,540** |
 | **RD override** | 5% | **$5.90** | **3,540** |
 
-**Full stack:** 20% of $118 = **$23.60** (14,160 FCFA).
+**Full stack:** 20% of $144.17 = **$23.60** (14,160 FCFA).
 
 ### Operator challenge math (planning + DOS)
 
 | Cadence | Deployments | Direct commission |
 |---------|-------------|-------------------|
-| Day | 10 × $118 | **$118 / day** |
+| Day | 10 × $144.17 | **$144.17 / day** |
 | Month (20 days) | 200 | **$2,360 / month** |
 | Senior (10 ambassadors at full target) | 5% of network revenue | **$11,800 / month** |
 
@@ -147,7 +147,7 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 ## 9. Quick reference
 
 ```
-YEARLY ($118):
+FOUNDATION ACCESS ($144.17 one-time / 12 months):
   Direct  = 7,080 FCFA ($11.80)
   Senior  = 3,540 FCFA ($5.90)
   RD      = 3,540 FCFA ($5.90)
