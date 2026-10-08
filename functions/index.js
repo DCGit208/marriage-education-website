@@ -63,7 +63,7 @@ const MESOMB_ACCESS_KEY = defineSecret('MESOMB_ACCESS_KEY');
 const MESOMB_SECRET_KEY = defineSecret('MESOMB_SECRET_KEY');
 const MESOMB_WEBHOOK_SECRET = defineSecret('MESOMB_WEBHOOK_SECRET');
 
-function getMesombClient() {
+function getMesombCredentials() {
   const applicationKey = MESOMB_APPLICATION_KEY.value() || process.env.MESOMB_APPLICATION_KEY || '';
   const accessKey = MESOMB_ACCESS_KEY.value() || process.env.MESOMB_ACCESS_KEY || '';
   const secretKey = MESOMB_SECRET_KEY.value() || process.env.MESOMB_SECRET_KEY || '';
@@ -72,11 +72,130 @@ function getMesombClient() {
     throw new Error('SBD-Network MeSomb credentials are not configured on the server.');
   }
 
-  return new PaymentOperation({
-    applicationKey,
-    accessKey,
-    secretKey
+  return { applicationKey, accessKey, secretKey };
+}
+
+/**
+ * Direct MeSomb REST request signer for SBD collect operations.
+ *
+ * The installed SDK 3.0.2 constructs a non-matching canonical request for
+ * this integration. This implementation follows MeSomb's documented
+ * Signature format and signs exactly the headers sent over the wire.
+ */
+async function sbdMesombCollect({
+  applicationKey,
+  accessKey,
+  secretKey,
+  amount,
+  payer,
+  service,
+  country = 'CM',
+  currency = 'XAF',
+  nonce,
+  trxID,
+  reference,
+  message,
+  customer,
+  products
+}) {
+  const url = 'https://mesomb.hachther.com/api/v1.1/payment/collect';
+  const date = new Date();
+  const timestamp = String(date.getTime());
+  const safeNonce = nonce || crypto.randomBytes(20).toString('hex');
+
+  const bodyObject = {
+    amount,
+    service,
+    payer,
+    country,
+    currency,
+    amount_currency: currency,
+    fees: true,
+    conversion: false,
+    mode: 'asynchronous',
+    nonce: safeNonce,
+    reference,
+    trxID,
+    message,
+    customer,
+    products
+  };
+
+  const body = JSON.stringify(bodyObject);
+  const parsed = new URL(url);
+
+  const headersToSign = {
+    host: parsed.host,
+    'content-type': 'application/json',
+    'x-mesomb-application': applicationKey,
+    'x-mesomb-date': timestamp,
+    'x-mesomb-nonce': safeNonce
+  };
+
+  const headerNames = Object.keys(headersToSign).sort();
+  const canonicalHeaders = headerNames
+    .map((name) => name + ':' + String(headersToSign[name]).trim())
+    .join('\n');
+  const signedHeaders = headerNames.join(';');
+
+  const canonicalRequest = [
+    'POST',
+    encodeURI(parsed.pathname),
+    '',
+    canonicalHeaders,
+    signedHeaders,
+    crypto.createHash('sha1').update(body, 'utf8').digest('hex')
+  ].join('\n');
+
+  const scope =
+    date.getUTCFullYear().toString() +
+    String(date.getUTCMonth() + 1).padStart(2, '0') +
+    String(date.getUTCDate()).padStart(2, '0') +
+    '/payment/mesomb_request';
+
+  const stringToSign = [
+    'HMAC-SHA1',
+    timestamp,
+    scope,
+    crypto.createHash('sha1').update(canonicalRequest, 'utf8').digest('hex')
+  ].join('\n');
+
+  const signature = crypto
+    .createHmac('sha1', secretKey)
+    .update(stringToSign, 'utf8')
+    .digest('hex');
+
+  const authorization =
+    'HMAC-SHA1 Credential=' + accessKey + '/' + scope +
+    ', SignedHeaders=' + signedHeaders +
+    ', Signature=' + signature;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-MeSomb-Application': applicationKey,
+      'x-mesomb-date': timestamp,
+      'x-mesomb-nonce': safeNonce,
+      Authorization: authorization
+    },
+    body
   });
+
+  const responseText = await response.text();
+  let payload;
+  try {
+    payload = responseText ? JSON.parse(responseText) : {};
+  } catch (_) {
+    payload = { message: responseText };
+  }
+
+  if (!response.ok) {
+    const detail = payload?.message || payload?.error || ('HTTP ' + response.status);
+    throw new Error('MeSomb collect failed: ' + detail);
+  }
+
+  return payload;
 }
 
 function verifySbdMeSombWebhook({ rawBody, signatureHeader, webhookSecret, toleranceSeconds = 300 }) {
@@ -5309,15 +5428,15 @@ exports.createSbdMeSombPayment = functions.runWith({
   await db.collection('mesomb_payments').doc(reference).set(pending);
 
   try {
-    const client = getMesombClient();
-    const response = await client.makeCollect({
+    const credentials = getMesombCredentials();
+    const response = await sbdMesombCollect({
+      ...credentials,
       amount: plan.amountXaf,
       payer: phone,
       nonce: reference,
       service,
       country: 'CM',
       currency: 'XAF',
-      fees: true,
       reference,
       trxID: reference,
       message: 'Marriage Education — ' + plan.label,
