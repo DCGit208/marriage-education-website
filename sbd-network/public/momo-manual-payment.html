@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Mobile Money Payment</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDK2FjzMM5cZ6zkpz89LieauLDTBT8DzYc",
+      authDomain: "marriage-education.firebaseapp.com",
+      projectId: "marriage-education",
+      storageBucket: "marriage-education.firebasestorage.app",
+      messagingSenderId: "730854285800",
+      appId: "1:730854285800:web:2176d278397398fd41045d"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #FFCB05 0%, #000 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .header {
+      background: #FFCB05;
+      color: #000;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .header .logo {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .product-info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .product-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 10px;
+    }
+    .product-price {
+      font-size: 32px;
+      font-weight: 700;
+      color: #FFCB05;
+    }
+    .reference-code {
+      background: #000;
+      color: #FFCB05;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .reference-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    .reference-value {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+    .copy-btn {
+      background: #FFCB05;
+      color: #000;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .copy-btn:hover {
+      background: #e6b800;
+    }
+    .instructions {
+      margin-bottom: 30px;
+    }
+    .instructions h2 {
+      font-size: 20px;
+      color: #2d3436;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: #FFCB05;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 5px;
+    }
+    .step-text {
+      color: #636e72;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .momo-number {
+      background: #000;
+      color: #FFCB05;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 18px;
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+    }
+    .momo-recipient { margin-top: 10px; }
+    .momo-name { margin-top: 10px; color: #2d3436; font-size: 15px; line-height: 1.5; }
+    .momo-name-hint { display: block; margin-top: 6px; color: #636e72; font-size: 13px; line-height: 1.4; }
+    .form-section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 12px;
+      margin-top: 30px;
+    }
+    .form-section h3 {
+      font-size: 18px;
+      color: #2d3436;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #2d3436;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #dfe6e9;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #FFCB05;
+    }
+    .submit-btn {
+      width: 100%;
+      background: #000;
+      color: #FFCB05;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+    }
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .alert.show {
+      display: block;
+    }
+    .note {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #856404;
+    }
+    .note strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .container { padding: 25px 20px; margin: 20px auto; }
+      .header-icon { font-size: 48px; }
+      h1 { font-size: 22px; }
+      .subtitle { font-size: 14px; }
+      .reference-display { font-size: 24px; padding: 12px; }
+      .form-group input, .form-group textarea { padding: 12px; font-size: 16px; }
+      .submit-btn { padding: 14px; font-size: 16px; }
+      .step { font-size: 14px; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">📱💰</div>
+      <h1>Manual Mobile Money Payment</h1>
+      <p>Send the payment yourself, then submit it for verification</p>
+    </div>
+
+    <div class="content">
+      <!-- Product Info -->
+      <div class="product-info">
+        <div class="product-name" id="product-name">Loading...</div>
+        <div class="product-price" id="product-price">0 FCFA</div>
+      </div>
+
+      <!-- Reference Code -->
+      <div class="reference-code">
+        <div class="reference-label">Your Payment Reference</div>
+        <div class="reference-value" id="reference-code">Loading...</div>
+        <button class="copy-btn" onclick="copyReference()">📋 Copy Reference</button>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h2>📝 Payment Instructions</h2>
+        
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Open your Mobile Money service</div>
+            <div class="step-text">Use MTN MoMo (<strong>*126#</strong>) or Orange Money (<strong>#150#</strong>) and send the payment to the account shown below.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Transfer Money</div>
+            <div class="step-text">
+              Send <strong id="amount-text">0 FCFA</strong> to either:<br>
+              <div class="momo-recipient">
+                <div style="margin-top:8px;font-weight:700;color:#2d3436;">MTN MoMo</div>
+                <span class="momo-number">237 677 604 100</span>
+                <div class="momo-name">Account name: <strong>Achu Gustave Mokom</strong></div>
+              </div>
+              <div class="momo-recipient" style="margin-top:14px;">
+                <div style="margin-top:8px;font-weight:700;color:#2d3436;">Orange Money</div>
+                <span class="momo-number">237 699 651 555</span>
+                <div class="momo-name">Account name: <strong>Achu Gustave Mokom</strong></div>
+                <small class="momo-name-hint">The account name must match what your app shows before you confirm.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Include Reference</div>
+            <div class="step-text">
+              In the message/note field, include your reference code:<br>
+              <strong id="reference-text">Loading...</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">Submit Payment for Verification</div>
+            <div class="step-text">After sending the payment, submit your details below. Access is granted after the payment is verified.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Form -->
+      <div class="form-section">
+        <h3>✅ Submit Your Payment</h3>
+        
+        <div id="alert" class="alert"></div>
+
+        <form id="confirmation-form">
+          <div class="form-group">
+            <label for="phone">Your Mobile Money Phone Number</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              placeholder="237670000000" 
+              required
+              pattern="[0-9]{9,12}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address (for download link)</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="your@email.com" 
+              required
+            >
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            ✓ Submit Payment for Verification
+          </button>
+          <p class="payment-wa-support">
+            Stuck? <a href="#" class="js-wa-payment-support" data-wa-page="Manual MoMo payment">WhatsApp Support</a>
+          </p>
+        </form>
+
+        <div class="note">
+          <strong>⏱️ Verification:</strong>
+          This is a manual payment route. Your payment is reviewed and access is granted after confirmation.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      const results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Generate unique reference code
+    function generateReference() {
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `SBD-${timestamp}${random}`;
+    }
+
+    // Copy reference to clipboard
+    function copyReference() {
+      const reference = document.getElementById('reference-code').textContent;
+      navigator.clipboard.writeText(reference).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    // Show alert
+    function showAlert(message, type) {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = `alert ${type} show`;
+      setTimeout(() => {
+        alert.classList.remove('show');
+      }, 5000);
+    }
+
+    // Initialize page
+    const productId = getUrlParameter('product') || 'sbd-for-dummies';
+    const productName = getUrlParameter('name') || 'Sex By Design For Dummies';
+    const productPrice = getUrlParameter('price') || '17712';
+    const currency = getUrlParameter('currency') || 'XAF';
+    const referralCode = getUrlParameter('ref') || getUrlParameter('referral') || '';
+    const reference = generateReference();
+
+    // Store reference and referral code in sessionStorage
+    sessionStorage.setItem('payment_reference', reference);
+    sessionStorage.setItem('product_id', productId);
+    sessionStorage.setItem('product_price', productPrice);
+    
+    // Save referral code for commission tracking
+    if (referralCode) {
+      sessionStorage.setItem('referral_code', referralCode);
+      sessionStorage.setItem('ambassador_ref', referralCode); // Also save as ambassador_ref for compatibility
+      console.log('✅ Captured referral code:', referralCode);
+    }
+
+    // Update page content
+    document.getElementById('product-name').textContent = productName;
+    document.getElementById('product-price').textContent = `${productPrice} FCFA`;
+    document.getElementById('amount-text').textContent = `${productPrice} FCFA`;
+    document.getElementById('reference-code').textContent = reference;
+    document.getElementById('reference-text').textContent = reference;
+
+    // Handle form submission
+    document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+      const ambassadorRef = sessionStorage.getItem('ambassador_ref') || '';
+      const referralCode = sessionStorage.getItem('referral_code') || '';
+
+      try {
+        // Call Firebase Cloud Function instead of Render backend
+        console.log('Submitting payment with data:', {
+          reference, productId, productName, amount: productPrice, currency, phone, email
+        });
+        
+        const submitManualPayment = firebase.functions().httpsCallable('submitManualPayment');
+        const result = await submitManualPayment({
+          reference: reference,
+          product_id: productId,
+          product_name: productName,
+          amount: productPrice,
+          currency: currency,
+          phone: phone,
+          email: email,
+          ambassador_ref: ambassadorRef,
+          referral_code: referralCode
+        });
+
+        console.log('Payment submission result:', result);
+
+        if (result.data.success) {
+          showAlert('✓ Payment submitted! You will receive your download link within 15 minutes.', 'success');
+          document.getElementById('confirmation-form').reset();
+          
+          // Redirect to confirmation page after 3 seconds
+          setTimeout(() => {
+            window.location.href = `momo-pending.html?reference=${reference}&email=${encodeURIComponent(email)}`;
+          }, 3000);
+        } else {
+          showAlert('❌ ' + (result.data.message || 'Failed to submit payment. Please try again.'), 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '✓ I\'ve Sent the Payment';
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details
+        });
+        
+        let errorMessage = 'Connection error. Please check your internet and try again.';
+        if (error.code === 'unauthenticated') {
+          errorMessage = 'Authentication error. Please try again.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        showAlert('❌ ' + errorMessage, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✓ I\'ve Sent the Payment';
+      }
+    });
+  </script>
+
+  <script src="/js/payment-whatsapp-support.js"></script>
+  <!-- Marriage Education Chatbot -->
+  <script src="marriage-chatbot.js"></script>
+</body>
+</html>
