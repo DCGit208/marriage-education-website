@@ -10,6 +10,9 @@
         ],
         "main": [
           "marriage-education"
+        ],
+        "sbd-network": [
+          "sbd-network"
         ]
       }
     }
