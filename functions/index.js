@@ -717,6 +717,35 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           return res.json({ received: true, action: 'sbd-missing-metadata' });
         }
         const canonicalProductId = resolveSbdProductId(productId);
+
+        // Stripe Checkout does not accept cancel_at inside subscription_data.
+        // Schedule fixed-term SBD subscriptions after Checkout creates the
+        // subscription, using the subscription ID from the completed session.
+        if (session.subscription) {
+          const catalogProduct = SBD_CATALOG_SERVER[canonicalProductId];
+          const termMonths = Number(catalogProduct?.termMonths || 0);
+          if (termMonths > 0) {
+            try {
+              const cancelAt = new Date();
+              cancelAt.setMonth(cancelAt.getMonth() + termMonths);
+              await stripe.subscriptions.update(
+                typeof session.subscription === 'string'
+                  ? session.subscription
+                  : session.subscription.id,
+                { cancel_at: Math.floor(cancelAt.getTime() / 1000) }
+              );
+              console.log(
+                `[SBD] Scheduled subscription cancellation: product=${canonicalProductId} termMonths=${termMonths}`
+              );
+            } catch (subscriptionError) {
+              console.error(
+                '[SBD] Failed to schedule fixed-term subscription cancellation:',
+                subscriptionError.message
+              );
+            }
+          }
+        }
+
         const tgMeta = await unlockSbdContent(uid, canonicalProductId, session);
         const prodName = SBD_CATALOG_SERVER[canonicalProductId]?.name || canonicalProductId;
         const amt      = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
@@ -5101,11 +5130,6 @@ exports.createSbdCheckoutSession = functions.https.onCall(async (data, context) 
     subscriptionData = {
       metadata: { app: 'sbd', uid, productId: canonicalProductId },
     };
-    if (product.termMonths) {
-      const cancelAt = new Date();
-      cancelAt.setMonth(cancelAt.getMonth() + Number(product.termMonths));
-      subscriptionData.cancel_at = Math.floor(cancelAt.getTime() / 1000);
-    }
   }
 
   const session = await stripe.checkout.sessions.create({
