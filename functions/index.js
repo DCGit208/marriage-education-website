@@ -83,20 +83,9 @@ function getMesombCredentials() {
  * Signature format and signs exactly the headers sent over the wire.
  */
 async function sbdMesombCollect({
-  applicationKey,
-  accessKey,
-  secretKey,
-  amount,
-  payer,
-  service,
-  country = 'CM',
-  currency = 'XAF',
-  nonce,
-  trxID,
-  reference,
-  message,
-  customer,
-  products
+  applicationKey, accessKey, secretKey, amount, payer, service,
+  country = 'CM', currency = 'XAF', nonce, trxID, reference,
+  message, customer, products
 }) {
   const url = 'https://mesomb.hachther.com/api/v1.1/payment/collect';
   const date = new Date();
@@ -104,97 +93,64 @@ async function sbdMesombCollect({
   const safeNonce = nonce || crypto.randomBytes(20).toString('hex');
 
   const bodyObject = {
-    amount,
-    service,
-    payer,
-    country,
-    currency,
-    amount_currency: currency,
-    fees: true,
-    conversion: false,
-    mode: 'asynchronous',
-    nonce: safeNonce,
-    reference,
-    trxID,
-    message,
-    customer,
-    products
+    amount, service, payer, country, currency, amount_currency: currency,
+    fees: true, conversion: false, mode: 'asynchronous',
+    reference, message, customer, products
   };
-
   const body = JSON.stringify(bodyObject);
   const parsed = new URL(url);
 
-  // Match the official SDK's signed-header set exactly. The application
-  // identifier is sent as X-MeSomb-Application but is not part of the
-  // SDK's canonical signed headers.
+  // MeSomb requires every x-mesomb-* header sent on the request to be
+  // present in the canonical signed-header set.
   const headersToSign = {
     host: parsed.host,
     'content-type': 'application/json',
+    'x-mesomb-application': applicationKey,
     'x-mesomb-date': timestamp,
     'x-mesomb-nonce': safeNonce
   };
+  if (trxID) headersToSign['x-mesomb-trxid'] = String(trxID);
 
   const headerNames = Object.keys(headersToSign).sort();
-  const canonicalHeaders = headerNames
-    .map((name) => name + ':' + String(headersToSign[name]).trim())
-    .join('\n');
+  const canonicalHeaders = headerNames.map((name) =>
+    name + ':' + String(headersToSign[name]).trim()
+  ).join('\n');
   const signedHeaders = headerNames.join(';');
-
+  const payloadHash = crypto.createHash('sha1').update(body, 'utf8').digest('hex');
   const canonicalRequest = [
-    'POST',
-    encodeURI(parsed.pathname),
-    '',
-    canonicalHeaders,
-    signedHeaders,
-    crypto.createHash('sha1').update(body, 'utf8').digest('hex')
+    'POST', encodeURI(parsed.pathname), '', canonicalHeaders,
+    signedHeaders, payloadHash
   ].join('\n');
 
-  const scope =
-    date.getUTCFullYear().toString() +
+  const scope = date.getUTCFullYear().toString() +
     String(date.getUTCMonth() + 1).padStart(2, '0') +
     String(date.getUTCDate()).padStart(2, '0') +
     '/payment/mesomb_request';
-
   const stringToSign = [
-    'HMAC-SHA1',
-    timestamp,
-    scope,
+    'HMAC-SHA1', timestamp, scope,
     crypto.createHash('sha1').update(canonicalRequest, 'utf8').digest('hex')
   ].join('\n');
+  const signature = crypto.createHmac('sha1', secretKey)
+    .update(stringToSign, 'utf8').digest('hex');
+  const authorization = 'HMAC-SHA1 Credential=' + accessKey + '/' + scope +
+    ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
 
-  const signature = crypto
-    .createHmac('sha1', secretKey)
-    .update(stringToSign, 'utf8')
-    .digest('hex');
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    'X-MeSomb-Application': applicationKey,
+    'x-mesomb-date': timestamp,
+    'x-mesomb-nonce': safeNonce,
+    Authorization: authorization
+  };
+  if (trxID) requestHeaders['X-MeSomb-TrxID'] = String(trxID);
 
-  const authorization =
-    'HMAC-SHA1 Credential=' + accessKey + '/' + scope +
-    ', SignedHeaders=' + signedHeaders +
-    ', Signature=' + signature;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-MeSomb-Application': applicationKey,
-      'x-mesomb-date': timestamp,
-      'x-mesomb-nonce': safeNonce,
-      Authorization: authorization
-    },
-    body
-  });
-
+  const response = await fetch(url, { method: 'POST', headers: requestHeaders, body });
   const responseText = await response.text();
   let payload;
-  try {
-    payload = responseText ? JSON.parse(responseText) : {};
-  } catch (_) {
-    payload = { message: responseText };
-  }
+  try { payload = responseText ? JSON.parse(responseText) : {}; }
+  catch (_) { payload = { message: responseText }; }
 
   if (!response.ok) {
-    // Diagnostic only: keep provider details server-side so customers still
-    // receive the generic payment error from the callable.
     const providerDetail = payload?.message || payload?.error || responseText || ('HTTP ' + response.status);
     console.error('[SBD MeSomb] collect HTTP failure', {
       status: response.status,
@@ -204,7 +160,6 @@ async function sbdMesombCollect({
     });
     throw new Error('MeSomb collect failed: HTTP ' + response.status);
   }
-
   return payload;
 }
 
