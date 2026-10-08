@@ -191,8 +191,16 @@ async function sbdMesombCollect({
   }
 
   if (!response.ok) {
-    const detail = payload?.message || payload?.error || ('HTTP ' + response.status);
-    throw new Error('MeSomb collect failed: ' + detail);
+    // Diagnostic only: keep provider details server-side so customers still
+    // receive the generic payment error from the callable.
+    const providerDetail = payload?.message || payload?.error || responseText || ('HTTP ' + response.status);
+    console.error('[SBD MeSomb] collect HTTP failure', {
+      status: response.status,
+      contentType: response.headers.get('content-type') || '',
+      requestId: response.headers.get('x-request-id') || response.headers.get('x-mesomb-request-id') || '',
+      providerDetail: String(providerDetail).slice(0, 2000)
+    });
+    throw new Error('MeSomb collect failed: HTTP ' + response.status);
   }
 
   return payload;
