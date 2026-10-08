@@ -78,7 +78,7 @@ jobs:
 
       - name: Install functions dependencies
         if: steps.filter.outputs.functions == 'true' || github.event_name == 'workflow_dispatch'
-        run: npm ci
+        run: npm install --no-audit --no-fund
         working-directory: functions
 
       - name: Deploy to Firebase
