@@ -84,86 +84,54 @@ function getMesombCredentials() {
  */
 async function sbdMesombCollect({
   applicationKey, accessKey, secretKey, amount, payer, service,
-  country = 'CM', currency = 'XAF', nonce, trxID, reference,
+  country = 'CM', currency = 'XAF', nonce, trxID,
   message, customer, products
 }) {
-  const url = 'https://mesomb.hachther.com/api/v1.1/payment/collect';
-  const date = new Date();
-  const timestamp = String(Math.floor(date.getTime() / 1000));
+  // Use the same @hachther/mesomb SDK implementation as the known-good
+  // WUM payment client. Do not reimplement MeSomb request signing here.
+  const client = new PaymentOperation({
+    applicationKey,
+    accessKey,
+    secretKey,
+  });
+
   const safeNonce = nonce || crypto.randomBytes(20).toString('hex');
 
-  const bodyObject = {
-    amount, service, payer, country, currency, amount_currency: currency,
-    fees: true, conversion: false, mode: 'asynchronous',
-    reference, message, customer, products
-  };
-  const body = JSON.stringify(bodyObject);
-  const parsed = new URL(url);
+  const response = await client.makeCollect({
+    amount,
+    service,
+    payer,
+    nonce: safeNonce,
+    trxID,
+    country,
+    currency,
+    fees: true,
+    mode: 'asynchronous',
+    conversion: false,
+    products,
+    customer,
+  });
 
-  // MeSomb requires every x-mesomb-* header sent on the request
-  // to participate in the canonical signature. Keep the signed set
-  // identical to the authentication headers sent over the wire.
-  const headersToSign = {
-    host: parsed.host,
-    'content-type': 'application/json',
-    'x-mesomb-application': applicationKey,
-    'x-mesomb-date': timestamp,
-    'x-mesomb-nonce': safeNonce
-  };
-  if (trxID) {
-    headersToSign['x-mesomb-trxid'] = String(trxID);
-  }
-
-  const headerNames = Object.keys(headersToSign).sort();
-  const canonicalHeaders = headerNames.map((name) =>
-    name + ':' + String(headersToSign[name]).trim()
-  ).join('\n');
-  const signedHeaders = headerNames.join(';');
-  const payloadHash = crypto.createHash('sha1').update(body, 'utf8').digest('hex');
-  const canonicalRequest = [
-    'POST', encodeURI(parsed.pathname), '', canonicalHeaders,
-    signedHeaders, payloadHash
-  ].join('\n');
-
-  const scope = date.getUTCFullYear().toString() +
-    String(date.getUTCMonth() + 1).padStart(2, '0') +
-    String(date.getUTCDate()).padStart(2, '0') +
-    '/payment/mesomb_request';
-  const stringToSign = [
-    'HMAC-SHA1', timestamp, scope,
-    crypto.createHash('sha1').update(canonicalRequest, 'utf8').digest('hex')
-  ].join('\n');
-  const signature = crypto.createHmac('sha1', secretKey)
-    .update(stringToSign, 'utf8').digest('hex');
-  const authorization = 'HMAC-SHA1 Credential=' + accessKey + '/' + scope +
-    ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
-
-  const requestHeaders = {
-    'Content-Type': 'application/json',
-    'X-MeSomb-Application': applicationKey,
-    'x-mesomb-date': timestamp,
-    'x-mesomb-nonce': safeNonce,
-    Authorization: authorization
-  };
-  if (trxID) requestHeaders['X-MeSomb-TrxID'] = String(trxID);
-
-  const response = await fetch(url, { method: 'POST', headers: requestHeaders, body });
-  const responseText = await response.text();
-  let payload;
-  try { payload = responseText ? JSON.parse(responseText) : {}; }
-  catch (_) { payload = { message: responseText }; }
-
-  if (!response.ok) {
-    const providerDetail = payload?.message || payload?.error || responseText || ('HTTP ' + response.status);
-    console.error('[SBD MeSomb] collect HTTP failure', {
+  return {
+    success: response.isOperationSuccess(),
+    transactionSuccess: response.isTransactionSuccess(),
+    status: response.status,
+    message: response.message,
+    reference: response.reference,
+    redirect: response.redirect || null,
+    providerTransactionId: response.transaction?.pk || null,
+    providerAmount: response.transaction?.amount ?? null,
+    providerService: response.transaction?.service || null,
+    providerCurrency: response.transaction?.currency || null,
+    providerFinTrxId: response.transaction?.finTrxId || null,
+    transaction: response.transaction || null,
+    rawSafe: {
       status: response.status,
-      contentType: response.headers.get('content-type') || '',
-      requestId: response.headers.get('x-request-id') || response.headers.get('x-mesomb-request-id') || '',
-      providerDetail: String(providerDetail).slice(0, 2000)
-    });
-    throw new Error('MeSomb collect failed: HTTP ' + response.status);
-  }
-  return payload;
+      reference: response.reference,
+      message: response.message,
+      transactionPk: response.transaction?.pk || null,
+    },
+  };
 }
 
 function verifySbdMeSombWebhook({ rawBody, signatureHeader, webhookSecret, toleranceSeconds = 300 }) {
