@@ -100,15 +100,19 @@ async function sbdMesombCollect({
   const body = JSON.stringify(bodyObject);
   const parsed = new URL(url);
 
-  // Match the official MeSomb SDK's signing boundary: sign host,
-  // content-type, x-mesomb-date and x-mesomb-nonce. The application and
-  // external transaction identifiers are sent separately, as the SDK does.
+  // MeSomb requires every x-mesomb-* header sent on the request
+  // to participate in the canonical signature. Keep the signed set
+  // identical to the authentication headers sent over the wire.
   const headersToSign = {
     host: parsed.host,
     'content-type': 'application/json',
+    'x-mesomb-application': applicationKey,
     'x-mesomb-date': timestamp,
     'x-mesomb-nonce': safeNonce
   };
+  if (trxID) {
+    headersToSign['x-mesomb-trxid'] = String(trxID);
+  }
 
   const headerNames = Object.keys(headersToSign).sort();
   const canonicalHeaders = headerNames.map((name) =>
