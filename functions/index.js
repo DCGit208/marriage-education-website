@@ -124,10 +124,12 @@ async function sbdMesombCollect({
   const body = JSON.stringify(bodyObject);
   const parsed = new URL(url);
 
+  // Match the official SDK's signed-header set exactly. The application
+  // identifier is sent as X-MeSomb-Application but is not part of the
+  // SDK's canonical signed headers.
   const headersToSign = {
     host: parsed.host,
     'content-type': 'application/json',
-    'x-mesomb-application': applicationKey,
     'x-mesomb-date': timestamp,
     'x-mesomb-nonce': safeNonce
   };
