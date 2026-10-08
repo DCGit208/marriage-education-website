@@ -1,6 +1,6 @@
 name: Deploy Marriage Education to Firebase
 
-# Firebase Hosting targets: main + marriageducation (web.app)
+# Firebase Hosting targets: main + marriageducation + sbd-network
 # Root Cloud Functions live in /functions
 # FTP deploy for marriageducation.com remains separate (deploy-to-ftp.yml)
 
@@ -15,6 +15,10 @@ on:
       - 'firebase.json'
       - '.firebaserc'
       - 'scripts/copy-canon-bundle.js'
+      - 'sbd-network/public/**'
+      - 'sbd-network/firebase.json'
+      - 'sbd-network/firestore.rules'
+      - 'sbd-network/firestore.indexes.json'
       - '.github/workflows/firebase-deploy.yml'
   workflow_dispatch:
 
@@ -52,6 +56,10 @@ jobs:
               - 'public/**'
               - 'firebase.json'
               - '.firebaserc'
+            sbdHosting:
+              - 'sbd-network/public/**'
+              - 'sbd-network/firebase.json'
+              - '.firebaserc'
             functions:
               - 'functions/**'
               - 'scripts/copy-canon-bundle.js'
@@ -81,7 +89,8 @@ jobs:
         run: npm install --no-audit --no-fund
         working-directory: functions
 
-      - name: Deploy to Firebase
+      - name: Deploy root Firebase resources
+        if: steps.filter.outputs.hosting == 'true' || steps.filter.outputs.functions == 'true' || steps.filter.outputs.rules == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           PARTS=()
           if [ "${{ steps.filter.outputs.hosting }}" = "true" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -93,9 +102,14 @@ jobs:
           if [ "${{ steps.filter.outputs.rules }}" = "true" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PARTS+=("firestore:rules" "firestore:indexes" "storage")
           fi
-          if [ ${#PARTS[@]} -eq 0 ]; then
-            PARTS=("hosting")
+          if [ ${#PARTS[@]} -gt 0 ]; then
+            ONLY=$(IFS=,; echo "${PARTS[*]}")
+            echo "Deploying root resources: --only ${ONLY}"
+            firebase deploy --only "${ONLY}" --project marriage-education --non-interactive
           fi
-          ONLY=$(IFS=,; echo "${PARTS[*]}")
-          echo "Deploying: --only ${ONLY}"
-          firebase deploy --only "${ONLY}" --project marriage-education --non-interactive
+
+      - name: Deploy SBD Network Hosting
+        if: steps.filter.outputs.sbdHosting == 'true' || github.event_name == 'workflow_dispatch'
+        working-directory: sbd-network
+        run: |
+          firebase deploy --only hosting:sbd-network --project marriage-education --non-interactive
