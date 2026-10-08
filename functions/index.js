@@ -100,7 +100,7 @@ async function sbdMesombCollect({
 }) {
   const url = 'https://mesomb.hachther.com/api/v1.1/payment/collect';
   const date = new Date();
-  const timestamp = String(date.getTime());
+  const timestamp = String(Math.floor(date.getTime() / 1000));
   const safeNonce = nonce || crypto.randomBytes(20).toString('hex');
 
   const bodyObject = {
