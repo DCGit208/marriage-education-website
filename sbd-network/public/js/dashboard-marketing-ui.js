@@ -62,7 +62,6 @@
   // requesting the large Hosting MP4s. Only the currently needed authenticated video
   // is hydrated into a real src attribute.
   function hydrateVideo(video) {
-    if (!video || !isAuthenticated) return false;
     let changed = false;
     video.querySelectorAll('source[data-src]').forEach(function (source) {
       if (!source.getAttribute('src')) {
@@ -128,7 +127,6 @@
   }
 
   function playIntroSlideVideo(video, opts) {
-    if (!video || !isAuthenticated) return;
     hydrateVideo(video);
 
     const fromUserGesture = !!(opts && opts.fromUserGesture);
@@ -387,7 +385,6 @@
   }
 
   function playMvHouseVideo(slide, opts) {
-    if (!isAuthenticated) return;
     const video = slide && slide.querySelector('video.video-bg');
     if (!video) return;
     hydrateVideo(video);
@@ -831,10 +828,6 @@
 
       if (isAuthenticated && promptSheet) {
         promptSheet.classList.remove('open');
-      }
-
-      if (!isAuthenticated) {
-        dehydrateAllBackgroundVideos();
       }
 
       if (authChanged && typeof window.refreshSliderLayout === 'function') {
