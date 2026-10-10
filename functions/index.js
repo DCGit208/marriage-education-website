@@ -92,7 +92,7 @@ async function sbdMesombCollect({
   // Use MeSomb's maintained SDK for request construction and authentication.
   // The previous hand-built HMAC request was consistently rejected with
   // HTTP 403 bad-signature, so do not duplicate the provider's signer here.
-  const client = new PaymentOperation(applicationKey, accessKey, secretKey);
+  const client = new PaymentOperation({ applicationKey, accessKey, secretKey });
   return client.makeCollect({
     amount,
     payer,
