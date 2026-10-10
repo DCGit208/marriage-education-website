@@ -87,53 +87,92 @@ async function sbdMesombCollect({
   country = 'CM', currency = 'XAF', nonce, trxID, reference,
   message, customer, products
 }) {
-  // Use the same @hachther/mesomb SDK implementation as the known-good
-  // WUM payment client. Do not reimplement MeSomb request signing here.
-  const client = new PaymentOperation({
-    applicationKey,
-    accessKey,
-    secretKey,
-  });
-
+  const url = 'https://mesomb.hachther.com/api/v1.1/payment/collect';
+  const timestamp = String(Math.floor(Date.now() / 1000));
   const safeNonce = nonce || crypto.randomBytes(20).toString('hex');
 
-  const response = await client.makeCollect({
-    amount,
-    service,
-    payer,
-    nonce: safeNonce,
-    trxID,
-    reference,
-    message,
-    country,
-    currency,
-    fees: true,
-    mode: 'asynchronous',
-    conversion: false,
-    products,
-    customer,
-  });
-
-  return {
-    success: response.isOperationSuccess(),
-    transactionSuccess: response.isTransactionSuccess(),
-    status: response.status,
-    message: response.message,
-    reference: response.reference,
-    redirect: response.redirect || null,
-    providerTransactionId: response.transaction?.pk || null,
-    providerAmount: response.transaction?.amount ?? null,
-    providerService: response.transaction?.service || null,
-    providerCurrency: response.transaction?.currency || null,
-    providerFinTrxId: response.transaction?.finTrxId || null,
-    transaction: response.transaction || null,
-    rawSafe: {
-      status: response.status,
-      reference: response.reference,
-      message: response.message,
-      transactionPk: response.transaction?.pk || null,
-    },
+  // Keep the payload compact and deterministic: the exact bytes hashed here
+  // are the exact bytes sent to MeSomb.
+  const bodyObject = {
+    amount, service, payer, country, currency, amount_currency: currency,
+    fees: true, conversion: false, mode: 'asynchronous',
+    reference, message, customer, products
   };
+  const body = JSON.stringify(bodyObject);
+  const parsed = new URL(url);
+
+  // MeSomb Signature requires the canonical header block to end with a
+  // newline. The canonical request then adds its separator newline before
+  // SignedHeaders. Omitting this final newline changes the signature.
+  const headersToSign = {
+    host: parsed.host,
+    'content-type': 'application/json',
+    'x-mesomb-application': applicationKey,
+    'x-mesomb-date': timestamp,
+    'x-mesomb-nonce': safeNonce
+  };
+  if (trxID) headersToSign['x-mesomb-trxid'] = String(trxID);
+
+  const headerNames = Object.keys(headersToSign).sort();
+  const canonicalHeaders = headerNames
+    .map(name => name.toLowerCase() + ':' + String(headersToSign[name]).trim())
+    .join('\n') + '\n';
+  const signedHeaders = headerNames.join(';');
+  const payloadHash = crypto.createHash('sha1').update(body, 'utf8').digest('hex');
+  const canonicalRequest = [
+    'POST',
+    encodeURI(parsed.pathname),
+    '',
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash
+  ].join('\n');
+
+  const now = new Date();
+  const scope = now.getUTCFullYear().toString() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') +
+    '/payment/mesomb_request';
+  const stringToSign = [
+    'HMAC-SHA1',
+    timestamp,
+    scope,
+    crypto.createHash('sha1').update(canonicalRequest, 'utf8').digest('hex')
+  ].join('\n');
+  const signature = crypto.createHmac('sha1', secretKey)
+    .update(stringToSign, 'utf8').digest('hex');
+  const authorization = 'HMAC-SHA1 Credential=' + accessKey + '/' + scope +
+    ', SignedHeaders=' + signedHeaders + ', Signature=' + signature;
+
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    'X-MeSomb-Application': applicationKey,
+    'x-mesomb-date': timestamp,
+    'x-mesomb-nonce': safeNonce,
+    Authorization: authorization
+  };
+  if (trxID) requestHeaders['X-MeSomb-TrxID'] = String(trxID);
+
+  const response = await fetch(url, { method: 'POST', headers: requestHeaders, body });
+  const responseText = await response.text();
+  let payload;
+  try {
+    payload = responseText ? JSON.parse(responseText) : {};
+  } catch (_) {
+    payload = { message: responseText };
+  }
+
+  if (!response.ok) {
+    const providerDetail = payload?.message || payload?.error || responseText || ('HTTP ' + response.status);
+    console.error('[SBD MeSomb] collect HTTP failure', {
+      status: response.status,
+      contentType: response.headers.get('content-type') || '',
+      requestId: response.headers.get('x-request-id') || response.headers.get('x-mesomb-request-id') || '',
+      providerDetail: String(providerDetail).slice(0, 2000)
+    });
+    throw new Error('MeSomb collect failed: HTTP ' + response.status);
+  }
+  return payload;
 }
 
 function verifySbdMeSombWebhook({ rawBody, signatureHeader, webhookSecret, toleranceSeconds = 300 }) {
