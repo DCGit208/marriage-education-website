@@ -76,15 +76,15 @@ function getMesombCredentials() {
 }
 
 /**
- * Direct MeSomb REST request signer for SBD collect operations.
+ * MeSomb collect adapter for SBD Network.
  *
- * The installed SDK 3.0.2 constructs a non-matching canonical request for
- * this integration. This implementation follows MeSomb's documented
- * Signature format and signs exactly the headers sent over the wire.
+ * Use the official SDK for request signing and collection, matching the
+ * known-working Q4-Life Community Connect integration. Keep credentials
+ * server-side and pass the external reference through for reconciliation.
  */
 async function sbdMesombCollect({
   applicationKey, accessKey, secretKey, amount, payer, service,
-  country = 'CM', currency = 'XAF', nonce, trxID,
+  country = 'CM', currency = 'XAF', nonce, trxID, reference,
   message, customer, products
 }) {
   // Use the same @hachther/mesomb SDK implementation as the known-good
@@ -103,6 +103,8 @@ async function sbdMesombCollect({
     payer,
     nonce: safeNonce,
     trxID,
+    reference,
+    message,
     country,
     currency,
     fees: true,
@@ -5478,8 +5480,11 @@ exports.checkSbdMeSombPayment = functions.runWith({
   }
 
   try {
-    const client = getMesombClient();
-    const response = await client.checkTransactions([pending.transactionId]);
+    const credentials = getMesombCredentials();
+    const client = new PaymentOperation(credentials);
+    // MeSomb's documented SDK method is getTransactions(). The stored ID is
+    // the provider transaction primary key returned by makeCollect().
+    const response = await client.getTransactions([pending.transactionId]);
     const transaction = extractMesombTransaction(response);
     const status = String(transaction?.status || '').toUpperCase();
 
