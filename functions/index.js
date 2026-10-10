@@ -64,9 +64,11 @@ const MESOMB_SECRET_KEY = defineSecret('MESOMB_SECRET_KEY');
 const MESOMB_WEBHOOK_SECRET = defineSecret('MESOMB_WEBHOOK_SECRET');
 
 function getMesombCredentials() {
-  const applicationKey = MESOMB_APPLICATION_KEY.value() || process.env.MESOMB_APPLICATION_KEY || '';
-  const accessKey = MESOMB_ACCESS_KEY.value() || process.env.MESOMB_ACCESS_KEY || '';
-  const secretKey = MESOMB_SECRET_KEY.value() || process.env.MESOMB_SECRET_KEY || '';
+  // Secret Manager values can accidentally include surrounding whitespace
+  // when copied/pasted. Normalize that without logging credential material.
+  const applicationKey = String(MESOMB_APPLICATION_KEY.value() || process.env.MESOMB_APPLICATION_KEY || '').trim();
+  const accessKey = String(MESOMB_ACCESS_KEY.value() || process.env.MESOMB_ACCESS_KEY || '').trim();
+  const secretKey = String(MESOMB_SECRET_KEY.value() || process.env.MESOMB_SECRET_KEY || '').trim();
 
   if (!applicationKey || !accessKey || !secretKey) {
     throw new Error('SBD-Network MeSomb credentials are not configured on the server.');
