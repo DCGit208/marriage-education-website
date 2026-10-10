@@ -96,7 +96,7 @@ async function sbdMesombCollect({
   const bodyObject = {
     amount, service, payer, country, currency, amount_currency: currency,
     fees: true, conversion: false, mode: 'asynchronous',
-    nonce: safeNonce, reference, message, customer, products
+    reference, message, customer, products
   };
   const body = JSON.stringify(bodyObject);
   const parsed = new URL(url);
