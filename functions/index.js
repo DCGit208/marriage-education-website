@@ -5370,7 +5370,6 @@ exports.createSbdMeSombPayment = functions.runWith({
       ...credentials,
       amount: plan.amountXaf,
       payer: phone,
-      nonce: undefined,
       service,
       country: 'CM',
       currency: 'XAF',
