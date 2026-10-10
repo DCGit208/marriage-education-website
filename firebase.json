@@ -78,6 +78,33 @@
           ]
         },
         {
+          "source": "**/*.{js,css}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600, stale-while-revalidate=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.{png,jpg,jpeg,webp,avif,svg,ico,woff,woff2,ttf}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, stale-while-revalidate=604800"
+            }
+          ]
+        },
+        {
+          "source": "**/*.{mp4,webm,m4v,mp3,m4a,wav}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
           "source": "**/*.html",
           "headers": [
             {
@@ -156,6 +183,33 @@
             {
               "key": "Cache-Control",
               "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
+        {
+          "source": "**/*.{js,css}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600, stale-while-revalidate=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.{png,jpg,jpeg,webp,avif,svg,ico,woff,woff2,ttf}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, stale-while-revalidate=604800"
+            }
+          ]
+        },
+        {
+          "source": "**/*.{mp4,webm,m4v,mp3,m4a,wav}",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
             }
           ]
         },
