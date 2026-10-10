@@ -86,22 +86,23 @@ function getMesombCredentials() {
  */
 async function sbdMesombCollect({
   applicationKey, accessKey, secretKey, amount, payer, service,
-  country = 'CM', currency = 'XAF', nonce, reference,
-  message, customer, products
+  country = 'CM', currency = 'XAF', nonce, trxID,
+  customer, products
 }) {
-  // Use MeSomb's maintained SDK for request construction and authentication.
-  // The previous hand-built HMAC request was consistently rejected with
-  // HTTP 403 bad-signature, so do not duplicate the provider's signer here.
+  // Match the known-working Community Connect integration: SDK constructor,
+  // unique alphanumeric nonce, and trxID (the SDK's supported reference field).
   const client = new PaymentOperation({ applicationKey, accessKey, secretKey });
+  const safeNonce = nonce || Array.from({ length: 40 }, () =>
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[crypto.randomInt(62)]
+  ).join('');
   return client.makeCollect({
     amount,
     payer,
     service,
     country,
     currency,
-    nonce: nonce || crypto.randomBytes(20).toString('hex'),
-    reference,
-    message,
+    nonce: safeNonce,
+    trxID,
     customer,
     products,
     fees: true,
@@ -5369,11 +5370,9 @@ exports.createSbdMeSombPayment = functions.runWith({
       ...credentials,
       amount: plan.amountXaf,
       payer: phone,
-      nonce: reference,
       service,
       country: 'CM',
       currency: 'XAF',
-      reference,
       trxID: reference,
       message: 'Marriage Education — ' + plan.label,
       customer: {
