@@ -77,6 +77,28 @@ function getMesombCredentials() {
   return { applicationKey, accessKey, secretKey };
 }
 
+function getMesombClient(overrides = {}) {
+  const credentials = { ...getMesombCredentials(), ...overrides };
+  const { applicationKey, accessKey, secretKey } = credentials;
+
+  if (!applicationKey || !accessKey || !secretKey) {
+    throw new Error('SBD-Network MeSomb client cannot be created without a complete credential set.');
+  }
+
+  const fingerprint = (value) => {
+    if (!value) return 'missing';
+    return crypto.createHash('sha256').update(value).digest('hex').slice(0, 12);
+  };
+
+  console.info('[SBD MeSomb] initialising client', {
+    applicationKey: fingerprint(applicationKey),
+    accessKey: fingerprint(accessKey),
+    secretKey: fingerprint(secretKey)
+  });
+
+  return new PaymentOperation({ applicationKey, accessKey, secretKey });
+}
+
 /**
  * MeSomb collect adapter for SBD Network.
  *
@@ -91,10 +113,11 @@ async function sbdMesombCollect({
 }) {
   // Match the known-working Community Connect integration: SDK constructor,
   // unique alphanumeric nonce, and trxID (the SDK's supported reference field).
-  const client = new PaymentOperation({ applicationKey, accessKey, secretKey });
+  const client = getMesombClient({ applicationKey, accessKey, secretKey });
   const safeNonce = nonce || Array.from({ length: 40 }, () =>
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[crypto.randomInt(62)]
   ).join('');
+
   return client.makeCollect({
     amount,
     payer,
