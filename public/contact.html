@@ -37,7 +37,8 @@
       <h2>We'd Love to Hear From You</h2>
       <p>Have questions about our courses, books, or coaching? Want to share your success story? We're here to help and would love to connect with you.</p>
       
-      <form action="mailto:info@marriageducation.com" method="POST" enctype="text/plain">
+      <p id="contact-form-status" role="status" aria-live="polite" tabindex="-1" hidden></p>
+      <form id="contact-form" action="/contact-submit.php" method="POST">
         <label for="name">Your Name:</label>
         <input type="text" id="name" name="name" required />
         
@@ -53,10 +54,16 @@
           <option value="Coaching Inquiry">Coaching Inquiry</option>
           <option value="Technical Support">Technical Support</option>
           <option value="Partnership/Media">Partnership/Media</option>
+          <option value="Free Guide Request">Free Guide Request</option>
         </select>
         
         <label for="message">Your Message:</label>
         <textarea id="message" name="message" rows="6" placeholder="Please share your questions, comments, or how we can help you..." required></textarea>
+
+        <div aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
+          <label for="website">Leave this field empty</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
         
         <button type="submit">Send Message</button>
       </form>
@@ -65,13 +72,6 @@
         <h3>Other Ways to Reach Us</h3>
         <div class="contact-methods">
           <div class="contact-method">
-            <h4>📧 Email Us</h4>
-            <p><strong>General Inquiries:</strong> info@marriageducation.com</p>
-            <p><strong>Course & Training:</strong> train@marriageducation.com</p>
-            <p><strong>Book Orders:</strong> orders@marriageducation.com</p>
-          </div>
-          
-          <div class="contact-method">
             <h4>⏰ Response Time</h4>
             <p>We typically respond to all inquiries within 24-48 hours during business days.</p>
           </div>
@@ -79,7 +79,7 @@
           <div class="contact-method">
             <h4>📚 Free Resources</h4>
             <p>While you're here, don't forget to download our free guide: "5 Secrets to Lasting Intimacy"</p>
-            <a href="mailto:info@marriageducation.com?subject=Free Guide Request" class="buy-button">Request Free Guide</a>
+            <a href="/contact.html?subject=Free%20Guide%20Request#contact-form" class="buy-button">Request Free Guide</a>
           </div>
         </div>
       </div>
@@ -104,10 +104,8 @@
           </ul>
         </div>
         <div class="footer-section">
-          <h4>Contact Info</h4>
-          <p>Email: info@marriageducation.com</p>
-          <p>Training: train@marriageducation.com</p>
-          <p>Orders: orders@marriageducation.com</p>
+          <h4>Get in Touch</h4>
+          <p><a href="#contact-form">Send us a message</a></p>
         </div>
       </div>
       <div class="footer-bottom">
@@ -116,6 +114,34 @@
     </div>
   </footer>
 
+  <script>
+    (function () {
+      'use strict';
+      var params = new URLSearchParams(window.location.search);
+      var status = document.getElementById('contact-form-status');
+      var messages = {
+        sent: 'Thanks for contacting us. Your message has been sent.',
+        invalid: 'Please check your details and try again.',
+        too_large: 'Your message is too long. Please shorten it and try again.',
+        rate_limited: 'Please wait a minute before sending another message.',
+        unavailable: 'We could not send your message right now. Please try again later.'
+      };
+      var message = messages[params.get('status')];
+      if (message) {
+        status.textContent = message;
+        status.hidden = false;
+        status.focus();
+      }
+
+      var subject = params.get('subject');
+      var subjectSelect = document.getElementById('subject');
+      if (subject && Array.prototype.some.call(subjectSelect.options, function (option) {
+        return option.value === subject;
+      })) {
+        subjectSelect.value = subject;
+      }
+    }());
+  </script>
   <!-- Marriage Education Chatbot -->
   <script src="marriage-chatbot.js"></script>
 </body>
