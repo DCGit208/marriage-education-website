@@ -365,7 +365,7 @@
           </div>
 
           <div class="form-group">
-            <label for="email">Email Address (for download link)</label>
+            <label for="email">Email Address (for SBD Reader access)</label>
             <input 
               type="email" 
               id="email" 
@@ -492,7 +492,7 @@
         console.log('Payment submission result:', result);
 
         if (result.data.success) {
-          showAlert('✓ Payment submitted! You will receive your download link within 15 minutes.', 'success');
+          showAlert('✓ Payment submitted! You will receive your SBD Reader access email within 15 minutes.', 'success');
           document.getElementById('confirmation-form').reset();
           
           // Redirect to confirmation page after 3 seconds

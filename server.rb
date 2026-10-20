@@ -737,8 +737,23 @@ def send_customer_whatsapp(phone, message)
   end
 end
 
+SBD_READER_URL = 'https://sbd.marriageducation.com/book.html?id=sbd-dummies'.freeze
+
+# Sex by Design for Dummies is read-only inside the SBD reader (no PDF delivery)
+def reader_only_product?(product_id, product_name = nil)
+  id = product_id.to_s.downcase
+  return true if id =~ /\A(sbd-founding|sbd-dummies.*|sbd-for-dummies.*|sbd-\d+|sbd-pillar-\d+|sbd-sponsor-\d+|sbd-challenge-14|sbd-teleios-live|sbd-quote-pack)\z/
+  product_name.to_s.downcase.include?('dummies')
+end
+
 # Helper: Generate download email HTML
 def generate_download_email(product_name, download_url, expiry_date)
+  reader_url = if product_name.to_s.downcase.include?('dummies') || download_url.to_s.include?('sbd-dummies')
+                 'https://sbd.marriageducation.com/book.html?id=sbd-dummies'
+               else
+                 download_url
+               end
+
   <<~HTML
     <!DOCTYPE html>
     <html>
@@ -747,35 +762,35 @@ def generate_download_email(product_name, download_url, expiry_date)
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #FFCB05; color: #000; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .header { background: #0a3d32; color: #fff; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; background: #000; color: #FFCB05 !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .info-box { background: #fff; padding: 15px; border-left: 4px solid #FFCB05; margin: 20px 0; }
+        .button { display: inline-block; background: #00b894; color: #fff !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .info-box { background: #fff; padding: 15px; border-left: 4px solid #00b894; margin: 20px 0; }
         .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Your Purchase is Confirmed!</h1>
+          <h1>📚 Your Book Access is Ready</h1>
         </div>
         <div class="content">
           <p>Thank you for your purchase of <strong>#{product_name}</strong>!</p>
           
-          <p>Your payment has been verified and approved. Click the button below to download your eBook:</p>
+          <p>Your payment has been verified and approved. Open your book in the SBD reader below.</p>
           
           <div style="text-align: center;">
-            <a href="#{download_url}" class="button">📥 Download Your eBook</a>
+            <a href="#{reader_url}" class="button">📖 Open in the SBD Reader</a>
           </div>
           
           <div class="info-box">
-            <strong>⏰ Important Information:</strong><br>
-            • This link expires on: <strong>#{expiry_date}</strong><br>
-            • Maximum 5 downloads allowed<br>
-            • Save the file to your device for unlimited access<br>
+            <strong>🔒 Access Policy:</strong><br>
+            • This title is delivered inside the SBD reader<br>
+            • No PDF copy is issued to customers<br>
+            • Your content remains protected from unofficial redistribution
           </div>
           
-          <p>If you have any issues downloading, please contact us at support@marriageducation.com</p>
+          <p>If you have any issues accessing the book, please contact us at support@marriageducation.com</p>
           
           <p>Enjoy your reading!</p>
           
@@ -2042,6 +2057,22 @@ post '/admin/approve-payment' do
         
         # Skip download token generation for RD registration
         unless payment['product_id'] == 'rd-registration'
+          if reader_only_product?(payment['product_id'], payment['product_name'])
+            # Reader-only: no token, no PDF, no customer Telegram/WhatsApp link
+            email_html = generate_download_email(payment['product_name'], SBD_READER_URL, nil)
+            email_sent = send_email(payment['email'], '📖 Your book is ready in the SBD Reader', email_html)
+            if TELEGRAM_ENABLED
+              send_telegram("✅ *Payment Approved (Reader access)*\n\nReference: `#{payment['reference']}`\nCustomer: #{payment['email']}\nProduct: *#{payment['product_name']}*\nAmount: #{payment['amount']} #{payment['currency']}\n\n📧 Email: #{email_sent ? '✅' : '❌'}")
+            end
+            halt 200, {
+              success: true,
+              message: 'Payment approved - reader access email sent',
+              email: payment['email'],
+              email_sent: email_sent,
+              reader_url: SBD_READER_URL
+            }.to_json
+          end
+
           # Generate secure download token
           token_data = generate_download_token(payment)
           tokens = read_download_tokens
@@ -2197,6 +2228,13 @@ post '/stripe/fulfill-order' do
     
     puts "[STRIPE FULFILLMENT] Processing order for #{customer_email}"
     puts "[STRIPE FULFILLMENT] Product: #{product_name} (#{product_id})"
+
+    if reader_only_product?(product_id, product_name)
+      email_html = generate_download_email(product_name, SBD_READER_URL, nil)
+      reader_email_sent = send_email(customer_email, '📖 Your book is ready in the SBD Reader', email_html)
+      send_telegram("💳 *Stripe purchase (Reader access)*\nCustomer: #{customer_email}\nProduct: *#{product_name}*\nAmount: #{amount} USD\n📧 Email: #{reader_email_sent ? '✅' : '❌'}") if TELEGRAM_ENABLED
+      halt 200, { success: true, email_sent: reader_email_sent, reader_url: SBD_READER_URL }.to_json
+    end
     
     # Generate secure download token (same as manual payment approval)
     token_data = {
@@ -2401,12 +2439,13 @@ post '/resend-download-link' do
     user_tokens = tokens_data['tokens'].select do |t|
       t['email']&.downcase&.strip == email && 
       t['status'] == 'active' && 
+      !reader_only_product?(t['product_id'], t['product_name']) &&
       Time.now < Time.parse(t['expires_at'])
     end
     
     if user_tokens.empty?
       halt 404, { 
-        error: 'No active download links found for this email. Please contact support.',
+        error: 'No downloadable files found for this email. Dummies book buyers: sign in at sbd.marriageducation.com to read it.',
         support_email: 'orders@marriageducation.com'
       }.to_json
     end
@@ -2710,6 +2749,7 @@ get '/download' do
 
     product = product_db[product_id]
     halt 404, 'Product not found' unless product
+    halt 410, 'This book is read inside the SBD Reader: https://sbd.marriageducation.com' if reader_only_product?(product_id, product['name'])
     
     download_filename = product['download_filename']
     halt 404, 'No download available for this product' unless download_filename && !download_filename.strip.empty?
@@ -2781,6 +2821,7 @@ get '/download' do
 
   product = product_db[token_record['product_id']]
   halt 404, 'Product not found' unless product
+  halt 410, 'This book is read inside the SBD Reader: https://sbd.marriageducation.com' if reader_only_product?(token_record['product_id'], product['name'])
   
   download_filename = product['download_filename']
   halt 404, 'No download available for this product' unless download_filename && !download_filename.strip.empty?

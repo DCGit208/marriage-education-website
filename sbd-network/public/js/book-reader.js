@@ -239,33 +239,6 @@
     }
   }
 
-  async function downloadPdf() {
-    if (!pdfProductId) return;
-    var btn = qs('brPdfBtn');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Preparing…';
-    }
-    try {
-      if (!firebase.functions) {
-        throw new Error('Download service unavailable in this browser session.');
-      }
-      var fn = firebase.app().functions('us-central1').httpsCallable('getOwnedBookPdfUrl');
-      var res = await fn({ productId: pdfProductId });
-      var url = res && res.data && res.data.url;
-      if (!url) throw new Error('No download URL returned.');
-      window.open(url, '_blank', 'noopener');
-    } catch (err) {
-      console.error('[BookReader PDF]', err);
-      alert((err && err.message) || 'Could not prepare PDF download.');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = 'Download PDF';
-      }
-    }
-  }
-
   function presentChapter(chapter, index) {
     var article = qs('brArticle');
     var body = qs('brArticleBody');
@@ -536,8 +509,6 @@
       resumeBtn.onclick = openAtResume;
     }
     qs('brOfflineBtn').onclick = saveOffline;
-    var pdfBtn = qs('brPdfBtn');
-    if (pdfBtn) pdfBtn.onclick = downloadPdf;
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {

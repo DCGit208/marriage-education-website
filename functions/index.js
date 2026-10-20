@@ -6,7 +6,6 @@ const { Resend } = require('resend');
 const axios = require('axios');
 const crypto = require('crypto');
 const { defineSecret } = require('firebase-functions/params');
-const { PaymentOperation } = require('@hachther/mesomb');
 const { jsPDF } = require('jspdf');
 const { creditRecruitmentBonusesV2 } = require('./recruitment-bonus-service');
 const { POLICY_VERSION: RECRUITMENT_POLICY_VERSION } = require('./recruitment-bonus-policy');
@@ -77,7 +76,7 @@ function getMesombCredentials() {
   return { applicationKey, accessKey, secretKey };
 }
 
-function getMesombClient(overrides = {}) {
+async function getMesombClient(overrides = {}) {
   const credentials = { ...getMesombCredentials(), ...overrides };
   const { applicationKey, accessKey, secretKey } = credentials;
 
@@ -96,6 +95,7 @@ function getMesombClient(overrides = {}) {
     secretKey: fingerprint(secretKey)
   });
 
+  const { PaymentOperation } = await import('@hachther/mesomb');
   return new PaymentOperation({ applicationKey, accessKey, secretKey });
 }
 
@@ -108,12 +108,12 @@ function getMesombClient(overrides = {}) {
  */
 async function sbdMesombCollect({
   applicationKey, accessKey, secretKey, amount, payer, service,
-  country = 'CM', currency = 'XAF', nonce, trxID,
-  customer, products
+  country = 'CM', currency = 'XAF', nonce,
+  location, products
 }) {
-  // Match the known-working Community Connect integration: SDK constructor,
-  // unique alphanumeric nonce, and trxID (the SDK's supported reference field).
-  const client = getMesombClient({ applicationKey, accessKey, secretKey });
+  // Use a unique nonce; keep the SBD reference internally rather than sending
+  // the SDK's separate, unsigned X-MeSomb-TrxID header.
+  const client = await getMesombClient({ applicationKey, accessKey, secretKey });
   const safeNonce = nonce || Array.from({ length: 40 }, () =>
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[crypto.randomInt(62)]
   ).join('');
@@ -125,12 +125,11 @@ async function sbdMesombCollect({
     country,
     currency,
     nonce: safeNonce,
-    trxID,
-    customer,
     products,
     fees: true,
     conversion: false,
-    mode: 'asynchronous'
+    mode: 'asynchronous',
+    location
   });
 }
 
@@ -345,18 +344,28 @@ async function writeUnifiedPaymentRecord(record) {
  * Generate signed download URL from Firebase Storage
  */
 async function generateDownloadURL(productId) {
+  const normalized = String(productId || '').trim();
+  const dummiesAliases = new Set([
+    'sbd-book',
+    'sbd-for-dummies',
+    'sbd-dummies',
+    'sbd-dummies-digital-print',
+    'sbd-founding',
+    'sbd-1',
+    'sbd-3',
+    'sbd-5',
+    'sbd-10',
+    'sbd-100'
+  ]);
+
+  if (dummiesAliases.has(normalized)) {
+    const readerUrl = getSbdReaderBookUrl('sbd-dummies');
+    console.log(`[DOWNLOAD] Reader-only access enforced for ${normalized}: ${readerUrl}`);
+    return readerUrl;
+  }
+
   // Map product IDs to PDF filenames
   const productMap = {
-    'sbd-book': 'sbd-for-dummies.pdf',
-    'sbd-for-dummies': 'sbd-for-dummies.pdf',
-    'sbd-dummies': 'sbd-for-dummies.pdf',
-    'sbd-dummies-digital-print': 'sbd-for-dummies.pdf',
-    'sbd-founding': 'sbd-for-dummies.pdf',
-    'sbd-1': 'sbd-for-dummies.pdf',
-    'sbd-3': 'sbd-for-dummies.pdf',
-    'sbd-5': 'sbd-for-dummies.pdf',
-    'sbd-10': 'sbd-for-dummies.pdf',
-    'sbd-100': 'sbd-for-dummies.pdf',
     'sbd-standard': 'sbd-standard.pdf',
     'sbd-canonical': 'sbd-canonical.pdf',
     'complete-sbd-library': 'complete-sbd-library.pdf',
@@ -366,7 +375,7 @@ async function generateDownloadURL(productId) {
     // Add more mappings as needed
   };
   
-  const filename = productMap[productId] || 'sbd-for-dummies.pdf';
+  const filename = productMap[normalized] || 'sbd-for-dummies.pdf';
   const file = bucket.file(`ebooks/${filename}`);
   
   try {
@@ -413,17 +422,11 @@ async function generateDownloadURL(productId) {
  * Send download email to customer
  */
 async function sendDownloadEmail(email, productName, downloadUrl, paymentRef = null) {
-  const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-  
-  // Create simple redirect URL if payment reference is available
-  const simpleDownloadUrl = paymentRef 
-    ? `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}`
-    : downloadUrl;
-  
+  const readerUrl = getSbdReaderBookUrl('sbd-dummies');
+  const finalUrl = String(productName || '').toLowerCase().includes('dummies') || String(downloadUrl || '').includes('sbd-dummies')
+    ? readerUrl
+    : (paymentRef ? `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}` : downloadUrl);
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -431,39 +434,28 @@ async function sendDownloadEmail(email, productName, downloadUrl, paymentRef = n
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2d3748; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .header { background: linear-gradient(135deg, #0a3d32 0%, #00b894 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
     .content { background: #f7fafc; padding: 30px; }
-    .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+    .button { display: inline-block; background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
     .footer { text-align: center; padding: 20px; color: #718096; font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>📚 Your eBook is Ready!</h1>
+      <h1>📚 Your Book Access is Ready</h1>
     </div>
     <div class="content">
       <h2>Payment Approved</h2>
-      <p>Thank you for your purchase! Your payment has been approved and your eBook is ready to download.</p>
+      <p>Thank you for your purchase! Your access is active in the SBD reader.</p>
       
       <p><strong>Product:</strong> ${productName}</p>
       
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${simpleDownloadUrl}" class="button" style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📥 Download Now</a>
+        <a href="${finalUrl}" class="button" style="display: inline-block; background: #00b894; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📖 Open in the SBD Reader</a>
       </div>
       
-      <p><strong>Download expires:</strong> ${expiryDate}</p>
-      
-      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
-        <h3 style="margin-top: 0; color: #92400e; font-size: 16px;">📱 If the button above doesn't work:</h3>
-        
-        <p style="margin: 10px 0;"><strong>Option 1 - Copy this link:</strong></p>
-        <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">${simpleDownloadUrl}</p>
-        
-        <p style="margin: 10px 0;"><strong>Option 2 - Direct download link:</strong></p>
-        <p style="word-break: break-all; background: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 11px;">${downloadUrl}</p>
-        <p style="color: #92400e; font-size: 13px; margin: 5px 0;">⚠️ Copy the ENTIRE link including everything after "?token="</p>
-      </div>
+      <p><strong>Access:</strong> Read in the reader on sbd.marriageducation.com — no PDF download is provided.</p>
       
       <p>Thank you for supporting Marriage Education!</p>
     </div>
@@ -481,7 +473,7 @@ async function sendDownloadEmail(email, productName, downloadUrl, paymentRef = n
       await transporter.sendMail({
         from: `"Marriage Education" <${SMTP_CONFIG.from}>`,
         to: email,
-        subject: `📥 Your eBook is Ready - ${productName}`,
+        subject: `📖 Your book access is ready - ${productName}`,
         html: html
       });
       console.log(`[Email] Sent to ${email}`);
@@ -507,57 +499,59 @@ exports.downloadBook = functions.https.onRequest(async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   
   try {
-    const { ref, token } = req.query;
-    
+    const { ref, token, product_id } = req.query;
+    const productId = String(product_id || '').trim();
+
     // Method 1: Using payment reference
     if (ref) {
       console.log(`[DOWNLOAD] Request for payment ref: ${ref}`);
-      
-      // Look up the payment to get product_id
+
       const paymentDoc = await db.collection('pending_payments').doc(ref).get();
-      
       if (!paymentDoc.exists) {
         console.error(`[DOWNLOAD] Payment not found: ${ref}`);
         return res.status(404).send('Payment record not found. Please contact support with your reference number.');
       }
-      
+
       const payment = paymentDoc.data();
-      
-      // Check if payment is approved
       if (payment.status !== 'approved') {
         console.log(`[DOWNLOAD] Payment not approved: ${ref} (status: ${payment.status})`);
         return res.status(403).send('Payment not yet approved. Please wait for admin approval or contact support.');
       }
-      
-      // Generate download URL
-      const downloadUrl = await generateDownloadURL(payment.product_id);
-      console.log(`[DOWNLOAD] Redirecting ${ref} to storage URL`);
-      
-      // Redirect to the actual file
-      return res.redirect(downloadUrl);
+
+      const readerUrl = getSbdReaderBookUrl('sbd-dummies');
+      const targetUrl = ['sbd-book', 'sbd-for-dummies', 'sbd-dummies', 'sbd-dummies-digital-print', 'sbd-founding', 'sbd-1', 'sbd-3', 'sbd-5', 'sbd-10', 'sbd-100'].includes(String(payment.product_id || ''))
+        ? readerUrl
+        : await generateDownloadURL(payment.product_id);
+      console.log(`[DOWNLOAD] Redirecting ${ref} to ${targetUrl}`);
+      return res.redirect(targetUrl);
     }
-    
-    // Method 2: Using direct download token (for future use)
+
+    if (productId) {
+      const targetUrl = ['sbd-book', 'sbd-for-dummies', 'sbd-dummies', 'sbd-dummies-digital-print', 'sbd-founding', 'sbd-1', 'sbd-3', 'sbd-5', 'sbd-10', 'sbd-100'].includes(productId)
+        ? getSbdReaderBookUrl('sbd-dummies')
+        : await generateDownloadURL(productId);
+      return res.redirect(targetUrl);
+    }
+
     if (token) {
       const tokenDoc = await db.collection('download_tokens').doc(token).get();
-      
       if (!tokenDoc.exists) {
         return res.status(404).send('Invalid or expired download token.');
       }
-      
+
       const tokenData = tokenDoc.data();
-      
-      // Check expiry
       if (tokenData.expires_at && tokenData.expires_at.toDate() < new Date()) {
         return res.status(403).send('Download link has expired. Please contact support.');
       }
-      
-      const downloadUrl = await generateDownloadURL(tokenData.product_id);
-      return res.redirect(downloadUrl);
+
+      const targetUrl = ['sbd-book', 'sbd-for-dummies', 'sbd-dummies', 'sbd-dummies-digital-print', 'sbd-founding', 'sbd-1', 'sbd-3', 'sbd-5', 'sbd-10', 'sbd-100'].includes(String(tokenData.product_id || ''))
+        ? getSbdReaderBookUrl('sbd-dummies')
+        : await generateDownloadURL(tokenData.product_id);
+      return res.redirect(targetUrl);
     }
-    
+
     return res.status(400).send('Missing required parameter: ref or token');
-    
+
   } catch (error) {
     console.error('[DOWNLOAD] Error:', error);
     return res.status(500).send(`Download error: ${error.message}. Please contact support.`);
@@ -570,11 +564,20 @@ exports.downloadBook = functions.https.onRequest(async (req, res) => {
  */
 exports.getOwnedBookPdfUrl = functions.https.onCall(async (data, context) => {
   if (!context.auth || !context.auth.uid) {
-    throw new functions.https.HttpsError('unauthenticated', 'Sign in to download.');
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in to access the reader.');
   }
   const productId = String((data && data.productId) || '').trim();
   if (!productId) {
     throw new functions.https.HttpsError('invalid-argument', 'Missing productId.');
+  }
+
+  const normalized = normalizeSbdReaderProductId(productId);
+  const dummiesAliases = new Set(['sbd-dummies', 'sbd-for-dummies', 'sbd-dummies-digital-print']);
+  if (dummiesAliases.has(normalized)) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Sex By Design for Dummies is delivered in the SBD reader, not as a downloadable PDF.'
+    );
   }
 
   const uid = context.auth.uid;
@@ -2612,12 +2615,15 @@ async function activateAmbassador(payment, reference) {
     }
   }
 
-  // Generate book download URL - use simple redirect to avoid SendGrid click tracking issues
-  const paymentRef = payment.reference;
-  const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${paymentRef}`;
-  console.log(`[BOOK] Generated simple download URL for ${ambassadorCode}: ${bookUrl}`);
-  
-  // Send ambassador credentials + book link email
+  // Grant book access in the SBD reader instead of sending a PDF download link.
+  const bookUrl = getSbdReaderBookUrl('sbd-dummies');
+  await ensureSbdReaderAccess({
+    email: payment.email,
+    fullName: ambassadorData.fullName,
+    productId: 'sbd-dummies',
+  });
+  console.log(`[BOOK] Reader access granted for ${ambassadorCode}: ${bookUrl}`);
+
   const accessEmailResult = await sendAmbassadorAccessEmail({
     email: payment.email,
     ambassadorCode,
@@ -2627,11 +2633,8 @@ async function activateAmbassador(payment, reference) {
   const emailSent = accessEmailResult.sent;
   const emailError = accessEmailResult.error;
 
-  // Send Telegram notification with ALL details including book link
   if (TELEGRAM_BOT_TOKEN) {
     const emailStatus = emailSent ? '✅ Sent' : '❌ Failed';
-    const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
-    
     const msg = `✅ AMBASSADOR REGISTRATION APPROVED\n\n` +
       `🎯 Code: ${ambassadorCode}\n` +
       `👤 Name: ${ambassadorData.fullName}\n` +
@@ -2641,8 +2644,8 @@ async function activateAmbassador(payment, reference) {
       `💰 Fee: ${payment.amount} ${payment.currency}\n\n` +
       `📧 Email Status: ${emailStatus}${emailError ? ` (${emailError})` : ''}\n` +
       `🔐 Dashboard: https://marriageducation.com/ambassador-login.html\n\n` +
-      `📥 Book Download (expires ${expiryDate}):\n${bookUrl}`;
-    
+      `📖 Book access: ${bookUrl}`;
+
     await sendTelegram(msg, false);
   }
   
@@ -2736,6 +2739,7 @@ function getPaymentFulfillment() {
       sendTelegram,
       TELEGRAM_BOT_TOKEN,
       unlockSbdContent,
+      ensureSbdReaderAccess,
       sendSbdBuyerAccessEmail
     });
   }
@@ -2814,14 +2818,14 @@ async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName
               <p style="margin: 0; font-size: 14px; color: #856404;">If this email arrived in Spam/Junk, please mark it as &quot;Not Junk&quot; or &quot;Not Spam&quot; and move it to your Inbox. This ensures you receive all future important emails from us.</p>
             </div>
             
-            <div style="background: #fff; border: 2px solid #00b894; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                  <div style="background: #fff; border: 2px solid #00b894; border-radius: 5px; padding: 15px; margin: 20px 0;">
               <h3 style="margin-top: 0; color: #00b894;">📚 Your Welcome Book</h3>
-              <p style="margin: 5px 0;">Download your exclusive book package (expires ${expiryDate}):</p>
+              <p style="margin: 5px 0;">Read your book in the SBD reader. Set your password to open it in the app:</p>
               <div style="text-align: center; margin: 15px 0;">
-                <a href="${bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Download Book</a>
+                <a href="${bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Open Book in SBD Reader</a>
               </div>
               <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                <p style="margin: 5px 0; font-size: 13px; color: #666;"><strong>If button doesn't work, copy this link:</strong></p>
+                <p style="margin: 5px 0; font-size: 13px; color: #666;"><strong>If the button does not work, open this link:</strong></p>
                 <p style="margin: 5px 0; font-size: 11px; word-break: break-all; font-family: monospace; color: #333;">${bookUrl}</p>
               </div>
             </div>
@@ -2829,7 +2833,7 @@ async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName
             <div style="background: #fff; padding: 15px; margin: 20px 0; border-radius: 5px;">
               <h3 style="margin-top: 0; color: #667eea;">🚀 Next Steps</h3>
               <ol style="color: #555; line-height: 1.8;">
-                <li>Download and read your book package</li>
+                <li>Open and read your book in the SBD reader</li>
                 <li>Log in to your <a href="https://marriageducation.com/ambassador-login.html" style="color: #667eea;">Ambassador Dashboard</a></li>
                 <li>Get your unique referral link</li>
                 <li>Start sharing and earning commissions!</li>
@@ -2899,7 +2903,7 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
     }
 
     const ambassador = ambassadorDoc.data();
-    const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${ambassadorCode}`;
+    const bookUrl = getSbdReaderBookUrl('sbd-dummies');
 
     const sendResult = await sendAmbassadorAccessEmail({
       email,
@@ -2913,12 +2917,11 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
     }
 
     if (TELEGRAM_BOT_TOKEN) {
-      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
       await sendTelegram(
         `✅ AMBASSADOR ACCESS EMAIL RESENT\n\n` +
           `🎯 Code: ${ambassadorCode}\n` +
           `📧 Email: ${email}\n\n` +
-          `📥 Book Download (expires ${expiryDate}):\n${bookUrl}\n\n` +
+          `📖 Book access: ${bookUrl}\n\n` +
           `🔐 Dashboard: https://marriageducation.com/ambassador-login.html`,
         false
       );
@@ -3155,6 +3158,83 @@ async function resolveRdCodeForSeller(sellerCodeUpper, options) {
   const ambSnap = await db.collection('ambassadors').doc(sellerCodeUpper).get();
   if (!ambSnap.exists) return null;
   return resolveAmbassadorRdUpline(ambSnap.data());
+}
+
+function normalizeSbdReaderProductId(productId) {
+  const value = String(productId || 'sbd-dummies').trim().toLowerCase();
+  const normalized = value.replace(/[_\s]+/g, '-');
+  if (['sbd-dummies', 'sbd-for-dummies', 'sbd-dummies-digital-print', 'sbd-book', 'sbd-dummies-book'].includes(normalized)) {
+    return 'sbd-dummies';
+  }
+  return normalized || 'sbd-dummies';
+}
+
+function getSbdReaderBookUrl(productId) {
+  return `https://sbd.marriageducation.com/book.html?id=${encodeURIComponent(normalizeSbdReaderProductId(productId))}`;
+}
+
+async function ensureSbdReaderAccess({ email, fullName, productId = 'sbd-dummies' }) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail || !normalizedEmail.includes('@')) {
+    throw new Error('Missing buyer email for SBD reader access.');
+  }
+
+  const canonicalProductId = normalizeSbdReaderProductId(productId);
+  let userRecord;
+
+  try {
+    userRecord = await admin.auth().getUserByEmail(normalizedEmail);
+    console.log(`[SBD] Found existing reader user: ${userRecord.uid}`);
+  } catch (notFoundErr) {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    const tempPassword = Array.from({ length: 14 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+
+    userRecord = await admin.auth().createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      displayName: fullName || 'Reader',
+      emailVerified: false,
+    });
+    console.log(`[SBD] Created reader user: ${userRecord.uid}`);
+  }
+
+  const uid = userRecord.uid;
+  const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const existingUser = userSnap.exists ? userSnap.data() || {} : {};
+  const ownedProducts = Array.isArray(existingUser.ownedProducts) ? existingUser.ownedProducts : [];
+  const nextOwnedProducts = Array.from(new Set([
+    ...ownedProducts,
+    canonicalProductId,
+    'sbd-for-dummies',
+    'sbd-dummies-digital-print'
+  ]));
+
+  await userRef.set({
+    uid,
+    email: normalizedEmail,
+    name: fullName || existingUser.name || userRecord.displayName || '',
+    role: existingUser.role || 'member',
+    tier: existingUser.tier || 'foundation',
+    ownedProducts: nextOwnedProducts,
+    sbdAccessProvisioned: true,
+    sbdUid: uid,
+    lastActive: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const resetLink = await admin.auth().generatePasswordResetLink(normalizedEmail, {
+    url: getSbdReaderBookUrl(canonicalProductId)
+  });
+
+  return {
+    uid,
+    productId: canonicalProductId,
+    resetLink,
+    bookUrl: getSbdReaderBookUrl(canonicalProductId)
+  };
 }
 
 async function provisionSBDAccess(email, sellerCode, fullName, options) {
@@ -3427,39 +3507,38 @@ async function sendSbdBuyerAccessEmail(opts) {
   }
   const name = String(opts.name || '').trim() || 'Student';
   const productName = opts.productName || 'Foundation Access — 12 Months';
-  const learnUrl = 'https://sbd-network.web.app/learn?tier=foundation';
-  const loginUrl = 'https://sbd-network.web.app/auth';
+  const readUrl = getSbdReaderBookUrl('sbd-dummies');
   const resetLink = await admin.auth().generatePasswordResetLink(email, {
-    url: learnUrl
+    url: readUrl
   });
 
   await resend.emails.send({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
-    subject: `Your Foundation Access is ready — School 1 for 12 months`,
+    subject: `Your book is ready — read in the SBD reader`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#0a3d32 0%,#00b894 100%);color:#fff;padding:32px;text-align:center;">
           <p style="margin:0;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;opacity:0.85;">Marriage Education</p>
-          <h1 style="margin:10px 0 0;font-size:26px;">Foundation Access — Yearly</h1>
-          <p style="margin:10px 0 0;opacity:0.9;">One payment. Twelve months. School 1 on SBD Network.</p>
+          <h1 style="margin:10px 0 0;font-size:26px;">Sex By Design for Dummies</h1>
+          <p style="margin:10px 0 0;opacity:0.9;">Your access is active in the SBD reader.</p>
         </div>
         <div style="padding:30px;background:#f7faf9;">
           <p style="font-size:16px;color:#333;">Dear ${name},</p>
-          <p style="color:#555;">Thank you for purchasing <strong>${productName}</strong>. Your Foundation-tier access is active on the SBD Network.</p>
+          <p style="color:#555;">Thank you for purchasing <strong>${productName}</strong>. Your access is active. Set your password to open the reader and begin reading.</p>
 
           <div style="background:#fff;border-left:4px solid #00b894;padding:16px;margin:22px 0;">
-            <h3 style="margin:0 0 10px;color:#0a3d32;">Your login</h3>
-            <p style="margin:6px 0;"><strong>App:</strong> <a href="${learnUrl}">sbd-network.web.app/learn?tier=foundation</a></p>
+            <h3 style="margin:0 0 10px;color:#0a3d32;">Your reader access</h3>
+            <p style="margin:6px 0;"><strong>Reader:</strong> <a href="${readUrl}">sbd.marriageducation.com/book.html?id=sbd-dummies</a></p>
             <p style="margin:6px 0;"><strong>Email:</strong> ${email}</p>
             <p style="margin:6px 0;"><strong>Password:</strong> Set it with the button below (required once)</p>
           </div>
 
           <div style="text-align:center;margin:28px 0;">
-            <a href="${resetLink}" style="display:inline-block;background:#00b894;color:#fff;font-weight:700;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;">Set password &amp; open Foundation →</a>
+            <a href="${resetLink}" style="display:inline-block;background:#00b894;color:#fff;font-weight:700;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;">Set password &amp; open reader →</a>
           </div>
 
-          <p style="color:#555;font-size:14px;">Already have a password? <a href="${loginUrl}">Sign in here</a>, then go to Foundation.</p>
+          <p style="color:#555;font-size:14px;">Need to return later? Open the book here: <a href="${readUrl}">Read my book</a>.</p>
           <p style="color:#777;font-size:13px;margin-top:24px;">Questions? Contact <a href="mailto:orders@marriageducation.com">orders@marriageducation.com</a></p>
         </div>
       </div>
@@ -3488,14 +3567,14 @@ async function sendAmbassadorCredentialsEmailSMTP(ambassador) {
           </div>
           
           <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #00b894;">
-            <h3>📚 Your Book Download</h3>
-            <p>Download your book package now. This link expires in 7 days.</p>
-            <a href="${ambassador.bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0;">📥 Download Book</a>
+            <h3>📚 Your Reader Access</h3>
+            <p>Open your book in the SBD reader. PDF downloads are disabled to protect the content.</p>
+            <a href="${ambassador.bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0;">📖 Open Book in SBD Reader</a>
           </div>
           
           <h3>🚀 Next Steps:</h3>
           <ol>
-            <li>Download and read your book package</li>
+            <li>Open the book in the SBD reader</li>
             <li>Log in to your ambassador dashboard</li>
             <li>Get your unique referral link</li>
             <li>Start sharing and earning commissions!</li>
@@ -5396,17 +5475,14 @@ exports.createSbdMeSombPayment = functions.runWith({
       service,
       country: 'CM',
       currency: 'XAF',
-      trxID: reference,
       message: 'Marriage Education — ' + plan.label,
-      customer: {
-        email,
-        firstName: String(name).split(/\s+/)[0] || 'Student',
-        lastName: String(name).split(/\s+/).slice(1).join(' ') || '',
+      location: {
+        town: 'Douala',
         country: 'CM'
       },
       products: [{
-        id: productId,
         name: plan.label,
+        category: 'education',
         quantity: 1,
         amount: plan.amountXaf
       }]
@@ -5477,7 +5553,7 @@ exports.checkSbdMeSombPayment = functions.runWith({
 
   try {
     const credentials = getMesombCredentials();
-    const client = new PaymentOperation(credentials);
+    const client = await getMesombClient(credentials);
     // MeSomb's documented SDK method is getTransactions(). The stored ID is
     // the provider transaction primary key returned by makeCollect().
     const response = await client.getTransactions([pending.transactionId]);

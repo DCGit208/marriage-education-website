@@ -17,6 +17,7 @@ function createPendingPaymentFulfillment(deps) {
     sendTelegram,
     TELEGRAM_BOT_TOKEN,
     unlockSbdContent,
+    ensureSbdReaderAccess,
     sendSbdBuyerAccessEmail
   } = deps;
 
@@ -227,27 +228,54 @@ function createPendingPaymentFulfillment(deps) {
       await trackReferralSale(payment.referral_code, payment.amount);
     }
 
-    const downloadUrl = await generateDownloadURL(payment.product_id);
-    const emailSent = await sendDownloadEmail(
-      payment.email,
-      payment.product_name,
-      downloadUrl,
-      ref
-    );
+    const isReaderOnlyDummies = ['sbd-book', 'sbd-for-dummies', 'sbd-dummies', 'sbd-dummies-digital-print', 'sbd-founding', 'sbd-1', 'sbd-3', 'sbd-5', 'sbd-10', 'sbd-100'].includes(String(payment.product_id || ''));
+
+    let readerUrl = null;
+    let emailSent = false;
+
+    if (isReaderOnlyDummies) {
+      try {
+        const access = await ensureSbdReaderAccess({
+          email: payment.loginEmail || payment.email,
+          fullName: payment.name || payment.customer_name || payment.email || 'Reader',
+          productId: payment.product_id || 'sbd-dummies'
+        });
+        readerUrl = access?.bookUrl || access?.resetLink || null;
+        emailSent = await sendDownloadEmail(
+          payment.email,
+          payment.product_name,
+          readerUrl,
+          ref
+        );
+      } catch (readerErr) {
+        console.error('[fulfill] Reader-only access failed:', readerErr.message);
+        emailSent = false;
+      }
+    } else {
+      const downloadUrl = await generateDownloadURL(payment.product_id);
+      emailSent = await sendDownloadEmail(
+        payment.email,
+        payment.product_name,
+        downloadUrl,
+        ref
+      );
+      readerUrl = null;
+    }
 
     if (TELEGRAM_BOT_TOKEN) {
       const adminMsg = `✅ PAYMENT APPROVED (${channel})\n\n` +
         `📋 Reference: ${payment.reference}\n` +
         `👤 Customer: ${payment.email}\n` +
         `📚 Product: ${payment.product_name}\n` +
-        `💰 Amount: ${payment.amount} ${payment.currency}`;
+        `💰 Amount: ${payment.amount} ${payment.currency}\n` +
+        `📖 Reader access granted — no PDF link sent`;
       await sendTelegram(adminMsg, false);
     }
 
     return {
       success: true,
       message: 'Payment approved successfully',
-      download_url: downloadUrl,
+      reader_url: readerUrl,
       email_sent: emailSent,
       channel
     };

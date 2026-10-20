@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payment Successful - Download Your eBook</title>
+  <title>Payment Successful - Read in the SBD Reader</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -125,9 +125,9 @@
     <h1>🎉 Payment Successful!</h1>
     <div id="payment-method-badge" class="payment-method"></div>
     <p>Thank you for your purchase of <span class="product-name" id="product-name">the eBook</span>.</p>
-    <p>Click the button below to download your eBook now:</p>
+    <p>Your book is read inside the SBD Reader. Check your email for your access link, or open the reader below.</p>
     
-    <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+    <a href="#" id="download-btn" class="download-btn">📖 Open in the SBD Reader</a>
     
     <br><br>
     <a href="https://marriageducation.com" class="home-link">← Return to Home</a>
@@ -177,7 +177,7 @@
     
     // Set download link
     const downloadBtn = document.getElementById('download-btn');
-    downloadBtn.href = `/download?product_id=${encodeURIComponent(productId)}&session_id=${encodeURIComponent(sessionId || 'direct')}`;
+    downloadBtn.href = 'https://sbd.marriageducation.com/book.html?id=sbd-dummies';
     
     console.log('✅ Success page loaded');
     console.log('Product ID:', productId);

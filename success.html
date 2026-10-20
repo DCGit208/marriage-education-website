@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payment Successful - Download Your eBook</title>
+  <title>Payment Successful - Read in the SBD Reader</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
@@ -108,8 +108,8 @@
     
     <!-- For ebooks -->
     <div id="ebook-download" style="display: none;">
-      <p>Click the button below to download your eBook:</p>
-      <a href="#" id="download-btn" class="download-btn">📥 Download Your eBook</a>
+      <p>Your book is read inside the SBD Reader:</p>
+      <a href="#" id="download-btn" class="download-btn">📖 Open in the SBD Reader</a>
     </div>
     
     <!-- For courses -->
@@ -170,7 +170,7 @@
       };
       
       document.getElementById('product-name').textContent = productNames[productId] || productNames['default'];
-      document.getElementById('download-btn').href = `download-ebook.php?product_id=${encodeURIComponent(productId)}`;
+      document.getElementById('download-btn').href = `https://sbd.marriageducation.com/book.html?id=sbd-dummies`;
     }
 
     async function checkIfCourse(productId) {

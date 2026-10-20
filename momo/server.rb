@@ -332,6 +332,9 @@ get '/download' do
 
   product = product_db[product_id]
   halt 404, 'Product not found' unless product
+  if product_id =~ /\A(sbd-founding|sbd-dummies.*|sbd-for-dummies.*|sbd-\d+|sbd-pillar-\d+|sbd-sponsor-\d+|sbd-challenge-14|sbd-teleios-live|sbd-quote-pack)\z/ || product['name'].to_s.downcase.include?('dummies')
+    halt 410, 'This book is read inside the SBD Reader: https://sbd.marriageducation.com'
+  end
   download_filename = product['download_filename']
   halt 404, 'No download available for this product' unless download_filename && !download_filename.strip.empty?
 
