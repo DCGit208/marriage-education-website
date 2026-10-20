@@ -106,31 +106,45 @@ async function getMesombClient(overrides = {}) {
  * known-working Q4-Life Community Connect integration. Keep credentials
  * server-side and pass the external reference through for reconciliation.
  */
+// MeSomb rejects SDK 3.0.2 signatures when the JSON body has non-ASCII characters (e.g. an em dash).
+function toMesombAscii(value) {
+  return String(value || '')
+    .replace(/[\u2010-\u2015]/g, '-')
+    .normalize('NFKD')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function sbdMesombCollect({
   applicationKey, accessKey, secretKey, amount, payer, service,
-  country = 'CM', currency = 'XAF', nonce,
+  country = 'CM', currency = 'XAF', nonce, trxID,
   location, products
 }) {
-  // Use a unique nonce; keep the SBD reference internally rather than sending
-  // the SDK's separate, unsigned X-MeSomb-TrxID header.
   const client = await getMesombClient({ applicationKey, accessKey, secretKey });
-  const safeNonce = nonce || Array.from({ length: 40 }, () =>
+  const cleanProducts = (products || []).map(p => ({ ...p, name: toMesombAscii(p.name), category: toMesombAscii(p.category) }));
+  const newNonce = () => Array.from({ length: 40 }, () =>
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[crypto.randomInt(62)]
   ).join('');
 
-  return client.makeCollect({
-    amount,
-    payer,
-    service,
-    country,
-    currency,
-    nonce: safeNonce,
-    products,
-    fees: true,
-    conversion: false,
-    mode: 'asynchronous',
-    location
-  });
+  // MeSomb rejects bad signatures before processing, so a retry cannot double-charge.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await client.makeCollect({
+        amount, payer, service, country, currency,
+        nonce: (attempt === 1 && nonce) || newNonce(),
+        trxID,
+        products: cleanProducts,
+        fees: true,
+        conversion: false,
+        mode: 'asynchronous',
+        location
+      });
+    } catch (error) {
+      console.warn('[SBD MeSomb] collect attempt', attempt, error.name, String(error.message).slice(0, 120), { trxID, service, amount, productName: cleanProducts[0] && cleanProducts[0].name });
+      if (error.name !== 'PermissionDeniedError' || attempt >= 3) throw error;
+    }
+  }
 }
 
 function verifySbdMeSombWebhook({ rawBody, signatureHeader, webhookSecret, toleranceSeconds = 300 }) {
@@ -5475,6 +5489,7 @@ exports.createSbdMeSombPayment = functions.runWith({
       service,
       country: 'CM',
       currency: 'XAF',
+      trxID: reference,
       message: 'Marriage Education — ' + plan.label,
       location: {
         town: 'Douala',
@@ -5506,6 +5521,7 @@ exports.createSbdMeSombPayment = functions.runWith({
     }
 
     if (status === 'FAILED') {
+      console.error('[SBD MeSomb] provider reported FAILED', { reference, message: response?.message, txMessage: transaction?.message, finTrxId: transaction?.fin_trx_id || transaction?.finTrxId });
       return { success: false, status: 'FAILED', reference, message: 'Your Mobile Money payment could not be completed. Please try again.' };
     }
 
