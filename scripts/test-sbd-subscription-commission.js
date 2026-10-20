@@ -14,6 +14,7 @@ const {
   YEARLY_SENIOR_FCFA,
   YEARLY_RD_FCFA,
   YEARLY_REVENUE_BASE_FCFA,
+  YEARLY_COMMISSION_BASE_FCFA,
   FOUNDATION_YEARLY_USD,
   XAF_PER_USD,
   resolveSeniorOverrideCode,
@@ -34,7 +35,7 @@ function ok(name, cond, detail) {
   }
 }
 
-ok('policy version', POLICY_VERSION === '2026-07-v2');
+ok('policy version', POLICY_VERSION === '2026-10-v3');
 ok('monthly direct 500', DIRECT_COMMISSION_FCFA === 500);
 ok('monthly senior 250', SENIOR_OVERRIDE_FCFA === 250);
 ok('monthly rd 250', RD_OVERRIDE_FCFA === 250);
@@ -43,24 +44,34 @@ ok('monthly full stack 1000', DIRECT_COMMISSION_FCFA + SENIOR_OVERRIDE_FCFA + RD
 
 ok('Foundation Access product $144.17', FOUNDATION_YEARLY_USD === 144.17);
 ok('xaf rate 600', XAF_PER_USD === 600);
-ok('yearly direct 7080', YEARLY_DIRECT_FCFA === 7080);
-ok('yearly senior 3540', YEARLY_SENIOR_FCFA === 3540);
-ok('yearly rd 3540', YEARLY_RD_FCFA === 3540);
-ok('yearly base 70800', YEARLY_REVENUE_BASE_FCFA === 70800);
-ok('yearly full stack 17300', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 17300);
-ok('daily amb target $144.17', YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 === 144.17);
-ok('monthly amb target $2883.40', YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 === 2883.4);
+ok('yearly retail payment remains 86502 XAF', YEARLY_REVENUE_BASE_FCFA === 86502);
+ok('yearly retail payment matches $144.17 at policy rate', YEARLY_REVENUE_BASE_FCFA === Math.round(FOUNDATION_YEARLY_USD * XAF_PER_USD));
+ok('yearly commission base 80000', YEARLY_COMMISSION_BASE_FCFA === 80000);
+ok('yearly direct 8000', YEARLY_DIRECT_FCFA === 8000);
+ok('yearly senior 4000', YEARLY_SENIOR_FCFA === 4000);
+ok('yearly rd 4000', YEARLY_RD_FCFA === 4000);
+ok('yearly full stack 16000', YEARLY_DIRECT_FCFA + YEARLY_SENIOR_FCFA + YEARLY_RD_FCFA === 16000);
+ok('daily Ambassador target $133.33', Math.round(YEARLY_DIRECT_FCFA / XAF_PER_USD * 10 * 100) / 100 === 133.33);
+ok('monthly Ambassador target $2666.67', Math.round(YEARLY_DIRECT_FCFA / XAF_PER_USD * 200 * 100) / 100 === 2666.67);
+ok('monthly Senior team target $13333.33', Math.round(YEARLY_SENIOR_FCFA / XAF_PER_USD * 10 * 200 * 100) / 100 === 13333.33);
+ok('monthly RD region target $666666.67', Math.round(YEARLY_RD_FCFA / XAF_PER_USD * 50 * 10 * 200 * 100) / 100 === 666666.67);
 
 ok('isFoundationYearly true', isFoundationYearly('foundation-yearly') === true);
 ok('isFoundationYearly false monthly', isFoundationYearly('foundation-monthly') === false);
 
 const monthlyAmounts = commissionAmountsForProduct('foundation-monthly');
 ok('monthly amounts program', monthlyAmounts.program === 'foundation_monthly');
+ok('monthly amounts base remains 5000', monthlyAmounts.revenueBaseFCFA === 5000);
 ok('monthly amounts direct', monthlyAmounts.direct === 500);
+ok('monthly amounts senior remains 250', monthlyAmounts.senior === 250);
+ok('monthly amounts rd remains 250', monthlyAmounts.rd === 250);
 
 const yearlyAmounts = commissionAmountsForProduct('foundation-yearly');
 ok('yearly amounts program', yearlyAmounts.program === 'foundation_yearly_deployment');
-ok('yearly amounts direct', yearlyAmounts.direct === 7080);
+ok('yearly amounts base uses commission basis', yearlyAmounts.revenueBaseFCFA === 80000);
+ok('yearly amounts direct', yearlyAmounts.direct === 8000);
+ok('yearly amounts senior', yearlyAmounts.senior === 4000);
+ok('yearly amounts rd', yearlyAmounts.rd === 4000);
 
 const ambSeller = {
   type: 'ambassador',

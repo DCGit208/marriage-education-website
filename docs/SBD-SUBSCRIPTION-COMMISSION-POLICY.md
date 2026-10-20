@@ -1,8 +1,8 @@
 # SBD Subscription Commission Policy
 
-**Policy version:** `2026-07-v2`  
-**Status:** Active — implemented in Cloud Functions (`handleSbdStripeInvoice`, `unlockSbdContent`, `creditSbdSubscriptionCommissions`)  
-**Last updated:** July 2026  
+**Policy version:** `2026-10-v3`
+**Status:** Approved policy; implementation updated in Cloud Functions and pending deployment
+**Last updated:** October 2026
 
 > **Read [COMMISSION-MASTER-PRINCIPLES.md](./COMMISSION-MASTER-PRINCIPLES.md) first.**
 
@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-When a user subscribes to **Foundation Access** on **sbd-network.web.app** (and related checkout paths), ambassadors and uplines earn commission on each qualifying charge — separate from the **15,000 FCFA ambassador onboarding** recruitment bonus.
+When a user purchases **Foundation Access** on **sbd-network.web.app** (and related checkout paths), ambassadors and eligible uplines earn commission on qualifying charges — separate from the Ambassador onboarding recruitment bonus. General-outreach USD equivalents below use the plan's 600:1 XAF/USD reference rate; the commission ledger and Mobile Money collection remain in XAF.
 
 Two Foundation billing paths exist:
 
@@ -27,26 +27,31 @@ Two Foundation billing paths exist:
 |-------|-------|
 | Product ID | `foundation-yearly` |
 | Customer charge | **$144.17 USD one-time / 12 months** |
-| FX ledger rate | **600 XAF / USD** |
-| Commissionable base | **86,502 FCFA** ($144.17 × 600) |
+| Mobile Money collection amount | **86,502 XAF** (the $144.17 retail charge at 600 XAF/USD) |
+| Commissionable unit basis | **80,000 XAF** (approximately **$133.33 USD**) |
 
 ### Commission stack (each paid yearly charge)
 
-| Role | % of $144.17 | USD | FCFA |
-|------|-----------|-----|------|
-| **Direct** (SBD referral code owner) | 10% | **$11.80** | **7,080** |
-| **Senior override** | 5% | **$5.90** | **3,540** |
-| **RD override** | 5% | **$5.90** | **3,540** |
+| Role | Rate of commissionable unit basis | USD equivalent per unit | XAF ledger amount per unit |
+|------|-------------------------------------|--------------------------|---------------------------|
+| **Direct** (SBD referral code owner) | 10% | **$13.33** | **8,000 XAF** |
+| **Senior override** | 5% | **$6.67** | **4,000 XAF** |
+| **RD override** | 5% | **$6.67** | **4,000 XAF** |
 
-**Full stack:** 20% of $144.17 = **$23.60** (14,160 FCFA).
+**Full eligible stack:** 20% of the 80,000 XAF commission basis = **$26.67 USD equivalent** (16,000 XAF). Commissions are not calculated from the $144.17 retail price.
 
-### Operator challenge math (planning + DOS)
+The retail amount collected and the commission basis are intentionally different. `YEARLY_REVENUE_BASE_FCFA` remains the retail-charge amount used by existing Mobile Money checkout flows. Commission plans and `sbd_sales.revenueBaseFCFA` use `YEARLY_COMMISSION_BASE_FCFA` (80,000 XAF). A one-time 12-month purchase is credited on its qualifying deployment; it does not generate a recurring commission each month.
+
+### Operator challenge math (planning targets)
 
 | Cadence | Deployments | Direct commission |
 |---------|-------------|-------------------|
-| Day | 10 × $144.17 | **$144.17 / day** |
-| Month (20 days) | 200 | **$2,360 / month** |
-| Senior (10 ambassadors at full target) | 5% of network revenue | **$11,800 / month** |
+| Ambassador / day | 10 units | **Approximately $133.33 USD** |
+| Ambassador / month (20 days) | 200 units | **Approximately $2,666.67 USD** |
+| Senior team / month (10 Ambassadors at full target) | 2,000 units | **Approximately $13,333.33 USD** override |
+| Regional network / month (50 Senior teams / 500 Ambassadors) | 100,000 units | **Approximately $666,666.67 USD** override |
+
+These are full-target scenarios, not guaranteed income. They assume every target unit is successfully deployed, attributed, and eligible. Senior and RD figures show team overrides only; they exclude any direct commissions those leaders may earn on their own qualifying deployments. USD values are rounded to cents after calculation using the 600:1 reference rate.
 
 Dashboard tracks paid yearly sales via `sbdReferrals.yearlyByDay` / `yearlyByMonth` / `foundationYearly`.
 
@@ -57,21 +62,21 @@ Dashboard tracks paid yearly sales via `sbdReferrals.yearlyByDay` / `yearlyByMon
 | Field | Value |
 |-------|-------|
 | Product ID | `foundation-monthly` (premium/elite monthly use same % rules on their base) |
-| Customer charge | **5,200 FCFA/month** (catalog USD may show ~$9.77) |
-| Commissionable base | **5,000 FCFA** |
-| OPEX (platform) | **200 FCFA** (not commissionable) |
+| Customer charge | **Approximately $9.77 USD/month** (5,200 XAF at the policy reference rate; catalog pricing may vary) |
+| Commissionable base | **Approximately $8.33 USD** (5,000 XAF) |
+| OPEX (platform) | **Approximately $0.33 USD** (200 XAF; not commissionable) |
 
 ### Commission stack (every qualifying monthly charge)
 
-| Role | % of 5,000 base | FCFA/month |
-|------|-----------------|------------|
-| **Direct** | 10% | **500** |
-| **Senior override** | 5% | **250** |
-| **RD override** | 5% | **250** |
+| Role | % of 5,000 XAF base | USD equivalent per qualifying charge | XAF ledger amount |
+|------|---------------------|-----------------------------------|--------------------|
+| **Direct** | 10% | **Approximately $0.83** | **500 XAF** |
+| **Senior override** | 5% | **Approximately $0.42** | **250 XAF** |
+| **RD override** | 5% | **Approximately $0.42** | **250 XAF** |
 
-**Total commission per monthly charge (full stack):** **1,000 FCFA**.
+**Total commission per monthly charge (full stack):** **Approximately $1.67 USD** (1,000 XAF).
 
-Commissions apply on **each successful monthly subscription charge**, not first month only.
+Commissions apply on **each successful monthly subscription charge**, not first month only. This recurring monthly-product behavior is separate from the one-time Foundation Yearly deployment.
 
 ---
 
@@ -115,7 +120,7 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 | Seller `sbdReferrals.yearlyByDay.{YYYY-MM-DD}` | Daily challenge progress |
 | Seller `sbdReferrals.yearlyByMonth.{YYYY-MM}` | Monthly challenge progress |
 
-**Policy version tag:** `2026-07-v2`
+**Policy version tag:** `2026-10-v3`
 
 ---
 
@@ -123,7 +128,7 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 
 | System | Relationship |
 |--------|----------------|
-| [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) | One-time 15,000 FCFA signup — separate |
+| [RECRUITMENT-BONUS-POLICY.md](./RECRUITMENT-BONUS-POLICY.md) | One-time Ambassador signup bonus — separate |
 | DTC landing | `public/foundation-access.html` → `createSbdGuestCheckoutSession` |
 | `functions/commerce/` | Sandbox CamPay engine — mirror these rules; not production checkout yet |
 | Product / book sales | **Done** — 10/5/5 only; no executive override |
@@ -147,15 +152,19 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 ## 9. Quick reference
 
 ```
-FOUNDATION ACCESS ($144.17 one-time / 12 months):
-  Direct  = 7,080 FCFA ($11.80)
-  Senior  = 3,540 FCFA ($5.90)
-  RD      = 3,540 FCFA ($5.90)
+FOUNDATION ACCESS ($144.17 USD one-time / 12 months):
+  Retail charge = 86,502 XAF at 600 XAF/USD
+  Commission basis = 80,000 XAF (~$133.33 USD)
+  Direct  = 8,000 XAF (~$13.33 USD)
+  Senior  = 4,000 XAF (~$6.67 USD)
+  RD      = 4,000 XAF (~$6.67 USD)
+  Full eligible stack = 16,000 XAF (~$26.67 USD)
 
-MONTHLY (5,200 charge / 5,000 base):
-  Direct  = 500
-  Senior  = 250
-  RD      = 250
+MONTHLY (5,200 XAF charge / 5,000 XAF base):
+  Direct  = 500 XAF (~$0.83 USD)
+  Senior  = 250 XAF (~$0.42 USD)
+  RD      = 250 XAF (~$0.42 USD)
+  Full stack = 1,000 XAF (~$1.67 USD)
 
 Executive = 0 on both stacks
 ```
