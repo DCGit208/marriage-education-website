@@ -306,9 +306,9 @@ const PRODUCTS = [
     description: 'Foundation School access billed monthly at $11/month. This is the ongoing monthly option.',
     unlocks: { type: 'tier', tier: 'foundation' },
   }),
-  p('foundation-yearly', 'Foundation School — One-Time Access', 'network_subscription', 144.17, {
+  p('foundation-yearly', 'Foundation School — One-Time Access', 'network_subscription', 145, {
     phase: 1, type: 'access', priceSuffix: '', recurring: false, icon: '🎓', sortOrder: 1.1,
-    description: 'One-time payment of $144.17 for 12 months of Foundation School access. No automatic renewal.',
+    description: 'One-time payment of $145 for 12 months of Foundation School access. No automatic renewal.',
     unlocks: { type: 'tier', tier: 'foundation', months: 12 },
   }),
   p('foundation-1year', 'Foundation School — 1-Year Subscription', 'network_subscription', 15, {

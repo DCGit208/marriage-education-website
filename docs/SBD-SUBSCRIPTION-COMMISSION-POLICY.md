@@ -16,7 +16,7 @@ Two Foundation billing paths exist:
 
 | Path | Product ID | Role |
 |------|------------|------|
-| **Official yearly deployment program** | `foundation-yearly` ($144.17 one-time / 12 months) | Primary operator challenge (10/day × 20 days) |
+| **Official yearly deployment program** | `foundation-yearly` ($145 one-time / 12 months) | Primary operator challenge (10/day × 20 days) |
 | **Monthly enrollment provision** | `foundation-monthly` ($9.77/mo) | Alternate path — does not replace yearly |
 
 ---
@@ -26,9 +26,10 @@ Two Foundation billing paths exist:
 | Field | Value |
 |-------|-------|
 | Product ID | `foundation-yearly` |
-| Customer charge | **$144.17 USD one-time / 12 months** |
-| Mobile Money collection amount | **86,502 XAF** (the $144.17 retail charge at 600 XAF/USD) |
+| Customer charge | **$145 USD one-time / 12 months** |
+| Mobile Money collection amount | **87,000 XAF** (the $145 retail charge at 600 XAF/USD) |
 | Commissionable unit basis | **80,000 XAF** (approximately **$133.33 USD**) |
+| Reserved portion | **7,000 XAF** (approximately **$11.67 USD**) — excluded from commissions |
 
 ### Commission stack (each paid yearly charge)
 
@@ -38,7 +39,7 @@ Two Foundation billing paths exist:
 | **Senior override** | 5% | **$6.67** | **4,000 XAF** |
 | **RD override** | 5% | **$6.67** | **4,000 XAF** |
 
-**Full eligible stack:** 20% of the 80,000 XAF commission basis = **$26.67 USD equivalent** (16,000 XAF). Commissions are not calculated from the $144.17 retail price.
+**Full eligible stack:** 20% of the 80,000 XAF commission basis = **$26.67 USD equivalent** (16,000 XAF). Commissions are not calculated from the $145 retail price; the 7,000 XAF difference is reserved.
 
 The retail amount collected and the commission basis are intentionally different. `YEARLY_REVENUE_BASE_FCFA` remains the retail-charge amount used by existing Mobile Money checkout flows. Commission plans and `sbd_sales.revenueBaseFCFA` use `YEARLY_COMMISSION_BASE_FCFA` (80,000 XAF). A one-time 12-month purchase is credited on its qualifying deployment; it does not generate a recurring commission each month.
 
@@ -152,8 +153,9 @@ Label all mature-scale figures **planning targets** — actuals depend on deploy
 ## 9. Quick reference
 
 ```
-FOUNDATION ACCESS ($144.17 USD one-time / 12 months):
-  Retail charge = 86,502 XAF at 600 XAF/USD
+FOUNDATION ACCESS ($145 USD one-time / 12 months):
+  Retail charge = 87,000 XAF at 600 XAF/USD
+  Reserved (no commission) = 7,000 XAF (~$11.67 USD)
   Commission basis = 80,000 XAF (~$133.33 USD)
   Direct  = 8,000 XAF (~$13.33 USD)
   Senior  = 4,000 XAF (~$6.67 USD)

@@ -11,7 +11,7 @@ test.describe('Guest UX (local public tree)', () => {
     const response = await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
     expect(response && response.status()).toBe(200);
     await expect(page.locator('h1')).toContainText('Choose Your Level of Access');
-    await expect(page.locator('body')).toContainText('$144.17');
+    await expect(page.locator('body')).toContainText('$145');
     await expect(page.locator('body')).toContainText('$11');
     await expect(page.locator('body')).toContainText('$20');
     await expect(page.locator('body')).toContainText('$50');

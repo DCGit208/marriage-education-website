@@ -42,10 +42,11 @@ ok('monthly rd 250', RD_OVERRIDE_FCFA === 250);
 ok('monthly base 5000', REVENUE_BASE_FCFA === 5000);
 ok('monthly full stack 1000', DIRECT_COMMISSION_FCFA + SENIOR_OVERRIDE_FCFA + RD_OVERRIDE_FCFA === 1000);
 
-ok('Foundation Access product $144.17', FOUNDATION_YEARLY_USD === 144.17);
+ok('Foundation Access product $145', FOUNDATION_YEARLY_USD === 145);
 ok('xaf rate 600', XAF_PER_USD === 600);
-ok('yearly retail payment remains 86502 XAF', YEARLY_REVENUE_BASE_FCFA === 86502);
-ok('yearly retail payment matches $144.17 at policy rate', YEARLY_REVENUE_BASE_FCFA === Math.round(FOUNDATION_YEARLY_USD * XAF_PER_USD));
+ok('yearly retail payment is 87000 XAF', YEARLY_REVENUE_BASE_FCFA === 87000);
+ok('7000 XAF is reserved outside commission basis', YEARLY_REVENUE_BASE_FCFA - YEARLY_COMMISSION_BASE_FCFA === 7000);
+ok('yearly retail payment matches $145 at policy rate', YEARLY_REVENUE_BASE_FCFA === Math.round(FOUNDATION_YEARLY_USD * XAF_PER_USD));
 ok('yearly commission base 80000', YEARLY_COMMISSION_BASE_FCFA === 80000);
 ok('yearly direct 8000', YEARLY_DIRECT_FCFA === 8000);
 ok('yearly senior 4000', YEARLY_SENIOR_FCFA === 4000);

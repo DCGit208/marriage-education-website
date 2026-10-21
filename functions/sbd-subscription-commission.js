@@ -1,7 +1,7 @@
 /**
  * SBD subscription commission policy
  * - Monthly tiers: 500 + 250 + 250 FCFA on 5,000 base (2026-04-v1)
- * - Foundation Access ($144.17 one-time / 12 months): 10% / 5% / 5% of the 80,000 FCFA unit basis (2026-10-v3)
+ * - Foundation Access ($145 one-time / 12 months): 10% / 5% / 5% of the 80,000 FCFA unit basis (2026-10-v3)
  * See docs/SBD-SUBSCRIPTION-COMMISSION-POLICY.md
  */
 
@@ -15,9 +15,10 @@ const RD_OVERRIDE_FCFA = 250;
 
 const XAF_PER_USD = 600;
 const FOUNDATION_YEARLY_PRODUCT = 'foundation-yearly';
-const FOUNDATION_YEARLY_USD = 144.17;
+const FOUNDATION_YEARLY_USD = 145;
 const YEARLY_REVENUE_BASE_FCFA = Math.round(FOUNDATION_YEARLY_USD * XAF_PER_USD);
 const YEARLY_COMMISSION_BASE_FCFA = 80000;
+const YEARLY_RESERVED_FCFA = YEARLY_REVENUE_BASE_FCFA - YEARLY_COMMISSION_BASE_FCFA;
 const YEARLY_DIRECT_FCFA = Math.round(YEARLY_COMMISSION_BASE_FCFA * 0.1);
 const YEARLY_SENIOR_FCFA = Math.round(YEARLY_COMMISSION_BASE_FCFA * 0.05);
 const YEARLY_RD_FCFA = Math.round(YEARLY_COMMISSION_BASE_FCFA * 0.05);
@@ -424,6 +425,7 @@ module.exports = {
   FOUNDATION_YEARLY_PRODUCT,
   FOUNDATION_YEARLY_USD,
   YEARLY_REVENUE_BASE_FCFA,
+  YEARLY_RESERVED_FCFA,
   YEARLY_COMMISSION_BASE_FCFA,
   YEARLY_DIRECT_FCFA,
   YEARLY_SENIOR_FCFA,

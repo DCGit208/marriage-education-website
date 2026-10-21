@@ -653,7 +653,7 @@ function createPaywallModal() {
           <ul class="tier-features">
             <li>Foundation School formation access</li>
             <li>Three payment choices at checkout</li>
-            <li>One-time: $144.17 for 12 months</li>
+            <li>One-time: $145 for 12 months</li>
             <li>1-year subscription: $15/month for 12 months</li>
             <li>2-year subscription: $11/month for 24 months</li>
           </ul>

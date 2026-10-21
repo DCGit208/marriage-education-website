@@ -531,7 +531,7 @@
         'If you want structure instead of guessing course by course, the 1-year formation pack is the stronger direction to consider. It fits someone who wants a guided formation rhythm, not just a single answer.',
       nextStep: 'Start in Learn, then compare membership access so the pack or course path matches the level of structure you want.',
       catalog: [
-        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$144.17 one-time / 12 months', why: 'Best if you want an affordable year rhythm.', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
+        { label: 'Year path', title: 'Foundation Tier — Yearly', meta: '$145 one-time / 12 months', why: 'Best if you want an affordable year rhythm.', href: '/checkout.html?product=foundation-yearly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20Tier' },
         { label: 'Deeper access', title: 'Premium Tier', meta: '$20/mo', why: 'Good if you want more course access monthly.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
         { label: 'Diploma path', title: 'Diploma in Teleios Personal Development', meta: '$2000', why: 'Good if you want a serious credential path.', href: '/checkout.html?product=diploma-teleios-personal-development', reviewHref: '/shop.html?section=bundles_diplomas&category=diplomas_certifications&q=Diploma%20Teleios%20Personal%20Development' },
       ],
@@ -561,7 +561,7 @@
         'Start free if you are only exploring. Choose Foundation for entry formation, Premium for deeper course access and progress, and Elite when you want the full ecosystem: advanced training, MV House, and deeper guided access.',
       nextStep: 'Compare plans, then choose the lowest level that genuinely opens the next step you need.',
       catalog: [
-        { label: 'Start', title: 'Foundation School', meta: '$144.17 one-time · $15/mo 1-year · $11/mo 2-year', why: 'Choose the Foundation payment term that fits your access plan.', href: '/checkout.html?product=foundation-options', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20School' },
+        { label: 'Start', title: 'Foundation School', meta: '$145 one-time · $15/mo 1-year · $11/mo 2-year', why: 'Choose the Foundation payment term that fits your access plan.', href: '/checkout.html?product=foundation-options', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Foundation%20School' },
         { label: 'Deeper learning', title: 'Premium Tier', meta: '$20/mo', why: 'Good if courses are the main reason you are joining.', href: '/checkout.html?product=premium-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Premium%20Tier' },
         { label: 'Full ecosystem', title: 'Elite Tier', meta: '$50/mo', why: 'Good if you want the widest SBD access.', href: '/checkout.html?product=elite-monthly', reviewHref: '/shop.html?section=membership&category=network_subscription&q=Elite%20Tier' },
       ],
