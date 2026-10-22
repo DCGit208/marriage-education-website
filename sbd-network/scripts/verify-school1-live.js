@@ -39,10 +39,10 @@ async function main() {
     throw new Error('No Firebase project ID found in environment or sbd-network/.firebaserc.');
   }
 
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    projectId,
-  });
+  const credential = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+    : admin.credential.applicationDefault();
+  admin.initializeApp({ credential, projectId });
   const db = admin.firestore();
   let failures = 0;
 

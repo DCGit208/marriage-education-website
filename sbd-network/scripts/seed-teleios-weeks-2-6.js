@@ -12,9 +12,16 @@ const path  = require('path');
 const fs    = require('fs');
 
 const SA = path.resolve(__dirname, '../../serviceAccountKey.json');
-if (!fs.existsSync(SA)) { console.error('❌ serviceAccountKey.json not found at:', SA); process.exit(1); }
+let credential;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  credential = admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT));
+} else if (fs.existsSync(SA)) {
+  credential = admin.credential.cert(require(SA));
+} else {
+  credential = admin.credential.applicationDefault();
+}
 
-admin.initializeApp({ credential: admin.credential.cert(require(SA)) });
+admin.initializeApp({ credential });
 const db = admin.firestore();
 
 // ── Load content from parent project's courses-catalogue.json ─────

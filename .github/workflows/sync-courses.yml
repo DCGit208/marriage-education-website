@@ -65,3 +65,10 @@ jobs:
           
           importCourses().catch(console.error);
           EOF
+
+      - name: Seed Teleios weeks 2-6 and verify School 1
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node sbd-network/scripts/seed-teleios-weeks-2-6.js
+          node sbd-network/scripts/verify-school1-live.js
