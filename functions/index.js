@@ -355,7 +355,7 @@ async function sendSbdMesombGuestAccessEmail(pending, paymentRef) {
   if (!claimed) return;
 
   try {
-    await sendSbdBuyerAccessEmail({
+    const sent = await sendSbdBuyerAccessEmail({
       email: pending.loginEmail || pending.email,
       name: pending.name,
       productId: pending.productId,
@@ -364,6 +364,7 @@ async function sendSbdMesombGuestAccessEmail(pending, paymentRef) {
     await paymentRef.set({
       welcomeEmailSent: true,
       welcomeEmailSending: false,
+      welcomeEmailVia: sent?.via || null,
       welcomeEmailError: admin.firestore.FieldValue.delete(),
       welcomeEmailSentAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -3633,6 +3634,37 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
+ * Send a transactional email. Resend's SDK returns { error } instead of
+ * throwing, so check it explicitly and fall back to the SMTP sender.
+ */
+async function sendEmailWithFallback({ to, from, subject, html }) {
+  let resendFailure = null;
+  try {
+    const result = await resend.emails.send({ to, from, subject, html });
+    if (!result?.error) return { via: 'resend', id: result?.data?.id || null };
+    resendFailure = result.error.message || String(result.error.name || 'resend_error');
+  } catch (error) {
+    resendFailure = error.message;
+  }
+
+  if (!transporter) {
+    throw new Error('Email failed via Resend (' + resendFailure + ') and SMTP is not configured.');
+  }
+  console.warn('[Email] Resend failed, falling back to SMTP:', resendFailure);
+  try {
+    const info = await transporter.sendMail({
+      from: '"Marriage Education" <' + SMTP_CONFIG.from + '>',
+      to,
+      subject,
+      html
+    });
+    return { via: 'smtp', id: info.messageId || null };
+  } catch (error) {
+    throw new Error('Email failed via Resend (' + resendFailure + ') and SMTP (' + error.message + ')');
+  }
+}
+
+/**
  * Welcome email for 12-Month Foundation Access buyers (SBD Network, School 1).
  */
 async function sendSbdFoundationAccessEmail({ email, name, productName }) {
@@ -3642,7 +3674,7 @@ async function sendSbdFoundationAccessEmail({ email, name, productName }) {
     url: learnUrl
   });
 
-  await resend.emails.send({
+  return sendEmailWithFallback({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
     subject: `Your Foundation Access is ready — School 1 for 12 months`,
@@ -3695,7 +3727,7 @@ async function sendSbdBuyerAccessEmail(opts) {
     url: readUrl
   });
 
-  await resend.emails.send({
+  return sendEmailWithFallback({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
     subject: `Your book is ready — read in the SBD reader`,
