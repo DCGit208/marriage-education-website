@@ -608,7 +608,7 @@
 
     .pay-methods {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.55rem;
       margin: 0 0 1rem;
     }
@@ -638,6 +638,10 @@
       font-size: 0.75rem;
       color: var(--muted);
     }
+    @media (max-width: 560px) {
+      .pay-methods { grid-template-columns: 1fr; }
+      .pay-method { text-align: left; }
+    }
 
     .momo-panel {
       display: none;
@@ -648,6 +652,18 @@
       background: var(--paper);
     }
     .momo-panel.show { display: block; }
+    .automatic-momo-panel { display: none; }
+    .automatic-momo-panel.show { display: block; }
+    .automatic-momo-result {
+      display: none;
+      margin-top: 0.85rem;
+      padding: 0.85rem;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+    .automatic-momo-result.show { display: block; }
     .momo-panel h3 {
       margin: 0 0 0.65rem;
       font-size: 0.95rem;
@@ -1160,10 +1176,28 @@
               Card / Stripe
               <small>Visa · Mastercard · Virtual Card</small>
             </button>
+            <button type="button" class="pay-method" id="payAutoMomo" data-method="automatic-momo">
+              Mobile Money · automatic
+              <small>Phone prompt · MTN or Orange</small>
+            </button>
             <button type="button" class="pay-method" id="payMomo" data-method="momo">
               Manual MoMo
               <small>MTN or Orange · 87,000 FCFA</small>
             </button>
+          </div>
+
+          <div class="momo-panel automatic-momo-panel" id="automaticMomoPanel">
+            <h3>Pay 86,502 FCFA by Mobile Money</h3>
+            <p style="margin:0 0 0.75rem;color:var(--muted);font-size:0.88rem">We’ll send a payment request to your phone. Approve it in your MTN MoMo or Orange Money app to complete checkout.</p>
+            <div class="momo-network" role="group" aria-label="Mobile money network">
+              <button type="button" class="active" id="autoNetMtn" data-network="mtn">MTN MoMo</button>
+              <button type="button" class="orange" id="autoNetOrange" data-network="orange">Orange Money</button>
+            </div>
+            <div class="field">
+              <label for="autoMomoPhone" id="autoMomoPhoneLabel">Your MTN MoMo phone number</label>
+              <input id="autoMomoPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="670000000" pattern="[0-9+]{9,15}">
+            </div>
+            <div class="automatic-momo-result" id="automaticMomoResult" role="status" aria-live="polite"></div>
           </div>
 
           <div class="momo-panel" id="momoPanel">
@@ -1389,12 +1423,15 @@
       var payMethod = 'stripe';
       var momoNetwork = 'mtn';
       var payStripe = document.getElementById('payStripe');
+      var payAutoMomo = document.getElementById('payAutoMomo');
       var payMomo = document.getElementById('payMomo');
+      var automaticMomoPanel = document.getElementById('automaticMomoPanel');
       var momoPanel = document.getElementById('momoPanel');
       var formNote = document.getElementById('formNote');
       var trustPay = document.getElementById('trustPay');
       var virtualCardHint = document.getElementById('virtualCardHint');
       var momoDone = document.getElementById('momoDone');
+      var automaticMomoResult = document.getElementById('automaticMomoResult');
       var PAYEES = {
         mtn: { number: '237 677 604 100', name: 'Achu Gustave Mokom', step1: 'Open your MTN MoMo app or dial <strong>*126#</strong>', phoneLabel: 'Your MTN MoMo phone number' },
         orange: { number: '237 699 651 555', name: 'Achu Gustave Mokom', step1: 'Open your Orange Money app or dial <strong>#150#</strong>', phoneLabel: 'Your Orange Money phone number' }
@@ -1402,21 +1439,27 @@
 
       function syncPayMethod() {
         var isMomo = payMethod === 'momo';
-        if (payStripe) payStripe.classList.toggle('active', !isMomo);
+        var isAutoMomo = payMethod === 'automatic-momo';
+        if (payStripe) payStripe.classList.toggle('active', payMethod === 'stripe');
+        if (payAutoMomo) payAutoMomo.classList.toggle('active', isAutoMomo);
         if (payMomo) payMomo.classList.toggle('active', isMomo);
         if (momoPanel) momoPanel.classList.toggle('show', isMomo);
-        if (btn) btn.textContent = isMomo ? 'Confirm MoMo transfer' : 'Continue to secure payment';
+        if (automaticMomoPanel) automaticMomoPanel.classList.toggle('show', isAutoMomo);
+        if (btn) btn.textContent = isMomo ? 'Confirm MoMo transfer' : (isAutoMomo ? 'Send payment request' : 'Continue to secure payment');
         if (formNote) {
           formNote.textContent = isMomo
             ? 'After you transfer 87,000 FCFA and confirm, we approve in admin and email the learner login.'
-            : 'You’ll finish on Stripe. After success, the learner email gets login instructions.';
+            : (isAutoMomo
+              ? 'Approve the prompt on your phone. Foundation access instructions are emailed after payment succeeds.'
+              : 'You’ll finish on Stripe. After success, the learner email gets login instructions.');
         }
-        if (trustPay) trustPay.textContent = isMomo ? 'Manual MoMo · admin verifies' : 'Secure checkout · Stripe';
-        if (virtualCardHint) virtualCardHint.style.display = isMomo ? 'none' : '';
+        if (trustPay) trustPay.textContent = isMomo ? 'Manual MoMo · admin verifies' : (isAutoMomo ? 'Secure Mobile Money request' : 'Secure checkout · Stripe');
+        if (virtualCardHint) virtualCardHint.style.display = isMomo || isAutoMomo ? 'none' : '';
         if (status) {
-          status.textContent = isMomo ? 'Submitting MoMo confirmation…' : 'Redirecting to secure checkout…';
+          status.textContent = isMomo ? 'Submitting MoMo confirmation…' : (isAutoMomo ? 'Sending Mobile Money request…' : 'Redirecting to secure checkout…');
         }
         if (momoDone) momoDone.classList.remove('show');
+        if (automaticMomoResult) automaticMomoResult.classList.remove('show');
       }
 
       function syncMomoNetwork() {
@@ -1427,12 +1470,18 @@
         var phoneLabel = document.getElementById('momoPhoneLabel');
         var netMtnEl = document.getElementById('netMtn');
         var netOrangeEl = document.getElementById('netOrange');
+        var autoPhoneLabel = document.getElementById('autoMomoPhoneLabel');
+        var autoMtnEl = document.getElementById('autoNetMtn');
+        var autoOrangeEl = document.getElementById('autoNetOrange');
         if (num) num.textContent = p.number;
         if (nameEl) nameEl.textContent = p.name;
         if (step1) step1.innerHTML = p.step1;
         if (phoneLabel) phoneLabel.textContent = p.phoneLabel;
         if (netMtnEl) netMtnEl.classList.toggle('active', momoNetwork === 'mtn');
         if (netOrangeEl) netOrangeEl.classList.toggle('active', momoNetwork === 'orange');
+        if (autoPhoneLabel) autoPhoneLabel.textContent = p.phoneLabel;
+        if (autoMtnEl) autoMtnEl.classList.toggle('active', momoNetwork === 'mtn');
+        if (autoOrangeEl) autoOrangeEl.classList.toggle('active', momoNetwork === 'orange');
       }
 
       if (payStripe) {
@@ -1444,6 +1493,12 @@
       if (payMomo) {
         payMomo.addEventListener('click', function () {
           payMethod = 'momo';
+          syncPayMethod();
+        });
+      }
+      if (payAutoMomo) {
+        payAutoMomo.addEventListener('click', function () {
+          payMethod = 'automatic-momo';
           syncPayMethod();
         });
       }
@@ -1461,6 +1516,10 @@
           syncMomoNetwork();
         });
       }
+      var autoNetMtn = document.getElementById('autoNetMtn');
+      var autoNetOrange = document.getElementById('autoNetOrange');
+      if (autoNetMtn) autoNetMtn.addEventListener('click', function () { momoNetwork = 'mtn'; syncMomoNetwork(); });
+      if (autoNetOrange) autoNetOrange.addEventListener('click', function () { momoNetwork = 'orange'; syncMomoNetwork(); });
       syncPayMethod();
       syncMomoNetwork();
 
@@ -1480,8 +1539,8 @@
         var sponsoring = !!(isSponsor && isSponsor.checked);
         var sponsorName = document.getElementById('sponsorName').value.trim();
         var sponsorEmail = document.getElementById('sponsorEmail').value.trim();
-        var momoPhone = (document.getElementById('momoPhone') || {}).value || '';
-        momoPhone = String(momoPhone).trim();
+        var momoPhoneInput = document.getElementById(payMethod === 'automatic-momo' ? 'autoMomoPhone' : 'momoPhone');
+        var momoPhone = String((momoPhoneInput || {}).value || '').trim();
         var typedRef = normalizeRef(referralInput ? referralInput.value : '');
         if (typedRef) {
           ref = typedRef;
@@ -1502,7 +1561,7 @@
             return showError('Sponsor email must be different from the learner login email.');
           }
         }
-        if (payMethod === 'momo') {
+        if (payMethod === 'momo' || payMethod === 'automatic-momo') {
           if (!momoPhone || momoPhone.replace(/\D/g, '').length < 9) {
             return showError('Enter the phone number you are paying from (9+ digits).');
           }
@@ -1521,6 +1580,26 @@
           if (sponsoring) {
             payload.sponsorEmail = sponsorEmail;
             payload.sponsorName = sponsorName || undefined;
+          }
+
+          if (payMethod === 'automatic-momo') {
+            payload.phone = momoPhone;
+            payload.momo_network = momoNetwork;
+            var createAutoMomo = firebase.functions().httpsCallable('createSbdGuestMeSombPayment');
+            var autoResult = await createAutoMomo(payload);
+            var autoData = autoResult.data || {};
+            status.classList.remove('show');
+            if (!autoData.reference) return showError(autoData.message || 'Could not start Mobile Money checkout.');
+            if (automaticMomoResult) {
+              automaticMomoResult.textContent = autoData.status === 'FAILED'
+                ? (autoData.message || 'The Mobile Money request failed. Please try again or use another method.')
+                : (autoData.success
+                  ? 'Payment confirmed. Access instructions will be sent to the learner email.'
+                  : 'Payment request sent. Approve it on your phone. Access instructions will be emailed after payment succeeds. Reference: ' + autoData.reference);
+              automaticMomoResult.classList.add('show');
+            }
+            btn.disabled = false;
+            return;
           }
 
           if (payMethod === 'momo') {
