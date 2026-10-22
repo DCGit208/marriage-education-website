@@ -38,6 +38,8 @@ const bucket = admin.storage().bucket();
 // client is created on first use to keep an unconfigured key from taking down
 // every function in this module at load time.
 const RESEND_KEY = functions.config().resend?.key || process.env.RESEND_API_KEY || '';
+// Second-tier email channel (HTTPS API, unaffected by SMTP IP blocklists).
+const SENDGRID_API_KEY = functions.config().sendgrid?.api_key || process.env.SENDGRID_API_KEY || '';
 let resendClient = null;
 function getRawResendEmails() {
   if (!resendClient) {
@@ -435,13 +437,53 @@ function parseEmailAddress(value) {
     : { name: '', address: text };
 }
 
+function toSendGridRecipients(value) {
+  const list = Array.isArray(value) ? value : String(value || '').split(',');
+  return list
+    .map(item => parseEmailAddress(item))
+    .filter(entry => entry.address)
+    .map(entry => (entry.name ? { email: entry.address, name: entry.name } : { email: entry.address }));
+}
+
+async function sendViaSendGrid(message, replyTo) {
+  const from = parseEmailAddress(message.from);
+  const content = [];
+  if (message.text) content.push({ type: 'text/plain', value: String(message.text) });
+  if (message.html) content.push({ type: 'text/html', value: String(message.html) });
+  if (!content.length) content.push({ type: 'text/plain', value: ' ' });
+
+  const personalization = { to: toSendGridRecipients(message.to) };
+  const cc = toSendGridRecipients(message.cc);
+  const bcc = toSendGridRecipients(message.bcc);
+  if (cc.length) personalization.cc = cc;
+  if (bcc.length) personalization.bcc = bcc;
+
+  const payload = {
+    personalizations: [personalization],
+    from: from.name ? { email: from.address, name: from.name } : { email: from.address },
+    subject: String(message.subject || ''),
+    content
+  };
+  const replyAddress = replyTo ? parseEmailAddress(replyTo).address : '';
+  if (replyAddress) payload.reply_to = { email: replyAddress };
+
+  const response = await axios.post('https://api.sendgrid.com/v3/mail/send', payload, {
+    headers: { Authorization: 'Bearer ' + SENDGRID_API_KEY, 'Content-Type': 'application/json' },
+    timeout: 15000
+  });
+  return response.headers?.['x-message-id'] || null;
+}
+
 let lastEmailFailureAlertAt = 0;
 
 /**
- * Single email entry point for the whole backend.
- * Resend is the primary sender (its SDK returns { error } instead of throwing,
- * so that is checked explicitly); on any Resend failure the same message is
- * sent through the iPage SMTP account. Throws only if both channels fail.
+ * Single email entry point for the whole backend. Channel order:
+ *   1. Resend (primary; its SDK returns { error } instead of throwing, so that
+ *      is checked explicitly)
+ *   2. SendGrid HTTPS API
+ *   3. iPage SMTP (last resort — Google Cloud egress IPs are often on SMTP
+ *      blocklists, so this tier is unreliable from Cloud Functions)
+ * Throws only if every configured channel fails.
  * Accepts nodemailer-style options (from, to, subject, html, text, cc, bcc,
  * replyTo / reply_to).
  */
@@ -477,6 +519,17 @@ async function sendEmail(options) {
     failures.push('resend: not configured');
   }
 
+  if (SENDGRID_API_KEY) {
+    try {
+      const id = await sendViaSendGrid(message, replyTo);
+      console.warn('[Email] Sent via SendGrid fallback —', failures.join('; '), '— to:', String(message.to).slice(0, 80));
+      return { via: 'sendgrid', id, messageId: id };
+    } catch (error) {
+      const detail = error.response?.data?.errors?.[0]?.message || error.message;
+      failures.push('sendgrid: ' + detail);
+    }
+  }
+
   if (smtpTransporter) {
     try {
       // SMTP can only send as the mailbox it authenticates with, so use that
@@ -502,7 +555,7 @@ async function sendEmail(options) {
   if (Date.now() - lastEmailFailureAlertAt > 60000) {
     lastEmailFailureAlertAt = Date.now();
     sendTelegram(
-      `⚠️ EMAIL DELIVERY FAILED (Resend + SMTP)\n📧 To: ${String(message.to).slice(0, 80)}\n📝 ${String(message.subject || '').slice(0, 80)}\n❌ ${failures.join(' | ').slice(0, 300)}`,
+      `⚠️ EMAIL DELIVERY FAILED (Resend, SendGrid and SMTP)\n📧 To: ${String(message.to).slice(0, 80)}\n📝 ${String(message.subject || '').slice(0, 80)}\n❌ ${failures.join(' | ').slice(0, 300)}`,
       false
     ).catch(() => {});
   }
@@ -511,11 +564,11 @@ async function sendEmail(options) {
 
 // Nodemailer-compatible adapter used by existing call sites (throws on failure).
 // Null only when no channel is configured at all.
-const transporter = (RESEND_KEY || smtpTransporter) ? { sendMail: sendEmail } : null;
+const transporter = (RESEND_KEY || SENDGRID_API_KEY || smtpTransporter) ? { sendMail: sendEmail } : null;
 
 /**
  * Contact form relay. public/contact-submit.php posts here so contact messages
- * go out through sendEmail (Resend primary, SMTP fallback); the PHP script
+ * go out through sendEmail (Resend, then SendGrid, then SMTP); the PHP script
  * falls back to PHP mail() if this call fails. The recipient is fixed, and
  * requests are throttled per caller IP.
  */
