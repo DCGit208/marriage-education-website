@@ -222,7 +222,7 @@ post '/webhooks' do
     if product_id && download_file && customer_email
       begin
         # Call main server to create download token and send emails
-        main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriage-education-website.onrender.com'
+        main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriageducation.com'
         
         response = HTTParty.post("#{main_server_url}/stripe/fulfill-order",
           headers: { 'Content-Type' => 'application/json' },
@@ -291,7 +291,7 @@ get '/session-status' do
   download_token = nil
   if session.status == 'complete'
     begin
-      main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriage-education-website.onrender.com'
+      main_server_url = ENV['MAIN_SERVER_URL'] || 'https://marriageducation.com'
       response = HTTParty.get("#{main_server_url}/stripe/token-by-session?session_id=#{params[:session_id]}")
       if response.success?
         data = JSON.parse(response.body)

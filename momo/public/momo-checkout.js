@@ -29,15 +29,8 @@ if (productName && productPrice) {
   document.getElementById('order-total').textContent = '-';
 }
 
-// Always use the correct backend - if on Render, use relative URL (same server)
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const isRender = window.location.hostname.includes('onrender.com');
-
-const apiUrl = isLocal 
-  ? 'http://localhost:4243'
-  : isRender
-    ? window.location.origin  // Same server on Render
-    : 'https://marriage-education-momo-rp92.onrender.com';  // Fallback
+const apiUrl = isLocal ? 'http://localhost:4243' : window.location.origin;
 
 console.log('API URL:', apiUrl, 'Hostname:', window.location.hostname);
 

@@ -471,7 +471,7 @@
       const referralCode = sessionStorage.getItem('referral_code') || '';
 
       try {
-        // Call Firebase Cloud Function instead of Render backend
+        // Call Firebase Cloud Function
         console.log('Submitting payment with data:', {
           reference, productId, productName, amount: productPrice, currency, phone, email
         });

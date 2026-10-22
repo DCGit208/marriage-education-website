@@ -276,7 +276,7 @@ post '/create-checkout-session' do
     amount = zero_decimal.include?(currency) ? dynamic_price.to_i : (dynamic_price.to_f * 100).to_i
 
     begin
-      render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+      render_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
       session = Stripe::Checkout::Session.create({
         line_items: [{
           price_data: {
@@ -306,7 +306,7 @@ post '/create-checkout-session' do
       idempotency_key = "checkout_#{product_id}_#{Time.now.to_i}_#{SecureRandom.hex(8)}"
 
       begin
-        render_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+        render_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
         session = Stripe::Checkout::Session.create({
           line_items: [{ price: stripe_price_id, quantity: 1 }],
           mode: 'payment',
@@ -2080,7 +2080,7 @@ post '/admin/approve-payment' do
           write_download_tokens(tokens)
           
           # Build download URL with token - must point to Render backend
-          backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+          backend_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
           download_url = "#{backend_url}/download?token=#{token_data['token']}"
           
           # Send email automatically
@@ -2258,7 +2258,7 @@ post '/stripe/fulfill-order' do
     write_download_tokens(tokens)
     
     # Build download URL - must point to Render backend
-    backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+    backend_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
     download_url = "#{backend_url}/download?token=#{token_data['token']}"
     
     # Send download email to customer
@@ -2451,7 +2451,7 @@ post '/resend-download-link' do
     end
     
     # Send email with all active download links
-    backend_url = ENV['RENDER_EXTERNAL_URL'] || 'https://marriage-education-website.onrender.com'
+    backend_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
     
     links_html = user_tokens.map do |t|
       download_url = "#{backend_url}/download?token=#{t['token']}"

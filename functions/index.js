@@ -4296,7 +4296,7 @@ exports.listStorageInfo = functions.https.onRequest(async (req, res) => {
 
 /**
  * Create Stripe Checkout Session
- * HTTPS endpoint to replace Render backend for Stripe payments
+ * HTTPS endpoint for Stripe payments
  */
 // ═══════════════════════════════════════════════════════════════════
 // SBD NETWORK — PAYMENT CONSTANTS & HELPERS
