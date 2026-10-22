@@ -39,15 +39,30 @@ const bucket = admin.storage().bucket();
 // every function in this module at load time.
 const RESEND_KEY = functions.config().resend?.key || process.env.RESEND_API_KEY || '';
 let resendClient = null;
-const resend = {
-  get emails() {
-    if (!resendClient) {
-      if (!RESEND_KEY) {
-        throw new Error('Resend API key is not configured. Set functions config resend.key or the RESEND_API_KEY env var.');
-      }
-      resendClient = new Resend(RESEND_KEY);
+function getRawResendEmails() {
+  if (!resendClient) {
+    if (!RESEND_KEY) {
+      throw new Error('Resend API key is not configured. Set functions config resend.key or the RESEND_API_KEY env var.');
     }
-    return resendClient.emails;
+    resendClient = new Resend(RESEND_KEY);
+  }
+  return resendClient.emails;
+}
+
+// Resend-compatible adapter used by existing call sites. Delivery goes through
+// sendEmail (Resend primary, SMTP fallback). Like the Resend SDK it never
+// throws: failures come back as { data: null, error } so non-critical
+// notification emails can't break the flow that triggered them.
+const resend = {
+  emails: {
+    async send(message) {
+      try {
+        const sent = await sendEmail(message);
+        return { data: { id: sent.id }, error: null };
+      } catch (error) {
+        return { data: null, error: { name: 'email_delivery_failed', message: error.message } };
+      }
+    }
   }
 };
 
@@ -389,11 +404,11 @@ const SMTP_CONFIG = {
   from: functions.config().smtp?.from || 'orders@marriageducation.com'
 };
 
-// Email transporter
-let transporter;
+// Raw SMTP transport (iPage). Used only as the fallback inside sendEmail().
+let smtpTransporter = null;
 try {
   if (SMTP_CONFIG.user && SMTP_CONFIG.pass) {
-    transporter = nodemailer.createTransport({
+    smtpTransporter = nodemailer.createTransport({
       host: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
       secure: false, // STARTTLS
@@ -409,8 +424,149 @@ try {
   }
 } catch (error) {
   console.log('[SMTP] Not configured:', error.message);
-  transporter = null;
+  smtpTransporter = null;
 }
+
+function parseEmailAddress(value) {
+  const text = String(value || '').trim();
+  const match = text.match(/^"?([^"<]*?)"?\s*<([^>]+)>$/);
+  return match
+    ? { name: match[1].trim(), address: match[2].trim() }
+    : { name: '', address: text };
+}
+
+let lastEmailFailureAlertAt = 0;
+
+/**
+ * Single email entry point for the whole backend.
+ * Resend is the primary sender (its SDK returns { error } instead of throwing,
+ * so that is checked explicitly); on any Resend failure the same message is
+ * sent through the iPage SMTP account. Throws only if both channels fail.
+ * Accepts nodemailer-style options (from, to, subject, html, text, cc, bcc,
+ * replyTo / reply_to).
+ */
+async function sendEmail(options) {
+  const message = { ...options };
+  const replyTo = message.replyTo || message.reply_to;
+  delete message.reply_to;
+  const failures = [];
+
+  if (RESEND_KEY) {
+    try {
+      const payload = {
+        from: message.from,
+        to: message.to,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+        cc: message.cc,
+        bcc: message.bcc,
+        replyTo
+      };
+      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+      const result = await getRawResendEmails().send(payload);
+      if (!result?.error) {
+        const id = result?.data?.id || null;
+        return { via: 'resend', id, messageId: id };
+      }
+      failures.push('resend: ' + (result.error.message || result.error.name || 'unknown error'));
+    } catch (error) {
+      failures.push('resend: ' + error.message);
+    }
+  } else {
+    failures.push('resend: not configured');
+  }
+
+  if (smtpTransporter) {
+    try {
+      // SMTP can only send as the mailbox it authenticates with, so use that
+      // address and keep the original sender as Reply-To.
+      const original = parseEmailAddress(message.from);
+      const useSmtpSender = !original.address || original.address.toLowerCase() !== String(SMTP_CONFIG.from).toLowerCase();
+      const info = await smtpTransporter.sendMail({
+        ...message,
+        from: `"${original.name || 'Marriage Education'}" <${SMTP_CONFIG.from}>`,
+        replyTo: replyTo || (useSmtpSender && original.address ? original.address : undefined)
+      });
+      console.warn('[Email] Sent via SMTP fallback —', failures.join('; '), '— to:', String(message.to).slice(0, 80));
+      return { via: 'smtp', id: info.messageId || null, messageId: info.messageId || null };
+    } catch (error) {
+      failures.push('smtp: ' + error.message);
+    }
+  } else {
+    failures.push('smtp: not configured');
+  }
+
+  const failure = new Error('Email delivery failed (' + failures.join('; ') + ')');
+  console.error('[Email]', failure.message, '— subject:', String(message.subject || '').slice(0, 80));
+  if (Date.now() - lastEmailFailureAlertAt > 60000) {
+    lastEmailFailureAlertAt = Date.now();
+    sendTelegram(
+      `⚠️ EMAIL DELIVERY FAILED (Resend + SMTP)\n📧 To: ${String(message.to).slice(0, 80)}\n📝 ${String(message.subject || '').slice(0, 80)}\n❌ ${failures.join(' | ').slice(0, 300)}`,
+      false
+    ).catch(() => {});
+  }
+  throw failure;
+}
+
+// Nodemailer-compatible adapter used by existing call sites (throws on failure).
+// Null only when no channel is configured at all.
+const transporter = (RESEND_KEY || smtpTransporter) ? { sendMail: sendEmail } : null;
+
+/**
+ * Contact form relay. public/contact-submit.php posts here so contact messages
+ * go out through sendEmail (Resend primary, SMTP fallback); the PHP script
+ * falls back to PHP mail() if this call fails. The recipient is fixed, and
+ * requests are throttled per caller IP.
+ */
+const CONTACT_SUBJECTS = [
+  'General Inquiry', 'Course Information', 'Book Orders', 'Coaching Inquiry',
+  'Technical Support', 'Partnership/Media', 'Free Guide Request'
+];
+exports.sendContactMessage = functions.https.onRequest(async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const body = req.body || {};
+  const name = String(body.name || '').replace(/[\r\n\t]+/g, ' ').trim();
+  const email = String(body.email || '').trim();
+  const subject = String(body.subject || '');
+  const message = String(body.message || '').trim();
+
+  if (
+    !name || name.length > 120 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
+    !CONTACT_SUBJECTS.includes(subject) ||
+    !message || message.length > 12000
+  ) {
+    return res.status(400).json({ error: 'Invalid contact message' });
+  }
+
+  try {
+    const callerIp = String(req.get('x-forwarded-for') || req.ip || 'unknown').split(',')[0].trim();
+    const bucket = crypto.createHash('sha256').update(callerIp).digest('hex').slice(0, 24) + '_' + Math.floor(Date.now() / 3600000);
+    const limitRef = db.collection('contact_rate_limits').doc(bucket);
+    const allowed = await db.runTransaction(async tx => {
+      const snap = await tx.get(limitRef);
+      const count = snap.exists ? Number(snap.data().count || 0) : 0;
+      if (count >= 60) return false;
+      tx.set(limitRef, { count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      return true;
+    });
+    if (!allowed) return res.status(429).json({ error: 'Too many requests' });
+
+    const sent = await sendEmail({
+      from: '"Marriage Education Contact" <noreply@marriageducation.com>',
+      to: 'info@marriageducation.com',
+      replyTo: email,
+      subject: '[Marriage Education contact] ' + subject,
+      text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}\n`
+    });
+    return res.status(200).json({ success: true, via: sent.via });
+  } catch (error) {
+    console.error('[Contact] relay failed:', error.message);
+    return res.status(502).json({ error: 'Email delivery failed' });
+  }
+});
 
 // ========== HELPER FUNCTIONS ==========
 
@@ -3634,37 +3790,6 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
- * Send a transactional email. Resend's SDK returns { error } instead of
- * throwing, so check it explicitly and fall back to the SMTP sender.
- */
-async function sendEmailWithFallback({ to, from, subject, html }) {
-  let resendFailure = null;
-  try {
-    const result = await resend.emails.send({ to, from, subject, html });
-    if (!result?.error) return { via: 'resend', id: result?.data?.id || null };
-    resendFailure = result.error.message || String(result.error.name || 'resend_error');
-  } catch (error) {
-    resendFailure = error.message;
-  }
-
-  if (!transporter) {
-    throw new Error('Email failed via Resend (' + resendFailure + ') and SMTP is not configured.');
-  }
-  console.warn('[Email] Resend failed, falling back to SMTP:', resendFailure);
-  try {
-    const info = await transporter.sendMail({
-      from: '"Marriage Education" <' + SMTP_CONFIG.from + '>',
-      to,
-      subject,
-      html
-    });
-    return { via: 'smtp', id: info.messageId || null };
-  } catch (error) {
-    throw new Error('Email failed via Resend (' + resendFailure + ') and SMTP (' + error.message + ')');
-  }
-}
-
-/**
  * Welcome email for 12-Month Foundation Access buyers (SBD Network, School 1).
  */
 async function sendSbdFoundationAccessEmail({ email, name, productName }) {
@@ -3674,7 +3799,7 @@ async function sendSbdFoundationAccessEmail({ email, name, productName }) {
     url: learnUrl
   });
 
-  return sendEmailWithFallback({
+  return sendEmail({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
     subject: `Your Foundation Access is ready — School 1 for 12 months`,
@@ -3727,7 +3852,7 @@ async function sendSbdBuyerAccessEmail(opts) {
     url: readUrl
   });
 
-  return sendEmailWithFallback({
+  return sendEmail({
     to: email,
     from: 'Marriage Education <orders@marriageducation.com>',
     subject: `Your book is ready — read in the SBD reader`,

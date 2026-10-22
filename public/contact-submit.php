@@ -78,8 +78,42 @@ $headers = [
     'Content-Type: text/plain; charset=UTF-8',
 ];
 
-if (!mail($recipient, '[Marriage Education contact] ' . $subject, $body, implode("\r\n", $headers))) {
-    error_log('Contact form mail() returned false.');
+// Primary: relay through the Cloud Function (Resend first, SMTP fallback there).
+function sendViaRelay(array $payload): bool
+{
+    if (!function_exists('curl_init')) {
+        return false;
+    }
+    $ch = curl_init('https://us-central1-marriage-education.cloudfunctions.net/sendContactMessage');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $response = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return $response !== false && $status === 200;
+}
+
+$delivered = sendViaRelay([
+    'name' => $name,
+    'email' => $email,
+    'subject' => $subject,
+    'message' => $message,
+]);
+
+// Fallback: this server's own mail().
+if (!$delivered) {
+    error_log('Contact form relay failed; falling back to mail().');
+    $delivered = mail($recipient, '[Marriage Education contact] ' . $subject, $body, implode("\r\n", $headers));
+}
+
+if (!$delivered) {
+    error_log('Contact form delivery failed on relay and mail().');
     redirectToContact('unavailable');
 }
 
