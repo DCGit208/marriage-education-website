@@ -1590,15 +1590,57 @@
             var autoData = autoResult.data || {};
             status.classList.remove('show');
             if (!autoData.reference) return showError(autoData.message || 'Could not start Mobile Money checkout.');
-            if (automaticMomoResult) {
-              automaticMomoResult.textContent = autoData.status === 'FAILED'
-                ? (autoData.message || 'The Mobile Money request failed. Please try again or use another method.')
-                : (autoData.success
-                  ? 'Payment confirmed. Access instructions will be sent to the learner email.'
-                  : 'Payment request sent. Approve it on your phone. Access instructions will be emailed after payment succeeds. Reference: ' + autoData.reference);
+
+            var showAutoResult = function (text, ok) {
+              if (!automaticMomoResult) return;
+              automaticMomoResult.textContent = text;
               automaticMomoResult.classList.add('show');
+              automaticMomoResult.style.color = ok === false ? '#b42318' : '';
+            };
+            var showAutoSuccess = function () {
+              showAutoResult('Payment confirmed. Your 12-month Foundation access is active. Login instructions have been emailed to ' + email + ' — then sign in at https://sbd.marriageducation.com/auth', true);
+              btn.textContent = 'Payment confirmed';
+            };
+
+            if (autoData.status === 'FAILED') {
+              showAutoResult(autoData.message || 'The Mobile Money request failed. Please try again or use another method.', false);
+              btn.disabled = false;
+              return;
             }
-            btn.disabled = false;
+            if (autoData.success) {
+              showAutoSuccess();
+              return;
+            }
+
+            showAutoResult('Payment request sent. Approve it on your phone (' + momoPhone + '). Keep this page open — we are confirming it automatically. Reference: ' + autoData.reference, true);
+            btn.disabled = true;
+            btn.textContent = 'Waiting for approval…';
+
+            var checkAutoMomo = firebase.functions().httpsCallable('checkSbdGuestMeSombPayment');
+            var attempts = 0;
+            var pollAutoMomo = async function () {
+              attempts += 1;
+              if (attempts > 60) {
+                showAutoResult('We are still waiting for confirmation. If you approved the payment, you do not need to pay again — access and the login email will follow automatically. Reference: ' + autoData.reference, true);
+                btn.disabled = false;
+                btn.textContent = 'Send payment request';
+                return;
+              }
+              try {
+                var checked = (await checkAutoMomo({ reference: autoData.reference })).data || {};
+                if (checked.success && checked.status === 'SUCCESS') return showAutoSuccess();
+                if (checked.status === 'FAILED' || checked.pending === false) {
+                  showAutoResult('The Mobile Money payment was not completed. You have not been charged. Please try again or use another method.', false);
+                  btn.disabled = false;
+                  btn.textContent = 'Send payment request';
+                  return;
+                }
+              } catch (pollErr) {
+                console.warn('Mobile Money status check failed:', pollErr);
+              }
+              setTimeout(pollAutoMomo, 5000);
+            };
+            setTimeout(pollAutoMomo, 5000);
             return;
           }
 

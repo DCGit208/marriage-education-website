@@ -218,13 +218,29 @@ async function finalizeSbdMesombPayment(pending, transaction) {
   }
 
   const ref = db.collection('mesomb_payments').doc(pending.reference);
-  const snap = await ref.get();
-  if (!snap.exists) throw new Error('MeSomb payment record not found.');
-  const current = snap.data();
-  if (current.status === 'completed') {
+
+  // Atomic claim: the webhook and the page poll can both report SUCCESS at the
+  // same time, but access, ledger, admin and Telegram must be written only once.
+  const claim = await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error('MeSomb payment record not found.');
+    const current = snap.data();
+    if (current.status === 'completed') return 'completed';
+    const claimedAtMs = current.finalizingAt?.toMillis ? current.finalizingAt.toMillis() : 0;
+    if (claimedAtMs && Date.now() - claimedAtMs < 120000) return 'in_progress';
+    tx.set(ref, { finalizingAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    return 'claimed';
+  });
+
+  if (claim === 'completed') {
+    if (pending.guest) await sendSbdMesombGuestAccessEmail(pending, ref);
+    return { success: true, status: 'SUCCESS', transactionId };
+  }
+  if (claim === 'in_progress') {
     return { success: true, status: 'SUCCESS', transactionId };
   }
 
+  const paymentMethod = pending.service === 'ORANGE' ? 'orange_money' : 'mtn_momo';
   const session = {
     id: 'mesomb_' + transactionId,
     mode: 'payment',
@@ -241,10 +257,16 @@ async function finalizeSbdMesombPayment(pending, transaction) {
     manualAmount: Number(pending.amountXaf),
     manualCurrency: 'XAF',
     manualChannel: 'mesomb',
-    manualPaymentMethod: pending.service === 'ORANGE' ? 'orange_money' : 'mtn_momo'
+    manualPaymentMethod: paymentMethod
   };
 
-  await unlockSbdContent(pending.uid, pending.productId, session);
+  let tgMeta;
+  try {
+    tgMeta = await unlockSbdContent(pending.uid, pending.productId, session);
+  } catch (error) {
+    await ref.set({ finalizingAt: admin.firestore.FieldValue.delete() }, { merge: true });
+    throw error;
+  }
 
   await ref.set({
     status: 'completed',
@@ -253,7 +275,106 @@ async function finalizeSbdMesombPayment(pending, transaction) {
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
+  // Register the sale in the admin dashboard (revenue/sales counters read
+  // pending_payments with status 'approved').
+  try {
+    await db.collection('pending_payments').doc(pending.reference).set({
+      reference: pending.reference,
+      uid: pending.uid,
+      email: pending.email,
+      loginEmail: pending.loginEmail || pending.email,
+      name: pending.name || '',
+      phone: pending.phone || '',
+      product_id: pending.productId,
+      product_name: pending.productName || pending.productId,
+      amount: Number(pending.amountXaf),
+      currency: 'XAF',
+      guest: pending.guest === true,
+      app: 'sbd',
+      type: 'sbd_subscription',
+      referral_code: pending.referredBy || '',
+      referredBy: pending.referredBy || '',
+      sponsorEmail: pending.sponsorEmail || '',
+      status: 'approved',
+      payment_channel: 'mesomb',
+      payment_method: paymentMethod,
+      momo_network: String(pending.service || '').toLowerCase(),
+      mesomb_transaction_id: transactionId,
+      created_at: pending.createdAt || admin.firestore.FieldValue.serverTimestamp(),
+      approved_at: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('[SBD MeSomb] admin registration failed:', error.message);
+    await sendTelegram(`⚠️ MeSomb sale NOT registered in admin\n📋 ${pending.reference}\n❌ ${error.message}`, false);
+  }
+
+  try {
+    let msg =
+      '✅ FOUNDATION ACCESS — MOBILE MONEY PAID (MeSomb)\n\n' +
+      `📋 Reference: ${pending.reference}\n` +
+      `📦 ${pending.productName || pending.productId}\n` +
+      `💰 ${Number(pending.amountXaf).toLocaleString()} XAF\n` +
+      `🏦 ${pending.service === 'ORANGE' ? 'Orange Money' : 'MTN MoMo'} · ${pending.phone || ''}\n` +
+      `👤 ${pending.loginEmail || pending.email}\n` +
+      `🆔 ${pending.uid}\n` +
+      `🔖 MeSomb tx: ${transactionId}\n`;
+    if (pending.guest) msg += '🆕 Guest checkout (Foundation Access page)\n';
+    if (pending.sponsored) msg += `🎁 Sponsor: ${pending.sponsorEmail}\n`;
+    if (tgMeta?.referredBy) {
+      msg += `🔗 Referral ref: ${tgMeta.referredBy}\n`;
+    } else {
+      msg += '🔗 Referral ref: (none — direct/organic)\n';
+    }
+    if (tgMeta?.referralCredited) {
+      msg += `✅ Commission: ${tgMeta.ambassadorCommissionFCFA || 0} FCFA`;
+      if (tgMeta.seniorAmbassadorCode) msg += ` · senior ${tgMeta.seniorAmbassadorCode} +${tgMeta.seniorCommissionFCFA || 0}`;
+      if (tgMeta.rdCode) msg += ` · RD ${tgMeta.rdCode} +${tgMeta.rdCommissionFCFA || 0}`;
+      msg += '\n';
+    } else if (tgMeta?.referralSkipReason) {
+      msg += `ℹ️ Commission: ${tgMeta.referralSkipReason}\n`;
+    }
+    msg += '\n👉 Admin: https://marriageducation.com/admin-dashboard.html';
+    await sendTelegram(msg, false);
+  } catch (error) {
+    console.warn('[SBD MeSomb] Telegram failed:', error.message);
+  }
+
+  if (pending.guest) await sendSbdMesombGuestAccessEmail(pending, ref);
+
   return { success: true, status: 'SUCCESS', transactionId };
+}
+
+async function sendSbdMesombGuestAccessEmail(pending, paymentRef) {
+  const claimed = await db.runTransaction(async transaction => {
+    const snap = await transaction.get(paymentRef);
+    const current = snap.data() || {};
+    if (current.welcomeEmailSent || current.welcomeEmailSending) return false;
+    transaction.set(paymentRef, { welcomeEmailSending: true }, { merge: true });
+    return true;
+  });
+  if (!claimed) return;
+
+  try {
+    await sendSbdBuyerAccessEmail({
+      email: pending.loginEmail || pending.email,
+      name: pending.name,
+      productId: pending.productId,
+      productName: pending.productName || 'Foundation Access — 12 Months'
+    });
+    await paymentRef.set({
+      welcomeEmailSent: true,
+      welcomeEmailSending: false,
+      welcomeEmailError: admin.firestore.FieldValue.delete(),
+      welcomeEmailSentAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('[SBD MeSomb] guest access email failed:', error.message);
+    await paymentRef.set({ welcomeEmailSending: false, welcomeEmailError: error.message }, { merge: true });
+    await sendTelegram(
+      `⚠️ MeSomb sale paid but access email FAILED\n📋 ${pending.reference}\n👤 ${pending.loginEmail || pending.email}\n❌ ${error.message}`,
+      false
+    );
+  }
 }
 
 
@@ -3512,7 +3633,52 @@ async function sendSBDWelcomeEmail(email, fullName, ambassadorCode, sbdReferralC
 }
 
 /**
- * Welcome email for DTC 12-Month Foundation Access (and other guest) buyers.
+ * Welcome email for 12-Month Foundation Access buyers (SBD Network, School 1).
+ */
+async function sendSbdFoundationAccessEmail({ email, name, productName }) {
+  const learnUrl = 'https://sbd.marriageducation.com/learn?tier=foundation';
+  const loginUrl = 'https://sbd.marriageducation.com/auth';
+  const resetLink = await admin.auth().generatePasswordResetLink(email, {
+    url: learnUrl
+  });
+
+  await resend.emails.send({
+    to: email,
+    from: 'Marriage Education <orders@marriageducation.com>',
+    subject: `Your Foundation Access is ready — School 1 for 12 months`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#0a3d32 0%,#00b894 100%);color:#fff;padding:32px;text-align:center;">
+          <p style="margin:0;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;opacity:0.85;">Marriage Education</p>
+          <h1 style="margin:10px 0 0;font-size:26px;">Foundation Access — Yearly</h1>
+          <p style="margin:10px 0 0;opacity:0.9;">One payment. Twelve months. School 1 on SBD Network.</p>
+        </div>
+        <div style="padding:30px;background:#f7faf9;">
+          <p style="font-size:16px;color:#333;">Dear ${name},</p>
+          <p style="color:#555;">Thank you for purchasing <strong>${productName}</strong>. Your Foundation-tier access is active on the SBD Network.</p>
+
+          <div style="background:#fff;border-left:4px solid #00b894;padding:16px;margin:22px 0;">
+            <h3 style="margin:0 0 10px;color:#0a3d32;">Your login</h3>
+            <p style="margin:6px 0;"><strong>App:</strong> <a href="${learnUrl}">sbd.marriageducation.com/learn?tier=foundation</a></p>
+            <p style="margin:6px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin:6px 0;"><strong>Password:</strong> Set it with the button below (required once)</p>
+          </div>
+
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${resetLink}" style="display:inline-block;background:#00b894;color:#fff;font-weight:700;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;">Set password &amp; open Foundation →</a>
+          </div>
+
+          <p style="color:#555;font-size:14px;">Already have a password? <a href="${loginUrl}">Sign in here</a>, then go to Foundation.</p>
+          <p style="color:#777;font-size:13px;margin-top:24px;">Questions? Contact <a href="mailto:orders@marriageducation.com">orders@marriageducation.com</a></p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Buyer access email: Foundation products get the Foundation welcome email;
+ * everything else (SBD for Dummies) gets the SBD reader email.
  */
 async function sendSbdBuyerAccessEmail(opts) {
   const email = String(opts.email || '').trim().toLowerCase();
@@ -3521,6 +3687,9 @@ async function sendSbdBuyerAccessEmail(opts) {
   }
   const name = String(opts.name || '').trim() || 'Student';
   const productName = opts.productName || 'Foundation Access — 12 Months';
+  if (String(opts.productId || '').startsWith('foundation')) {
+    return sendSbdFoundationAccessEmail({ email, name, productName });
+  }
   const readUrl = getSbdReaderBookUrl('sbd-dummies');
   const resetLink = await admin.auth().generatePasswordResetLink(email, {
     url: readUrl
@@ -5013,7 +5182,7 @@ async function unlockSbdContent(uid, productId, session) {
   });
 
   await writeUnifiedPaymentRecord({
-    source: paymentChannel === 'stripe' ? 'stripe_sbd' : 'manual_payment',
+    source: paymentChannel === 'stripe' ? 'stripe_sbd' : (paymentChannel === 'mesomb' ? 'mesomb_sbd' : 'manual_payment'),
     reference: session?.id || `${uid}-${canonicalProductId}`,
     external_reference: session?.payment_intent || session?.id || '',
     record_type: 'customer_payment',
@@ -5252,27 +5421,35 @@ exports.sbdMeSombWebhook = functions.runWith({
     }
 
     const eventType = String(event.event_type || event.type || '').toLowerCase();
-    const transaction = event.data?.object || event.data?.transaction || event.transaction || {};
+    // MeSomb payload shape varies by version: the transaction may be nested or top-level.
+    const transaction = event.data?.object || event.data?.transaction || event.transaction ||
+      (event.data && typeof event.data === 'object' ? event.data : null) ||
+      (event.object && typeof event.object === 'object' ? event.object : null) ||
+      event;
     const status = String(transaction.status || event.status || '').toUpperCase();
+    const payloadKeys = Object.keys(event).slice(0, 20);
 
-    // This endpoint is the production SBD-Network endpoint. Never fulfill
-    // a development/test webhook against a production payment record.
-    if (event.livemode !== true) {
+    // Signed production endpoint: only an explicit livemode=false marks a test
+    // event. MeSomb live webhooks do not always include a livemode flag.
+    if (event.livemode === false) {
       await eventRef.set({
         processed: true,
         ignored: true,
         reason: 'non_live_event',
         eventType,
+        payloadKeys,
         receivedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       return res.status(200).send('Non-live event ignored');
     }
 
-    if (!['payment.transaction.succeeded', 'payment.transaction.success', 'payment.succeeded'].includes(eventType)) {
+    // Fulfilment is gated on status === SUCCESS below, so accept any payment-type event.
+    if (eventType && !/payment|transaction|succe/.test(eventType)) {
       await eventRef.set({
         processed: true,
         ignored: true,
         eventType,
+        payloadKeys,
         livemode: event.livemode === true,
         receivedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -5285,6 +5462,7 @@ exports.sbdMeSombWebhook = functions.runWith({
         ignored: true,
         eventType,
         status,
+        payloadKeys,
         livemode: event.livemode === true,
         receivedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -5764,6 +5942,186 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     productId,
     sponsored: isSponsored,
   };
+});
+
+/**
+ * Guest 12-Month Foundation Access — automated MeSomb Mobile Money.
+ */
+exports.createSbdGuestMeSombPayment = functions.runWith({
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+}).https.onCall(async data => {
+  const email = String(data?.email || '').trim().toLowerCase();
+  const name = String(data?.name || '').trim() || 'Student';
+  const phone = String(data?.phone || '').replace(/\D/g, '').replace(/^237/, '');
+  const sponsorEmail = String(data?.sponsorEmail || '').trim().toLowerCase();
+  const sponsorName = String(data?.sponsorName || '').trim();
+  const isSponsored = Boolean(sponsorEmail);
+  const referredBy = normalizeToSbdReferralCode(String(data?.ref || data?.referredBy || '').trim());
+  const productId = resolveSbdProductId(data?.productId || 'foundation-yearly');
+  const service = String(data?.momo_network || 'mtn').toLowerCase() === 'orange' ? 'ORANGE' : 'MTN';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid learner email is required.');
+  }
+  if (phone.length !== 9) {
+    throw new functions.https.HttpsError('invalid-argument', 'Enter a valid 9-digit Cameroon Mobile Money number.');
+  }
+  if (isSponsored && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sponsorEmail) || sponsorEmail === email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Enter a valid sponsor email different from the learner email.');
+  }
+  if (productId !== 'foundation-yearly') {
+    throw new functions.https.HttpsError('invalid-argument', 'Automated guest Mobile Money is for 12-Month Foundation Access.');
+  }
+  if (referredBy && !await findSellerBySbdReferralCode(referredBy)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Referral code not recognized.');
+  }
+
+  const plan = await getSbdMesombPlan(productId);
+  if (!plan) throw new functions.https.HttpsError('invalid-argument', 'This Mobile Money product is unavailable.');
+
+  let uid;
+  let isNew = false;
+  try {
+    uid = (await admin.auth().getUserByEmail(email)).uid;
+  } catch (error) {
+    if (error.code !== 'auth/user-not-found') throw error;
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    const tempPassword = Array.from({ length: 14 }, () => chars[crypto.randomInt(chars.length)]).join('');
+    uid = (await admin.auth().createUser({ email, password: tempPassword, displayName: name, emailVerified: false })).uid;
+    isNew = true;
+  }
+
+  const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const existingData = userSnap.exists ? userSnap.data() : {};
+  const userPatch = {
+    uid, email, name: existingData.name || name,
+    role: existingData.role === 'admin' ? 'admin' : (existingData.role || 'member'),
+    signupApp: existingData.signupApp || 'foundation-yearly-landing',
+    phone,
+    lastActive: admin.firestore.FieldValue.serverTimestamp()
+  };
+  if (isSponsored) {
+    userPatch.sponsoredByEmail = sponsorEmail;
+    if (sponsorName) userPatch.sponsoredByName = sponsorName;
+  }
+  if (isNew || !userSnap.exists) {
+    userPatch.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    userPatch.groups = existingData.groups || [];
+  }
+  if (!existingData.referredBy && referredBy) userPatch.referredBy = referredBy;
+  await userRef.set(firestoreSafeObject(userPatch), { merge: true });
+
+  if (referredBy && !existingData.referredBy) {
+    try {
+      const seller = await findSellerBySbdReferralCode(referredBy);
+      if (seller) await seller.ref.update({ 'sbdReferrals.signups': admin.firestore.FieldValue.increment(1) });
+    } catch (error) {
+      console.warn('[SBD Guest MeSomb] referral signup update skipped:', error.message);
+    }
+  }
+
+  const reference = 'SBD-MESOMB-GUEST-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+  const pending = {
+    reference, uid, email, loginEmail: email, name, phone, service, productId,
+    productName: plan.label, amountXaf: plan.amountXaf,
+    accessMonths: plan.accessMonths, status: 'pending', guest: true,
+    referredBy: referredBy || '', sponsored: isSponsored,
+    sponsorEmail: isSponsored ? sponsorEmail : '',
+    sponsorName: isSponsored ? sponsorName : '',
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  const paymentRef = db.collection('mesomb_payments').doc(reference);
+  await paymentRef.set(pending);
+
+  try {
+    const response = await sbdMesombCollect({
+      ...getMesombCredentials(),
+      amount: plan.amountXaf,
+      payer: phone,
+      service,
+      country: 'CM',
+      currency: 'XAF',
+      trxID: reference,
+      message: 'Marriage Education — ' + plan.label,
+      customer: {
+        email,
+        firstName: String(name).split(/\s+/)[0] || 'Student',
+        lastName: String(name).split(/\s+/).slice(1).join(' ') || '',
+        country: 'CM'
+      },
+      products: [{ id: productId, name: plan.label, quantity: 1, amount: plan.amountXaf }]
+    });
+    const transaction = extractMesombTransaction(response);
+    const transactionId = transaction?.pk || transaction?.id || null;
+    const status = String(transaction?.status || '').toUpperCase();
+    await paymentRef.set({ transactionId, providerMessage: response?.message || null, status: status || 'PENDING', updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+    if (status === 'SUCCESS') {
+      const completed = await finalizeSbdMesombPayment(pending, transaction);
+      return { ...completed, reference, amountXaf: plan.amountXaf, accessMonths: plan.accessMonths };
+    }
+    if (status === 'FAILED') return { success: false, status, reference, message: response?.message || 'The Mobile Money payment failed.' };
+    return { success: false, pending: true, status: status || 'PENDING', reference, amountXaf: plan.amountXaf, message: 'Payment request sent. Approve it on your phone; we will email access instructions after confirmation.' };
+  } catch (error) {
+    await paymentRef.set({ status: 'failed', error: error.message, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    console.error('[SBD Guest MeSomb] collect failed:', error);
+    throw new functions.https.HttpsError('internal', 'We could not start the Mobile Money payment. Please try again or use another payment method.');
+  }
+});
+
+/**
+ * Guest status check for automated MeSomb Mobile Money. The unguessable payment
+ * reference is the capability; the check polls MeSomb and finalizes on SUCCESS
+ * so access does not depend solely on webhook delivery.
+ */
+exports.checkSbdGuestMeSombPayment = functions.runWith({
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+}).https.onCall(async data => {
+  const reference = String(data?.reference || '').trim();
+  if (!/^SBD-MESOMB-GUEST-\d+-[a-f0-9]{8}$/.test(reference)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid payment reference is required.');
+  }
+
+  const ref = db.collection('mesomb_payments').doc(reference);
+  const snap = await ref.get();
+  if (!snap.exists || snap.data().guest !== true) {
+    throw new functions.https.HttpsError('not-found', 'Payment record not found.');
+  }
+
+  const pending = snap.data();
+  if (pending.status === 'completed') {
+    await sendSbdMesombGuestAccessEmail(pending, ref);
+    return { success: true, status: 'SUCCESS', reference };
+  }
+  if (!pending.transactionId) {
+    return { success: false, pending: pending.status !== 'failed', status: pending.status || 'PENDING', reference };
+  }
+
+  try {
+    const client = await getMesombClient();
+    const response = await client.getTransactions([pending.transactionId]);
+    const transaction = extractMesombTransaction(response);
+    const status = String(transaction?.status || '').toUpperCase();
+
+    await ref.set({
+      status: status || pending.status || 'PENDING',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (status === 'SUCCESS') {
+      const completed = await finalizeSbdMesombPayment(pending, transaction);
+      return { ...completed, reference };
+    }
+
+    return {
+      success: false, pending: status !== 'FAILED', status: status || 'PENDING', reference,
+      message: status === 'FAILED' ? 'The Mobile Money payment failed.' : 'Payment is still pending.'
+    };
+  } catch (error) {
+    console.error('[SBD Guest MeSomb] status check failed:', error);
+    throw new functions.https.HttpsError('internal', 'Unable to check the Mobile Money payment status.');
+  }
 });
 
 /**

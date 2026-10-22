@@ -124,7 +124,7 @@ They are separate credentials.
 Once all four secrets have been entered:
 
 ```bash
-firebase deploy --only functions:createSbdMeSombPayment,functions:checkSbdMeSombPayment,functions:sbdMeSombWebhook
+firebase deploy --only functions:createSbdMeSombPayment,functions:checkSbdMeSombPayment,functions:createSbdGuestMeSombPayment,functions:checkSbdGuestMeSombPayment,functions:sbdMeSombWebhook
 ```
 
 The code binds the secrets only to the functions that need them.
@@ -140,7 +140,8 @@ firebase functions:list
 You should see:
 
 - `createSbdMeSombPayment`
-- `checkSbdMeSombPayment`
+- `createSbdGuestMeSombPayment` (Foundation Access page, guest checkout)
+- `checkSbdGuestMeSombPayment`- `checkSbdMeSombPayment`
 - `sbdMeSombWebhook`
 
 ## Step 9 — Verify the secrets exist without exposing their values
