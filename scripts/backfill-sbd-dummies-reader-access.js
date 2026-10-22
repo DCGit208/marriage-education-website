@@ -12,8 +12,10 @@
 const path = require('path');
 const admin = require('firebase-admin');
 
-const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+const keyPath = path.join(__dirname, '../serviceAccountKey.json');
+admin.initializeApp(require('fs').existsSync(keyPath)
+  ? { credential: admin.credential.cert(require(keyPath)), projectId: 'marriage-education' }
+  : { projectId: 'marriage-education' });
 const db = admin.firestore();
 
 const APPLY = process.argv.includes('--apply');
@@ -37,7 +39,21 @@ async function collectBuyers() {
     if (!buyers.has(email)) buyers.set(email, { email, name: p.name || p.full_name || '', refs: [] });
     buyers.get(email).refs.push(p.reference || doc.id);
   });
+  await collectAmbassadors(buyers);
   return [...buyers.values()];
+}
+
+// Ambassadors receive the Dummies book on registration; it is read in the SBD app.
+async function collectAmbassadors(buyers) {
+  const snap = await db.collection('ambassadors').get();
+  snap.forEach((doc) => {
+    const a = doc.data();
+    const status = String(a.status || '').toLowerCase();
+    const email = String(a.email || '').trim().toLowerCase();
+    if (!email.includes('@') || (status !== 'active' && status !== 'approved')) return;
+    if (!buyers.has(email)) buyers.set(email, { email, name: a.fullName || a.name || '', refs: [] });
+    buyers.get(email).refs.push(doc.id);
+  });
 }
 
 async function grant(buyer) {
@@ -65,7 +81,7 @@ async function grant(buyer) {
 
 (async () => {
   const buyers = await collectBuyers();
-  console.log(`${APPLY ? 'APPLY' : 'DRY RUN'}: ${buyers.length} past Dummies buyer(s) found in approved pending_payments`);
+  console.log(`${APPLY ? 'APPLY' : 'DRY RUN'}: ${buyers.length} Dummies buyer(s)/ambassador(s) found`);
   for (const b of buyers) {
     if (!APPLY) {
       console.log(`- ${b.email} (${b.refs.join(', ')})`);
