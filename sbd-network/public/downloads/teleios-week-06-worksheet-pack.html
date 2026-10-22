@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Week 6 Worksheet Pack — Teleios Blueprint</title>
+    <style>
+        :root { color-scheme: light; --ink: #243447; --gold: #8b7355; --line: #cbd2d9; --paper: #fff; }
+        * { box-sizing: border-box; }
+        body { max-width: 900px; margin: 0 auto; padding: 28px; color: var(--ink); background: #f5f3ef; font: 16px/1.5 Georgia, "Times New Roman", serif; }
+        h1, h2, h3 { line-height: 1.2; }
+        h1 { margin-bottom: 4px; font-size: 2rem; }
+        h2 { margin-top: 0; color: var(--gold); }
+        h3 { margin-bottom: 8px; }
+        .intro, section { padding: 22px; margin: 18px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+        .intro { border-top: 5px solid var(--gold); }
+        .muted { color: #586574; }
+        .write { display: inline-block; min-width: 130px; min-height: 1.4em; border-bottom: 1px solid #788391; vertical-align: bottom; }
+        .long-write { display: block; min-height: 46px; margin: 6px 0 14px; border-bottom: 1px solid #aeb6bf; }
+        .note { padding: 12px 14px; background: #f7f5f0; border-left: 3px solid var(--gold); }
+        .toolbar { display: flex; gap: 12px; margin: 16px 0; }
+        button { padding: 9px 14px; border: 0; border-radius: 6px; color: white; background: var(--gold); font: inherit; cursor: pointer; }
+        .scale-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px 14px; padding: 0; list-style: none; }
+        .question-group { margin: 18px 0; }
+        .question { display: grid; grid-template-columns: 1fr 100px; gap: 12px; padding: 9px 0; border-bottom: 1px solid #e3e6e9; align-items: center; }
+        .question select { width: 100%; padding: 7px; border: 1px solid var(--line); border-radius: 5px; background: white; color: var(--ink); font: inherit; }
+        .subtotal, .score-result { font-weight: bold; }
+        .score-result { padding: 12px; background: #f7f5f0; border-radius: 6px; }
+        .competency { margin: 16px 0; }
+        textarea { display: block; width: 100%; min-height: 70px; margin-top: 6px; border: 1px solid var(--line); border-radius: 5px; padding: 8px; font: inherit; }
+        table { width: 100%; margin: 12px 0 18px; border-collapse: collapse; }
+        th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f0ede7; }
+        td.blank { height: 45px; }
+        @media print {
+            @page { size: letter; margin: 0.5in; }
+            body { max-width: none; padding: 0; background: white; font-size: 10pt; }
+            .toolbar { display: none; }
+            section, .intro { break-inside: avoid; margin: 0 0 14px; padding: 14px; }
+            .question { padding: 5px 0; grid-template-columns: 1fr 90px; }
+            .question select { border: 0; border-bottom: 1px solid #788391; border-radius: 0; padding: 2px; appearance: none; }
+            textarea { min-height: 48px; }
+            h2, h3 { break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <header class="intro">
+        <p class="muted">The Teleios Blueprint · Week 6</p>
+        <h1>Teleios Marriage Readiness Assessment</h1>
+        <p>This reflection pack brings together the Week 6 readiness scan, covenant competency questions, and a 12-month formation plan. Use it to identify practices and areas for growth; it is not a clinical instrument or a verdict about your worth or future.</p>
+        <p>Name: <span class="write"></span> &nbsp; Date: <span class="write"></span></p>
+        <div class="toolbar"><button type="button" onclick="window.print()">Print or save as PDF</button></div>
+    </header>
+
+    <section id="readiness-scan">
+        <h2>1. Teleios Marriage Readiness Scan</h2>
+        <p>Rate each statement based on consistent, observable behavior—not the answer you wish were true. Complete every item before interpreting the totals.</p>
+        <ul class="scale-list">
+            <li><strong>5</strong> — Always / strongly agree</li>
+            <li><strong>4</strong> — Often / agree</li>
+            <li><strong>3</strong> — Sometimes / neutral</li>
+            <li><strong>2</strong> — Rarely / disagree</li>
+            <li><strong>1</strong> — Never / strongly disagree</li>
+        </ul>
+        <div id="scan"></div>
+        <p class="score-result">Overall score: <span id="overall">0</span> / 250 — <span id="interpretation">Complete the scan to see your reflection range.</span></p>
+        <p class="note">Use a score as a prompt for reflection, not as a pass/fail decision about marriage. Review low-scoring domains, discuss consequential decisions with trusted, qualified support, and consider the actual patterns and responsibilities in your life.</p>
+    </section>
+
+    <section id="covenant-competency-test">
+        <h2>2. Covenant Competency Test</h2>
+        <p class="muted">For each question, write a specific example, an area for growth, and one practice to try. A candid answer is more useful than a perfect-sounding one.</p>
+        <div id="competencies"></div>
+    </section>
+
+    <section id="formation-plan">
+        <h2>3. 12-Month Teleios Formation Plan</h2>
+        <h3>My three growth domains</h3>
+        <p>1. <span class="write"></span> &nbsp; 2. <span class="write"></span> &nbsp; 3. <span class="write"></span></p>
+        <table>
+            <thead><tr><th>Domain / capacity</th><th>Specific goal</th><th>Daily or weekly practice</th><th>Evidence of progress</th><th>Accountability support</th></tr></thead>
+            <tbody>
+                <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+                <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+                <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            </tbody>
+        </table>
+        <h3>Monthly review tracker</h3>
+        <table>
+            <thead><tr><th>Month</th><th>Practice kept / evidence</th><th>What improved?</th><th>Adjustment for next month</th><th>Review date</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>2</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>3</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>4</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>5</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>6</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>7</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>8</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>9</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>10</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>11</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+                <tr><td>12</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td></td></tr>
+            </tbody>
+        </table>
+        <p>Quarterly reassessment dates: Q1 <span class="write"></span> &nbsp; Q2 <span class="write"></span> &nbsp; Q3 <span class="write"></span> &nbsp; Q4 <span class="write"></span></p>
+        <p>My first next step, and when I will do it: <span class="long-write"></span></p>
+    </section>
+
+    <script>
+        const scanGroups = [
+            {
+                title: 'Week 1: Identity — You Were Created Teleios',
+                questions: [
+                    'I understand that I was created teleios (whole, complete, fit for purpose).',
+                    'I practice FROM righteousness in Christ, not TO earn it.',
+                    'I believe marriage is built FROM maturity, not FOR maturity.',
+                    'I reject the lie that "I need someone to complete me."',
+                    'I know my identity in Christ, independent of relationship status.'
+                ]
+            },
+            {
+                title: 'Week 2: Faculties — The Four Integrated Powers',
+                questions: [
+                    'I keep my promises, even when it is costly.',
+                    'I finish what I start.',
+                    'I reason from Scripture, not from culture.',
+                    'I hold complex ideas without distortion.',
+                    'I feel deeply without fragmenting under emotion.',
+                    'My emotions serve truth; by serving truth, they serve humanity.',
+                    'I steward my body with discipline (fitness, grooming, health).',
+                    'I remain steady under physical or emotional strain.',
+                    'My will, mind, heart, and body work in harmony, not in conflict.',
+                    'I practice daily exercises that integrate all four faculties.'
+                ]
+            },
+            {
+                title: 'Week 3: Attributes — The Four Domains of Development',
+                questions: [
+                    'I exhibit restraint (I do not react impulsively).',
+                    'I am punctual and reliable.',
+                    'I take initiative in peacekeeping.',
+                    'I am flexible and adaptable.',
+                    'I empathize with those different from me (especially the opposite sex).',
+                    'My mood is stable, not erratic.',
+                    'I am quick to listen, slow to wrath.',
+                    'I exhibit tenderness without weakness.',
+                    'I experience joy even under duty.',
+                    'My desires are governed by truth, not by impulse.',
+                    'I think critically and avoid simplistic reasoning.',
+                    'I read deeply and regularly.',
+                    'I write clearly and coherently.',
+                    'I listen to understand, not just to respond.',
+                    'I observe carefully before judging.'
+                ]
+            },
+            {
+                title: 'Week 4: Axiomatic Dimensions — The Four Lenses of Discernment',
+                questions: [
+                    'I verify claims before accepting them.',
+                    'I distinguish between Scripture and culture.',
+                    'I ask "How do I know this is true?" before deciding.',
+                    'I order goods by truth, not by trend.',
+                    'I value covenant over comfort.',
+                    'I resist cultural hierarchy (where feelings outrank faithfulness).',
+                    'I honor marriage as designed by God, not as desired by me.',
+                    'I treat covenant as ontological (being-level), not optional.',
+                    'I resist cultural redefinition of marriage.',
+                    'I honor the weight of my words.',
+                    'I keep my promises; I do not redefine them later.',
+                    'I clarify meaning rather than assuming.'
+                ]
+            },
+            {
+                title: 'Week 5: Civilizational Scaling — Individual → Household → Society',
+                questions: [
+                    'I prioritize personal formation, not just information consumption.',
+                    'I serve from fullness, not from emptiness.',
+                    'My relationships reveal steadiness, empathy, and clarity.',
+                    'I practice covenant habits now (fidelity, communication, self-governance).',
+                    'I am whole enough to enter covenant (not waiting for marriage to complete me).',
+                    'I discern before I decide (Hebrews 5:14 test).',
+                    'I self-govern (behavioral, temperamental, emotional, mental).',
+                    'My choices today strengthen, not weaken, society tomorrow.'
+                ]
+            }
+        ];
+
+        const scanRoot = document.getElementById('scan');
+        let questionNumber = 0;
+        scanGroups.forEach((group, groupIndex) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'question-group';
+            const heading = document.createElement('h3');
+            heading.textContent = group.title;
+            wrapper.appendChild(heading);
+            group.questions.forEach(prompt => {
+                questionNumber += 1;
+                const row = document.createElement('label');
+                row.className = 'question';
+                const question = document.createElement('span');
+                question.textContent = `${questionNumber}. ${prompt}`;
+                const select = document.createElement('select');
+                select.setAttribute('aria-label', `Rating for item ${questionNumber}`);
+                const empty = document.createElement('option');
+                empty.value = '';
+                empty.textContent = 'Rate';
+                select.appendChild(empty);
+                for (let rating = 1; rating <= 5; rating += 1) {
+                    const option = document.createElement('option');
+                    option.value = String(rating);
+                    option.textContent = String(rating);
+                    select.appendChild(option);
+                }
+                select.addEventListener('change', updateScores);
+                row.append(question, select);
+                wrapper.appendChild(row);
+            });
+            const subtotal = document.createElement('p');
+            subtotal.className = 'subtotal';
+            subtotal.id = `subtotal-${groupIndex}`;
+            subtotal.textContent = `Week ${groupIndex + 1} subtotal: 0 / ${group.questions.length * 5}`;
+            wrapper.appendChild(subtotal);
+            scanRoot.appendChild(wrapper);
+        });
+
+        const competencies = [
+            'Do I discern before I decide?',
+            'Can I hold peace under contradiction?',
+            'Do I practice covenant habits before I promise covenant vows?',
+            'Do I own outcomes rather than outsource blame?',
+            'Am I whole, or am I waiting for marriage to complete me?',
+            'Can I love when I do not feel like it?',
+            'Do I honor design over desire?',
+            'Do my words carry weight?',
+            'Am I self-governing, or do I require external control?'
+        ];
+        const competencyRoot = document.getElementById('competencies');
+        competencies.forEach((prompt, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'competency';
+            const label = document.createElement('strong');
+            label.textContent = `${index + 1}. ${prompt}`;
+            const example = document.createElement('textarea');
+            example.setAttribute('aria-label', `Evidence and reflection for competency ${index + 1}`);
+            example.placeholder = 'Specific example, evidence, or question to discuss';
+            wrapper.append(label, example);
+            competencyRoot.appendChild(wrapper);
+        });
+
+        function updateScores() {
+            let total = 0;
+            let complete = true;
+            scanGroups.forEach((group, groupIndex) => {
+                const rows = scanRoot.querySelectorAll(`.question-group:nth-child(${groupIndex + 1}) select`);
+                let subtotal = 0;
+                let groupComplete = true;
+                rows.forEach(select => {
+                    if (!select.value) {
+                        complete = false;
+                        groupComplete = false;
+                    } else {
+                        subtotal += Number(select.value);
+                    }
+                });
+                total += subtotal;
+                document.getElementById(`subtotal-${groupIndex}`).textContent =
+                    `Week ${groupIndex + 1} subtotal: ${subtotal} / ${group.questions.length * 5}${groupComplete ? '' : ' (in progress)'}`;
+            });
+            document.getElementById('overall').textContent = String(total);
+            let interpretation = 'Complete the scan to see your reflection range.';
+            if (complete) {
+                if (total >= 210) interpretation = '210–250: Covenant-Ready range in the course scan';
+                else if (total >= 160) interpretation = '160–209: Formation-Progressing range';
+                else if (total >= 100) interpretation = '100–159: Formation-Needed range';
+                else interpretation = 'Below 100: The course labels this Immature range';
+            } else {
+                interpretation = 'Complete all 50 ratings to see the course score range.';
+            }
+            document.getElementById('interpretation').textContent = interpretation;
+        }
+    </script>
+</body>
+</html>

@@ -47,6 +47,8 @@ async function seed() {
     await db.collection('modules').doc(docId).update({
       title:       mod.title || existing.title,
       content:     mod.content || '',
+      reflectionQuestions: mod.reflection_questions || [],
+      downloads:   mod.downloads || [],
       week:        weekNo,
       unlockTier:  'foundation',
       accessLevel: 'foundation',
