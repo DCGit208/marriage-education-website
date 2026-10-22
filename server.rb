@@ -2079,7 +2079,7 @@ post '/admin/approve-payment' do
           tokens['tokens'] << token_data
           write_download_tokens(tokens)
           
-          # Build download URL with token - must point to Render backend
+          # Build download URL with token for the customer email
           backend_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
           download_url = "#{backend_url}/download?token=#{token_data['token']}"
           
@@ -2257,7 +2257,7 @@ post '/stripe/fulfill-order' do
     tokens['tokens'] << token_data
     write_download_tokens(tokens)
     
-    # Build download URL - must point to Render backend
+    # Build download URL for the customer email
     backend_url = ENV['BACKEND_URL'] || 'https://marriageducation.com'
     download_url = "#{backend_url}/download?token=#{token_data['token']}"
     
