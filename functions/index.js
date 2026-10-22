@@ -2962,19 +2962,12 @@ async function activateAmbassador(payment, reference) {
 
   // Grant book access in the SBD reader instead of sending a PDF download link.
   const bookUrl = getSbdReaderBookUrl('sbd-dummies');
-  await ensureSbdReaderAccess({
-    email: payment.email,
-    fullName: ambassadorData.fullName,
-    productId: 'sbd-dummies',
-  });
-  console.log(`[BOOK] Reader access granted for ${ambassadorCode}: ${bookUrl}`);
-
   const accessEmailResult = await sendAmbassadorAccessEmail({
     email: payment.email,
     ambassadorCode,
-    ambassadorName: ambassadorData.fullName,
-    bookUrl
+    ambassadorName: ambassadorData.fullName
   });
+  console.log(`[BOOK] Reader access granted for ${ambassadorCode}: ${bookUrl}`);
   const emailSent = accessEmailResult.sent;
   const emailError = accessEmailResult.error;
 
@@ -3131,11 +3124,20 @@ exports.reprocessAmbassadorActivationHttp = functions.https.onRequest(async (req
   }
 });
 
-async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName, bookUrl }) {
+async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName }) {
   try {
+    // Grants reader ownership and returns a fresh set-password link, so the
+    // ambassador can actually sign in at sbd.marriageducation.com.
+    const access = await ensureSbdReaderAccess({
+      email,
+      fullName: ambassadorName,
+      productId: 'sbd-dummies'
+    });
+    const bookUrl = access.bookUrl;
+    const resetLink = access.resetLink;
     const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
-    await resend.emails.send({
+    await sendEmail({
       to: email,
       from: 'Marriage Education <orders@marriageducation.com>',
       subject: `Account Activated: ${ambassadorCode}`,
@@ -3165,13 +3167,12 @@ async function sendAmbassadorAccessEmail({ email, ambassadorCode, ambassadorName
             
                   <div style="background: #fff; border: 2px solid #00b894; border-radius: 5px; padding: 15px; margin: 20px 0;">
               <h3 style="margin-top: 0; color: #00b894;">📚 Your Welcome Book</h3>
-              <p style="margin: 5px 0;">Read your book in the SBD reader. Set your password to open it in the app:</p>
+              <p style="margin: 5px 0;">Read your book in the SBD reader at <a href="${bookUrl}">sbd.marriageducation.com</a>. Sign-in email: <strong>${email}</strong>. Set your password once to open it:</p>
               <div style="text-align: center; margin: 15px 0;">
-                <a href="${bookUrl}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Open Book in SBD Reader</a>
+                <a href="${resetLink}" style="display: inline-block; background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Set Password &amp; Open Book</a>
               </div>
               <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                <p style="margin: 5px 0; font-size: 13px; color: #666;"><strong>If the button does not work, open this link:</strong></p>
-                <p style="margin: 5px 0; font-size: 11px; word-break: break-all; font-family: monospace; color: #333;">${bookUrl}</p>
+                <p style="margin: 5px 0; font-size: 13px; color: #666;">Already set a password? <a href="${bookUrl}">Open your book here</a> and sign in. Forgot it? Use &quot;Forgot password&quot; on the sign-in page.</p>
               </div>
             </div>
             
@@ -3248,13 +3249,13 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
     }
 
     const ambassador = ambassadorDoc.data();
-    const bookUrl = getSbdReaderBookUrl('sbd-dummies');
-
+    if (String(ambassador.email || '').trim().toLowerCase() !== email) {
+      throw new functions.https.HttpsError('permission-denied', 'Email does not match the ambassador record.');
+    }
     const sendResult = await sendAmbassadorAccessEmail({
       email,
       ambassadorCode,
-      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador',
-      bookUrl
+      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador'
     });
 
     if (!sendResult.sent) {
@@ -3266,7 +3267,7 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
         `✅ AMBASSADOR ACCESS EMAIL RESENT\n\n` +
           `🎯 Code: ${ambassadorCode}\n` +
           `📧 Email: ${email}\n\n` +
-          `📖 Book access: ${bookUrl}\n\n` +
+          `📖 Book access: ${getSbdReaderBookUrl('sbd-dummies')}\n\n` +
           `🔐 Dashboard: https://marriageducation.com/ambassador-login.html`,
         false
       );
@@ -3277,7 +3278,7 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
       message: 'Access email resent successfully.',
       ambassadorCode,
       email,
-      book_url: bookUrl
+      book_url: getSbdReaderBookUrl('sbd-dummies')
     };
   } catch (error) {
     console.error('[EMAIL] resendAmbassadorAccessEmail error:', error.message);
@@ -3317,12 +3318,10 @@ exports.resendAmbassadorStripeAccessEmail = functions.https.onCall(async (data, 
     }
 
     const ambassador = ambassadorDoc.data();
-    const bookUrl = `https://us-central1-marriage-education.cloudfunctions.net/downloadBook?ref=${ambassadorCode}`;
     const sendResult = await sendAmbassadorAccessEmail({
       email,
       ambassadorCode,
-      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador',
-      bookUrl
+      ambassadorName: ambassador.fullName || ambassador.name || 'Ambassador'
     });
 
     if (!sendResult.sent) {
