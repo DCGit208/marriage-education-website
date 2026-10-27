@@ -434,7 +434,7 @@ Marriage Education — Publication Universe (46 unique book titles)
 | Global # | Title | Status | Shop | Notes |
 |----------|-------|--------|------|-------|
 | **28** | What Is Marriage? | PLANNED | — | Definition treatise; teleios + covenant |
-| **29** | The Matrimonial Order: An Exhaustive Guide | PLANNED | — | Eph 5 Divine Matrimonial Rule expanded |
+| **29** | The Matrimonial Order: An Exhaustive Guide | READY — DEPLOY PENDING | the-matrimonial-order ($30 digital) | 20-chapter Ephesians 5 study and practice guide |
 | **30** | Why Do Men Watch Porn? | PLANNED | — | Dissatisfaction / role failure diagnosis |
 | **31** | Marriage Eudemonia | PLANNED | — | Abundant life / hedonism in marriage |
 

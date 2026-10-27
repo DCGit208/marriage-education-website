@@ -4691,6 +4691,7 @@ const SBD_STRIPE_PRICE_IDS = {
   'starter-bundle': process.env.SBD_PRICE_STARTER_BUNDLE || '',  'teleios-bundle': process.env.SBD_PRICE_TELEIOS_BUNDLE || '',
   'elite-bundle': process.env.SBD_PRICE_ELITE_BUNDLE || '',
   'sbd-dummies': process.env.SBD_PRICE_SBD_DUMMIES || '',
+  'the-matrimonial-order': process.env.SBD_PRICE_THE_MATRIMONIAL_ORDER || '',
   'the-woman-the-wife-the-mother': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BUNDLE || process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER || '',
   'the-woman-the-wife-the-mother-book': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_BOOK || '',
   'the-woman-the-wife-the-mother-course': process.env.SBD_PRICE_THE_WOMAN_THE_WIFE_THE_MOTHER_COURSE || '',
@@ -4795,6 +4796,7 @@ const SBD_CATALOG_SERVER = {
   'teleios-bundle': { name: 'Teleios Bundle', amount: 29700, mode: 'payment', tier: 'premium', stripePriceId: SBD_STRIPE_PRICE_IDS['teleios-bundle'] },
   'elite-bundle': { name: 'Elite Formation Bundle', amount: 49700, mode: 'payment', tier: 'elite', stripePriceId: SBD_STRIPE_PRICE_IDS['elite-bundle'] },
   'sbd-dummies': { name: 'SBD for Dummies', amount: 2700, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['sbd-dummies'] },
+  'the-matrimonial-order': { name: 'The Matrimonial Order: An Exhaustive Guide', amount: 3000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-matrimonial-order'] },
   'the-woman-the-wife-the-mother-book': { name: 'The Woman, The Wife, The Mother — Book', amount: 5000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-book'] },
   'the-woman-the-wife-the-mother-course': { name: 'The Woman, The Wife, The Mother — 13-Week Formation', amount: 25000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-course'] },
   'the-woman-the-wife-the-mother-bundle': { name: 'The Woman, The Wife, The Mother — Book + Course', amount: 30000, mode: 'payment', stripePriceId: SBD_STRIPE_PRICE_IDS['the-woman-the-wife-the-mother-bundle'] },
@@ -4899,6 +4901,7 @@ const SBD_UNLOCK_RULES = {
   'teleios-bundle': { products: ['teleios-bundle'] },
   'elite-bundle': { products: ['elite-bundle'] },
   'sbd-dummies': { courses: ['sbd-dummies-course'] },
+  'the-matrimonial-order': { products: ['the-matrimonial-order'] },
   'the-woman-the-wife-the-mother-book': {
     products: ['the-woman-the-wife-the-mother-book'],
     issueIds: ['issue-woman-wife-mother-2026'],

@@ -152,7 +152,7 @@ Reason from design and fruit (Isaiah 1:18): homes that abandon Ephesians 5 wife 
 
 ### Matrimonial Order — TO WIVES (exhaustive guide, course compression)
 
-*The Matrimonial Order: An Exhaustive Guide* (SBD Life Issue #29, planned treatise) expands Ephesians 5 for both spouses. This course compresses **TO WIVES** at summit:
+*The Matrimonial Order: An Exhaustive Guide* (SBD Life Issue #29) expands Ephesians 5 for both spouses in a 20-chapter study with practical exercises. Once published, it will be available for $30 in the [SBD Network shop](https://sbd.marriageducation.com/shop.html), with [reading access after purchase](https://sbd.marriageducation.com/book.html?id=the-matrimonial-order). This course compresses **TO WIVES** at summit:
 
 | Order element | Wife formation |
 |---------------|----------------|

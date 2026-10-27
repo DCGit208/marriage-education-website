@@ -29,6 +29,7 @@ const STRIPE_READY_IDS = new Set([
   'teleios-bundle',
   'elite-bundle',
   'sbd-dummies',
+  'the-matrimonial-order',
   'the-woman-the-wife-the-mother',
   'the-woman-the-wife-the-mother-book',
   'the-woman-the-wife-the-mother-course',
@@ -180,6 +181,7 @@ const BOOK_COVERS = {
   'anthropology-of-wholeness-book': '/assets/book-covers/anthropology-of-wholeness.webp',
   'sbd-dummies': '/assets/book-covers/sbd-dummies.png',
   'sbd-dummies-digital-print': '/assets/book-covers/sbd-dummies.png',
+  'the-matrimonial-order': '/assets/book-covers/the-matrimonial-order.png',
   'sbd-canonical': '/images/sbd-canonical.jpg',
   'sbd-standard': '/images/sbd-standard.jpg',
   'sbd-real-couples': '/images/SBD-Real-Couples.jpg',
@@ -356,6 +358,11 @@ const PRODUCTS = [
     phase: 1, icon: '📗', sortOrder: 8,
     description: 'Entry-level guide to sexual design and covenant intimacy.',
     unlocks: { type: 'course', courseIds: ['sbd-dummies-course'] },
+  }),
+  p('the-matrimonial-order', 'The Matrimonial Order: An Exhaustive Guide', 'books_sbd_series', 30, {
+    phase: 1, type: 'book', icon: '📕', sortOrder: 8.5,
+    description: 'A 20-chapter Christian study of Ephesians 5:21–33, covenant responsibility, practical marriage habits, and safety.',
+    unlocks: { type: 'product', products: ['the-matrimonial-order'] },
   }),
   p('the-woman-the-wife-the-mother-book', 'The Woman, The Wife, The Mother — Book', 'books_sbd_series', 50, {
     phase: 1, type: 'book', icon: '📕', sortOrder: 9,

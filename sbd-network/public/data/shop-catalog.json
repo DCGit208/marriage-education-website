@@ -520,6 +520,40 @@
       "coverWrapImage": null
     },
     {
+      "id": "the-matrimonial-order",
+      "name": "The Matrimonial Order: An Exhaustive Guide",
+      "category": "books_sbd_series",
+      "section": "books_magazine",
+      "subcategory": null,
+      "phase": 1,
+      "stripeReady": true,
+      "type": "book",
+      "priceUsd": 30,
+      "priceDisplay": "$30",
+      "priceSuffix": "",
+      "originalPriceUsd": null,
+      "description": "A 20-chapter Christian study of Ephesians 5:21–33, covenant responsibility, practical marriage habits, and safety.",
+      "icon": "📕",
+      "format": "digital",
+      "recurring": false,
+      "schoolId": null,
+      "requiredTier": "free",
+      "sourceUrl": "https://marriageducation.com/shop.html",
+      "coverImage": "/assets/book-covers/the-matrimonial-order.png",
+      "visualKey": "book",
+      "legacyAliases": [],
+      "sortOrder": 8.5,
+      "status": "active",
+      "source": "marriageducation.com",
+      "unlocks": {
+        "type": "product",
+        "products": [
+          "the-matrimonial-order"
+        ]
+      },
+      "coverWrapImage": null
+    },
+    {
       "id": "the-woman-the-wife-the-mother-book",
       "name": "The Woman, The Wife, The Mother — Book",
       "category": "books_sbd_series",
