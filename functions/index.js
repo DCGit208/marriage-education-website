@@ -6371,20 +6371,32 @@ exports.checkSbdGuestMeSombPayment = functions.runWith({
     if (pending.guest) await sendSbdMesombGuestAccessEmail(pending, ref);
     return { success: true, status: 'SUCCESS', reference };
   }
-  if (!pending.transactionId) {
-    return { success: false, pending: pending.status !== 'failed', status: pending.status || 'PENDING', reference };
-  }
-
   try {
     const client = await getMesombClient();
-    const response = await client.getTransactions([pending.transactionId]);
+
+    // The collect request may have reached MeSomb even though our function never
+    // saw the response (timeout/crash). Our reference was sent as the external
+    // trxID, so look the transaction up by it before giving up.
+    let lookupId = pending.transactionId;
+    let lookupSource = 'MESOMB';
+    if (!lookupId) {
+      lookupId = reference;
+      lookupSource = 'EXTERNAL';
+    }
+    const response = await client.getTransactions([lookupId], lookupSource);
     const transaction = extractMesombTransaction(response);
+    if (!transaction) {
+      return { success: false, pending: pending.status !== 'failed', status: pending.status || 'PENDING', reference };
+    }
     const status = String(transaction?.status || '').toUpperCase();
+    const foundId = transaction?.pk || transaction?.id || pending.transactionId || null;
 
     await ref.set({
+      ...(foundId ? { transactionId: foundId } : {}),
       status: status || pending.status || 'PENDING',
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+    if (foundId && !pending.transactionId) pending.transactionId = foundId;
 
     if (status === 'SUCCESS') {
       const completed = await finalizeSbdMesombPayment(pending, transaction);
@@ -6481,7 +6493,8 @@ async function resolveWebMesombQuote(data) {
 }
 
 exports.createMesombWebPayment = functions.runWith({
-  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY],
+  timeoutSeconds: 90
 }).https.onCall(async data => {
   const quote = await resolveWebMesombQuote(data);
 
@@ -6529,7 +6542,7 @@ exports.createMesombWebPayment = functions.runWith({
   await paymentRef.set(firestoreSafeObject(pending));
 
   try {
-    const response = await sbdMesombCollect({
+    const collectPromise = sbdMesombCollect({
       ...getMesombCredentials(),
       amount: quote.amountXaf,
       payer: phone,
@@ -6540,6 +6553,25 @@ exports.createMesombWebPayment = functions.runWith({
       location: { town: 'Douala', country: 'CM' },
       products: [{ name: quote.label, category: 'education', quantity: 1, amount: quote.amountXaf }]
     });
+    collectPromise.catch(() => {});
+
+    // Do not wait on MeSomb for long: if it is slow the request may still have
+    // gone through, so hand the page the reference and let it poll the status
+    // check (which finds the transaction by this reference).
+    let response;
+    try {
+      response = await Promise.race([
+        collectPromise,
+        new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error('collect_slow'), { code: 'collect_slow' })), 20000))
+      ]);
+    } catch (waitError) {
+      if (waitError.code !== 'collect_slow') throw waitError;
+      console.warn('[Web MeSomb] collect slow, handing off to status polling:', reference);
+      return {
+        success: false, pending: true, status: 'PENDING', reference, amountXaf: quote.amountXaf,
+        message: 'Payment request sent. Approve it on your phone.'
+      };
+    }
     const transaction = extractMesombTransaction(response);
     const transactionId = transaction?.pk || transaction?.id || null;
     const status = String(transaction?.status || '').toUpperCase();
