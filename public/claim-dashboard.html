@@ -254,16 +254,9 @@
                     <input type="text" id="name" placeholder="Your full name" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password"><i class="fas fa-lock"></i> Choose a Password</label>
-                    <input type="password" id="password" placeholder="Create a secure password" required minlength="8">
-                    <div class="password-hint">Minimum 8 characters</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm-password"><i class="fas fa-lock"></i> Confirm Password</label>
-                    <input type="password" id="confirm-password" placeholder="Re-enter your password" required>
-                </div>
+                <p style="color:#6b7280;font-size:14px;margin:0 0 16px;">
+                    We'll email a secure link to this address so you can set your own password.
+                </p>
                 
                 <button type="submit" class="btn-claim" id="claim-btn">
                     <i class="fas fa-check-circle"></i> Claim Dashboard Access
@@ -282,8 +275,8 @@
             <div class="success-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h2>Dashboard Claimed Successfully!</h2>
-            <p>Your Book Sharer dashboard is now ready. Use your email and password to login and start tracking your earnings.</p>
+            <h2>Check Your Email</h2>
+            <p>Your Book Sharer dashboard is claimed. We emailed you a link to set your password &mdash; open it, choose a password, then sign in to track your earnings.</p>
             <a href="/book-sharer-dashboard" class="btn-login">
                 <i class="fas fa-chart-line"></i> Go to Dashboard
             </a>
@@ -301,20 +294,7 @@
             
             const email = document.getElementById('email').value.trim();
             const name = document.getElementById('name').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
             const claimBtn = document.getElementById('claim-btn');
-            
-            // Validation
-            if (password !== confirmPassword) {
-                showMessage('Passwords do not match. Please try again.', 'error');
-                return;
-            }
-            
-            if (password.length < 8) {
-                showMessage('Password must be at least 8 characters long.', 'error');
-                return;
-            }
             
             claimBtn.disabled = true;
             claimBtn.textContent = 'Claiming...';
@@ -323,7 +303,7 @@
             try {
                 const functions = firebase.functions();
                 const claimDashboard = functions.httpsCallable('claimBookSharerDashboard');
-                const result = await claimDashboard({ email, name, password });
+                const result = await claimDashboard({ email, name });
                 
                 if (result.data.success) {
                     // Show success message

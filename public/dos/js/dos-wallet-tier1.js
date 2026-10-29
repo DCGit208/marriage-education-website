@@ -124,6 +124,7 @@
     }
     var payload = {
       payee_code: payeeCode,
+      email: (function () { try { return localStorage.getItem('ambassadorEmail') || ''; } catch (e) { return ''; } })(),
       payout_profile: {
         country: (document.getElementById('ppCountry') || {}).value,
         method: (document.getElementById('ppMethod') || {}).value,

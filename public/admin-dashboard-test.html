@@ -2761,6 +2761,13 @@
 
         // Recruitment bonus table — js/admin-recruitment-bonuses.js
 
+        // Escape untrusted text before it is placed in innerHTML / attributes.
+        function esc(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         // Load Payments Table
         async function loadPaymentsTable() {
             const tbody = document.getElementById('paymentsTableBody');
@@ -2793,29 +2800,29 @@
                     // Show RD code or ambassador code if available
                     let additionalInfo = '';
                     if (data.regional_director) {
-                        additionalInfo = `<br><small style="color: #9333ea;">👑 RD: ${data.regional_director}</small>`;
+                        additionalInfo = `<br><small style="color: #9333ea;">👑 RD: ${esc(data.regional_director)}</small>`;
                     }
                     if (data.ambassador_code) {
-                        additionalInfo += `<br><small style="color: #00b894;">🎯 Code: ${data.ambassador_code}</small>`;
+                        additionalInfo += `<br><small style="color: #00b894;">🎯 Code: ${esc(data.ambassador_code)}</small>`;
                     }
                     
                     html += `
                         <tr>
-                            <td><code>${data.reference || doc.id}</code></td>
+                            <td><code>${esc(data.reference || doc.id)}</code></td>
                             <td>${typeBadge}</td>
                             <td>
-                                <strong>${data.email}</strong><br>
-                                <small>${data.phone || 'N/A'}</small>${additionalInfo}
+                                <strong>${esc(data.email)}</strong><br>
+                                <small>${esc(data.phone || 'N/A')}</small>${additionalInfo}
                             </td>
-                            <td>${data.product_name || 'N/A'}</td>
-                            <td><strong>${data.amount} ${data.currency || 'FCFA'}</strong></td>
-                            <td><span class="badge badge-info">${data.payment_method || 'MoMo'}</span></td>
+                            <td>${esc(data.product_name || 'N/A')}</td>
+                            <td><strong>${esc(data.amount)} ${esc(data.currency || 'FCFA')}</strong></td>
+                            <td><span class="badge badge-info">${esc(data.payment_method || 'MoMo')}</span></td>
                             <td><small>${date}</small></td>
                             <td>
-                                <button class="btn btn-success btn-sm" onclick="approvePayment('${doc.id}', '${data.reference}')">
+                                <button class="btn btn-success btn-sm" data-doc="${esc(doc.id)}" data-ref="${esc(data.reference)}" onclick="approvePayment(this.dataset.doc, this.dataset.ref)">
                                     <i class="fas fa-check"></i> Approve
                                 </button>
-                                <button class="btn btn-danger btn-sm" onclick="rejectPayment('${doc.id}')">
+                                <button class="btn btn-danger btn-sm" data-doc="${esc(doc.id)}" onclick="rejectPayment(this.dataset.doc)">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </td>
@@ -2864,10 +2871,12 @@
             
             try {
                 console.log('[Admin] Calling rejectPaymentHttp with:', { reference: paymentId, reason });
+                const idToken = await firebase.auth().currentUser.getIdToken();
                 const response = await fetch('https://us-central1-marriage-education.cloudfunctions.net/rejectPaymentHttp', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + idToken
                     },
                     body: JSON.stringify({
                         reference: paymentId,

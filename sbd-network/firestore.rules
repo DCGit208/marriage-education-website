@@ -576,6 +576,38 @@ service cloud.firestore {
       return !affected.hasAny(['fcmToken', 'pushToken', 'notificationToken']) ||
         !ce2UserPushSecretsPresent(request.resource.data);
     }
+    // Profile fields that grant admin/staff rights, paid access or referral
+    // credit. Users may never set or change them on their own profile; only
+    // admins (via rules) and Cloud Functions (Admin SDK) can.
+    function userPrivilegedKeys() {
+      return [
+        'role', 'roles', 'isAdmin', 'staffAccess',
+        'tier', 'tierLevel', 'subscription',
+        'ownedProducts', 'ownedCourses', 'enrolledCourses',
+        'mentor', 'messagingEnabled', 'disabled', 'datingBanned',
+        'referredBy', 'sponsoredByEmail', 'sponsoredByName', 'sbdReferralCode'
+      ];
+    }
+    // A self-created profile may only carry the free/member defaults the app
+    // sets at signup (referredBy from a ?ref= link is allowed on create only).
+    function userCreateHasSafeDefaults(d) {
+      return (!('role' in d) || d.role == 'member') &&
+        !d.keys().hasAny([
+          'roles', 'isAdmin', 'staffAccess', 'tierLevel',
+          'ownedProducts', 'ownedCourses', 'enrolledCourses',
+          'mentor', 'messagingEnabled', 'disabled', 'datingBanned',
+          'sponsoredByEmail', 'sponsoredByName', 'sbdReferralCode'
+        ]) &&
+        (!('tier' in d) || d.tier == 'free') &&
+        (!('subscription' in d) || (
+          d.subscription is map &&
+          d.subscription.tier == 'free' &&
+          d.subscription.status == 'inactive'
+        ));
+    }
+    function userSelfUpdateKeepsPrivilegedFields() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(userPrivilegedKeys());
+    }
     // Governance v1: conversation content floor (-1 = legacy conv, no floor field)
     function ce2ConvSecurityLevel(convData) {
       return convData != null && convData.securityLevel is int ? convData.securityLevel : -1;
@@ -623,16 +655,17 @@ service cloud.firestore {
     // MARRIAGE EDUCATION SITE COLLECTIONS (marriageducation.com)
     // ============================================================
 
-    // Courses - Public read, TESTING: allow public write for enrollment updates
+    // Courses - Public read; only admins may write
     match /courses/{courseId} {
       allow read: if true;
-      allow write: if true; // TESTING ONLY
+      allow write: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
     
-    // Enrollments - TESTING: Allow public write for testing enrollment creation
+    // Enrollments - created from the payment-success page; only admins may change/delete
     match /enrollments/{enrollmentId} {
-      allow read: if true; // TESTING ONLY
-      allow write: if true; // TESTING ONLY
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
     
     // Reflections - Students can read/write their own
@@ -641,11 +674,10 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
     
-    // Sales records - Allow public read for dashboard, admin write
+    // Sales records - Public read for dashboards; written only by admins / Cloud Functions
     match /sales/{saleId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
+      allow write: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
 
     // SBD subscription sales audit — written by Cloud Functions; admin dashboard reads
@@ -654,12 +686,15 @@ service cloud.firestore {
       allow write: if false;
     }
     
-    // Ambassadors - Public can register and read, update own progress
+    // Ambassadors - Public read (ambassador dashboards are not Firebase-authenticated).
+    // Creation and money/status fields are admin- or Cloud-Function-only: the
+    // unauthenticated ambassador pages may only update their learning progress.
     match /ambassadors/{ambassadorId} {
       allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow create: if request.auth != null && siteIsAdmin(request.auth.uid);
+      allow update: if (request.auth != null && siteIsAdmin(request.auth.uid)) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['school_enrollment', 'formation']);
+      allow delete: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
     
     // School Progress - Ambassadors can read/write their own progress
@@ -689,30 +724,37 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
     
-    // Pending Payments - Public read/write for admin dashboard
+    // Pending Payments - a customer may fetch a single payment by its reference
+    // (payment-pending.html polls status). Listing and all writes are admin-only;
+    // payments are created by Cloud Functions (Admin SDK).
     match /pending_payments/{paymentRef} {
-      allow read: if true;
-      allow update, delete: if true;
-      allow create: if true;
+      allow get: if true;
+      allow list: if request.auth != null && siteIsAdmin(request.auth.uid);
+      allow create, update, delete: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
 
-    // Unified payments ledger — read-only admin preview (written by backend)
+    // Unified payments ledger — admin-only preview (written by backend)
     match /payments/{paymentId} {
-      allow read: if true;
+      allow read: if request.auth != null && siteIsAdmin(request.auth.uid);
       allow write: if false;
     }
     
-    // Referral Codes - Public read/create, admin update/delete
+    // Referral Codes - created by Cloud Functions; admin update/delete
     match /referral_codes/{referralCode} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow read: if request.auth != null && (
+        siteIsAdmin(request.auth.uid) ||
+        (resource.data.auth_uid is string && resource.data.auth_uid == request.auth.uid) ||
+        (resource.data.email is string && request.auth.token.email != null &&
+          resource.data.email.lower() == request.auth.token.email.lower())
+      );
+      allow create: if false;
+      allow update, delete: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
     
-    // Admin Notifications - Public read/write for admin dashboard
+    // Admin Notifications - public read (legacy dashboards); writes are admin-only
     match /admin_notifications/{notificationId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
 
     // Tier 1 payout audit — Cloud Functions write only; admin dashboard reads history
@@ -727,25 +769,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Tier 2 CamPay production pilot
+    // Tier 2 CamPay production pilot — Cloud Functions write; admin-only read
     match /campay_payments/{paymentId} {
-      allow read: if true;
+      allow read: if request.auth != null && siteIsAdmin(request.auth.uid);
       allow write: if false;
     }
     match /campay_webhook_logs/{logId} {
-      allow read: if true;
+      allow read: if request.auth != null && siteIsAdmin(request.auth.uid);
       allow write: if false;
     }
     match /campay_webhook_processed/{id} {
-      allow read: if true;
+      allow read: if request.auth != null && siteIsAdmin(request.auth.uid);
       allow write: if false;
     }
     
-    // Notifications - Public read/create for ambassador dashboard
+    // Notifications - Public read for ambassador dashboard; created by Cloud Functions / admins
     match /notifications/{notifId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow create, update, delete: if request.auth != null && siteIsAdmin(request.auth.uid);
     }
     
     // Contests - Public read for leaderboards
@@ -911,9 +952,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId &&
-        !ce2UserPushSecretsPresent(request.resource.data);
+        !ce2UserPushSecretsPresent(request.resource.data) &&
+        userCreateHasSafeDefaults(request.resource.data);
       allow update: if request.auth != null && (
-        request.auth.uid == userId ||
+        (request.auth.uid == userId && userSelfUpdateKeepsPrivilegedFields()) ||
         ce2IsAdmin(ce2UserDataOrNull(request.auth.uid))
       ) && ce2UserPushSecretsUnchangedOrStripped();
       allow delete: if request.auth != null &&

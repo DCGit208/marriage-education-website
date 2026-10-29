@@ -865,8 +865,7 @@
         const stripeAmountText = stripeAmountEl ? stripeAmountEl.textContent : '$30 USD';
 
       try {
-          // Default is $30. Optional one-dollar live test is enabled only with ?stripe_test=1usd
-          const amountInUSD = stripeTestMode ? 100 : 3000;
+          // The fee is fixed server-side; nothing the browser sends can change it.
 
         // Create payment method
         const { paymentMethod, error } = await stripe.createPaymentMethod({
@@ -898,10 +897,8 @@
           const result = await createCheckout({
             paymentMethodId: paymentMethod.id,
             email,
-            amount: amountInUSD,
             currency: 'usd',
             ambassadorCode: code,
-              allowOneUsdTest: stripeTestMode,
               ambassadorData: ambassadorData,
             description: 'Ambassador Registration - ' + code
           });
@@ -1019,8 +1016,7 @@
     const payCtx = resolvePaymentContext();
     const code = getUrlParameter('code') || payCtx.session?.code || 'AMB-UNKNOWN';
     const reference = code;
-    const stripeTestMode = getUrlParameter('stripe_test') === '1usd';
-    const stripeDisplayAmount = stripeTestMode ? '$1 USD (Live Test)' : '$30 USD';
+    const stripeDisplayAmount = '$30 USD';
 
     const priceEl = document.getElementById('registration-price');
     priceEl.textContent = payCtx.priceLabel;
@@ -1049,7 +1045,7 @@
     }
 
     document.getElementById('stripe-amount-display').textContent =
-      payCtx.isCameroon ? stripeDisplayAmount : (stripeTestMode ? '$1 USD (Live Test)' : payCtx.priceLabel);
+      payCtx.isCameroon ? stripeDisplayAmount : payCtx.priceLabel;
 
     const virtualCardToggle = document.getElementById('virtual-card-hint-toggle');
     if (virtualCardToggle) {

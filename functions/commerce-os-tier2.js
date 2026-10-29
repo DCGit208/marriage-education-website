@@ -69,9 +69,9 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
     }
 
     const campayDoc = await db.collection(COLLECTIONS.campayPayments).doc(ref).get();
-    const gwRef =
-      gatewayReference ||
-      (campayDoc.exists ? campayDoc.data().gatewayReference : null);
+    // Only the gateway transaction the server recorded for this payment counts.
+    // A caller-supplied transaction id could belong to someone else's payment.
+    const gwRef = campayDoc.exists ? campayDoc.data().gatewayReference : null;
 
     if (!gwRef) {
       return { ok: false, action: 'no_gateway_reference', reference: ref };
@@ -85,6 +85,19 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
         reference: ref,
         campay_status: verified.status
       };
+    }
+
+    // The successful transaction must be for this payment and for the full amount.
+    const raw = verified.raw || {};
+    const paidAmount = Number(raw.amount);
+    const expectedAmount = Number(paymentDoc.data().amount);
+    const gatewayExternalRef = String(raw.external_reference || '').trim();
+    if (
+      (gatewayExternalRef && gatewayExternalRef !== ref) ||
+      (Number.isFinite(paidAmount) && Number.isFinite(expectedAmount) && paidAmount < expectedAmount)
+    ) {
+      console.error('[CamPay] transaction does not match payment', { ref, gatewayExternalRef, paidAmount, expectedAmount });
+      return { ok: false, action: 'transaction_mismatch', reference: ref };
     }
 
     const result = await orchestrator.paymentSucceeded({
@@ -452,6 +465,7 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
           const summary = buildWalletSummary(doc.data(), doc.id, coll);
           const profile = summary.payout_profile || {};
           if (profile.method !== 'momo_cm' || profile.profile_complete !== true) return;
+          if (doc.data().payout_profile_review_required === true) return;
           if (summary.total_pending_fcfa < minPending) return;
           queue.push({ code: doc.id, summary, collection: coll });
         });
@@ -465,6 +479,10 @@ function registerCommerceOsTier2(db, admin, exports, deps) {
       const profile = wallet.payout_profile || {};
       const amount = wallet.total_pending_fcfa;
 
+      if (payeeData.payout_profile_review_required === true) {
+        results.push({ payee_code: code, status: 'skipped', reason: 'payout_profile_under_review' });
+        continue;
+      }
       if (profile.method !== 'momo_cm' || !profile.momo_number) {
         results.push({ payee_code: code, status: 'skipped', reason: 'not_momo_cm' });
         continue;

@@ -1007,12 +1007,7 @@
                 // Update password
                 await currentUser.updatePassword(newPassword);
                 
-                // Update in Firestore (optional, for reference)
-                const db = firebase.firestore();
-                await db.collection('referral_codes').doc(currentReferralData.code).update({
-                    password: newPassword,
-                    password_updated_at: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                // The password is managed by Firebase Auth only; never store it in Firestore.
                 
                 showMessage('settings', 'Password updated successfully!', 'success');
                 document.getElementById('change-password-form').reset();

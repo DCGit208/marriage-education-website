@@ -566,6 +566,54 @@ async function sendEmail(options) {
 // Null only when no channel is configured at all.
 const transporter = (RESEND_KEY || SENDGRID_API_KEY || smtpTransporter) ? { sendMail: sendEmail } : null;
 
+// ========== ADMIN AUTH GUARDS ==========
+// walletTier1Api is initialised at the bottom of this module; these guards only
+// run at request time, after the module has fully loaded.
+async function requireAdmin(context) {
+  return walletTier1Api.assertAdmin(db, context);
+}
+
+const ADMIN_CORS_ORIGINS = [
+  'https://marriageducation.com',
+  'https://www.marriageducation.com',
+  'https://marriage-education.web.app',
+  'https://marriage-education.firebaseapp.com'
+];
+
+/**
+ * Guard for admin-only HTTP functions: CORS limited to our own origins and a
+ * verified Firebase ID token belonging to an admin. Returns the admin identity,
+ * or null after writing the error response (and for OPTIONS pre-flights).
+ */
+async function requireAdminHttp(req, res) {
+  const origin = req.get('Origin');
+  if (origin && ADMIN_CORS_ORIGINS.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Vary', 'Origin');
+  }
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return null;
+  }
+
+  const header = String(req.get('Authorization') || '');
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  if (!token) {
+    res.status(401).json({ error: 'Authentication required' });
+    return null;
+  }
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    return await walletTier1Api.assertAdmin(db, { auth: { uid: decoded.uid, token: decoded } });
+  } catch (error) {
+    const denied = error && error.code === 'permission-denied';
+    res.status(denied ? 403 : 401).json({ error: denied ? 'Admin access required' : 'Invalid credentials' });
+    return null;
+  }
+}
+
 /**
  * Contact form relay. public/contact-submit.php posts here so contact messages
  * go out through sendEmail (Resend, then SendGrid, then SMTP); the PHP script
@@ -871,11 +919,9 @@ exports.downloadBook = functions.https.onRequest(async (req, res) => {
       return res.redirect(targetUrl);
     }
 
+    // A bare product_id never proves a purchase: downloads require a paid payment reference or a one-time token.
     if (productId) {
-      const targetUrl = ['sbd-book', 'sbd-for-dummies', 'sbd-dummies', 'sbd-dummies-digital-print', 'sbd-founding', 'sbd-1', 'sbd-3', 'sbd-5', 'sbd-10', 'sbd-100'].includes(productId)
-        ? getSbdReaderBookUrl('sbd-dummies')
-        : await generateDownloadURL(productId);
-      return res.redirect(targetUrl);
+      return res.status(403).send('A payment reference or download token is required.');
     }
 
     if (token) {
@@ -1682,6 +1728,9 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
     } = data;
 
     const paymentChannel = String(paymentChannelRaw || 'manual').toLowerCase();
+    if (typeof reference !== 'string' || !/^[A-Za-z0-9_-]{4,80}$/.test(reference)) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid payment reference is required.');
+    }
     const isCampayAutomated = paymentChannel === 'campay';
     const resolvedMomoNetwork = String(momo_network || '').toLowerCase() === 'orange' ? 'orange' : 'mtn';
     const resolvedPaymentMethod = payment_method
@@ -1731,7 +1780,16 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
       }
     }
 
-    await db.collection('pending_payments').doc(reference).set(paymentData);
+    // create() fails if the reference already exists, so a caller can never
+    // overwrite (or re-pend) someone else's payment record.
+    try {
+      await db.collection('pending_payments').doc(reference).create(paymentData);
+    } catch (createError) {
+      if (createError.code === 6 || /already exists/i.test(String(createError.message))) {
+        throw new functions.https.HttpsError('already-exists', 'This payment reference has already been submitted.');
+      }
+      throw createError;
+    }
 
     await writeUnifiedPaymentRecord({
       source: isCampayAutomated ? 'campay_collect' : 'manual_payment',
@@ -1803,6 +1861,7 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('submitManualPayment error:', error);
+    if (error instanceof functions.https.HttpsError) throw error;
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
@@ -1811,6 +1870,7 @@ exports.submitManualPayment = functions.https.onCall(async (data, context) => {
  * Approve Payment (Admin Only)
  */
 exports.approvePayment = functions.https.onCall(async (data, context) => {
+  await requireAdmin(context);
   try {
     const { reference } = data;
     const result = await getPaymentFulfillment().fulfillPendingPayment(reference, {
@@ -1833,18 +1893,12 @@ exports.approvePayment = functions.https.onCall(async (data, context) => {
  * Reject Payment (Admin Only)
  */
 /**
- * Reject Payment (Admin Only) - HTTP endpoint (unauthenticated)
+ * Reject Payment (Admin Only) - HTTP endpoint. Requires a Firebase ID token for
+ * an admin in the Authorization header.
  */
 exports.rejectPaymentHttp = functions.https.onRequest(async (req, res) => {
-  // Enable CORS for all requests
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    return res.status(204).send('');
-  }
+  const adminUser = await requireAdminHttp(req, res);
+  if (!adminUser) return undefined;
 
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -1852,7 +1906,7 @@ exports.rejectPaymentHttp = functions.https.onRequest(async (req, res) => {
   }
 
   try {
-    console.log('[REJECT] HTTP Function called with data:', req.body);
+    console.log('[REJECT] HTTP Function called by', adminUser.email, 'for', req.body && req.body.reference);
     const { reference, reason } = req.body;
 
     if (!reference) {
@@ -1909,14 +1963,10 @@ exports.rejectPaymentHttp = functions.https.onRequest(async (req, res) => {
  * Reject Payment (Admin Only) - Cloud Function version (keeping for backwards compatibility)
  */
 exports.rejectPayment = functions.https.onCall(async (data, context) => {
-  // TODO: Re-enable admin authentication after implementing Firebase Auth in admin panel
-  // TEMPORARY: Disabled for testing
-  // if (!context.auth || !context.auth.token.admin) {
-  //   throw new functions.https.HttpsError('permission-denied', 'Admin access required');
-  // }
+  await requireAdmin(context);
 
   try {
-    console.log('[REJECT] Function called with data:', data);
+    console.log('[REJECT] Function called for', data && data.reference);
     const { reference, reason } = data;
 
     if (!reference) {
@@ -1970,6 +2020,7 @@ exports.rejectPayment = functions.https.onCall(async (data, context) => {
  * Mark RD Recruitment Payment as Paid (Admin Only)
  */
 exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
+  await requireAdmin(context);
   try {
     const { notification_id, rd_code, amount } = data;
 
@@ -2076,7 +2127,7 @@ exports.markRDPaymentPaid = functions.https.onCall(async (data, context) => {
  * Fix All Ambassador Statuses to 'active' (Admin utility)
  */
 exports.fixAllAmbassadorStatuses = functions.https.onRequest(async (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
+  if (!(await requireAdminHttp(req, res))) return undefined;
   
   try {
     console.log('[STATUS-FIX] Starting ambassador status fix to active...');
@@ -2132,7 +2183,7 @@ exports.fixAllAmbassadorStatuses = functions.https.onRequest(async (req, res) =>
  * Fix Missing Email Fields in Ambassador Records (One-time admin utility)
  */
 exports.fixAmbassadorEmails = functions.https.onRequest(async (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
+  if (!(await requireAdminHttp(req, res))) return undefined;
   
   try {
     console.log('[FIX] Starting ambassador email fix...');
@@ -2201,12 +2252,27 @@ exports.fixAmbassadorEmails = functions.https.onRequest(async (req, res) => {
 /**
  * Register Referral Code (Book Sharer Rewards)
  */
+function randomAccountPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
+  return Array.from({ length: 20 }, () => chars.charAt(crypto.randomInt(chars.length))).join('');
+}
+
+// Passwords are never stored or emailed: the account gets an unknown random
+// password and the owner sets their own through a reset link sent to the
+// mailbox, which also proves they own the email address.
+async function sendBookSharerAccessEmail(email, name, code, isReminder) {
+  const resetLink = await admin.auth().generatePasswordResetLink(email.toLowerCase(), {
+    url: 'https://marriageducation.com/book-sharer-dashboard'
+  });
+  return sendBookSharerWelcomeEmail(email, name, code, resetLink, isReminder);
+}
+
 exports.registerReferralCode = functions.https.onCall(async (data, context) => {
   try {
     const { name, email } = data;
 
-    if (!name || !email) {
-      throw new functions.https.HttpsError('invalid-argument', 'Name and email required');
+    if (!name || !email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new functions.https.HttpsError('invalid-argument', 'Name and a valid email are required');
     }
 
     // Check if email already has a code
@@ -2216,13 +2282,18 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
       .get();
 
     if (!existingQuery.empty) {
-      const existingCode = existingQuery.docs[0].data();
-      
-      // Send reminder email with existing credentials
-      try {
-        await sendBookSharerWelcomeEmail(existingCode.email, existingCode.name, existingCode.code, existingCode.password, true);
-      } catch (emailError) {
-        console.error('Failed to send reminder email:', emailError);
+      const existingDoc = existingQuery.docs[0];
+      const existingCode = existingDoc.data();
+      const lastReminder = existingCode.last_reminder_at?.toMillis ? existingCode.last_reminder_at.toMillis() : 0;
+
+      // At most one reminder every 10 minutes, so this can't be used to spam an inbox.
+      if (Date.now() - lastReminder > 10 * 60 * 1000) {
+        try {
+          await sendBookSharerAccessEmail(existingCode.email, existingCode.name, existingCode.code, true);
+          await existingDoc.ref.update({ last_reminder_at: admin.firestore.FieldValue.serverTimestamp() });
+        } catch (emailError) {
+          console.error('Failed to send reminder email:', emailError);
+        }
       }
       
       return {
@@ -2234,21 +2305,16 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
 
     // Generate new code
     const prefix = email.split('@')[0].replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 4);
-    const random = Math.floor(100 + Math.random() * 900);
+    const random = crypto.randomInt(100, 1000);
     const code = `${prefix}${random}`;
 
-    // Generate random password (12 characters: uppercase, lowercase, numbers, special)
-    const passwordChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
-    const password = Array.from({ length: 12 }, () => 
-      passwordChars.charAt(Math.floor(Math.random() * passwordChars.length))
-    ).join('');
-
-    // Create Firebase Auth user
+    // Create Firebase Auth user with a random password nobody knows; the owner
+    // sets their own via the emailed reset link.
     let authUserId = null;
     try {
       const userRecord = await admin.auth().createUser({
         email: email.toLowerCase(),
-        password: password,
+        password: randomAccountPassword(),
         displayName: name,
         emailVerified: false
       });
@@ -2263,7 +2329,6 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
       code,
       name,
       email: email.toLowerCase(),
-      password, // Store for reference (user can change in dashboard)
       auth_uid: authUserId,
       sales_count: 0,
       total_revenue: 0,
@@ -2277,9 +2342,9 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
 
     await db.collection('referral_codes').doc(code).set(referralData);
 
-    // Send welcome email with credentials
+    // Send welcome email with a set-password link
     try {
-      await sendBookSharerWelcomeEmail(email, name, code, password, false);
+      await sendBookSharerAccessEmail(email, name, code, false);
       console.log(`✅ Sent welcome email to ${email}`);
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
@@ -2293,6 +2358,7 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('registerReferralCode error:', error);
+    if (error instanceof functions.https.HttpsError) throw error;
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
@@ -2301,7 +2367,7 @@ exports.registerReferralCode = functions.https.onCall(async (data, context) => {
  * sendBookSharerWelcomeEmail
  * - Sends welcome email with dashboard credentials
  */
-async function sendBookSharerWelcomeEmail(email, name, code, password, isReminder) {
+async function sendBookSharerWelcomeEmail(email, name, code, resetLink, isReminder) {
   const subject = isReminder 
     ? '✅ Your Book Sharer Dashboard Login Details'
     : '🎉 Welcome to Book Sharer Rewards - Your Dashboard is Ready!';
@@ -2351,7 +2417,7 @@ async function sendBookSharerWelcomeEmail(email, name, code, password, isReminde
             
             <div class="credential-item">
               <div class="credential-label">🔑 Password:</div>
-              <div class="credential-value">${password}</div>
+              <div class="credential-value" style="font-family: inherit;">For your security we never email passwords. <a href="${resetLink}" style="color:#059669;font-weight:600;">Set your password</a> to sign in.</div>
             </div>
             
             <div class="credential-item">
@@ -2409,6 +2475,7 @@ async function sendBookSharerWelcomeEmail(email, name, code, password, isReminde
  * - Generates passwords, creates Firebase Auth users, sends welcome emails
  */
 exports.migrateExistingBookSharers = functions.https.onCall(async (data, context) => {
+  await requireAdmin(context);
   try {
     // Get ALL referral codes, then filter those without auth_uid
     // (Can't query for missing fields in Firestore)
@@ -2457,11 +2524,8 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
           continue;
         }
         
-        // Generate random password
-        const passwordChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
-        const password = Array.from({ length: 12 }, () => 
-          passwordChars.charAt(Math.floor(Math.random() * passwordChars.length))
-        ).join('');
+        // Random password nobody knows; the owner sets their own via the emailed link
+        const password = randomAccountPassword();
         
         // Create Firebase Auth user
         let authUserId = null;
@@ -2474,12 +2538,10 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
           });
           authUserId = userRecord.uid;
         } catch (authError) {
-          // User might already exist in Auth but not linked
+          // User might already exist in Auth but not linked: link it without touching its password
           if (authError.code === 'auth/email-already-exists') {
             const existingUser = await admin.auth().getUserByEmail(data.email.toLowerCase());
             authUserId = existingUser.uid;
-            // Update password for existing auth user
-            await admin.auth().updateUser(authUserId, { password });
           } else {
             throw authError;
           }
@@ -2488,18 +2550,16 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
         // Update Firestore
         await db.collection('referral_codes').doc(code).update({
           name: data.name || 'Book Sharer',
-          password: password,
           auth_uid: authUserId,
           migrated_at: admin.firestore.FieldValue.serverTimestamp()
         });
         
         // Send welcome email
         try {
-          await sendBookSharerWelcomeEmail(
+          await sendBookSharerAccessEmail(
             data.email,
             data.name || 'Book Sharer',
             code,
-            password,
             true // isReminder = true (since they're existing users)
           );
         } catch (emailError) {
@@ -2535,18 +2595,15 @@ exports.migrateExistingBookSharers = functions.https.onCall(async (data, context
 /**
  * claimBookSharerDashboard
  * - Self-service function for existing users to claim their dashboard
- * - User provides email, name, and sets their own password
+ * - The caller proves they own the email by using the set-password link we
+ *   email to it; no password is accepted, stored or emailed here.
  */
 exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) => {
   try {
-    const { email, name, password } = data;
+    const { email, name } = data;
     
-    if (!email || !name || !password) {
-      throw new functions.https.HttpsError('invalid-argument', 'Email, name, and password required');
-    }
-    
-    if (password.length < 8) {
-      throw new functions.https.HttpsError('invalid-argument', 'Password must be at least 8 characters');
+    if (!email || !name || typeof email !== 'string') {
+      throw new functions.https.HttpsError('invalid-argument', 'Email and name required');
     }
     
     // Find existing referral code by email
@@ -2567,13 +2624,13 @@ exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) 
     if (existingData.auth_uid) {
       throw new functions.https.HttpsError('already-exists', 'Dashboard already set up. Use "Forgot Password" if you need to reset.');    }
     
-    // Create Firebase Auth user
+    // Create Firebase Auth user with a random password nobody knows
     let authUserId = null;
     try {
       const userRecord = await admin.auth().createUser({
         email: email.toLowerCase(),
-        password: password,
-        displayName: name,
+        password: randomAccountPassword(),
+        displayName: String(existingData.name || name),
         emailVerified: false
       });
       authUserId = userRecord.uid;
@@ -2586,15 +2643,13 @@ exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) 
     
     // Update Firestore with auth details
     await db.collection('referral_codes').doc(code).update({
-      name: name,
-      password: password,
       auth_uid: authUserId,
       claimed_at: admin.firestore.FieldValue.serverTimestamp()
     });
     
-    // Send confirmation email
+    // Email the set-password link to the address on file
     try {
-      await sendBookSharerWelcomeEmail(email, name, code, password, false);
+      await sendBookSharerAccessEmail(email, existingData.name || name, code, false);
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);
       // Don't throw - claim succeeded
@@ -2602,7 +2657,7 @@ exports.claimBookSharerDashboard = functions.https.onCall(async (data, context) 
     
     return {
       success: true,
-      message: 'Dashboard claimed successfully! You can now login.',
+      message: 'Dashboard claimed! Check your email for a link to set your password.',
       code: code
     };
     
@@ -3085,6 +3140,7 @@ function getPaymentFulfillment() {
 }
 
 exports.reprocessAmbassadorActivation = functions.https.onCall(async (data, context) => {
+  await requireAdmin(context);
   try {
     const reference = String(data?.reference || '').trim();
     if (!reference) {
@@ -3098,15 +3154,9 @@ exports.reprocessAmbassadorActivation = functions.https.onCall(async (data, cont
   }
 });
 
-/** HTTP recovery endpoint (service-account auth) for admin scripts */
+/** HTTP recovery endpoint for admins (Firebase ID token of an admin required) */
 exports.reprocessAmbassadorActivationHttp = functions.https.onRequest(async (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(204).send('');
-  }
+  if (!(await requireAdminHttp(req, res))) return undefined;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -3226,8 +3276,10 @@ exports.resendAmbassadorAccessEmail = functions.https.onCall(async (data, contex
         const pending = pendingDoc.data();
         const isCampay =
           pending.payment_channel === 'campay' || !!pending.campay_reference;
+        // Only an already-approved (verified) payment may be re-fulfilled here;
+        // the payment channel is client-supplied and must not unlock fulfilment.
         if (
-          (pending.status === 'approved' || isCampay) &&
+          pending.status === 'approved' &&
           (pending.product_id === 'ambassador-registration' || pending.type === 'ambassador')
         ) {
           await getPaymentFulfillment().fulfillPendingPayment(ambassadorCode, {
@@ -4024,10 +4076,23 @@ async function trackAmbassadorSale(ambassadorCode, amount) {
  * Idempotent: persist Stripe payment, activate ambassador, notify Telegram.
  * Skips duplicate work when stripe_payments is already approved.
  */
+const AMBASSADOR_STRIPE_AMOUNT_CENTS = 3000; // $30.00 USD registration fee
+
 async function processSuccessfulAmbassadorStripePayment(paymentIntent, { email, ambassadorData } = {}) {
   const ambassadorCode = paymentIntent.metadata?.ambassadorCode;
   if (!ambassadorCode) {
     throw new Error('Missing ambassador code in Stripe metadata');
+  }
+
+  // Never activate an account for a payment that is not the full registration fee.
+  if (
+    String(paymentIntent.currency || '').toLowerCase() !== 'usd' ||
+    Number(paymentIntent.amount_received ?? paymentIntent.amount) < AMBASSADOR_STRIPE_AMOUNT_CENTS
+  ) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Payment amount does not match the ambassador registration fee.'
+    );
   }
 
   const meta = paymentIntent.metadata || {};
@@ -4191,7 +4256,6 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
       paymentMethodId,
       email,
       currency,
-      allowOneUsdTest,
       ambassadorCode,
       ambassadorData,
       description
@@ -4206,8 +4270,8 @@ exports.createAmbassadorCheckout = functions.https.onCall(async (data, context) 
       throw new functions.https.HttpsError('invalid-argument', 'Only USD is supported for Stripe ambassador checkout.');
     }
 
-    // Do not trust client amount. Default charge is $30; allow $1 only when explicit test flag is set.
-    const resolvedAmount = allowOneUsdTest === true ? 100 : 3000;
+    // Never trust a client-supplied amount: the registration fee is fixed server-side.
+    const resolvedAmount = AMBASSADOR_STRIPE_AMOUNT_CENTS;
 
     const ambassadorMetadata = {
       type: 'ambassador',
@@ -6078,7 +6142,7 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     signupApp: existingData.signupApp || 'foundation-yearly-landing',
     lastActive: admin.firestore.FieldValue.serverTimestamp(),
   };
-  if (isSponsored) {
+  if (isSponsored && (isNew || !userSnap.exists)) {
     patch.sponsoredByEmail = sponsorEmail;
     if (sponsorName) patch.sponsoredByName = sponsorName;
   }
@@ -6086,12 +6150,12 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
     patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
     patch.groups = existingData.groups || [];
   }
-  if (!existingData.referredBy && referredBy) {
+  if ((isNew || !userSnap.exists) && !existingData.referredBy && referredBy) {
     patch.referredBy = referredBy;
   }
   await userRef.set(firestoreSafeObject(patch), { merge: true });
 
-  if (referredBy && !existingData.referredBy) {
+  if (referredBy && !existingData.referredBy && (isNew || !userSnap.exists)) {
     try {
       const seller = await findSellerBySbdReferralCode(referredBy);
       if (seller) {        await seller.ref.update({
@@ -6149,8 +6213,6 @@ exports.createSbdGuestCheckoutSession = functions.https.onCall(async (data) => {
 
   return {
     url: session.url,
-    uid,
-    isNew,
     productId,
     sponsored: isSponsored,
   };
@@ -6210,10 +6272,10 @@ exports.createSbdGuestMeSombPayment = functions.runWith({
     uid, email, name: existingData.name || name,
     role: existingData.role === 'admin' ? 'admin' : (existingData.role || 'member'),
     signupApp: existingData.signupApp || 'foundation-yearly-landing',
-    phone,
+    ...(isNew || !userSnap.exists ? { phone } : {}),
     lastActive: admin.firestore.FieldValue.serverTimestamp()
   };
-  if (isSponsored) {
+  if (isSponsored && (isNew || !userSnap.exists)) {
     userPatch.sponsoredByEmail = sponsorEmail;
     if (sponsorName) userPatch.sponsoredByName = sponsorName;
   }
@@ -6221,10 +6283,10 @@ exports.createSbdGuestMeSombPayment = functions.runWith({
     userPatch.createdAt = admin.firestore.FieldValue.serverTimestamp();
     userPatch.groups = existingData.groups || [];
   }
-  if (!existingData.referredBy && referredBy) userPatch.referredBy = referredBy;
+  if ((isNew || !userSnap.exists) && !existingData.referredBy && referredBy) userPatch.referredBy = referredBy;
   await userRef.set(firestoreSafeObject(userPatch), { merge: true });
 
-  if (referredBy && !existingData.referredBy) {
+  if (referredBy && !existingData.referredBy && (isNew || !userSnap.exists)) {
     try {
       const seller = await findSellerBySbdReferralCode(referredBy);
       if (seller) await seller.ref.update({ 'sbdReferrals.signups': admin.firestore.FieldValue.increment(1) });
@@ -6414,8 +6476,8 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
     signupApp: existingData.signupApp || 'foundation-yearly-landing',
     lastActive: admin.firestore.FieldValue.serverTimestamp(),
   };
-  if (phone) patch.phone = phone;
-  if (isSponsored) {
+  if (phone && (isNew || !userSnap.exists)) patch.phone = phone;
+  if (isSponsored && (isNew || !userSnap.exists)) {
     patch.sponsoredByEmail = sponsorEmail;
     if (sponsorName) patch.sponsoredByName = sponsorName;
   }
@@ -6423,12 +6485,12 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
     patch.createdAt = admin.firestore.FieldValue.serverTimestamp();
     patch.groups = existingData.groups || [];
   }
-  if (!existingData.referredBy && referredBy) {
+  if ((isNew || !userSnap.exists) && !existingData.referredBy && referredBy) {
     patch.referredBy = referredBy;
   }
   await userRef.set(firestoreSafeObject(patch), { merge: true });
 
-  if (referredBy && !existingData.referredBy) {
+  if (referredBy && !existingData.referredBy && (isNew || !userSnap.exists)) {
     try {
       const seller = await findSellerBySbdReferralCode(referredBy);
       if (seller) {
@@ -6522,8 +6584,6 @@ exports.createSbdGuestManualPayment = functions.https.onCall(async (data) => {
   return {
     success: true,
     reference,
-    uid,
-    isNew,
     productId,
     amount,
     currency: 'XAF',
@@ -7415,6 +7475,9 @@ async function sendCertificateEmail(recipientEmail, studentName, courseTitle, pd
  * Process product deployment with universal commission tracking
  */
 exports.processProductDeployment = functions.https.onCall(async (data, context) => {
+  // Records a sale and credits commissions without any payment verification,
+  // so it must never be callable by the public.
+  await requireAdmin(context);
   console.log('🚀 Processing product deployment:', data.product_id);
   
   try {
@@ -9561,7 +9624,7 @@ exports.onAmbassadorWriteSyncDosMetrics = functions.firestore
 // Commerce OS Tier 1 — wallet & payout
 // ============================================
 const walletPayoutTier1 = require('./wallet-payout-tier1');
-const walletTier1Api = walletPayoutTier1.registerWalletPayoutTier1(db, exports);
+const walletTier1Api = walletPayoutTier1.registerWalletPayoutTier1(db, exports, { sendEmail, sendTelegram });
 
 const { registerSbdCommissionPayout } = require('./sbd-commission-payout');
 registerSbdCommissionPayout(db, exports, {

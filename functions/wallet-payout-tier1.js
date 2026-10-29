@@ -156,13 +156,16 @@ async function assertAdmin(db, context) {
     };
   }
 
-  if (tokenEmail && adminEmailAllowlist().includes(tokenEmail)) {
+  // An email address alone is not proof of identity: anyone can register an
+  // unverified Firebase Auth account under an allowlisted address, so the
+  // allowlist only counts verified emails.
+  if (tokenEmail && context.auth.token.email_verified === true && adminEmailAllowlist().includes(tokenEmail)) {
     return { uid: context.auth.uid, email: tokenEmail };
   }
 
   throw new functions.https.HttpsError(
     'permission-denied',
-    'Admin access required. Use an admin account (custom claim admin:true, users/{uid}.role=admin, or configured admin email).'
+    'Admin access required. Use an admin account (custom claim admin:true, users/{uid}.role=admin, or a verified configured admin email).'
   );
 }
 
@@ -178,7 +181,8 @@ async function scanPayoutQueue(db, minPendingFcfa) {
       if (summary.total_pending_fcfa < threshold) return;
       rows.push({
         ...summary,
-        profile_complete: !!(summary.payout_profile && summary.payout_profile.profile_complete)
+        profile_complete: !!(summary.payout_profile && summary.payout_profile.profile_complete),
+        profile_review_required: data.payout_profile_review_required === true
       });
     });
   }
@@ -189,7 +193,7 @@ async function scanPayoutQueue(db, minPendingFcfa) {
   return { threshold_fcfa: threshold, payees: rows, count: rows.length };
 }
 
-function registerWalletPayoutTier1(db, exports) {
+function registerWalletPayoutTier1(db, exports, helpers = {}) {
   exports.getWalletSummary = functions.https.onCall(async (data, context) => {
     const payeeCode = (data && data.payee_code) || (data && data.code) || '';
     const { data: payeeData, collection } = await resolvePayeeRef(db, payeeCode);
@@ -207,12 +211,72 @@ function registerWalletPayoutTier1(db, exports) {
     return { success: true, wallet: buildWalletSummary(payeeData, payeeCode, collection) };
   });
 
+  // Ambassadors and RDs sign in with their code + email only (no Firebase Auth),
+  // so the caller cannot be strongly authenticated here. Compensating controls:
+  // the email on record must match, the owner is emailed, the admin is alerted,
+  // and a changed profile is held (payout_profile_review_required) until an admin
+  // confirms it with the owner. Automatic and batch payouts skip held profiles.
   exports.updatePayoutProfile = functions.https.onCall(async (data) => {
     const payeeCode = (data && data.payee_code) || '';
+    const claimedEmail = String((data && data.email) || '').trim().toLowerCase();
     const profile = validatePayoutProfileInput(data && data.payout_profile);
+    const { ref, data: payeeData, collection } = await resolvePayeeRef(db, payeeCode);
+
+    const onRecordEmail = String(payeeData.email || '').trim().toLowerCase();
+    if (!claimedEmail || !onRecordEmail || claimedEmail !== onRecordEmail) {
+      throw new functions.https.HttpsError('permission-denied', 'The email does not match this payee account.');
+    }
+
+    const previous = payeeData.payout_profile || null;
+    const fields = ['country', 'method', 'account_holder_name', 'momo_number', 'wise_email', 'iban', 'paypal_email'];
+    const changed = !previous || fields.some((f) => String(previous[f] || '') !== String(profile[f] || ''));
+
+    const update = { payout_profile: profile };
+    if (changed) {
+      update.payout_profile_review_required = true;
+      update.payout_profile_changed_at = admin.firestore.FieldValue.serverTimestamp();
+      update.payout_profile_previous = previous || null;
+    }
+    await ref.update(update);
+
+    if (changed && previous) {
+      try {
+        if (helpers.sendTelegram) {
+          await helpers.sendTelegram(
+            `⚠️ PAYOUT PROFILE CHANGED\n\n👤 ${payeeCode} (${collection})\n📧 ${onRecordEmail}\n` +
+            `💳 ${previous.method || '—'} → ${profile.method || '—'}\n` +
+            `📱 Number: ${String(previous.momo_number || '').slice(-4).padStart(9, '•')} → ${String(profile.momo_number || '').slice(-4).padStart(9, '•')}\n\n` +
+            `Payouts are on hold until you confirm with the owner and approve the change in the admin dashboard.`,
+            false
+          );
+        }
+        if (helpers.sendEmail) {
+          await helpers.sendEmail({
+            from: 'Marriage Education <orders@marriageducation.com>',
+            to: onRecordEmail,
+            subject: 'Your payout details were changed',
+            html: '<p>The payout details on your Marriage Education account were just changed.</p>' +
+              '<p>If this was you, no action is needed. Payouts are held briefly while we confirm the change.</p>' +
+              '<p><strong>If this was NOT you</strong>, reply to this email or contact orders@marriageducation.com immediately.</p>'
+          });
+        }
+      } catch (notifyError) {
+        console.error('[Payout profile] notification failed:', notifyError.message);
+      }
+    }
+
+    return { success: true, payout_profile: profile, review_required: changed };
+  });
+
+  exports.approvePayoutProfileChange = functions.https.onCall(async (data, context) => {
+    await assertAdmin(db, context);
+    const payeeCode = (data && data.payee_code) || '';
     const { ref } = await resolvePayeeRef(db, payeeCode);
-    await ref.update({ payout_profile: profile });
-    return { success: true, payout_profile: profile };
+    await ref.update({
+      payout_profile_review_required: false,
+      payout_profile_approved_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { success: true };
   });
 
   exports.listPayoutQueue = functions.https.onCall(async (data, context) => {
@@ -273,6 +337,12 @@ function registerWalletPayoutTier1(db, exports) {
       throw new functions.https.HttpsError(
         'failed-precondition',
         'Payout profile must be complete before batch mark paid'
+      );
+    }
+    if (payeeData.payout_profile_review_required === true && method !== 'manual') {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Payout profile was changed recently. Confirm the change with the owner, then approve it before paying.'
       );
     }
 

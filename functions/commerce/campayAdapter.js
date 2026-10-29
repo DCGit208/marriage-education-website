@@ -86,7 +86,9 @@ async function processPayment(params) {
 }
 
 async function verifyPayment({ gatewayReference }) {
-  if (CAMPAY.testMode && String(gatewayReference).startsWith('CAMPAY-SIM-')) {
+  // Simulated payments are for the local emulator only; in production a made-up
+  // CAMPAY-SIM-* reference must never count as a successful payment.
+  if (process.env.FUNCTIONS_EMULATOR === 'true' && CAMPAY.testMode && String(gatewayReference).startsWith('CAMPAY-SIM-')) {
     return {
       gateway: 'campay',
       gatewayReference,
@@ -148,7 +150,7 @@ async function processPayout({ amount, currency = 'XAF', momoNumber, externalRef
 function verifyWebhook({ headers: reqHeaders, rawBody }) {
   const secret = CAMPAY.webhookSecret;
   if (!secret) {
-    if (CAMPAY.testMode) {
+    if (CAMPAY.testMode && process.env.FUNCTIONS_EMULATOR === 'true') {
       return { valid: true, mode: 'sandbox_no_secret' };
     }
     return { valid: false, error: 'CAMPAY_WEBHOOK_SECRET not configured' };
