@@ -379,6 +379,22 @@
         <button class="copy-btn" onclick="copyReference()">📋 Copy Reference</button>
       </div>
 
+      <!-- Payment method -->
+      <div style="margin:0 0 20px">
+        <h3 style="margin:0 0 10px;font-size:1.05rem">Choose how to pay</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" id="rd-method-auto" class="rd-method active" data-method="auto">📲 Automatic MoMo</button>
+          <button type="button" id="rd-method-manual" class="rd-method" data-method="manual">✋ Manual MoMo transfer</button>
+        </div>
+      </div>
+      <style>
+        .rd-method{flex:1;min-width:160px;padding:12px;border-radius:8px;border:2px solid #d1d5db;background:#fff;cursor:pointer;font-weight:700;font-size:.95rem}
+        .rd-method.active{border-color:#9333ea;background:#faf5ff}
+      </style>
+
+      <div id="auto-momo-section"><div id="auto-momo-mount"></div></div>
+
+      <div id="manual-section" style="display:none">
       <!-- Instructions -->
       <div class="instructions">
         <h2>📝 Payment Instructions</h2>
@@ -475,6 +491,7 @@
           Your payment will be verified within 5-15 minutes during business hours. Once confirmed, you'll receive your login credentials via email with your RD code and dashboard access link.
         </div>
       </div>
+      </div><!-- /manual-section -->
     </div>
   </div>
 
@@ -575,6 +592,48 @@
 
   <!-- Marriage Education Chatbot -->
   <script src="/js/payment-whatsapp-support.js"></script>
+  <script src="/js/mesomb-web-payment.js?v=20261029"></script>
+  <script>
+    // Automatic Mobile Money (MeSomb) — the server fixes the price.
+    (function () {
+      var autoSec = document.getElementById('auto-momo-section');
+      var manualSec = document.getElementById('manual-section');
+      var btnAuto = document.getElementById('rd-method-auto');
+      var btnManual = document.getElementById('rd-method-manual');
+      var mounted = false;
+
+      function choose(method) {
+        var auto = method === 'auto';
+        autoSec.style.display = auto ? 'block' : 'none';
+        manualSec.style.display = auto ? 'none' : 'block';
+        btnAuto.classList.toggle('active', auto);
+        btnManual.classList.toggle('active', !auto);
+        if (auto && !mounted && window.MEMesombPayment) {
+          mounted = true;
+          window.MEMesombPayment.mount({
+            container: document.getElementById('auto-momo-mount'),
+            kind: 'rd-registration',
+            getContext: function () { return { rdCode: code }; },
+            onSuccess: function (result) {
+              result.say('Payment confirmed ✅ Your Regional Director account is being activated. We emailed your login details to ' + result.email + '.', 'ok');
+              var link = document.createElement('a');
+              link.href = '/rd-login.html';
+              link.textContent = 'Go to Regional Director Login →';
+              link.style.cssText = 'display:block;margin-top:12px;text-align:center;font-weight:700;color:#9333ea';
+              result.root.querySelector('.mwp').appendChild(link);
+            },
+            onUnavailable: function () {
+              btnAuto.style.display = 'none';
+              choose('manual');
+            }
+          });
+        }
+      }
+      btnAuto.addEventListener('click', function () { choose('auto'); });
+      btnManual.addEventListener('click', function () { choose('manual'); });
+      choose('auto');
+    })();
+  </script>
   <script src="marriage-chatbot.js"></script>
 </body>
 </html>

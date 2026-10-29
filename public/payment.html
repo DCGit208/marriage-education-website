@@ -186,12 +186,17 @@
           <h3>Choose Payment Method</h3>
           
           <div class="payment-options">
-            <!-- MTN Mobile Money -->
+            <!-- Automatic Mobile Money (MeSomb) — shown only for products with a server-side price -->
+            <div class="payment-option" id="auto-momo-option" style="display:none">
+              <div id="auto-momo-mount"></div>
+            </div>
+
+            <!-- Manual MTN / Orange Mobile Money -->
             <div class="payment-option momo-payment-box">
-              <h4>📱 MTN Mobile Money</h4>
-              <p>Pay with MTN MOMO - Fast & Secure (Cameroon)</p>
+              <h4>✋ Manual Mobile Money transfer</h4>
+              <p>Send the money yourself and confirm — verified by our team (Cameroon)</p>
               <a href="#" class="pay-button" id="momo-checkout-btn" style="background: #000; color: #FFCB05;">
-                Pay with MTN MOMO
+                Pay with MoMo manually
               </a>
               <div class="security-badges" style="justify-content: center; margin-top: 15px;">
                 <div class="security-badge" style="color: #333;">
@@ -253,6 +258,9 @@
     </div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="/js/mesomb-web-payment.js?v=20261029"></script>
   <script>
     // Product name mapping for when name parameter is missing
     const productNames = {
@@ -393,6 +401,22 @@
         window.location.href = checkoutUrl;
       });
       
+      // Automatic Mobile Money: only offered when the server has a trusted price
+      // for this product. The server — not the URL — decides what is charged.
+      if (window.MEMesombPayment) {
+        const autoBox = document.getElementById('auto-momo-option');
+        autoBox.style.display = 'block';
+        window.MEMesombPayment.mount({
+          container: document.getElementById('auto-momo-mount'),
+          kind: 'product',
+          getContext: function () { return { productId: productId, ref: referralCode }; },
+          onSuccess: function (result) {
+            result.say('Payment confirmed ✅ Your purchase is complete. Access details were emailed to ' + result.email + '.', 'ok');
+          },
+          onUnavailable: function () { autoBox.style.display = 'none'; }
+        });
+      }
+
       console.log('✅ Payment page loaded:', { productId, productName, productPrice, productCurrency, referralCode });
     });
   </script>

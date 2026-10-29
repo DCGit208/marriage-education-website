@@ -228,6 +228,9 @@ function extractMesombTransaction(response) {
 }
 
 async function finalizeSbdMesombPayment(pending, transaction) {
+  // Website (marriageducation.com) payments carry a `kind` and are fulfilled
+  // through the shared pending_payments pipeline instead.
+  if (pending.kind) return finalizeWebMesombPayment(pending, transaction);
   const transactionId = transaction?.pk || transaction?.id || pending.transactionId;
   const status = String(transaction?.status || '').toUpperCase();
   if (!transactionId || status !== 'SUCCESS') {
@@ -6353,19 +6356,19 @@ exports.checkSbdGuestMeSombPayment = functions.runWith({
   secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
 }).https.onCall(async data => {
   const reference = String(data?.reference || '').trim();
-  if (!/^SBD-MESOMB-GUEST-\d+-[a-f0-9]{8}$/.test(reference)) {
+  if (!/^(SBD-MESOMB-GUEST|WEB-MESOMB)-\d+-[a-f0-9]{8}$/.test(reference)) {
     throw new functions.https.HttpsError('invalid-argument', 'A valid payment reference is required.');
   }
 
   const ref = db.collection('mesomb_payments').doc(reference);
   const snap = await ref.get();
-  if (!snap.exists || snap.data().guest !== true) {
+  if (!snap.exists || (snap.data().guest !== true && !snap.data().kind)) {
     throw new functions.https.HttpsError('not-found', 'Payment record not found.');
   }
 
   const pending = snap.data();
   if (pending.status === 'completed') {
-    await sendSbdMesombGuestAccessEmail(pending, ref);
+    if (pending.guest) await sendSbdMesombGuestAccessEmail(pending, ref);
     return { success: true, status: 'SUCCESS', reference };
   }
   if (!pending.transactionId) {
@@ -6397,6 +6400,284 @@ exports.checkSbdGuestMeSombPayment = functions.runWith({
     throw new functions.https.HttpsError('internal', 'Unable to check the Mobile Money payment status.');
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Website (marriageducation.com) automatic Mobile Money via MeSomb
+// Same gateway/credentials/webhook as SBD Foundation Access. Prices are decided
+// HERE, never by the browser: a page can only say WHAT is being bought.
+// Success is fulfilled through the shared pending_payments pipeline, so
+// accounts, emails, commissions, ledger and Telegram behave exactly like an
+// admin-approved manual payment — just without the manual step.
+// ═══════════════════════════════════════════════════════════════════════════
+const WEB_MESOMB_AMBASSADOR_XAF = 15000;
+const WEB_MESOMB_RD_XAF = 50000;
+const WEB_MESOMB_FIXED_PRODUCTS = {
+  'sbd-founding': { name: 'Founding 500 Member', amountXaf: 15000 }
+};
+
+async function resolveWebMesombQuote(data) {
+  const kind = String(data?.kind || '');
+
+  if (kind === 'ambassador-registration') {
+    const code = String(data?.ambassadorCode || '').trim().toUpperCase();
+    if (!/^AMB-[A-Z0-9-]{3,40}$/.test(code)) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid ambassador code is required.');
+    }
+    const existing = await db.collection('ambassadors').doc(code).get();
+    const activeStates = ['active', 'approved', 'activated', 'confirmed'];
+    if (existing.exists && activeStates.includes(String(existing.data().status || '').toLowerCase())) {
+      throw new functions.https.HttpsError('already-exists', 'This ambassador account is already active. Please sign in.');
+    }
+    return {
+      kind, type: 'ambassador', productId: 'ambassador-registration', pendingDocId: code, code,
+      amountXaf: WEB_MESOMB_AMBASSADOR_XAF, label: 'Ambassador Registration - ' + code
+    };
+  }
+
+  if (kind === 'rd-registration') {
+    const code = String(data?.rdCode || '').trim().toUpperCase();
+    if (!/^RD-[A-Z0-9-]{3,40}$/.test(code)) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid Regional Director code is required.');
+    }
+    const rd = await db.collection('regional_directors').doc(code).get();
+    if (!rd.exists) {
+      throw new functions.https.HttpsError('not-found', 'Regional Director registration not found.');
+    }
+    if (String(rd.data().status || '').toLowerCase() === 'active') {
+      throw new functions.https.HttpsError('already-exists', 'This Regional Director account is already active. Please sign in.');
+    }
+    return {
+      kind, type: 'rd', productId: 'rd-registration', pendingDocId: code, code,
+      amountXaf: WEB_MESOMB_RD_XAF, label: 'Regional Director Registration - ' + code
+    };
+  }
+
+  if (kind === 'product') {
+    const productId = resolveSbdProductId(String(data?.productId || '').trim());
+    if (!productId) {
+      throw new functions.https.HttpsError('invalid-argument', 'A product is required.');
+    }
+    const unavailable = new functions.https.HttpsError(
+      'failed-precondition',
+      'Automatic Mobile Money is not available for this product. Please use another payment method.'
+    );
+    const fixed = WEB_MESOMB_FIXED_PRODUCTS[productId];
+    if (fixed) {
+      return { kind, type: 'book-purchase', productId, pendingDocId: null, amountXaf: fixed.amountXaf, label: fixed.name };
+    }
+    const resolved = await resolveSbdCatalogProduct(productId);
+    // One-time, non-membership products only: memberships/subscriptions need an
+    // SBD account and have their own checkout.
+    if (!resolved || !resolved.product || resolved.product.mode !== 'payment' || resolved.product.tier) throw unavailable;
+    const amountXaf = Math.round((Number(resolved.product.amount) || 0) * 6);
+    if (!amountXaf) throw unavailable;
+    return {
+      kind, type: 'book-purchase', productId, pendingDocId: null, amountXaf,
+      label: resolved.product.name || productId
+    };
+  }
+
+  throw new functions.https.HttpsError('invalid-argument', 'Unknown payment type.');
+}
+
+exports.createMesombWebPayment = functions.runWith({
+  secrets: [MESOMB_APPLICATION_KEY, MESOMB_ACCESS_KEY, MESOMB_SECRET_KEY]
+}).https.onCall(async data => {
+  const quote = await resolveWebMesombQuote(data);
+
+  // Price check for the page: no charge, nothing stored.
+  if (data?.quoteOnly === true) {
+    return { success: true, quote: true, amountXaf: quote.amountXaf, label: quote.label };
+  }
+
+  const email = String(data?.email || '').trim().toLowerCase();
+  const phone = String(data?.phone || '').replace(/\D/g, '').replace(/^237/, '');
+  const name = String(data?.name || '').trim().slice(0, 120) || 'Customer';
+  const service = String(data?.momo_network || 'mtn').toLowerCase() === 'orange' ? 'ORANGE' : 'MTN';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new functions.https.HttpsError('invalid-argument', 'A valid email address is required.');
+  }
+  if (phone.length !== 9) {
+    throw new functions.https.HttpsError('invalid-argument', 'Enter a valid 9-digit Cameroon Mobile Money number.');
+  }
+
+  const reference = 'WEB-MESOMB-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+  const pending = {
+    reference, kind: quote.kind, type: quote.type, pendingDocId: quote.pendingDocId || reference,
+    email, loginEmail: email, name, phone, service,
+    productId: quote.productId, productName: quote.label, amountXaf: quote.amountXaf,
+    status: 'pending', createdAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (quote.kind === 'ambassador-registration') {
+    pending.ambassadorCode = quote.code;
+    pending.regionalDirector = String(data?.recruitedBy || '').trim().slice(0, 60);
+    let ambassadorData = null;
+    try {
+      const serialized = JSON.stringify(data?.ambassadorData || null);
+      if (serialized && serialized.length < 20000) ambassadorData = JSON.parse(serialized);
+    } catch (error) { /* ignore malformed client data */ }
+    pending.ambassadorData = ambassadorData;
+  } else if (quote.kind === 'rd-registration') {
+    pending.rdCode = quote.code;
+  } else {
+    pending.referralCode = String(data?.ref || '').trim().slice(0, 60);
+  }
+
+  const paymentRef = db.collection('mesomb_payments').doc(reference);
+  await paymentRef.set(firestoreSafeObject(pending));
+
+  try {
+    const response = await sbdMesombCollect({
+      ...getMesombCredentials(),
+      amount: quote.amountXaf,
+      payer: phone,
+      service,
+      country: 'CM',
+      currency: 'XAF',
+      trxID: reference,
+      location: { town: 'Douala', country: 'CM' },
+      products: [{ name: quote.label, category: 'education', quantity: 1, amount: quote.amountXaf }]
+    });
+    const transaction = extractMesombTransaction(response);
+    const transactionId = transaction?.pk || transaction?.id || null;
+    const status = String(transaction?.status || '').toUpperCase();
+    await paymentRef.set({
+      transactionId, providerMessage: response?.message || null,
+      status: status || 'PENDING', updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    if (status === 'SUCCESS') {
+      const completed = await finalizeWebMesombPayment(pending, transaction);
+      return { ...completed, reference, amountXaf: quote.amountXaf };
+    }
+    if (status === 'FAILED') {
+      return { success: false, status, reference, message: response?.message || 'The Mobile Money payment failed.' };
+    }
+    return {
+      success: false, pending: true, status: status || 'PENDING', reference, amountXaf: quote.amountXaf,
+      message: 'Payment request sent. Approve it on your phone.'
+    };
+  } catch (error) {
+    await paymentRef.set({ status: 'failed', error: error.message, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    console.error('[Web MeSomb] collect failed:', error);
+    throw new functions.https.HttpsError('internal', 'We could not start the Mobile Money payment. Please try again or use another payment method.');
+  }
+});
+
+async function finalizeWebMesombPayment(pending, transaction) {
+  const transactionId = transaction?.pk || transaction?.id || pending.transactionId;
+  const status = String(transaction?.status || '').toUpperCase();
+  if (!transactionId || status !== 'SUCCESS') {
+    return { success: false, status: status || 'PENDING', transactionId: transactionId || null };
+  }
+
+  const ref = db.collection('mesomb_payments').doc(pending.reference);
+
+  // Atomic claim: the webhook and the page poll can both report SUCCESS at once.
+  const claim = await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error('MeSomb payment record not found.');
+    const current = snap.data();
+    if (current.status === 'completed') return 'completed';
+    const claimedAtMs = current.finalizingAt?.toMillis ? current.finalizingAt.toMillis() : 0;
+    if (claimedAtMs && Date.now() - claimedAtMs < 120000) return 'in_progress';
+    tx.set(ref, { finalizingAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    return 'claimed';
+  });
+  if (claim !== 'claimed') return { success: true, status: 'SUCCESS', transactionId };
+
+  const paymentMethod = pending.service === 'ORANGE' ? 'orange_money' : 'mtn_momo';
+  const docId = pending.pendingDocId || pending.reference;
+
+  try {
+    const pendingRef = db.collection('pending_payments').doc(docId);
+    const existing = await pendingRef.get();
+    if (!(existing.exists && existing.data().status === 'approved')) {
+      let doc = {
+        reference: docId,
+        product_id: pending.productId,
+        product_name: pending.productName,
+        amount: Number(pending.amountXaf),
+        currency: 'XAF',
+        email: pending.email,
+        loginEmail: pending.loginEmail || pending.email,
+        name: pending.name || '',
+        phone: pending.phone,
+        type: pending.type,
+        status: 'pending',
+        payment_channel: 'mesomb',
+        momo_network: String(pending.service || '').toLowerCase(),
+        payment_method: paymentMethod,
+        mesomb_reference: pending.reference,
+        mesomb_transaction_id: transactionId,
+        created_at: admin.firestore.FieldValue.serverTimestamp()
+      };
+      if (pending.kind === 'ambassador-registration') {
+        doc.ambassador_code = pending.ambassadorCode;
+        doc.regional_director = pending.regionalDirector || '';
+        doc.ambassador_data = pending.ambassadorData || { code: pending.ambassadorCode, recruitedBy: pending.regionalDirector || '' };
+        doc = normalizeAmbassadorRecruiterPaymentFields(doc);
+      } else if (pending.kind === 'rd-registration') {
+        doc.rd_code = pending.rdCode;
+      } else {
+        doc.referral_code = pending.referralCode || '';
+      }
+      await pendingRef.set(firestoreSafeObject(doc), { merge: true });
+    }
+
+    await getPaymentFulfillment().fulfillPendingPayment(docId, {
+      channel: 'mesomb',
+      payment_method: paymentMethod,
+      gateway_reference: transactionId
+    });
+  } catch (error) {
+    // Paid but not fulfilled: release the claim so the next poll/webhook retries,
+    // and tell the admin once.
+    console.error('[Web MeSomb] fulfilment failed:', error);
+    const snap = await ref.get();
+    const alerted = snap.exists && snap.data().fulfillmentAlertedAt;
+    await ref.set({
+      finalizingAt: admin.firestore.FieldValue.delete(),
+      fulfillmentError: String(error.message || error).slice(0, 300),
+      ...(alerted ? {} : { fulfillmentAlertedAt: admin.firestore.FieldValue.serverTimestamp() })
+    }, { merge: true });
+    if (!alerted) {
+      await sendTelegram(
+        `🚨 MoMo PAID but fulfilment FAILED (will retry)\n📋 ${pending.reference}\n📦 ${pending.productName}\n💰 ${Number(pending.amountXaf).toLocaleString()} XAF\n👤 ${pending.email}\n❌ ${String(error.message || error).slice(0, 200)}`,
+        false
+      );
+    }
+    throw error;
+  }
+
+  await ref.set({
+    status: 'completed',
+    transactionId,
+    fulfillmentError: admin.firestore.FieldValue.delete(),
+    completedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  try {
+    await sendTelegram(
+      '✅ WEBSITE PAYMENT — MOBILE MONEY PAID (MeSomb)\n\n' +
+      `📋 Reference: ${pending.reference}\n` +
+      `📦 ${pending.productName}\n` +
+      `💰 ${Number(pending.amountXaf).toLocaleString()} XAF\n` +
+      `🏦 ${pending.service === 'ORANGE' ? 'Orange Money' : 'MTN MoMo'} · ${pending.phone}\n` +
+      `👤 ${pending.email}\n` +
+      `🔖 MeSomb tx: ${transactionId}\n\n` +
+      '👉 Admin: https://marriageducation.com/admin-dashboard.html',
+      false
+    );
+  } catch (error) {
+    console.warn('[Web MeSomb] Telegram failed:', error.message);
+  }
+
+  return { success: true, status: 'SUCCESS', transactionId };
+}
 
 /**
  * Guest 12-Month Foundation Access — Manual MoMo / Orange Money path. One-time payment; no auto-renewal.

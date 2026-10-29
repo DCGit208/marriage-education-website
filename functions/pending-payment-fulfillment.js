@@ -69,18 +69,19 @@ function createPendingPaymentFulfillment(deps) {
         status: 'approved',
         approved_at: admin.firestore.FieldValue.serverTimestamp(),
         payment_channel: channel,
-        campay_reference: gatewayReference || payment.campay_reference || null
+        campay_reference: channel === 'mesomb' ? (payment.campay_reference || null) : (gatewayReference || payment.campay_reference || null),
+        ...(channel === 'mesomb' && gatewayReference ? { mesomb_transaction_id: gatewayReference } : {})
       });
     } else if (gatewayReference || channel !== 'manual') {
       await paymentRef.update({
         payment_channel: channel,
-        campay_reference: gatewayReference || payment.campay_reference || null,
+        campay_reference: channel === 'mesomb' ? (payment.campay_reference || null) : (gatewayReference || payment.campay_reference || null),
         updated_at: admin.firestore.FieldValue.serverTimestamp()
       });
     }
 
     await writeUnifiedPaymentRecord({
-      source: channel === 'campay' ? 'campay_webhook' : 'manual_payment',
+      source: channel === 'campay' ? 'campay_webhook' : (channel === 'mesomb' ? 'mesomb_web' : 'manual_payment'),
       reference: ref,
       external_reference: gatewayReference || ref,
       record_type: 'customer_payment',
@@ -161,7 +162,7 @@ function createPendingPaymentFulfillment(deps) {
         manualChargeKind: 'initial',
         manualAmount: Number(payment.amount) || 0,
         manualCurrency: (payment.currency || 'XAF').toUpperCase(),
-        manualChannel: channel === 'campay' ? 'campay' : 'momo',
+        manualChannel: channel === 'campay' ? 'campay' : (channel === 'mesomb' ? 'mesomb' : 'momo'),
         manualPaymentMethod: payment.payment_method || paymentMethod || 'momo',
         // Fixed 12-month term for Manual MoMo yearly (no Stripe auto-renew)
         manualAccessMonths: productId === 'foundation-yearly' ? 12 : (payment.manualAccessMonths || null)

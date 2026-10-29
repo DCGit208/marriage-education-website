@@ -510,11 +510,14 @@
       <div class="payment-method-selector" id="payment-method-selector">
         <h3 id="payment-method-heading">📱 Select Payment Method</h3>
         <div class="payment-methods">
-          <button type="button" class="payment-method-btn active" data-method="momo" id="btn-pay-momo" onclick="selectPaymentMethod('momo', this)">
-            <span>🟡</span> MTN MoMo
+          <button type="button" class="payment-method-btn active" data-method="auto" id="btn-pay-auto" onclick="selectPaymentMethod('auto', this)">
+            <span>📲</span> Automatic MoMo
+          </button>
+          <button type="button" class="payment-method-btn" data-method="momo" id="btn-pay-momo" onclick="selectPaymentMethod('momo', this)">
+            <span>🟡</span> MTN MoMo (manual)
           </button>
           <button type="button" class="payment-method-btn" data-method="orange" id="btn-pay-orange" onclick="selectPaymentMethod('orange', this)">
-            <span>🟠</span> Orange Money
+            <span>🟠</span> Orange Money (manual)
           </button>
           <button type="button" class="payment-method-btn" data-method="stripe" id="btn-pay-stripe" onclick="selectPaymentMethod('stripe', this)">
             <span>💳</span> Card
@@ -619,6 +622,11 @@
         </div>
       </div>
 
+      <!-- Automatic Mobile Money (MeSomb) Section -->
+      <div id="auto-momo-payment-section" style="display:none;margin-bottom:20px">
+        <div id="auto-momo-mount"></div>
+      </div>
+
       <!-- Manual MoMo / Orange Payment Section -->
       <div class="momo-section" id="momo-payment-section">
       <!-- Instructions -->
@@ -716,6 +724,7 @@
   </div>
 
   <script src="/js/payment-whatsapp-support.js"></script>
+  <script src="/js/mesomb-web-payment.js?v=20261029"></script>
   <script>
     // Stripe instance
     let stripe = null;
@@ -793,8 +802,14 @@
 
       const momoSec = document.getElementById('momo-payment-section');
       const stripeSec = document.getElementById('stripe-payment-section');
+      const autoSec = document.getElementById('auto-momo-payment-section');
+      if (autoSec) autoSec.style.display = method === 'auto' ? 'block' : 'none';
 
-      if (method === 'stripe') {
+      if (method === 'auto') {
+        if (stripeSec) stripeSec.classList.remove('active');
+        if (momoSec) momoSec.classList.add('hidden');
+        mountAutomaticMomo();
+      } else if (method === 'stripe') {
         if (momoSec) momoSec.classList.add('hidden');
         if (stripeSec) stripeSec.classList.add('active');
         initializeStripe();
@@ -806,6 +821,65 @@
         if (momoSec) momoSec.classList.remove('hidden');
         applyManualNetwork(method === 'orange' ? 'orange' : 'mtn');
       }
+    }
+
+    // Automatic Mobile Money (MeSomb). The server fixes the price; the page only
+    // says which ambassador registration is being paid and who recruited them.
+    let autoMomoMounted = false;
+    function buildAmbassadorPaymentContext() {
+      let ambassadorData = null;
+      try {
+        const stored = sessionStorage.getItem('ambassadorData');
+        if (stored) ambassadorData = JSON.parse(stored);
+      } catch (e) { ambassadorData = null; }
+
+      const urlRefRaw = getUrlParameter('ref') || '';
+      const urlRef = window.MEAmbassadorReferralCode
+        ? window.MEAmbassadorReferralCode.normalizeReferralCode(urlRefRaw)
+        : String(urlRefRaw || '').trim().toUpperCase();
+      if (urlRef && (!ambassadorData || !ambassadorData.recruitedBy)) {
+        ambassadorData = ambassadorData || {};
+        if (window.MEAmbassadorReferralCode) {
+          ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(ambassadorData, urlRef);
+        } else {
+          ambassadorData.recruitedBy = urlRef;
+        }
+      }
+      if (ambassadorData && window.MEAmbassadorReferralCode) {
+        ambassadorData = window.MEAmbassadorReferralCode.applyRecruiterToAmbassadorData(
+          ambassadorData,
+          ambassadorData.recruitedBy || ambassadorData.regional_director_code || urlRef
+        );
+      }
+      const recruitedBy = ambassadorData?.regional_director_code || ambassadorData?.recruitedBy || urlRef || '';
+      return { ambassadorCode: code, ambassadorData: ambassadorData, recruitedBy: recruitedBy };
+    }
+
+    function mountAutomaticMomo() {
+      if (autoMomoMounted || !window.MEMesombPayment) return;
+      autoMomoMounted = true;
+      const session = loadAmbassadorSession();
+      window.MEMesombPayment.mount({
+        container: document.getElementById('auto-momo-mount'),
+        kind: 'ambassador-registration',
+        defaultEmail: session && session.email,
+        defaultPhone: session && (session.phoneE164 || session.phone),
+        getContext: buildAmbassadorPaymentContext,
+        onSuccess: function (result) {
+          sessionStorage.removeItem('ambassadorData');
+          result.say('Payment confirmed ✅ Your ambassador account is being activated. We emailed your login details to ' + result.email + '.', 'ok');
+          const link = document.createElement('a');
+          link.href = '/ambassador-login.html';
+          link.textContent = 'Go to Ambassador Login →';
+          link.style.cssText = 'display:block;margin-top:12px;text-align:center;font-weight:700;color:#00b894';
+          result.root.querySelector('.mwp').appendChild(link);
+        },
+        onUnavailable: function () {
+          const btn = document.getElementById('btn-pay-auto');
+          if (btn) btn.style.display = 'none';
+          selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
+        }
+      });
     }
 
     function callableErrorMessage(err) {
@@ -1031,10 +1105,11 @@
     if (payCtx.isCameroon) {
       document.getElementById('amount-text').textContent = payCtx.amount.toLocaleString() + ' FCFA';
       document.getElementById('stripe-amount-display').textContent = stripeDisplayAmount;
-      selectPaymentMethod('momo', document.getElementById('btn-pay-momo'));
+      selectPaymentMethod('auto', document.getElementById('btn-pay-auto'));
     } else {
       document.getElementById('payment-method-heading').textContent = '💳 International payment';
       document.getElementById('btn-pay-momo').style.display = 'none';
+      document.getElementById('btn-pay-auto').style.display = 'none';
       const orangeBtn = document.getElementById('btn-pay-orange');
       if (orangeBtn) orangeBtn.style.display = 'none';
       document.getElementById('benefit-earnings-detail').textContent =
@@ -1061,7 +1136,9 @@
         const method =
           currentPaymentMethod === 'stripe'
             ? 'Card (Stripe)'
-            : (currentManualNetwork === 'orange' ? 'Orange Money' : 'MTN MoMo');
+            : (currentPaymentMethod === 'auto'
+              ? 'Automatic MoMo (MeSomb)'
+              : (currentManualNetwork === 'orange' ? 'Orange Money (manual)' : 'MTN MoMo (manual)'));
         return {
           page: 'Ambassador payment',
           code: code,
